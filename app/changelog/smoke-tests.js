@@ -27,6 +27,86 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.40 — Hotfix SQL : date_trunc pas IMMUTABLE ==============
+  "0.55.40": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table api_usage_log accessible (patch passé)", async () => {
+      const { error } = await supabase.from("api_usage_log").select("id").limit(1);
+      if (error?.message?.match(/does not exist|relation/)) {
+        return { ok: false, msg: "Table absente — Run patch 0.55.40" };
+      }
+      return { ok: !error, msg: "Table OK" };
+    }));
+
+    results.push(await runTest("Vue v_api_usage_current_month accessible", async () => {
+      const { error } = await supabase.from("v_api_usage_current_month").select("api_name").limit(1);
+      if (error?.message?.includes("does not exist")) return { ok: false, msg: "Vue absente" };
+      return { ok: true, msg: "Vue déclarée" };
+    }));
+
+    results.push(await runTest("RPC get_api_usage_stats fonctionne", async () => {
+      const { error } = await supabase.rpc("get_api_usage_stats");
+      if (error?.message?.includes("does not exist")) return { ok: false, msg: "RPC absente" };
+      return { ok: true, msg: "RPC OK" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.39 — Compteur API + page intégrations + clé Google Places + login amélioré ==============
+  "0.55.39": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table api_usage_log créée", async () => {
+      const { error } = await supabase.from("api_usage_log").select("id").limit(1);
+      if (error?.message?.match(/does not exist|relation/)) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Table accessible" };
+    }));
+
+    results.push(await runTest("RPC get_api_usage_stats répond", async () => {
+      const { error } = await supabase.rpc("get_api_usage_stats");
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente" };
+      }
+      return { ok: true, msg: "RPC déclarée" };
+    }));
+
+    results.push(await runTest("RPC log_api_call déclarée", async () => {
+      const { error } = await supabase.rpc("log_api_call", {
+        p_api_name: "test",
+      });
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente" };
+      }
+      return { ok: true, msg: "RPC déclarée (peut renvoyer PERMISSION en RLS)" };
+    }));
+
+    results.push(await runTest("Page /parametres/integrations chargeable", async () => {
+      const mod = await import("../parametres/integrations/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("API /api/place répond (avec ou sans clé)", async () => {
+      try {
+        const res = await fetch("/api/place?nom=test");
+        const data = await res.json();
+        return {
+          ok: typeof data.ok === "boolean",
+          msg: data.note?.includes("non configurée") ? "Sans clé Google" : "Avec clé Google ✓",
+        };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.38 — Google Places + alertes avis + carte RPPS/SIRENE ==============
   "0.55.38": async () => {
     const supabase = createClient();

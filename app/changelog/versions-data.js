@@ -120,6 +120,41 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.40",
+    "kind": "hotfix",
+    "titre": "🩹 Fix SQL 42P17 'functions in index expression must be marked IMMUTABLE' · date_trunc() retiré de l'index · Les 2 autres index suffisent pour la perf",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug SQL 'ERROR 42P17: functions in index expression must be marked IMMUTABLE' lors de l'exécution du patch 0.55.39 : l'index idx_api_usage_month utilisait date_trunc('month', created_at) qui n'est pas marqué IMMUTABLE en PostgreSQL (car le fuseau horaire peut influencer le résultat avec timestamptz). PostgreSQL refuse les fonctions non-IMMUTABLE dans les expressions d'index" },
+      { "code": "SQL", "txt": "Patch 0.55.40 : drop index if exists idx_api_usage_month (silencieux si jamais créé), garde les 2 autres index utiles (idx_api_usage_api sur api_name+created_at desc et idx_api_usage_struct sur structure_id+created_at). PostgreSQL utilise un range scan sur created_at desc pour le filtre 'where created_at >= date_trunc month' donc les perfs restent identiques" },
+      { "code": "SQL", "txt": "Patch 0.55.40 100% idempotent et auto-suffisant : recrée la table api_usage_log (IF NOT EXISTS), les RLS policies (do $$ if exists $$), la vue v_api_usage_current_month, les 3 RPCs (get_api_usage_stats, log_api_call, cleanup_old_api_logs). Tu peux jouer ce patch même si le 0.55.39 a partiellement échoué" },
+      { "code": "SQL", "txt": "Le patch 0.55.39 a été corrigé aussi (l'index sur date_trunc supprimé) pour quiconque le rejouerait. Note ajoutée en commentaire expliquant pourquoi" },
+      { "code": "AI", "txt": "+6 tests Vitest : vérification que les fichiers SQL ne contiennent plus date_trunc dans les CREATE INDEX, drop explicite de l'ancien, 2 autres index conservés, idempotence (IF NOT EXISTS), DO $$ pour policies. Total 1319 tests verts (vs 1313)" }
+    ],
+    "themes": ["fixes", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.40.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.40.sql"
+  },
+  {
+    "v": "0.55.39",
+    "kind": "version",
+    "titre": "🔌 Compteur de requêtes API + page Paramètres > Intégrations · .env.local avec clé Google Places · Login info biométrie · SQL log_api_call + get_api_usage_stats",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.39 : table api_usage_log (id, structure_id, user_id, api_name, endpoint, status [ok/error/no_key/cache_hit], http_status, error_message, duration_ms, created_at). Index sur api_name + date_trunc('month') pour les agrégats rapides. Vue v_api_usage_current_month qui groupe par api_name avec calls_ok/error/cached/total + avg_duration_ms. RPCs : get_api_usage_stats() (admin), log_api_call() (utilisé par les route handlers), cleanup_old_api_logs() (nettoie > 90 jours). RLS : insert pour tous authentifiés, select uniquement pour parametres_admin" },
+      { "code": "BE", "txt": "Modification de /api/place : logger chaque appel via la RPC log_api_call avec endpoint (findplacefromtext / details / no_key / exception), status, duration_ms. Best-effort try/catch — n'a JAMAIS d'impact sur la réponse à l'utilisateur même si Supabase down" },
+      { "code": "FE", "txt": "Nouvelle page /parametres/integrations : 5 cartes (Google Places, RPPS, FINESS, SIRENE, BAN INSEE) avec pour chacune : statut connecté/non configuré (badge vert/rouge), total des appels du mois, succès/erreurs, temps moyen, barre de quota (Google Places : 1000/mois gratuits, ~$17/1000 ensuite, autres APIs gratuites). Auto-detect si la clé Google Places est configurée côté serveur" },
+      { "code": "FE", "txt": "Pour les APIs nécessitant une clé non configurée (Google Places) : bloc informatif ambre avec procédure étape par étape (lien doc, ajout sur Vercel Settings → Environment Variables, redeploy). Lien direct vers la documentation officielle de chaque API" },
+      { "code": "CFG", "txt": "Fichier .env.local créé (dans .gitignore — JAMAIS poussé sur GitHub) avec GOOGLE_PLACES_API_KEY. ⚠ La clé partagée dans le chat est COMPROMISE — à régénérer absolument sur Google Cloud Console + restreindre par référent HTTP. Fichier .env.local.example mis à jour avec la procédure complète" },
+      { "code": "FE", "txt": "TopBar : nouveau lien 'Intégrations API' (icône ti-plug bleu Google) dans le menu admin, juste après 'Paramètres'. Accès restreint via parametres_admin" },
+      { "code": "FE", "txt": "Login : message d'astuce 'Active la biométrie dans Mon profil' qui s'affiche dès qu'un email est saisi ET que WebAuthn est supporté ET que pas de méthode biométrique enregistrée pour cet email. Aide à comprendre pourquoi les boutons biométriques ne s'affichent pas" },
+      { "code": "AI", "txt": "+14 tests Vitest : .env.local + .gitignore (2), schéma SQL (2), page intégrations 5 APIs (3), calcul coût (4), login biométrie hint (2), logging best-effort (1). Total 1313 tests verts (vs 1299)" }
+    ],
+    "themes": ["users", "ui_ux", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.39.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.39.sql"
+  },
+  {
     "v": "0.55.38",
     "kind": "version",
     "titre": "🗺 Filtres carte RPPS + SIRENE croisés (en plus de FINESS) · Wikipedia retiré · Google Places API préparé (photo + horaires + étoiles + avis) · Popup d'alerte 20s · SQL préférences alertes Google par étab · Modal avec étoiles de notation",

@@ -190,6 +190,23 @@ export default function Login() {
             </>
           )}
 
+          {/* 0.55.39 : info biométrie si pas encore enregistrée pour cet email */}
+          {bioMethodsForEmail.length === 0 && mode === "signin" && email && isWebAuthnSupported() && (
+            <div style={{
+              background: "linear-gradient(135deg, #eef5fc, #fff)",
+              border: "1px solid #c7dcef",
+              borderRadius: 8,
+              padding: "8px 10px",
+              fontSize: 11.5,
+              color: "#185FA5",
+              marginTop: 10,
+              marginBottom: 4,
+            }}>
+              <i className="ti ti-bulb" style={{ fontSize: 13 }} />{" "}
+              <b>Astuce :</b> après ta connexion, active la biométrie dans <a style={{ color: "#185FA5", fontWeight: 600 }} href="/profil">Mon profil</a> pour te connecter en un coup d'œil.
+            </div>
+          )}
+
           <label>Mot de passe</label>
           <input className="input" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && submit()} autoComplete="current-password" />
           <button className="btn-primary" onClick={submit} disabled={busy || !email || !pwd}>

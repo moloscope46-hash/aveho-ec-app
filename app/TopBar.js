@@ -80,6 +80,7 @@ const MENU = [
     { p: "/etiquettes", ic: "ti-tags", lbl: "Étiquettes", col: "#C9867F" },
     { p: "/tags-materiel", ic: "ti-tag", lbl: "Tags matériel", col: "#5a8f8f" },
     { p: "/parametres", ic: "ti-settings", lbl: "Paramètres", col: "#5a8f8f" },
+    { p: "/parametres/integrations", ic: "ti-plug", lbl: "Intégrations API", col: "#4285F4" },
     { p: "/mentions-legales", ic: "ti-license", lbl: "Mentions légales", col: "#8a98a8" },
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
   ] },
