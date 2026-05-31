@@ -1,0 +1,81 @@
+<!-- Template d'email de bienvenue Aveho — Espace Collectivité
+     Variables à remplacer : {{NOM}} {{COLLECTIVITE}} {{ETABLISSEMENTS}} {{ROLE}} {{LIEN}} -->
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;background:#eef2f5;font-family:'Segoe UI',Helvetica,Arial,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f5;padding:24px 0">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.1)">
+
+        <!-- bandeau -->
+        <tr><td style="background:linear-gradient(120deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);padding:34px 36px">
+          <div style="font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700">AVEHO PRÉSENTE</div>
+          <div style="font-size:30px;font-weight:600;letter-spacing:2px;color:#fff;margin-top:6px">a<span style="color:#7CC8C8">v</span>eho</div>
+          <div style="font-size:10px;letter-spacing:1px;color:#cfe0e0;margin-top:2px">ESPACE COLLECTIVITÉ</div>
+        </td></tr>
+
+        <!-- corps -->
+        <tr><td style="padding:34px 36px 10px">
+          <h1 style="margin:0 0 6px;font-size:22px;color:#142131">Bienvenue {{NOM}} 👋</h1>
+          <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4a5763">
+            Votre compte vient d'être créé sur l'<b>Espace Collectivité Aveho</b> pour la collectivité
+            <b style="color:#2a5a5a">{{COLLECTIVITE}}</b>. Vous pouvez dès maintenant accéder à vos établissements.
+          </p>
+
+          <!-- carte rôle + établissements -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fa;border:1px solid #e3e9ee;border-radius:14px;margin:0 0 22px">
+            <tr><td style="padding:18px 20px">
+              <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a98a8;font-weight:700">Votre rôle</div>
+              <div style="font-size:16px;color:#142131;font-weight:700;margin:3px 0 14px">{{ROLE}}</div>
+              <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8a98a8;font-weight:700">Vos établissements</div>
+              <div style="margin-top:8px">{{ETABLISSEMENTS}}</div>
+            </td></tr>
+          </table>
+
+          <!-- bouton -->
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 10px"><tr>
+            <td style="border-radius:12px;background:#142131"><a href="{{LIEN}}" style="display:inline-block;padding:14px 34px;font-size:15px;font-weight:700;color:#fff;text-decoration:none">Activer mon compte &rarr;</a></td>
+          </tr></table>
+          <p style="text-align:center;font-size:12px;color:#9aa7b4;margin:8px 0 22px">Ce lien est personnel, ne le partagez pas.</p>
+
+          <!-- bloc installer l'appli (PWA) -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(120deg,#142131,#2a5a5a);border-radius:14px">
+            <tr><td style="padding:20px 22px">
+              <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px">📲 Installez l'application Aveho</div>
+              <div style="font-size:13px;color:#cfe0e0;line-height:1.6;margin-bottom:14px">
+                Retrouvez votre Espace Collectivité directement sur votre téléphone ou votre PC, comme une vraie application.
+              </div>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px"><tr>
+                <td style="border-radius:10px;background:#7CC8C8"><a href="{{LIEN}}" style="display:inline-block;padding:11px 22px;font-size:14px;font-weight:700;color:#142131;text-decoration:none">Ouvrir &amp; installer l'appli</a></td>
+              </tr></table>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="font-size:12px;color:#bfe6e6;line-height:1.6;vertical-align:top;padding-right:10px">
+                    <b style="color:#fff">📱 Sur mobile</b><br>
+                    Android : touchez « Installer l'application ».<br>
+                    iPhone : Partager → « Sur l'écran d'accueil ».
+                  </td>
+                  <td style="font-size:12px;color:#bfe6e6;line-height:1.6;vertical-align:top;border-left:1px solid rgba(255,255,255,.15);padding-left:14px">
+                    <b style="color:#fff">💻 Sur ordinateur</b><br>
+                    Cliquez sur « Installer l'app » en haut, ou l'icône d'installation dans la barre d'adresse.
+                  </td>
+                </tr>
+              </table>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- pied -->
+        <tr><td style="padding:24px 36px;border-top:1px solid #eef1f4">
+          <p style="margin:0;font-size:12px;color:#9aa7b4;line-height:1.6">
+            Aveho Softs &amp; Services · Hébergement HDS · Certifié RGPD<br>
+            Vous recevez cet email car un administrateur vous a invité sur l'Espace Collectivité.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

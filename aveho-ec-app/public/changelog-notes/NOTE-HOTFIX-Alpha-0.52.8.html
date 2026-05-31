@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.52.8 — 400 Bad Request achats.patient_id</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:28px;box-shadow:0 10px 30px rgba(192,57,43,.25)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffd6d2;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13px;font-weight:500;color:#ffd6d2;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffd6d2}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.fix{background:#fef0ee;color:#c0392b}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — BUG LATENT DEPUIS 14 VERSIONS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.52.8 — 400 Bad Request sur achats.patient_id
+      <small>Bug latent depuis la 0.38 (livrée il y a longtemps) — requête malformée silencieuse</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.52.8-alpha</code></span>
+      <span><b>Type :</b> Hotfix bug latent</span>
+      <span><b>Tests :</b> 944 verts</span>
+    </div>
+  </header>
+
+  <h2>Erreur que tu as remontée</h2>
+  <pre><code>GET https://rnvlzddgxiuslgljkobm.supabase.co/rest/v1/achats
+  ?select=patient_id,statut
+  &amp;etablissement_id=eq.2e068241-...
+  &amp;created_at=gte.2026-03-01T22:37:38.708Z
+400 (Bad Request)</code></pre>
+
+  <h2>Diagnostic</h2>
+
+  <h3>D'où vient la requête</h3>
+  <p>Page <code>app/patients/page.js</code> ligne 131 (code livré en Alpha 0.38.0). Le but était de pré-calculer les compteurs <b>"DI ouvertes"</b> et <b>"achats récents"</b> par patient pour le composant <code>&lt;PatientPreview&gt;</code> (l'overlay qui apparaît au hover sur une ligne patient).</p>
+
+  <h3>Pourquoi ça plante</h3>
+  <p>Le code suppose que la table <code>achats</code> a une colonne <code>patient_id</code>. <b>Faux.</b></p>
+  
+  <p>Vérification du schéma actuel de la table :</p>
+  <pre><code>create table achats (
+  id, structure_id, etablissement_id,
+  numero, fournisseur, motif,
+  budget_estime, budget_reel, statut,
+  date_souhaitee, date_commande, date_reception,
+  demandeur_id, valideur_id, motif_refus, notes,
+  created_at, updated_at,
+  /* + colonnes 0.50 workflow double validation */
+  seuil_double_validation, second_valideur_id, 
+  date_second_validation, workflow_etape
+);  -- ❌ AUCUN patient_id</code></pre>
+
+  <p>C'est <b>cohérent métier</b> : un achat dans Aveho est rattaché à un <b>établissement</b> (besoin global de l'établissement), pas à un patient spécifique. Les achats individualisés au patient s'appelleraient des <i>commandes nominatives</i>, ce qui n'existe pas dans la 0.52.</p>
+
+  <h3>Pourquoi le bug a survécu 14 versions</h3>
+  <ul>
+    <li>La requête était dans un <code>Promise.all([...])</code> avec un <code>.then()</code> qui itérait sur <code>achResp.data</code></li>
+    <li>Quand Supabase renvoie 400, le SDK retourne <code>{ data: null, error: {...} }</code></li>
+    <li><code>(achResp.data || []).forEach(...)</code> itère sur tableau vide → pas d'erreur JS</li>
+    <li>L'erreur 400 apparaissait <b>uniquement dans la console</b>, jamais dans l'UI</li>
+    <li>Le compteur <b>"X achats"</b> affichait toujours <b>0</b> dans le preview hover, ce qui pouvait paraître normal ("ce patient n'a pas eu d'achats récents") → personne n'a tilté</li>
+  </ul>
+
+  <h2>Correction</h2>
+  <p>Retrait pur et simple de la requête achats. Le compteur n'aurait jamais marché de toute façon vu le modèle de données. Le preview hover reste utile pour <b>nbDI</b> qui lui fonctionne correctement.</p>
+
+  <p>Diff dans <code>app/patients/page.js</code> :</p>
+  <pre><code>// AVANT
+Promise.all([
+  supabase.from("interventions").select("patient_id, statut")...,
+  supabase.from("achats").select("patient_id, statut")...,  // ❌
+]).then(([diResp, achResp]) =&gt; {
+  // ... itération sur diResp + achResp
+});
+
+// APRÈS
+supabase.from("interventions")
+  .select("patient_id, statut")
+  .eq("etablissement_id", auth.etabId)
+  .not("statut", "in", "(\"Clôturée\",\"Refusée\")")
+  .then((diResp) =&gt; {
+    const stats = {};
+    (diResp.data || []).forEach((d) =&gt; {
+      if (!d.patient_id) return;
+      if (!stats[d.patient_id]) stats[d.patient_id] = { nbDI: 0 };
+      stats[d.patient_id].nbDI++;
+    });
+    setPatStats(stats);
+  });</code></pre>
+
+  <p><code>nbAchats</code> retiré du calcul mais le composant <code>PatientPreview</code> reste avec <code>nbAchats: patStats[r.id]?.nbAchats || 0</code> (toujours 0) — c'est défensif et permettra de réactiver le compteur si un jour <code>achats</code> reçoit une colonne <code>patient_id</code>.</p>
+
+  <h2>Audit de bugs similaires</h2>
+  <p>J'ai écrit un script qui inspecte toutes les requêtes Supabase <code>.from('tableName').select('col1, col2, ...')</code> sur les tables connues (<code>achats</code>, <code>annonces</code>) et vérifie chaque colonne contre le schéma SQL.</p>
+  <p><b>Résultat</b> : aucun autre bug similaire sur ces 2 tables. La seule requête fautive était celle-ci.</p>
+  <p>Audit étendu aux autres tables possible si un autre 400 apparaît.</p>
+
+  <h2>Fichiers modifiés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Retrait requête achats.patient_id (n'existait pas) · Promise.all → simple appel · code orphelin nettoyé</td></tr>
+      <tr><td><code>public/sw.js</code></td><td><span class="pill fix">BUMP AUTO</span></td><td>0.52.7 → 0.52.8 (prebuild)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill fix">MODIF</span></td><td>0.52.7-alpha → 0.52.8-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Décompresser le zip 0.52.8</b> par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Installer + lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller sur <code>/patients</code> avec DevTools console ouverte</li>
+          <li>Plus aucune erreur <code>400 (Bad Request)</code> sur la requête <code>achats</code></li>
+          <li>Le preview hover sur une ligne patient affiche toujours <b>nb DI</b> correctement</li>
+          <li>Le compteur <b>nbAchats</b> reste à 0 (pas de modèle de données pour le calculer)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Apprentissage / 16ᵉ réflexe</h2>
+  <div class="panel warn">
+    <p><b>Bug de catégorie "silencieux" qui a survécu 14 versions</b> car :</p>
+    <ol>
+      <li>Pas de visibilité métier (un compteur à 0 n'alerte personne)</li>
+      <li>Aucune erreur JS levée (data null géré par <code>|| []</code>)</li>
+      <li>Visible uniquement dans la console Network, jamais dans l'UI</li>
+    </ol>
+    <p><b>16ᵉ réflexe à ajouter à ma checklist :</b></p>
+    <p><i>"Lors de chaque nouvelle requête Supabase, grep `create table` pour vérifier QUE TOUTES LES COLONNES dans le `select(...)` existent. Pas seulement le nom de la table — c'est facile d'inventer un `patient_id` qui n'existe pas."</i></p>
+    <p>Le réflexe 2 (vérif schéma) existait déjà mais s'appliquait surtout aux noms de tables et aux colonnes des INSERT/UPDATE. À étendre aux colonnes des SELECT.</p>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.52.8 · 31 mai 2026</p>
+    <p>Bug latent depuis 0.38 enfin corrigé · 7ème SW auto-bump consécutif · 944 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

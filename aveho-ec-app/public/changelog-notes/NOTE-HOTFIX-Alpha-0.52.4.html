@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.52.4 — Responsive sur dernières MAJ</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5a8f8f 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:28px;box-shadow:0 10px 30px rgba(20,33,49,.20)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13px;font-weight:500;color:#bfe6e6;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#bfe6e6}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--teal)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.fix{background:#fef0ee;color:#c0392b}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — HOTFIX RESPONSIVE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.52.4 — Repasse responsive sur les dernières MAJ
+      <small>Audit complet 0.50→0.52.3, fix mobile sur 6 pages + bannière + 1 modal</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.52.4-alpha</code></span>
+      <span><b>Type :</b> Hotfix UX mobile</span>
+      <span><b>Tests :</b> 944 verts</span>
+    </div>
+  </header>
+
+  <h2>Constat</h2>
+  <p>Tu as remarqué qu'en livrant les chantiers récents (0.50 à 0.52.3), je n'ai pas systématiquement testé le rendu mobile. Plusieurs régressions UX visibles sur petit écran :</p>
+  <ul>
+    <li>Tables de 5 colonnes qui débordent (audit, app-logs, annonces, digest)</li>
+    <li>Grilles fixes <code>1fr 1fr</code> qui restent en 2 colonnes même sur 320px</li>
+    <li>Chips de filtres qui dépassent (17 thèmes dans le changelog par exemple)</li>
+    <li>Bannière annonces mobile : padding trop large, icône trop grosse, contenu masqué</li>
+    <li>Modales : boutons footer qui débordent sans wrap</li>
+    <li>Bannière fixed mobile en bas → masque les derniers éléments des pages</li>
+  </ul>
+
+  <h2>Audit + corrections systématiques</h2>
+
+  <h3>Pages auditées (0.50 → 0.52.3)</h3>
+  <table>
+    <thead><tr><th>Page / Composant</th><th>Issue mobile</th><th>Correction</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>/annonces</code></td>
+        <td>Table 5 colonnes déborde · grid <code>1fr 1fr</code> de la modale · message ellipsé sur 400px</td>
+        <td>Wrapper <code>.panel-table</code> avec scroll horizontal · classe <code>grid-2-mobile-1</code> · <code>maxWidth: "100%"</code></td>
+      </tr>
+      <tr>
+        <td><code>/app-logs</code></td>
+        <td>Table 5 colonnes déborde sur mobile</td>
+        <td>Wrapper <code>.panel-table</code> avec scroll horizontal</td>
+      </tr>
+      <tr>
+        <td><code>/digest-dashboard</code></td>
+        <td>Grid stats <code>1fr 1fr</code> + table erreurs récentes</td>
+        <td>Classe <code>grid-2-mobile-1</code> + <code>.panel-table</code></td>
+      </tr>
+      <tr>
+        <td><code>/audit</code></td>
+        <td>Barre filtres rapides 5 chips qui dépassent</td>
+        <td>Classe <code>chip-row</code> qui réduit la font-size sur petit écran</td>
+      </tr>
+      <tr>
+        <td><code>/changelog</code></td>
+        <td>17 chips thèmes serrés sur mobile</td>
+        <td>Classe <code>chip-row</code> + bouton "Voir plus/moins" déjà OK</td>
+      </tr>
+      <tr>
+        <td><code>/statut</code></td>
+        <td>Métriques 7j déjà responsive avec <code>auto-fit minmax</code> ✓</td>
+        <td>RAS</td>
+      </tr>
+      <tr>
+        <td><code>&lt;MesValidationsEnAttente /&gt;</code></td>
+        <td>Motif ellipsé à 400px max</td>
+        <td>Passé à <code>maxWidth: "100%"</code> (le parent <code>flex: 1, minWidth: 0</code> gère le reste)</td>
+      </tr>
+      <tr>
+        <td><code>&lt;AnnoncesBanner /&gt;</code> mobile bottom</td>
+        <td>Padding 10px 16px trop large · icône 38px trop grosse · masque le contenu de la page</td>
+        <td>Padding réduit à 8px 12px · icône 32px · ajout classe <code>has-bottom-banner</code> sur body qui réserve 100px de padding-bottom</td>
+      </tr>
+      <tr>
+        <td>Modal détail bannière</td>
+        <td>3 boutons footer sans wrap → débordent</td>
+        <td>Ajout <code>flexWrap: "wrap"</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Classes CSS responsive ajoutées dans <code>app/globals.css</code></h3>
+  <pre><code>/* Tables scrollables horizontalement sur mobile */
+.panel-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* edge-to-edge scroll */
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+.panel-table table {
+  min-width: 600px;
+}
+
+/* Grilles 1fr 1fr → 1 colonne sur très petit écran */
+@media (max-width: 640px) {
+  .grid-2-mobile-1 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Chips qui réduisent leur taille de police sur mobile */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+@media (max-width: 480px) {
+  .chip-row button {
+    font-size: 11px !important;
+    padding: 4px 9px !important;
+  }
+}
+
+/* Bannière fixed en bas : réserver place pour ne pas masquer contenu */
+@media (max-width: 768px) {
+  .has-bottom-banner main,
+  .has-bottom-banner .wrap {
+    padding-bottom: 100px !important;
+  }
+}
+
+/* Modal padding réduit + max-height sur très petit écran */
+@media (max-width: 640px) {
+  .modal-bg { padding: 12px; }
+  .modal { max-height: 95vh; }
+}
+
+/* Inputs date pleine largeur sur mobile */
+@media (max-width: 640px) {
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    width: 100%;
+  }
+}</code></pre>
+
+  <h3>Wrapper automatique des tables</h3>
+  <p>Script Python qui parcourt les 3 pages avec tables et enveloppe automatiquement chaque <code>&lt;table&gt;</code> dans un <code>&lt;div className="panel-table"&gt;</code> :</p>
+  <pre><code>pattern = re.compile(r'&lt;table\s+[^&gt;]*&gt;.*?&lt;/table&gt;', re.DOTALL)
+text = pattern.sub(lambda m: f'&lt;div className="panel-table"&gt;{m.group(0)}&lt;/div&gt;', text)</code></pre>
+  <p>Appliqué à <code>/annonces</code>, <code>/app-logs</code>, <code>/digest-dashboard</code>.</p>
+
+  <h3>Bannière mobile — toggle dynamique body class</h3>
+  <p>Le composant <code>AnnoncesBanner</code> ajoute maintenant la classe <code>has-bottom-banner</code> au <code>document.body</code> uniquement quand :</p>
+  <ol>
+    <li>L'écran est en mode mobile (<code>window.innerWidth &lt; 768</code>)</li>
+    <li>Et qu'il y a au moins une annonce visible (non dismissée, non snoozée)</li>
+  </ol>
+  <p>Le CSS global réserve alors 100px de <code>padding-bottom</code> sur la zone de contenu. Sur desktop ou si la bannière est masquée, la classe est retirée → pas d'espace inutile.</p>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill fix">ENRICHI</span></td><td>+ 6 classes responsive (.panel-table, .grid-2-mobile-1, .chip-row, .has-bottom-banner, .col-hide-xs, .modal-grid-2)</td></tr>
+      <tr><td><code>app/annonces/page.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Table wrappée · grid modale en classe · maxWidth message</td></tr>
+      <tr><td><code>app/app-logs/page.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Table wrappée</td></tr>
+      <tr><td><code>app/digest-dashboard/page.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Table erreurs wrappée · grid stats en classe</td></tr>
+      <tr><td><code>app/audit/page.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Barre presets en chip-row</td></tr>
+      <tr><td><code>app/changelog/page.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Barre thèmes en chip-row</td></tr>
+      <tr><td><code>app/MesValidationsEnAttente.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>maxWidth motif 400 → 100%</td></tr>
+      <tr><td><code>app/AnnoncesBanner.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Padding/icône réduits mobile · toggle body class has-bottom-banner · footer modal wrap</td></tr>
+      <tr><td><code>public/sw.js</code></td><td><span class="pill fix">BUMP AUTO</span></td><td>0.52.3 → 0.52.4 (prebuild)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill fix">MODIF</span></td><td>0.52.3-alpha → 0.52.4-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Décompresser le zip 0.52.4</b> par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Installer + lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester mobile</b> (DevTools → mode responsive → 375px largeur iPhone) :
+        <ul>
+          <li><code>/annonces</code> : la table scrolle horizontalement, le contenu reste lisible</li>
+          <li><code>/app-logs</code> : table 5 colonnes scrollable</li>
+          <li><code>/digest-dashboard</code> : cards stats passent en 1 colonne · table erreurs scrollable</li>
+          <li><code>/audit</code> : les 5 chips presets sont plus compacts (font-size: 11px)</li>
+          <li><code>/changelog</code> : les 17 chips thèmes plus compacts</li>
+          <li><b>Bannière annonces</b> : créer une annonce → en mode mobile elle apparaît en bas avec padding réduit, icône plus petite, et le contenu de la page ne masque plus rien</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump validé</h2>
+  <p>3ème mise à jour consécutive depuis le fix 0.52.1 :</p>
+  <ul>
+    <li>0.52.1 → 0.52.2 (changelog complet) — bump auto ✓</li>
+    <li>0.52.2 → 0.52.3 (téléchargement HTML + thèmes + bannière) — bump auto ✓</li>
+    <li><b>0.52.3 → 0.52.4 (responsive)</b> — bump auto ✓ (script prebuild a tourné dans le build de cette livraison)</li>
+  </ul>
+  <p>Si tu n'as plus eu besoin de Clear site data sur les MAJ précédentes, le réflexe 15 est validé en production.</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.52.4 · 31 mai 2026</p>
+    <p>Repasse responsive sur 6 pages + bannière + modal · 6 classes CSS responsive · 944 tests verts · réflexe 6 et 14 validés</p>
+  </footer>
+
+</div>
+</body>
+</html>

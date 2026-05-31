@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.15.1 (révisée + hotfix Journal)</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .panel.danger{background:#fef0ee;border-color:#f0c4be}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  .pill.fix{background:#dee9fa;color:#1e4a91}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  kbd{background:#f4f7fa;padding:2px 8px;border-radius:4px;border:1px solid #e3e9ee;font-size:11px;font-family:monospace}
+  .wf{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;align-items:center}
+  .wf-step{padding:6px 14px;border-radius:18px;font-size:12px;font-weight:600;color:#fff}
+  .wf-arrow{color:#8a98a8}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION RÉVISÉE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.15.1
+      <small>Module Achats · Palette Cmd+K enrichie · Journal d'activité · Étiquettes patient · Export Excel · <b>Hotfix Journal</b></small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.15.1-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.15.0 (même jour, hotfix)</span>
+      <span><b>Statut :</b> Alpha de test interne — révision avec hotfix Journal</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">🛒 Module Achats (workflow 7 statuts)</span>
+      <span class="badge green">⌘K Préfixes p:/m:/d:/s:/a:</span>
+      <span class="badge green">📰 Journal d'activité</span>
+      <span class="badge green">📊 Export Excel multi-feuille</span>
+      <span class="badge orange">⚠️ Pièges connus documentés</span>
+      <span class="badge orange">🔧 Script PATCH consolidé</span>
+      <span class="badge orange">🔥 Hotfix 0.15.1 : Journal corrigé</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#fonctionnalites">3. Détail des fonctionnalités</a></li>
+      <li><a href="#corrections">4. Corrections post-livraison</a></li>
+      <li><a href="#pieges">5. Pièges connus (à éviter)</a></li>
+      <li><a href="#modele">6. Modèle de données consolidé</a></li>
+      <li><a href="#migration">7. Procédure de migration (3 cas)</a></li>
+      <li><a href="#fichiers">8. Fichiers modifiés / créés</a></li>
+      <li><a href="#reporte">9. Reste à faire</a></li>
+      <li><a href="#roadmap">10. Roadmap 0.16</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.15 livre <b>cinq chantiers fonctionnels</b> autour du workflow opérationnel : module Achats (workflow 7 statuts), recherche globale enrichie avec préfixes, journal d'activité timeline, gestion des étiquettes patient depuis la fiche, et export Excel multi-feuille.</p>
+  <p>Cette note est une <b>révision post-déploiement</b> qui intègre les pièges rencontrés lors de la migration réelle d'une base existante 0.1 → 0.15. Les sections "Pièges connus" et "Procédure de migration" ont été enrichies en conséquence.</p>
+
+  <div class="highlight">
+    <b>2 scripts SQL livrés :</b><br>
+    • <code>aveho-PATCH-vers-0.15.sql</code> — patch pour une base 0.1 existante (recommandé)<br>
+    • <code>aveho-0.15-complet.sql</code> — création from scratch pour une nouvelle base
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers fonctionnels</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles pages (Achats, Journal)</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">Statuts du workflow Achats</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">Préfixes Cmd+K</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">Feuilles Excel exportées</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">Pièges documentés</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Module Achats</td><td><span class="pill new">Livré</span></td><td>Page <code>/achats</code> + tables <code>achats</code> / <code>achats_lignes</code></td></tr>
+      <tr><td>2</td><td>Recherche globale Cmd+K enrichie</td><td><span class="pill new">Livré</span></td><td>Préfixes <code>p:</code> <code>m:</code> <code>d:</code> <code>s:</code> <code>a:</code></td></tr>
+      <tr><td>3</td><td>Journal d'activité</td><td><span class="pill new">Livré</span></td><td>Timeline groupée par jour</td></tr>
+      <tr><td>4</td><td>Étiquettes patient sur la fiche</td><td><span class="pill new">Livré</span></td><td>Modale toggle directe</td></tr>
+      <tr><td>5</td><td>Export Excel multi-feuille</td><td><span class="pill new">Livré</span></td><td>SheetJS via CDN dynamique</td></tr>
+      <tr><td>6</td><td>useAuth tolérant aux 2 schémas</td><td><span class="pill fix">Patch</span></td><td>Gère <code>droits</code> ET <code>permissions_json</code></td></tr>
+      <tr><td>7</td><td>RLS sans dépendance roles</td><td><span class="pill fix">Patch</span></td><td>Scripts 16/17 utilisent <code>mes_structures()</code> uniquement</td></tr>
+      <tr><td>8</td><td>Renommage commandes → achats</td><td><span class="pill fix">Patch</span></td><td>Évite la collision avec la table panier 0.1</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fonctionnalites">3. Détail des fonctionnalités</h2>
+
+  <h3>3.1 Module Achats — workflow 7 statuts</h3>
+  <div class="wf">
+    <span class="wf-step" style="background:#8a98a8">Brouillon</span>
+    <span class="wf-arrow">→</span>
+    <span class="wf-step" style="background:#EF9F27">À valider</span>
+    <span class="wf-arrow">→</span>
+    <span class="wf-step" style="background:#5aa05a">Validée</span>
+    <span class="wf-arrow">→</span>
+    <span class="wf-step" style="background:#185FA5">Commandée</span>
+    <span class="wf-arrow">→</span>
+    <span class="wf-step" style="background:#7a6fb0">Reçue</span>
+  </div>
+  <p>Plus deux statuts annexes : <b>Refusée</b> (motif obligatoire visible par le demandeur) et <b>Annulée</b>. KPIs cliquables par statut + KPI Budget engagé en gradient navy/teal (somme des montants Validée + Commandée + Reçue). Lignes détaillées par commande (table <code>achats_lignes</code>) avec total auto. Notifications via <code>logEvent</code> à chaque transition.</p>
+
+  <h3>3.2 Recherche globale Cmd+K</h3>
+  <p>5 préfixes pour filtrer instantanément le type de résultat : <code>p:</code> patients, <code>m:</code> matériels, <code>d:</code> demandes d'intervention, <code>s:</code> signalements, <code>a:</code> achats. Panneau d'aide visuelle automatique quand l'input est vide. Navigation clavier <kbd>↑↓ Enter Échap</kbd>.</p>
+
+  <h3>3.3 Journal d'activité</h3>
+  <p>Nouvelle page <code>/journal</code> avec timeline visuelle groupée par jour ("Aujourd'hui", "Hier", date longue). Trait vertical avec points colorés par action, phrasé naturel, badges colorés par entité. Filtres : période (1/7/30/90j), entité, utilisateur.</p>
+
+  <h3>3.4 Étiquettes patient sur fiche</h3>
+  <p>Sur la fiche patient, bouton dashed <b>"Gérer"</b> à côté des pastilles d'étiquettes. Ouvre une modale avec toggles directs sur toutes les étiquettes de la collectivité. Mise à jour optimiste + persistance Supabase.</p>
+
+  <h3>3.5 Export Excel multi-feuille</h3>
+  <p>Bouton "Export Excel" sur Statistiques. Charge SheetJS depuis CDN au premier appel, génère <code>bilan-aveho-2026-XX-XX.xlsx</code> avec 7 feuilles : Patients, Matériels, DI, Maintenances, Stock, Achats, Informations (méta + compteurs).</p>
+
+  <h2 id="corrections">4. Corrections post-livraison <span class="pill fix">RÉVISION</span></h2>
+
+  <p>Lors de la migration réelle d'une base 0.1 vers 0.15, plusieurs bugs des scripts SQL initiaux ont été identifiés et corrigés. Le code applicatif a aussi été rendu plus tolérant aux variations de schéma.</p>
+
+  <h3>4.1 Collision de noms — table <code>commandes</code></h3>
+  <p>Le module Achats utilisait initialement les tables <code>commandes</code> et <code>commande_lignes</code>, qui <b>existaient déjà</b> dans la base 0.1 pour le workflow panier magasin. Résultat : le <code>create table if not exists</code> ne créait rien et le code plantait à l'exécution.</p>
+  <p><b>Correction</b> : renommage en <code>achats</code> et <code>achats_lignes</code>. Le code Next.js a été mis à jour (<code>.from("achats")</code> dans les pages concernées). Les tables 0.1 <code>commandes</code> / <code>commande_lignes</code> restent intactes pour le panier magasin.</p>
+
+  <h3>4.2 RLS avec dépendance à <code>ms.role</code></h3>
+  <p>Les scripts SQL initiaux 16 et 17 contenaient des politiques RLS qui joignaient <code>roles r on r.id = ms.role</code>. Or la colonne <code>role</code> de <code>membres_structure</code> est de type <b>text</b> (legacy), tandis que <code>role_id</code> est <b>uuid</b>. La jointure plantait avec <code>ERROR: operator does not exist: uuid = text</code>.</p>
+  <p><b>Correction</b> : les politiques RLS de <code>signalements</code>, <code>achats</code>, <code>achats_lignes</code> n'utilisent plus <b>aucune référence à <code>roles</code></b>. La sécurité repose uniquement sur la fonction <code>mes_structures()</code> qui cloisonne par collectivité.</p>
+
+  <h3>4.3 useAuth qui cherche <code>permissions_json</code> alors que la base a <code>droits</code></h3>
+  <p>La table <code>roles</code> dans les anciennes bases utilise la colonne <code>droits</code> (jsonb). Le code <code>useAuth</code> faisait un <code>select(...,roles(id,nom,permissions_json))</code> qui plantait sur les bases anciennes.</p>
+  <p><b>Correction côté code</b> : <code>useAuth</code> fait un fallback en deux temps. Première requête avec les deux noms tentés (<code>droits,permissions_json</code>), et si la colonne n'existe pas, deuxième requête minimaliste. Le hook accepte les deux formats de droits (array <code>["write","read"]</code> ou objet par module <code>{"stock":["read"]}</code>).</p>
+  <p><b>Correction côté SQL</b> : le script <code>06_utilisateurs.sql</code> ajoute désormais une colonne <code>permissions_json</code> en alias de <code>droits</code>. Pas de migration de données nécessaire, juste un duplicata du contenu.</p>
+
+  <h3>4.4 Page Journal cassée — table <code>evenements</code> qui n'existe pas <span class="pill fix">HOTFIX 0.15.1</span></h3>
+  <p>Première version de la page <code>/journal</code> requêtait une table <code>evenements</code> et des colonnes <code>membres_structure.prenom, nom, email</code> qui n'existent pas dans ta base. Résultat : la page plantait en 404 / 400.</p>
+  <p><b>Correction</b> :</p>
+  <ul>
+    <li><code>app/journal/page.js</code> requête désormais <code>audit_log</code> (la vraie table d'audit)</li>
+    <li>Le nom de l'auteur est récupéré depuis <code>membres_structure.nom_affiche</code> (colonne réelle, vs les 3 champs séparés qu'on imaginait)</li>
+    <li>Fallback sur <code>audit_log.user_email</code> (snapshot conservé) si l'utilisateur n'est plus dans <code>membres_structure</code></li>
+    <li>Bonus : la section "Historique d'activité" de la fiche patient utilisait aussi <code>evenements</code> → corrigée vers <code>audit_log</code></li>
+  </ul>
+  <p>Pas de SQL à exécuter pour cette correction, c'est purement côté code. Re-déploiement du zip 0.15.1 suffit.</p>
+
+  <h3>4.5 Boutons de création invisibles malgré rôle Administrateur</h3>
+  <p>Symptôme : l'utilisateur s'authentifie correctement mais ne voit aucun bouton "Nouveau patient", "Nouvelle commande", etc. sur les pages.</p>
+  <p><b>Cause</b> : le rôle est bien créé dans <code>roles</code> avec la colonne <code>droits</code> (jsonb par module), mais <code>useAuth</code> cherchait <code>permissions_json</code> qui n'existait pas → fallback déclenché → mais sans la bonne info de droits.</p>
+  <p><b>Correction côté SQL</b> : ajout de la colonne <code>permissions_json</code> en alias de <code>droits</code> (voir patch).</p>
+  <p><b>Correction côté code</b> : <code>useAuth</code> accepte les deux noms de colonne et gère les deux formats de droits (array <code>["write"]</code> ou objet par module <code>{"stock":["read"]}</code>).</p>
+
+  <h2 id="pieges">5. Pièges connus (à éviter) <span class="pill brk">IMPORTANT</span></h2>
+
+  <div class="panel danger">
+    <h3 style="margin-top:0;color:#a32f24">⚠️ Piège n°1 : ne PAS supprimer <code>commande_lignes</code></h3>
+    <p>Cette table appartient au workflow panier magasin 0.1. Si tu la supprimes (par exemple en exécutant un mauvais <code>drop table commande_lignes cascade</code>), la page <b>/panier</b> casse avec l'erreur <i>"Could not find the table public.commande_lignes in the schema cache"</i>.</p>
+    <p><b>Récupération</b> : exécute le bloc de récupération du <code>aveho-PATCH-vers-0.15.sql</code> (section "2) Récupération de commande_lignes si supprimée par mégarde").</p>
+  </div>
+
+  <div class="panel danger">
+    <h3 style="margin-top:0;color:#a32f24">⚠️ Piège n°2 : ne PAS toucher à la table <code>commandes</code></h3>
+    <p>La table <code>commandes</code> appartient au workflow panier magasin 0.1. Le module Achats utilise <code>achats</code>, jamais <code>commandes</code>.</p>
+    <p>Si tu te demandes : "quelle table contient mes commandes d'achat fournisseur ?", c'est <code>achats</code>.</p>
+  </div>
+
+  <div class="panel danger">
+    <h3 style="margin-top:0;color:#a32f24">⚠️ Piège n°3 : <code>auth.uid()</code> retourne NULL dans le SQL Editor</h3>
+    <p>Si tu exécutes <code>select auth.uid()</code> dans Supabase SQL Editor, ça retourne NULL. C'est <b>normal</b> : le SQL Editor tourne avec le rôle <code>postgres</code> (admin), pas avec ton compte authentifié. Pour insérer manuellement avec ton user_id, va dans <b>Authentication → Users</b> dans Supabase Dashboard, récupère l'id du compte concerné, et utilise-le en littéral dans tes requêtes SQL.</p>
+  </div>
+
+  <div class="panel danger">
+    <h3 style="margin-top:0;color:#a32f24">⚠️ Piège n°4 : mot de passe en clair dans les logs console</h3>
+    <p>Si tu copies-colles les logs de la console navigateur (F12) pour les partager en debug, <b>vérifie qu'il n'y a pas de mot de passe</b>. Le tag <code>&lt;input type="password" value="XXX"&gt;</code> peut apparaître dans certains messages d'erreur React. Bonne pratique : utiliser le <b>magic link</b> (passwordless) pour l'authentification.</p>
+  </div>
+
+  <div class="panel danger">
+    <h3 style="margin-top:0;color:#a32f24">⚠️ Piège n°5 : la table d'audit s'appelle <code>audit_log</code></h3>
+    <p>Le code applicatif tente d'abord de requêter <code>evenements</code> (nom envisagé pendant la conception), mais en base la table créée par <code>10_audit.sql</code> s'appelle <code>audit_log</code>. Le hotfix 0.15.1 corrige le code en conséquence.</p>
+    <p>Pour insérer des événements depuis le SQL Editor :</p>
+    <pre><code>insert into audit_log (structure_id, user_id, user_email, action, entite, entite_id, details)
+values ('aaaaaaaa-...', '945c466a-...', 'moloscope46@gmail.com', 'creer', 'patient', null, '{}'::jsonb);</code></pre>
+  </div>
+
+  <div class="panel danger">
+    <h3 style="margin-top:0;color:#a32f24">⚠️ Piège n°6 : <code>membres_structure</code> n'a pas <code>prenom / nom / email</code> séparés</h3>
+    <p>Le code envisageait initialement 3 colonnes <code>prenom</code>, <code>nom</code>, <code>email</code> pour afficher le nom de l'auteur dans le Journal. Mais la vraie table a une seule colonne <code>nom_affiche</code> (text). Le hotfix 0.15.1 utilise cette colonne et tombe sur <code>audit_log.user_email</code> en fallback.</p>
+  </div>
+
+  <h2 id="modele">6. Modèle de données consolidé (état 0.15)</h2>
+
+  <p>Voici l'état exact de la base après migration complète. <b>31 tables</b> au total.</p>
+
+  <h3>6.1 Tables d'origine 0.1 (workflow panier magasin)</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><code>structures</code></td><td>Collectivités clientes (EHPAD, hôpitaux…)</td></tr>
+      <tr><td><code>magasins</code></td><td>Points de vente partenaires de la collectivité</td></tr>
+      <tr><td><code>promotions</code></td><td>Offres commerciales en cours</td></tr>
+      <tr><td><code>commandes</code></td><td>Paniers passés depuis les magasins (workflow d'origine)</td></tr>
+      <tr><td><code>commande_lignes</code></td><td>Articles des paniers magasins</td></tr>
+      <tr><td><code>membres_structure</code></td><td>Utilisateurs rattachés à une collectivité</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 Référentiel patients / matériels (0.2 → 0.5)</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Apport</th></tr></thead>
+    <tbody>
+      <tr><td><code>patients</code></td><td>Dossier patient avec hiérarchie chambre/lit/service</td></tr>
+      <tr><td><code>articles</code></td><td>Catalogue matériel et consommables</td></tr>
+      <tr><td><code>materiels</code></td><td>Inventaire physique (S/N, parc, lot)</td></tr>
+      <tr><td><code>depots</code> <code>zones</code></td><td>Lieux de stockage</td></tr>
+      <tr><td><code>stock_articles</code></td><td>Stock par dépôt</td></tr>
+      <tr><td><code>interventions</code></td><td>Demandes d'intervention (DI)</td></tr>
+      <tr><td><code>transferts</code></td><td>Mouvements de matériel inter-dépôts</td></tr>
+      <tr><td><code>etablissements</code> <code>batiments</code> <code>etages</code> <code>services</code> <code>chambres</code> <code>lits</code></td><td>Hiérarchie collectivité complète</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.3 Utilisateurs, rôles, audit (0.6 → 0.11)</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Apport</th></tr></thead>
+    <tbody>
+      <tr><td><code>roles</code></td><td>Rôles configurables avec colonnes <code>droits</code> ET <code>permissions_json</code> (alias pour compat 0.15)</td></tr>
+      <tr><td><code>invitations</code></td><td>Invitations utilisateurs</td></tr>
+      <tr><td><code>membres_etablissements</code> <code>membres_services</code></td><td>Granularité d'accès par établissement et service</td></tr>
+      <tr><td><code>notifications</code></td><td>Cloche de notifications</td></tr>
+      <tr><td><code>audit_log</code></td><td>Journal d'activité (table source du <code>/journal</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.4 Modules métier (0.12 → 0.15)</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Apport</th></tr></thead>
+    <tbody>
+      <tr><td><code>etiquettes</code> <code>patient_etiquettes</code></td><td>Étiquettes libres par patient (0.13)</td></tr>
+      <tr><td><code>maintenances</code></td><td>Maintenances préventives matériel (0.10)</td></tr>
+      <tr><td><code>tags_materiel</code> <code>materiel_tags</code></td><td>Tags libres sur matériel (0.11)</td></tr>
+      <tr><td><code>signalements</code></td><td>Boîte à idées anonyme (0.12) <span class="pill new">0.15</span></td></tr>
+      <tr><td><code>achats</code> <code>achats_lignes</code></td><td>Workflow commandes d'achat fournisseur (0.15) <span class="pill new">NEW</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="migration">7. Procédure de migration (3 cas)</h2>
+
+  <h3>Cas A — Base vierge (nouveau déploiement)</h3>
+  <div class="panel hi">
+    <ol>
+      <li>Dans Supabase → SQL Editor → coller le contenu de <code>aveho-0.15-complet.sql</code> → Run.</li>
+      <li>Cela crée toutes les tables, RLS et quelques données démo.</li>
+      <li>Configure l'auth, déploie le code, c'est parti.</li>
+    </ol>
+  </div>
+
+  <h3>Cas B — Base 0.1 existante (cas Cédric)</h3>
+  <div class="panel ok">
+    <ol>
+      <li>Dans Supabase → SQL Editor → exécuter chaque script de <code>02_referentiel.sql</code> à <code>17_commandes.sql</code> dans l'ordre. Ignorer les warnings <i>"already exists"</i>.</li>
+      <li>Si quelque chose plante, exécuter <code>aveho-PATCH-vers-0.15.sql</code> qui répare tous les cas connus.</li>
+      <li>Vérifier les tables : <code>select tablename from pg_tables where schemaname='public' order by tablename;</code> Tu dois en voir 31.</li>
+    </ol>
+  </div>
+
+  <h3>Cas C — Base 0.15 partielle (récupération)</h3>
+  <div class="panel warn">
+    <ol>
+      <li>Exécuter <code>aveho-PATCH-vers-0.15.sql</code> intégralement. Idempotent.</li>
+      <li>Si /panier plante avec <i>"Could not find the table commande_lignes"</i> → section 2 du patch récupère cette table.</li>
+      <li>Si les boutons de création n'apparaissent pas → section 1 du patch ajoute <code>permissions_json</code>.</li>
+      <li>Si /signalements ou /achats plantent → sections 3 et 4 du patch créent les tables.</li>
+    </ol>
+  </div>
+
+  <h3>Côté code (tous cas)</h3>
+  <div class="panel hi">
+    <ol>
+      <li>Sauvegarder ton <code>.env.local</code>.</li>
+      <li>Décompresser <code>aveho-ec-app.zip</code> dans ton dossier (écrase le code).</li>
+      <li>Remettre ton <code>.env.local</code> (sinon le build plante).</li>
+      <li>PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run build
+npm run dev</code></pre></li>
+      <li>Tests : Cmd+K affiche les 5 préfixes, /achats et /journal accessibles, boutons de création visibles.</li>
+      <li>Mise en ligne : <code>git add . ; git commit -m "Aveho EC 0.15" ; git push</code></li>
+    </ol>
+  </div>
+
+  <h2 id="fichiers">8. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.15.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Patch idempotent depuis une base 0.1 ou partielle</td></tr>
+      <tr><td><code>supabase/aveho-0.15-complet.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Création from scratch (équivalent schema + 02→17)</td></tr>
+      <tr><td><code>supabase/17_commandes.sql</code></td><td><span class="pill imp">RÉÉCRIT</span></td><td>Tables renommées <code>achats</code> / <code>achats_lignes</code></td></tr>
+      <tr><td><code>supabase/16_signalements.sql</code></td><td><span class="pill imp">CORRIGÉ</span></td><td>RLS sans <code>ms.role</code></td></tr>
+      <tr><td><code>supabase/06_utilisateurs.sql</code></td><td><span class="pill imp">MODIF</span></td><td>+ alias <code>permissions_json</code></td></tr>
+      <tr><td><code>app/achats/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page module Achats</td></tr>
+      <tr><td><code>app/journal/page.js</code></td><td><span class="pill new">CRÉÉ + PATCHÉ</span></td><td>Page journal d'activité timeline (corrigée 0.15.1 : audit_log + nom_affiche)</td></tr>
+      <tr><td><code>lib/exportExcel.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Helper export bilan Excel</td></tr>
+      <tr><td><code>lib/useAuth.js</code></td><td><span class="pill fix">PATCHÉ</span></td><td>Tolère <code>droits</code> ET <code>permissions_json</code></td></tr>
+      <tr><td><code>app/GlobalSearch.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ préfixes + source achats + aide visuelle</td></tr>
+      <tr><td><code>app/patient/[id]/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ bouton Gérer + modale étiquettes + audit_log au lieu de evenements</td></tr>
+      <tr><td><code>app/statistiques/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ Export Excel + aperçu impression</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ entrées Journal + Achats</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.14.0-alpha → 0.15.1-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="reporte">9. Reste à faire / en attente</h2>
+  <div class="panel warn">
+    <table>
+      <thead><tr><th>Sujet</th><th>Pourquoi pas livré</th></tr></thead>
+      <tbody>
+        <tr><td>Refactor lourd du code applicatif</td><td>Reporté en 0.17 — risque de régressions sur les 32 pages</td></tr>
+        <tr><td>Composants partagés (Modal, FilterBar, KpiTile)</td><td>Reporté en 0.16 — extraction graduelle moins risquée</td></tr>
+        <tr><td>Mise à jour des notes 0.12 → 0.14</td><td>Reporté en 0.16 — sections "Pièges" à rajouter</td></tr>
+        <tr><td>RLS admin-only sur delete</td><td>Nécessite stabilisation du schéma rôles</td></tr>
+        <tr><td>Intégration Teams / Slack</td><td>Chantier webhook dédié</td></tr>
+        <tr><td>Notifications push navigateur (VAPID)</td><td>Chantier service worker dédié</td></tr>
+        <tr><td>Drag & drop tactile mobile Kanban</td><td>Refactor avec dnd-kit</td></tr>
+        <tr><td>Alertes ML légères</td><td>Spec à préciser</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="roadmap">10. Roadmap suggérée pour 0.16</h2>
+  <div class="panel ok">
+    <ol>
+      <li><b>Nettoyer le legacy schéma rôles</b> — décider entre <code>role</code> (text) vs <code>role_id</code> (uuid), consolider en source unique.</li>
+      <li><b>Extraction de 3 composants partagés évidents</b> — <code>&lt;Modal&gt;</code>, <code>&lt;FilterBar&gt;</code>, <code>&lt;KpiTile&gt;</code>. Première étape vers la 0.17.</li>
+      <li><b>Mise à jour des notes 0.12 → 0.14</b> avec sections "Pièges connus".</li>
+      <li><b>Intégration Teams / Slack</b> — webhook pour relayer les notifs critiques.</li>
+      <li><b>Notifications push navigateur</b> — chantier VAPID.</li>
+      <li><b>Bouton "Commander un remplacement"</b> sur fiche matériel.</li>
+      <li><b>Drag tactile mobile Kanban</b> — refactor avec dnd-kit.</li>
+      <li><b>Modèles d'étiquettes par défaut</b> — seeder de 8-10 étiquettes types.</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.15.1 (révision post-déploiement + hotfix Journal) · 29 mai 2026</p>
+    <p>Document de version révisé — 5 chantiers fonctionnels + 5 correctifs critiques + 6 pièges documentés</p>
+  </footer>
+
+</div>
+</body>
+</html>

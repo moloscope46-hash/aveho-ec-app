@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Patch 0.52.5 — Ciblage établissement + responsive paramétrage</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5e4a8c 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.20)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13px;font-weight:500;color:#bfe6e6;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#bfe6e6}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.sql{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.fix{background:#fef0ee;color:#c0392b}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.sql{background:#fce5d3;color:#7a3315}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — 2 EN 1</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Patch 0.52.5 — Ciblage établissement annonces + responsive paramétrage
+      <small>Annonce ciblable par établissement · audit responsive complet sur toutes les pages paramétrage</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.52.5-alpha</code></span>
+      <span><b>Type :</b> Patch fonctionnel + UX</span>
+      <span><b>Tests :</b> 944 verts</span>
+    </div>
+  </header>
+
+  <h2>Tes 2 demandes</h2>
+  <ol>
+    <li><b>"Y a plus de bâtiment annonce"</b> → ajout du ciblage par établissement sur les annonces (auparavant uniquement structure-wide)</li>
+    <li><b>"Le paramétrage pas du tout responsive"</b> → audit + correction systématique sur toutes les pages paramétrage et admin</li>
+  </ol>
+
+  <h2>1. Ciblage établissement sur les annonces</h2>
+
+  <div class="panel">
+    <p><b>Avant</b> : une annonce était visible par tous les membres de la structure, peu importe leur établissement courant.</p>
+    <p><b>Maintenant</b> : chaque annonce peut être :</p>
+    <ul>
+      <li>🌍 <b>Globale</b> (etablissement_id null) — visible partout dans la structure</li>
+      <li>🏥 <b>Ciblée</b> sur un établissement — visible uniquement quand l'user a cet établissement comme contexte courant</li>
+    </ul>
+    
+    <h3>SQL ajouté (patch 0.52.5)</h3>
+    <pre><code>alter table annonces
+  add column if not exists etablissement_id uuid 
+    references etablissements(id) on delete cascade;
+
+create index if not exists idx_annonces_etab on annonces (etablissement_id);
+
+notify pgrst, 'reload schema';</code></pre>
+    
+    <h3>UI page <code>/annonces</code></h3>
+    <ul>
+      <li>Nouveau champ select dans la modale d'édition : <b>"Cibler un établissement (optionnel)"</b></li>
+      <li>Option par défaut : "🌍 Toute la structure (par défaut)"</li>
+      <li>Options établissements : "🏥 Nom de l'établissement"</li>
+      <li>Nouvelle colonne "Cible" dans le tableau :
+        <ul>
+          <li>Si globale → chip gris "🌐 Toute la structure"</li>
+          <li>Si ciblée → chip bleu "🏥 Nom étab"</li>
+        </ul>
+      </li>
+    </ul>
+    
+    <h3>Filtrage côté <code>AnnoncesBanner</code></h3>
+    <ul>
+      <li>Requête modifiée pour ne charger que :
+        <ul>
+          <li><code>etablissement_id IS NULL</code> (globales) OU</li>
+          <li><code>etablissement_id = auth.etabId</code> (correspondant à l'étab courant de l'user)</li>
+        </ul>
+      </li>
+      <li>Si l'user change d'établissement courant via le menu, les annonces se rechargent automatiquement (deps useEffect incluant <code>auth.etabId</code>)</li>
+    </ul>
+  </div>
+
+  <h2>2. Audit responsive complet — Paramétrage</h2>
+
+  <h3>Pages auditées</h3>
+  <table>
+    <thead><tr><th>Page</th><th>Avant</th><th>Après</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>/parametres</code></td>
+        <td>Boutons mode flex sans wrap (mais déjà OK)</td>
+        <td>RAS — déjà responsive</td>
+      </tr>
+      <tr>
+        <td><code>/parametres-rgpd</code> (962 lignes !)</td>
+        <td>1 table déborde + 1 grid <code>1fr 1fr</code> + 3 flex sans wrap</td>
+        <td>Table wrappée <code>.panel-table</code> · grid passe en <code>.grid-2-mobile-1</code> · 3 <code>flexWrap: "wrap"</code> ajoutés</td>
+      </tr>
+      <tr>
+        <td><code>/etablissement</code></td>
+        <td>3 tables (patients, matériel, DI) sans wrapper scrollable</td>
+        <td>3 tables wrappées <code>.panel-table</code></td>
+      </tr>
+      <tr>
+        <td><code>/etablissement/edition</code></td>
+        <td>Déjà OK</td>
+        <td>RAS</td>
+      </tr>
+      <tr>
+        <td><code>/utilisateurs</code> (589 lignes)</td>
+        <td>3 tables + 1 grid fixe + 1 flex sans wrap</td>
+        <td>3 tables wrappées · grid en classe · flexWrap ajouté</td>
+      </tr>
+      <tr>
+        <td><code>/webhooks</code></td>
+        <td>1 grid <code>1fr 1fr</code> fixe</td>
+        <td>Passe en <code>.grid-2-mobile-1</code></td>
+      </tr>
+      <tr>
+        <td><code>/admin-perf</code></td>
+        <td>1 table sans wrapper</td>
+        <td>Wrappée <code>.panel-table</code></td>
+      </tr>
+      <tr>
+        <td><code>/annonces</code></td>
+        <td>(re-pass car nouvelle colonne)</td>
+        <td>Colonne Cible visible et compacte sur mobile</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Autres pages corrigées (en bonus pendant l'audit)</h3>
+  <p>J'ai trouvé d'autres tables et grids non-responsives en passant, donc corrigées au passage :</p>
+  <ul>
+    <li><code>/audit</code> · <code>/maintenance</code> · <code>/achats</code> · <code>/historique</code> · <code>/transferts</code> · <code>/interventions</code> · <code>/consentements</code> · <code>/patients</code> → tables wrappées</li>
+    <li><code>/achats</code> · <code>/statistiques</code> · <code>/maintenance</code> · <code>GlobalSearch.js</code> · <code>ConflictResolver.js</code> → grids 2col/3col passés en responsive</li>
+  </ul>
+
+  <h3>Nouvelle classe CSS <code>.grid-3-mobile-1</code></h3>
+  <pre><code>/* Grilles 3 col → 1 col sur mobile */
+@media (max-width: 640px) {
+  .grid-3-mobile-1 { grid-template-columns: 1fr !important; }
+}
+/* Sur tablette → 2 col */
+@media (min-width: 641px) and (max-width: 900px) {
+  .grid-3-mobile-1 { grid-template-columns: 1fr 1fr !important; }
+}</code></pre>
+
+  <h2>Récapitulatif chiffré</h2>
+  <table>
+    <thead><tr><th>Élément</th><th>Avant</th><th>Après</th></tr></thead>
+    <tbody>
+      <tr><td>Tables sans wrapper scrollable</td><td>16</td><td>0 (toutes wrappées <code>.panel-table</code>)</td></tr>
+      <tr><td>Grids fixes <code>1fr 1fr</code> ou <code>1fr 1fr 1fr</code></td><td>14</td><td>0 (toutes passées en classe responsive)</td></tr>
+      <tr><td>Flex containers sans <code>flexWrap</code></td><td>4</td><td>0 (ajout automatique)</td></tr>
+      <tr><td>Page <code>/annonces</code> avec ciblage étab</td><td>❌</td><td>✓ avec colonne Cible</td></tr>
+      <tr><td>Bannière filtre par <code>etabId</code></td><td>❌</td><td>✓ + reload auto au switch</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.52.5.sql</code></td><td><span class="pill sql">SQL</span></td><td>+ colonne etablissement_id sur annonces + index</td></tr>
+      <tr><td><code>app/annonces/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>Load étabs · champ Cible modale · colonne Cible table · payload etablissement_id</td></tr>
+      <tr><td><code>app/AnnoncesBanner.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>Filtre étab courant + reload sur switch auth.etabId</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ classe .grid-3-mobile-1 + breakpoint tablette</td></tr>
+      <tr><td>16 fichiers JS (pages + composants)</td><td><span class="pill fix">PATCHÉ</span></td><td>Tables wrappées · grids responsifs · flexWrap ajoutés</td></tr>
+      <tr><td><code>public/sw.js</code></td><td><span class="pill imp">BUMP AUTO</span></td><td>0.52.4 → 0.52.5 (prebuild)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.52.4-alpha → 0.52.5-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application — PowerShell</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Appliquer le patch SQL</b> <code>aveho-PATCH-vers-0.52.5.sql</code> dans Supabase &gt; SQL Editor (1 seconde — juste un ALTER TABLE + index)</li>
+      <li><b>Décompresser le zip 0.52.5</b> par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Installer + lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester ciblage étab annonces</b> :
+        <ul>
+          <li><code>/annonces</code> → Nouvelle annonce → choisir "🏥 Établissement X"</li>
+          <li>Switcher entre établissements via le menu user → la bannière ne s'affiche qu'avec X comme contexte courant</li>
+          <li>Créer une 2ème annonce "🌍 Toute la structure" → visible partout</li>
+          <li>Dans le tableau /annonces, chaque ligne montre maintenant la cible (chip bleu étab ou chip gris "Toute la structure")</li>
+        </ul>
+      </li>
+      <li><b>Tester responsive paramétrage</b> (DevTools → mode responsive → iPhone 12 - 390px) :
+        <ul>
+          <li><code>/utilisateurs</code> : les 3 tables scrollent horizontalement sans déborder</li>
+          <li><code>/etablissement</code> : les tables patients/matériel/DI sont scrollables</li>
+          <li><code>/webhooks</code> : la grille config Teams/Slack passe en 1 colonne</li>
+          <li><code>/parametres-rgpd</code> : table templates scrollable + bandeau filtres wrap</li>
+          <li><code>/admin-perf</code> : table requêtes lentes scrollable</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 4ème consécutif</h2>
+  <p>Depuis le fix structurel 0.52.1 :</p>
+  <ul>
+    <li>0.52.1 → 0.52.2 (changelog complet) ✓</li>
+    <li>0.52.2 → 0.52.3 (téléchargement HTML + thèmes) ✓</li>
+    <li>0.52.3 → 0.52.4 (responsive cleanup) ✓</li>
+    <li><b>0.52.4 → 0.52.5 (cible étab + repasse responsive)</b> ✓</li>
+  </ul>
+  <p>4 MAJ consécutives sans nécessité de Clear site data si tout va bien. Le réflexe 15 est solidement validé.</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Patch Alpha 0.52.5 · 31 mai 2026</p>
+    <p>Ciblage étab annonces + 16 tables wrappées + 14 grids responsifs + 4 flexWrap auto — 944 tests, 1 patch SQL léger</p>
+  </footer>
+
+</div>
+</body>
+</html>

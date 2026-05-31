@@ -1,0 +1,589 @@
+"use client";
+// Page Utilisateurs — Gestion des membres, rôles personnalisables et invitations
+import { useEffect, useState } from "react";
+import { createClient } from "../../lib/supabase";
+import { useAuth } from "../../lib/useAuth";
+import { fmtDate, relativeTime, activityDotColor } from "../../lib/format";
+import TopBar from "../TopBar";
+import { useCart } from "../useCart";
+import { PageHead, Panel, StateMsg, FilterBar, IconButton } from "../ui";
+import { KpiRow } from "../kpis";
+import { logEvent } from "../../lib/events";
+
+import { dialogs } from "../dialogs";
+const MODULES = [
+  { k: "patients", l: "Patients" }, { k: "etablissement", l: "Établissement" },
+  { k: "materiels", l: "Matériel" }, { k: "articles", l: "Articles" },
+  { k: "stock", l: "Stock" }, { k: "transferts", l: "Transferts" },
+  { k: "interventions", l: "Interventions" }, { k: "commandes", l: "Commandes" },
+  { k: "utilisateurs", l: "Utilisateurs" },
+];
+
+export default function Utilisateurs() {
+  const supabase = createClient();
+  const auth = useAuth();
+  const cart = useCart();
+  const [tab, setTab] = useState("membres");
+  const [membres, setMembres] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [invitations, setInvitations] = useState([]);
+  const [services, setServices] = useState([]);
+  const [memServices, setMemServices] = useState([]);
+  // Alpha 0.17.0 : dernière activité par user (depuis v_user_activity)
+  const [lastActivity, setLastActivity] = useState({}); // {user_id: {derniere_activite, nb_actions, actions_7j}}
+  const [loading, setLoading] = useState(true);
+
+  // modale rôle
+  const [roleModal, setRoleModal] = useState(null);
+  const [roleForm, setRoleForm] = useState({ nom: "", description: "", droits: {} });
+  // modale invitation
+  const [inviteModal, setInviteModal] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: "", role_id: "", nom_affiche: "" });
+  // Alpha 0.16.0 : filtre archive + modale info user
+  const [filtreStatut, setFiltreStatut] = useState("actifs"); // 'actifs' | 'archives' | 'tous'
+  const [filtreInvit, setFiltreInvit] = useState("non-archivees"); // 'non-archivees' | 'archivees' | 'toutes'
+  // Alpha 0.20.0 : recherche dans la liste des membres
+  const [searchMembres, setSearchMembres] = useState("");
+  const [userInfoModal, setUserInfoModal] = useState(null);
+  const [userInfoForm, setUserInfoForm] = useState({ nom_affiche: "", telephone: "", poste: "", notes: "", date_arrivee: "" });
+  const [userActivity, setUserActivity] = useState(null); // {nb_actions, derniere_activite, ...}
+  const [err, setErr] = useState("");
+
+  async function loadAll() {
+    const [m, r, i, s, ms] = await Promise.all([
+      supabase.from("membres_structure").select("*, roles(nom)"),
+      supabase.from("roles").select("*").order("created_at"),
+      supabase.from("invitations").select("*, roles(nom)").order("created_at", { ascending: false }),
+      supabase.from("services").select("id,nom"),
+      supabase.from("membres_services").select("*"),
+    ]);
+    setMembres(m.data || []); setRoles(r.data || []); setInvitations(i.data || []);
+    setServices(s.data || []); setMemServices(ms.data || []);
+    // Alpha 0.17.0 : charger la dernière activité de chaque membre (vue v_user_activity)
+    if (m.data?.length) {
+      const userIds = m.data.map(x => x.user_id);
+      const { data: act } = await supabase.from("v_user_activity")
+        .select("user_id, derniere_activite, nb_actions, actions_7j")
+        .in("user_id", userIds);
+      const map = {};
+      (act || []).forEach(a => { map[a.user_id] = a; });
+      setLastActivity(map);
+    }
+    setLoading(false);
+  }
+  useEffect(() => { if (auth.ready) loadAll(); }, [auth.ready]);
+
+  // ---- rôles ----
+  function openRole(r) {
+    if (r) { setRoleForm({ nom: r.nom, description: r.description || "", droits: r.droits || {} }); setRoleModal(r); }
+    else { setRoleForm({ nom: "", description: "", droits: {} }); setRoleModal({}); }
+    setErr("");
+  }
+  function toggleDroit(mod, perm) {
+    setRoleForm((f) => {
+      const cur = new Set(f.droits[mod] || []);
+      cur.has(perm) ? cur.delete(perm) : cur.add(perm);
+      // write implique read
+      if (perm === "write" && cur.has("write")) cur.add("read");
+      const d = { ...f.droits };
+      if (cur.size) d[mod] = [...cur]; else delete d[mod];
+      return { ...f, droits: d };
+    });
+  }
+  async function saveRole() {
+    if (!roleForm.nom) { setErr("Nom du rôle requis."); return; }
+    const payload = { nom: roleForm.nom, description: roleForm.description, droits: roleForm.droits };
+    if (roleModal.id) await supabase.from("roles").update(payload).eq("id", roleModal.id);
+    else await supabase.from("roles").insert({ ...payload, structure_id: auth.structureId });
+    setRoleModal(null); await loadAll();
+  }
+  async function delRole(r) {
+    if (r.systeme) { alert("Rôle système non supprimable."); return; }
+    if (!await dialogs.confirm({ title: "Supprimer ce rôle ?", variant: "danger" })) return;
+    await supabase.from("roles").delete().eq("id", r.id); await loadAll();
+  }
+
+  // ---- membre : changer rôle / services / statut ----
+  async function setMembreRole(userId, roleId) {
+    await supabase.from("membres_structure").update({ role_id: roleId || null }).eq("user_id", userId).eq("structure_id", auth.structureId);
+    await loadAll();
+  }
+  async function toggleActif(m) {
+    await supabase.from("membres_structure").update({ actif: !m.actif }).eq("user_id", m.user_id).eq("structure_id", auth.structureId);
+    await loadAll();
+  }
+  async function toggleService(userId, serviceId, has) {
+    if (has) await supabase.from("membres_services").delete().eq("user_id", userId).eq("service_id", serviceId);
+    else await supabase.from("membres_services").insert({ user_id: userId, service_id: serviceId, structure_id: auth.structureId });
+    await loadAll();
+  }
+  async function toggleRestreint(m) {
+    await supabase.from("membres_structure").update({ restreint_services: !m.restreint_services }).eq("user_id", m.user_id).eq("structure_id", auth.structureId);
+    await loadAll();
+  }
+  // Alpha 0.16.0 : archiver / restaurer un membre
+  async function toggleArchive(m) {
+    const nouvellevaleur = !m.archive;
+    const action = nouvellevaleur ? "Archiver" : "Restaurer";
+    if (!await dialogs.confirm({ title: `${action} ${m.nom_affiche || "ce membre"} ?`, variant: "danger" })) return;
+    await supabase.from("membres_structure")
+      .update({ archive: nouvellevaleur })
+      .eq("user_id", m.user_id)
+      .eq("structure_id", auth.structureId);
+    await logEvent(supabase, auth, {
+      action: nouvellevaleur ? "archiver" : "restaurer",
+      entite: "utilisateur", entite_id: m.user_id,
+      details: { nom: m.nom_affiche },
+    });
+    await loadAll();
+  }
+  // Alpha 0.16.0 : ouvrir la modale info user
+  async function openUserInfo(m) {
+    setUserInfoModal(m);
+    setUserInfoForm({
+      nom_affiche: m.nom_affiche || "",
+      telephone: m.telephone || "",
+      poste: m.poste || "",
+      notes: m.notes || "",
+      date_arrivee: m.date_arrivee || "",
+    });
+    setUserActivity(null);
+    // Charger l'activité depuis audit_log
+    const { data } = await supabase.from("audit_log")
+      .select("created_at")
+      .eq("structure_id", auth.structureId)
+      .eq("user_id", m.user_id)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (data) {
+      const now = Date.now();
+      setUserActivity({
+        nb_actions: data.length,
+        derniere_activite: data[0]?.created_at || null,
+        actions_7j: data.filter(d => now - new Date(d.created_at).getTime() < 7*86400000).length,
+        actions_30j: data.filter(d => now - new Date(d.created_at).getTime() < 30*86400000).length,
+      });
+    } else setUserActivity({ nb_actions: 0, derniere_activite: null, actions_7j: 0, actions_30j: 0 });
+  }
+  async function saveUserInfo() {
+    if (!userInfoModal) return;
+    await supabase.from("membres_structure")
+      .update({
+        nom_affiche: userInfoForm.nom_affiche || null,
+        telephone: userInfoForm.telephone || null,
+        poste: userInfoForm.poste || null,
+        notes: userInfoForm.notes || null,
+        date_arrivee: userInfoForm.date_arrivee || null,
+      })
+      .eq("user_id", userInfoModal.user_id)
+      .eq("structure_id", auth.structureId);
+    setUserInfoModal(null);
+    await loadAll();
+  }
+  // Alpha 0.16.0 : archive / restaure une invitation
+  async function toggleInvitArchive(i) {
+    await supabase.from("invitations").update({ archive: !i.archive }).eq("id", i.id);
+    await loadAll();
+  }
+  async function relancerInvitation(i) {
+    if (!await dialogs.confirm({ title: `Renvoyer l'invitation à ${i.email} ?`, variant: "danger" })) return;
+    try {
+      const roleNom = roles.find((r) => r.id === i.role_id)?.nom || "Utilisateur";
+      const etabNoms = auth.etablissements.map((e) => e.nom);
+      await supabase.functions.invoke("invite-user", {
+        body: { email: i.email, nom: i.nom_affiche, collectivite: auth.structureNom, role: roleNom, etablissements: etabNoms },
+      });
+      alert("Invitation renvoyée.");
+    } catch (e) {
+      alert("Échec : la fonction d'envoi d'email n'est pas configurée.\n" + (e?.message || ""));
+    }
+  }
+
+  // ---- invitations ----
+  async function sendInvite() {
+    if (!inviteForm.email) { setErr("Email requis."); return; }
+    if (!auth.can("inviter")) { setErr("Ton rôle ne permet pas d'inviter."); return; }
+    // 1) enregistrer l'invitation
+    await supabase.from("invitations").insert({
+      structure_id: auth.structureId, email: inviteForm.email, role_id: inviteForm.role_id || null, nom_affiche: inviteForm.nom_affiche,
+    });
+    // 2) tenter l'envoi du mail de bienvenue (Edge Function invite-user)
+    try {
+      const roleNom = roles.find((r) => r.id === inviteForm.role_id)?.nom || "Utilisateur";
+      const etabNoms = auth.etablissements.map((e) => e.nom);
+      await supabase.functions.invoke("invite-user", {
+        body: { email: inviteForm.email, nom: inviteForm.nom_affiche, collectivite: auth.structureNom, role: roleNom, etablissements: etabNoms },
+      });
+    } catch (e) {
+      // si la fonction n'est pas déployée, l'invitation reste enregistrée (envoi manuel possible)
+      console.warn("Email non envoyé (Edge Function invite-user non déployée ?)", e);
+    }
+    // 3) Alpha 0.4 : trace audit + notif à tous
+    await logEvent(supabase, auth, {
+      action: "inviter", entite: "invitation",
+      details: { email: inviteForm.email, nom: inviteForm.nom_affiche },
+      notif: true, notifType: "invitation",
+      titre: "Nouvelle invitation envoyée",
+      message: `${inviteForm.nom_affiche || inviteForm.email} a été invité(e).`,
+      lien: "/utilisateurs",
+    });
+    setInviteModal(false); setInviteForm({ email: "", role_id: "", nom_affiche: "" }); await loadAll();
+  }
+
+  if (!auth.ready) return null;
+
+  const kpis = [
+    { label: "Utilisateurs", value: membres.length, icon: "ti-users", color: "#7a6fb0" },
+    { label: "Actifs", value: membres.filter((m) => m.actif !== false).length, icon: "ti-user-check", color: "#5aa05a" },
+    { label: "Rôles", value: roles.length, icon: "ti-shield-lock", color: "#185FA5" },
+    { label: "Invitations en attente", value: invitations.filter((i) => i.statut === "En attente").length, icon: "ti-mail", color: "#e35d5b" },
+  ];
+  const svcOfUser = (uid) => memServices.filter((x) => x.user_id === uid).map((x) => x.service_id);
+
+  // Alpha 0.17.1 : helpers relativeTime / activityDotColor déplacés dans lib/format.js
+
+  return (
+    <div className="bg-dark">
+      <TopBar cartCount={cart.count} auth={auth} />
+      <div className="wrap">
+        <PageHead small title="Gestion des utilisateurs" sub="Rôles, droits, rattachement aux services et invitations" />
+        <KpiRow tiles={kpis} />
+
+        <div className="seg" style={{ marginBottom: 14 }}>
+          <button className={tab === "membres" ? "on" : ""} onClick={() => setTab("membres")}>Membres</button>
+          <button className={tab === "roles" ? "on" : ""} onClick={() => setTab("roles")}>Rôles & droits</button>
+          <button className={tab === "invitations" ? "on" : ""} onClick={() => setTab("invitations")}>Invitations</button>
+        </div>
+
+        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
+          <>
+            {tab === "membres" && (
+              <Panel>
+                {/* Filtre statut (Alpha 0.16.1 : FilterBar partagé) */}
+                <FilterBar
+                  label="Voir :"
+                  value={filtreStatut}
+                  onChange={setFiltreStatut}
+                  options={[
+                    { v:"actifs", l:"Actifs", count:membres.filter(m=>!m.archive).length },
+                    { v:"archives", l:"Archivés", count:membres.filter(m=>m.archive).length },
+                    { v:"tous", l:"Tous", count:membres.length },
+                  ]}
+                  rightSlot={
+                    <div style={{ position:"relative", display:"inline-flex", alignItems:"center" }}>
+                      <i className="ti ti-search" style={{ position:"absolute", left:10, color:"#8a98a8", fontSize:14, pointerEvents:"none" }} />
+                      <input
+                        type="text"
+                        value={searchMembres}
+                        onChange={(e) => setSearchMembres(e.target.value)}
+                        placeholder="Rechercher (nom, poste, email)…"
+                        aria-label="Rechercher un membre"
+                        style={{ padding:"6px 28px 6px 32px", borderRadius:8, border:"1px solid #e1e6eb", fontFamily:"inherit", fontSize:13, width:240, background:"#fff" }}
+                      />
+                      {searchMembres && (
+                        <button onClick={() => setSearchMembres("")} aria-label="Effacer la recherche" style={{ position:"absolute", right:6, background:"transparent", border:"none", cursor:"pointer", color:"#8a98a8", fontSize:14, padding:4 }}>
+                          <i className="ti ti-x" />
+                        </button>
+                      )}
+                    </div>
+                  }
+                />
+                {(() => {
+                  // Alpha 0.20.0 : filtrage par recherche (nom, poste, email)
+                  const q = searchMembres.trim().toLowerCase();
+                  const visibles = membres.filter(m => {
+                    // Filtre statut
+                    if (filtreStatut === "actifs" && m.archive) return false;
+                    if (filtreStatut === "archives" && !m.archive) return false;
+                    // Filtre recherche
+                    if (!q) return true;
+                    const hay = [
+                      m.nom_affiche,
+                      m.poste,
+                      m.telephone,
+                      m.user_id,
+                      m.roles?.nom,
+                    ].filter(Boolean).join(" ").toLowerCase();
+                    return hay.includes(q);
+                  });
+                  if (visibles.length === 0) {
+                    return <StateMsg>
+                      {q ? `Aucun membre trouvé pour "${searchMembres}".` :
+                       `Aucun membre ${filtreStatut === "archives" ? "archivé" : filtreStatut === "actifs" ? "actif" : ""}.`}
+                    </StateMsg>;
+                  }
+                  return (
+                  <div className="panel-table"><table>
+                    <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Services</th><th>Visibilité</th><th>Statut</th><th></th></tr></thead>
+                    <tbody>
+                      {visibles.map((m) => {
+                        const userSvc = svcOfUser(m.user_id);
+                        return (
+                          <tr key={m.user_id} style={m.archive ? { opacity:.55 } : null}>
+                            <td>
+                              <button onClick={()=>openUserInfo(m)} title="Voir les infos détaillées" style={{ background:"transparent", border:"none", padding:0, cursor:"pointer", fontFamily:"inherit", color:"#142131", fontWeight:600, textAlign:"left", display:"flex", alignItems:"center", gap:8 }}>
+                                {/* Alpha 0.17.0 : pastille d'activité */}
+                                <span title={lastActivity[m.user_id]?.derniere_activite ? `Dernière activité ${relativeTime(lastActivity[m.user_id].derniere_activite)}` : "Aucune activité enregistrée"}
+                                  style={{ width:8, height:8, borderRadius:"50%", background:activityDotColor(lastActivity[m.user_id]?.derniere_activite), flexShrink:0, display:"inline-block" }} />
+                                <span>
+                                  {m.nom_affiche || m.user_id.slice(0, 8)}
+                                  {m.poste && <span style={{ display:"block", fontSize:11, color:"#8a98a8", fontWeight:400, marginTop:1 }}>{m.poste}</span>}
+                                  {lastActivity[m.user_id]?.derniere_activite && (
+                                    <span style={{ display:"block", fontSize:10, color:"#8a98a8", fontWeight:400, marginTop:1 }}>
+                                      {relativeTime(lastActivity[m.user_id].derniere_activite)}
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                            </td>
+                            <td>
+                              <select value={m.role_id || ""} onChange={(e) => setMembreRole(m.user_id, e.target.value)} style={{ height: 32, borderRadius: 8, border: "1px solid #e1e6eb", fontFamily: "inherit" }}>
+                                <option value="">— Aucun —</option>
+                                {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                              </select>
+                            </td>
+                            <td style={{ maxWidth: 240 }}>
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                                {services.map((s) => {
+                                  const has = userSvc.includes(s.id);
+                                  return <span key={s.id} onClick={() => toggleService(m.user_id, s.id, has)}
+                                    style={{ cursor: "pointer", fontSize: 11, padding: "3px 9px", borderRadius: 12, fontWeight: 600, background: has ? "#eef6f6" : "#f1f3f5", color: has ? "#2a5a5a" : "#9aa7b4", border: `1px solid ${has ? "#cfe6e6" : "#e6ebf0"}` }}>
+                                    {has ? <i className="ti ti-check" /> : <i className="ti ti-plus" />} {s.nom}
+                                  </span>;
+                                })}
+                              </div>
+                            </td>
+                            <td>
+                              <span onClick={() => toggleRestreint(m)} style={{ cursor: "pointer", fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12, background: m.restreint_services ? "#FFF3E0" : "#E1F5EE", color: m.restreint_services ? "#8a5300" : "#0F6E56" }}>
+                                {m.restreint_services ? "Ses services" : "Tout l'établissement"}
+                              </span>
+                            </td>
+                            <td>
+                              <span onClick={() => toggleActif(m)} style={{ cursor: "pointer", fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12, background: m.actif !== false ? "#E1F5EE" : "#FDECEA", color: m.actif !== false ? "#0F6E56" : "#c0392b" }}>
+                                {m.actif !== false ? "Actif" : "Inactif"}
+                              </span>
+                            </td>
+                            <td style={{ whiteSpace:"nowrap", textAlign:"right" }}>
+                              <button onClick={()=>openUserInfo(m)} title="Modifier les infos" style={{ background:"transparent", border:"none", color:"#185FA5", cursor:"pointer", fontSize:16, padding:"4px 6px" }}>
+                                <i className="ti ti-info-circle" />
+                              </button>
+                              <button onClick={()=>toggleArchive(m)} title={m.archive ? "Restaurer" : "Archiver"} style={{ background:"transparent", border:"none", color: m.archive ? "#5aa05a" : "#8a98a8", cursor:"pointer", fontSize:16, padding:"4px 6px" }}>
+                                <i className={`ti ${m.archive ? "ti-archive-off" : "ti-archive"}`} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table></div>
+                  );
+                })()}
+              </Panel>
+            )}
+
+            {tab === "roles" && (
+              <Panel>
+                <div className="di-toolbar"><button className="btn-new" onClick={() => openRole(null)}><i className="ti ti-plus" /> Nouveau rôle</button></div>
+                <div className="panel-table"><table>
+                  <thead><tr><th>Rôle</th><th>Description</th><th>Modules autorisés</th><th></th></tr></thead>
+                  <tbody>
+                    {roles.map((r) => (
+                      <tr key={r.id}>
+                        <td style={{ fontWeight: 600 }}>{r.nom}{r.systeme && <span className="tag-type" style={{ marginLeft: 6 }}>système</span>}</td>
+                        <td style={{ fontSize: 12, color: "#5a6776" }}>{r.description}</td>
+                        <td style={{ fontSize: 11, color: "#5a6776" }}>{Object.keys(r.droits || {}).length} module(s)</td>
+                        <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                          <IconButton icon="ti-edit" color="#EF9F27" ariaLabel="Modifier" onClick={() => openRole(r)} />
+                          {!r.systeme && <IconButton icon="ti-trash" color="#C9867F" ariaLabel="Supprimer" onClick={() => delRole(r)} />}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table></div>
+              </Panel>
+            )}
+
+            {tab === "invitations" && (
+              <Panel>
+                <div className="di-toolbar" style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:12 }}>
+                  {auth.can("inviter") && <button className="btn-new" onClick={() => { setErr(""); setInviteModal(true); }}><i className="ti ti-mail" /> Inviter un utilisateur</button>}
+                  <span style={{ marginLeft:"auto" }}>
+                    <FilterBar
+                      label="Voir :"
+                      value={filtreInvit}
+                      onChange={setFiltreInvit}
+                      options={[
+                        { v:"non-archivees", l:"En cours", count:invitations.filter(i=>!i.archive).length },
+                        { v:"archivees", l:"Archivées", count:invitations.filter(i=>i.archive).length },
+                        { v:"toutes", l:"Toutes", count:invitations.length },
+                      ]}
+                    />
+                  </span>
+                </div>
+                {(() => {
+                  const visibles = invitations.filter(i =>
+                    filtreInvit === "toutes" ? true :
+                    filtreInvit === "archivees" ? i.archive :
+                    !i.archive
+                  );
+                  if (visibles.length === 0) return <StateMsg>Aucune invitation {filtreInvit === "archivees" ? "archivée" : filtreInvit === "non-archivees" ? "en cours" : ""}.</StateMsg>;
+                  return (
+                  <div className="panel-table"><table>
+                    <thead><tr><th>Email</th><th>Nom</th><th>Rôle</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+                    <tbody>
+                      {visibles.map((i) => (
+                        <tr key={i.id} style={i.archive ? { opacity:.55 } : null}>
+                          <td>{i.email}</td><td>{i.nom_affiche || "—"}</td><td>{i.roles?.nom || "—"}</td><td>{fmtDate(i.created_at)}</td>
+                          <td>
+                            <span className={`statut ${i.statut === "Acceptée" ? "s-validee" : i.statut === "Expirée" ? "s-refusee" : "s-attente"}`}>{i.statut || "En attente"}</span>
+                          </td>
+                          <td style={{ whiteSpace:"nowrap", textAlign:"right" }}>
+                            {i.statut !== "Acceptée" && !i.archive && (
+                              <button onClick={()=>relancerInvitation(i)} title="Renvoyer l'invitation" style={{ background:"transparent", border:"none", color:"#185FA5", cursor:"pointer", fontSize:16, padding:"4px 6px" }}>
+                                <i className="ti ti-send" />
+                              </button>
+                            )}
+                            <button onClick={()=>toggleInvitArchive(i)} title={i.archive ? "Restaurer" : "Archiver"} style={{ background:"transparent", border:"none", color: i.archive ? "#5aa05a" : "#8a98a8", cursor:"pointer", fontSize:16, padding:"4px 6px" }}>
+                              <i className={`ti ${i.archive ? "ti-archive-off" : "ti-archive"}`} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table></div>
+                  );
+                })()}
+              </Panel>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* modale rôle */}
+      {roleModal && (
+        <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setRoleModal(null)}>
+          <div className="modal">
+            <div className="modal-head">{roleModal.id ? "Modifier le rôle" : "Nouveau rôle"} <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setRoleModal(null)} /></div>
+            <div className="modal-body">
+              {err && <div className="err">{err}</div>}
+              <div className="fld"><label>Nom du rôle</label><input value={roleForm.nom} onChange={(e) => setRoleForm({ ...roleForm, nom: e.target.value })} placeholder="Ex : Infirmier coordinateur" /></div>
+              <div className="fld"><label>Description</label><input value={roleForm.description} onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })} /></div>
+              <label style={{ display: "block", marginBottom: 8 }}>Droits par module</label>
+              <div style={{ border: "1px solid #e6ebf0", borderRadius: 10, overflow: "hidden" }}>
+                {MODULES.map((mod, i) => {
+                  const cur = roleForm.droits[mod.k] || [];
+                  return (
+                    <div key={mod.k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: i % 2 ? "#f9fbfc" : "#fff" }}>
+                      <span style={{ fontSize: 13 }}>{mod.l}</span>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", }}>
+                        {["read", "write"].map((perm) => {
+                          const on = cur.includes(perm);
+                          return <span key={perm} onClick={() => toggleDroit(mod.k, perm)}
+                            style={{ cursor: "pointer", fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12, background: on ? "#eef6f6" : "#f1f3f5", color: on ? "#2a5a5a" : "#9aa7b4", border: `1px solid ${on ? "#cfe6e6" : "#e6ebf0"}` }}>
+                            {perm === "read" ? "Lecture" : "Écriture"}
+                          </span>;
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn-ghost" onClick={() => setRoleModal(null)}>Annuler</button>
+              <button className="btn-save" onClick={saveRole}>Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* modale invitation */}
+      {inviteModal && (
+        <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setInviteModal(false)}>
+          <div className="modal">
+            <div className="modal-head">Inviter un utilisateur <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setInviteModal(false)} /></div>
+            <div className="modal-body">
+              {err && <div className="err">{err}</div>}
+              <div className="fld"><label>Email</label><input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="prenom.nom@etablissement.fr" /></div>
+              <div className="fld"><label>Nom affiché</label><input value={inviteForm.nom_affiche} onChange={(e) => setInviteForm({ ...inviteForm, nom_affiche: e.target.value })} /></div>
+              <div className="fld"><label>Rôle</label>
+                <select value={inviteForm.role_id} onChange={(e) => setInviteForm({ ...inviteForm, role_id: e.target.value })}>
+                  <option value="">— Choisir —</option>{roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                </select>
+              </div>
+              <p style={{ fontSize: 12, color: "#8a98a8" }}>L'utilisateur recevra le lien d'inscription. Dans cette démo, l'invitation est enregistrée mais l'envoi d'email se configure côté Supabase.</p>
+            </div>
+            <div className="modal-foot">
+              <button className="btn-ghost" onClick={() => setInviteModal(false)}>Annuler</button>
+              <button className="btn-save" onClick={sendInvite}>Envoyer l'invitation</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alpha 0.16.0 : modale infos utilisateur */}
+      {userInfoModal && (
+        <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setUserInfoModal(null)}>
+          <div className="modal" style={{ maxWidth: 540 }}>
+            <div className="modal-head">
+              Informations utilisateur
+              <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setUserInfoModal(null)} />
+            </div>
+            <div className="modal-body">
+              {/* Stats d'activité */}
+              {userActivity && (
+                <div style={{ background:"linear-gradient(135deg,#f4f7fa,#eaf2f4)", borderRadius:10, padding:14, marginBottom:14, display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                  <div>
+                    <div style={{ fontSize:11, color:"#6c7a89", fontWeight:700, letterSpacing:.5, textTransform:"uppercase" }}>Dernière activité</div>
+                    <div style={{ fontSize:14, color:"#142131", fontWeight:600, marginTop:3 }}>
+                      {userActivity.derniere_activite ? fmtDate(userActivity.derniere_activite) : <span style={{ color:"#8a98a8", fontWeight:400 }}>Jamais</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, color:"#6c7a89", fontWeight:700, letterSpacing:.5, textTransform:"uppercase" }}>Actions totales</div>
+                    <div style={{ fontSize:14, color:"#142131", fontWeight:600, marginTop:3 }}>{userActivity.nb_actions}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, color:"#6c7a89", fontWeight:700, letterSpacing:.5, textTransform:"uppercase" }}>7 derniers jours</div>
+                    <div style={{ fontSize:14, color:"#185FA5", fontWeight:600, marginTop:3 }}>{userActivity.actions_7j} action{userActivity.actions_7j>1?"s":""}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, color:"#6c7a89", fontWeight:700, letterSpacing:.5, textTransform:"uppercase" }}>30 derniers jours</div>
+                    <div style={{ fontSize:14, color:"#185FA5", fontWeight:600, marginTop:3 }}>{userActivity.actions_30j} action{userActivity.actions_30j>1?"s":""}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="fld">
+                <label>Nom affiché</label>
+                <input value={userInfoForm.nom_affiche} onChange={(e)=>setUserInfoForm({...userInfoForm, nom_affiche:e.target.value})} placeholder="Marie Dupont" />
+              </div>
+              <div className="grid-2-mobile-1" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div className="fld">
+                  <label>Poste / fonction</label>
+                  <input value={userInfoForm.poste} onChange={(e)=>setUserInfoForm({...userInfoForm, poste:e.target.value})} placeholder="Infirmière coordinatrice" />
+                </div>
+                <div className="fld">
+                  <label>Téléphone</label>
+                  <input value={userInfoForm.telephone} onChange={(e)=>setUserInfoForm({...userInfoForm, telephone:e.target.value})} placeholder="06 12 34 56 78" />
+                </div>
+              </div>
+              <div className="fld">
+                <label>Date d'arrivée</label>
+                <input type="date" value={userInfoForm.date_arrivee} onChange={(e)=>setUserInfoForm({...userInfoForm, date_arrivee:e.target.value})} />
+              </div>
+              <div className="fld">
+                <label>Notes internes</label>
+                <textarea value={userInfoForm.notes} onChange={(e)=>setUserInfoForm({...userInfoForm, notes:e.target.value})} rows={3} style={{ width:"100%", padding:9, border:"1px solid #e1e6eb", borderRadius:8, fontFamily:"inherit", fontSize:13, resize:"vertical" }} placeholder="Compétences, disponibilités, infos pratiques…" />
+              </div>
+            </div>
+            <div className="modal-foot">
+              <button className="btn-ghost" onClick={()=>setUserInfoModal(null)}>Fermer</button>
+              <button className="btn-save" onClick={saveUserInfo}>Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

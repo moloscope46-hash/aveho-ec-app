@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.29.1</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#a83a33 70%,#EF9F27 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(168,58,51,.25)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde7c4;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#fff0d4;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#fde7c4}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.fix{background:rgba(239,159,39,.30);border-color:rgba(239,159,39,.6);color:#fff}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .panel.fix{background:#fef0ee;border-color:#f0c4be}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .bug{background:#fff;border-left:4px solid #c0392b;padding:14px 18px;margin:10px 0;border-radius:6px}
+  .bug h3{margin-top:0;color:#c0392b}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.fix{background:#fef0ee;color:#c0392b}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — HOTFIX URGENT</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.29.1
+      <small>Hotfix dashboard /profil — corrections des erreurs 400 et 404 sur audit_log et signalements</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026 (matin)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.29.1-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.29.0</span>
+      <span><b>Statut :</b> Build clean · 242 tests verts · Pas de SQL · Pas de redéploiement Edge Function</span>
+    </div>
+    <div class="badges">
+      <span class="badge fix">🩹 Fix table audit_events → audit_log</span>
+      <span class="badge fix">🩹 Fix signalements.user_id inexistant</span>
+      <span class="badge fix">📋 Doc résolution erreur 503 Service Worker</span>
+      <span class="badge green">242 tests verts (inchangé)</span>
+    </div>
+  </header>
+
+  <h2>Contexte</h2>
+  <p>Au premier lancement de la 0.29.0 en local, 3 erreurs sont apparues dans la console navigateur sur la page <code>/profil</code> :</p>
+
+  <div class="bug">
+    <h3>🐛 Bug #1 — Table <code>audit_events</code> inexistante (404)</h3>
+    <p><b>Symptôme :</b> <code>GET /rest/v1/audit_events?... → 404</code></p>
+    <p><b>Cause :</b> J'ai utilisé le nom <code>audit_events</code> dans la requête, mais la vraie table créée dans le schéma (depuis la 0.4) s'appelle <code>audit_log</code>. Erreur de mémoire en codant rapide.</p>
+    <p><b>Conséquence :</b> Le panneau "Mes 15 dernières actions" ne se chargeait jamais.</p>
+  </div>
+
+  <div class="bug">
+    <h3>🐛 Bug #2 — Colonne <code>signalements.user_id</code> inexistante (400)</h3>
+    <p><b>Symptôme :</b> <code>GET /rest/v1/signalements?...&user_id=eq.xxx → 400 (column does not exist)</code></p>
+    <p><b>Cause :</b> J'ai supposé qu'il y avait un <code>user_id</code> sur la table signalements, mais le schéma a été conçu <b>volontairement anonyme</b> — pas de user_id, seulement un champ <code>signature text</code> optionnel si l'auteur veut signer. Commentaire explicite dans le SQL :</p>
+    <pre><code>-- NOTE : pas de user_id sur cette table. Volontaire pour l'anonymat.</code></pre>
+    <p><b>Conséquence :</b> KPI "Signalements" du dashboard /profil cassé.</p>
+  </div>
+
+  <div class="bug">
+    <h3>🐛 Bug #3 — Service Worker servant 503 Offline sur /maintenance</h3>
+    <p><b>Symptôme :</b> <code>maintenance:1 Failed to load resource: 503 (Offline)</code></p>
+    <p><b>Cause :</b> Le SW PWA a mis en cache une réponse "Hors-ligne" pour <code>/maintenance</code> lors d'un test offline précédent (DevTools → Network → Offline). Le SW ressert cette réponse stockée même quand le réseau est revenu.</p>
+    <p><b>Type :</b> Bug d'usage utilisateur, pas du code Aveho. La logique <code>networkFirst</code> du SW est correcte, mais le cache contient une réponse 503 figée.</p>
+  </div>
+
+  <h2>Corrections apportées</h2>
+
+  <h3>Fix #1 — Bonne table audit_log</h3>
+  <pre><code>// AVANT
+supabase.from("audit_events")...
+
+// APRÈS (0.29.1)
+supabase.from("audit_log")...</code></pre>
+
+  <h3>Fix #2 — KPI signalements retiré</h3>
+  <p>Le KPI "Signalements" du dashboard a été retiré car il n'y a pas de moyen propre de l'implémenter sans casser l'anonymat. Remplacé par "Achats à valider" qui apporte plus de valeur (combien d'achats j'ai soumis qui attendent encore validation).</p>
+  <p><b>Nouveau set de 6 KPIs personnels</b> dans /profil :</p>
+  <table>
+    <thead><tr><th>KPI</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>DI créées</td><td><code>interventions.created_by = userId</code></td></tr>
+      <tr><td>DI urgentes</td><td>filtre <code>urgence === "Urgent"</code></td></tr>
+      <tr><td>DI clôturées</td><td>filtre <code>statut === "Clôturée"</code></td></tr>
+      <tr><td>Achats demandés</td><td><code>achats.demandeur_id = userId</code></td></tr>
+      <tr><td><b>Achats à valider</b> 🆕</td><td>filtre <code>statut === "À valider"</code></td></tr>
+      <tr><td>Transferts</td><td><code>transferts.created_by = userId</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Fix #3 — Documentation côté utilisateur</h3>
+  <p>Procédure pour vider le cache du Service Worker :</p>
+  <div class="panel hi">
+    <ol>
+      <li>Ouvrir Chrome sur <code>http://localhost:3000</code></li>
+      <li><b>F12</b> → onglet <b>Application</b></li>
+      <li>Sidebar gauche → <b>Service Workers</b></li>
+      <li>Clic <b>Unregister</b> à côté de l'entrée Aveho</li>
+      <li><b>Application</b> → <b>Storage</b> → <b>Clear site data</b></li>
+      <li>Fermer et rouvrir l'onglet</li>
+    </ol>
+    <p style="margin-top:12px"><b>Plus rapide</b> : <code>Ctrl + Shift + R</code> (hard refresh ignore cache)</p>
+  </div>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Arrêter</b> <code>npm run dev</code> en cours (Ctrl+C)</li>
+      <li><b>Décompresser</b> le zip 0.29.1 par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Pas de SQL</b> à appliquer (rien n'a changé côté base)</li>
+      <li><b>Pas de redéploiement</b> Edge Function</li>
+      <li><b>Relancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+npm run dev</code></pre>
+      </li>
+      <li><b>Vider le cache navigateur</b> (Service Worker — voir procédure ci-dessus)</li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller dans <code>/profil</code></li>
+          <li>Vérifier que les 6 KPIs s'affichent correctement</li>
+          <li>Vérifier que "Mes 15 dernières actions" se charge</li>
+          <li>Plus aucune erreur dans la console F12</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/profil/page.js</code></td><td><span class="pill fix">FIX</span></td><td>audit_events → audit_log, retrait KPI signalements, ajout KPI achats à valider</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.29.0-alpha → 0.29.1-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Note sur le KPI signalements perdu</h2>
+  <div class="panel warn">
+    <p>Si tu veux quand même tracker "mes signalements" en 0.30+, deux options :</p>
+    <ul>
+      <li><b>Option A — Champ optionnel</b> : ajouter <code>created_by uuid</code> nullable sur <code>signalements</code> + UI "publier anonymement ou avec ma signature" dans le form. Garde l'anonymat par défaut, opt-in pour traçabilité perso.</li>
+      <li><b>Option B — Via signature text</b> : filtrer par <code>signature ilike '%mon nom%'</code>. Pas fiable mais zéro changement de schéma.</li>
+    </ul>
+    <p>Mon avis : Option A propre, à voir si la demande remonte. Pour l'instant on reste anonyme strict.</p>
+  </div>
+
+  <h2>Pas de régression</h2>
+  <div class="panel">
+    <p>✅ Build clean</p>
+    <p>✅ <b>242 tests verts</b> (inchangé, c'était déjà OK en 0.29.0 — les tests ne testaient pas la table directement)</p>
+    <p>✅ Aucune autre page impactée (le fix est isolé à <code>/profil</code>)</p>
+    <p>✅ Pas de breaking change pour les utilisateurs</p>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.29.1 · 31 mai 2026 (matin)</p>
+    <p>Hotfix dashboard /profil — audit_log + KPI signalements retiré + doc SW</p>
+  </footer>
+
+</div>
+</body>
+</html>

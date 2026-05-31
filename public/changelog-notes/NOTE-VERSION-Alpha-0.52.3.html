@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Patch 0.52.3 — Téléchargement HTML + thèmes + bannière refondue</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:960px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fcefda;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fcefda;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fcefda}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:14px 0}
+  @media(max-width:700px){.grid3{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;text-align:center}
+  .kpi .v{font-size:22px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .theme-demo{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;border:1px solid;margin:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — UX AVANCÉE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Patch 0.52.3 — Téléchargement HTML · Thèmes · Bannière refondue
+      <small>Le changelog devient une vraie base de connaissance navigable</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.52.3-alpha</code></span>
+      <span><b>Type :</b> Patch UX (zéro SQL)</span>
+      <span><b>Tests :</b> 944 verts</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📥 Téléchargement HTML par version</span>
+      <span class="badge">🏷️ 17 thèmes catégorisés</span>
+      <span class="badge">🎨 Bannière refondue (modal + carousel + snooze)</span>
+      <span class="badge">📱 Bannière mobile en bas (safe-area iOS)</span>
+      <span class="badge">🔍 Recherche sophistiquée</span>
+    </div>
+  </header>
+
+  <h2>Récapitulatif</h2>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">3</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">67</div><div class="l">Notes HTML téléchargeables</div></div>
+    <div class="kpi"><div class="v">17</div><div class="l">Thèmes catégorisés</div></div>
+    <div class="kpi"><div class="v">1.5 MB</div><div class="l">Taille notes (public/)</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">Fonctions bannière</div></div>
+    <div class="kpi"><div class="v">944</div><div class="l">Tests verts</div></div>
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3>1. Téléchargement HTML des notes de version</h3>
+    <ul>
+      <li><b>67 notes HTML</b> (NOTE-VERSION + NOTE-HOTFIX + NOTE-DIAGNOSTIC) copiées dans <code>public/changelog-notes/</code></li>
+      <li>Chaque version dans le changelog a maintenant un <b>bouton "HTML"</b> avec icône download à droite de la date</li>
+      <li><b>Attribut <code>download</code></b> sur le lien pour forcer le téléchargement plutôt que l'ouverture inline</li>
+      <li><b>Couleur du bouton</b> assortie au type (vert/orange/bleu selon version courante/hotfix/majeure)</li>
+      <li>Champ <code>noteFile</code> ajouté à chaque entrée de <code>versions-data.js</code> avec le nom du fichier</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3>2. Recherche sophistiquée avec catégories thématiques</h3>
+    <ul>
+      <li><b>17 thèmes définis</b> avec icône + couleur dédiée :
+        <div style="margin-top:6px">
+          <span class="theme-demo" style="border-color:#8c2a23;color:#8c2a23;background:#8c2a2312">🛡 RGPD &amp; Consents</span>
+          <span class="theme-demo" style="border-color:#EF9F27;color:#EF9F27;background:#EF9F2712">🛒 Achats &amp; Commandes</span>
+          <span class="theme-demo" style="border-color:#5a8f8f;color:#5a8f8f;background:#5a8f8f12">📱 PWA &amp; Offline</span>
+          <span class="theme-demo" style="border-color:#7a6fb0;color:#7a6fb0;background:#7a6fb012">🎨 UX &amp; Design</span>
+          <span class="theme-demo" style="border-color:#5e4a8c;color:#5e4a8c;background:#5e4a8c12">🔍 Audit &amp; Logs</span>
+          <span class="theme-demo" style="border-color:#EF9F27;color:#EF9F27;background:#EF9F2712">🔔 Notifs &amp; Annonces</span>
+          <span class="theme-demo" style="border-color:#c0392b;color:#c0392b;background:#c0392b12">🛡 Sécurité &amp; Droits</span>
+          <span class="theme-demo" style="border-color:#185FA5;color:#185FA5;background:#185FA512">👤 Patients</span>
+          <span class="theme-demo" style="border-color:#1c5454;color:#1c5454;background:#1c545412">🔧 Maintenance &amp; DI</span>
+          <span class="theme-demo" style="border-color:#EF9F27;color:#EF9F27;background:#EF9F2712">⚡ Perf &amp; Qualité</span>
+          <span class="theme-demo" style="border-color:#7CC8C8;color:#7CC8C8;background:#7CC8C812">📡 Realtime</span>
+          <span class="theme-demo" style="border-color:#7a6fb0;color:#7a6fb0;background:#7a6fb012">📊 Stats &amp; Dashboards</span>
+          <span class="theme-demo" style="border-color:#5aa05a;color:#5aa05a;background:#5aa05a12">↔️ Transferts &amp; Matériel</span>
+          <span class="theme-demo" style="border-color:#185FA5;color:#185FA5;background:#185FA512">🔍 Recherche</span>
+          <span class="theme-demo" style="border-color:#142131;color:#142131;background:#14213112">🖥️ Infrastructure</span>
+          <span class="theme-demo" style="border-color:#7CC8C8;color:#7CC8C8;background:#7CC8C812">📖 Documentation</span>
+        </div>
+      </li>
+      <li><b>Catégorisation automatique</b> : chaque version est analysée par mots-clés et tagguée avec 1 à N thèmes</li>
+      <li><b>Filtres multi-select</b> : on peut cocher plusieurs thèmes (logique OR — affiche les versions qui touchent à au moins UN des thèmes cochés)</li>
+      <li><b>Compteurs par thème</b> en temps réel (ex: "Notifs &amp; Annonces (24)")</li>
+      <li><b>Chips de thème cliquables sur chaque version</b> : clic sur un chip → ajoute/retire le filtre directement</li>
+      <li><b>Recherche enrichie</b> : la recherche scanne aussi les labels de thèmes (taper "rgpd" filtre toutes les versions du thème)</li>
+      <li><b>Voir moins/plus</b> : si une version a > 5 chantiers, affichage tronqué avec bouton "Voir les N autres"</li>
+      <li><b>Bouton "Réinitialiser"</b> qui efface filtre + recherche + thèmes en un clic</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3>3. Bannière annonces — refonte complète</h3>
+    <h4 style="margin-top:12px;font-size:13.5px">Position adaptative</h4>
+    <ul>
+      <li><b>Desktop (≥ 768px)</b> : sticky en haut, sous la TopBar (comportement précédent)</li>
+      <li><b>Mobile (&lt; 768px)</b> : <b>fixed en BAS de page</b> avec respect du <code>safe-area-inset-bottom</code> (notch iOS, barre Android)</li>
+      <li><b>Détection responsive</b> : listener resize qui bascule entre les 2 modes</li>
+      <li><b>Animation slide-in</b> à l'arrivée (depuis haut sur desktop, depuis bas sur mobile)</li>
+    </ul>
+
+    <h4 style="font-size:13.5px">Design visuel</h4>
+    <ul>
+      <li><b>Gradient subtil</b> sur le fond (au lieu d'aplat) selon le niveau</li>
+      <li><b>Icône circulaire</b> 38px avec accent color (au lieu de simple icône)</li>
+      <li><b>Bordure colorée</b> de 3px en haut sur mobile (séparateur visuel fort)</li>
+      <li><b>Shadow forte</b> (vers le haut sur mobile, vers le bas sur desktop)</li>
+      <li><b>3 niveaux distincts</b> :
+        <ul>
+          <li>info → dégradé bleu clair, accent <code>#185FA5</code></li>
+          <li>warning → dégradé orange pâle, accent <code>#EF9F27</code></li>
+          <li>critique → dégradé rouge pâle, accent <code>#c0392b</code></li>
+        </ul>
+      </li>
+    </ul>
+
+    <h4 style="font-size:13.5px">Carousel si plusieurs annonces</h4>
+    <ul>
+      <li>Boutons <b>← →</b> de navigation à droite</li>
+      <li><b>Compteur "1/3"</b> avec pill colorée à côté du titre</li>
+      <li><b>Dots indicateurs</b> en bas de la bannière (style swipe iOS) — le dot actif est étiré</li>
+    </ul>
+
+    <h4 style="font-size:13.5px">Actions enrichies</h4>
+    <ul>
+      <li><b>Bouton "Détails"</b> (desktop only, si message > 80 char) → ouvre un modal complet</li>
+      <li><b>Menu kebab (3 points)</b> avec dropdown :
+        <ul>
+          <li>👁 Voir détails (ouvre le modal)</li>
+          <li>🕐 Me rappeler dans 1h <i>(snooze persistant localStorage)</i></li>
+          <li>📅 Demain <i>(snooze 24h)</i></li>
+          <li>❌ Ne plus afficher (dismiss définitif via annonces_dismissees)</li>
+        </ul>
+      </li>
+      <li><b>Croix fermer rapide</b> à droite</li>
+    </ul>
+
+    <h4 style="font-size:13.5px">Modal détails</h4>
+    <ul>
+      <li>Avatar circulaire grand format (48px) avec icône niveau</li>
+      <li>Titre + niveau en uppercase</li>
+      <li><b>Message complet</b> avec <code>white-space: pre-wrap</code> (préserve les retours à la ligne)</li>
+      <li><b>Métadonnées</b> : période d'affichage + auteur</li>
+      <li>3 boutons d'action : Rappel 1h · Ne plus afficher · Fermer</li>
+    </ul>
+
+    <h4 style="font-size:13.5px">Snooze persistant</h4>
+    <ul>
+      <li><b>localStorage key</b> <code>aveho_annonces_snooze</code> = <code>{ annonceId: timestampExpiration }</code></li>
+      <li>Au chargement, l'annonce est filtrée si <code>snoozedMap[id] > Date.now()</code></li>
+      <li>Permet de "reporter" une annonce sans la dismisser définitivement</li>
+      <li>Auto-réapparaît à la prochaine session passé le délai</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>public/changelog-notes/</code></td><td><span class="pill new">CRÉÉ</span></td><td>67 fichiers HTML (1.5 MB) : NOTE-VERSION + NOTE-HOTFIX + NOTE-DIAGNOSTIC</td></tr>
+      <tr><td><code>app/changelog/versions-data.js</code></td><td><span class="pill imp">RÉGÉN</span></td><td>+ themes par version · + noteFile · + export THEME_LABELS (17 thèmes)</td></tr>
+      <tr><td><code>app/changelog/page.js</code></td><td><span class="pill imp">RÉÉCRIT</span></td><td>+ filtres multi-thèmes · + recherche enrichie · + voir plus/moins · + bouton download HTML par version</td></tr>
+      <tr><td><code>app/AnnoncesBanner.js</code></td><td><span class="pill imp">RÉÉCRIT</span></td><td>125 → 398 lignes : responsive mobile/desktop · carousel · modal détails · snooze · menu kebab · animation slide-in</td></tr>
+      <tr><td><code>public/sw.js</code></td><td><span class="pill imp">BUMP AUTO</span></td><td>0.52.2 → 0.52.3 (prebuild)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.52.2-alpha → 0.52.3-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application — PowerShell</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Décompresser le zip 0.52.3</b> par-dessus <code>C:\aveho-ec-app\</code> — il inclut le dossier <code>public/changelog-notes/</code> avec les 67 notes HTML.</li>
+      <li><b>Installer + lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><b>Téléchargement HTML</b> : sur <code>/changelog</code>, cliquer le bouton "HTML" à droite d'une version → le fichier <code>NOTE-VERSION-Alpha-0.X.html</code> se télécharge</li>
+          <li><b>Filtres thèmes</b> : sur <code>/changelog</code>, cliquer "RGPD &amp; Consents" → ne reste que les 13 versions du thème · cliquer aussi "Achats" → 13 + autres versions Achats (logique OR)</li>
+          <li><b>Recherche</b> : taper "rgpd" → filtre les versions du thème + celles qui mentionnent RGPD dans titre/chantiers</li>
+          <li><b>Chips de thème</b> : sur une version, cliquer un chip thème → ajoute ce thème au filtre</li>
+          <li><b>Voir plus</b> : sur la 0.50 (5+ chantiers), cliquer "Voir les N autres" → expand</li>
+          <li><b>Bannière mobile</b> : ouvrir DevTools → mode responsive → largeur &lt; 768px → la bannière apparaît en BAS de la page (animation slide-up)</li>
+          <li><b>Carousel</b> : créer 2-3 annonces dans <code>/annonces</code> → la bannière affiche "1/3" avec boutons ← → et dots</li>
+          <li><b>Modal détails</b> : créer une annonce avec un message long (&gt; 80 char) → bouton "Détails" apparaît → modal s'ouvre</li>
+          <li><b>Snooze</b> : menu kebab → "Me rappeler dans 1h" → l'annonce disparaît, réapparaîtra dans 1h (testable en clear localStorage)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Test SW auto-bump (2ème validation)</h2>
+  <div class="panel warn">
+    <p>2ème mise à jour depuis le hotfix 0.52.1 :</p>
+    <ul>
+      <li>0.52.1 → 0.52.2 : OK (vu sur la livraison précédente, attente confirmation user)</li>
+      <li><b>0.52.2 → 0.52.3</b> : si le SW se met à jour proprement sans Clear site data, le réflexe 15 est validé en production</li>
+    </ul>
+    <p>Le toast VersionCheck vert "Mise à jour disponible — 0.52.3-alpha" devrait apparaître 10s après le chargement. Cliquer "Recharger" → tout devient propre.</p>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Patch Alpha 0.52.3 · 31 mai 2026</p>
+    <p>3 chantiers UX · 67 notes HTML téléchargeables · 17 thèmes · Bannière responsive avec 7 fonctions</p>
+  </footer>
+
+</div>
+</body>
+</html>

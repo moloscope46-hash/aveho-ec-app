@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.9</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.amber{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f5d09f}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.9
+      <small>Sélection multiple · Calendrier DI · Étiquettes patients · Comparaison inter-établissements</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.9.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.8 (29/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">☑️ Sélection multiple + bulk actions</span>
+      <span class="badge green">📅 Calendrier DI mensuel</span>
+      <span class="badge green">🏷️ Étiquettes patients</span>
+      <span class="badge green">⚖️ Comparaison inter-étab</span>
+      <span class="badge amber">⚠ Nouveau script SQL requis</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#bulk">3. Sélection multiple + bulk actions</a></li>
+      <li><a href="#calendrier">4. Calendrier des interventions</a></li>
+      <li><a href="#etiquettes">5. Étiquettes patients</a></li>
+      <li><a href="#comparaison">6. Comparaison inter-établissements</a></li>
+      <li><a href="#delta">7. Delta vs Alpha 0.8</a></li>
+      <li><a href="#fichiers">8. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">9. Procédure de mise à jour</a></li>
+      <li><a href="#reporte">10. Reste à faire</a></li>
+      <li><a href="#roadmap">11. Roadmap suggérée 0.10</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.9 livre quatre chantiers à forte valeur métier : la <b>sélection multiple</b> avec actions en masse dans toutes les listes Crud, un <b>calendrier mensuel</b> des interventions, les <b>étiquettes colorées</b> personnalisables pour catégoriser les patients, et des <b>graphes de comparaison</b> entre établissements d'une même collectivité.</p>
+
+  <div class="highlight">
+    <b>Cette version introduit 2 nouvelles tables SQL</b> (<code>etiquettes</code> et <code>patient_etiquettes</code>). Un script de migration unique (<code>13_etiquettes.sql</code>) à exécuter dans Supabase. Sans ce script, la page Étiquettes ne fonctionnera pas mais le reste de l'app continuera normalement.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">4</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles pages (Calendrier, Étiquettes)</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles tables SQL</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Bulk actions (Export, Supprimer, Désélectionner)</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">Étiquettes démo pré-installées</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Graphes inter-étab (DI + transferts)</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Sélection multiple + bulk actions</td><td><span class="pill new">Livré</span></td><td>Toutes les listes Crud (Articles, Matériels, Dépôts, etc.)</td></tr>
+      <tr><td>2</td><td>Calendrier des interventions</td><td><span class="pill new">Livré</span></td><td>Nouvelle page <code>/calendrier</code>, vue mensuelle</td></tr>
+      <tr><td>3</td><td>Étiquettes patients</td><td><span class="pill new">Livré</span></td><td>Nouvelle page <code>/etiquettes</code> + intégration dans Patients</td></tr>
+      <tr><td>4</td><td>Graphes de comparaison inter-établissements</td><td><span class="pill new">Livré</span></td><td>Sur la page Statistiques, si ≥ 2 établissements</td></tr>
+      <tr><td>5</td><td>Mode kiosque / présentation</td><td><span class="pill brk">0.10</span></td><td>Cosmétique, à la demande</td></tr>
+      <tr><td>6</td><td>Pagination serveur</td><td><span class="pill brk">+5000 lignes</span></td><td>Pas encore nécessaire</td></tr>
+      <tr><td>7</td><td>Notifications push navigateur</td><td><span class="pill brk">Dédié</span></td><td>Push API + VAPID</td></tr>
+      <tr><td>8</td><td>Écriture hors-ligne / domaine email / récap quotidien</td><td><span class="pill brk">En file</span></td><td>Selon ton besoin</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="bulk">3. Sélection multiple + bulk actions <span class="pill new">NOUVEAU</span></h2>
+  <p>Dans toutes les listes Crud, une <b>colonne de cases à cocher</b> apparaît en première position. Au moins une coche sélectionnée fait apparaître en haut de la liste une <b>barre noire bulk</b> avec le décompte et les actions disponibles.</p>
+
+  <h3>Actions disponibles</h3>
+  <table>
+    <thead><tr><th>Action</th><th>Effet</th><th>Disponible pour</th></tr></thead>
+    <tbody>
+      <tr><td><b>Exporter CSV</b></td><td>Exporte uniquement les lignes sélectionnées</td><td>Tous les rôles avec accès lecture</td></tr>
+      <tr><td><b>Supprimer</b></td><td>Confirmation puis suppression définitive en batches de 100</td><td>Rôles avec droit "supprimer"</td></tr>
+      <tr><td><b>Désélectionner</b></td><td>Vide la sélection (sans supprimer)</td><td>Tous</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Header "tout sélectionner"</h3>
+  <p>La case à cocher en haut de colonne sélectionne ou désélectionne <b>toutes les lignes visibles de la page courante</b> (pas toute la liste paginée). C'est volontaire pour éviter qu'un clic involontaire embarque 200 lignes invisibles.</p>
+
+  <h3>Suppression en batches</h3>
+  <p>Pour respecter les limites Supabase, le bulk delete envoie les IDs par tranches de 100 en boucle. Tu peux donc sans risque sélectionner 500 lignes — la suppression se fera en 5 requêtes séquentielles, avec rechargement automatique de la liste à la fin.</p>
+
+  <h2 id="calendrier">4. Calendrier des interventions <span class="pill new">NOUVEAU</span></h2>
+  <p>Nouvelle page <code>/calendrier</code> dans le menu Espace Collectivité (icône <i class="ti ti-calendar"></i>). Affiche une <b>vue mensuelle</b> des DI sur 7 colonnes (lundi en première colonne, à la française).</p>
+
+  <h3>Comportement</h3>
+  <ul>
+    <li>Le jour <b>aujourd'hui</b> est mis en évidence avec un fond turquoise clair et une bordure</li>
+    <li>Les jours hors mois courant sont grisés</li>
+    <li>Chaque DI apparaît comme une <b>pastille colorée</b> selon son statut (rouge = Nouvelle, orange = En cours, vert = Résolue, gris = Annulée)</li>
+    <li>Max <b>3 DI affichées par jour</b> avec un compteur "+N autre(s)" si dépassement</li>
+    <li>Clic sur une pastille → redirection vers la page Interventions</li>
+    <li>Tooltip au survol avec numéro de DI, type, statut</li>
+  </ul>
+
+  <h3>Navigation</h3>
+  <p>Boutons <b>Précédent</b> / <b>Suivant</b> pour parcourir les mois, bouton <b>Aujourd'hui</b> pour revenir au mois courant. À chaque changement, on recharge les DI sur la période visible (avec un mois de marge avant/après pour la fluidité).</p>
+
+  <h3>Positionnement des DI</h3>
+  <p>Une DI est positionnée sur sa <code>due_date</code> si elle est renseignée, sinon sur <code>created_at</code>. Si tu veux une vue purement planning, renseigne les <code>due_date</code> ; sinon le calendrier reste utile en vue historique.</p>
+
+  <h2 id="etiquettes">5. Étiquettes patients <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>5.1 Architecture SQL</h3>
+  <p>Deux nouvelles tables (RLS activée, scope collectivité) :</p>
+  <pre><code>etiquettes (
+  id, structure_id, libelle, couleur, description
+)
+
+patient_etiquettes (
+  id, patient_id, etiquette_id, structure_id, created_at
+)</code></pre>
+  <p>La relation est <b>n:n</b> : un patient peut porter plusieurs étiquettes, une étiquette peut être appliquée à plusieurs patients. La contrainte unique <code>(patient_id, etiquette_id)</code> empêche les doublons.</p>
+
+  <h3>5.2 Page de gestion des étiquettes</h3>
+  <p>Nouvelle page <code>/etiquettes</code> dans le menu Administration. Accessible uniquement aux <b>Administrateurs</b> (un message s'affiche sinon). Permet de créer / modifier / supprimer des étiquettes :</p>
+  <ul>
+    <li><b>Libellé</b> obligatoire (ex: "Chronique", "Sortie prévue")</li>
+    <li><b>Couleur</b> à choisir dans une palette de 9 couleurs Aveho (cliquables avec aperçu en taille réelle)</li>
+    <li><b>Description</b> optionnelle</li>
+    <li>Aperçu live de la tag pendant la saisie</li>
+  </ul>
+  <p>5 étiquettes démo sont pré-insérées par le script SQL pour la collectivité de test : Chronique, Sortie prévue, Allergie connue, À surveiller, Isolement.</p>
+
+  <h3>5.3 Application aux patients</h3>
+  <p>Sur la page Patients, une icône <i class="ti ti-tag"></i> apparaît dans la colonne actions. Au clic, une modale s'ouvre listant toutes les étiquettes de la collectivité. Clic sur une étiquette = bascule (ajoute ou retire) — <b>les changements sont enregistrés immédiatement</b>, pas besoin de bouton "Valider".</p>
+  <p>Les étiquettes appliquées s'affichent comme des tags colorés sous le nom du patient dans la liste, en utilisant la couleur définie pour chacune.</p>
+
+  <h3>5.4 Cas d'usage métier</h3>
+  <p>Exemples concrets de ce que ça permet :</p>
+  <ul>
+    <li>Marquer les patients en <b>isolement</b> pour limiter les visites</li>
+    <li>Identifier les <b>sorties prévues</b> dans la semaine pour préparer le matériel à reprendre</li>
+    <li>Repérer les <b>allergies connues</b> avant prescription</li>
+    <li>Tagger les patients <b>à surveiller</b> pour les tournées de nuit</li>
+  </ul>
+  <p>Comme les étiquettes sont définies par collectivité, chaque structure peut établir son propre référentiel selon ses procédures internes.</p>
+
+  <h2 id="comparaison">6. Comparaison inter-établissements <span class="pill new">NOUVEAU</span></h2>
+  <p>Sur la page Statistiques, un nouveau bloc <b>Comparaison inter-établissements</b> apparaît automatiquement <b>si la collectivité a au moins 2 établissements</b>. Sinon, le bloc reste caché (pas de pollution UI pour les mono-sites).</p>
+
+  <h3>Deux graphes de comparaison</h3>
+  <ul>
+    <li><b>Interventions par établissement</b> — barres rouges, 6 derniers mois, classées par volume décroissant</li>
+    <li><b>Transferts par établissement</b> — barres bleues, idem</li>
+  </ul>
+  <p>Permet d'identifier rapidement quel établissement génère le plus de DI ou le plus de transferts, pour équilibrer les ressources ou enquêter sur les écarts.</p>
+
+  <h2 id="delta">7. Delta vs Alpha 0.8</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Sélection multiple dans <code>Crud</code></td><td><span class="pill new">NEW</span></td><td>Checkbox par ligne + checkbox "tout sélectionner"</td></tr>
+      <tr><td>Barre de bulk actions</td><td><span class="pill new">NEW</span></td><td>Export CSV, Supprimer (par batches de 100), Désélectionner</td></tr>
+      <tr><td>Page <code>/calendrier</code></td><td><span class="pill new">NEW</span></td><td>Vue mensuelle des DI</td></tr>
+      <tr><td>Page <code>/etiquettes</code></td><td><span class="pill new">NEW</span></td><td>Gestion des étiquettes (admin uniquement)</td></tr>
+      <tr><td>Modale étiquettes dans Patients</td><td><span class="pill new">NEW</span></td><td>Application toggle avec persistance instantanée</td></tr>
+      <tr><td>Affichage tags sur la liste Patients</td><td><span class="pill new">NEW</span></td><td>Sous le nom, dans les couleurs définies</td></tr>
+      <tr><td>Graphes inter-étab sur Statistiques</td><td><span class="pill new">NEW</span></td><td>Conditionnel : si ≥ 2 établissements</td></tr>
+      <tr><td>Script SQL <code>13_etiquettes.sql</code></td><td><span class="pill new">NEW</span></td><td>2 tables + RLS + 5 étiquettes démo</td></tr>
+      <tr><td>2 entrées menu (Calendrier, Étiquettes)</td><td><span class="pill imp">IMP</span></td><td>TopBar mise à jour</td></tr>
+      <tr><td>CSS bulk-bar + cal-grid + etq-tag</td><td><span class="pill imp">IMP</span></td><td>Avec variantes mode foncé</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fichiers">8. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/13_etiquettes.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Tables etiquettes + patient_etiquettes avec RLS</td></tr>
+      <tr><td><code>app/calendrier/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page calendrier mensuel des DI</td></tr>
+      <tr><td><code>app/etiquettes/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>CRUD étiquettes (admin)</td></tr>
+      <tr><td><code>app/crud.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ sélection multiple, bulk delete, bulk export</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ chargement étiquettes, modale toggle, affichage tags</td></tr>
+      <tr><td><code>app/statistiques/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ section comparaison inter-établissements</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ entrées Calendrier DI + Étiquettes</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill imp">MODIF</span></td><td>+ styles .bulk-bar, .cal-grid, .etq-tag</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.8.0-alpha → 0.9.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="migration">9. Procédure de mise à jour depuis Alpha 0.8</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sauvegarde ton dossier <code>C:\aveho-ec-app</code>.</li>
+      <li>Décompresse le nouveau zip par-dessus.</li>
+      <li><b>Dans Supabase SQL Editor</b> : exécute <code>supabase/13_etiquettes.sql</code>.<br>
+        Sans ce script, la page Étiquettes échouera mais le reste de l'app fonctionne normalement.</li>
+      <li>Dans PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre></li>
+      <li><b>Tests rapides</b> :
+        <ul>
+          <li>Va sur Articles : <b>coche 2 lignes</b> → la barre noire bulk apparaît avec les actions</li>
+          <li>Clique <b>Exporter CSV</b> → tu obtiens un fichier avec seulement les 2 lignes</li>
+          <li>Va sur <code>/calendrier</code> : tu vois la vue mensuelle des DI</li>
+          <li>Navigue avec Précédent / Suivant / Aujourd'hui</li>
+          <li>Va sur <code>/etiquettes</code> (si tu es Admin) : 5 étiquettes démo</li>
+          <li>Sur la liste Patients, clique <i class="ti ti-tag"></i> sur un patient → modale d'application</li>
+          <li>Sur Statistiques, scroll en bas : si tu as plusieurs établissements, les graphes comparatifs apparaissent</li>
+        </ul>
+      </li>
+      <li>Mise en ligne :<pre><code>git add .
+git commit -m "Aveho EC Alpha 0.9"
+git push</code></pre></li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">10. Reste à faire / en attente</h2>
+  <div class="panel warn">
+    <p>Toujours les mêmes sujets en file, plus 3 qui ont été reportés en arbitrage pour cette 0.9 :</p>
+    <table>
+      <thead><tr><th>Sujet</th><th>Pourquoi pas livré</th></tr></thead>
+      <tbody>
+        <tr><td>Mode kiosque / présentation</td><td>Cosmétique, pas urgent. Pour 0.10 si besoin.</td></tr>
+        <tr><td>Pagination serveur</td><td>Inutile sous 5000 lignes/table. Pagination client suffit.</td></tr>
+        <tr><td>Notifications push navigateur</td><td>Nécessite Push API + Service Worker + clés VAPID. Chantier dédié.</td></tr>
+        <tr><td>Écriture hors-ligne différée</td><td>Pas de besoin métier confirmé, risque de désynchro élevé.</td></tr>
+        <tr><td>Domaine email pro</td><td>Côté toi (achat de domaine).</td></tr>
+        <tr><td>Récap quotidien email des notifs</td><td>Cron Supabase + Edge Function dédiée.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="roadmap">11. Roadmap suggérée pour Alpha 0.10</h2>
+  <div class="panel ok">
+    <p>Suggestions pour la prochaine version, à classer par priorité :</p>
+    <ol>
+      <li><b>Mode kiosque</b> — TopBar masquée, KPIs en grand pour affichage en salle de pause</li>
+      <li><b>Calendrier en vue semaine</b> (en plus de la vue mensuelle actuelle)</li>
+      <li><b>Calendrier de la maintenance préventive</b> (entretien périodique du matériel)</li>
+      <li><b>Filtres par étiquette</b> sur la liste Patients (rechercher tous les "Chroniques")</li>
+      <li><b>Templates d'étiquettes</b> proposés à la création d'une collectivité</li>
+      <li><b>Notifications push navigateur</b> (chantier dédié avec clés VAPID)</li>
+      <li><b>Mode lecture seule pour formateurs</b> (donner accès sans risque)</li>
+      <li><b>Statistiques personnalisées</b> — l'utilisateur choisit quels graphes afficher</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.9 · 29 mai 2026</p>
+    <p>Document de version interne — phase d'enrichissement fonctionnel</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.51.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5a8f8f 50%,#7CC8C8 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#bfe6e6}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.sql{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#fcefda}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.sql{background:#fff8ec;border-color:#f0d59f}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.sql{background:#fce5d3;color:#7a3315}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:14px 20px;margin:14px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:36px; height:36px; line-height:36px; text-align:center; border-radius:50%; background:var(--teal); color:var(--navy); font-weight:700; margin-right:10px; font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — POST-50</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.51.0
+      <small>Statut système · Stats annonces · Recherche audit · Validations en attente · Migration confirm() finale</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.51.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.50.0</span>
+      <span><b>Statut :</b> Build clean · 919 tests verts</span>
+    </div>
+    <div class="badges">
+      <span class="badge">💚 AQ - Statut système (page /statut)</span>
+      <span class="badge">📊 AZ - Stats annonces (taux dismiss)</span>
+      <span class="badge">🔍 BA - Recherche audit étendue (details jsonb)</span>
+      <span class="badge">✅ BB - Mes validations en attente (widget accueil)</span>
+      <span class="badge">💬 AA - Migration confirm() FINALE</span>
+      <span class="badge sql">📝 1 patch SQL (vue + index)</span>
+      <span class="badge green">+26 tests Vitest</span>
+      <span class="badge green">✅ Test runtime 7/7 OK</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>Première version après le cap des 50. 5 chantiers fonctionnels, <b>1 patch SQL léger</b> (1 vue + 1 index GIN). Tout polish/complétion : finir la migration confirm() (AA fini une bonne fois pour toutes), ajouter des stats utiles sur les annonces de la 0.50, étendre la recherche audit qui était partielle, créer la page Statut système, exploiter la vue v_achats_a_valider créée en 0.50.</p>
+
+  <div class="highlight">
+    <b>5 modules livrés :</b><br/>
+    <b>AQ</b> Endpoint <code>/api/health</code> + page <code>/statut</code> avec ping Supabase PostgreSQL + REST + Realtime (WebSocket côté client). Refresh 30s, historique 12 derniers checks en mémoire visualisé en mini bandeaux colorés.<br/>
+    <b>AZ</b> Vue SQL <code>v_annonces_stats</code> qui calcule nb_destinataires, nb_dismisses, taux_dismiss_pct par annonce. Affichée sur la page admin <code>/annonces</code> avec barre de progression et pastille de couleur.<br/>
+    <b>BA</b> Recherche audit étendue : le filtre cherche maintenant aussi dans <code>details::text</code> (le JSON sérialisé). Index GIN ajouté sur <code>audit_log.details</code> pour les requêtes structurées.<br/>
+    <b>BB</b> Widget <code>&lt;MesValidationsEnAttente /&gt;</code> sur l'accueil : liste les commandes "À valider" + celles en "Validée (1/2)" qui ne sont pas validées par l'utilisateur courant (séparation des pouvoirs). Visible uniquement pour managers/admins.<br/>
+    <b>AA</b> Migration confirm() finale : 4 derniers <code>confirm()</code> migrés (parametres-rgpd × 2 avec variable confirmMsg + crud.js × 2). <b>Total cumulé sur 0.49 + 0.50 + 0.51 : 23 confirm() natifs → dialogs.confirm() stylé.</b>
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AQ</span> Statut système — page de monitoring</h3>
+    <ul>
+      <li><b>Nouvel endpoint <code>/api/health</code></b> (Next.js Route Handler) :
+        <ul>
+          <li>Ping Supabase PostgreSQL via count head sur <code>structures</code> (mesure latency_ms)</li>
+          <li>Ping Supabase REST endpoint via HEAD sur <code>/rest/v1/</code></li>
+          <li>Renvoie <code>{ overall, services: [{name, status, latency_ms, error}], timestamp }</code></li>
+          <li><code>dynamic = "force-dynamic"</code> + <code>revalidate = 0</code> pour éviter tout cache</li>
+        </ul>
+      </li>
+      <li><b>Nouvelle page <code>/statut</code></b> :
+        <ul>
+          <li>Poll <code>/api/health</code> toutes les 30 secondes</li>
+          <li>Check Realtime côté client en parallèle (subscribe sur un channel jetable, mesure du temps avant état "SUBSCRIBED")</li>
+          <li>Bandeau principal coloré selon overall (vert/orange/rouge/gris)</li>
+          <li>Cards par service avec icône + statut + latence + erreur éventuelle</li>
+          <li>Historique des 12 derniers checks visualisé en mini bandeaux colorés (style status page)</li>
+          <li>Bouton "Rafraîchir" manuel</li>
+        </ul>
+      </li>
+      <li><b>Lien menu</b> ajouté dans Administration (entre Performance SQL et Dashboard direction)</li>
+      <li><b>Pas d'auth requis</b> sur l'endpoint <code>/api/health</code> — il faut pouvoir vérifier le statut même quand on n'est pas loggé</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AZ</span> Statistiques annonces</h3>
+    <ul>
+      <li><b>Vue SQL <code>v_annonces_stats</code></b> (créée dans le patch 0.51) :
+        <ul>
+          <li>Pour chaque annonce : <code>nb_destinataires</code> (count membres de la structure), <code>nb_dismisses</code> (count dismissees), <code>taux_dismiss_pct</code> (calculé avec round 1 décimale)</li>
+          <li>Gestion de la division par zéro (si 0 membres → 0%)</li>
+          <li><code>grant select to authenticated</code></li>
+        </ul>
+      </li>
+      <li><b>Chargement parallèle</b> dans la page <code>/annonces</code> : <code>Promise.all</code> sur annonces + stats</li>
+      <li><b>Nouvelle colonne "Réception"</b> dans le tableau admin :
+        <ul>
+          <li>Compteur <code>nb_dismisses / nb_destinataires</code></li>
+          <li>Barre de progression 80px avec couleur selon taux (bleu &lt; 25% lecture, orange 25-50%, vert &gt; 50%)</li>
+          <li>Pourcentage affiché en dessous</li>
+        </ul>
+      </li>
+      <li><b>Pourquoi "dismiss = lecture"</b> : un user qui dismisse a forcément vu l'annonce. Un taux de dismiss élevé indique donc une bonne visibilité (les users prennent connaissance et ferment activement). Un taux faible = soit l'annonce est récente, soit les users ne la voient pas.</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">BA</span> Recherche audit étendue</h3>
+    <ul>
+      <li><b>Avant</b> : le commentaire dans le code disait "Cherche dans entite_id, user_email, ou details" mais le code ne cherchait que dans <code>user_email</code> et <code>entite_id</code></li>
+      <li><b>Maintenant</b> : ajout de <code>details::text.ilike.%texte%</code> dans la clause OR Supabase. Cherche dans le JSON sérialisé.</li>
+      <li><b>Patch SQL</b> : index <code>idx_audit_log_details_gin</code> de type GIN sur <code>audit_log.details</code> jsonb. Accélère les requêtes structurées <code>details @&gt; '{...}'</code> ou <code>@? '$.key'</code>. Pour <code>ilike</code> sur cast text, un seq scan reste nécessaire — mais reste rapide grâce aux autres filtres préalables (struct, période, action).</li>
+      <li><b>Placeholder enrichi</b> : "🔍 Recherche email / ID / contenu…" + <code>title</code> explicite</li>
+      <li><b>Min-width</b> input augmenté de 180px à 220px</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">BB</span> Mes validations en attente (widget accueil)</h3>
+    <ul>
+      <li><b>Composant <code>&lt;MesValidationsEnAttente /&gt;</code></b> dans <code>app/MesValidationsEnAttente.js</code></li>
+      <li><b>Visible uniquement</b> pour les managers/admins (<code>auth.can("valider_achat") || role.nom === "Administrateur"</code>)</li>
+      <li><b>Deux requêtes en parallèle</b> :
+        <ul>
+          <li>1) Achats statuts "À valider" / "En attente" → première validation possible</li>
+          <li>2) Achats statut "Validée (1/2)" où <code>valideur_id ≠ auth.user.id</code> → seconde validation possible (séparation pouvoirs respectée)</li>
+        </ul>
+      </li>
+      <li><b>UI</b> : card orange avec bordure gauche + titre + badge count + bouton "Voir tout →"</li>
+      <li><b>Items</b> : chip "1ère validation" (orange) ou "2nde validation" (violet), numéro, fournisseur, motif tronqué, budget formaté en € français, badge "Double valid." si budget > seuil</li>
+      <li><b>Limité aux 5 premiers</b> + message "+ N autre(s)" si dépassement</li>
+      <li><b>Clic sur item</b> → navigate <code>/achats</code></li>
+      <li><b>Caché</b> si <code>items.length === 0</code> (zéro pollution si rien à valider)</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AA</span> Migration confirm() — FINALE</h3>
+    <ul>
+      <li><b>4 derniers <code>confirm()</code> migrés</b> :
+        <ul>
+          <li><code>/parametres-rgpd</code> × 2 (avec variable <code>confirmMsg</code>) — script Python n'a pas matché car le regex demandait une string littérale. Migré manuellement.</li>
+          <li><code>app/crud.js</code> × 2 (composant générique CRUD utilisé par /articles, /materiels, /depots, /stock, /collectivite). Plus utilisé partout.</li>
+        </ul>
+      </li>
+      <li><b>Total cumulé migration confirm() depuis le début</b> :
+        <ul>
+          <li>0.49 : 8</li>
+          <li>0.50 : 11</li>
+          <li>0.51 : 4</li>
+          <li><strong>Total : 23 confirm() natifs migrés vers dialogs.confirm() stylé</strong></li>
+        </ul>
+      </li>
+      <li><b>Plus aucun <code>confirm()</code> natif</b> dans le code applicatif. Toutes les modales de confirmation sont désormais ConfirmModal de la dialogs API (cohérence visuelle, accessibilité, support du focus trap, etc.).</li>
+    </ul>
+  </div>
+
+  <h2>📝 SQL — Patch 0.51</h2>
+  <div class="panel sql">
+    <p style="margin:0 0 10px;font-size:14px;"><b>1 petit patch SQL à appliquer dans Supabase &gt; SQL Editor.</b></p>
+    <ul style="font-size:13px;">
+      <li><b>Vue <code>v_annonces_stats</code></b> avec colonnes nb_destinataires, nb_dismisses, taux_dismiss_pct</li>
+      <li><b>Grant select to authenticated</b></li>
+      <li><b>Index GIN <code>idx_audit_log_details_gin</code></b> sur audit_log.details</li>
+      <li><b><code>notify pgrst, 'reload schema'</code></b> en fin (réflexe 4)</li>
+    </ul>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89;"><i class="ti ti-info-circle"></i> Idempotent, &lt; 1 seconde d'exécution.</p>
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">~30</div><div class="l">Lignes SQL</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">confirm() migrés</div></div>
+    <div class="kpi"><div class="v">23</div><div class="l">confirm() total cumulé</div></div>
+    <div class="kpi"><div class="v">+26</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">919</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">887</div><div class="l">K du zip livré</div></div>
+    <div class="kpi"><div class="v">7/7</div><div class="l">Routes dev OK</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.51.sql</code></td><td><span class="pill sql">SQL</span></td><td>Vue v_annonces_stats + index GIN audit + notify</td></tr>
+      <tr><td><code>app/api/health/route.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Endpoint ping Supabase PG + REST</td></tr>
+      <tr><td><code>app/statut/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page status avec bandeaux, services, historique</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ lien /statut section Administration</td></tr>
+      <tr><td><code>app/annonces/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state stats · + Promise.all annonces+stats · + colonne Réception avec barre progression</td></tr>
+      <tr><td><code>app/audit/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ details::text.ilike dans la clause OR · placeholder enrichi · min-width 220</td></tr>
+      <tr><td><code>app/MesValidationsEnAttente.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Widget accueil avec items 1ère et 2nde validation</td></tr>
+      <tr><td><code>app/accueil/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ import + montage MesValidationsEnAttente</td></tr>
+      <tr><td><code>app/parametres-rgpd/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>2 confirm() migrés (variable confirmMsg)</td></tr>
+      <tr><td><code>app/crud.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>2 confirm() migrés (composant CRUD générique)</td></tr>
+      <tr><td><code>__tests__/v051-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>26 tests sur les 5 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.50.0-alpha → 0.51.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application — PowerShell</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Appliquer le patch SQL</b> dans Supabase &gt; SQL Editor (~1s)</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Installer & lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test
+npm run dev</code></pre>
+        Attendu : <b>919 tests verts</b>.
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><b>AQ Statut</b> : menu Administration → Statut système → bandeau vert "Tous les services fonctionnent normalement" + 3 cards (Postgres, REST, Realtime) avec latences. Attendre 30s → un nouveau carré apparaît dans l'historique.</li>
+          <li><b>AZ Stats</b> : <code>/annonces</code> → nouvelle colonne "Réception" → si une annonce a été dismissée par certains users, la barre de progression et le pourcentage s'affichent</li>
+          <li><b>BA Recherche</b> : <code>/audit</code> → taper un fragment qui se trouve dans <code>details</code> JSON (ex: un numéro de patient, un nom de fichier) → les lignes correspondantes remontent</li>
+          <li><b>BB Validations</b> : connecté en tant que manager → <code>/accueil</code> affiche en haut le widget orange "Mes validations en attente" si des achats sont à valider</li>
+          <li><b>AA Migration</b> : <code>/parametres-rgpd</code> → activer plusieurs templates → modale stylée (plus de confirm() natif laid)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.52+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>C</b> SafeWrite · <b>D</b> Playwright · <b>E</b> Next 15 · <b>F</b> E-learning · <b>G</b> Recherche c:+f: · <b>H</b> Stores · <b>I</b> Présentation · <b>M</b> Mode sombre</li>
+      <li><b>AF</b> ⌘K filtres · <b>AI</b> Excel · <b>AJ</b> Multi-langue · <b>AK</b> Logs applicatifs</li>
+      <li><b>AU</b> Export complet · <b>AX</b> Carte géoloc</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.51.0 · 31 mai 2026</p>
+    <p>Statut système · Stats annonces · Recherche audit étendue · Validations en attente · Migration confirm() finale — 919 tests, 1 patch SQL, réflexe 6 validé</p>
+  </footer>
+
+</div>
+</body>
+</html>

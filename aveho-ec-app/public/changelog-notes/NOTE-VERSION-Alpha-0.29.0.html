@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.29.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1e4a91 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — QUALITY OF LIFE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.29.0
+      <small>Filtres sticky localStorage · Préférences notif par user · Dashboard /profil enrichi</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026 (matin)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.29.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.28.0</span>
+      <span><b>Statut :</b> Build clean · 242 tests verts · 1 patch SQL</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">🔖 useStickyState — filtres persistés par user</span>
+      <span class="badge green">🔔 7 catégories de notif configurables</span>
+      <span class="badge green">🌙 Heures silencieuses</span>
+      <span class="badge green">📊 Dashboard /profil : mes stats + historique</span>
+      <span class="badge green">⚙️ Filtrage push côté Edge Function</span>
+      <span class="badge green">+32 tests Vitest</span>
+      <span class="badge orange">🔧 1 patch SQL</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>La 0.29.0 attaque la <b>quality of life</b> utilisateur. 3 chantiers complémentaires :</p>
+  <ol>
+    <li><b>Filtres persistés</b> : hook <code>useStickyState</code> qui remplace <code>useState</code> et sauvegarde dans localStorage scopé par userId. Plus de "refresh = filtres perdus". Appliqué sur <code>/patients</code>, <code>/interventions</code>, <code>/achats</code>, <code>/signalements</code>.</li>
+    <li><b>Préférences notifications par user</b> : nouvelle table <code>user_notification_preferences</code> + composant <code>NotificationPreferences</code> dans <code>/profil</code> avec 7 catégories d'events (DI, achats, transferts, signalements, maintenance, renouvellement RGPD, archivage). Filtrage appliqué côté <code>send-push</code> avant envoi (bulk fetch des prefs pour économiser les appels RPC).</li>
+    <li><b>Dashboard /profil enrichi</b> : panneau "Mon activité" avec KPIs personnels (DI créées, urgentes, clôturées, achats demandés, transferts, signalements) + "Mes 15 dernières actions" (audit_events filtrés par user_id, badges colorés par type d'action).</li>
+  </ol>
+
+  <div class="highlight">
+    <b>Personnalisation complète.</b> Chaque utilisateur a maintenant son propre espace de travail dans Aveho : ses filtres préférés sont mémorisés, il reçoit uniquement les notifs qu'il veut, et il visualise son activité personnelle. Plus de bruit, plus de friction.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>lib/useStickyState.js</code> : hook persistant scopé par userId</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>2</td><td>Sticky filters sur 4 pages critiques (patients, interventions, achats, signalements)</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>3</td><td>Table <code>user_notification_preferences</code> + RLS + trigger + RPC <code>user_accepts_notif</code></td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>4</td><td><code>app/NotificationPreferences.js</code> : 7 catégories + heures silencieuses</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>5</td><td>Intégration dans <code>/profil</code> (déplacée depuis /parametres avec lien)</td><td><span class="pill imp">UX</span></td></tr>
+      <tr><td>6</td><td>Edge Function <code>send-push</code> : bulk fetch + filtrage par préférences</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>7</td><td>Dashboard <code>/profil</code> : KPIs personnels + 15 dernières actions</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>8</td><td>32 tests Vitest (sticky state + prefs + quiet hours + scénarios)</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. useStickyState</h2>
+
+  <h3>API</h3>
+  <pre><code>// Drop-in replacement de useState
+const [fStatut, setFStatut] = useStickyState("", "interventions:fStatut");
+const [filters, setFilters] = useStickyState({}, "patients:filters");
+
+// 3e élément = reset
+const [filters, setFilters, resetFilters] = useStickyState({}, "patients:filters");</code></pre>
+
+  <h3>Caractéristiques</h3>
+  <ul>
+    <li><b>Scopé par userId</b> : clé localStorage <code>aveho:{userId}:{key}</code>. Alice et Bob sur le même appareil n'écrasent pas leurs filtres.</li>
+    <li><b>Fallback "anon"</b> si pas de userId (utile en login screen)</li>
+    <li><b>Auto-cleanup</b> : si la valeur devient vide ("", null, [], {}), l'entrée localStorage est supprimée plutôt que de stocker "vide"</li>
+    <li><b>Re-chargement automatique</b> au changement d'utilisateur (clé recomposée)</li>
+    <li><b>Robuste</b> : try/catch silencieux (quota localStorage dépassé, etc.)</li>
+    <li><b>JSON par défaut</b> : opt-out avec <code>{ json: false }</code> pour stocker des strings brutes</li>
+    <li><b>Scope global possible</b> : <code>{ scope: "global" }</code> pour partager entre users</li>
+  </ul>
+
+  <h3>Pages migrées</h3>
+  <table>
+    <thead><tr><th>Page</th><th>Filtres persistés</th></tr></thead>
+    <tbody>
+      <tr><td><code>/patients</code></td><td>filters object (q, service, chambre, etat, etiquette)</td></tr>
+      <tr><td><code>/interventions</code></td><td>fStatut, fType</td></tr>
+      <tr><td><code>/achats</code></td><td>fStatut</td></tr>
+      <tr><td><code>/signalements</code></td><td>fStatut, fType</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Préférences notifications par user</h2>
+
+  <h3>7 catégories disponibles</h3>
+  <table>
+    <thead><tr><th>Catégorie</th><th>Events couverts</th><th>Défaut</th></tr></thead>
+    <tbody>
+      <tr><td><b>DI</b></td><td>Demandes d'intervention (création, urgence, assignation)</td><td>ON</td></tr>
+      <tr><td><b>Achats</b></td><td>Workflow complet (à valider, validée, refusée, reçue)</td><td>ON</td></tr>
+      <tr><td><b>Transferts</b></td><td>Inter-dépôts (créé, validé, réceptionné)</td><td>ON</td></tr>
+      <tr><td><b>Signalements</b></td><td>Nouveaux signalements + réponses</td><td>ON</td></tr>
+      <tr><td><b>Maintenance</b></td><td>Préventive (J-7, retards, récurrences)</td><td>ON</td></tr>
+      <tr><td><b>Renouvellement RGPD</b></td><td>Consentements expirant dans 30 jours</td><td>ON</td></tr>
+      <tr><td><b>Archivage RGPD mensuel</b></td><td>Maintenance mensuelle (1er du mois)</td><td>OFF</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Heures silencieuses</h3>
+  <p>Plage horaire (ex: 22h00-07h00) pendant laquelle les notifs reçues seront silencieuses (pas de son ni vibration). Les notifs restent visibles dans la cloche au réveil. Supporte le passage minuit.</p>
+
+  <h3>Stockage</h3>
+  <pre><code>-- Table user_notification_preferences
+-- 1 ligne par user, jsonb pour prefs + quiet_hours
+
+{
+  "user_id": "uuid-de-alice",
+  "prefs": {
+    "di": true,
+    "achat": false,           // Alice ne veut pas les notifs achats
+    "consent_auto_archive": true  // Mais veut l'archivage mensuel
+  },
+  "quiet_hours": { "start": "22:00", "end": "07:00" }
+}</code></pre>
+
+  <h3>Filtrage côté Edge Function</h3>
+  <p>Quand <code>send-push</code> est appelée avec un <code>event_type</code> :</p>
+  <ol>
+    <li>Récupère les targets (push_subscriptions) de la structure</li>
+    <li><b>Bulk fetch</b> des préférences pour tous les userIds concernés (1 seul appel SQL, pas N)</li>
+    <li>Filtre la liste : exclut les users qui ont explicitement désactivé ce type</li>
+    <li>Envoie aux restants</li>
+    <li>Retour enrichi : <code>{ sent, failed, cleaned, filtered }</code></li>
+  </ol>
+
+  <h3>RPC user_accepts_notif</h3>
+  <p>Fonction SQL utilitaire <code>user_accepts_notif(user_id, event_type)</code> qui retourne <code>true</code> si le user accepte ce type (par défaut <code>true</code> si pas de préférence enregistrée). Utilisable depuis d'autres Edge Functions ou côté front pour vérification.</p>
+
+  <h2>3. Dashboard /profil</h2>
+
+  <h3>KPIs personnels</h3>
+  <p>Compteurs basés sur <code>created_by</code> / <code>demandeur_id</code> / <code>user_id</code> selon la table :</p>
+  <ul>
+    <li><b>DI créées</b> + sous-compteurs urgentes / clôturées</li>
+    <li><b>Achats demandés</b> + à valider</li>
+    <li><b>Transferts</b> créés</li>
+    <li><b>Signalements</b> postés</li>
+  </ul>
+
+  <h3>Mes 15 dernières actions</h3>
+  <p>Lecture de <code>audit_events</code> filtrée par user_id de la structure. Affichage :</p>
+  <ul>
+    <li>Badge coloré par type d'action (creer=vert, modifier=bleu, supprimer=rouge, valider=vert, refuser=rouge, soumettre=orange, etc.)</li>
+    <li>Icône de l'entité (intervention, commande, transfert, signalement, patient, materiel)</li>
+    <li>Numéro de l'entité si disponible (DI-1234, CMD-5678, etc.)</li>
+    <li>Time relative ("il y a 2h") avec tooltip date complète au survol</li>
+  </ul>
+
+  <h3>Composants existants conservés</h3>
+  <ul>
+    <li>Identité + collectivité + rôle</li>
+    <li>Modification nom d'affichage</li>
+    <li>Changement mot de passe</li>
+    <li>Infos session (email, ID, permissions)</li>
+  </ul>
+
+  <h3>Préférences notif déplacées</h3>
+  <p>Les préférences notification ont leur place naturelle dans /profil (c'est mon propre choix). Le composant est référencé depuis /parametres avec un lien.</p>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">7</div><div class="l">Catégories notif</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Pages sticky filters</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">KPIs perso /profil</div></div>
+    <div class="kpi"><div class="v">15</div><div class="l">Dernières actions affichées</div></div>
+    <div class="kpi"><div class="v">+32</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">242</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">98</div><div class="l">Lignes patch SQL</div></div>
+    <div class="kpi"><div class="v">428</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.29.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Table + RLS + trigger + RPC user_accepts_notif</td></tr>
+      <tr><td><code>lib/useStickyState.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Hook localStorage scopé par userId</td></tr>
+      <tr><td><code>app/NotificationPreferences.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Composant 7 catégories + quiet hours</td></tr>
+      <tr><td><code>__tests__/qol-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>32 tests sur sticky + prefs + quiet hours + scénarios</td></tr>
+      <tr><td><code>app/profil/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ Dashboard stats + 15 dernières actions + prefs notif</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>filters → useStickyState</td></tr>
+      <tr><td><code>app/interventions/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>fStatut + fType → useStickyState</td></tr>
+      <tr><td><code>app/achats/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>fStatut → useStickyState</td></tr>
+      <tr><td><code>app/signalements/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>fStatut + fType → useStickyState</td></tr>
+      <tr><td><code>app/parametres/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ lien vers /profil pour prefs notif</td></tr>
+      <tr><td><code>supabase/functions/send-push/index.ts</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ filtrage par préférences user (bulk fetch)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.28.0-alpha → 0.29.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.29.sql</code> → Run.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- La table existe ?
+select count(*) from user_notification_preferences;
+
+-- Le RPC fonctionne ?
+select user_accepts_notif(auth.uid(), 'di');
+-- → true (pas de pref → accepte tout)</code></pre>
+      </li>
+      <li><b>Redéployer send-push</b> (modifiée pour filtrage) :
+        <pre><code>cd C:\aveho-ec-app
+supabase functions deploy send-push</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>npm install
+npm test       # 242 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Test sticky filters</b> :
+        <ul>
+          <li>Aller dans <code>/interventions</code></li>
+          <li>Filtrer par statut "En cours"</li>
+          <li>F5 (refresh) → le filtre est toujours actif</li>
+          <li>Se déconnecter, se reconnecter avec un autre user → le filtre n'est pas conservé pour lui</li>
+        </ul>
+      </li>
+      <li><b>Test préférences notif</b> :
+        <ul>
+          <li>Aller dans <code>/profil</code> → section "Mes notifications"</li>
+          <li>Désactiver "Workflow achats"</li>
+          <li>Activer "Heures silencieuses" 22h-07h → Enregistrer</li>
+          <li>Demander à un collègue de soumettre une demande d'achat → tu ne dois PAS recevoir de notif push</li>
+        </ul>
+      </li>
+      <li><b>Test dashboard /profil</b> :
+        <ul>
+          <li>Aller dans <code>/profil</code></li>
+          <li>Voir tes KPIs personnels (DI créées, achats, etc.)</li>
+          <li>Voir tes 15 dernières actions avec badges colorés</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.30+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Statistiques RGPD avancées</b> : graphiques consentements/mois (Chart.js ou Recharts), taux refus, expirations à venir par établissement</li>
+      <li><b>Stats globales</b> : qui crée le plus de DI dans la collectivité, top demandeurs achats, etc.</li>
+      <li><b>Export PDF mensuel</b> du dashboard (reporting DPO/manager)</li>
+      <li><b>Tests Playwright</b> end-to-end sur flows offline + sticky filters + prefs</li>
+      <li><b>Modèles consentement personnalisables</b> par collectivité</li>
+      <li><b>Migration pages config restantes</b> vers safeWrite (utilisateurs, parametres, etablissement/edition, collectivite)</li>
+      <li><b>Quiet hours côté SW</b> : actuellement, c'est le navigateur qui gère le silence selon les notif settings de l'OS. À voir si on veut surcharger côté Service Worker (silencer la vibration uniquement, sans masquer la notif).</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.29.0 · 31 mai 2026 (matin)</p>
+    <p>Quality of life — Filtres sticky · 7 catégories notif · Quiet hours · Dashboard perso</p>
+  </footer>
+
+</div>
+</body>
+</html>

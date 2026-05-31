@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.11</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.amber{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f5d09f}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.11
+      <small>Lien Maintenance↔DI · Maintenances récurrentes · Notifs J-7 · Tags matériel · Maintenances dans calendrier</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.11.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.10 (29/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">🔗 Lien Maintenance ↔ DI auto</span>
+      <span class="badge green">🔁 Maintenances récurrentes</span>
+      <span class="badge green">🔔 Notifs J-7</span>
+      <span class="badge green">🏷️ Tags matériel</span>
+      <span class="badge green">📅 Maintenances dans calendrier</span>
+      <span class="badge amber">⚠ Nouveau script SQL requis</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#di-auto">3. Création auto de DI quand maintenance en retard</a></li>
+      <li><a href="#recurrence">4. Maintenances récurrentes</a></li>
+      <li><a href="#notif-j7">5. Notifications J-7</a></li>
+      <li><a href="#tags-mat">6. Tags matériel</a></li>
+      <li><a href="#cal-fusion">7. Maintenances dans le calendrier</a></li>
+      <li><a href="#delta">8. Delta vs Alpha 0.10</a></li>
+      <li><a href="#fichiers">9. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">10. Procédure de mise à jour</a></li>
+      <li><a href="#reporte">11. Reste à faire</a></li>
+      <li><a href="#roadmap">12. Roadmap suggérée 0.12</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.11 muscle le module Maintenance livré en 0.10 avec <b>trois automatismes métier majeurs</b> : création automatique d'une DI quand une maintenance passe en retard, création de la maintenance suivante quand on en clôture une avec récurrence, et notifications J-7 avant échéance. En parallèle, ajout des <b>tags matériel</b> (similaires aux étiquettes patients de la 0.9) et fusion des maintenances dans la vue calendrier pour avoir tout sous les yeux.</p>
+
+  <div class="highlight">
+    <b>Cette version introduit 2 nouvelles tables SQL</b> (<code>tags_materiel</code> + <code>materiel_tags</code>) et <b>4 colonnes</b> sur <code>maintenances</code> (<code>recurrence_jours</code>, <code>parent_id</code>, <code>di_id</code>, <code>notif_j7_envoyee</code>). Script unique <code>15_tags_materiel.sql</code> à exécuter dans Supabase.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Automatismes Maintenance</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles tables SQL</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">Tags matériel démo</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">Récurrences proposées (mensuelle à 2 ans)</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">Jours d'anticipation des notifs</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Création auto de DI quand maintenance en retard</td><td><span class="pill new">Livré</span></td><td>Détection au chargement de la page, une seule DI par maintenance</td></tr>
+      <tr><td>2</td><td>Maintenances récurrentes</td><td><span class="pill new">Livré</span></td><td>Création auto de la suivante quand statut → Faite</td></tr>
+      <tr><td>3</td><td>Notifications J-7 avant échéance</td><td><span class="pill new">Livré</span></td><td>Notif cloche dès qu'une maintenance arrive dans la fenêtre 7 jours</td></tr>
+      <tr><td>4</td><td>Tags matériel + page de gestion</td><td><span class="pill new">Livré</span></td><td>Nouvelle page <code>/tags-materiel</code> + intégration liste Matériels</td></tr>
+      <tr><td>5</td><td>Maintenances dans le calendrier DI</td><td><span class="pill new">Livré</span></td><td>Fusion DI + Maintenances dans vue mois et vue semaine</td></tr>
+      <tr><td>6</td><td>Export PDF planning Maintenance</td><td><span class="pill brk">À faire</span></td><td>Pattern Export PDF existant à dupliquer</td></tr>
+      <tr><td>7</td><td>Notifications push navigateur</td><td><span class="pill brk">Dédié</span></td><td>VAPID + SW + permission</td></tr>
+      <tr><td>8</td><td>Module signalements anonymes</td><td><span class="pill brk">Nouveau</span></td><td>Nouveau chantier qui mérite son tour</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="di-auto">3. Création auto de DI quand maintenance en retard <span class="pill new">NOUVEAU</span></h2>
+  <p>Au chargement de la page <code>/maintenance</code>, pour chaque maintenance dont la <code>date_prevue</code> est passée et qui n'est ni Faite ni Annulée, et qui n'a pas encore de DI liée (<code>di_id IS NULL</code>), Aveho crée automatiquement :</p>
+  <ol>
+    <li>Une <b>nouvelle DI</b> dans <code>interventions</code> avec :
+      <ul>
+        <li>Type = "Maintenance en retard"</li>
+        <li>Urgence = Normal</li>
+        <li>Statut = Nouvelle</li>
+        <li>Description = référence à la maintenance + intervenant prévu</li>
+        <li>Matériel lié à celui de la maintenance</li>
+      </ul>
+    </li>
+    <li>Le champ <code>di_id</code> sur la maintenance est mis à jour pour pointer vers la DI créée. <b>Cela empêche les doublons</b> : à la prochaine ouverture de la page, la DI ne sera pas recréée.</li>
+    <li>Une trace audit est posée et une notification est envoyée via <code>logEvent</code>.</li>
+  </ol>
+
+  <h3>Cas d'usage</h3>
+  <p>Tu reviens de vacances, tu ouvres la page Maintenance, tu vois :</p>
+  <ul>
+    <li>3 maintenances passées en "En retard" sont devenues automatiquement des DI Nouvelles</li>
+    <li>Tu les retrouves dans la page Interventions, prêtes à être traitées par l'équipe technique</li>
+    <li>Plus jamais de maintenance oubliée qui dort dans un fichier Excel</li>
+  </ul>
+
+  <h2 id="recurrence">4. Maintenances récurrentes <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>4.1 Champ Récurrence dans la modale</h3>
+  <p>Quand tu crées ou modifies une maintenance, un nouveau sélecteur <b>Récurrence</b> propose 6 valeurs :</p>
+  <ul>
+    <li>Pas de récurrence (par défaut)</li>
+    <li>Tous les mois (30 j)</li>
+    <li>Tous les 3 mois (90 j)</li>
+    <li>Tous les 6 mois (180 j)</li>
+    <li>Tous les ans (365 j)</li>
+    <li>Tous les 2 ans (730 j)</li>
+  </ul>
+  <p>Un message vert apparaît dès qu'une valeur > 0 est choisie : <i>"Quand cette maintenance sera marquée Faite, la suivante sera créée automatiquement à +N jour(s)."</i></p>
+
+  <h3>4.2 Création de la suivante</h3>
+  <p>Quand tu passes une maintenance récurrente à <b>Faite</b>, Aveho :</p>
+  <ol>
+    <li>Vérifie qu'aucune "suivante" n'existe déjà (champ <code>parent_id</code>) pour éviter les doublons même si tu cliques 2× sur "Faite"</li>
+    <li>Calcule la prochaine date = <code>date_realisee</code> (ou <code>date_prevue</code> à défaut) + <code>recurrence_jours</code></li>
+    <li>Crée une nouvelle ligne maintenance avec mêmes type, intervenant, récurrence — <code>parent_id</code> pointe vers celle qu'on vient de clôturer</li>
+    <li>Statut = Planifiée, notes = trace de l'origine</li>
+    <li>Notification cloche : <i>"Maintenance récurrente programmée — Révision annuelle sur Lit Bastide programmée le 28/05/2027"</i></li>
+  </ol>
+
+  <h3>4.3 Cas d'usage</h3>
+  <p>Tu paramètres une révision annuelle sur 20 concentrateurs O2. Chaque année, quand un technicien clôture la révision sur un appareil, la suivante est automatiquement programmée à +1 an. Tu n'as plus à tenir une liste manuelle.</p>
+
+  <h2 id="notif-j7">5. Notifications J-7 avant échéance <span class="pill new">NOUVEAU</span></h2>
+  <p>Au chargement de la page Maintenance, pour chaque maintenance dont la <code>date_prevue</code> est dans la fenêtre <b>[aujourd'hui ; aujourd'hui + 7 jours]</b>, et qui n'a pas encore eu sa notif J-7 (<code>notif_j7_envoyee = false</code>) :</p>
+  <ol>
+    <li>Une <b>notification cloche</b> est envoyée à tous les membres de la collectivité</li>
+    <li>Titre : <i>"Maintenance proche"</i></li>
+    <li>Message : <i>"Révision annuelle sur Lit médicalisé Bastide prévue le 5/06/2026"</i></li>
+    <li>Le flag <code>notif_j7_envoyee</code> passe à <code>true</code> — la notif ne sera plus renvoyée même si la page est rechargée 50 fois</li>
+  </ol>
+
+  <h3>Limites assumées</h3>
+  <p>Comme la détection se fait au chargement de la page, <b>la notif est envoyée quand quelqu'un ouvre la page Maintenance</b>, pas à minuit pile. Pour un déclenchement plus précis (cron quotidien Supabase), ce serait le chantier Edge Function dont on parle depuis quelques versions. Pour l'instant ça marche bien parce que quelqu'un ouvre la page tous les jours ou presque.</p>
+
+  <h2 id="tags-mat">6. Tags matériel <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>6.1 Modèle SQL</h3>
+  <p>Architecture identique aux étiquettes patients (0.9) :</p>
+  <pre><code>tags_materiel (id, structure_id, libelle, couleur, description)
+materiel_tags (id, materiel_id, tag_id, structure_id, created_at)
+              unique (materiel_id, tag_id)</code></pre>
+  <p>Tables avec RLS scope collectivité.</p>
+
+  <h3>6.2 Page de gestion <code>/tags-materiel</code></h3>
+  <p>Nouvelle page Administration, accessible uniquement aux Admins. CRUD complet des tags : libellé, palette de 9 couleurs Aveho, description, aperçu live. <b>5 tags démo</b> pré-installés pour la collectivité de test :</p>
+  <ul>
+    <li><b>Critique</b> (rouge) — matériel essentiel à la prise en charge</li>
+    <li><b>Sous garantie</b> (vert) — couverture constructeur en cours</li>
+    <li><b>À remplacer</b> (orange) — fin de vie programmée</li>
+    <li><b>Hors service</b> (gris) — inutilisable temporairement</li>
+    <li><b>À surveiller</b> (violet) — comportement anormal détecté</li>
+  </ul>
+
+  <h3>6.3 Application aux matériels</h3>
+  <p>Sur la page Matériels, dans la colonne Article :</p>
+  <ul>
+    <li>Les tags appliqués s'affichent comme des pastilles colorées sous le libellé</li>
+    <li>Une icône <i class="ti ti-tag"></i> à côté du libellé ouvre une modale toggle pour appliquer/retirer des tags</li>
+    <li>Persistance instantanée (pas de bouton Valider)</li>
+  </ul>
+
+  <h3>6.4 Filtre par tag</h3>
+  <p>Dans le panneau Filtres avancés des Matériels, un nouveau sélecteur <b>Tag</b> apparaît si au moins un tag est défini. Permet par exemple de lister "tous les matériels Critiques" ou "tous ceux À remplacer".</p>
+
+  <h2 id="cal-fusion">7. Maintenances dans le calendrier <span class="pill new">NOUVEAU</span></h2>
+  <p>La page Calendrier (livrée en 0.9, enrichie d'une vue semaine en 0.10) affiche maintenant <b>aussi les maintenances</b> en plus des DI, dans les deux vues.</p>
+
+  <h3>Distinction visuelle</h3>
+  <ul>
+    <li>Les DI gardent leurs couleurs par statut (rouge Nouvelle, orange En cours, etc.)</li>
+    <li>Les maintenances sont toutes en <b>turquoise sombre (#5a8f8f)</b> avec une <b>icône clé à molette</b> <i class="ti ti-tool"></i></li>
+    <li>Clic sur une maintenance ouvre la page <code>/maintenance</code>, clic sur une DI ouvre <code>/interventions</code></li>
+  </ul>
+
+  <h3>Toggle "Afficher les maintenances"</h3>
+  <p>Une case à cocher en haut à droite du calendrier permet de masquer les maintenances si tu veux te concentrer sur les DI uniquement. Activée par défaut.</p>
+
+  <h3>Légende enrichie</h3>
+  <p>La légende du calendrier en bas inclut maintenant le pictogramme Maintenance pour identifier visuellement le type d'événement.</p>
+
+  <h2 id="delta">8. Delta vs Alpha 0.10</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Création auto de DI quand maintenance en retard</td><td><span class="pill new">NEW</span></td><td>Détecté au load page Maintenance, anti-doublon via di_id</td></tr>
+      <tr><td>Champ Récurrence dans modale maintenance</td><td><span class="pill new">NEW</span></td><td>6 options de 30j à 730j</td></tr>
+      <tr><td>Création auto de la maintenance suivante</td><td><span class="pill new">NEW</span></td><td>Quand passage à Faite avec récurrence > 0</td></tr>
+      <tr><td>Notif J-7 avant échéance</td><td><span class="pill new">NEW</span></td><td>Flag notif_j7_envoyee anti-spam</td></tr>
+      <tr><td>Tables <code>tags_materiel</code> + <code>materiel_tags</code></td><td><span class="pill new">NEW</span></td><td>RLS collectivité + 5 tags démo</td></tr>
+      <tr><td>Page <code>/tags-materiel</code></td><td><span class="pill new">NEW</span></td><td>CRUD admin similaire aux étiquettes patients</td></tr>
+      <tr><td>Affichage tags sur liste Matériels</td><td><span class="pill new">NEW</span></td><td>Pastilles + icône toggle + filtre</td></tr>
+      <tr><td>Maintenances dans Calendrier</td><td><span class="pill new">NEW</span></td><td>Fusion DI + Maintenances avec toggle</td></tr>
+      <tr><td>Distinction visuelle DI/Maintenance</td><td><span class="pill new">NEW</span></td><td>Couleur + icône clé à molette</td></tr>
+      <tr><td>4 colonnes sur <code>maintenances</code></td><td><span class="pill imp">IMP</span></td><td>recurrence_jours, parent_id, di_id, notif_j7_envoyee</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fichiers">9. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/15_tags_materiel.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>2 tables + 4 colonnes sur maintenances + 5 démos</td></tr>
+      <tr><td><code>app/tags-materiel/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page CRUD tags (admin)</td></tr>
+      <tr><td><code>app/maintenance/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ récurrence + DI auto + notif J-7 + traitements au load</td></tr>
+      <tr><td><code>app/materiels/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ chargement tags + modale toggle + filtre tag</td></tr>
+      <tr><td><code>app/calendrier/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ chargement maintenances + toggle + indexation byDate</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ entrée Tags matériel</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.10.0-alpha → 0.11.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="migration">10. Procédure de mise à jour depuis Alpha 0.10</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sauvegarde ton dossier <code>C:\aveho-ec-app</code>.</li>
+      <li>Décompresse le nouveau zip par-dessus.</li>
+      <li><b>Dans Supabase SQL Editor</b> : exécute <code>supabase/15_tags_materiel.sql</code>.<br>
+        Sans ce script, les pages Tags matériel et certaines fonctionnalités Maintenance (récurrence, DI auto, notif J-7) échoueront.</li>
+      <li>Dans PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre></li>
+      <li><b>Tests rapides</b> :
+        <ul>
+          <li>Va sur <code>/tags-materiel</code> : 5 tags démo</li>
+          <li>Sur Matériels, clique l'icône <i class="ti ti-tag"></i> à côté d'un libellé : modale d'application</li>
+          <li>Sur Maintenances, crée une maintenance avec récurrence "Tous les mois" → passe-la à Faite → tu vois une "suivante" apparaître dans la liste</li>
+          <li>Si une maintenance démo est en retard, ouvre la page : tu vois apparaître une nouvelle DI "Maintenance en retard" dans <code>/interventions</code></li>
+          <li>Sur <code>/calendrier</code>, regarde les pastilles turquoise <i class="ti ti-tool"></i> qui représentent les maintenances. Décoche "Afficher les maintenances" pour ne voir que les DI</li>
+        </ul>
+      </li>
+      <li>Mise en ligne :<pre><code>git add .
+git commit -m "Aveho EC Alpha 0.11"
+git push</code></pre></li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">11. Reste à faire / en attente</h2>
+  <div class="panel warn">
+    <table>
+      <thead><tr><th>Sujet</th><th>Pourquoi pas livré</th></tr></thead>
+      <tbody>
+        <tr><td>Export PDF planning Maintenance</td><td>Pattern Export PDF déjà connu en 0.8, à faire à la demande</td></tr>
+        <tr><td>Notifications push navigateur</td><td>Chantier dédié VAPID + Service Worker</td></tr>
+        <tr><td>Module signalements anonymes</td><td>Nouveau chantier qui mérite son tour propre</td></tr>
+        <tr><td>Templates d'étiquettes / tags</td><td>Nécessite ta liste métier de référence</td></tr>
+        <tr><td>Cron quotidien Supabase pour notifs J-7</td><td>Aujourd'hui la détection est au load, suffisant tant que la page est ouverte tous les jours</td></tr>
+        <tr><td>Écriture hors-ligne / domaine email / récap quotidien email</td><td>Toujours selon ton besoin</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="roadmap">12. Roadmap suggérée pour Alpha 0.12</h2>
+  <div class="panel ok">
+    <p>Idées pour la prochaine version :</p>
+    <ol>
+      <li><b>Export PDF planning Maintenance</b> — pour les prestataires externes (Bureau Veritas, Philips, etc.)</li>
+      <li><b>Vue dédiée par matériel</b> — fiche complète : tags, maintenances passées et à venir, DI liées, transferts</li>
+      <li><b>Cron quotidien Supabase</b> — Edge Function pour calculer les notifs J-7 à minuit (au lieu du load)</li>
+      <li><b>Module signalements anonymes</b> — boîte à idées / problèmes terrain</li>
+      <li><b>Notifications push navigateur</b> — chantier VAPID dédié</li>
+      <li><b>Statistiques Maintenance</b> — graphes des maintenances par statut/type sur la page Statistiques</li>
+      <li><b>Lien Tag matériel ↔ génération auto de maintenance</b> — ex: tag "À surveiller" déclenche une maintenance "Vérification" tous les 3 mois</li>
+      <li><b>Page Tableau de bord opérationnel</b> — pour le mode kiosque, avec animations chiffres et météo de la collectivité</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.11 · 29 mai 2026</p>
+    <p>Document de version interne — 5 chantiers livrés, le module Maintenance prend toute sa puissance avec les automatismes</p>
+  </footer>
+
+</div>
+</body>
+</html>

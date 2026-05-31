@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.5</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.amber{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f5d09f}
+  .badge.red{background:rgba(227,93,91,.22);border-color:rgba(227,93,91,.5);color:#f5c4c3}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .panel.crit{background:#fbe9e7;border-color:#f1a89e}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.fix{background:#e3edf7;color:#1f4f8a}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  .pill.sec{background:#fbe9e7;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  .highlight.sec{border-left-color:#e35d5b;background:#fbe9e7}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.5
+      <small>RLS étanche · Profil utilisateur · Logs de connexion · Libellés propagés · Filtres temporels</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.5.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.4 (29/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge red">🔒 RLS étanche par établissement</span>
+      <span class="badge green">✓ 6 chantiers livrés</span>
+      <span class="badge green">✓ 1 nouvelle page (Profil)</span>
+      <span class="badge green">✓ +1 script SQL critique</span>
+      <span class="badge amber">⚠ Test interne</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#rls">3. RLS étanche par établissement</a></li>
+      <li><a href="#profil">4. Page profil utilisateur</a></li>
+      <li><a href="#connexion">5. Logs de connexion</a></li>
+      <li><a href="#libelles">6. Libellés propagés aux autres pages</a></li>
+      <li><a href="#filtres">7. Filtres temporels sur l'historique</a></li>
+      <li><a href="#notif-ciblees">8. Notifications ciblées</a></li>
+      <li><a href="#delta">9. Delta vs Alpha 0.4</a></li>
+      <li><a href="#fichiers">10. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">11. Procédure de mise à jour</a></li>
+      <li><a href="#tests">12. Tests de sécurité à faire</a></li>
+      <li><a href="#reporte">13. Chantiers reportés en 0.6</a></li>
+      <li><a href="#roadmap">14. Roadmap Alpha 0.6</a></li>
+    </ul>
+  </nav>
+
+  <!-- 1. RÉSUMÉ -->
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.5 est <b>la version sécurité</b>. Elle livre enfin le chantier <b>RLS étanche par établissement</b> reporté depuis la 0.2 — un chantier critique que j'avais refusé de bâcler. C'est aussi une version "expérience utilisateur" avec une vraie <b>page profil</b>, des <b>logs de connexion</b> tracés dans l'audit, les <b>libellés métier</b> propagés à toutes les pages principales, et des <b>filtres temporels</b> sur l'historique.</p>
+
+  <div class="highlight sec">
+    <b>🔒 Sécurité critique livrée</b> : le RLS au niveau établissement est désormais en base, en plus du filtrage applicatif. Un utilisateur rattaché à "Hôpital Cédric" ne pourra plus voir les données de "EHPAD Les Tilleuls" même s'il essayait de contourner l'UI. Si vous comptez ouvrir l'app à plusieurs utilisateurs distincts, exécutez le script <code>11_rls_etanche.sql</code> impérativement.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">6</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">14</div><div class="l">Tables protégées par RLS étab</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle page (Profil)</div></div>
+    <div class="kpi"><div class="v">+1</div><div class="l">Action audit (connexion)</div></div>
+    <div class="kpi"><div class="v">+1</div><div class="l">Filtre (temporel sur historique)</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Pages avec libellés propagés</div></div>
+  </div>
+
+  <!-- 2. CHANTIERS -->
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier roadmap</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>RLS étanche par établissement</b></td><td><span class="pill sec">Livré 🔒</span></td><td>Reporté depuis la 0.2, enfin attaqué en chantier dédié</td></tr>
+      <tr><td>2</td><td>Application des libellés métier aux autres pages</td><td><span class="pill new">Livré</span></td><td>Étendu à Interventions, Vue globale</td></tr>
+      <tr><td>3</td><td>Notifications ciblées</td><td><span class="pill new">Livré</span></td><td>Helper events.js gère déjà <code>notifUserId</code></td></tr>
+      <tr><td>4</td><td>Logs de connexion</td><td><span class="pill new">Livré</span></td><td>Insertion automatique dans audit_log au signin</td></tr>
+      <tr><td>5</td><td>Filtres temporels sur l'historique</td><td><span class="pill new">Livré</span></td><td>7j / 30j / 90j / Tout</td></tr>
+      <tr><td>6</td><td>Page profil utilisateur</td><td><span class="pill new">Livré</span></td><td>Nouvelle page <code>/profil</code> : nom, mot de passe, session</td></tr>
+      <tr><td>7</td><td>Mode hors-ligne PWA</td><td><span class="pill brk">Reporté 0.6</span></td><td>Refonte service worker dédiée</td></tr>
+      <tr><td>8</td><td>Domaine email pro</td><td><span class="pill brk">Reporté 0.6</span></td><td>Dépend de toi</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 3. RLS -->
+  <h2 id="rls">3. RLS étanche par établissement <span class="pill sec">SÉCURITÉ</span></h2>
+
+  <div class="panel crit">
+    <h3 style="margin-top:0">Pourquoi c'était important</h3>
+    <p>Jusqu'à la 0.4, le filtrage par établissement était fait <b>côté application</b> (chaque requête ajoutait <code>.eq("etablissement_id", auth.etabId)</code>). Ça marche pour l'usage normal, mais ça n'est <b>pas étanche</b> : un utilisateur technique qui contournerait l'UI (via l'API Supabase directement, ou un bug applicatif) pourrait potentiellement voir des données d'autres établissements de sa collectivité.</p>
+    <p>La 0.5 ajoute une <b>seconde couche</b> en base : même si l'app ne filtre rien, PostgreSQL refuse de retourner les lignes des établissements auxquels l'utilisateur n'est pas rattaché.</p>
+  </div>
+
+  <h3>3.1 Architecture en deux couches</h3>
+  <pre><code>┌─────────────────────────────────────────────────────────────┐
+│ Couche 1 : RLS COLLECTIVITÉ (existante depuis schema.sql)   │
+│   structure_id ∈ mes_structures()                            │
+│   → empêche de voir une autre collectivité                   │
+├─────────────────────────────────────────────────────────────┤
+│ Couche 2 : RLS ÉTABLISSEMENT (nouveau, Alpha 0.5)           │
+│   etablissement_id ∈ mes_etablissements() OU NULL            │
+│   → empêche de voir un autre établissement de SA coll.       │
+└─────────────────────────────────────────────────────────────┘
+                Les deux couches s'appliquent (AND)</code></pre>
+
+  <h3>3.2 Fonction mes_etablissements()</h3>
+  <pre><code>create function mes_etablissements() returns table(etab_id uuid)
+language sql security definer set search_path = public as $$
+  with rattachements as (
+    select etablissement_id from membres_etablissements where user_id = auth.uid()
+  )
+  -- Si l'user a au moins un rattachement : on prend ses établissements
+  select etablissement_id from membres_etablissements where user_id = auth.uid()
+  union
+  -- Sinon (admin collectivité sans rattachement) : on lui donne tous les étab
+  -- de sa collectivité, pour ne pas bloquer l'admin
+  select e.id from etablissements e
+  where not exists (select 1 from rattachements)
+    and e.structure_id in (select mes_structures());
+$$;</code></pre>
+
+  <h3>3.3 Tables protégées</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Politique select</th><th>Politique write</th></tr></thead>
+    <tbody>
+      <tr><td><code>patients</code></td><td>patients_select_etab</td><td>patients_write_etab</td></tr>
+      <tr><td><code>articles</code></td><td>articles_select_etab</td><td>articles_write_etab</td></tr>
+      <tr><td><code>materiels</code></td><td>materiels_select_etab</td><td>materiels_write_etab</td></tr>
+      <tr><td><code>interventions</code></td><td>interventions_select_etab</td><td>interventions_write_etab</td></tr>
+      <tr><td><code>depots, zones, stock_articles</code></td><td>*_select_etab</td><td>*_write_etab</td></tr>
+      <tr><td><code>transferts, commandes</code></td><td>*_select_etab</td><td>*_write_etab</td></tr>
+      <tr><td><code>batiments</code></td><td>batiments_select_etab</td><td>batiments_write_etab</td></tr>
+      <tr><td><code>etages, services, chambres, lits</code></td><td colspan="2">RLS héritée par cascade EXISTS sur la chaîne batiments</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.4 Comportement de bordure</h3>
+  <ul>
+    <li><b>Lignes sans <code>etablissement_id</code> (NULL)</b> : visibles par tous les membres de la collectivité (cas des données legacy ou globales). C'est volontaire — ça permet à la 0.5 de ne casser aucune donnée existante.</li>
+    <li><b>Utilisateur sans rattachement à un établissement</b> : il voit tous les établissements de sa collectivité (= admin collectivité). C'est volontaire pour ne pas bloquer les admins par défaut.</li>
+    <li><b>Utilisateur avec rattachement(s)</b> : il ne voit QUE ses établissements. Pour qu'il voie aussi d'autres établissements, il faut explicitement le rattacher.</li>
+  </ul>
+
+  <!-- 4. PROFIL -->
+  <h2 id="profil">4. Page profil utilisateur <span class="pill new">NOUVEAU</span></h2>
+  <p>Nouvelle page <code>/profil</code> accessible depuis le menu Administration → Mon profil. Permet à l'utilisateur connecté de :</p>
+  <ul>
+    <li><b>Voir ses infos</b> : email, collectivité, rôle, établissements accessibles, permissions</li>
+    <li><b>Modifier son nom d'affichage</b> (stocké dans <code>auth.users.user_metadata.nom_affiche</code>)</li>
+    <li><b>Changer son mot de passe</b> (avec confirmation + min. 6 caractères)</li>
+    <li>Voir son <b>ID utilisateur</b> (utile pour les requêtes SQL d'admin)</li>
+  </ul>
+
+  <!-- 5. CONNEXION -->
+  <h2 id="connexion">5. Logs de connexion <span class="pill new">NOUVEAU</span></h2>
+  <p>Chaque connexion réussie crée maintenant une entrée dans <code>audit_log</code> :</p>
+  <pre><code>{
+  action: "connexion",
+  entite: "session",
+  user_email: "cedric@aveho.fr",
+  details: { ua: "Mozilla/5.0 ... Chrome/148..." }
+}</code></pre>
+  <p>Visible dans la page Historique en filtrant sur "Connexion".</p>
+
+  <!-- 6. LIBELLÉS -->
+  <h2 id="libelles">6. Libellés métier propagés</h2>
+  <p>En 0.4, seule la page Patients utilisait <code>useLibelles</code>. En 0.5, c'est étendu à :</p>
+  <ul>
+    <li><b>Interventions</b> : KPI "Patients", références dans les DI</li>
+    <li><b>Vue globale</b> : KPI "Patients (total)", "Matériel (total)"</li>
+  </ul>
+  <p>Les pages restantes (Mon établissement, Magasins, etc.) seront adaptées en 0.6 — c'est mécanique mais demande de modifier chaque <code>"Patient"</code> en dur.</p>
+
+  <!-- 7. FILTRES -->
+  <h2 id="filtres">7. Filtres temporels sur l'historique <span class="pill new">NOUVEAU</span></h2>
+  <p>La page Historique a maintenant un sélecteur de période en premier filtre :</p>
+  <ul>
+    <li><b>7 derniers jours</b></li>
+    <li><b>30 derniers jours</b> (défaut)</li>
+    <li><b>90 derniers jours</b></li>
+    <li><b>Tout</b></li>
+  </ul>
+  <p>Combinable avec les filtres action et entité existants. Le bouton "Effacer filtres" devient "Réinitialiser" et remet la période à 30j par défaut.</p>
+
+  <!-- 8. NOTIF CIBLÉES -->
+  <h2 id="notif-ciblees">8. Notifications ciblées</h2>
+  <p>Le helper <code>logEvent</code> accepte maintenant <code>notifUserId</code> pour cibler un utilisateur précis au lieu de diffuser "à tous" :</p>
+  <pre><code>// Notif diffusée à tous (comportement par défaut depuis 0.4)
+await logEvent(supabase, auth, { ..., notif: true });
+
+// Notif ciblée sur un utilisateur précis (nouveau en 0.5)
+await logEvent(supabase, auth, {
+  ...,
+  notif: true,
+  notifUserId: assigneeUserId,    // un seul destinataire
+  titre: "Tu as été assigné à cette DI",
+});</code></pre>
+  <p>Pour l'instant ce paramètre est juste exposé techniquement — il sera utilisé en 0.6 quand on ajoutera l'assignation explicite des DI à un utilisateur.</p>
+
+  <!-- 9. DELTA -->
+  <h2 id="delta">9. Delta vs Alpha 0.4</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Script SQL <code>11_rls_etanche.sql</code></td><td><span class="pill sec">SEC</span></td><td>RLS étanche sur 14 tables + fonction mes_etablissements()</td></tr>
+      <tr><td>Fonction SQL <code>mes_etablissements()</code></td><td><span class="pill sec">SEC</span></td><td>Retourne les UUIDs accessibles à l'user, avec fallback admin</td></tr>
+      <tr><td>Page <code>/profil</code></td><td><span class="pill new">NEW</span></td><td>Nom d'affichage, mot de passe, infos session</td></tr>
+      <tr><td>Logs de connexion</td><td><span class="pill new">NEW</span></td><td>Insertion auto dans audit_log au signin</td></tr>
+      <tr><td>Filtre temporel sur historique</td><td><span class="pill new">NEW</span></td><td>7j / 30j / 90j / Tout</td></tr>
+      <tr><td>Libellés appliqués sur Interventions</td><td><span class="pill imp">IMP</span></td><td>KPI "Patients" devient dynamique</td></tr>
+      <tr><td>Libellés appliqués sur Vue globale</td><td><span class="pill imp">IMP</span></td><td>KPIs "Patients (total)", "Matériel (total)"</td></tr>
+      <tr><td>Notif ciblée via notifUserId</td><td><span class="pill imp">IMP</span></td><td>Paramètre exposé, prêt à être utilisé en 0.6</td></tr>
+      <tr><td>Entrée menu Mon profil</td><td><span class="pill imp">IMP</span></td><td>Sous Administration</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 10. FICHIERS -->
+  <h2 id="fichiers">10. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/11_rls_etanche.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>RLS étanche par établissement (critique)</td></tr>
+      <tr><td><code>app/profil/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page profil utilisateur</td></tr>
+      <tr><td><code>app/login/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Insertion audit_log au signin</td></tr>
+      <tr><td><code>app/historique/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Filtre temporel + 4ème sélecteur</td></tr>
+      <tr><td><code>app/interventions/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Libellés dynamiques</td></tr>
+      <tr><td><code>app/vue-globale/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Libellés dynamiques</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>Entrée menu Mon profil</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.4.0-alpha → 0.5.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 11. MIGRATION -->
+  <h2 id="migration">11. Procédure de mise à jour depuis Alpha 0.4</h2>
+  <div class="panel hi">
+    <p><b>1 script SQL critique à exécuter</b> :</p>
+    <ol>
+      <li>Sauvegarde ton dossier <code>C:\aveho-ec-app</code> ET ta base Supabase (Project Settings → Database → Backups).</li>
+      <li>Décompresse le nouveau zip par-dessus.</li>
+      <li><b>Dans Supabase SQL Editor</b> : exécute <code>supabase/11_rls_etanche.sql</code>.
+        <br><b>⚠️ Important</b> : si ton compte de test n'est rattaché à AUCUN établissement, tu verras quand même tout (fallback admin). Pour tester l'étanchéité, crée un user de test et rattache-le explicitement à un seul établissement via SQL :
+        <pre style="margin:8px 0"><code>insert into membres_etablissements (user_id, etablissement_id, structure_id)
+values ('UID_DE_TEST', 'UUID_HOPITAL_CEDRIC', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');</code></pre>
+      </li>
+      <li>Dans PowerShell :
+        <pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre>
+      </li>
+      <li>Mise en ligne :
+        <pre><code>git add .
+git commit -m "Aveho EC Alpha 0.5"
+git push</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <!-- 12. TESTS -->
+  <h2 id="tests">12. Tests de sécurité à faire après mise à jour</h2>
+  <div class="panel warn">
+    <p><b>Vérification que le RLS étanche fonctionne</b> :</p>
+    <ol>
+      <li>Crée un user de test "test@aveho.fr" via Supabase Auth → Users → Add user.</li>
+      <li>Rattache-le à la collectivité ET à un seul établissement (Hôpital Cédric) :
+        <pre><code>insert into membres_structure (user_id, structure_id, role)
+values ('TEST_UID', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'lecture');
+
+insert into membres_etablissements (user_id, etablissement_id, structure_id)
+select 'TEST_UID', id, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+from etablissements where nom = 'Hôpital Cédric';</code></pre>
+      </li>
+      <li>Connecte-toi avec ce user, va sur la page Patients.</li>
+      <li>Tu dois voir uniquement les patients d'<i>Hôpital Cédric</i>, pas ceux d'<i>EHPAD Les Tilleuls</i>.</li>
+      <li>Va dans Supabase → Table Editor → patients : tu dois voir le même filtrage côté requête directe (preuve que la RLS marche, pas seulement l'app).</li>
+    </ol>
+  </div>
+
+  <!-- 13. REPORTÉ -->
+  <h2 id="reporte">13. Chantiers reportés en Alpha 0.6</h2>
+  <div class="panel warn">
+    <table>
+      <thead><tr><th>Chantier</th><th>Raison</th></tr></thead>
+      <tbody>
+        <tr><td><b>Mode hors-ligne PWA</b></td><td>Refonte service worker + stratégie cache + IndexedDB. Chantier qui mérite d'être traité seul.</td></tr>
+        <tr><td><b>Domaine email pro</b></td><td>Dépend de l'achat d'un domaine.</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px"><b>Plus que 2 chantiers en attente</b> contre 3 en 0.4. La dette technique se réduit. 👍</p>
+  </div>
+
+  <!-- 14. ROADMAP -->
+  <h2 id="roadmap">14. Roadmap Alpha 0.6</h2>
+  <div class="panel ok">
+    <ol>
+      <li><b>Mode hors-ligne PWA</b> — refonte service worker, cache des données critiques, indexedDB</li>
+      <li><b>Domaine email pro</b> — dès qu'il sera disponible</li>
+      <li><b>Assignation explicite des DI</b> à un utilisateur (avec notif ciblée — déjà prête côté helper events.js)</li>
+      <li><b>Libellés sur les pages restantes</b> (Mon établissement, Magasins, Stock, Transferts…)</li>
+      <li><b>Récap quotidien des notifications par email</b> (si l'user n'est pas connecté de la journée)</li>
+      <li><b>Tableau de bord personnalisable</b> sur la page d'accueil</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.5 · 29 mai 2026</p>
+    <p>Document de version interne — la 0.5 marque le passage en "sécurité production-ready"</p>
+  </footer>
+
+</div>
+</body>
+</html>

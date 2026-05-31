@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.19.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.fix{background:#dee9fa;color:#1e4a91}
+  .pill.refac{background:#e8d8f0;color:#5a2a7a}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.dark{background:#2a3a48;color:#cfe0e0}
+  .pill.perf{background:#dcf0e3;color:#1c5a36}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+  .compare div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+  .compare h4{margin:0 0 6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .gain{color:#1c5a36;font-weight:700}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — QUALITÉ APPROFONDIE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.19.0
+      <small>67 tests Vitest · Audit mode sombre 0.16-0.18 · Lazy load modules lourds · pageSize configurable · content-visibility</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 30 mai 2026 (nuit)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.19.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.18.0</span>
+      <span><b>Statut :</b> Build clean · 67 tests verts · Pas de SQL</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">✅ 67 tests Vitest (+33 vs 0.18)</span>
+      <span class="badge green">🌓 Mode sombre complet (UM, FilterBar, Tooltip…)</span>
+      <span class="badge green">📦 -44% bundle fiche matériel/patient</span>
+      <span class="badge green">🔢 pageSize configurable (25/50/100/Tout)</span>
+      <span class="badge green">⚡ content-visibility sur les tables</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#tests">3. Tests étendus (67 tests)</a></li>
+      <li><a href="#dark">4. Audit mode sombre</a></li>
+      <li><a href="#perf">5. Optimisations performance</a></li>
+      <li><a href="#fichiers">6. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">7. Procédure d'application</a></li>
+      <li><a href="#reporte">8. Reste à faire (0.20)</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>La 0.19.0 continue l'effort de qualité commencé en 0.18.0 : <b>tests étendus</b> (+33 tests pour atteindre 67), <b>audit mode sombre</b> sur les composants ajoutés en 0.16-0.18, et <b>optimisations performance</b> via lazy loading des modules lourds et content-visibility CSS.</p>
+
+  <div class="highlight">
+    <b>Aucun patch SQL</b>, aucune dépendance npm, aucun changement de comportement fonctionnel. Cette release vise uniquement à <b>améliorer ce qui est déjà là</b> sans casser ce qui marche.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">4</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">67</div><div class="l">Tests unitaires verts</div></div>
+    <div class="kpi"><div class="v">+33</div><div class="l">Nouveaux tests vs 0.18</div></div>
+    <div class="kpi"><div class="v">-44%</div><div class="l">Bundle fiche matériel</div></div>
+    <div class="kpi"><div class="v">-44%</div><div class="l">Bundle fiche patient</div></div>
+    <div class="kpi"><div class="v">~30</div><div class="l">Sélecteurs CSS dark ajoutés</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Pages bénéficiant du lazy load</div></div>
+    <div class="kpi"><div class="v">332</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Tests Vitest sur <code>canDo</code> (18 tests sur rôles & permissions)</td><td><span class="pill test">Tests</span></td></tr>
+      <tr><td>2</td><td>Tests Vitest sur <code>parseCSVText</code> (15 tests sur import CSV)</td><td><span class="pill test">Tests</span></td></tr>
+      <tr><td>3</td><td>CSS mode sombre pour UserMenu, FilterBar, Tooltip, NotificationOptIn, WebhookConfig</td><td><span class="pill dark">Dark</span></td></tr>
+      <tr><td>4</td><td>Lazy load <code>ficheToPdf</code> sur fiches matériel et patient</td><td><span class="pill perf">Perf</span></td></tr>
+      <tr><td>5</td><td>Lazy load <code>exportExcel</code> sur statistiques</td><td><span class="pill perf">Perf</span></td></tr>
+      <tr><td>6</td><td>pageSize configurable (25/50/100/Tout) dans le composant Crud</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>7</td><td><code>content-visibility: auto</code> sur les rangées de tables</td><td><span class="pill perf">Perf</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="tests">3. Tests étendus (67 tests)</h2>
+  <p>Évolution depuis 0.18.0 :</p>
+  <table>
+    <thead><tr><th>Fichier de tests</th><th>0.18.0</th><th>0.19.0</th><th>Delta</th></tr></thead>
+    <tbody>
+      <tr><td><code>format.test.js</code></td><td>22</td><td>22</td><td>—</td></tr>
+      <tr><td><code>events.test.js</code></td><td>12</td><td>12</td><td>—</td></tr>
+      <tr><td><code>useAuth.test.js</code></td><td>—</td><td>18</td><td>+18</td></tr>
+      <tr><td><code>importCsv.test.js</code></td><td>—</td><td>15</td><td>+15</td></tr>
+      <tr><td><b>Total</b></td><td><b>34</b></td><td><b>67</b></td><td><b>+33</b></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.1 Tests <code>canDo</code> (18 tests)</h3>
+  <p>La fonction <code>canDo(role, action)</code> est centrale : elle décide si un utilisateur peut écrire, supprimer, inviter, gérer les rôles, etc. Toute régression ici cassera silencieusement des fonctionnalités entières. Les tests couvrent :</p>
+  <ul>
+    <li><b>Rôles système</b> : Administrateur peut tout, Lecture seule peut rien</li>
+    <li><b>Raccourcis</b> : <code>systeme: "admin"</code> et <code>systeme: "lecture"</code></li>
+    <li><b>null/undefined</b> : ne peut rien faire (sécurité par défaut)</li>
+    <li><b>Format Array</b> : <code>["write", "delete"]</code> + wildcard <code>*</code></li>
+    <li><b>Format Objet par module</b> : <code>{ stock: ["read","write"], patients: ["read"] }</code></li>
+    <li><b>Compatibilité legacy</b> : fallback sur <code>droits</code> et <code>permissions</code> si <code>permissions_json</code> absent</li>
+    <li><b>Cas réels</b> : admin de structure (Cédric), formateur, observateur</li>
+  </ul>
+
+  <h3>3.2 Tests <code>parseCSVText</code> (15 tests)</h3>
+  <p>L'import CSV est utilisé pour les patients, prescripteurs, articles, etc. Une régression peut corrompre des données en base. Les tests couvrent :</p>
+  <ul>
+    <li><b>Séparateurs</b> : virgule (US) et point-virgule (FR Excel)</li>
+    <li><b>BOM UTF-8</b> : retrait du préfixe <code>\uFEFF</code></li>
+    <li><b>Guillemets</b> : entourant cellule, échappés (doublés), contenant retour ligne</li>
+    <li><b>Lignes vides</b> : ignorées</li>
+    <li><b>Retours ligne</b> : Windows (\r\n) et Unix (\n)</li>
+    <li><b>Cas limites</b> : chaîne vide, en-tête seul, cellule manquante, trim</li>
+    <li><b>Cas réels</b> : import patients FR avec point-virgule, import prescripteurs avec virgules dans les noms entre guillemets</li>
+  </ul>
+
+  <h2 id="dark">4. Audit mode sombre</h2>
+  <p>Le mode sombre existait depuis la 0.7 mais les composants ajoutés en 0.16-0.18 n'avaient pas leur variante dark. Audit complet livré dans cette release.</p>
+
+  <h3>4.1 Composants couverts</h3>
+  <ul>
+    <li><b>UserMenu</b> (0.16.0) : popover, bottom-sheet, items, divider, en-tête avec avatar</li>
+    <li><b>Tooltip</b> (0.16.0) : bulle navy plus foncée en dark, soulignement adaptatif</li>
+    <li><b>FilterBar</b> (0.16.1) : chips de filtre avec couleurs adaptées au fond sombre</li>
+    <li><b>NotificationOptIn</b> (0.17.1) : carte d'opt-in dark, conserve les couleurs sémantiques (vert/orange) pour la lisibilité</li>
+    <li><b>WebhookConfig</b> (0.17.1) : section grise foncée, inputs adaptés, boutons Tester</li>
+    <li><b>Modale Infos utilisateur</b> (0.16.0) : encart stats d'activité en gradient sombre</li>
+    <li><b>Skip-link</b> (0.18.0) : déjà en navy, pas besoin de variante</li>
+  </ul>
+
+  <h3>4.2 Variables CSS utilisées</h3>
+  <p>Les overrides dark utilisent les variables CSS existantes pour cohérence avec le système de design :</p>
+  <pre><code>--aveho-bg: #0a131f        /* fond général */
+--aveho-panel: #142131     /* cartes / panels */
+--aveho-line: #243044      /* bordures */
+--aveho-text: #e8edf2      /* texte principal */
+--aveho-muted: #8a98a8     /* texte secondaire */</code></pre>
+
+  <h2 id="perf">5. Optimisations performance</h2>
+
+  <h3>5.1 Lazy load des modules lourds</h3>
+  <p>Trois imports statiques convertis en imports dynamiques (chargés à l'appel) :</p>
+  <table>
+    <thead><tr><th>Page</th><th>Module lazy</th><th>Trigger</th></tr></thead>
+    <tbody>
+      <tr><td><code>/materiel/[id]</code></td><td><code>ficheToPdf.js</code></td><td>Clic sur "Imprimer"</td></tr>
+      <tr><td><code>/patient/[id]</code></td><td><code>ficheToPdf.js</code></td><td>Clic sur "Imprimer"</td></tr>
+      <tr><td><code>/statistiques</code></td><td><code>exportExcel.js</code></td><td>Clic sur "Export Excel"</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 Gains mesurés sur le build</h3>
+  <div class="compare">
+    <div>
+      <h4>Avant (0.18.0)</h4>
+      <ul style="margin:0;padding-left:18px">
+        <li>/materiel/[id] : <b>5.95 kB</b></li>
+        <li>/patient/[id] : <b>6.9 kB</b></li>
+        <li>/statistiques : <b>7.0 kB</b></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Après (0.19.0)</h4>
+      <ul style="margin:0;padding-left:18px">
+        <li>/materiel/[id] : <b>3.33 kB</b> <span class="gain">(-44%)</span></li>
+        <li>/patient/[id] : <b>3.86 kB</b> <span class="gain">(-44%)</span></li>
+        <li>/statistiques : <b>5.96 kB</b> <span class="gain">(-15%)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>5.3 pageSize configurable</h3>
+  <p>Le composant <code>&lt;Crud&gt;</code> (utilisé sur les pages Patients, Matériels, Articles, Dépôts, etc.) propose désormais un sélecteur de taille de page : <b>25 / 50 / 100 / Tout</b>. Affiché dès qu'il y a plus de 25 lignes.</p>
+  <ul>
+    <li>Par défaut : 50 (comme avant)</li>
+    <li>Sur mobile, l'utilisateur peut passer à 25 pour réduire la charge</li>
+    <li>Sur desktop avec une grosse collectivité, l'utilisateur peut afficher tout pour utiliser Ctrl+F natif du navigateur</li>
+  </ul>
+
+  <h3>5.4 content-visibility: auto</h3>
+  <p>Ajout de la règle CSS <code>content-visibility: auto</code> sur les <code>tr</code> de tables. Le navigateur ne rend les rangées qu'au scroll (out-of-viewport = skip layout/paint). Sur une liste de 200+ lignes, le scroll devient nettement plus fluide.</p>
+  <pre><code>table tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 48px;
+}</code></pre>
+  <p>L'attribut <code>contain-intrinsic-size</code> indique au navigateur la hauteur approximative d'une rangée non rendue, ce qui évite les sauts de scrollbar. Compatible Chrome 85+, Firefox 125+, Safari 18+. Pas de fallback nécessaire — sur les anciens navigateurs, le rendu normal est utilisé.</p>
+
+  <h2 id="fichiers">6. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>__tests__/useAuth.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>18 tests sur canDo</td></tr>
+      <tr><td><code>__tests__/importCsv.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>15 tests sur parseCSVText</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill dark">DARK</span> + <span class="pill perf">PERF</span></td><td>+ Dark mode 0.16-0.18, + content-visibility</td></tr>
+      <tr><td><code>app/materiel/[id]/page.js</code></td><td><span class="pill perf">PERF</span></td><td>Import statique ficheToPdf → dynamique</td></tr>
+      <tr><td><code>app/patient/[id]/page.js</code></td><td><span class="pill perf">PERF</span></td><td>Import statique ficheToPdf → dynamique</td></tr>
+      <tr><td><code>app/statistiques/page.js</code></td><td><span class="pill perf">PERF</span></td><td>Import statique exportExcel → dynamique</td></tr>
+      <tr><td><code>app/crud.js</code></td><td><span class="pill new">ENRICHI</span></td><td>+ Sélecteur pageSize, + aria-labels pagination</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.18.0-alpha → 0.19.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">7. Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Pas de SQL.</b> Aucun changement de schéma.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app</code> (garder <code>.env.local</code>)</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+npm install
+npm test       # vérifie : Tests 67 passed (67)
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Activer le mode sombre via <code>/parametres</code> → onglet Thème → Sombre. Tous les composants doivent être lisibles (texte clair sur fond foncé).</li>
+          <li>Ouvrir une fiche matériel ou patient → DevTools Network : le chunk <code>ficheToPdf</code> n'apparaît que quand on clique sur Imprimer.</li>
+          <li>Liste matériels avec &gt; 25 items : le sélecteur pageSize apparaît. Tester 25 / 50 / 100 / Tout.</li>
+          <li>Liste matériels avec &gt; 100 items (si tu as les données) : scroll fluide grâce à content-visibility.</li>
+        </ul>
+      </li>
+      <li><b>Pousser sur Vercel</b> comme d'habitude (<code>C:\aveho-ec-app-01</code> + git push).</li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">8. Reste à faire (0.20+)</h2>
+  <div class="panel warn">
+    <p>Chantiers reportés depuis la roadmap 0.18 originelle, à attaquer en journée (pas la nuit) :</p>
+    <ul>
+      <li><b>Dépréciation <code>membres_structure.role</code> text</b> — risque élevé, demande audit code complet. Avec les 67 tests en place, le risque diminue mais reste à faire à tête reposée.</li>
+      <li><b>Extraction hooks <code>useStructureData</code>, <code>useFiltres</code></b> — refactor moyen, peu de valeur visible utilisateur</li>
+      <li><b>Tests d'intégration Playwright</b> — setup lourd (~200 MB de browsers), flux critiques (login, créer DI, traiter panier)</li>
+      <li><b>Tests étendus exportExcel / pdfPreview</b> — ces modules manipulent du DOM/Blob, demande mock environment Vitest</li>
+    </ul>
+    <p>Chantiers futurs (idées pour 0.20+) :</p>
+    <ul>
+      <li><b>Recherche full-text</b> sur les patients / matériels (Postgres GIN index sur tsvector)</li>
+      <li><b>Notifications push grouped</b> (regrouper les 5 DI urgentes du jour en une seule notif)</li>
+      <li><b>Mode hors-ligne avancé</b> : queue d'écritures en attente quand offline</li>
+      <li><b>Export Excel avec graphiques natifs</b> (xlsx-populate pour gérer les charts)</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.19.0 · 30 mai 2026 (nuit)</p>
+    <p>4 chantiers qualité — Tests étendus · Audit dark mode · Lazy load · Perf CSS</p>
+  </footer>
+
+</div>
+</body>
+</html>

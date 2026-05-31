@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.2</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.amber{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f5d09f}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  h4{font-size:14px;color:#2a5a5a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:1px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table tbody tr:last-child td{border-bottom:none}
+  code,.code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.fix{background:#e3edf7;color:#1f4f8a}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  .pill.k{background:#e8efff;color:#2c3e7a}
+  .pill.f{background:#e9f7f7;color:#23615f}
+  .pill.t{background:#f7e8ef;color:#7a2c52}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.2
+      <small>Édition de la hiérarchie · Système UI unifié · Application des droits · Décrément stock auto</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.2.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.1 (28/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">✓ 6/10 chantiers roadmap livrés</span>
+      <span class="badge green">✓ 1 nouvelle page</span>
+      <span class="badge green">✓ Système UI unifié</span>
+      <span class="badge green">✓ Droits effectifs</span>
+      <span class="badge amber">⚠ Test interne</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#nouveautes">3. Détail des nouveautés</a></li>
+      <li><a href="#ui">4. Système UI unifié</a></li>
+      <li><a href="#droits">5. Application des droits de rôle</a></li>
+      <li><a href="#delta">6. Delta vs Alpha 0.1</a></li>
+      <li><a href="#fichiers">7. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">8. Procédure de mise à jour</a></li>
+      <li><a href="#reporte">9. Chantiers reportés en 0.3</a></li>
+      <li><a href="#roadmap">10. Roadmap Alpha 0.3</a></li>
+    </ul>
+  </nav>
+
+  <!-- 1. RÉSUMÉ -->
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.2 enrichit les fondations posées en 0.1 sans ajouter de nouveau module métier — elle <b>termine</b> ce qui était en chantier. Les utilisateurs gagnent enfin la possibilité de gérer la hiérarchie de leur établissement depuis l'interface (plus besoin de SQL), les pop-ups deviennent homogènes et reconnaissables, et les droits définis dans les rôles s'appliquent réellement dans l'UI.</p>
+
+  <div class="highlight">
+    <b>Priorisation transparente</b> : la roadmap Alpha 0.2 comptait 10 chantiers. Cette version en livre <b>6</b> à fort impact immédiat. Les 4 chantiers restants (RLS étanche, domaine email, notifications, mode hors-ligne) sont reportés en Alpha 0.3 car ils nécessitent un travail spécialisé qui aurait été bâclé en lot avec le reste.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle page</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">23</div><div class="l">Types d'entités unifiés</div></div>
+    <div class="kpi"><div class="v">16</div><div class="l">Pages commentées</div></div>
+    <div class="kpi"><div class="v">+1</div><div class="l">Entrée menu</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">Nouveau script SQL requis</div></div>
+  </div>
+
+  <!-- 2. CHANTIERS LIVRÉS -->
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier roadmap</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Édition hiérarchie depuis l'UI</td><td><span class="pill new">Livré</span></td><td>Nouvelle page <code>/etablissement/edition</code></td></tr>
+      <tr><td>2</td><td>Refonte visuelle des pop-ups</td><td><span class="pill new">Livré</span></td><td>Composant <code>&lt;Modal&gt;</code> v2 unifié, entête coloré par entité</td></tr>
+      <tr><td>3</td><td>Cohérence visuelle inter-pages</td><td><span class="pill new">Livré</span></td><td>Table <code>ENTITY</code> + <code>&lt;Badge&gt;</code> / <code>&lt;Btn&gt;</code> / <code>&lt;EntityIcon&gt;</code></td></tr>
+      <tr><td>4</td><td>Application des droits de rôle</td><td><span class="pill new">Livré</span></td><td>Helper <code>auth.can(action)</code>, boutons masqués selon permissions</td></tr>
+      <tr><td>5</td><td>Décrément automatique du stock à la réception</td><td><span class="pill new">Livré</span></td><td>Logique côté app dans <code>advance()</code> des transferts</td></tr>
+      <tr><td>6</td><td>Commentaires détaillés dans le code</td><td><span class="pill new">Livré</span></td><td>16 pages avec en-tête descriptif + commentaires de blocs</td></tr>
+      <tr><td>7</td><td>RLS étanche par établissement</td><td><span class="pill brk">Reporté 0.3</span></td><td>Sécurité critique, mérite tests dédiés</td></tr>
+      <tr><td>8</td><td>Domaine email pro chez Resend</td><td><span class="pill brk">Reporté 0.3</span></td><td>Dépend de l'acquisition d'un domaine</td></tr>
+      <tr><td>9</td><td>Notifications in-app (cloche)</td><td><span class="pill brk">Reporté 0.3</span></td><td>Nouvelle table + UI temps réel</td></tr>
+      <tr><td>10</td><td>Mode hors-ligne PWA</td><td><span class="pill brk">Reporté 0.3</span></td><td>Refonte service worker + stratégie cache</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 3. NOUVEAUTÉS -->
+  <h2 id="nouveautes">3. Détail des nouveautés</h2>
+
+  <h3>3.1 Page Édition de la hiérarchie <span class="pill new">NOUVEAU</span></h3>
+  <p><b>Route :</b> <code>/etablissement/edition</code> — accessible depuis le menu (sous "Mon établissement") ou directement par lien.</p>
+  <p><b>Fonctionnement</b> : la page affiche l'arborescence complète de l'établissement courant (bâtiments → étages → services → chambres → lits) avec, à chaque niveau, des actions <i>Ajouter / Modifier / Supprimer</i>. Une seule modale unifiée gère tous les types de création/édition, avec champs spécifiques (niveau pour les étages, type pour les services).</p>
+  <p><b>Garde-fou</b> : la page vérifie la permission <code>editer_hierarchie</code>. Un utilisateur en "Lecture seule" voit un message d'accès refusé.</p>
+  <p><b>Impact</b> : finie la nécessité de passer par SQL Editor pour créer une chambre. Les utilisateurs métier gèrent eux-mêmes leur établissement.</p>
+
+  <h3>3.2 Décrément automatique du stock <span class="pill new">NOUVEAU</span></h3>
+  <p>Au passage d'un transfert en statut <b>Reçu</b>, si le transfert porte un <b>article</b> entre <b>deux dépôts</b>, la fonction <code>advance()</code> de la page transferts :</p>
+  <ul>
+    <li>Décrémente la quantité de l'article dans <code>stock_articles</code> côté dépôt source (sans descendre sous zéro)</li>
+    <li>Incrémente la quantité côté dépôt destination (création de la ligne si elle n'existait pas)</li>
+  </ul>
+  <p>Les transferts vers une chambre, un patient ou un emplacement non-dépôt ne déclenchent pas de mouvement de stock — c'est volontaire (ils sortent du périmètre stock).</p>
+
+  <!-- 4. UI -->
+  <h2 id="ui">4. Système UI unifié</h2>
+  <p>Tous les composants UI partagés ont été regroupés et standardisés dans <code>app/ui.js</code>.</p>
+
+  <h3>4.1 Table ENTITY — référentiel visuel des entités</h3>
+  <p>Une table centrale associe chaque type d'objet (patient, matériel, dépôt, DI, etc.) à une icône Tabler et une couleur. C'est cette table qui pilote la cohérence visuelle dans toute l'appli.</p>
+  <pre><code>// Extrait simplifié
+ENTITY = {
+  patient:   { ic: "ti-user",          color: "#7a6fb0", label: "Patient" },
+  materiel:  { ic: "ti-armchair-2",    color: "#142131", label: "Matériel" },
+  depot:     { ic: "ti-building-warehouse", color: "#EF9F27", label: "Dépôt" },
+  di:        { ic: "ti-tools",         color: "#e35d5b", label: "DI" },
+  commande:  { ic: "ti-shopping-bag",  color: "#2a5a5a", label: "Commande" },
+  // ... 23 types au total
+}</code></pre>
+
+  <h3>4.2 Composant &lt;Modal&gt; v2</h3>
+  <p>Une seule modale unifiée pour toute l'appli :</p>
+  <ul>
+    <li><b>En-tête coloré</b> selon le type d'entité (la modale "patient" est violette, "matériel" est navy, etc.)</li>
+    <li><b>Icône</b> de l'entité en haut à gauche de la modale</li>
+    <li><b>Animation</b> à l'ouverture (subtle slide-up + fade)</li>
+    <li><b>Bottom-sheet</b> automatique sur mobile (pleine largeur, depuis le bas)</li>
+    <li><b>Footer flexible</b> pour les boutons d'action</li>
+  </ul>
+  <pre><code>&lt;Modal open={modal} onClose={close} kind="patient" title="Nouveau patient"
+       footer={&lt;&gt;&lt;Btn variant="ghost" onClick={close}&gt;Annuler&lt;/Btn&gt;
+                  &lt;Btn variant="primary" onClick={save}&gt;Enregistrer&lt;/Btn&gt;&lt;/&gt;}&gt;
+  ...champs...
+&lt;/Modal&gt;</code></pre>
+
+  <h3>4.3 Composants &lt;Badge&gt;, &lt;Btn&gt;, &lt;EntityIcon&gt;</h3>
+  <table>
+    <thead><tr><th>Composant</th><th>Rôle</th><th>Variants</th></tr></thead>
+    <tbody>
+      <tr><td><code>&lt;Badge kind="..."&gt;</code></td><td>Pastille typée par entité (couleur + icône cohérentes)</td><td>Tous les types ENTITY</td></tr>
+      <tr><td><code>&lt;Btn variant="..."&gt;</code></td><td>Bouton typé</td><td>primary, ghost, danger, new</td></tr>
+      <tr><td><code>&lt;EntityIcon kind="..."&gt;</code></td><td>Icône d'entité dans un carré pastel</td><td>Taille paramétrable</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 5. DROITS -->
+  <h2 id="droits">5. Application des droits de rôle</h2>
+
+  <h3>5.1 Helper auth.can(action)</h3>
+  <p>Le hook <code>useAuth</code> charge maintenant le rôle effectif de l'utilisateur dans la collectivité (table <code>roles</code> liée via <code>membres_structure.role_id</code>), et expose un helper :</p>
+  <pre><code>const auth = useAuth();
+auth.can("ecrire")       // peut créer/modifier ?
+auth.can("supprimer")    // peut supprimer ?
+auth.can("inviter")      // peut inviter des utilisateurs ?
+auth.can("editer_hierarchie")  // peut gérer bâtiments/chambres ?
+// ... etc.</code></pre>
+
+  <h3>5.2 Mapping action → permission</h3>
+  <table>
+    <thead><tr><th>Action</th><th>Permission requise</th></tr></thead>
+    <tbody>
+      <tr><td><code>ecrire</code></td><td><code>write</code></td></tr>
+      <tr><td><code>supprimer</code></td><td><code>delete</code></td></tr>
+      <tr><td><code>inviter</code></td><td><code>invite_users</code></td></tr>
+      <tr><td><code>gerer_roles</code></td><td><code>manage_roles</code></td></tr>
+      <tr><td><code>valider_transfert</code></td><td><code>validate_transfer</code></td></tr>
+      <tr><td><code>valider_di</code></td><td><code>validate_di</code></td></tr>
+      <tr><td><code>creer_etablissement</code> / <code>editer_etablissement</code></td><td><code>manage_collectivite</code></td></tr>
+      <tr><td><code>creer_chambre</code> / <code>editer_hierarchie</code></td><td><code>manage_locations</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 Raccourcis rôles système</h3>
+  <ul>
+    <li><b>"Administrateur"</b> (ou <code>role.systeme === "admin"</code>) → toutes les actions autorisées</li>
+    <li><b>"Lecture seule"</b> (ou <code>role.systeme === "lecture"</code>) → aucune action d'écriture</li>
+    <li>Autres rôles → vérifient leur <code>permissions_json</code> (tableau de permissions explicites)</li>
+  </ul>
+
+  <h3>5.4 Application UI</h3>
+  <p>Les composants <code>&lt;Crud&gt;</code> et les pages refondues (Patients notamment) acceptent des props <code>canWrite</code> / <code>canDelete</code>. Les boutons "Nouveau", "Modifier", "Supprimer" disparaissent visuellement quand le rôle ne le permet pas.</p>
+
+  <!-- 6. DELTA -->
+  <h2 id="delta">6. Delta vs Alpha 0.1</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Page <code>/etablissement/edition</code></td><td><span class="pill new">NEW</span></td><td>Gestion complète de la hiérarchie depuis l'UI</td></tr>
+      <tr><td>Composant <code>&lt;Modal&gt;</code> v2 unifié</td><td><span class="pill new">NEW</span></td><td>Header coloré, icône typée, animation, footer flexible</td></tr>
+      <tr><td>Composants <code>&lt;Btn&gt;</code> / <code>&lt;Badge&gt;</code> / <code>&lt;EntityIcon&gt;</code></td><td><span class="pill new">NEW</span></td><td>Système de design unifié</td></tr>
+      <tr><td>Table ENTITY (23 types)</td><td><span class="pill new">NEW</span></td><td>Référentiel central icône + couleur par entité</td></tr>
+      <tr><td>Helper <code>auth.can(action)</code></td><td><span class="pill new">NEW</span></td><td>Vérification des droits dans le code</td></tr>
+      <tr><td>Chargement du rôle dans useAuth</td><td><span class="pill new">NEW</span></td><td>Le rôle effectif est désormais en contexte global</td></tr>
+      <tr><td>Décrément/incrément stock auto</td><td><span class="pill new">NEW</span></td><td>Au passage à "Reçu" sur un transfert article dépôt→dépôt</td></tr>
+      <tr><td>Entrée menu "Édition hiérarchie"</td><td><span class="pill new">NEW</span></td><td>Sous la section Établissement</td></tr>
+      <tr><td>Bouton danger <code>btn-danger</code></td><td><span class="pill new">NEW</span></td><td>Pour les actions destructives</td></tr>
+      <tr><td>Animation modale</td><td><span class="pill imp">IMP</span></td><td>Slide-up + fade subtil à l'ouverture</td></tr>
+      <tr><td>Composant Crud étendu</td><td><span class="pill imp">IMP</span></td><td>Props <code>canWrite</code> / <code>canDelete</code></td></tr>
+      <tr><td>Commentaires d'en-tête</td><td><span class="pill imp">IMP</span></td><td>16 pages avec description en commentaire</td></tr>
+      <tr><td>Bouton danger pas distingué</td><td><span class="pill fix">FIX</span></td><td>Couleur Terra (#C9867F) au lieu d'un bouton générique</td></tr>
+      <tr><td>Modales toutes identiques visuellement</td><td><span class="pill fix">FIX</span></td><td>Maintenant différenciées par entité</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 7. FICHIERS -->
+  <h2 id="fichiers">7. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/etablissement/edition/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Nouvelle page d'édition hiérarchie</td></tr>
+      <tr><td><code>app/ui.js</code></td><td><span class="pill imp">RÉÉCRIT</span></td><td>Modal v2, Btn, Badge, EntityIcon, table ENTITY</td></tr>
+      <tr><td><code>lib/useAuth.js</code></td><td><span class="pill imp">RÉÉCRIT</span></td><td>Charge le rôle, expose <code>can(action)</code>, helper <code>canDo()</code></td></tr>
+      <tr><td><code>app/crud.js</code></td><td><span class="pill imp">MODIF</span></td><td>Props <code>canWrite</code> / <code>canDelete</code> ajoutées</td></tr>
+      <tr><td><code>app/transferts/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Décrément stock dans <code>advance()</code></td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Boutons conditionnels selon droits</td></tr>
+      <tr><td><code>app/articles, materiels, depots, stock</code></td><td><span class="pill imp">MODIF</span></td><td>Props droits propagées au Crud</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>Entrée menu "Édition hiérarchie"</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill imp">MODIF</span></td><td>+ styles Modal v2, btn-danger, hier-row, hier-children</td></tr>
+      <tr><td>16 pages</td><td><span class="pill imp">MODIF</span></td><td>Commentaire d'en-tête descriptif ajouté</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>version : 0.1.1-alpha → 0.2.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 8. MIGRATION -->
+  <h2 id="migration">8. Procédure de mise à jour depuis Alpha 0.1</h2>
+  <div class="panel hi">
+    <p><b>Bonne nouvelle :</b> aucune migration SQL nécessaire pour cette version. Les tables existantes (notamment <code>roles</code> et <code>membres_structure</code>) sont suffisantes.</p>
+    <ol>
+      <li><b>Sauvegarde</b> ton dossier <code>C:\aveho-ec-app</code> par sécurité (Copier/Coller, ou ZIP).</li>
+      <li>Télécharge le nouveau <code>aveho-ec-app.zip</code>, décompresse-le par-dessus l'ancien dossier (écrase les fichiers).</li>
+      <li>Dans PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre></li>
+      <li><b>Test en local</b> : ouvre <code>http://localhost:3000</code>, connecte-toi, vérifie que tu vois "Édition hiérarchie" dans le menu et que les modales ont le nouveau look.</li>
+      <li><b>Mise en ligne Vercel</b> :
+        <pre><code>git add .
+git commit -m "Aveho EC Alpha 0.2"
+git push</code></pre>
+        Vercel redéploie automatiquement.
+      </li>
+    </ol>
+  </div>
+
+  <!-- 9. REPORTÉ -->
+  <h2 id="reporte">9. Chantiers reportés en Alpha 0.3 — pourquoi</h2>
+  <div class="panel warn">
+    <p>Je préfère reporter plutôt que livrer mal. Voici les raisons honnêtes du report :</p>
+    <table>
+      <thead><tr><th>Chantier</th><th>Raison du report</th></tr></thead>
+      <tbody>
+        <tr><td><b>RLS étanche par établissement/service</b></td><td>Sécurité critique. Une mauvaise politique RLS peut soit bloquer tout, soit laisser passer ce qui ne devrait pas. Mérite un chantier dédié avec tests d'accès par rôle.</td></tr>
+        <tr><td><b>Domaine email pro chez Resend</b></td><td>Dépend de l'acquisition d'un nom de domaine (~10€/an chez OVH, Gandi…). Tant que tu n'as pas de domaine, on reste sur <code>onboarding@resend.dev</code> qui fonctionne pour le test.</td></tr>
+        <tr><td><b>Notifications in-app</b></td><td>Nouvelle table <code>notifications</code> + UI temps réel (cloche dans la TopBar + panneau déroulant). Travail de qualité demande 2-3h de soin.</td></tr>
+        <tr><td><b>Mode hors-ligne PWA</b></td><td>Refonte complète du service worker avec stratégie cache (network-first / cache-first par type de ressource), gestion des conflits offline→online. Chantier qui mérite isolé.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 10. ROADMAP 0.3 -->
+  <h2 id="roadmap">10. Roadmap Alpha 0.3</h2>
+  <div class="panel ok">
+    <p>Reprise des 4 chantiers reportés + chantiers nouveaux issus du retour Alpha 0.2 :</p>
+    <ol>
+      <li><b>RLS étanche par établissement</b> — sécurité d'abord</li>
+      <li><b>Notifications in-app (cloche)</b> — transferts validés, DI assignées, invitations acceptées</li>
+      <li><b>Domaine email pro</b> — dès qu'un domaine sera disponible</li>
+      <li><b>Mode hors-ligne PWA</b> — consultation possible sans réseau</li>
+      <li><b>Application des droits sur toutes les pages</b> (l'Alpha 0.2 a fait Patients + Crud génériques, reste à étendre aux pages spécifiques)</li>
+      <li><b>Export Excel / PDF</b> sur les listes principales (patients, matériel, stock, commandes)</li>
+      <li><b>Recherche globale</b> (barre en haut, cherche dans patients, matériels, articles, commandes)</li>
+      <li><b>Page paramètres collectivité</b> : préférences d'affichage, libellés métier personnalisables</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.2 · 29 mai 2026</p>
+    <p>Document de version interne — à archiver dans le projet à chaque livraison</p>
+  </footer>
+
+</div>
+</body>
+</html>

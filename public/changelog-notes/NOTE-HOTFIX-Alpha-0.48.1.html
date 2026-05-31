@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.48.1 — Page offline en HTML statique</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#EF9F27 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:28px;box-shadow:0 10px 30px rgba(239,159,39,.20)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fcefda;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13px;font-weight:500;color:#fcefda;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fcefda}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--amber)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  pre.diff{font-size:12px;line-height:1.5}
+  .del{color:#ff8b80;display:block}
+  .add{color:#a8e6a3;display:block}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.refactor{background:#fcefda;color:#7a4f15}
+  .pill.bug{background:#fef0ee;color:#c0392b}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .fix-block{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:16px 18px;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — HOTFIX POLISH</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Patch 0.48.1 — Page offline statique
+      <small>Élimine les 8 erreurs 503 dans la console quand on est hors-ligne</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.48.1-alpha</code></span>
+      <span><b>Tests :</b> 844 verts (inchangé)</span>
+      <span><b>Type :</b> Polish UX, pas un bug bloquant</span>
+    </div>
+  </header>
+
+  <p>La page <code>/offline</code> livrée en 0.47 <b>fonctionnait visuellement</b> (capture utilisateur confirme : fond gradient, icône Wi-Fi off, message, bloc "Disponible en local", dot pulsant), mais la console montrait 8 erreurs <code>503 (Offline)</code> chaque fois qu'elle s'affichait.</p>
+
+  <h2>Cause</h2>
+  <div class="fix-block">
+    <h3>SW précachait <code>/offline</code> sans ses chunks Next</h3>
+    <p>La page <code>/offline</code> était une <b>page Next.js classique</b> (<code>app/offline/page.js</code>) avec <code>"use client"</code>, hooks <code>useState</code>/<code>useEffect</code>, animation CSS keyframes inline...</p>
+    <p>Le SW précachait juste l'URL <code>/offline</code> (le HTML), mais quand Next.js tentait d'hydrater la page côté client, il fallait :</p>
+    <ul>
+      <li><code>/_next/static/css/app/layout.css</code> ← 503</li>
+      <li><code>/_next/static/chunks/webpack.js</code> ← 503</li>
+      <li><code>/_next/static/chunks/main-app.js</code> ← 503</li>
+      <li><code>/_next/static/chunks/app-pages-internals.js</code> ← 503</li>
+      <li><code>/_next/static/chunks/app/offline/page.js</code> ← 503</li>
+      <li><code>/_next/static/chunks/app/layout.js</code> ← 503</li>
+      <li><code>/icons/favicon-32.png</code> ← 503</li>
+      <li><code>/icons/favicon-16.png</code> ← 503</li>
+    </ul>
+    <p>Ces chunks ont des <b>noms hashés</b> qui changent à chaque build, donc impossibles à pré-cacher de façon fiable.</p>
+  </div>
+
+  <h2>Correction</h2>
+  <div class="fix-block">
+    <h3>Conversion en HTML statique pur dans <code>/public/offline.html</code></h3>
+    <p>Plus de Next.js runtime : tout est embarqué inline (CSS + un peu de JS vanilla pour réagir à <code>navigator.onLine</code>).</p>
+    <p>Bénéfices :</p>
+    <ul>
+      <li><b>Zéro chunk JS/CSS à charger</b> → zéro erreur 503</li>
+      <li><b>Mêmes fonctionnalités</b> : icône Wi-Fi qui change selon online/offline, message contextualisé, bouton "Réessayer" / "Recharger", dot live pulsant, auto-refresh toutes les 5s</li>
+      <li><b>Mêmes styles</b> : fond gradient navy, glassmorphism, badges teal · bloc "Disponible en local"</li>
+      <li><b>Plus rapide</b> : un seul HTTP request pour le HTML (5163 bytes), tout inline</li>
+      <li><b>Compatible PWA</b> : référence le <code>manifest.json</code> + les icônes Tabler depuis le CDN (qui peut aussi être cacheable séparément)</li>
+    </ul>
+  </div>
+
+  <h2>Changements détaillés</h2>
+  <table>
+    <thead>
+      <tr><th>Fichier</th><th>Action</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>public/offline.html</code></td>
+        <td><span class="pill refactor">CRÉÉ</span></td>
+        <td>HTML pur avec CSS inline + JS vanilla pour la réactivité online/offline (5163 bytes total)</td>
+      </tr>
+      <tr>
+        <td><code>app/offline/page.js</code></td>
+        <td><span class="pill bug">SUPPRIMÉ</span></td>
+        <td>Plus utile, remplacé par le HTML statique</td>
+      </tr>
+      <tr>
+        <td><code>public/sw.js</code></td>
+        <td><span class="pill refactor">PATCHÉ</span></td>
+        <td>Version <code>aveho-ec-0.47</code> → <code>aveho-ec-0.48.1</code> · <code>OFFLINE_PAGES = ["/offline.html"]</code> · fallback navigation → <code>/offline.html</code></td>
+      </tr>
+      <tr>
+        <td><code>package.json</code></td>
+        <td><span class="pill refactor">MODIF</span></td>
+        <td>0.48.0-alpha → 0.48.1-alpha</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Diff service worker</h2>
+  <pre class="diff"><span class="del">- const VERSION = "aveho-ec-0.47";</span>
+<span class="add">+ const VERSION = "aveho-ec-0.48.1";</span>
+
+<span class="del">- const OFFLINE_PAGES = ["/offline"];</span>
+<span class="add">+ const OFFLINE_PAGES = ["/offline.html"];</span>
+
+  // Dans networkFirst() :
+  if (req.mode === "navigate" || req.destination === "document") {
+<span class="del">-   const offlinePage = await cache.match("/offline");</span>
+<span class="add">+   const offlinePage = await cache.match("/offline.html");</span>
+    if (offlinePage) return offlinePage;
+  }</pre>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Aucun SQL à modifier</b></li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Le SW a changé de version</b> (<code>aveho-ec-0.47</code> → <code>aveho-ec-0.48.1</code>) — il va se mettre à jour automatiquement au prochain chargement. Pour forcer immédiatement :
+        <ul>
+          <li>DevTools → Application → Service Workers → "Update on reload" coché</li>
+          <li>Puis hard reload (Ctrl+F5)</li>
+          <li>Ou DevTools → Application → Storage → "Clear site data"</li>
+        </ul>
+      </li>
+      <li><b>Tester</b> :
+        <ol>
+          <li>DevTools → Network → Throttling → Offline</li>
+          <li>Naviguer vers une route quelconque (ex. <code>/promotions</code>)</li>
+          <li>La page <code>/offline.html</code> doit s'afficher (même rendu visuel qu'avant)</li>
+          <li><b>Plus aucune erreur 503</b> dans la console</li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+
+  <h2>État après hotfix</h2>
+  <div class="panel hi">
+    <ul>
+      <li>✅ Même UX visuelle pour l'utilisateur final</li>
+      <li>✅ Plus aucune erreur 503 dans la console quand on est offline</li>
+      <li>✅ Page beaucoup plus légère (5 KB vs ~30 KB de chunks Next initialement nécessaires)</li>
+      <li>✅ 844 tests verts (inchangé)</li>
+      <li>✅ Build Next clean</li>
+    </ul>
+  </div>
+
+  <h2>Pour ma checklist</h2>
+  <div class="panel" style="border-left:4px solid var(--violet)">
+    <p><b>7ᵉ réflexe à ajouter :</b> pour une page de fallback offline (ou tout asset servi via Service Worker), <b>préférer du HTML statique pur dans <code>/public/</code></b> plutôt qu'une page Next.js. Les chunks JS/CSS hashés sont impossibles à pré-cacher de manière fiable et créent des erreurs console quand on est offline.</p>
+    <p>Checklist complète (7 réflexes) :</p>
+    <ol>
+      <li>Pattern RLS avec <code>mes_structures()</code></li>
+      <li>Grep <code>create table</code> avant SQL</li>
+      <li>Dates en ms (DST-safe)</li>
+      <li><code>notify pgrst, 'reload schema'</code> + grants en fin de patch</li>
+      <li>Pas de crossover <code>lib/</code> ↔ <code>app/</code> via le layout</li>
+      <li>Test <code>npm run dev</code> sur les pages modifiées avant package</li>
+      <li><b>Page de fallback offline (SW) : HTML statique pur, pas de Next.js</b></li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.48.1 · 31 mai 2026</p>
+    <p>Conversion /offline en HTML statique pur — élimine 8 erreurs 503 console — mêmes UX visuelle</p>
+  </footer>
+
+</div>
+</body>
+</html>

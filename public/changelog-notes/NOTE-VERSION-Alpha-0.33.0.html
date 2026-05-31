@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.33.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#d6cce8;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#d6cce8;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#d6cce8}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  .pill.func{background:#fdebe9;color:#8c2a23}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--violet);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — NOTIFICATIONS EMAIL POUR WORKFLOWS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.33.0
+      <small>Edge Function send-email · Email template brandé · Opt-in par catégorie · Intégration logEvent</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026 (matin)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.33.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.32.0</span>
+      <span><b>Statut :</b> Build clean · 370 tests verts · 1 patch SQL · 1 Edge Function</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📧 Edge Function send-email réutilisable</span>
+      <span class="badge">🎨 Template HTML brandé Aveho (navy + teal)</span>
+      <span class="badge">☑️ Opt-in par catégorie (push ON / email OFF par défaut)</span>
+      <span class="badge">🔌 Relais auto depuis logEvent</span>
+      <span class="badge">🛡️ XSS escape sur tous les champs dynamiques</span>
+      <span class="badge green">+33 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>Aveho EC avait déjà 2 canaux de notification : <b>push VAPID</b> (PWA, 0.17) et <b>webhooks Teams/Slack</b> (0.18). Resend était branché pour <b>les emails DPO uniquement</b> (rappels renouvellement RGPD, 0.24).</p>
+  <p>La 0.33 ajoute le <b>3e canal manquant</b> : les emails directs aux utilisateurs pour les workflows métier (DI urgentes, achats refusés, maintenance planifiée, etc.). Le tout en respectant les préférences user via une nouvelle ligne dans <code>NotificationPreferences</code>.</p>
+
+  <div class="highlight">
+    <b>Opt-in strict pour les emails.</b> Contrairement au push (ON par défaut sauf archivage), <b>les emails sont OFF par défaut pour toutes les catégories</b>. L'utilisateur doit cocher explicitement chaque case email_X qu'il veut activer dans /profil. Logique : un email est plus intrusif qu'un push, on évite le spam.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Edge Function <code>send-email</code> avec template HTML brandé + filtrage opt-in</td><td><span class="pill func">Edge</span></td></tr>
+      <tr><td>2</td><td>Patch SQL : vue <code>v_users_emails</code> pour résolution rapide user_id → email</td><td><span class="pill sql">SQL</span></td></tr>
+      <tr><td>3</td><td>Intégration dans <code>logEvent</code> : relais auto vers send-email avec event_type mappé</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>4</td><td>Refonte <code>NotificationPreferences</code> : grille 2 colonnes (push + email) par catégorie</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>5</td><td>Helpers <code>buildEmailBody()</code> + <code>escapeHtml()</code> + <code>mapEmailEventType()</code></td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>6</td><td>33 tests Vitest (mapping, escape XSS, filtrage opt-in, séparation push/email, scénarios)</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. Edge Function send-email</h2>
+
+  <h3>API d'appel</h3>
+  <pre><code>await supabase.functions.invoke("send-email", {
+  body: {
+    structure_id: "...",
+    target_user_id: "...",     // OU target_emails: [...] pour externes
+    event_type: "di",           // mapping catégorie prefs
+    subject: "DI urgente assignée",
+    body_html: "&lt;p&gt;...&lt;/p&gt;",
+    body_text: "...",           // fallback texte
+    cta_label: "Voir la DI",    // optionnel
+    cta_url: "https://...",     // optionnel
+  }
+})</code></pre>
+
+  <h3>Logique de résolution des destinataires</h3>
+  <ol>
+    <li><b>Cas 1 — target_emails fourni</b> : envoie direct (utile pour DPO externe, partenaire, etc.)</li>
+    <li><b>Cas 2 — target_user_id fourni</b> : résout l'email via <code>v_users_emails</code> (rapide) ou fallback <code>auth.admin.getUserById</code></li>
+    <li><b>Cas 3 — ni l'un ni l'autre</b> : broadcast à tous les membres de la structure</li>
+  </ol>
+
+  <h3>Filtrage opt-in par event_type</h3>
+  <p>Pour chaque destinataire avec un user_id, l'Edge Function regarde <code>prefs.email_{event_type}</code> :</p>
+  <ul>
+    <li><b>Clé absente</b> → <b>pas d'envoi</b> (opt-in strict)</li>
+    <li><b>email_di = true</b> → envoie</li>
+    <li><b>email_di = false</b> → pas d'envoi</li>
+    <li><b>target_emails (sans user_id)</b> → toujours envoyé (bypass filtre)</li>
+  </ul>
+
+  <h3>Template HTML brandé</h3>
+  <p>Tous les emails sont enveloppés dans un template HTML responsive :</p>
+  <ul>
+    <li><b>Header navy</b> avec logo "aveho" et accent teal</li>
+    <li><b>Body</b> : titre H1 + body HTML libre</li>
+    <li><b>Bouton CTA</b> centré (si cta_url + cta_label fournis) en bleu Aveho</li>
+    <li><b>Footer gris</b> : "Tu peux désactiver les notifications email dans ton profil →" avec lien</li>
+    <li>Responsive (table-based pour compat Outlook)</li>
+    <li>Échappement HTML de tous les champs dynamiques (XSS-safe)</li>
+  </ul>
+
+  <h2>2. Intégration dans logEvent</h2>
+
+  <h3>Relais transparent</h3>
+  <p>Aucun changement nécessaire dans les pages métier. <code>logEvent</code> relaie automatiquement vers <code>send-email</code> en parallèle de send-push et send-webhook quand <code>notif: true</code> :</p>
+  <pre><code>// Aucun changement requis dans les pages métier
+await logEvent(supabase, auth, {
+  action: "creer", entite: "intervention", entite_id: di.id,
+  titre: "DI urgente créée",
+  message: `${di.numero} : ${di.objet}`,
+  lien: `/interventions?id=${di.id}`,
+  notif: true,   // → déclenche push + webhook + email (si opt-in)
+});</code></pre>
+
+  <p>Pour les events où on veut <b>désactiver l'email seulement</b> (ex: hot reload, événements de masse silencieux), nouveau flag :</p>
+  <pre><code>await logEvent(supabase, auth, {
+  ...,
+  notif: true,
+  skipEmail: true,  // push + webhook mais pas d'email
+});</code></pre>
+
+  <h3>mapEmailEventType</h3>
+  <p>Mapping des entités vers les catégories de NotificationPreferences :</p>
+  <table>
+    <thead><tr><th>ev.entite ou notifType</th><th>email_event_type</th></tr></thead>
+    <tbody>
+      <tr><td>intervention / notifType:di</td><td>di</td></tr>
+      <tr><td>achat</td><td>achat</td></tr>
+      <tr><td>transfert</td><td>transfert</td></tr>
+      <tr><td>signalement</td><td>signalement</td></tr>
+      <tr><td>maintenance</td><td>maintenance</td></tr>
+      <tr><td>consentement</td><td>consent_a_renouveler</td></tr>
+      <tr><td>autre / patient / materiel</td><td>autre (jamais envoyé)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>buildEmailBody — corps automatique</h3>
+  <p>Génère un body HTML structuré à partir des champs ev :</p>
+  <ul>
+    <li>Message principal en paragraphe (si différent du titre)</li>
+    <li>Mini-tableau des <code>ev.details</code> (numéro, motif, statut, etc.) en gris pâle</li>
+    <li>Tous les valeurs sont passées dans <code>escapeHtml()</code> (XSS-safe)</li>
+    <li>Fallback : si aucune donnée riche, juste le titre dans un <code>&lt;p&gt;</code></li>
+  </ul>
+
+  <h2>3. NotificationPreferences refondu</h2>
+
+  <h3>Grille 2 colonnes par catégorie</h3>
+  <p>Avant : 1 case par catégorie (push seulement). Après : 2 cases (push + email) sur la même ligne.</p>
+  <pre><code>┌────────────────────────────────────────────┬──────┬───────┐
+│ Catégorie                                  │ Push │ Email │
+├────────────────────────────────────────────┼──────┼───────┤
+│ 🔧 Demandes d'intervention                 │  ☑   │   ☐   │
+│ 🛒 Workflow achats                         │  ☑   │   ☑   │
+│ 🔄 Transferts                              │  ☑   │   ☐   │
+│ 💬 Signalements / Idées                    │  ☑   │   ☐   │
+│ 🔧 Maintenance préventive                  │  ☑   │   ☑   │
+│ 🛡️ Renouvellement RGPD                     │  ☑   │   ☐   │
+│ 📦 Archivage RGPD mensuel                  │  ☐   │   ☐   │
+└────────────────────────────────────────────┴──────┴───────┘
+ℹ️ Push : 6/7 — Email : 2/7</code></pre>
+
+  <h3>Comportement</h3>
+  <ul>
+    <li><b>Push</b> : ON par défaut sauf <code>consent_auto_archive</code> (inchangé depuis 0.29)</li>
+    <li><b>Email</b> : <b>OFF par défaut pour toutes</b> (opt-in strict)</li>
+    <li>Les 2 toggles sont <b>indépendants</b> : on peut activer push sans email (cas le plus courant) ou email sans push (cas "silencieux mobile" : pas dérangé par notif PWA mais reçoit l'email)</li>
+    <li>Compteurs affichés en haut : "Push : 6/7 · Email : 2/7"</li>
+    <li>Encart violet d'info : "Les emails sont désactivés par défaut pour éviter le spam. Active-les uniquement pour les catégories où tu veux recevoir aussi un email en plus de la notification push."</li>
+  </ul>
+
+  <h2>4. Stockage</h2>
+  <p>Pas de schema migration nécessaire. La table <code>user_notification_preferences</code> (0.29) accepte n'importe quelle clé dans son champ <code>prefs jsonb</code>. On ajoute juste des clés préfixées :</p>
+  <pre><code>{
+  "di": true,          // push DI (existait déjà)
+  "email_di": true,    // email DI (nouveau 0.33)
+  "achat": true,
+  "email_achat": false, // ou absent → off
+  ...
+}</code></pre>
+
+  <h3>Vue v_users_emails</h3>
+  <p>Vue minimaliste qui expose <code>id, email, nom_affiche, created_at</code> depuis <code>auth.users</code>. <b>Accessible uniquement par service_role</b> (les Edge Functions). RLS publique non nécessaire car la table auth.users n'est pas exposée à l'API REST de toute façon.</p>
+
+  <h2>5. Sécurité</h2>
+  <ul>
+    <li><b>XSS escape strict</b> sur tous les champs dynamiques (titre, message, details, valeurs) via <code>escapeHtml()</code></li>
+    <li><b>Mode dégradé</b> : si <code>RESEND_API_KEY</code> n'est pas configuré → log warning + retour 200 (ne plante pas l'app)</li>
+    <li><b>Rate limit Resend</b> géré naturellement : 1 appel par destinataire, pas de batch (évite les erreurs 429)</li>
+    <li><b>Erreurs partielles</b> : si 3 destinataires sur 10 échouent, les 7 autres reçoivent quand même (retour <code>{sent, failed, errors}</code>)</li>
+    <li><b>CORS preflight OPTIONS</b> géré</li>
+  </ul>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">1</div><div class="l">Edge Function</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Vue SQL helper</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">Catégories email</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">Schema migration</div></div>
+    <div class="kpi"><div class="v">+33</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">370</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">53</div><div class="l">Lignes patch SQL</div></div>
+    <div class="kpi"><div class="v">467</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/functions/send-email/index.ts</code></td><td><span class="pill new">CRÉÉ</span></td><td>Edge Function avec template HTML brandé + filtrage opt-in</td></tr>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.33.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Vue v_users_emails (service_role only)</td></tr>
+      <tr><td><code>__tests__/email-notifications.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>33 tests sur mapping, escape, filtrage, séparation push/email, scénarios</td></tr>
+      <tr><td><code>lib/events.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ relais send-email + helpers buildEmailBody / escapeHtml / mapEmailEventType + flag skipEmail</td></tr>
+      <tr><td><code>app/NotificationPreferences.js</code></td><td><span class="pill imp">REFONDU</span></td><td>Grille 2 colonnes push/email + compteurs séparés + info opt-in</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.32.0-alpha → 0.33.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.33.sql</code> → Run.
+        <pre><code>-- Vérifier que la vue existe
+select count(*) from v_users_emails;
+-- Doit fonctionner (tu as les droits service_role en SQL Editor)</code></pre>
+      </li>
+      <li><b>Déployer la nouvelle Edge Function</b> :
+        <pre><code>cd C:\aveho-ec-app
+supabase functions deploy send-email</code></pre>
+      </li>
+      <li><b>Vérifier les secrets Resend</b> dans Supabase (Settings → Edge Functions → Secrets) :
+        <ul>
+          <li><code>RESEND_API_KEY</code> (déjà configuré depuis 0.24)</li>
+          <li><code>RESEND_FROM_EMAIL</code> = "Aveho EC &lt;no-reply@aveho.fr&gt;" (ou ton domaine vérifié sur Resend)</li>
+        </ul>
+        <p style="margin:8px 0;"><b>Important</b> : ton domaine d'envoi doit être vérifié sur <a href="https://resend.com/domains">resend.com/domains</a>. Sinon les emails partiront du <code>onboarding@resend.dev</code> (mode test) qui ne fonctionne que pour ton compte propriétaire.</p>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>npm install
+npm test       # 370 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller dans <code>/profil</code> → section "Mes notifications"</li>
+          <li>Voir la nouvelle grille 2 colonnes (Push | Email)</li>
+          <li>Activer <b>email_di</b> par exemple → Enregistrer</li>
+          <li>Créer une DI urgente quelque part → tu dois recevoir un email avec le template brandé Aveho</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.34+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Modèles consentement personnalisables</b> par collectivité</li>
+      <li><b>Tests Playwright</b> end-to-end</li>
+      <li><b>Drill-down heatmap + tendances</b></li>
+      <li><b>Migration pages config restantes</b> vers safeWrite</li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+      <li><b>Tableau de bord Accueil enrichi</b> (widgets configurables)</li>
+      <li><b>Recherche globale avancée</b> (Ctrl+K à la Linear)</li>
+      <li><b>PWA finalisée</b> (icônes, splash, install)</li>
+      <li><b>Email transactionnels</b> : factures, exports CSV, etc. (réutilise send-email)</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.33.0 · 31 mai 2026 (matin)</p>
+    <p>Notifications email — Edge send-email · Template brandé · Opt-in strict · 370 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

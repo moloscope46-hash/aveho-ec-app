@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.41.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1c5454 50%,#EF9F27 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffe5b8;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#ffe5b8;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#ffe5b8}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--amber)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#fff8ec;border-color:#f0d59f}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--amber);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--amber); color:#fff; font-weight:700; margin-right:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — VERSION MARATHON 6 CHANTIERS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.41.0
+      <small>Drill heatmap RGPD · Digest test · Preview kanban · Workflow signalements · Stats maintenances · Widget "À traiter"</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.41.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.40.0</span>
+      <span><b>Statut :</b> Build clean · 639 tests verts · 1 patch SQL (147 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📊 I - Drill heatmap signatures RGPD</span>
+      <span class="badge">📧 J - Digest envoi test depuis /profil</span>
+      <span class="badge">👁️ K - DIPreview dans vue Kanban</span>
+      <span class="badge">💬 H - Signalements filtres + tri + workflow auto</span>
+      <span class="badge">🔧 L - Maintenances stats par type + table récurrences</span>
+      <span class="badge">🏠 A - Widget "À traiter" sur l'accueil</span>
+      <span class="badge green">+32 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>6 chantiers en une version, sélectionnés directement dans la roadmap. Audit préalable : tous les modules existaient (heatmap RGPD, DigestPreferences, Kanban, signalements, maintenance, accueil), on a enrichi. Build clean, 639 tests verts.</p>
+
+  <div class="highlight">
+    <b>6 modules livrés d'un coup :</b><br/>
+    <b>I</b> Clic sur cellule heatmap signatures → modale avec les patients qui ont signé sur ce créneau (RPC dédiée).<br/>
+    <b>J</b> Bouton "Envoyer un test maintenant" dans <code>/profil</code> qui déclenche la Edge Function send-digest.<br/>
+    <b>K</b> DIPreview ajouté à la vue Kanban (en plus de la liste tableau de la 0.39).<br/>
+    <b>H</b> Signalements : filtre catégorie, tri récents/votes avec sticky state, transition auto Nouveau → En cours quand l'admin répond pour la 1ère fois.<br/>
+    <b>L</b> Maintenances : panneau "Stats par type" (vue SQL) + table SQL récurrences pour futurs rappels automatiques.<br/>
+    <b>A</b> Accueil : nouveau widget "À traiter" qui agrège DI ouvertes / achats à valider / signalements / renouvellements RGPD / maintenances. Affiché en premier par défaut.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">I</span> Drill-down heatmap signatures RGPD</h3>
+    <ul>
+      <li><b>RPC SQL</b> <code>get_rgpd_heatmap_drill(structure_id, jour_semaine, heure, limit)</code> reproduisant la mécanique de <code>get_heatmap_drill</code> (chantier 0.37 pour l'activité) mais pour <code>consentements_rgpd</code></li>
+      <li>Retourne id, patient_id, patient_nom_prenom, finalites_acceptees, version_template, created_at, jour_label sur 90j</li>
+      <li><code>security invoker</code> → respecte les RLS du user</li>
+      <li><b>UI</b> : la prop <code>onCellClick</code> du composant <code>&lt;Heatmap&gt;</code> est exploitée → ouvre une modale avec :
+        <ul>
+          <li>État loading avec spinner</li>
+          <li>État erreur (rouge)</li>
+          <li>État vide (texte gris italique)</li>
+          <li>État data : tableau Date / Patient / Finalités (count) / Version template</li>
+        </ul>
+      </li>
+      <li>Hint UX en bas de la heatmap : "Clique sur une cellule colorée pour voir le détail"</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">J</span> Digest — test depuis /profil</h3>
+    <ul>
+      <li>Bouton "Envoyer un test maintenant" dans <code>&lt;DigestPreferences&gt;</code></li>
+      <li>États : idle / busy (spinner) / résultat (vert ou rouge, auto-hide 6s)</li>
+      <li>POST à <code>/functions/v1/send-digest</code> avec body <code>{ user_id, force_send: true }</code> + token session</li>
+      <li><b>Edge Function patchée</b> pour accepter <code>force_send</code> :
+        <ul>
+          <li>Si user_id fourni mais pas de pref existante → crée une pref temporaire "quotidien" via lookup <code>users_structures</code></li>
+          <li>Avec <code>force_send</code>, ne skip pas même si <code>hasContent === false</code> (utile pour tester le format sur un environnement vide)</li>
+        </ul>
+      </li>
+      <li>Le bouton fonctionne <b>indépendamment</b> du mode choisi (même si "Jamais") → permet de prévisualiser à tout moment</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">K</span> DIPreview dans Kanban</h3>
+    <ul>
+      <li>Le DIPreview de la 0.39 ne fonctionnait que dans la liste tableau <code>/interventions</code></li>
+      <li><b>Extension</b> : wrap du numéro DI dans chaque carte Kanban</li>
+      <li>Select Supabase enrichi : <code>materiels(id,libelle,num_serie,num_parc,num_lot), patients(id,nom,prenom,chambre,date_naissance,numero_dossier)</code></li>
+      <li>Le hover affiche le popover complet (statut, urgence, patient, matériel) sans quitter le drag-drop</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">H</span> Signalements — workflow avancé</h3>
+    <ul>
+      <li><b>Filtre catégorie</b> : select alimenté dynamiquement par les catégories existantes (extraction via Set + tri alpha)</li>
+      <li><b>Sélecteur de tri</b> : "Plus récents" (défaut) ou "Plus de votes"
+        <ul>
+          <li>Tri par votes avec tiebreak sur created_at desc</li>
+          <li>Sticky state (localStorage) sur catégorie et tri</li>
+        </ul>
+      </li>
+      <li><b>Transition auto</b> Nouveau → En cours :
+        <ul>
+          <li>Quand l'admin répond pour la 1ère fois (avant : <code>modal.reponse</code> null, après : remplie)</li>
+          <li>Et que le statut était Nouveau et que l'admin n'a pas explicitement choisi un autre statut</li>
+          <li>Logique côté JS (pas trigger SQL) pour rester non-destructif sur l'historique</li>
+        </ul>
+      </li>
+      <li><b>Trigger SQL</b> <code>trg_signal_notif_reponse</code> : marque <code>reponse_notifie = false</code> sur changement de réponse, pour que la future notif au demandeur (opt-in <code>created_by</code>) puisse être déclenchée</li>
+      <li>Bouton "Effacer filtres" étendu à 3 critères</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">L</span> Maintenances — stats par type + récurrences</h3>
+    <ul>
+      <li><b>Vue SQL</b> <code>v_stats_maintenances</code> : group by structure_id + type avec :
+        <ul>
+          <li><code>nb_total</code>, <code>nb_30j</code>, <code>nb_7j</code></li>
+          <li><code>nb_cloturees</code>, <code>nb_en_cours</code></li>
+          <li><code>duree_moy_jours</code> (avg sur les clôturées : <code>cloturee_le - created_at</code>)</li>
+        </ul>
+      </li>
+      <li><b>UI</b> : panneau "Stats par type" entre KPIs et toolbar, 6 cartes max, format : <code>{type}</code> · <code>{nb_total}</code> en gros · <code>+{nb_7j}</code> en vert · <code>{duree_moy_jours}j moy.</code></li>
+      <li>Chargement silencieux : si la vue n'existe pas → tableau vide (pas d'erreur visible)</li>
+      <li><b>Table SQL</b> <code>maintenance_recurrences</code> créée (id, structure_id, materiel_id, type, libelle, frequence_jours, derniere_realisee, prochaine_due, actif) avec RLS et indexes
+        <ul>
+          <li>Préparation pour les rappels automatiques (UI à venir en 0.42+)</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">A</span> Accueil — widget "À traiter"</h3>
+    <ul>
+      <li><b>Nouveau widget</b> <code>atraiter</code> dans la liste des widgets configurables (depuis 0.6)</li>
+      <li><b>Position par défaut</b> : en premier (avant kpis) car c'est l'info la plus actionnable au quotidien</li>
+      <li><b>5 compteurs agrégés</b> chargés en parallèle silencieux (try/catch global) :
+        <ol>
+          <li>DI ouvertes (interventions hors Clôturée/Refusée)</li>
+          <li>Achats à valider</li>
+          <li>Maintenances à faire ou en retard</li>
+          <li>Signalements nouveaux</li>
+          <li>Renouvellements RGPD à 30 jours (vue 0.40)</li>
+        </ol>
+      </li>
+      <li><b>Filtrage zéros</b> : si un compteur est à 0, l'item n'est pas affiché. Si tous à 0, le widget entier est masqué (zen accueil)</li>
+      <li><b>Clic</b> sur chaque item → navigation vers le module correspondant</li>
+      <li><b>Personnalisation</b> : intégré au panneau "Personnaliser" existant — l'utilisateur peut décocher ou réordonner</li>
+      <li><b>Préservation</b> du dashboard fournisseur (promos/commandes) qui existait déjà</li>
+    </ul>
+  </div>
+
+  <h2>SQL — Patch 0.41 (147 lignes idempotentes)</h2>
+
+  <table>
+    <thead><tr><th>Objet</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>get_rgpd_heatmap_drill</code></td><td><span class="pill new">RPC</span></td><td>Drill cellule heatmap signatures RGPD (90j)</td></tr>
+      <tr><td><code>maintenance_recurrences</code></td><td><span class="pill new">Table</span></td><td>Échéances récurrentes par matériel (RLS par structure)</td></tr>
+      <tr><td><code>v_stats_maintenances</code></td><td><span class="pill new">Vue</span></td><td>Group by type avec compteurs et durée moyenne</td></tr>
+      <tr><td><code>trg_signal_notif_reponse</code></td><td><span class="pill new">Trigger</span></td><td>Marque <code>reponse_notifie=false</code> quand réponse change</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">6</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle RPC</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle table SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle vue SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouveau trigger</div></div>
+    <div class="kpi"><div class="v">+32</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">639</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">768</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.41.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>RPC drill RGPD + table récurrences + vue stats + trigger</td></tr>
+      <tr><td><code>supabase/functions/send-digest/index.ts</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ support <code>force_send</code> · création pref temporaire pour test</td></tr>
+      <tr><td><code>app/statistiques-rgpd/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state drillRgpd · + openDrillRgpd avec RPC · + Heatmap onCellClick · + modale drill complète</td></tr>
+      <tr><td><code>app/DigestPreferences.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ bouton "Envoyer un test" · + states testBusy/testResult · + fonction sendTest</td></tr>
+      <tr><td><code>app/interventions/kanban/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ import DIPreview · + select élargi · + wrap numéro DI</td></tr>
+      <tr><td><code>app/signalements/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ sticky fCategorie + triPar · + filtre+tri appliqués · + transition auto Nouveau→En cours · + select catégorie + select tri</td></tr>
+      <tr><td><code>app/maintenance/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state statsParType · + chargement silencieux v_stats_maintenances · + panneau stats par type</td></tr>
+      <tr><td><code>app/accueil/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ widget "atraiter" dans state · + Promise.all 5 compteurs · + rendu carte widget · + label dans personnalisation</td></tr>
+      <tr><td><code>__tests__/v041-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>32 tests couvrant les 6 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.40.0-alpha → 0.41.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.41.sql</code> → Run (idempotent).</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- RPC drill
+select * from get_rgpd_heatmap_drill(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid, 1, 14, 20);
+
+-- Table récurrences
+select count(*) from maintenance_recurrences;
+
+-- Vue stats maintenances
+select * from v_stats_maintenances 
+where structure_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+-- Trigger signalements
+select tgname from pg_trigger 
+where tgrelid='signalements'::regclass;</code></pre>
+      </li>
+      <li><b>Redéployer la Edge Function</b> <code>send-digest</code> (la patch supporte <code>force_send</code>) :
+        <pre><code>supabase functions deploy send-digest</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Nettoyer le cache + npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test       # 639 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><code>/accueil</code> → nouveau widget "À traiter" en haut (si des items non-zero existent)</li>
+          <li><code>/profil</code> → bouton "Envoyer un test maintenant" sous Récap email → ouvre un email test</li>
+          <li><code>/statistiques-rgpd</code> → cliquer sur une cellule colorée de la heatmap signatures → modale avec liste des patients</li>
+          <li><code>/interventions/kanban</code> → hover sur un numéro DI dans une carte → preview complet</li>
+          <li><code>/signalements</code> → filtre catégorie dispo si signalements catégorisés · select tri "Plus récents/Plus de votes"</li>
+          <li>Répondre à un signalement Nouveau → passe automatiquement à "En cours"</li>
+          <li><code>/maintenance</code> → panneau "Stats par type" entre KPIs et toolbar (si maintenances existent)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.42+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>UI récurrences maintenance</b> (table créée, manque la gestion CRUD)</li>
+      <li><b>Notif email auteur signalement</b> quand admin répond (déclenchée par trigger, à câbler avec send-email)</li>
+      <li><b>Pages config restantes vers safeWrite</b></li>
+      <li><b>Tests Playwright end-to-end</b></li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+      <li><b>Recherche : ajouter consentements + factures</b></li>
+      <li><b>Soumission stores</b> (Google Play / Microsoft Store)</li>
+      <li><b>Templates RGPD par établissement</b> (au lieu d'un seul par structure)</li>
+      <li><b>Digest — historique des envois</b> dans /profil (utiliser <code>notification_digest_log</code>)</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.41.0 · 31 mai 2026</p>
+    <p>Marathon 6 chantiers — Drill RGPD · Digest test · Kanban preview · Workflow signalements · Stats maintenances · Widget Accueil · 639 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

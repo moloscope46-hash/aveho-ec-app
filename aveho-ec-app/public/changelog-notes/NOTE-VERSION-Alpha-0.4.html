@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.4</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.amber{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f5d09f}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.fix{background:#e3edf7;color:#1f4f8a}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.4
+      <small>Notifications auto · Audit log · Libellés métier appliqués · Export PDF · Droits étendus</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.4.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.3 (29/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">✓ 5 chantiers livrés</span>
+      <span class="badge green">✓ 1 nouvelle page (Historique)</span>
+      <span class="badge green">✓ +1 table SQL (audit_log)</span>
+      <span class="badge green">✓ Notifications maintenant peuplées</span>
+      <span class="badge amber">⚠ Test interne</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#notif-auto">3. Notifications automatiques</a></li>
+      <li><a href="#audit">4. Audit log + page Historique</a></li>
+      <li><a href="#libelles">5. Libellés métier appliqués</a></li>
+      <li><a href="#pdf">6. Export PDF</a></li>
+      <li><a href="#droits">7. Droits étendus complets</a></li>
+      <li><a href="#events">8. Helper events.js — centralisation</a></li>
+      <li><a href="#delta">9. Delta vs Alpha 0.3</a></li>
+      <li><a href="#fichiers">10. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">11. Procédure de mise à jour</a></li>
+      <li><a href="#reporte">12. Chantiers reportés en 0.5</a></li>
+      <li><a href="#roadmap">13. Roadmap Alpha 0.5</a></li>
+    </ul>
+  </nav>
+
+  <!-- 1. RÉSUMÉ -->
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.4 connecte enfin les pièces posées dans les versions précédentes : les <b>notifications</b> de la 0.3 se créent maintenant <b>automatiquement</b> à chaque transfert, DI urgente, invitation. Les <b>libellés métier</b> saisis dans Paramètres se <b>répercutent</b> dans l'UI ("Patient" devient "Résident" pour un EHPAD). Et une nouvelle page <b>Historique d'actions</b> permet de consulter qui a fait quoi, quand — un audit log immutable basé sur une nouvelle table SQL.</p>
+
+  <div class="highlight">
+    <b>Priorisation transparente</b> : 5 chantiers livrés sur 8 de la roadmap 0.4. Les 3 reportés en Alpha 0.5 (<b>RLS étanche</b>, <b>mode hors-ligne</b>, <b>domaine email</b>) le sont pour les mêmes raisons qu'en 0.2 et 0.3 : ce sont des chantiers spécialisés qui méritent d'être traités isolément. La sécurité RLS notamment ne doit jamais être bâclée.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle page (Historique)</div></div>
+    <div class="kpi"><div class="v">+1</div><div class="l">Table SQL (audit_log)</div></div>
+    <div class="kpi"><div class="v">+2</div><div class="l">Helpers (events, exportPdf)</div></div>
+    <div class="kpi"><div class="v">+1</div><div class="l">Hook (useLibelles)</div></div>
+    <div class="kpi"><div class="v">100%</div><div class="l">Pages avec droits appliqués</div></div>
+  </div>
+
+  <!-- 2. CHANTIERS -->
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier roadmap</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Création automatique des notifications</td><td><span class="pill new">Livré</span></td><td>Helper <code>logEvent()</code> centralisé</td></tr>
+      <tr><td>2</td><td>Application effective des libellés métier</td><td><span class="pill new">Livré</span></td><td>Hook <code>useLibelles()</code> + appliqué à patients</td></tr>
+      <tr><td>3</td><td>Droits sur les pages restantes</td><td><span class="pill new">Livré</span></td><td>Collectivité (CRUD étab) + Utilisateurs (invitations)</td></tr>
+      <tr><td>4</td><td>Historique d'actions (audit log)</td><td><span class="pill new">Livré</span></td><td>Nouvelle table SQL + page <code>/historique</code></td></tr>
+      <tr><td>5</td><td>Export PDF</td><td><span class="pill new">Livré</span></td><td>Helper <code>exportPDF()</code> + bouton dans Crud</td></tr>
+      <tr><td>6</td><td>RLS étanche par établissement</td><td><span class="pill brk">Reporté 0.5</span></td><td>Chantier sécurité dédié</td></tr>
+      <tr><td>7</td><td>Mode hors-ligne PWA</td><td><span class="pill brk">Reporté 0.5</span></td><td>Refonte service worker</td></tr>
+      <tr><td>8</td><td>Domaine email pro</td><td><span class="pill brk">Reporté 0.5</span></td><td>Dépend de toi</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 3. NOTIFICATIONS AUTO -->
+  <h2 id="notif-auto">3. Notifications automatiques <span class="pill new">NOUVEAU</span></h2>
+  <p>En 0.3, la table <code>notifications</code> existait mais n'était peuplée que par les inserts de démo. En 0.4, l'app crée des notifications automatiquement à chaque action significative :</p>
+  <table>
+    <thead><tr><th>Action déclencheur</th><th>Type de notif</th><th>Visible par</th></tr></thead>
+    <tbody>
+      <tr><td>Création d'un transfert</td><td>transfert</td><td>Tous les membres de la collectivité</td></tr>
+      <tr><td>Transfert passé à "Validé"</td><td>transfert</td><td>Tous les membres</td></tr>
+      <tr><td>Transfert passé à "Reçu"</td><td>transfert</td><td>Tous les membres</td></tr>
+      <tr><td>Création d'une DI <b>urgente</b></td><td>di</td><td>Tous les membres (urgence "Urgent" uniquement)</td></tr>
+      <tr><td>Envoi d'une invitation</td><td>invitation</td><td>Tous les membres</td></tr>
+    </tbody>
+  </table>
+  <p>La cloche de la TopBar (introduite en 0.3) affiche le badge animé dès qu'une nouvelle notif apparaît, avec polling toutes les 60s.</p>
+
+  <!-- 4. AUDIT -->
+  <h2 id="audit">4. Audit log + page Historique <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>4.1 Nouvelle table SQL <code>audit_log</code></h3>
+  <p>Table immutable (pas de UPDATE ni DELETE possible côté RLS) qui trace toute opération significative :</p>
+  <pre><code>create table audit_log (
+  id uuid primary key,
+  structure_id uuid,
+  etablissement_id uuid,
+  user_id uuid, user_email text,    -- snapshot email même si user supprimé
+  action text,         -- 'creer','modifier','supprimer','valider','recevoir','inviter'
+  entite text,         -- 'patient','materiel','transfert','di','invitation',...
+  entite_id uuid,
+  details jsonb,       -- payload libre (numéro, ancien/nouveau statut, ...)
+  created_at timestamptz
+);</code></pre>
+
+  <h3>4.2 Page <code>/historique</code></h3>
+  <p>Accessible depuis menu Administration → Historique. Affiche les 200 dernières actions de la collectivité, avec :</p>
+  <ul>
+    <li>4 KPIs : total tracé, 7 derniers jours, utilisateurs actifs (7j), suppressions</li>
+    <li>Filtre par <b>action</b> (création, modification, suppression…)</li>
+    <li>Filtre par <b>entité</b> (patient, matériel, transfert…)</li>
+    <li>Tableau chronologique avec date, utilisateur, action colorée, entité (badge typé), détails JSON</li>
+  </ul>
+
+  <!-- 5. LIBELLÉS -->
+  <h2 id="libelles">5. Libellés métier appliqués <span class="pill new">NOUVEAU</span></h2>
+  <p>En 0.3, la page Paramètres permettait de saisir des libellés personnalisés ("Résident" au lieu de "Patient") mais ils étaient juste stockés. En 0.4, ils sont <b>effectivement appliqués</b> via le hook <code>useLibelles</code>.</p>
+
+  <h3>5.1 Le hook</h3>
+  <pre><code>import { useLibelles } from "../../lib/useLibelles";
+
+const { lbl } = useLibelles(auth.structureId);
+
+// Au lieu d'écrire "Patient" en dur :
+&lt;h1&gt;{lbl("patient", "Patient")}&lt;/h1&gt;
+// -> affiche "Résident" si l'EHPAD a configuré le libellé, sinon "Patient"
+
+// Le hook gère pluriel et majuscules automatiquement
+lbl("patients", "Patients")  // -> "Résidents"
+lbl("PATIENT")               // -> "RÉSIDENT"</code></pre>
+
+  <h3>5.2 Couverture en 0.4</h3>
+  <p>La <b>page Patients</b> est entièrement adaptée (titre, KPI, bouton "Nouveau", modales, message de suppression). Les autres pages (Mon établissement, Interventions…) seront adaptées en 0.5 si tu confirmes que cette approche te convient.</p>
+
+  <!-- 6. PDF -->
+  <h2 id="pdf">6. Export PDF <span class="pill new">NOUVEAU</span></h2>
+  <p>Un bouton <i>Export PDF</i> apparaît à côté du bouton CSV (déjà introduit en 0.3) sur toutes les listes Crud.</p>
+
+  <h3>Choix technique : impression navigateur plutôt qu'une lib PDF</h3>
+  <p>J'ai choisi de m'appuyer sur la fonction <i>Imprimer → Enregistrer en PDF</i> du navigateur plutôt que d'embarquer une lib (jsPDF ~150 Ko, pdfmake ~400 Ko). Avantages :</p>
+  <ul>
+    <li>Bundle léger (aucun ajout)</li>
+    <li>Mise en page A4 propre via CSS <code>@page</code></li>
+    <li>L'utilisateur garde le contrôle (peut choisir d'imprimer papier ou de sauver en PDF)</li>
+  </ul>
+  <p>Inconvénient assumé : nécessite une popup, donc on demande à l'utilisateur d'autoriser les popups au premier export.</p>
+
+  <h3>Format produit</h3>
+  <ul>
+    <li>En-tête Aveho avec eyebrow "AVEHO — ESPACE COLLECTIVITÉ" en teal + ligne de séparation</li>
+    <li>Titre du document + sous-titre (date d'export)</li>
+    <li>Tableau Aveho-stylé (en-têtes navy, lignes alternées)</li>
+    <li>Pied de page avec date de génération et nombre de lignes</li>
+  </ul>
+
+  <!-- 7. DROITS -->
+  <h2 id="droits">7. Droits étendus à toutes les pages</h2>
+  <p>Le chantier d'application des droits, commencé en 0.2 et poursuivi en 0.3, est <b>terminé</b> en 0.4 :</p>
+  <table>
+    <thead><tr><th>Page</th><th>Boutons concernés</th><th>Permission requise</th></tr></thead>
+    <tbody>
+      <tr><td>Patients</td><td>Nouveau, Modifier, Supprimer</td><td><code>ecrire</code>, <code>supprimer</code></td></tr>
+      <tr><td>Toutes les pages Crud (articles, matériels, dépôts, stock)</td><td>Idem</td><td>Idem</td></tr>
+      <tr><td>Transferts</td><td>Nouveau, Avancer statut</td><td><code>ecrire</code>, <code>valider_transfert</code></td></tr>
+      <tr><td>Interventions</td><td>Nouvelle DI</td><td><code>ecrire</code></td></tr>
+      <tr><td><b>Collectivité (CRUD étab)</b></td><td><b>Nouveau, Modifier, Supprimer établissement</b></td><td><b><code>creer_etablissement</code></b></td></tr>
+      <tr><td><b>Utilisateurs (invitations)</b></td><td><b>Inviter un utilisateur</b></td><td><b><code>inviter</code></b></td></tr>
+      <tr><td>Édition hiérarchie (depuis 0.2)</td><td>Tout</td><td><code>editer_hierarchie</code></td></tr>
+      <tr><td>Paramètres (depuis 0.3)</td><td>Enregistrer</td><td>Admin uniquement</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 8. EVENTS HELPER -->
+  <h2 id="events">8. Helper events.js — centralisation</h2>
+  <p>Plutôt que dupliquer les inserts d'audit + notifs dans 10 pages, j'ai créé un helper centralisé <code>lib/events.js</code> :</p>
+  <pre><code>import { logEvent } from "../../lib/events";
+
+await logEvent(supabase, auth, {
+  action: "creer",              // creer, modifier, supprimer, valider, recevoir, inviter
+  entite: "transfert",          // patient, materiel, transfert, di, ...
+  entite_id: nouveauTransfert.id,
+  details: { numero: "TRF-1042", motif: "Réappro" },
+  // Si notif=true, crée aussi une notification visible dans la cloche
+  notif: true,
+  titre: "Nouveau transfert à valider",
+  message: "Transfert TRF-1042 créé : 30 boîtes de gants...",
+  lien: "/transferts",
+});</code></pre>
+  <p>Ce helper fait deux choses en une :</p>
+  <ol>
+    <li><b>Insère dans <code>audit_log</code></b> (toujours)</li>
+    <li><b>Insère dans <code>notifications</code></b> (si <code>notif: true</code>)</li>
+  </ol>
+  <p>Avantages : un seul point de modification si on veut changer le comportement (ex: webhook Slack en plus), garantie que les deux inserts vont toujours ensemble, code des pages métier reste simple.</p>
+
+  <!-- 9. DELTA -->
+  <h2 id="delta">9. Delta vs Alpha 0.3</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Helper <code>logEvent()</code> (lib/events.js)</td><td><span class="pill new">NEW</span></td><td>Audit + notification en un appel</td></tr>
+      <tr><td>Hook <code>useLibelles()</code> (lib/useLibelles.js)</td><td><span class="pill new">NEW</span></td><td>Libellés métier dynamiques (singulier/pluriel/majuscule)</td></tr>
+      <tr><td>Helper <code>exportPDF()</code> (lib/exportPdf.js)</td><td><span class="pill new">NEW</span></td><td>Génère un PDF via fenêtre d'impression</td></tr>
+      <tr><td>Page <code>/historique</code></td><td><span class="pill new">NEW</span></td><td>Consultation audit log avec filtres + KPIs</td></tr>
+      <tr><td>Script SQL <code>10_audit.sql</code></td><td><span class="pill new">NEW</span></td><td>Table audit_log immutable + RLS</td></tr>
+      <tr><td>Création auto notifs transferts</td><td><span class="pill new">NEW</span></td><td>À création, validation, réception</td></tr>
+      <tr><td>Création auto notif DI urgente</td><td><span class="pill new">NEW</span></td><td>Quand urgence = "Urgent"</td></tr>
+      <tr><td>Création auto notif invitations</td><td><span class="pill new">NEW</span></td><td>À l'envoi d'une invitation</td></tr>
+      <tr><td>Bouton Export PDF dans Crud</td><td><span class="pill imp">IMP</span></td><td>À côté du bouton CSV (depuis 0.3)</td></tr>
+      <tr><td>Droits sur collectivité (CRUD étab)</td><td><span class="pill imp">IMP</span></td><td>Permission <code>creer_etablissement</code></td></tr>
+      <tr><td>Droits sur utilisateurs (invitations)</td><td><span class="pill imp">IMP</span></td><td>Permission <code>inviter</code></td></tr>
+      <tr><td>Page Patients adaptée aux libellés</td><td><span class="pill imp">IMP</span></td><td>"Patient" -&gt; "Résident" si configuré</td></tr>
+      <tr><td>Entrée menu Historique</td><td><span class="pill imp">IMP</span></td><td>Sous Administration</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 10. FICHIERS -->
+  <h2 id="fichiers">10. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/events.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Helper logEvent() centralisé</td></tr>
+      <tr><td><code>lib/useLibelles.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Hook libellés métier</td></tr>
+      <tr><td><code>lib/exportPdf.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Helper export PDF</td></tr>
+      <tr><td><code>app/historique/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page consultation audit log</td></tr>
+      <tr><td><code>supabase/10_audit.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Table audit_log + RLS</td></tr>
+      <tr><td><code>app/transferts/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>logEvent au create + advance</td></tr>
+      <tr><td><code>app/interventions/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>logEvent au create (notif si urgent) + advance</td></tr>
+      <tr><td><code>app/utilisateurs/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>logEvent à l'invitation + droits</td></tr>
+      <tr><td><code>app/collectivite/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Droits creer_etablissement</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Libellés dynamiques via useLibelles</td></tr>
+      <tr><td><code>app/crud.js</code></td><td><span class="pill imp">MODIF</span></td><td>Bouton Export PDF</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>Entrée menu Historique</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>version : 0.3.0-alpha → 0.4.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 11. MIGRATION -->
+  <h2 id="migration">11. Procédure de mise à jour depuis Alpha 0.3</h2>
+  <div class="panel hi">
+    <p><b>1 script SQL à exécuter</b> (l'audit log) :</p>
+    <ol>
+      <li>Sauvegarde ton dossier <code>C:\aveho-ec-app</code>.</li>
+      <li>Décompresse le nouveau zip par-dessus.</li>
+      <li><b>Dans Supabase SQL Editor</b> : exécute <code>supabase/10_audit.sql</code></li>
+      <li>Dans PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre></li>
+      <li><b>Tests à faire</b> :
+        <ul>
+          <li>Créer un transfert → la cloche doit clignoter avec une notif</li>
+          <li>Aller dans <i>Administration → Historique</i> → tu dois voir l'action loggée</li>
+          <li>Va dans <i>Paramètres</i>, mets "Résident" dans "Terme pour Patient" → enregistre, ouvre la page Patients → le titre doit dire "Résidents"</li>
+          <li>Sur une liste, clique <b>Export PDF</b> → une fenêtre s'ouvre avec mise en page A4, puis la boîte d'impression du navigateur</li>
+        </ul>
+      </li>
+      <li>Mise en ligne :<pre><code>git add .
+git commit -m "Aveho EC Alpha 0.4"
+git push</code></pre></li>
+    </ol>
+  </div>
+
+  <!-- 12. REPORTÉ -->
+  <h2 id="reporte">12. Chantiers reportés en Alpha 0.5</h2>
+  <div class="panel warn">
+    <p>Les trois mêmes que depuis la 0.2 — je préfère continuer à les reporter qu'à les bâcler :</p>
+    <table>
+      <thead><tr><th>Chantier</th><th>Raison du report (encore une fois honnête)</th></tr></thead>
+      <tbody>
+        <tr><td><b>RLS étanche par établissement</b></td><td>Sécurité critique. Reporté depuis la 0.2 — la 0.5 sera la version où je l'attaquerai en chantier dédié avec tests d'accès par rôle.</td></tr>
+        <tr><td><b>Mode hors-ligne PWA</b></td><td>Refonte du service worker avec stratégie cache + indexedDB.</td></tr>
+        <tr><td><b>Domaine email pro</b></td><td>Dépend de l'achat d'un domaine de ton côté.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 13. ROADMAP -->
+  <h2 id="roadmap">13. Roadmap Alpha 0.5</h2>
+  <div class="panel ok">
+    <ol>
+      <li><b>RLS étanche par établissement</b> — priorité absolue, en chantier dédié</li>
+      <li><b>Application des libellés métier sur les autres pages</b> (Mon établissement, Interventions, Vue globale, etc.)</li>
+      <li><b>Notifications ciblées</b> (envoi à un utilisateur précis plutôt qu'à tous, ex: "tu as été assigné à cette DI")</li>
+      <li><b>Logs de connexion</b> dans audit_log (qui s'est connecté, quand)</li>
+      <li><b>Mode hors-ligne PWA</b></li>
+      <li><b>Domaine email pro</b> (dès que tu en as un)</li>
+      <li><b>Filtres temporels sur l'historique</b> (sélecteur de période, recherche par date)</li>
+      <li><b>Page de profil utilisateur</b> (modifier son nom, changer son mot de passe, préférences personnelles)</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.4 · 29 mai 2026</p>
+    <p>Document de version interne — à archiver dans le projet à chaque livraison</p>
+  </footer>
+
+</div>
+</body>
+</html>

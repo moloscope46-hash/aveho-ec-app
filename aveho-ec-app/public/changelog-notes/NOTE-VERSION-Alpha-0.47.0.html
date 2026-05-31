@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.47.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5e4a8c 50%,#7a6fb0 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#d4cbf0;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#d4cbf0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#d4cbf0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--violet)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--violet);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:34px; height:34px; line-height:34px; text-align:center; border-radius:50%; background:var(--violet); color:#fff; font-weight:700; margin-right:10px; font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — VERSION DIRECTION & INTÉGRATIONS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.47.0
+      <small>Dashboard direction · Webhooks UI · Push API étendu · Diff visuel · Page offline · InstallBanner</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.47.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.46.0 (+ hotfix)</span>
+      <span><b>Statut :</b> Build clean · 822 tests verts · 1 patch SQL (86 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">🏢 AM - Dashboard direction multi-structures</span>
+      <span class="badge">🔗 AN - Page /webhooks dédiée</span>
+      <span class="badge">📲 AB - Push API câblé cron + digest</span>
+      <span class="badge">📝 AH - ConflictResolver diff word-level</span>
+      <span class="badge">📡 AG - Page /offline polie</span>
+      <span class="badge">📱 AL - InstallBanner avec bénéfices visuels</span>
+      <span class="badge green">+29 tests Vitest</span>
+      <span class="badge green">✅ Test dev runtime validé (réflexe 6)</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>6 chantiers consacrés à <b>l'expérience admin/direction</b> et au polish de l'existant. Build clean, <b>822 tests verts</b>, patch SQL 86 lignes terminé par <code>notify pgrst</code>. Cette fois j'ai aussi appliqué le <b>réflexe 6 (test runtime dev)</b> : les 5 nouvelles pages clés ont été curl-testées et toutes renvoient HTTP 200 sans erreur runtime.</p>
+
+  <div class="highlight">
+    <b>6 modules livrés :</b><br/>
+    <b>AM</b> Page <code>/direction</code> consolidant les KPIs de toutes les structures de l'admin (cross-structure totaux + détail par site). 2 nouvelles vues SQL <code>v_direction_par_structure</code> et <code>v_direction_totaux</code>.<br/>
+    <b>AN</b> Page <code>/webhooks</code> dédiée à la gestion des intégrations Teams/Slack, avec testeur de webhook en ligne et docs intégrées des 2 plateformes.<br/>
+    <b>AB</b> <code>send-push</code> maintenant câblé dans <code>maintenance-daily-cron</code> (notifs J-7) et <code>weekly-stats-digest</code> (récap admin). 4 emplacements au total maintenant.<br/>
+    <b>AH</b> <code>ConflictResolver</code> enrichi avec un <b>diff word-level</b> : pour les valeurs textuelles longues, les mots changés sont highlightés rouge (côté local) ou vert (côté serveur).<br/>
+    <b>AG</b> Nouvelle page <code>/offline</code> visuellement soignée : icône Wi-Fi animée selon l'état, liste des données accessibles en local, bouton "Réessayer". Service Worker précache cette page et l'utilise en fallback pour les routes HTML.<br/>
+    <b>AL</b> <code>InstallBanner</code> enrichi avec une grille de 3 bénéfices visuels (rapidité, hors-ligne, push) au-dessus des boutons d'action.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AM</span> Dashboard direction multi-structures</h3>
+    <ul>
+      <li><b>2 nouvelles vues SQL</b> :
+        <ul>
+          <li><code>v_direction_par_structure</code> : 1 ligne par structure avec 10 KPIs (DI total, DI ce mois, DI ouvertes, DI urgentes, % résolu, patients, matériels, users actifs 30j, maintenances retard, signalements ouverts, dernière activité)</li>
+          <li><code>v_direction_totaux</code> : agrégation cross-structures via <code>membres_structure</code>, restreinte à <code>user_id = auth.uid()</code></li>
+        </ul>
+      </li>
+      <li><b>Page <code>/direction</code></b> réservée Administrateur ou permission <code>manage_collectivite</code></li>
+      <li><b>8 KPIs principaux</b> en grille responsive avec border-left colorée</li>
+      <li><b>Tableau détail par structure</b> affiché uniquement si l'user a > 1 structure</li>
+      <li><b>Couleurs sémantiques</b> :
+        <ul>
+          <li>DI urgentes > 0 → rouge avec compteur "(⚠ N)"</li>
+          <li>Maintenances retard > 0 → rouge gras</li>
+          <li>% résolu : vert ≥ 80, orange 50-79, rouge < 50</li>
+        </ul>
+      </li>
+      <li><b>Sécurité</b> : les vues utilisent les RLS existantes sur les tables sous-jacentes</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AN</span> Page /webhooks dédiée</h3>
+    <ul>
+      <li>L'infrastructure webhook existait depuis la 0.17.1 (colonnes <code>webhook_teams_url</code>, <code>webhook_slack_url</code>, <code>webhook_filters</code> sur <code>structures</code>) mais aucune page dédiée ne la mettait en valeur</li>
+      <li><b>3 sections</b> :
+        <ol>
+          <li><b>Configuration</b> : réutilise <code>&lt;WebhookConfig /&gt;</code> existant (URLs + checkboxes filtres + bouton tester chaque webhook config)</li>
+          <li><b>Testeur libre</b> : champ URL + message custom → envoi via Edge Function <code>send-webhook</code>. Auto-détection Teams vs Slack via pattern URL (matche <code>.office.com</code>, <code>teams.microsoft</code>, sinon Slack format). Feedback success/erreur en ligne.</li>
+          <li><b>Documentation</b> : 2 panneaux côte à côte Teams / Slack avec étapes pas-à-pas pour obtenir une URL incoming webhook + liens vers docs officielles</li>
+        </ol>
+      </li>
+      <li><b>Lien menu</b> dans TopBar Administration</li>
+      <li><b>Permission</b> : Administrateur ou <code>manage_collectivite</code></li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AB</span> Push API câblé sur cron + digest</h3>
+    <ul>
+      <li>L'Edge Function <code>send-push</code> existait mais n'était utilisée que dans <code>auto-archive-consents</code> et <code>notifierAuteurSignalement</code> (ajouté en 0.46)</li>
+      <li><b>2 nouveaux câblages</b> :
+        <ul>
+          <li><code>maintenance-daily-cron</code> : pour chaque notif J-7 maintenance proche, push browser additionnel best-effort. L'utilisateur reçoit donc : notif in-app + push browser (s'il s'est abonné)</li>
+          <li><code>weekly-stats-digest</code> : après envoi de l'email récap, push court "X DI, Y signalements, Z achats cette semaine"</li>
+        </ul>
+      </li>
+      <li><b>4 emplacements actifs maintenant</b> : auto-archive-consents · notifierAuteurSignalement · maintenance-daily-cron · weekly-stats-digest</li>
+      <li><b>Best-effort partout</b> : try/catch silencieux, l'absence de subscription ne bloque jamais le reste du flux</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AH</span> ConflictResolver — diff visuel word-level</h3>
+    <ul>
+      <li><b>Avant</b> : le composant montrait juste les 2 valeurs côte à côte sur fond coloré (bleu = ma version, orange = serveur)</li>
+      <li><b>Maintenant</b> : nouveau composant <code>&lt;DiffValue&gt;</code> qui :
+        <ul>
+          <li><b>Pour les valeurs courtes</b> (< 20 chars) : affichage simple (inchangé)</li>
+          <li><b>Pour les valeurs longues</b> (textareas, descriptions) : diff word-level
+            <ul>
+              <li>Tokenize les 2 strings (mots + espaces + ponctuation)</li>
+              <li>Marque les tokens uniques à chaque côté</li>
+              <li>Côté local : rouge + barré sur les mots supprimés</li>
+              <li>Côté serveur : vert sur les mots ajoutés</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><b>Algorithme</b> : pas un vrai diff LCS (trop lourd pour l'usage), juste un check d'appartenance par set. Suffisant pour résoudre des conflits de descriptions de DI ou de signalements</li>
+      <li><b>Aucune dépendance</b> ajoutée</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AG</span> Page /offline polie</h3>
+    <ul>
+      <li>Avant : le service worker renvoyait juste <code>new Response("Hors-ligne", 503)</code> — texte brut sans style</li>
+      <li><b>Nouvelle page</b> <code>app/offline/page.js</code> avec :
+        <ul>
+          <li>Design gradient navy/bleu pleine page</li>
+          <li>Icône Wi-Fi qui change selon <code>navigator.onLine</code> (cyan quand en ligne, orange quand offline)</li>
+          <li>Message dynamique : différent selon online/offline</li>
+          <li>Bouton "Réessayer" / "Recharger la page" selon l'état</li>
+          <li>Panneau "Disponible en local" listant ce qui reste accessible (patients récents, catalogue, création DI offline, panier)</li>
+          <li>Indicateur live "En ligne / Hors connexion" avec dot pulsant</li>
+          <li>Auto-detect du retour de connexion via <code>online</code> / <code>offline</code> events + intervalle 5s</li>
+        </ul>
+      </li>
+      <li><b>Service Worker</b> mis à jour :
+        <ul>
+          <li>Version bumped <code>aveho-ec-0.6</code> → <code>aveho-ec-0.47</code></li>
+          <li>Précache de <code>/offline</code> à l'install</li>
+          <li><code>networkFirst()</code> retourne <code>/offline</code> en fallback pour les routes HTML (<code>req.mode === "navigate"</code>)</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">AL</span> InstallBanner refonte</h3>
+    <ul>
+      <li>Avant : juste un titre + sous-titre + boutons</li>
+      <li><b>Ajout d'une grille 3 colonnes de bénéfices visuels</b> entre le header et les boutons :
+        <ul>
+          <li>🚀 Plus rapide (ti-rocket)</li>
+          <li>📡 Hors-ligne (ti-wifi-off)</li>
+          <li>🔔 Notifs push (ti-bell-ringing)</li>
+        </ul>
+      </li>
+      <li>Chaque chip : icône cyan + label court + fond glassmorphism subtle</li>
+      <li><b>Nouveau composant interne</b> <code>&lt;BenefitChip&gt;</code> en fin de fichier</li>
+      <li><b>Aucun changement de comportement</b> : tous les états persistés (dismissed, snoozed) restent identiques</li>
+    </ul>
+  </div>
+
+  <h2>SQL — Patch 0.47 (86 lignes idempotentes)</h2>
+  <table>
+    <thead><tr><th>Objet</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>v_direction_par_structure</code></td><td><span class="pill new">View</span></td><td>10 KPIs par structure (DI, patients, matériels, maintenances, signalements, % résolu, dernière activité) · grant authenticated</td></tr>
+      <tr><td><code>v_direction_totaux</code></td><td><span class="pill new">View</span></td><td>Agrégation cross-structures via membres_structure, par user_id · grant authenticated</td></tr>
+      <tr><td><code>notify pgrst</code></td><td><span class="pill sql">Cache</span></td><td>Reload PostgREST (réflexe 0.43)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">6</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles vues SQL</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Nouvelles pages</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Emplacements send-push</div></div>
+    <div class="kpi"><div class="v">+29</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">822</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">844</div><div class="l">K du zip livré</div></div>
+    <div class="kpi"><div class="v">5/5</div><div class="l">Pages testées dev 200</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.47.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>2 vues SQL + grants + notify pgrst</td></tr>
+      <tr><td><code>app/direction/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Dashboard direction multi-structures · 8 KPIs + tableau détail</td></tr>
+      <tr><td><code>app/webhooks/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>3 sections : config (wrapper WebhookConfig) + testeur + docs Teams/Slack</td></tr>
+      <tr><td><code>supabase/functions/maintenance-daily-cron/index.ts</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ appel send-push best-effort dans la boucle notifs J-7</td></tr>
+      <tr><td><code>supabase/functions/weekly-stats-digest/index.ts</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ appel send-push après envoi email digest</td></tr>
+      <tr><td><code>app/ConflictResolver.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ composant DiffValue word-level + helpers tokenize/markDiff</td></tr>
+      <tr><td><code>app/offline/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page offline polie avec auto-detect online/offline</td></tr>
+      <tr><td><code>public/sw.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>Version bump 0.6 → 0.47 · précache /offline · fallback HTML routes</td></tr>
+      <tr><td><code>app/InstallBanner.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ grille 3 BenefitChip (rapide, offline, push)</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ liens /direction et /webhooks dans Administration</td></tr>
+      <tr><td><code>__tests__/v047-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>29 tests sur les 6 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.46.0-alpha → 0.47.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.47.sql</code> → Run. Le patch finit par <code>notify pgrst, 'reload schema'</code>.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Vue par structure (test sans filtre, RLS gère les accès)
+select structure_nom, nb_di_ce_mois, nb_maint_retard
+from v_direction_par_structure
+limit 5;
+
+-- Totaux du user courant
+select * from v_direction_totaux where user_id = auth.uid();</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Le service worker a changé</b> (version bump) : pour forcer son rechargement après installation, vider le cache navigateur ou hard reload (Ctrl+F5)</li>
+      <li><b>Redéployer les Edge Functions modifiées</b> :
+        <pre><code>supabase functions deploy maintenance-daily-cron
+supabase functions deploy weekly-stats-digest</code></pre>
+      </li>
+      <li><b>Cache + tests + dev</b> (PowerShell — pas de <code>&&</code>) :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test
+npm run dev</code></pre>
+        Attendu : <b>822 tests verts</b>.
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><b>AM</b> : <code>/direction</code> → 8 cards de KPIs + tableau si multi-structures</li>
+          <li><b>AN</b> : <code>/webhooks</code> → 3 sections, tester l'envoi avec un faux webhook (devrait renvoyer une erreur claire)</li>
+          <li><b>AH</b> : provoquer un conflit offline → modifier le même champ ailleurs → reconnecter → ConflictResolver montre maintenant le diff word-level pour les valeurs longues</li>
+          <li><b>AG</b> : DevTools → Network → Offline → naviguer vers une route non cachée → page /offline polie s'affiche</li>
+          <li><b>AL</b> : vider le localStorage du banner → recharger → la grille des 3 bénéfices apparaît</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.48+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>C</b> - Pages config restantes vers safeWrite</li>
+      <li><b>D</b> - Tests Playwright end-to-end</li>
+      <li><b>E</b> - Upgrade Next.js 14 → 15</li>
+      <li><b>F</b> - Module e-learning / formation (gros)</li>
+      <li><b>G</b> - Recherche : ajouter <code>c:</code> consents + <code>f:</code> factures</li>
+      <li><b>H</b> - Soumission stores (Play / MS Store)</li>
+      <li><b>I</b> - Mode présentation autres vues</li>
+      <li><b>M</b> - Mode sombre</li>
+      <li><b>AA</b> - Migration des 66 <code>confirm()</code> natifs vers <code>dialogs.confirm()</code></li>
+      <li><b>AC</b> - Bulk articles + matériels + transferts</li>
+      <li><b>AD</b> - Onboarding tour par rôle</li>
+      <li><b>AF</b> - Recherche globale avec ⌘K</li>
+      <li><b>AI</b> - Export Excel xlsx</li>
+      <li><b>AJ</b> - Multi-langue FR/EN</li>
+      <li><b>AK</b> - Logs applicatifs (table app_logs)</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.47.0 · 31 mai 2026</p>
+    <p>Direction · Webhooks · Push étendu · Diff visuel · Offline · InstallBanner — 822 tests verts · réflexe 6 validé</p>
+  </footer>
+
+</div>
+</body>
+</html>

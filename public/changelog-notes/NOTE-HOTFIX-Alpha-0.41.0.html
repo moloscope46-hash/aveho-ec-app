@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.41 — 3 corrections post-livraison</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:28px;box-shadow:0 10px 30px rgba(192,57,43,.20)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffd6d2;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13px;font-weight:500;color:#ffd6d2;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffd6d2}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  pre.diff{font-size:12px;line-height:1.5}
+  .del{color:#ff8b80;display:block}
+  .add{color:#a8e6a3;display:block}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  .pill.fn{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .fix-block{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:16px 18px;margin:12px 0}
+  .fix-block.green{border-left-color:var(--green)}
+  .fix-block h3{margin-top:0}
+  .fix-num{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:12px;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — HOTFIX POST-LIVRAISON</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Patch 0.41.0 — 3 corrections
+      <small>Erreurs SQL au déploiement + 1 test DST → tout fixé</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.41.0-alpha</code> (hotfix)</span>
+      <span><b>Tests :</b> 639 verts</span>
+    </div>
+  </header>
+
+  <p>3 corrections post-livraison de la 0.41 : 2 erreurs SQL bloquantes au déploiement du patch, plus 1 test qui échouait à cause d'un piège DST (passage à l'heure d'été du 29 mars 2026). Aucun impact sur les chantiers livrés — le front est resté propre tout du long.</p>
+
+  <h2>Résumé des fixes</h2>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Symptôme</th><th>Fichier</th><th>Cause</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><code>relation "users_structures" does not exist</code></td>
+        <td>SQL + Edge Function</td>
+        <td>Table inventée ; la vraie s'appelle <code>membres_structure</code>, accessible via le helper <code>mes_structures()</code></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><code>column m.cloturee_le does not exist</code></td>
+        <td>SQL (vue stats)</td>
+        <td>Colonne et statut inventés ; les vraies sont <code>date_realisee</code> et statut <code>'Faite'</code></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>1 test échoue : <code>2026-03-31</code> reçu au lieu de <code>2026-04-01</code></td>
+        <td>__tests__/v041-features.test.js</td>
+        <td>Bug DST : <code>setDate()</code> opère en local, perte d'1h en traversant le 29 mars (passage UTC+1 → UTC+2)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="fix-block">
+    <h3><span class="fix-num">1</span> SQL — table d'appartenance user ↔ structure</h3>
+    <p><b>Erreur</b> au déploiement du patch SQL :</p>
+    <pre><code>ERROR: 42P01: relation "users_structures" does not exist</code></pre>
+    <p><b>Cause</b> : j'avais inventé le nom <code>users_structures</code>. La vraie table d'Aveho s'appelle <code>membres_structure</code>, et il existe un helper SQL <code>mes_structures()</code> (<code>security definer stable</code>) utilisé partout dans les RLS du projet (patients, articles, materiels...).</p>
+    <p><b>Correction</b> dans la policy de <code>maintenance_recurrences</code> :</p>
+    <pre class="diff"><span class="del">- using (structure_id in (</span>
+<span class="del">-   select structure_id from users_structures where user_id = auth.uid()</span>
+<span class="del">- ))</span>
+<span class="add">+ using (structure_id in (select mes_structures()))</span></pre>
+    <p>Et dans la Edge Function <code>send-digest</code> (mode <code>force_send</code> qui crée une pref temporaire) :</p>
+    <pre class="diff"><span class="del">- .from("users_structures")</span>
+<span class="add">+ .from("membres_structure")</span></pre>
+    <p><b>Leçon</b> : avant d'écrire une nouvelle policy RLS, faire un <code>grep "create policy.*structure_id" supabase/*.sql</code> pour copier le pattern existant.</p>
+  </div>
+
+  <div class="fix-block">
+    <h3><span class="fix-num">2</span> SQL — colonnes et statuts de la table maintenances</h3>
+    <p><b>Erreur</b> au déploiement (après fix #1) :</p>
+    <pre><code>ERROR: 42703: column m.cloturee_le does not exist
+LINE 97: avg(extract(epoch from (m.cloturee_le - m.created_at)) / 86400)</code></pre>
+    <p><b>Cause</b> : j'avais inventé une colonne <code>cloturee_le</code> en <code>timestamptz</code> et les statuts <code>Clôturée</code> / <code>En cours</code>. Les vraies colonnes sont :</p>
+    <ul>
+      <li><code>date_realisee date</code> (renseigné quand effectuée)</li>
+      <li><code>statut text</code> : <code>Planifiée</code> / <code>À faire</code> / <code>Faite</code> / <code>En retard</code> / <code>Annulée</code></li>
+    </ul>
+    <p><b>Correction</b> dans la vue <code>v_stats_maintenances</code> :</p>
+    <pre class="diff"><span class="del">- count(*) filter (where m.statut = 'Clôturée') as nb_cloturees,</span>
+<span class="del">- count(*) filter (where m.statut = 'En cours') as nb_en_cours,</span>
+<span class="del">- avg(extract(epoch from (m.cloturee_le - m.created_at)) / 86400)</span>
+<span class="del">-   filter (where m.cloturee_le is not null) as duree_moy_jours</span>
+<span class="add">+ count(*) filter (where m.statut = 'Faite') as nb_cloturees,</span>
+<span class="add">+ count(*) filter (where m.statut in ('Planifiée', 'À faire', 'En retard')) as nb_en_cours,</span>
+<span class="add">+ avg(m.date_realisee - m.created_at::date)</span>
+<span class="add">+   filter (where m.date_realisee is not null) as duree_moy_jours</span></pre>
+    <p>Au passage, la nouvelle formule <code>date - date</code> retourne directement un <code>int</code> en jours, plus simple et plus correct que l'<code>extract(epoch …)/86400</code> qui avait des arrondis flottants.</p>
+    <p><b>Vérif</b> que le front maintenance est resté cohérent (depuis le début il utilise bien les vrais statuts <code>"Faite"</code>, <code>"À faire"</code>, <code>"En retard"</code>) — seul mon SQL était erroné.</p>
+    <p><b>Leçon</b> : avant d'écrire une vue SQL agrégeant une table métier, faire un <code>grep -A 20 "create table.*&lt;table&gt;" supabase/*.sql</code> pour vérifier les vrais noms de colonnes et les valeurs de statuts attendues.</p>
+  </div>
+
+  <div class="fix-block green">
+    <h3><span class="fix-num">3</span> Test — bug DST sur calcul de récurrence</h3>
+    <p><b>Échec test</b> à l'exécution locale chez toi (Marne-la-Vallée, UTC+2 en été) :</p>
+    <pre><code>FAIL __tests__/v041-features.test.js > Récurrences maintenance > dernière + 90j
+AssertionError: expected '2026-03-31' to be '2026-04-01'
+  - Expected: 2026-04-01
+  + Received: 2026-03-31</code></pre>
+    <p><b>Cause</b> : bug DST classique. Le calcul traversait le passage à l'heure d'été du <b>29 mars 2026</b> :</p>
+    <pre><code>new Date("2026-01-01")            → 2026-01-01T00:00:00Z (UTC)
+                                    = 2026-01-01T01:00:00 local (UTC+1, heure hiver)
+setDate(getDate() + 90)            → 91e jour calculé en local
+                                    = 1 avril 01:00 local
+                                    MAIS le 1er avril on est en UTC+2 (heure été)
+UTC                                = 2026-03-31T23:00:00Z   ← perd 1h !
+toISOString().slice(0, 10)         → "2026-03-31"   ✗</code></pre>
+    <p><b>Correction</b> : arithmétique en millisecondes directement, qui ne traverse aucun fuseau local.</p>
+    <pre class="diff"><span class="del">- function calcProchaine(derniere, frequence_jours) {</span>
+<span class="del">-   if (!derniere || !frequence_jours) return null;</span>
+<span class="del">-   const next = new Date(derniere);</span>
+<span class="del">-   next.setDate(next.getDate() + frequence_jours);</span>
+<span class="del">-   return next.toISOString().slice(0, 10);</span>
+<span class="del">- }</span>
+<span class="add">+ function calcProchaine(derniere, frequence_jours) {</span>
+<span class="add">+   if (!derniere || !frequence_jours) return null;</span>
+<span class="add">+   const t = new Date(derniere).getTime();</span>
+<span class="add">+   return new Date(t + frequence_jours * 86400000)</span>
+<span class="add">+     .toISOString().slice(0, 10);</span>
+<span class="add">+ }</span></pre>
+    <p>Impact : test uniquement. La fonction n'est pas utilisée dans le code de prod (helper de test). La table <code>maintenance_recurrences</code> a un champ <code>prochaine_due</code> qui pourra être calculé côté SQL (<code>derniere_realisee + frequence_jours</code>) sans aucun souci de fuseau.</p>
+    <p><b>Leçon</b> : pour toute arithmétique de date en JS, préférer <code>getTime() + n*86400000</code> à <code>setDate(getDate() + n)</code>. Le piège ne se manifeste qu'au passage de DST mais le test devient flaky selon le fuseau ET la date d'exécution.</p>
+  </div>
+
+  <h2>État après hotfix</h2>
+  <div class="panel hi">
+    <ul>
+      <li>✅ Patch SQL 0.41 désormais idempotent <b>et</b> exécutable sans erreur</li>
+      <li>✅ Vue <code>v_stats_maintenances</code> retourne des données cohérentes</li>
+      <li>✅ Policy RLS de <code>maintenance_recurrences</code> conforme au pattern Aveho (<code>mes_structures()</code>)</li>
+      <li>✅ Edge Function <code>send-digest</code> peut créer une pref temporaire pour le mode test (chantier J)</li>
+      <li>✅ <b>639 tests verts</b>, build Next.js clean</li>
+      <li>✅ Aucun changement front nécessaire — seule la couche SQL était impactée</li>
+    </ul>
+  </div>
+
+  <h2>Procédure de réapplication</h2>
+  <div class="panel warn">
+    <ol>
+      <li><b>Re-lancer le SQL</b> dans Supabase → SQL Editor → coller la <b>version corrigée</b> de <code>aveho-PATCH-vers-0.41.sql</code> → Run. Le SQL est idempotent : <code>create or replace view</code> et <code>create table if not exists</code> + <code>drop policy if exists</code> garantissent qu'on peut le relancer sans état résiduel.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Vue corrigée
+select * from v_stats_maintenances 
+where structure_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+-- → une ligne par type de maintenance présent (vide si aucune maintenance)
+
+-- Table récurrences
+select count(*) from maintenance_recurrences;
+-- → 0
+
+-- RPC drill RGPD
+select * from get_rgpd_heatmap_drill(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid, 1, 14, 5);
+-- → liste des signatures lundi 14h sur 90j (vide si aucune)</code></pre>
+      </li>
+      <li><b>Redéployer la Edge Function</b> (correction <code>membres_structure</code>) :
+        <pre><code>supabase functions deploy send-digest</code></pre>
+      </li>
+      <li><b>Re-extraire le zip</b> par-dessus <code>C:\aveho-ec-app\</code> (test corrigé) :
+        <pre><code>cd C:\aveho-ec-app
+npm test       # → 639 passed
+npm run dev</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>À retenir pour les prochaines versions</h2>
+  <div class="panel" style="border-left:4px solid var(--violet)">
+    <p>Trois grep réflexes à faire avant d'écrire du SQL ou des dates :</p>
+    <ol>
+      <li><b>Pattern RLS</b> :
+        <pre><code>grep "create policy.*structure_id" supabase/*.sql | head -5</code></pre>
+        → identifier le helper exact (ici <code>mes_structures()</code>) et coller le pattern.
+      </li>
+      <li><b>Schéma d'une table</b> :
+        <pre><code>grep -A 20 "create table if not exists &lt;table&gt;" supabase/*.sql</code></pre>
+        → vérifier les vrais noms de colonnes et les valeurs de statuts utilisées.
+      </li>
+      <li><b>Dates en JS</b> :
+        <ul>
+          <li>Pour additionner des jours : <code>new Date(t.getTime() + n * 86400000)</code></li>
+          <li>Pour parser une date ISO en UTC sans bonus local : <code>new Date(s + "T00:00:00Z")</code></li>
+          <li>Éviter <code>setDate(getDate() + n)</code> dès qu'on traverse mars ou octobre (DST en zone Europe)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.41.0 · 31 mai 2026</p>
+    <p>3 corrections : 2 SQL bloquantes · 1 test DST · État final 639 verts, build clean</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.18.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.fix{background:#dee9fa;color:#1e4a91}
+  .pill.refac{background:#e8d8f0;color:#5a2a7a}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.a11y{background:#f0e0d8;color:#6a3d1c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — QUALITÉ &amp; DETTE TECHNIQUE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.18.0
+      <small>Tests Vitest (34 tests) · Refactor pdfPreview blob URL · Audit a11y (focus, ARIA, skip-link) · NotifBell mutualisé</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026 (très tard)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.18.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.17.1</span>
+      <span><b>Statut :</b> Build clean · 34 tests verts · Aucun risque infra</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">✅ 34 tests Vitest passent</span>
+      <span class="badge green">🧹 document.write supprimé partout</span>
+      <span class="badge green">♿ Focus visible accessible</span>
+      <span class="badge green">🪪 Skip-link au contenu principal</span>
+      <span class="badge green">🔄 NotifBell utilise relativeTime partagé</span>
+      <span class="badge green">🔒 Focus trap dans les modales</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#tests">3. Tests Vitest (34 tests)</a></li>
+      <li><a href="#pdfpreview">4. Refactor pdfPreview blob URL</a></li>
+      <li><a href="#a11y">5. Audit a11y</a></li>
+      <li><a href="#notifbell">6. NotifBell mutualisé</a></li>
+      <li><a href="#fichiers">7. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">8. Procédure d'application</a></li>
+      <li><a href="#reporte">9. Reste à faire (0.19)</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>La 0.18.0 est une <b>itération qualité & dette technique</b>. 4 chantiers à faible risque, choisis pour leur gain net sans toucher au schéma de base ni risquer de régressions sur le code métier.</p>
+
+  <div class="highlight">
+    <b>Aucun patch SQL.</b> Aucun changement de schéma. Aucune dépendance npm sauf Vitest (devDependency). L'app garde exactement le même comportement fonctionnel, mais devient testable, accessible, et plus propre.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">4</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">34</div><div class="l">Tests unitaires verts</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Fichiers de tests</div></div>
+    <div class="kpi"><div class="v">1.1s</div><div class="l">Durée totale tests</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">document.write supprimés</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Améliorations a11y modales</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Helper dédupliqué (NotifBell)</div></div>
+    <div class="kpi"><div class="v">328</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Setup Vitest + tests sur lib/format.js et lib/events.js</td><td><span class="pill test">Tests</span></td></tr>
+      <tr><td>2</td><td>pdfPreview.js : remplacement contentDocument.write par blob URL</td><td><span class="pill refac">Refactor</span></td></tr>
+      <tr><td>3</td><td>exportPdf.js : remplacement w.document.write par blob URL</td><td><span class="pill refac">Refactor</span></td></tr>
+      <tr><td>4</td><td>Modale unifiée : role=dialog, aria-modal, focus trap, ESC handler</td><td><span class="pill a11y">A11y</span></td></tr>
+      <tr><td>5</td><td>CSS focus visible accessible sur tous les éléments interactifs</td><td><span class="pill a11y">A11y</span></td></tr>
+      <tr><td>6</td><td>Skip-link "Aller au contenu principal" dans layout</td><td><span class="pill a11y">A11y</span></td></tr>
+      <tr><td>7</td><td>NotifBell : aria-label sur bouton supprimer, role=button sur ligne, keyboard nav</td><td><span class="pill a11y">A11y</span></td></tr>
+      <tr><td>8</td><td>NotifBell : utilise relativeTime de lib/format (suppression fonction locale dupliquée)</td><td><span class="pill refac">Refactor</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="tests">3. Tests Vitest (34 tests)</h2>
+
+  <h3>3.1 Setup</h3>
+  <p>Ajout de <code>vitest@1.6.0</code> en devDependency. Nouveaux scripts dans <code>package.json</code> :</p>
+  <ul>
+    <li><code>npm test</code> — exécute tous les tests une fois</li>
+    <li><code>npm run test:watch</code> — mode watch pour développement</li>
+  </ul>
+  <p>Config minimale dans <code>vitest.config.js</code> : tests dans <code>__tests__/**/*.test.js</code>, environnement Node.</p>
+
+  <h3>3.2 Couverture lib/format.js (22 tests)</h3>
+  <table>
+    <thead><tr><th>Helper</th><th>Tests</th></tr></thead>
+    <tbody>
+      <tr><td><code>fmtEur</code></td><td>3 tests : format français, null/undefined/empty → 0, négatifs</td></tr>
+      <tr><td><code>fmtDate</code></td><td>2 tests : ISO → jj/mm/aaaa, null/undefined → —</td></tr>
+      <tr><td><code>joursRestants</code></td><td>3 tests : date future, date passée → 0, null → null</td></tr>
+      <tr><td><code>statutClass</code></td><td>3 tests : Validée, Livrée, fallback s-encours</td></tr>
+      <tr><td><code>relativeTime</code></td><td>7 tests : 5 paliers (à l'instant / min / h / j / sem / +30j) + null</td></tr>
+      <tr><td><code>activityDotColor</code></td><td>4 tests : < 10 min / < 24h / > 24h / null</td></tr>
+    </tbody>
+  </table>
+  <p>Les tests temporels utilisent <code>vi.useFakeTimers()</code> + <code>vi.setSystemTime("2024-03-15T12:00:00Z")</code> pour garantir la reproductibilité.</p>
+
+  <h3>3.3 Couverture lib/events.js (12 tests)</h3>
+  <p>Les helpers internes <code>mapNotifType</code>, <code>mapEventType</code>, <code>defaultTitre</code> ont été exportés (sans casser le code existant qui les utilise). Tests :</p>
+  <ul>
+    <li><code>mapNotifType</code> — 3 tests : transfert/di/intervention/invitation/commande + fallback systeme</li>
+    <li><code>mapEventType</code> — 5 tests : intervention/notifType:di/achat/signalement/fallback</li>
+    <li><code>defaultTitre</code> — 4 tests : 6 verbes traduits + action inconnue + capitalisation</li>
+  </ul>
+
+  <h3>3.4 Résultat</h3>
+  <pre><code>npm test
+> aveho-ec-app@0.18.0-alpha test
+> vitest run
+
+ ✓ __tests__/format.test.js  (22 tests) 36ms
+ ✓ __tests__/events.test.js  (12 tests)  6ms
+
+ Test Files  2 passed (2)
+      Tests  34 passed (34)
+   Duration  1.14s</code></pre>
+
+  <h2 id="pdfpreview">4. Refactor pdfPreview blob URL</h2>
+
+  <h3>4.1 Le problème</h3>
+  <p>Deux helpers utilisaient <code>document.write()</code> qui génère un warning Chrome <i>"document.write() is deprecated"</i> et qui est mal supporté par les CSP modernes. Pas bloquant, mais gênant à terme.</p>
+  <ul>
+    <li><code>lib/pdfPreview.js</code> : <code>iframe.contentDocument.write(html)</code></li>
+    <li><code>lib/exportPdf.js</code> : <code>w.document.write(html)</code> dans une nouvelle fenêtre</li>
+  </ul>
+
+  <h3>4.2 La solution : blob URL</h3>
+  <p>Construction d'un <code>Blob</code> avec le HTML, puis <code>URL.createObjectURL(blob)</code> pour obtenir une URL temporaire. Cette URL est ensuite passée à <code>iframe.src</code> ou à <code>window.open()</code>.</p>
+  <pre><code>// Avant
+iframe.contentDocument.open();
+iframe.contentDocument.write(html);
+iframe.contentDocument.close();
+
+// Après (Alpha 0.18.0)
+const blob = new Blob([html], { type: "text/html" });
+const blobUrl = URL.createObjectURL(blob);
+iframe.src = blobUrl;</code></pre>
+
+  <p>Nettoyage mémoire avec <code>URL.revokeObjectURL(blobUrl)</code> à la fermeture du preview (ou après 30 s pour la fenêtre de print, le temps d'impression).</p>
+
+  <h3>4.3 Avantages</h3>
+  <ul>
+    <li>Plus de warning Chrome</li>
+    <li>Compatible CSP strict (le blob est local, pas d'injection cross-origin)</li>
+    <li>Comportement identique pour l'utilisateur (preview A4 + impression)</li>
+  </ul>
+
+  <h2 id="a11y">5. Audit a11y</h2>
+
+  <h3>5.1 Modale unifiée (ui.js)</h3>
+  <p>Le composant <code>&lt;Modal&gt;</code> partagé reçoit 4 améliorations :</p>
+  <ul>
+    <li><b><code>role="dialog"</code></b> et <b><code>aria-modal="true"</code></b> sur le conteneur</li>
+    <li><b><code>aria-labelledby</code></b> pointant vers l'ID du titre (généré dynamiquement à partir du titre)</li>
+    <li><b>Focus initial</b> sur le premier élément focusable à l'ouverture</li>
+    <li><b>Focus trap</b> : Tab et Shift+Tab cyclent dans la modale, ne sortent pas vers l'arrière-plan</li>
+    <li><b>ESC ferme la modale</b> (déjà partiellement en place, désormais consolidé)</li>
+    <li><b>Restauration du focus</b> sur l'élément précédent à la fermeture</li>
+    <li><b><code>aria-hidden="true"</code></b> sur les icônes décoratives</li>
+    <li><b><code>aria-label</code></b> plus descriptif sur le bouton X ("Fermer la fenêtre")</li>
+  </ul>
+
+  <h3>5.2 Focus visible accessible (CSS)</h3>
+  <p>Ajout d'un style global <code>:focus-visible</code> qui rend le focus clavier clairement visible :</p>
+  <pre><code>button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #7CC8C8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}</code></pre>
+  <p>Variante "fond foncé" pour les boutons sur navy/teal : outline blanc + offset 3px pour rester visible.</p>
+
+  <h3>5.3 Skip-link</h3>
+  <p>Ajout d'un lien <i>"Aller au contenu principal"</i> en début de page (caché jusqu'au focus). Permet aux utilisateurs clavier de sauter directement le menu et la TopBar.</p>
+
+  <h3>5.4 NotifBell</h3>
+  <p>Les lignes de notification deviennent navigables au clavier : <code>role="button"</code>, <code>tabIndex={0}</code>, gestion de <code>Enter</code> et <code>Space</code>. Le bouton supprimer passe de <code>&lt;i&gt;</code> à <code>&lt;button&gt;</code> avec <code>aria-label</code>.</p>
+
+  <h2 id="notifbell">6. NotifBell mutualisé</h2>
+  <p>NotifBell avait une fonction locale <code>relDate(iso)</code> presque identique à <code>relativeTime(iso)</code> de <code>lib/format.js</code>. Suppression du doublon, utilisation du helper partagé. Bonus : le hover sur une notification montre maintenant la date complète (heure + date) en <code>title</code>.</p>
+
+  <h2 id="fichiers">7. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>vitest.config.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Config Vitest minimale (tests Node, glob __tests__)</td></tr>
+      <tr><td><code>__tests__/format.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>22 tests sur les 6 helpers de format</td></tr>
+      <tr><td><code>__tests__/events.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>12 tests sur les 3 mappers d'events</td></tr>
+      <tr><td><code>lib/events.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>Export des 3 helpers internes pour les tests</td></tr>
+      <tr><td><code>lib/pdfPreview.js</code></td><td><span class="pill refac">REFACTORÉ</span></td><td>contentDocument.write → blob URL + revoke</td></tr>
+      <tr><td><code>lib/exportPdf.js</code></td><td><span class="pill refac">REFACTORÉ</span></td><td>w.document.write → blob URL + revoke différé</td></tr>
+      <tr><td><code>app/ui.js</code></td><td><span class="pill a11y">A11Y</span></td><td>Modale : role=dialog, focus trap, ESC, restore focus</td></tr>
+      <tr><td><code>app/layout.js</code></td><td><span class="pill a11y">A11Y</span></td><td>+ Skip-link "Aller au contenu principal"</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill a11y">A11Y</span></td><td>+ CSS focus-visible et skip-to-content</td></tr>
+      <tr><td><code>app/NotifBell.js</code></td><td><span class="pill refac">PATCHÉ</span></td><td>Utilise relativeTime + a11y (role=button, aria-label)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>+ vitest devDep, + scripts test, version 0.18.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">8. Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Pas de SQL</b> — aucun changement de schéma en 0.18.0.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app</code> (garder .env.local).</li>
+      <li><b>Installer la nouvelle dépendance dev</b> (Vitest) :
+        <pre><code>cd C:\aveho-ec-app
+npm install</code></pre>
+      </li>
+      <li><b>Vérifier les tests</b> :
+        <pre><code>npm test</code></pre>
+        Tu dois voir <code>Test Files 2 passed (2) — Tests 34 passed (34)</code>.
+      </li>
+      <li><b>Lancer le dev</b> :
+        <pre><code>npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Ouvrir une modale (ex. /utilisateurs → Infos utilisateur). Tab et Shift+Tab restent dans la modale.</li>
+          <li>Échap ferme la modale.</li>
+          <li>Tab depuis le début de page → le skip-link apparaît, Entrée saute au contenu principal.</li>
+          <li>NotifBell : Tab navigue dans les notifications, Entrée/Espace ouvre celle focusée.</li>
+          <li>Imprimer une liste (/maintenance par exemple) : plus de warning document.write dans la console.</li>
+        </ul>
+      </li>
+      <li><b>Mise en ligne Vercel</b> : pousser sur <code>C:\aveho-ec-app-01</code> comme d'habitude.</li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">9. Reste à faire (0.19)</h2>
+  <div class="panel warn">
+    <p>Les chantiers reportés depuis la roadmap 0.18 originelle :</p>
+    <ul>
+      <li><b>Dépréciation <code>membres_structure.role</code> text</b> — risque élevé, à faire quand on est sûr que le code n'utilise plus que role_id (audit code requis)</li>
+      <li><b>Extraction hooks <code>useStructureData</code>, <code>useFiltres</code></b> — refactor moyen, demande tests en place d'abord (faits en 0.18.0, OK pour 0.19)</li>
+      <li><b>Optimisations perf</b> — virtualisation listes longues (react-window), lazy images, code-splitting routes lourdes (à faire si lenteur observée)</li>
+      <li><b>Couverture tests étendue</b> — ajouter tests sur canDo (useAuth), helpers d'export Excel, importCsv</li>
+      <li><b>Tests d'intégration UI</b> — Playwright pour les flux critiques (login, créer DI, traiter panier)</li>
+      <li><b>Mode sombre</b> — useTheme existe déjà, manque l'audit complet des couleurs en dark mode</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.18.0 · 29 mai 2026 (très tard)</p>
+    <p>4 chantiers qualité — Tests Vitest · Refactor blob URL · A11y · NotifBell mutualisé</p>
+  </footer>
+
+</div>
+</body>
+</html>

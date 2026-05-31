@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.37.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfeacb;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfeacb;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfeacb}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.28);border-color:rgba(132,200,124,.6);color:#fff}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--green)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eef9ef;border-color:#b4dfb6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--green);padding:12px 18px;margin:12px 0;border-radius:6px}
+  .trend-demo{display:inline-flex;align-items:center;gap:3px;padding:3px 10px;background:#dff5e0;color:#2e6f33;border-radius:12px;font-size:12px;font-weight:700;letter-spacing:.3px;margin:0 4px}
+  .trend-demo.down{background:#fef0ee;color:#c0392b}
+  .trend-demo.neutral{background:#f4f7fa;color:#8a98a8}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — ANALYTICS ENRICHIES</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.37.0
+      <small>Drill-down heatmap cliquable · Badges tendance N vs N-1 · RPC get_heatmap_drill</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.37.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.36.0</span>
+      <span><b>Statut :</b> Build clean · 513 tests verts · 1 patch SQL (146 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📊 Vue v_stats_activite_global (mois courant vs précédent)</span>
+      <span class="badge">🔍 RPC get_heatmap_drill pour détail par créneau</span>
+      <span class="badge">🖱️ Heatmap cliquable avec modale drill-down</span>
+      <span class="badge">📈 Composant TrendBadge réutilisable</span>
+      <span class="badge">🎯 6 métriques de tendance sur stats activité</span>
+      <span class="badge">🛡️ TrendBadge intégré aussi dans stats RGPD</span>
+      <span class="badge green">+35 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>La 0.31 a livré la heatmap et la 0.30 le dashboard RGPD. Mais les chiffres étaient muets : 25 DI ce mois, c'est beaucoup ou peu ? Et la heatmap montrait des pics sans qu'on puisse voir <b>quelles actions</b> exactement. La 0.37 ajoute le contexte qui manquait.</p>
+
+  <div class="highlight">
+    <b>Deux enrichissements complémentaires :</b><br/>
+    1) Chaque KPI a maintenant un badge de tendance "ce mois vs mois dernier" — exemple : <span class="trend-demo">↗ +24% vs mois dernier</span> ou <span class="trend-demo down">↘ −18% vs mois dernier</span> ou <span class="trend-demo neutral">≈ vs mois dernier</span>.<br/>
+    2) Les cellules colorées de la heatmap sont cliquables — modale qui liste les actions précises de ce créneau horaire (qui a fait quoi, quand).
+  </div>
+
+  <h2>Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Patch SQL : vue <code>v_stats_activite_global</code> avec compteurs mois courant + mois précédent par catégorie</td><td><span class="pill sql">SQL</span></td></tr>
+      <tr><td>2</td><td>Patch SQL : RPC <code>get_heatmap_drill(structure_id, dow, heure, limit)</code> pour drill-down</td><td><span class="pill sql">SQL</span></td></tr>
+      <tr><td>3</td><td>Composant <code>&lt;TrendBadge&gt;</code> dans Charts.js — gère hausse/baisse/neutre/nouveau avec mode inverse</td><td><span class="pill new">Composant</span></td></tr>
+      <tr><td>4</td><td>Heatmap cliquable : prop <code>onCellClick(cell)</code> ajoutée, cursor pointer + hint UX</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>5</td><td>Page <code>/statistiques-activite</code> : panneau "Ce mois vs mois dernier" avec 6 TrendRow + modale drill-down</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>6</td><td>Page <code>/statistiques-rgpd</code> : TrendBadge intégré dans le panneau Tendance (remplace la ligne texte basique)</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>7</td><td>35 tests Vitest (calcul tendance, mode inverse, drill RPC params, couleurs action, scénarios)</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. SQL — Vue tendances activité</h2>
+
+  <p>La vue <code>v_stats_activite_global</code> calcule en une seule passe toutes les comparaisons mois courant vs précédent :</p>
+
+  <table>
+    <thead><tr><th>Métrique</th><th>Ce mois</th><th>Mois dernier</th></tr></thead>
+    <tbody>
+      <tr><td>Actions totales</td><td><code>actions_ce_mois</code></td><td><code>actions_mois_dernier</code></td></tr>
+      <tr><td>DI créées</td><td><code>di_ce_mois</code></td><td><code>di_mois_dernier</code></td></tr>
+      <tr><td>Achats demandés</td><td><code>achats_ce_mois</code></td><td><code>achats_mois_dernier</code></td></tr>
+      <tr><td>Transferts</td><td><code>transferts_ce_mois</code></td><td><code>transferts_mois_dernier</code></td></tr>
+      <tr><td>Utilisateurs actifs (distinct)</td><td><code>users_ce_mois</code></td><td><code>users_mois_dernier</code></td></tr>
+      <tr><td>Validations</td><td><code>validations_ce_mois</code></td><td><code>validations_mois_dernier</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>Plus des compteurs glissants <code>actions_7j</code>, <code>actions_30j</code>, <code>actions_90j</code> pour les autres KPIs.</p>
+
+  <p><b>Performance</b> : la vue agrège <code>audit_log</code> filtré par <code>created_at</code> en une seule passe avec des <code>filter</code>. Avec les index existants sur (structure_id, created_at), elle reste rapide même sur de gros volumes.</p>
+
+  <h2>2. SQL — RPC drill-down</h2>
+
+  <pre><code>create or replace function get_heatmap_drill(
+  p_structure_id uuid,
+  p_jour_semaine int,    -- 0=dim, 1=lun, ..., 6=sam
+  p_heure int,           -- 0-23
+  p_limit int default 50
+)
+returns table (id, action, entite, entite_id, 
+               user_email, user_id, details, 
+               created_at, jour_label)</code></pre>
+
+  <ul>
+    <li><b>Stable + security invoker</b> : respecte la RLS de <code>audit_log</code> (un user ne voit que ses lignes structure)</li>
+    <li><b>Filtre 90 jours</b> : cohérent avec la heatmap qui affiche cette même fenêtre</li>
+    <li><b>Tri DESC</b> : les plus récentes d'abord</li>
+    <li><b>jour_label formaté</b> : "Mar 28/05 14:32" — directement affichable</li>
+    <li><b>grant authenticated</b> : tout user connecté peut appeler (RLS protège)</li>
+  </ul>
+
+  <h2>3. Composant TrendBadge</h2>
+
+  <p>Composant SVG inline réutilisable. Aperçu des 4 états :</p>
+
+  <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin:12px 0;display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:center;font-size:13px">
+    <div>
+      <div style="color:#8a98a8;font-size:11px;margin-bottom:6px">Hausse (mode normal)</div>
+      <span class="trend-demo">↗ +21% vs mois dernier</span>
+    </div>
+    <div>
+      <div style="color:#8a98a8;font-size:11px;margin-bottom:6px">Baisse (mode normal)</div>
+      <span class="trend-demo down">↘ −18% vs mois dernier</span>
+    </div>
+    <div>
+      <div style="color:#8a98a8;font-size:11px;margin-bottom:6px">Stable (< 2%)</div>
+      <span class="trend-demo neutral">≈ vs mois dernier</span>
+    </div>
+    <div>
+      <div style="color:#8a98a8;font-size:11px;margin-bottom:6px">Pas de N-1</div>
+      <span class="trend-demo">Nouveau vs mois dernier</span>
+    </div>
+  </div>
+
+  <h3>API</h3>
+  <pre><code>&lt;TrendBadge 
+  current={125}        // valeur actuelle
+  previous={100}       // valeur N-1
+  inverse={false}      // true = baisse = bon (taux refus, erreurs)
+  label="vs mois dernier"
+  size="sm"            // "sm" ou "md"
+/&gt;</code></pre>
+
+  <h3>Logique</h3>
+  <ul>
+    <li>Calcul : <code>pct = (current − previous) / previous × 100</code></li>
+    <li>Seuil neutre : <code>|pct| < 2%</code> → "≈" gris (évite le bruit visuel sur micro-variations)</li>
+    <li><code>previous = 0</code> et <code>current > 0</code> → "Nouveau" vert (impossible de diviser par 0)</li>
+    <li>Mode inverse : pour taux de refus, erreurs, etc. — la baisse est positive</li>
+    <li>Si <code>current</code> ou <code>previous</code> est null → retourne <code>null</code> (pas affiché)</li>
+  </ul>
+
+  <h2>4. Heatmap cliquable</h2>
+
+  <p>Le composant <code>&lt;Heatmap&gt;</code> de Charts.js accepte maintenant une prop <code>onCellClick</code> :</p>
+
+  <pre><code>&lt;Heatmap 
+  data={heatmap}
+  color="#185FA5"
+  onCellClick={(cell) =&gt; {
+    // cell = { jour_semaine: 1, heure: 14, nb_actions: 23, jour_label: "Mar" }
+    openDrill(cell);
+  }}
+/&gt;</code></pre>
+
+  <ul>
+    <li>Cellules avec <code>nb_actions > 0</code> deviennent cliquables (cursor pointer)</li>
+    <li>Cellules vides restent passives</li>
+    <li>Tooltip natif enrichi : "Mar 14h : 23 actions — cliquer pour détail"</li>
+    <li>Hint visible sous la heatmap : "💡 Clique sur une cellule colorée pour voir le détail"</li>
+  </ul>
+
+  <h2>5. Modale drill-down</h2>
+
+  <p>Au clic sur une cellule, une modale s'ouvre avec :</p>
+  <ul>
+    <li><b>Titre</b> : "Mar 14h — 23 actions"</li>
+    <li><b>Note</b> : précise que les 50 dernières actions sont agrégées sur 90 jours pour ce créneau (tous les mardis confondus)</li>
+    <li><b>Tableau</b> : Date complète · Action · Entité · Utilisateur</li>
+    <li><b>Couleurs par action</b> : creer (vert), modifier (orange), supprimer (rouge), valider (teal), refuser (rouge), recevoir (violet), cloturer (bleu)</li>
+    <li><b>Icônes par entité</b> : 8 entités mappées (intervention, achat, transfert, signalement, patient, materiel, maintenance, consentement)</li>
+    <li><b>Scroll interne</b> : maxHeight 480px pour ne pas dépasser l'écran</li>
+  </ul>
+
+  <p>États gérés :</p>
+  <ul>
+    <li><b>loading</b> : spinner pendant le fetch RPC</li>
+    <li><b>vide</b> : "Aucune action sur ce créneau" (peut arriver si la heatmap a une cellule à 0 cliquée — théoriquement impossible mais robuste)</li>
+    <li><b>erreur</b> : message d'erreur RPC avec icône warning</li>
+  </ul>
+
+  <h2>6. Intégration dans /statistiques-rgpd</h2>
+
+  <p>L'ancien panneau "Tendance ce mois" affichait du texte : "Ce mois : 12 — Mois dernier : 10 — Évolution : +20%". Remplacé par un layout plus clair :</p>
+  <ul>
+    <li><b>2 chiffres côte à côte</b> : "Ce mois" en gros + "Mois dernier" en plus petit gris</li>
+    <li><b>Séparateur visuel</b> entre les deux</li>
+    <li><b>TrendBadge size="md"</b> à droite avec le pourcentage coloré</li>
+  </ul>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle vue SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle RPC SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Composant TrendBadge</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">Métriques tendance</div></div>
+    <div class="kpi"><div class="v">8</div><div class="l">Entités drill mappées</div></div>
+    <div class="kpi"><div class="v">+35</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">513</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">146</div><div class="l">Lignes patch SQL</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.37.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Vue v_stats_activite_global + RPC get_heatmap_drill + grants</td></tr>
+      <tr><td><code>__tests__/trend-drill.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>35 tests sur calcul tendance, mode inverse, RPC params, couleurs, scénarios</td></tr>
+      <tr><td><code>app/Charts.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ &lt;TrendBadge&gt; + Heatmap accepte onCellClick</td></tr>
+      <tr><td><code>app/statistiques-activite/page.js</code></td><td><span class="pill imp">REFONDU</span></td><td>+ panneau tendances (6 TrendRow) + modale drill avec helpers actionColor / entiteIcon</td></tr>
+      <tr><td><code>app/statistiques-rgpd/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>Bloc Tendance refondu avec TrendBadge en remplacement du texte simple</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.36.0-alpha → 0.37.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.37.sql</code> → Run.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Vue créée
+select * from v_stats_activite_global 
+where structure_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+-- → 1 ligne avec actions_ce_mois, actions_mois_dernier, di_ce_mois, etc.
+
+-- RPC créée
+select * from get_heatmap_drill(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid,
+  1,  -- lundi
+  14, -- 14h
+  20
+);
+-- → liste des dernières actions de tous les lundis 14h sur 90 jours</code></pre>
+      </li>
+      <li><b>Pas de redéploiement Edge Function</b>.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Nettoyer le cache + npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test       # 513 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller dans <code>/statistiques-activite</code></li>
+          <li>Tu vois un nouveau panneau <b>"Ce mois vs mois dernier"</b> avec 6 cartes (Actions / DI / Achats / Transferts / Users / Validations), chacune avec son chiffre + badge tendance coloré</li>
+          <li>Cliquer sur une cellule colorée de la <b>heatmap</b> → modale drill avec tableau détaillé</li>
+          <li>Aller dans <code>/statistiques-rgpd</code></li>
+          <li>Le bloc "Tendance ce mois" affiche maintenant une layout claire avec TrendBadge à droite</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.38+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Tableau de bord Accueil enrichi</b> (widgets configurables)</li>
+      <li><b>Migration pages config restantes</b> vers safeWrite</li>
+      <li><b>Tests Playwright end-to-end</b></li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+      <li><b>Aperçu rapide patient</b> (hover/clic latéral)</li>
+      <li><b>Notifications digest hebdo</b></li>
+      <li><b>Variables custom templates RGPD</b> (suite 0.34)</li>
+      <li><b>Recherche : ajouter consentements + factures</b> (suite 0.35)</li>
+      <li><b>Soumission stores</b> (Google Play / Microsoft Store via PWABuilder)</li>
+      <li><b>Filtres période sur stats activité</b> : par établissement et par user (pour les très grosses collectivités)</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.37.0 · 31 mai 2026</p>
+    <p>Analytics enrichies — Drill heatmap + TrendBadge N vs N-1 · 513 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

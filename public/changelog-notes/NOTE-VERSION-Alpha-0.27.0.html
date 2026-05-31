@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.27.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1e4a91 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — HORS-LIGNE COMPLET</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.27.0
+      <small>Cache lecture activé · Bandeau données obsolètes · Modale résolution conflit avec fusion champ par champ</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026 (matin)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.27.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.26.0</span>
+      <span><b>Statut :</b> Build clean · 194 tests verts · Pas de SQL</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">💾 safeFetch activé : patients + interventions + achats</span>
+      <span class="badge green">🟠 Bandeau "données obsolètes" sur 3 pages</span>
+      <span class="badge green">⚔️ Modale ConflictResolver avec 3 actions</span>
+      <span class="badge green">🎨 Fusion champ par champ (UI claire)</span>
+      <span class="badge green">+18 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>La 0.27.0 finalise vraiment le mode hors-ligne en activant le cache de lecture (livré inutilisé en 0.26) sur les 3 pages les plus consultées en mobilité, et en livrant une UX complète pour la résolution des conflits.</p>
+
+  <div class="highlight">
+    <b>Mode hors-ligne désormais transparent et auto-géré.</b> Une utilisatrice peut consulter et modifier des patients/interventions/achats en zone blanche, revenir en zone couverte, et si un collègue a modifié les mêmes données entre-temps, elle peut comparer les versions et choisir champ par champ ce qu'elle garde. Aucune perte de données silencieuse.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Migration <code>/patients</code> vers safeFetch (load principal)</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>2</td><td>Migration <code>/interventions</code> vers safeFetch (load principal)</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>3</td><td>Migration <code>/achats</code> vers safeFetch (load principal)</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>4</td><td>Composant réutilisable <code>StaleDataBanner</code></td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>5</td><td>Bandeau "Données potentiellement obsolètes" sur les 3 pages</td><td><span class="pill new">UX</span></td></tr>
+      <tr><td>6</td><td>Composant <code>ConflictResolver</code> : modale 3 modes (compare/garder/fusionner)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>7</td><td>Bouton "Résoudre" dans la modale "Actions en attente" pour les conflits</td><td><span class="pill new">UX</span></td></tr>
+      <tr><td>8</td><td>18 tests Vitest (safeFetch structure + conflict detection + modes résolution)</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>Cache de lecture activé</h2>
+
+  <h3>Pages migrées</h3>
+  <p>3 pages les plus consultées en mobilité utilisent désormais <code>safeFetch</code> pour le chargement principal :</p>
+  <table>
+    <thead><tr><th>Page</th><th>Clé cache</th><th>Indicateur stale</th></tr></thead>
+    <tbody>
+      <tr><td><code>/patients</code></td><td><code>patients:etab:{etabId}</code></td><td>Oui</td></tr>
+      <tr><td><code>/interventions</code></td><td><code>interventions:etab:{etabId|all}</code></td><td>Oui</td></tr>
+      <tr><td><code>/achats</code></td><td><code>achats:etab:{etabId|all}</code></td><td>Oui</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Comportement</h3>
+  <ul>
+    <li><b>Online</b> : fetch normal Supabase + mise en cache automatique (TTL 7 jours)</li>
+    <li><b>Offline + cache valide</b> : lecture depuis le cache, bandeau orange "Données potentiellement obsolètes"</li>
+    <li><b>Offline + pas de cache</b> : message d'erreur clair "Hors-ligne et aucune donnée en cache"</li>
+    <li><b>Online + erreur Supabase</b> : fallback automatique sur cache si dispo</li>
+  </ul>
+
+  <h3>Composant StaleDataBanner</h3>
+  <p>Bandeau jaune réutilisable avec icône horloge. Affiché juste sous le PageHead/KpiRow. Disparaît automatiquement quand les données sont rafraîchies depuis le réseau.</p>
+
+  <h2>Modale ConflictResolver</h2>
+
+  <h3>Déclenchement</h3>
+  <p>Quand un UPDATE en queue échoue pour cause de conflit (détecté par la 0.26 via <code>updated_at</code>), un bouton orange "<i class="ti ti-git-merge"></i> Résoudre" apparaît dans la modale "Actions en attente". Clic → ouvre <code>ConflictResolver</code>.</p>
+
+  <h3>3 modes</h3>
+  <ol>
+    <li><b>Compare</b> (par défaut) : affiche un tableau avec les champs en conflit, "Ma version" (bleu) vs "Version actuelle" (orange)</li>
+    <li><b>Merge</b> : pour chaque champ en conflit, 2 boutons côte à côte ; l'utilisateur clique celui qu'il veut garder. Le bouton sélectionné devient plein, l'autre devient discret</li>
+    <li>3 actions disponibles depuis le mode Compare :
+      <ul>
+        <li><b>Forcer ma version</b> (bouton bleu) : applique mon update sans check de timestamp</li>
+        <li><b>Garder version actuelle</b> (bouton orange) : abandonne ma modif, retire de la queue</li>
+        <li><b>Fusionner manuellement</b> (bouton violet) : passe en mode Merge</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h3>Cas particuliers gérés</h3>
+  <ul>
+    <li><b>Ligne supprimée</b> par un autre user : message rouge "Élément introuvable" + bouton "Retirer de la queue"</li>
+    <li><b>Aucun conflit réel</b> (timestamps différents mais mêmes valeurs) : message vert + bouton "Retirer"</li>
+    <li><b>Comparaison tolérante</b> : null vs "" considérés identiques, string "42" vs number 42 identiques</li>
+  </ul>
+
+  <h3>Visualisation</h3>
+  <p>Tableau compare avec :</p>
+  <ul>
+    <li>Header coloré orange "Conflit détecté"</li>
+    <li>3 colonnes : Champ | Ma version (fond bleu pâle, icône user) | Version actuelle (fond orange pâle, icône cloud)</li>
+    <li>Footer avec date de dernière modification de la version actuelle</li>
+  </ul>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">3</div><div class="l">Pages cache activé</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Modes résolution conflit</div></div>
+    <div class="kpi"><div class="v">+18</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">194</div><div class="l">Tests verts total</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/StaleDataBanner.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Composant réutilisable bandeau "données obsolètes"</td></tr>
+      <tr><td><code>app/ConflictResolver.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Modale comparaison + merge champ par champ</td></tr>
+      <tr><td><code>__tests__/conflict-resolver.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>18 tests sur logique conflict</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>safeFetch + bandeau stale</td></tr>
+      <tr><td><code>app/interventions/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>safeFetch + bandeau stale</td></tr>
+      <tr><td><code>app/achats/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>safeFetch + bandeau stale</td></tr>
+      <tr><td><code>app/OfflineBanner.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>Bouton "Résoudre" + intégration ConflictResolver</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.26.0-alpha → 0.27.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Pas de SQL</b>.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+npm install
+npm test       # 194 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Test cache offline</b> :
+        <ul>
+          <li>Aller dans <code>/patients</code>, charger la page (cache se remplit)</li>
+          <li>F12 → Network → Offline</li>
+          <li>Refresh (F5) → la liste s'affiche depuis le cache, bandeau jaune "Données obsolètes"</li>
+          <li>Décocher Offline → bandeau disparaît au prochain load</li>
+        </ul>
+      </li>
+      <li><b>Test conflit avec résolution</b> :
+        <ul>
+          <li>Navigateur 1 : charger un patient, F12 → Offline → modifier sa chambre</li>
+          <li>Navigateur 2 (toujours online) : modifier le même patient (médecin traitant)</li>
+          <li>Navigateur 1 : remettre online → sync auto échoue avec message "Conflit"</li>
+          <li>Cliquer le bandeau orange → modale "Actions en attente"</li>
+          <li>Cliquer "Résoudre" sur la ligne en conflit → modale ConflictResolver s'ouvre</li>
+          <li>Voir les 2 versions côte à côte → choisir "Fusionner manuellement"</li>
+          <li>Pour chaque champ : cliquer ma version ou version actuelle</li>
+          <li>"Appliquer la fusion" → la queue se vide, base à jour avec le mix choisi</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.28+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Migrer pages restantes vers safeWrite</b> : transferts, materiels (page liste), maintenance, panier, utilisateurs, parametres</li>
+      <li><b>Activer safeFetch sur plus de pages</b> : signalements, materiels (liste), commandes, historique</li>
+      <li><b>Tests Playwright</b> end-to-end sur flow offline complet (création + conflit + résolution)</li>
+      <li><b>Stratégie d'invalidation cache</b> : à chaque INSERT/UPDATE réussi, invalider les clés cache concernées</li>
+      <li><b>Quality of life</b> : sauvegarde filtres localStorage, préférences notif par user, dashboard /profil</li>
+      <li><b>Statistiques RGPD</b> : graphiques consentements/mois, taux refus, expirations</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.27.0 · 31 mai 2026 (matin)</p>
+    <p>Hors-ligne complet — Cache lecture · Bandeau stale · Résolution conflit avec fusion</p>
+  </footer>
+
+</div>
+</body>
+</html>

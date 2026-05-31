@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.17.1</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .panel.danger{background:#fef0ee;border-color:#f0c4be}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.fix{background:#dee9fa;color:#1e4a91}
+  .pill.refac{background:#e8d8f0;color:#5a2a7a}
+  .pill.infra{background:#ffe5dc;color:#9c3d1a}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  .step{background:#fff;border:1px solid var(--line);border-left:3px solid var(--teal);padding:12px 16px;margin:8px 0;border-radius:8px}
+  .step b{color:var(--navy)}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTIFICATIONS & INTÉGRATIONS</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.17.1
+      <small>Push VAPID · Webhooks Teams &amp; Slack · Tri Kanban par échéance · relativeTime mutualisé</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026 (nuit)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.17.1-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.17.0</span>
+      <span><b>Statut :</b> Code prêt, config infra à finaliser</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">🔔 Push notifications VAPID</span>
+      <span class="badge green">🟦 Webhook Microsoft Teams</span>
+      <span class="badge green">🟪 Webhook Slack</span>
+      <span class="badge green">📅 Tri Kanban par échéance</span>
+      <span class="badge green">♻️ relativeTime extrait dans lib/format</span>
+      <span class="badge orange">🔧 1 patch SQL + 2 Edge Functions</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#push">3. Push VAPID — Architecture</a></li>
+      <li><a href="#webhooks">4. Webhooks Teams &amp; Slack</a></li>
+      <li><a href="#tri-kanban">5. Tri Kanban par échéance</a></li>
+      <li><a href="#refactor">6. Helper relativeTime extrait</a></li>
+      <li><a href="#sql">7. Patch SQL 0.17.1</a></li>
+      <li><a href="#deploy">8. Déploiement Edge Functions</a></li>
+      <li><a href="#fichiers">9. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">10. Procédure d'application complète</a></li>
+      <li><a href="#tests">11. Plan de tests</a></li>
+      <li><a href="#reporte">12. Reste à faire (0.18)</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>La 0.17.1 ajoute les <b>notifications push natives</b> et les <b>intégrations canal d'équipe</b> (Teams, Slack). Tout le code est livré et fonctionne <b>silencieusement même sans config infra</b> — l'app ne plante pas si les clés VAPID ne sont pas générées ou si aucune URL webhook n'est saisie.</p>
+
+  <div class="highlight">
+    <b>Trois étapes côté Cédric pour activer pleinement la 0.17.1 :</b>
+    <ol style="margin:8px 0 4px">
+      <li>Exécuter le patch SQL (création de la table <code>push_subscriptions</code> + colonnes webhook)</li>
+      <li>Générer les clés VAPID et déployer les Edge Functions Supabase</li>
+      <li>Créer les URLs webhook dans Teams/Slack et les coller dans <code>/parametres</code></li>
+    </ol>
+    Sans les étapes 2 et 3, l'app marche normalement — les notifs internes (cloche NotifBell) continuent de fonctionner comme avant.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Edge Functions créées</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Filtres webhook configurables</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Formats supportés (Teams + Slack)</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouveaux composants UI</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Table créée (push_subscriptions)</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">Dépendance npm ajoutée</div></div>
+    <div class="kpi"><div class="v">311</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Push notifications VAPID (table + service worker + opt-in + Edge Function)</td><td><span class="pill new">Feature</span> <span class="pill infra">Infra</span></td></tr>
+      <tr><td>2</td><td>Webhook Microsoft Teams (config UI + Edge Function + format MessageCard)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>3</td><td>Webhook Slack (config UI + Edge Function + format Block Kit)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>4</td><td>Tri Kanban par échéance + affichage due_date sur les cartes</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>5</td><td>Helper <code>relativeTime</code> + <code>activityDotColor</code> extraits dans lib/format.js</td><td><span class="pill refac">Refactor</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="push">3. Push VAPID — Architecture</h2>
+
+  <h3>3.1 Flux complet</h3>
+  <ol>
+    <li>L'utilisateur va dans <code>/parametres</code> et clique sur "Autoriser les notifications" dans le bloc Notifications avancées.</li>
+    <li>Le navigateur demande la permission de notification. Si accordée, le composant <code>&lt;NotificationOptIn&gt;</code> appelle <code>pushManager.subscribe()</code> avec la clé VAPID publique.</li>
+    <li>Le navigateur génère un endpoint unique (FCM pour Chrome, Mozilla pour Firefox, Apple pour Safari) et des clés p256dh + auth.</li>
+    <li>Le composant insère cette subscription dans la table <code>push_subscriptions</code> avec l'user_id, le structure_id, et le user_agent.</li>
+    <li>Quand un événement notifiable se produit (DI urgente, achat à valider, etc.), <code>logEvent()</code> dans <code>lib/events.js</code> appelle l'Edge Function <code>send-push</code> en fire-and-forget.</li>
+    <li><code>send-push</code> récupère toutes les subscriptions de la structure (vue <code>v_push_targets</code>), formate le payload, et appelle <code>web-push.sendNotification()</code> avec les clés VAPID privées.</li>
+    <li>Le service worker (<code>public/sw.js</code>) reçoit l'événement <code>push</code>, affiche la notification via <code>self.registration.showNotification()</code>, et écoute le clic pour ouvrir l'URL.</li>
+  </ol>
+
+  <h3>3.2 Composant <code>&lt;NotificationOptIn&gt;</code></h3>
+  <p>5 états gérés :</p>
+  <ul>
+    <li><b>idle</b> : prêt à demander la permission. Bouton "Autoriser les notifications" affiché.</li>
+    <li><b>working</b> : en cours d'inscription (anti-double-clic).</li>
+    <li><b>subscribed</b> : déjà inscrit. Bouton "Envoyer un test" + bouton "Désactiver".</li>
+    <li><b>denied</b> : permission refusée par le navigateur. Instructions pour réactiver.</li>
+    <li><b>unsupported</b> : navigateur sans Service Worker ou Push API (vieux Safari, certains in-app browsers).</li>
+  </ul>
+  <p>Le bouton "Envoyer un test" déclenche un push réel ciblé sur le user courant, ce qui permet de valider toute la chaîne (clés VAPID, service worker, navigation).</p>
+
+  <h3>3.3 Nettoyage automatique</h3>
+  <p>Si un endpoint retourne 410 (Gone) ou 404 lors d'un envoi (l'utilisateur a désinstallé la PWA, désactivé les notifs dans le système, etc.), <code>send-push</code> le détecte et le supprime de la base. Pas de spam des endpoints morts.</p>
+
+  <h2 id="webhooks">4. Webhooks Teams &amp; Slack</h2>
+
+  <h3>4.1 Composant <code>&lt;WebhookConfig&gt;</code></h3>
+  <p>Affiché dans <code>/parametres</code> juste après l'opt-in push. Permet :</p>
+  <ul>
+    <li>Saisir l'URL webhook Teams (workflow "Post to channel")</li>
+    <li>Saisir l'URL webhook Slack (incoming webhook)</li>
+    <li>Cocher les 3 filtres d'événements : DI urgentes, Achats à valider, Signalements</li>
+    <li>Bouton "Tester" par canal qui envoie un message de test</li>
+    <li>Sauvegarde dans <code>structures.webhook_teams_url</code> / <code>webhook_slack_url</code> / <code>webhook_filters</code></li>
+  </ul>
+
+  <h3>4.2 Edge Function <code>send-webhook</code></h3>
+  <p>Reçoit en POST :</p>
+  <pre><code>{
+  structure_id: "uuid",
+  channels: ["teams", "slack"],   // optionnel, défaut: les deux
+  event_type: "di_urgente",       // pour le filtrage
+  title: "DI urgente créée",
+  message: "DI-1234 — Lit en panne",
+  url: "https://app.aveho.fr/interventions",
+  fields: { Établissement: "EHPAD Les Tilleuls", Urgence: "Critique" }
+}</code></pre>
+  <p>Construit deux payloads distincts :</p>
+  <ul>
+    <li><b>Teams</b> : MessageCard avec themeColor, sections, facts, et bouton OpenUri</li>
+    <li><b>Slack</b> : Block Kit avec sections, fields en 2 colonnes, et bouton action</li>
+  </ul>
+  <p>Avant l'envoi, vérifie le filtre <code>webhook_filters[event_type]</code>. Si <code>false</code>, l'envoi est ignoré (réponse <code>{ reason: "filtered_out" }</code>).</p>
+
+  <h3>4.3 Format Teams (extrait)</h3>
+  <pre><code>{
+  "@type": "MessageCard",
+  "@context": "https://schema.org/extensions",
+  "themeColor": "7CC8C8",
+  "summary": "DI urgente créée",
+  "sections": [{
+    "activityTitle": "DI urgente créée",
+    "activitySubtitle": "DI-1234 — Lit en panne",
+    "facts": [
+      { "name": "Établissement", "value": "EHPAD Les Tilleuls" },
+      { "name": "Urgence", "value": "Critique" }
+    ]
+  }],
+  "potentialAction": [{
+    "@type": "OpenUri", "name": "Ouvrir dans Aveho",
+    "targets": [{ "os": "default", "uri": "https://app.aveho.fr/interventions" }]
+  }]
+}</code></pre>
+
+  <h3>4.4 Branchement automatique dans <code>lib/events.js</code></h3>
+  <p>Toute action passant par <code>logEvent()</code> avec <code>notif: true</code> ou <code>notifType</code> défini déclenche désormais en fire-and-forget les appels à <code>send-push</code> et <code>send-webhook</code>. Si les fonctions ne sont pas déployées ou que les configs sont absentes, les appels échouent silencieusement (warn console) sans perturber le flux applicatif.</p>
+
+  <h2 id="tri-kanban">5. Tri Kanban par échéance</h2>
+  <p>Dans <code>/interventions/kanban</code>, ajout d'un toggle dans la barre d'actions :</p>
+  <ul>
+    <li><b>Création</b> (défaut) : ordre par <code>created_at desc</code> (le plus récent en haut)</li>
+    <li><b>Échéance</b> : ordre par <code>due_date asc</code> avec nulls en bas (urgences temporelles en haut)</li>
+  </ul>
+  <p>Chaque carte affiche maintenant son échéance si elle existe, avec icône calendrier. <b>Si l'échéance est dépassée et que la DI n'est ni Résolue ni Annulée, la date passe en rouge.</b></p>
+
+  <h2 id="refactor">6. Helper relativeTime extrait</h2>
+  <p>Les fonctions locales <code>relativeTime()</code> et <code>activityDot()</code> de la 0.17.0 sont déplacées dans <code>lib/format.js</code> sous les noms <code>relativeTime</code> et <code>activityDotColor</code>. La page Utilisateurs les importe désormais au lieu de les redéfinir localement.</p>
+  <p>Disponibles pour réutilisation dans : NotifBell (timestamp des notifs), Journal, fiche patient (dernière visite), historique, etc.</p>
+
+  <h2 id="sql">7. Patch SQL 0.17.1</h2>
+  <div class="panel">
+    <p>Le script <code>aveho-PATCH-vers-0.17.1.sql</code> (84 lignes) effectue :</p>
+    <ol>
+      <li><b>Table <code>push_subscriptions</code></b> avec colonnes endpoint / p256dh / auth / user_agent / last_used_at</li>
+      <li><b>Index</b> sur user_id et structure_id</li>
+      <li><b>RLS</b> : un user ne voit/écrit que ses propres subscriptions (3 policies)</li>
+      <li><b>3 colonnes</b> sur <code>structures</code> : <code>webhook_teams_url</code>, <code>webhook_slack_url</code>, <code>webhook_filters</code> (jsonb avec defaults sains)</li>
+      <li><b>Vue <code>v_push_targets</code></b> qui joint <code>push_subscriptions</code> avec <code>membres_structure</code> (filtre actif + non archivé)</li>
+    </ol>
+    <p>100% idempotent (<code>create if not exists</code>, <code>add column if not exists</code>, <code>create or replace</code>, <code>drop policy if exists</code>).</p>
+  </div>
+
+  <h2 id="deploy">8. Déploiement Edge Functions</h2>
+
+  <div class="step">
+    <b>Étape 1 — Générer les clés VAPID</b><br>
+    Sur ton poste, dans un terminal :
+    <pre><code>npx web-push generate-vapid-keys</code></pre>
+    Tu obtiens deux clés (publique et privée). Garde-les en sécurité.
+  </div>
+
+  <div class="step">
+    <b>Étape 2 — Configurer les secrets côté Supabase</b><br>
+    <pre><code>supabase secrets set VAPID_PUBLIC_KEY=<la-clé-publique>
+supabase secrets set VAPID_PRIVATE_KEY=<la-clé-privée>
+supabase secrets set VAPID_SUBJECT=mailto:contact@aveho.fr</code></pre>
+  </div>
+
+  <div class="step">
+    <b>Étape 3 — Déployer les Edge Functions</b><br>
+    <pre><code>cd C:\aveho-ec-app
+supabase functions deploy send-push
+supabase functions deploy send-webhook</code></pre>
+  </div>
+
+  <div class="step">
+    <b>Étape 4 — Exposer la clé publique au client</b><br>
+    Dans <code>.env.local</code> (et dans les variables d'environnement Vercel) :
+    <pre><code>NEXT_PUBLIC_VAPID_PUBLIC_KEY=<la-même-clé-publique-qu'à-l'étape-1></code></pre>
+  </div>
+
+  <div class="step">
+    <b>Étape 5 — Créer les webhooks Teams/Slack</b><br>
+    <b>Teams</b> : dans le canal cible → Plus d'options → Connecteurs → Workflow Post to channel → URL générée<br>
+    <b>Slack</b> : <a href="https://api.slack.com/apps">api.slack.com/apps</a> → Create New App → From scratch → Incoming Webhooks → Add New Webhook to Workspace → URL générée
+  </div>
+
+  <h2 id="fichiers">9. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.17.1.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Table push_subscriptions, colonnes webhook, vue v_push_targets</td></tr>
+      <tr><td><code>supabase/functions/send-push/index.ts</code></td><td><span class="pill new">CRÉÉ</span></td><td>Edge Function envoi push VAPID</td></tr>
+      <tr><td><code>supabase/functions/send-webhook/index.ts</code></td><td><span class="pill new">CRÉÉ</span></td><td>Edge Function relais Teams + Slack</td></tr>
+      <tr><td><code>app/NotificationOptIn.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Composant opt-in push (5 états, bouton test)</td></tr>
+      <tr><td><code>app/WebhookConfig.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Composant config Teams/Slack (URLs + filtres + tests)</td></tr>
+      <tr><td><code>public/sw.js</code></td><td><span class="pill imp">EXTENDU</span></td><td>+ Listeners push + notificationclick</td></tr>
+      <tr><td><code>lib/format.js</code></td><td><span class="pill refac">EXTENDU</span></td><td>+ relativeTime, + activityDotColor</td></tr>
+      <tr><td><code>lib/events.js</code></td><td><span class="pill new">ENRICHI</span></td><td>+ Invocations send-push + send-webhook en fire-and-forget</td></tr>
+      <tr><td><code>app/parametres/page.js</code></td><td><span class="pill new">ENRICHI</span></td><td>+ Section Notifications avancées</td></tr>
+      <tr><td><code>app/utilisateurs/page.js</code></td><td><span class="pill refac">PATCHÉ</span></td><td>Utilise helpers partagés lib/format</td></tr>
+      <tr><td><code>app/interventions/kanban/page.js</code></td><td><span class="pill new">ENRICHI</span></td><td>+ Toggle tri Création/Échéance, + Affichage due_date</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill imp">EXTENDU</span></td><td>+ .optin-card, + .webhook-section/.webhook-row</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.17.0-alpha → 0.17.1-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">10. Procédure d'application complète</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.17.1.sql</code> → Run. Idempotent.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app</code> (garder <code>.env.local</code>)</li>
+      <li><b>Étape infra Supabase</b> — voir section 8 (génération VAPID + déploiement fonctions + secrets)</li>
+      <li><b>Étape <code>.env.local</code></b> — ajouter <code>NEXT_PUBLIC_VAPID_PUBLIC_KEY=...</code></li>
+      <li><b>Lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> : voir section 11</li>
+      <li><b>Vercel</b> : pousser sur <code>C:\aveho-ec-app-01</code> + ajouter <code>NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> dans les env vars du projet Vercel</li>
+    </ol>
+  </div>
+
+  <h2 id="tests">11. Plan de tests</h2>
+  <table>
+    <thead><tr><th>#</th><th>Scénario</th><th>Attendu</th></tr></thead>
+    <tbody>
+      <tr><td>T1</td><td>Sans aucune config infra, /parametres charge</td><td>Section "Notifications avancées" visible, bouton Autoriser affiché</td></tr>
+      <tr><td>T2</td><td>Clic sur Autoriser sans VAPID configuré</td><td>Message "La clé VAPID publique n'est pas configurée."</td></tr>
+      <tr><td>T3</td><td>Une fois VAPID configuré, clic sur Autoriser</td><td>Demande de permission du navigateur, puis état "Notifications activées"</td></tr>
+      <tr><td>T4</td><td>Clic sur "Envoyer un test"</td><td>Notification système Aveho affichée, clic ouvre /parametres</td></tr>
+      <tr><td>T5</td><td>Sans URL Teams, clic sur Tester Teams</td><td>Bouton désactivé (URL vide)</td></tr>
+      <tr><td>T6</td><td>Avec URL Teams valide, clic sur Tester Teams</td><td>Message reçu dans le canal Teams avec titre + collectivité + émetteur</td></tr>
+      <tr><td>T7</td><td>Idem avec URL Slack</td><td>Message reçu dans le canal Slack au format Block Kit</td></tr>
+      <tr><td>T8</td><td>Créer une DI urgente</td><td>Push reçu sur les appareils inscrits + message dans Teams/Slack si URL configurée</td></tr>
+      <tr><td>T9</td><td>Décocher "DI urgentes" dans les filtres, créer une DI urgente</td><td>Pas de message webhook (filtre actif), mais push toujours envoyé</td></tr>
+      <tr><td>T10</td><td>Kanban : toggle Création / Échéance</td><td>Cartes triées par due_date asc avec nulls en bas</td></tr>
+      <tr><td>T11</td><td>Carte avec due_date dépassée et statut Nouvelle/En cours</td><td>Date d'échéance en rouge sur la carte</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="reporte">12. Reste à faire (0.18)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Tests unitaires Vitest</b> sur les helpers critiques (canDo, fmtDate, statutClass, relativeTime)</li>
+      <li><b>Audit accessibilité (a11y)</b> — passe sur les modales, contrastes, focus visible, aria-labels</li>
+      <li><b>Refactor <code>pdfPreview.js</code></b> — remplacer document.write() par blob URL + iframe</li>
+      <li><b>Dépréciation <code>membres_structure.role</code></b> text — quand le code est 100% sur role_id</li>
+      <li><b>Extraction de hooks</b> — <code>useStructureData</code>, <code>useFiltres</code>, etc.</li>
+      <li><b>Optimisations perf</b> — virtualisation des listes longues, lazy loading images, code-splitting</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.17.1 · 29 mai 2026 (nuit)</p>
+    <p>5 chantiers — Push VAPID + Webhooks Teams &amp; Slack + Tri Kanban échéance + refactor helpers</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hors connexion — Aveho EC</title>
+<link rel="manifest" href="/manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:linear-gradient(135deg,#142131 0%,#2a3a48 50%,#1c3340 100%);color:#fff;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{max-width:480px;text-align:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:40px 32px;backdrop-filter:blur(8px)}
+  .icon-big{font-size:56px;margin:0 0 8px;color:#EF9F27;transition:color .4s}
+  .icon-big.online{color:#7CC8C8}
+  h1{font-size:24px;font-weight:700;margin-bottom:8px}
+  p.msg{margin:0 0 24px;font-size:14px;color:#bfd0d8}
+  button{background:#185FA5;border:none;color:#fff;padding:12px 28px;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .3s}
+  button:hover{filter:brightness(1.1)}
+  button.online{background:#5aa05a}
+  .available{margin-top:32px;padding:20px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(255,255,255,.08);text-align:left}
+  .available h3{margin:0 0 12px;font-size:13px;font-weight:700;color:#7CC8C8;text-transform:uppercase;letter-spacing:.5px}
+  .available ul{margin:0;padding-left:18px;font-size:13px;color:#cfdde2;line-height:1.8}
+  .available .info{margin-top:12px;font-size:12px;color:#8a98a8;font-style:italic}
+  .live{margin-top:20px;font-size:11px;color:#8a98a8;display:flex;align-items:center;justify-content:center;gap:6px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#c0392b;box-shadow:0 0 8px #c0392b;animation:pulse-dot 2s infinite}
+  .dot.online{background:#5aa05a;box-shadow:0 0 8px #5aa05a}
+  @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="icon-big" id="icon"><i class="ti ti-wifi-off"></i></div>
+    <h1 id="title">Hors connexion</h1>
+    <p class="msg" id="msg">
+      Pas de problème — Aveho EC fonctionne en mode hors-ligne. Tes modifications seront synchronisées dès le retour du réseau.
+    </p>
+    <button id="retry" onclick="window.location.reload()">
+      <i class="ti ti-reload" aria-hidden="true"></i>
+      <span id="btn-label">Réessayer</span>
+    </button>
+
+    <div class="available">
+      <h3><i class="ti ti-database" aria-hidden="true"></i> Disponible en local</h3>
+      <ul>
+        <li>Liste de tes patients récemment consultés</li>
+        <li>Catalogue matériel en cache</li>
+        <li>Création de DI et signalements (sync auto)</li>
+        <li>Consultation du panier d'achat</li>
+      </ul>
+      <p class="info">
+        <i class="ti ti-info-circle" aria-hidden="true"></i> Toutes les modifications faites hors-ligne seront poussées vers le serveur dès la reconnexion.
+      </p>
+    </div>
+
+    <div class="live">
+      <span class="dot" id="dot"></span>
+      <span id="live-text">Hors connexion · Vérifié à l'instant</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Mini JS vanilla pour réagir au changement de connexion
+  function updateState() {
+    var online = navigator.onLine;
+    var icon = document.getElementById("icon");
+    var title = document.getElementById("title");
+    var msg = document.getElementById("msg");
+    var btn = document.getElementById("retry");
+    var btnLabel = document.getElementById("btn-label");
+    var dot = document.getElementById("dot");
+    var liveText = document.getElementById("live-text");
+
+    if (online) {
+      icon.classList.add("online");
+      icon.innerHTML = '<i class="ti ti-wifi"></i>';
+      title.textContent = "Connexion retrouvée !";
+      msg.textContent = "Tu es de nouveau en ligne. Tu peux recharger la page.";
+      btn.classList.add("online");
+      btnLabel.textContent = "Recharger la page";
+      dot.classList.add("online");
+      liveText.textContent = "En ligne · Recharge la page";
+    } else {
+      icon.classList.remove("online");
+      icon.innerHTML = '<i class="ti ti-wifi-off"></i>';
+      title.textContent = "Hors connexion";
+      msg.textContent = "Pas de problème — Aveho EC fonctionne en mode hors-ligne. Tes modifications seront synchronisées dès le retour du réseau.";
+      btn.classList.remove("online");
+      btnLabel.textContent = "Réessayer";
+      dot.classList.remove("online");
+      liveText.textContent = "Hors connexion · Vérifié à l'instant";
+    }
+  }
+  updateState();
+  window.addEventListener("online", updateState);
+  window.addEventListener("offline", updateState);
+  setInterval(updateState, 5000);
+</script>
+</body>
+</html>

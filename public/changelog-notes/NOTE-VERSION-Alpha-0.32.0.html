@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.32.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7CC8C8 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — QUICK WIN ANONYMAT OPT-IN</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.32.0
+      <small>Tracker signalements perso — opt-in created_by préservant l'anonymat par défaut</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026 (matin)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.32.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.31.0</span>
+      <span><b>Statut :</b> Build clean · 337 tests verts · 1 patch SQL (69 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">✅ Colonne created_by NULLABLE (anonymat préservé)</span>
+      <span class="badge">☑️ Checkbox opt-in dans le form signalement</span>
+      <span class="badge">📊 KPI "Signalements signés" de retour dans /profil</span>
+      <span class="badge">👥 Compteur signalements dans stats activité</span>
+      <span class="badge green">+21 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>Quick win pour terminer le sujet "tracker signalements perso" évoqué depuis la 0.29.1. Ajout d'un <b>opt-in</b> qui permet à l'utilisateur de cocher "Tracker dans mon profil" lors de la création d'un signalement. Sans cette case → anonymat strict comme avant.</p>
+
+  <div class="highlight">
+    <b>Anonymat préservé par défaut.</b> La colonne <code>created_by</code> est NULLABLE et reste NULL par défaut. Aucune backfill rétroactive. Les signalements existants restent anonymes. L'utilisateur doit cocher explicitement la case pour que son signalement soit rattaché à son profil — choix conscient et réversible (édition).
+  </div>
+
+  <h2>Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Patch SQL : ajout <code>created_by uuid</code> NULLABLE + index conditionnel + vue helper</td><td><span class="pill sql">SQL</span></td></tr>
+      <tr><td>2</td><td>Checkbox opt-in "Tracker dans mon profil" dans <code>/signalements</code> (form création)</td><td><span class="pill new">UX</span></td></tr>
+      <tr><td>3</td><td>Réintégration KPI "Signalements signés" dans <code>/profil</code> (7 KPIs maintenant)</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>4</td><td>Enrichissement stats activité avec <code>nb_signalements_signes</code> par user</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>5</td><td>21 tests Vitest (build payload, coexistence signature, filtrage, fusion stats, scénarios)</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. SQL — ajout created_by NULLABLE</h2>
+  <pre><code>alter table signalements
+  add column if not exists created_by uuid 
+  references auth.users(id) on delete set null;
+
+-- Index conditionnel : performant pour les requêtes /profil
+create index if not exists idx_signal_created_by 
+  on signalements (created_by) 
+  where created_by is not null;
+
+-- Vue helper pour stats activité
+create or replace view v_signalements_par_user as
+select 
+  structure_id, created_by as user_id,
+  count(*) as nb_signalements_signes,
+  count(*) filter (where statut = 'Nouveau') as nb_nouveaux,
+  count(*) filter (where statut = 'Traité') as nb_traites,
+  max(created_at) as dernier_signalement
+from signalements
+where created_by is not null
+group by structure_id, created_by;</code></pre>
+
+  <h3>Choix techniques importants</h3>
+  <ul>
+    <li><b>NULLABLE strict</b> : aucune contrainte NOT NULL, aucune valeur par défaut. NULL = anonyme.</li>
+    <li><b>ON DELETE SET NULL</b> : si l'auteur est supprimé, le signalement reste mais redevient anonyme. Préserve la mémoire des signalements même après départ.</li>
+    <li><b>Index conditionnel</b> : <code>where created_by is not null</code> → ne pas indexer les NULL (gain place + vitesse).</li>
+    <li><b>RLS inchangée</b> : tout membre voit tous les signalements (anonymes et signés). Pas de surprise pour les admins.</li>
+    <li><b>Aucune backfill rétroactive</b> : les signalements créés avant la 0.32 restent NULL → anonymes éternellement, même si l'auteur change d'avis.</li>
+  </ul>
+
+  <h2>2. UX — Checkbox opt-in</h2>
+  <p>Dans le formulaire de création d'un signalement (<code>/signalements</code>), juste après le champ "Signature (optionnel)", un encart visuel apparaît :</p>
+  <pre><code>┌─────────────────────────────────────────────┐
+│ ☐ 👤 Tracker dans mon profil               │
+│   Ce signalement apparaîtra dans tes stats  │
+│   personnelles (/profil). Reste visible par │
+│   tous les membres comme un signalement     │
+│   classique.                                │
+│   ✓ Anonymat préservé par défaut.          │
+└─────────────────────────────────────────────┘</code></pre>
+
+  <h3>Comportement visuel</h3>
+  <ul>
+    <li><b>Décoché par défaut</b> : encart gris pâle, fond gris, texte "Anonymat préservé par défaut" en vert.</li>
+    <li><b>Coché</b> : encart bleu pâle, bordure teal, icône user-check bleue, message d'anonymat masqué.</li>
+    <li><b>Édition admin</b> : la checkbox n'apparaît PAS — on ne peut pas changer created_by après coup, ce qui préserve la décision initiale de l'auteur.</li>
+  </ul>
+
+  <h3>Coexistence avec le champ signature texte</h3>
+  <p>Le champ <code>signature</code> (text libre "Marie IDE service 2A") et le booléen <code>trackPerso</code> (created_by) sont <b>indépendants</b> :</p>
+  <table>
+    <thead><tr><th>signature</th><th>trackPerso</th><th>Résultat</th></tr></thead>
+    <tbody>
+      <tr><td>vide</td><td>décoché</td><td>Anonymat complet</td></tr>
+      <tr><td>"Marie IDE"</td><td>décoché</td><td>Signé publiquement mais pas tracké (cas où on veut afficher un nom sans rattacher au profil)</td></tr>
+      <tr><td>vide</td><td>coché</td><td>Tracking privé sans nom public (cas où on veut suivre ses signalements mais rester anonyme pour les autres)</td></tr>
+      <tr><td>"Marie IDE"</td><td>coché</td><td>Signé publiquement ET tracké</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Réintégration dans /profil</h2>
+  <p>Le KPI "Signalements signés" est de retour dans le dashboard perso (il avait été retiré en 0.29.1 par contrainte technique). Désormais 7 KPIs :</p>
+  <ul>
+    <li>DI créées · DI urgentes · DI clôturées</li>
+    <li>Achats demandés · Achats à valider</li>
+    <li>Transferts</li>
+    <li><b>Signalements signés</b> (icône message teal) ← nouveau</li>
+  </ul>
+  <p>Une info-bulle discrète sous les KPIs rappelle :</p>
+  <blockquote style="border-left:3px solid #7CC8C8;padding-left:14px;font-size:13px;color:#6c7a89;font-style:italic">
+    ℹ️ Seuls les signalements pour lesquels tu as coché "Tracker dans mon profil" sont comptés. Les autres restent anonymes.
+  </blockquote>
+
+  <h2>4. Stats activité enrichies</h2>
+  <p>La page <code>/statistiques-activite</code> charge maintenant la vue <code>v_signalements_par_user</code> en plus, et fusionne le compteur <code>nb_signalements_signes</code> dans chaque ligne user du tableau complet. Pas de re-fetch SQL coûteux : Promise.all parallèle avec les autres vues.</p>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">1</div><div class="l">Patch SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle colonne</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle vue</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">KPIs /profil</div></div>
+    <div class="kpi"><div class="v">+21</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">337</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">69</div><div class="l">Lignes patch SQL</div></div>
+    <div class="kpi"><div class="v">458</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.32.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Colonne created_by + index + vue v_signalements_par_user</td></tr>
+      <tr><td><code>__tests__/signalements-opt-in.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>21 tests sur build payload, coexistence, filtrage, fusion, scénarios</td></tr>
+      <tr><td><code>app/signalements/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ checkbox trackPerso + opt-in created_by dans save()</td></tr>
+      <tr><td><code>app/profil/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ requête signalements + KPI "Signalements signés" + info-bulle</td></tr>
+      <tr><td><code>app/statistiques-activite/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ fusion v_signalements_par_user dans users</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.31.0-alpha → 0.32.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.32.sql</code> → Run.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- La colonne existe ?
+select column_name, data_type, is_nullable 
+from information_schema.columns 
+where table_name = 'signalements' and column_name = 'created_by';
+-- → created_by | uuid | YES
+
+-- La vue helper existe ?
+select * from v_signalements_par_user limit 5;</code></pre>
+      </li>
+      <li><b>Pas de redéploiement Edge Function</b>.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>npm install
+npm test       # 337 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller dans <code>/signalements</code> → "Nouveau signalement"</li>
+          <li>Remplir titre + description</li>
+          <li><b>Décoché par défaut</b> : créer → signalement anonyme (comme avant)</li>
+          <li><b>Cocher "Tracker dans mon profil"</b> + créer → signalement rattaché à ton profil</li>
+          <li>Aller dans <code>/profil</code> → le KPI "Signalements signés" doit montrer 1+</li>
+          <li>Aller dans <code>/statistiques-activite</code> → ton compte de signalements signés apparaît dans le tableau complet</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.33+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Notifications email pour workflows</b> (DI urgentes, achats refusés, maintenance planifiée)</li>
+      <li><b>Tests Playwright</b> end-to-end</li>
+      <li><b>Modèles consentement personnalisables</b> par collectivité</li>
+      <li><b>Drill-down heatmap</b> + tendances N vs N-1 dans les stats</li>
+      <li><b>Migration pages config restantes</b> vers safeWrite</li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.32.0 · 31 mai 2026 (matin)</p>
+    <p>Signalements perso opt-in — Anonymat préservé par défaut · KPI réintégré · 337 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

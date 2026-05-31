@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.21.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1e4a91 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .panel.danger{background:#fef0ee;border-color:#f0c4be}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.fix{background:#dee9fa;color:#1e4a91}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sec{background:#fef0ee;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  .flow{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 24px;margin:14px 0}
+  .flow ol{counter-reset:step;list-style:none;padding-left:0}
+  .flow li{counter-increment:step;padding:8px 0 8px 36px;position:relative;border-bottom:1px dashed #eef2f5}
+  .flow li:last-child{border-bottom:none}
+  .flow li::before{content:counter(step);position:absolute;left:0;top:8px;width:24px;height:24px;background:#7CC8C8;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — CONFORMITÉ &amp; SIGNATURE ÉLECTRONIQUE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.21.0
+      <small>Consentement RGPD complet · Signature électronique tactile + WebHID · Hash SHA-256 + Storage privé</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 30 mai 2026 (encore plus tard)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.21.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.20.1</span>
+      <span><b>Statut :</b> Build clean · 87 tests verts · 1 patch SQL</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">🛡️ Consentement RGPD générique santé à domicile</span>
+      <span class="badge green">✍️ Pavé de signature tactile (Pointer Events)</span>
+      <span class="badge green">🔌 Détection signpads externes via WebHID</span>
+      <span class="badge green">🔐 Hash SHA-256 + Storage privé Supabase</span>
+      <span class="badge green">📋 Page /consentements avec filtres &amp; archivage</span>
+      <span class="badge orange">🔧 1 patch SQL + 1 bucket Storage</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#workflow">3. Workflow utilisateur</a></li>
+      <li><a href="#signature">4. Pavé de signature</a></li>
+      <li><a href="#webhid">5. WebHID (signpads externes)</a></li>
+      <li><a href="#stockage">6. Stockage sécurisé</a></li>
+      <li><a href="#template">7. Template du consentement</a></li>
+      <li><a href="#sql">8. Patch SQL 0.21.0</a></li>
+      <li><a href="#tests">9. Tests Vitest (+20)</a></li>
+      <li><a href="#fichiers">10. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">11. Procédure d'application</a></li>
+      <li><a href="#reporte">12. Reste à faire</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>La 0.21.0 livre un <b>module complet de consentement RGPD</b> avec signature électronique. Conforme aux exigences réglementaires :</p>
+  <ul>
+    <li><b>Document de consentement</b> auto-rempli avec les infos patient + établissement + collectivité</li>
+    <li><b>Signature électronique</b> sur tout appareil : tactile mobile, souris/trackpad desktop, stylet, ou <b>pavé tactile externe USB</b> via WebHID</li>
+    <li><b>Stockage sécurisé</b> : image PNG dans un bucket Storage privé Supabase, accessible uniquement via URL signée temporaire ; hash SHA-256 en base pour garantir l'intégrité (détection altération)</li>
+    <li><b>Page de gestion <code>/consentements</code></b> : liste avec filtres (Actifs / Refusés / Archivés / Tous), recherche, visualisation, impression, archivage manuel</li>
+    <li><b>Traçabilité totale</b> : qui a recueilli, depuis quel appareil, à quelle date, quel texte exact a été signé (gel pour audit)</li>
+  </ul>
+
+  <div class="highlight">
+    <b>Le consentement est immuable (RGPD).</b> Pas de DELETE possible côté base, uniquement archivage via <code>archive = true</code>. Le texte du consentement signé est gelé dans la colonne <code>texte_consentement</code> pour traçabilité : même si on modifie le template plus tard, les consentements signés gardent leur version originale.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">7</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Composants UI créés</div></div>
+    <div class="kpi"><div class="v">+20</div><div class="l">Nouveaux tests Vitest</div></div>
+    <div class="kpi"><div class="v">87</div><div class="l">Tests verts au total</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">Finalités cochables</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Finalités obligatoires</div></div>
+    <div class="kpi"><div class="v">182</div><div class="l">Lignes du patch SQL</div></div>
+    <div class="kpi"><div class="v">357</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Table <code>consentements_rgpd</code> + RLS + indices + trigger updated_at</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>2</td><td>Bucket Supabase Storage <code>signatures-rgpd</code> privé (5 MB max, PNG only)</td><td><span class="pill sec">Sec</span></td></tr>
+      <tr><td>3</td><td>Vue <code>v_patient_consent_status</code> pour affichage statut sur fiche/liste patient</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>4</td><td>Composant <code>&lt;SignaturePad&gt;</code> avec Pointer Events + WebHID</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>5</td><td>Composant <code>&lt;ConsentementRGPD&gt;</code> modale complète</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>6</td><td>Helpers <code>lib/rgpd.js</code> (template + hash SHA-256 + finalités)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>7</td><td>Intégration : ouverture automatique à la création de patient</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>8</td><td>Badge "RGPD" / "RGPD à recueillir" / "RGPD refusé" sur liste patients</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>9</td><td>Page <code>/consentements</code> (liste, filtres, recherche, visualisation, impression, archivage)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>10</td><td>20 tests Vitest sur <code>lib/rgpd.js</code></td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="workflow">3. Workflow utilisateur</h2>
+
+  <h3>3.1 À la création d'un patient</h3>
+  <div class="flow">
+    <ol>
+      <li>L'utilisateur ouvre <code>/patients</code> → bouton "Nouveau patient"</li>
+      <li>Il remplit nom, prénom, date de naissance, N° dossier, médecin traitant, chambre, notes</li>
+      <li>Il clique "Enregistrer" → le patient est créé en base</li>
+      <li><b>Automatiquement</b>, la modale <code>&lt;ConsentementRGPD&gt;</code> s'ouvre par-dessus</li>
+      <li>Le document est pré-rempli avec les infos du patient et de l'établissement</li>
+      <li>Le signataire choisit "Patient lui-même" ou "Représentant légal" (avec nom)</li>
+      <li>Il coche les finalités optionnelles (les 3 obligatoires sont pré-cochées et non décochables)</li>
+      <li>Il signe dans le pavé tactile</li>
+      <li>Clic "Valider le consentement" → hash SHA-256 + upload Storage + ligne en base</li>
+      <li>Retour à la liste patients avec le badge vert "RGPD" sur la ligne</li>
+    </ol>
+  </div>
+
+  <h3>3.2 Recueil différé ou re-signature</h3>
+  <p>Sur la liste <code>/patients</code>, chaque ligne affiche un badge :</p>
+  <ul>
+    <li><b style="color:#5aa05a">✓ RGPD</b> (vert) si signé</li>
+    <li><b style="color:#EF9F27">⚠️ RGPD à recueillir</b> (orange) si jamais signé, cliquable pour ouvrir directement la modale</li>
+    <li><b style="color:#c0392b">✗ RGPD refusé</b> (rouge) si refusé</li>
+  </ul>
+  <p>Plus une icône <code>ti-shield-lock</code> dans la colonne action pour ouvrir le module manuellement à n'importe quel moment.</p>
+
+  <h3>3.3 Refus de consentement</h3>
+  <p>Le bouton "Refuser" en bas de la modale enregistre un consentement avec <code>statut = "refuse"</code>. Cela trace que le refus a bien été proposé et capturé, sans avoir besoin de signature. L'utilisateur garde la trace pour audit.</p>
+
+  <h2 id="signature">4. Pavé de signature</h2>
+
+  <h3>4.1 Technologies utilisées</h3>
+  <ul>
+    <li><b>Canvas HTML5</b> avec scaling devicePixelRatio (signature nette sur écrans Retina)</li>
+    <li><b>Pointer Events</b> unifie souris + tactile + stylet en une seule API (compatibles tous navigateurs modernes)</li>
+    <li><b>Pression du stylet</b> détectée si dispo (épaisseur de trait adaptative)</li>
+    <li><b><code>touchAction: none</code></b> et <code>userSelect: none</code> pour empêcher scroll et sélection de texte pendant la signature</li>
+    <li><b><code>setPointerCapture</code></b> pour garder le tracé même si le doigt sort un instant du canvas</li>
+  </ul>
+
+  <h3>4.2 Adaptation mobile</h3>
+  <p>Sur mobile :</p>
+  <ul>
+    <li>La modale prend toute la largeur de l'écran (max-height 100vh)</li>
+    <li>Le pavé fait <code>min(window.innerWidth - 80, 400) × 180px</code> pour rester confortable</li>
+    <li>Le bouton "Refuser" passe en pleine largeur (3e ligne)</li>
+    <li>Le scroll vertical est dans <code>.consent-body</code>, le header et le footer restent visibles</li>
+  </ul>
+
+  <h3>4.3 API exposée du composant</h3>
+  <pre><code>const padRef = useRef();
+&lt;SignaturePad ref={padRef} width={500} height={180} /&gt;
+
+// Vérifier si signé
+padRef.current.isEmpty(); // → boolean
+
+// Effacer
+padRef.current.clear();
+
+// Récupérer
+const dataUrl = padRef.current.toDataURL("image/png");
+const blob = await padRef.current.toBlob("image/png");</code></pre>
+
+  <h2 id="webhid">5. WebHID — Signpads externes USB</h2>
+
+  <h3>5.1 Détection</h3>
+  <p>Au montage, le composant vérifie <code>navigator.hid</code> :</p>
+  <ul>
+    <li>Si non disponible → message "Pavés externes non supportés par ce navigateur"</li>
+    <li>Si disponible → tente <code>navigator.hid.getDevices()</code> pour voir si un signpad déjà autorisé</li>
+    <li>Sinon → affiche bouton "Connecter un pavé tactile externe"</li>
+  </ul>
+
+  <h3>5.2 Vendors supportés (filters)</h3>
+  <table>
+    <thead><tr><th>Vendor ID</th><th>Marque</th></tr></thead>
+    <tbody>
+      <tr><td><code>0x056a</code></td><td>Wacom (gamme STU, signature pads)</td></tr>
+      <tr><td><code>0x0403</code></td><td>FTDI (signpads génériques USB-serial)</td></tr>
+      <tr><td><code>0x06a8</code></td><td>Topaz Systems</td></tr>
+      <tr><td><code>0x162e</code></td><td>Scriptel</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 Limites WebHID</h3>
+  <div class="panel warn">
+    <p><b>Compatibilité navigateur</b> : Chrome, Edge, Opera (basés Chromium). <b>Pas Firefox ni Safari</b> à ce jour. Sur ces navigateurs, le composant tombe sur le mode souris/tactile classique sans message d'erreur.</p>
+    <p><b>Heuristique de mapping coordonnées</b> : les signpads exposent des formats différents (resolution, ordre des octets). Le décodage actuel suppose 2 octets X + 2 octets Y little-endian sur 16 bits. Les Wacom STU sont OK ; pour d'autres modèles il faudra peut-être adapter le <code>handleHidInput</code> avec le datasheet du vendor.</p>
+    <p><b>HTTPS requis</b> : WebHID ne fonctionne que sur HTTPS (sauf <code>localhost</code> en dev).</p>
+  </div>
+
+  <h2 id="stockage">6. Stockage sécurisé</h2>
+
+  <h3>6.1 Bucket Supabase Storage</h3>
+  <p>Bucket dédié <code>signatures-rgpd</code> créé via SQL :</p>
+  <ul>
+    <li><b>Privé</b> (pas d'URL publique)</li>
+    <li><b>Limite 5 MB</b> par fichier</li>
+    <li><b>MIME autorisés : image/png uniquement</b></li>
+    <li><b>Policies RLS</b> : seuls les utilisateurs authentifiés peuvent uploader/lire</li>
+  </ul>
+
+  <h3>6.2 Convention de nommage</h3>
+  <p>Chemin : <code>{structure_id}/{patient_id}/{timestamp}-{hash8}.png</code></p>
+  <p>Exemple : <code>aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/abc123.../1717012345000-d41d8cd9.png</code></p>
+  <p>Avantages :</p>
+  <ul>
+    <li>Organisation par structure puis par patient (isolation logique)</li>
+    <li>Timestamp + hash → noms uniques garantis sans collision</li>
+    <li>Le hash8 sert d'index visuel rapide pour vérifier l'intégrité</li>
+  </ul>
+
+  <h3>6.3 Hash SHA-256</h3>
+  <p>À chaque signature, on calcule le hash SHA-256 du PNG via <code>crypto.subtle.digest()</code> (Web Crypto API native, pas de lib). Le hash est stocké en colonne <code>signature_hash</code> de la table.</p>
+  <p><b>Garantie d'intégrité</b> : si quelqu'un modifie l'image directement dans Storage, le hash ne correspondra plus → preuve d'altération. C'est le standard pour la signature électronique conforme.</p>
+
+  <h3>6.4 URLs signées temporaires</h3>
+  <p>Pour visualiser une signature, on génère une URL signée valide <b>300 secondes (5 min)</b> via <code>supabase.storage.from("signatures-rgpd").createSignedUrl(path, 300)</code>. Pas de stockage de tokens permanents, pas de fuite possible.</p>
+
+  <h2 id="template">7. Template du consentement</h2>
+
+  <h3>7.1 Texte générique santé à domicile</h3>
+  <p>Le template (variable <code>TEMPLATE_CONSENTEMENT</code> dans <code>lib/rgpd.js</code>) suit la structure RGPD recommandée :</p>
+  <ol>
+    <li>Responsable du traitement (collectivité + établissement)</li>
+    <li>Personne concernée (patient)</li>
+    <li>Nature des données collectées</li>
+    <li>Finalités du traitement (avec cases cochées en temps réel)</li>
+    <li>Base légale (consentement + contrat de soins + obligation légale)</li>
+    <li>Destinataires (personnel, professionnels de santé, organismes payeurs)</li>
+    <li>Durée de conservation (20 ans dossier médical, 10 ans facturation)</li>
+    <li>Vos droits (accès, rectification, effacement, limitation, opposition, portabilité, retrait)</li>
+    <li>Réclamation CNIL</li>
+    <li>Signature avec nom du signataire et date</li>
+  </ol>
+
+  <h3>7.2 Finalités proposées</h3>
+  <table>
+    <thead><tr><th>Clé</th><th>Libellé</th><th>Statut</th></tr></thead>
+    <tbody>
+      <tr><td><code>soins</code></td><td>Suivi médical et soins à domicile</td><td><b style="color:#185FA5">Obligatoire</b></td></tr>
+      <tr><td><code>materiel</code></td><td>Gestion du matériel médical</td><td><b style="color:#185FA5">Obligatoire</b></td></tr>
+      <tr><td><code>facturation</code></td><td>Facturation et tiers payant</td><td><b style="color:#185FA5">Obligatoire</b></td></tr>
+      <tr><td><code>amelioration</code></td><td>Amélioration de la qualité du service</td><td>Optionnelle</td></tr>
+      <tr><td><code>communication</code></td><td>Communication par email/SMS</td><td>Optionnelle</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.3 Variables remplacées</h3>
+  <p>Les placeholders <code>{{patient_nom_prenom}}</code>, <code>{{collectivite_nom}}</code>, <code>{{date_signature}}</code>, etc. sont remplacés à l'exécution. Si une donnée manque (ex. pas de date de naissance saisie), le bloc est masqué proprement (pas de "né(e) le undefined").</p>
+
+  <h2 id="sql">8. Patch SQL 0.21.0</h2>
+  <div class="panel">
+    <p>Le script <code>aveho-PATCH-vers-0.21.sql</code> (182 lignes) effectue :</p>
+    <ol>
+      <li><b>Table <code>consentements_rgpd</code></b> avec 25 colonnes (identité gelée, finalités, statut, hash, métadonnées forensic, audit)</li>
+      <li><b>5 index</b> sur patient_id, structure_id, etablissement_id, statut, date_signature</li>
+      <li><b>RLS</b> : 3 policies (select / insert / update). Pas de delete (immutabilité RGPD).</li>
+      <li><b>Trigger updated_at</b> automatique</li>
+      <li><b>Vue <code>v_patient_consent_status</code></b> : agrégat par patient (a_consenti, derniere_signature, compteurs)</li>
+      <li><b>Bucket Storage <code>signatures-rgpd</code></b> : privé, 5 MB, PNG only</li>
+      <li><b>2 policies Storage</b> : insert + select pour utilisateurs authentifiés</li>
+    </ol>
+    <p>100% idempotent (<code>if not exists</code>, <code>create or replace</code>, <code>on conflict do nothing</code>). Rejouable.</p>
+  </div>
+
+  <h2 id="tests">9. Tests Vitest (+20)</h2>
+  <p>20 nouveaux tests sur <code>lib/rgpd.js</code> :</p>
+  <ul>
+    <li><b>FINALITES (3 tests)</b> : structure, présence des obligatoires</li>
+    <li><b>VERSION_TEMPLATE (1 test)</b> : format semver</li>
+    <li><b>renderConsentement (10 tests)</b> : remplacement des variables, gestion des blocs optionnels, finalités cochées vs non cochées, aucun placeholder non remplacé</li>
+    <li><b>consentementToHtml (6 tests)</b> : gras, hr, listes, paragraphes, échappement HTML, intégration template complet</li>
+  </ul>
+  <p>Total : <b>87 tests verts</b> (étaient 67 en 0.20.1).</p>
+
+  <h2 id="fichiers">10. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.21.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Table + RLS + bucket + vue + policies (182 lignes)</td></tr>
+      <tr><td><code>lib/rgpd.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Helpers : FINALITES, template, render, html, hashBlob, detectDeviceType</td></tr>
+      <tr><td><code>app/SignaturePad.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Pad de signature Pointer Events + WebHID</td></tr>
+      <tr><td><code>app/ConsentementRGPD.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Modale complète document + finalités + signataire + signature</td></tr>
+      <tr><td><code>app/consentements/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page liste, filtres, recherche, visualisation, impression, archivage</td></tr>
+      <tr><td><code>__tests__/rgpd.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>20 tests sur le module RGPD</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ Trigger consentement après création + badge statut + icône action</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ Entrée "Consentements RGPD" dans menu Administration</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill imp">EXTENDU</span></td><td>+ ~90 lignes : sig-pad, consent-modal, consent-doc, dark mode</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.20.1-alpha → 0.21.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">11. Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.21.sql</code> → Run.</li>
+      <li><b>Vérifier le bucket</b> dans Storage : tu dois voir <code>signatures-rgpd</code> apparu (privé). Si le SQL n'a pas pu créer le bucket (versions Supabase plus anciennes), créer manuellement : Storage → New bucket → nom "signatures-rgpd", public NON.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app</code> (garder .env.local).</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+npm install
+npm test       # 87 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Créer un nouveau patient → la modale RGPD s'ouvre automatiquement</li>
+          <li>Tester la signature à la souris, valider → vérifier que le badge vert apparaît sur la liste</li>
+          <li>Mode mobile (F12 → device toolbar iPhone) : pavé adapté, signature au doigt</li>
+          <li>Si pavé externe Wacom STU dispo : cliquer "Connecter un pavé tactile externe" → choisir le périphérique → signer</li>
+          <li>Aller dans <code>/consentements</code> : la liste, les filtres, la recherche, la visualisation, l'impression</li>
+        </ul>
+      </li>
+      <li><b>Pousser sur Vercel</b> comme d'habitude (l'app doit être en HTTPS pour WebHID en prod).</li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">12. Reste à faire (0.22+)</h2>
+  <div class="panel warn">
+    <p>Améliorations possibles à intégrer plus tard :</p>
+    <ul>
+      <li><b>Renouvellement automatique</b> du consentement après N années (rappel automatique avant expiration)</li>
+      <li><b>Modèles de consentement personnalisables</b> par collectivité (texte spécifique à la maison, mentions légales locales)</li>
+      <li><b>Export PDF du consentement signé</b> avec signature intégrée (au lieu de l'impression navigateur)</li>
+      <li><b>Notification push au DPO</b> à chaque consentement refusé (cas particulier à analyser)</li>
+      <li><b>Auto-archivage</b> des consentements obsolètes (patient sorti depuis &gt; 3 ans)</li>
+      <li><b>QR code de vérification d'intégrité</b> sur l'impression (scan → vérifier le hash via une URL publique read-only)</li>
+      <li><b>Section "Mes consentements"</b> côté patient (portail dédié, plus tard)</li>
+      <li><b>Tests d'intégration Playwright</b> sur le flow complet (création patient → signature → vérification)</li>
+      <li><b>Mapping WebHID étendu</b> à plus de modèles signpads (Topaz, Scriptel) avec datasheets précis</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.21.0 · 30 mai 2026 (encore plus tard)</p>
+    <p>Consentement RGPD complet — Signature électronique tactile + WebHID — Hash SHA-256 + Storage privé</p>
+  </footer>
+
+</div>
+</body>
+</html>
