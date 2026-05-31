@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.55.23 — Badge centré + feedback notif</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.fix{background:#fef0ee;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid #e3e9ee}
+  table td{padding:7px 9px;border-bottom:1px solid #e3e9ee;vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">HOTFIX — UI + FEEDBACK PERMISSIONS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.55.23 — Badge version vraiment centré + feedback détaillé sur les permissions
+      <small>Logo et badge maintenant alignés au pixel près · UX d'autorisation notifs/géoloc avec messages contextualisés selon le résultat browser</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.23-alpha</code></span>
+      <span><b>Tests :</b> 1087 verts</span>
+    </div>
+  </header>
+
+  <h2>🎯 Fix 1 — Centrage final du badge version</h2>
+  <div class="panel fix">
+    <p><b>Symptôme :</b> Sur tes captures, le badge "v0.55.21" était toujours visuellement décalé vers le bas par rapport au texte "aveho".</p>
+
+    <h3>Cause</h3>
+    <p>Le <code>.logo</code> est un <code>&lt;span&gt;</code> qui héritait du <code>line-height</code> par défaut (~1.5). Donc même si la TopBar fait <code>display:flex; align-items:center;</code>, le <b>centre visuel du texte</b> "aveho" et le <b>centre de la box</b> du span ne coïncidaient pas — la baseline tirait le rendu vers le bas.</p>
+
+    <h3>Fix</h3>
+    <pre><code>.logo {
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  cursor: pointer;
+  display: inline-flex;     /* nouveau */
+  align-items: center;       /* nouveau */
+  line-height: 1;            /* nouveau — coupe l'espace ascender/descender */
+  height: 24px;              /* nouveau — hauteur fixe */
+  flex-shrink: 0;
+}
+.version-badge {
+  ...
+  height: 24px;              /* même hauteur que le logo */
+}</code></pre>
+    <p>Maintenant les 2 éléments ont la même hauteur exacte (24px) et leur centre vertical coïncide.</p>
+  </div>
+
+  <h2>🔔 Fix 2 — Feedback détaillé sur autorisation notif/géoloc</h2>
+  <div class="panel hi">
+    <p><b>Symptôme :</b> Quand tu cliquais sur "Autoriser" pour les notifs, Edge affichait un message "Notifications bloquées" sans qu'on comprenne pourquoi, et la modale ne donnait aucun retour.</p>
+
+    <h3>Cause</h3>
+    <p>Edge et Chrome ont un mode <b>"Quiet permission requests"</b> (par défaut sur les sites peu visités) qui bloque automatiquement les demandes de permission sans afficher le prompt classique. L'API <code>Notification.requestPermission()</code> retourne immédiatement <code>"default"</code> sans rien demander.</p>
+
+    <p>Et si l'user avait déjà refusé une fois, l'API retourne directement <code>"denied"</code> et on ne peut PLUS demander à nouveau via JS — il faut aller dans les paramètres du navigateur.</p>
+
+    <h3>Fix UX</h3>
+    <p>On affiche maintenant un message inline coloré <b>après chaque clic sur "Autoriser"</b>, selon le résultat retourné par l'API :</p>
+
+    <table>
+      <thead><tr><th>Résultat</th><th>Couleur</th><th>Message</th></tr></thead>
+      <tbody>
+        <tr><td><code>granted</code></td><td>🟢 Vert</td><td>"Notifications autorisées !" + envoi d'une notif de test immédiate</td></tr>
+        <tr><td><code>denied</code></td><td>🔴 Rouge</td><td>"Notifications bloquées par le navigateur. Cliquez sur l'icône de cadenas/info dans la barre d'adresse → Permissions → Notifications → Autoriser."</td></tr>
+        <tr><td><code>default</code> (Quiet mode)</td><td>🟡 Orange</td><td>"Le navigateur a bloqué la demande. Cliquez sur l'icône cloche ou cadenas dans la barre d'adresse pour autoriser manuellement."</td></tr>
+      </tbody>
+    </table>
+
+    <p>Idem pour la géolocalisation avec adaptation au <code>PositionError.code</code> :</p>
+    <ul>
+      <li><code>code === 1</code> (PERMISSION_DENIED) → rouge avec instructions cadenas</li>
+      <li>autres → orange avec message générique</li>
+    </ul>
+
+    <h3>Notif de test au succès</h3>
+    <pre><code>if (result === "granted") {
+  new Notification("Aveho EC", {
+    body: "Vous recevrez désormais les alertes importantes ici",
+    icon: "/icons/icon-192.png",
+  });
+}</code></pre>
+    <p>Comme ça l'user voit immédiatement une vraie notif système → preuve concrète que c'est actif.</p>
+
+    <h3>Affichage du feedback</h3>
+    <ul>
+      <li>Sur <b>mobile</b> : bandeau horizontal sous le header de la bottom-sheet</li>
+      <li>Sur <b>desktop</b> : encart coloré dans le popover juste après la description</li>
+      <li>Disparait automatiquement après 5s (10s si message d'erreur avec instructions)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers</h2>
+  <ul>
+    <li><code>app/globals.css</code> : <code>.logo</code> et <code>.version-badge</code> alignés au pixel près (height:24px)</li>
+    <li><code>app/StatusIcons.js</code> : state <code>feedback</code> + <code>showFeedback()</code> + refonte requestNotif/requestGeoloc avec messages contextuels + notif de test au succès</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + entrée 0.55.23 (alignement logo+badge, hauteur, Notification API)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.23</li>
+    <li><code>package.json</code> : 0.55.22 → 0.55.23</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <p>Pas de SQL.</p>
+    <pre><code>cd C:\aveho-ec-app
+git add -A
+git commit -m "Alpha 0.55.23 - Badge centre + feedback contextuel notifs/geoloc"
+git push origin main</code></pre>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Reload n'importe quelle page → le badge "v0.55.23" est <b>parfaitement aligné</b> avec le texte "aveho" (même ligne horizontale)</li>
+      <li>Sur mobile/desktop : clic sur l'icône bouclier → modale s'ouvre</li>
+      <li>Clic sur "Autoriser" sur la ligne Notifications :
+        <ul>
+          <li>Si tu autorises → message vert "Notifications autorisées !" + notif système Windows/iOS s'affiche</li>
+          <li>Si tu refuses → message rouge avec instructions pour débloquer via le cadenas du navigateur</li>
+          <li>Si Edge bloque silencieusement → message orange avec instructions cloche</li>
+        </ul>
+      </li>
+      <li>Idem géoloc : autorise → vert, refuse → rouge avec instructions</li>
+      <li>Smoke test 0.55.23 dans le changelog → 3 tests verts (alignement logo, hauteur badge, API Notif)</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 33ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.22 → <b>0.55.23</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.55.23 · 31 mai 2026</p>
+    <p>Badge aligné · feedback permissions contextualisé · 1087 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -102,19 +102,72 @@ export default function StatusIcons({ auth }) {
     setStatus(s);
   }
 
+  // 0.55.23 : message de feedback temporaire après une action
+  const [feedback, setFeedback] = useState(null); // { type: 'success'|'warning'|'error', text }
+
+  function showFeedback(type, text, duration = 5000) {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), duration);
+  }
+
   async function requestNotif() {
-    if (!("Notification" in window)) return;
+    if (!("Notification" in window)) {
+      showFeedback("error", "Notifications non supportées par ce navigateur");
+      return;
+    }
     try {
-      await Notification.requestPermission();
+      const result = await Notification.requestPermission();
       await refreshAll();
-    } catch {}
+      if (result === "granted") {
+        showFeedback("success", "Notifications autorisées !");
+        // Notif de test immédiate
+        try {
+          new Notification("Aveho EC", {
+            body: "Vous recevrez désormais les alertes importantes ici",
+            icon: "/icons/icon-192.png",
+            silent: false,
+          });
+        } catch (e) {
+          console.warn("[StatusIcons] notif test fail:", e);
+        }
+      } else if (result === "denied") {
+        showFeedback("error",
+          "Notifications bloquées par le navigateur. Cliquez sur l'icône de cadenas/info dans la barre d'adresse → Permissions → Notifications → Autoriser.",
+          10000
+        );
+      } else {
+        // "default" → navigateur en mode silencieux (Edge Quiet, etc.)
+        showFeedback("warning",
+          "Le navigateur a bloqué la demande. Cliquez sur l'icône cloche ou cadenas dans la barre d'adresse pour autoriser manuellement.",
+          10000
+        );
+      }
+    } catch (e) {
+      showFeedback("error", e.message || "Erreur");
+    }
   }
   function requestGeoloc() {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      showFeedback("error", "Géolocalisation non supportée");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
-      async () => { await refreshAll(); },
-      async () => { await refreshAll(); },
-      { timeout: 5000 }
+      async () => {
+        await refreshAll();
+        showFeedback("success", "Position autorisée !");
+      },
+      async (err) => {
+        await refreshAll();
+        if (err.code === 1) {
+          showFeedback("error",
+            "Position refusée. Pour autoriser, cliquez sur le cadenas dans la barre d'adresse → Permissions → Position.",
+            10000
+          );
+        } else {
+          showFeedback("warning", "Impossible d'obtenir la position : " + (err.message || "erreur"));
+        }
+      },
+      { timeout: 8000 }
     );
   }
 
@@ -285,6 +338,29 @@ export default function StatusIcons({ auth }) {
                 </button>
               </div>
 
+              {/* 0.55.23 : feedback de la dernière action */}
+              {feedback && (
+                <div style={{
+                  padding: "10px 16px",
+                  fontSize: 12.5,
+                  lineHeight: 1.4,
+                  background: feedback.type === "success" ? "#dff5e0"
+                    : feedback.type === "warning" ? "#fff4d6"
+                    : "#fce5e0",
+                  color: feedback.type === "success" ? "#2e6f33"
+                    : feedback.type === "warning" ? "#7a4f15"
+                    : "#7a1f15",
+                  borderBottom: "1px solid #e3e9ee",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                }}>
+                  <i className={`ti ${feedback.type === "success" ? "ti-circle-check" : feedback.type === "warning" ? "ti-alert-triangle" : "ti-circle-x"}`}
+                    style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }} />
+                  <span>{feedback.text}</span>
+                </div>
+              )}
+
               {/* Liste features */}
               <div style={{ flex: 1, overflow: "auto", padding: "8px 0" }}>
                 {features.map((f) => {
@@ -450,6 +526,29 @@ export default function StatusIcons({ auth }) {
               <div style={{ padding: "12px 14px", fontSize: 12.5, color: "#2a3a48", lineHeight: 1.55 }}>
                 {f.desc}
               </div>
+              {/* 0.55.23 : feedback inline dans le popover desktop */}
+              {feedback && open && (
+                <div style={{
+                  margin: "0 14px 12px",
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  fontSize: 11.5,
+                  lineHeight: 1.4,
+                  background: feedback.type === "success" ? "#dff5e0"
+                    : feedback.type === "warning" ? "#fff4d6"
+                    : "#fce5e0",
+                  color: feedback.type === "success" ? "#2e6f33"
+                    : feedback.type === "warning" ? "#7a4f15"
+                    : "#7a1f15",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 6,
+                }}>
+                  <i className={`ti ${feedback.type === "success" ? "ti-circle-check" : feedback.type === "warning" ? "ti-alert-triangle" : "ti-circle-x"}`}
+                    style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }} />
+                  <span>{feedback.text}</span>
+                </div>
+              )}
               {f.action && (
                 <div style={{ padding: "0 14px 14px" }}>
                   <button

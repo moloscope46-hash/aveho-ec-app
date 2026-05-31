@@ -27,6 +27,37 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.23 — Centrage badge + feedback notif ==============
+  "0.55.23": async () => {
+    const results = [];
+
+    results.push(await runTest("Logo aligné comme badge (line-height:1)", () => {
+      const logo = document.querySelector(".logo");
+      if (!logo) return { ok: false, msg: "Logo non trouvé" };
+      const style = getComputedStyle(logo);
+      const lh = parseFloat(style.lineHeight) || 0;
+      const fs = parseFloat(style.fontSize) || 1;
+      const ratio = lh / fs;
+      return { ok: ratio <= 1.1, msg: `line-height/font-size ≈ ${ratio.toFixed(2)}` };
+    }));
+
+    results.push(await runTest("Badge et logo même hauteur", () => {
+      const logo = document.querySelector(".logo");
+      const badge = document.querySelector(".version-badge");
+      if (!logo || !badge) return { ok: false, msg: "Éléments non trouvés" };
+      const lh = logo.getBoundingClientRect().height;
+      const bh = badge.getBoundingClientRect().height;
+      const diff = Math.abs(lh - bh);
+      return { ok: diff <= 2, msg: `logo=${lh.toFixed(0)}px badge=${bh.toFixed(0)}px diff=${diff.toFixed(0)}px` };
+    }));
+
+    results.push(await runTest("Notification.requestPermission disponible", () => {
+      return typeof Notification?.requestPermission === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.22 — Bio icônes + getDeviceName ==============
   "0.55.22": async () => {
     const supabase = createClient();

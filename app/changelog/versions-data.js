@@ -119,6 +119,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.23",
+    "kind": "hotfix",
+    "titre": "Badge version vraiment centré avec le logo · Feedback détaillé sur activation notifs/géoloc (succès, bloqué par browser, refusé) + notif de test au succès",
+    "chantiers": [
+      { "code": "FIX", "txt": "Badge v0.55.x : fix centrage final. Le logo 'aveho' avait une line-height héritée (1.5) qui décalait son baseline par rapport au badge. Solution : .logo en display:inline-flex + align-items:center + line-height:1 + height:24px. Badge mis à la même height:24px pour alignement strict" },
+      { "code": "UX", "txt": "Quand l'user clique 'Autoriser' sur Notifications dans le popover/modale StatusIcons : feedback inline coloré selon le résultat — vert + notif de test (granted) / rouge avec instructions cadenas (denied) / orange avec instructions cloche (default, ex. Edge Quiet)" },
+      { "code": "UX", "txt": "Idem pour Géolocalisation : feedback vert (success) ou rouge avec instructions selon le code d'erreur (1 = refusé, autres = erreur technique)" },
+      { "code": "FE", "txt": "Notification de test envoyée automatiquement au moment de l'autorisation pour confirmer visuellement à l'user que c'est bien actif" }
+    ],
+    "themes": ["fixes", "ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.23.html"
+  },
+  {
     "v": "0.55.22",
     "kind": "hotfix",
     "titre": "Privacy : getDeviceName plus neutre · /utilisateurs : icônes bio toujours visibles avec couleur · smoke tests pour toutes les versions 0.55.18-22",
