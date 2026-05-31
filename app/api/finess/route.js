@@ -35,7 +35,7 @@ const CATEGORY_CODES = {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
-  const limit = Math.min(Number(searchParams.get("limit") || 10), 500);  // 0.55.9 : jusqu'à 500 pour bbox
+  const limit = Math.min(Number(searchParams.get("limit") || 10), 200);  // 0.55.10 : max API tabular-api = 200
   const finess = searchParams.get("finess");
   const type = (searchParams.get("type") || "ET").toUpperCase();
   // 0.55.5 : filtre par groupe(s) de catégorie (CSV : "ehpad,hopitaux")
@@ -93,18 +93,36 @@ export async function GET(request) {
     });
 
     if (!res.ok) {
-      throw new Error(`FINESS API HTTP ${res.status}`);
+      // 0.55.10 : capture l'erreur tabular-api (400 pour page_size > 200, etc.)
+      let detail = "";
+      try {
+        const errBody = await res.json();
+        detail = errBody?.errors?.[0]?.detail || JSON.stringify(errBody);
+      } catch {}
+      console.warn(`[FINESS proxy] tabular-api HTTP ${res.status}: ${detail} — URL: ${url}`);
+      // On renvoie un 200 avec results vide pour ne pas faire crash le client
+      return new Response(
+        JSON.stringify({ 
+          error: `tabular-api ${res.status}: ${detail.slice(0, 200)}`, 
+          results: [],
+          count: 0,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
     }
 
     const payload = await res.json();
     return normalize(payload);
   } catch (e) {
+    console.error("[FINESS proxy] Exception:", e);
+    // On renvoie un 200 vide pour ne pas crash le client
     return new Response(
       JSON.stringify({ 
         error: e.message || "Erreur API FINESS", 
-        results: [] 
+        results: [],
+        count: 0,
       }),
-      { status: 502, headers: { "Content-Type": "application/json" } }
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
 }

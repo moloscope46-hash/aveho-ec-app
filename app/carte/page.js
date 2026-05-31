@@ -280,16 +280,28 @@ export default function CartePage() {
       return;
     }
     const bounds = mapInstanceRef.current.getBounds();
+    const latDelta = bounds.getNorth() - bounds.getSouth();
+    const lngDelta = bounds.getEast() - bounds.getWest();
+    
+    // 0.55.10 : garde-fou bbox trop large (tabular-api limite 200 résultats, ça déborde vite)
+    // Au-delà de ~5° de delta dans une direction, on demande à l'user de zoomer.
+    if (latDelta > 5 || lngDelta > 6) {
+      if (finessOverlayLayerRef.current) finessOverlayLayerRef.current.clearLayers();
+      setFinessCount(-1);  // -1 = signal "zone trop large"
+      return;
+    }
+    
     const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
     const cats = finessFilters.join(",");
     setFinessLoading(true);
     try {
-      const res = await fetch(`/api/finess?bbox=${encodeURIComponent(bbox)}&categories=${encodeURIComponent(cats)}&limit=300`);
+      const res = await fetch(`/api/finess?bbox=${encodeURIComponent(bbox)}&categories=${encodeURIComponent(cats)}&limit=200`);
       const data = await res.json();
       if (res.ok && Array.isArray(data.results)) {
         drawFinessOverlay(data.results);
         setFinessCount(data.results.length);
       } else {
+        console.warn("[Carte] FINESS API error:", data.error || res.status);
         setFinessCount(0);
       }
     } catch (e) {
@@ -637,6 +649,11 @@ export default function CartePage() {
                 {!finessLoading && finessCount > 0 && (
                   <span style={{ fontSize: 11, color: "#2e6f33", background: "#dff5e0", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>
                     <i className="ti ti-circle-check" /> {finessCount} résultat{finessCount > 1 ? "s" : ""} affiché{finessCount > 1 ? "s" : ""}
+                  </span>
+                )}
+                {!finessLoading && finessCount === -1 && (
+                  <span style={{ fontSize: 11, color: "#7a4f15", background: "#fff3da", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>
+                    <i className="ti ti-zoom-in" /> Zoome plus (zone trop large)
                   </span>
                 )}
                 {finessFilters.length > 0 && (
