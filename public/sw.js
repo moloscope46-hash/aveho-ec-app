@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.55.20";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.55.21";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -119,6 +119,16 @@ async function networkFirst(req, cacheName) {
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch (e) {
+    // 0.55.21 : retry 1x avec petit délai (transient network errors)
+    try {
+      await new Promise(r => setTimeout(r, 100));
+      const res2 = await fetch(req);
+      if (res2.ok) {
+        cache.put(req, res2.clone());
+        return res2;
+      }
+    } catch (_) {}
+
     const cached = await cache.match(req);
     if (cached) return cached;
     // Alpha 0.47.0 : pour les routes HTML, fallback sur /offline qui est cachée
@@ -126,6 +136,17 @@ async function networkFirst(req, cacheName) {
     if (req.mode === "navigate" || req.destination === "document") {
       const offlinePage = await cache.match("/offline.html");
       if (offlinePage) return offlinePage;
+      // 0.55.21 : si /offline.html pas encore caché, on renvoie un HTML inline
+      // avec status 200 (au lieu de 503 qui apparaît dans les logs console)
+      return new Response(
+        `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hors-ligne</title>
+        <style>body{font-family:sans-serif;background:#f4f7fa;color:#142131;text-align:center;padding:60px 20px}
+        h1{color:#185FA5}p{color:#6c7a89}</style></head>
+        <body><h1>📡 Hors-ligne</h1><p>Vérifiez votre connexion et rechargez la page.</p>
+        <button onclick="location.reload()" style="background:#185FA5;color:#fff;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px;margin-top:14px">Réessayer</button>
+        </body></html>`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
+      );
     }
     return new Response("Hors-ligne — aucune donnée en cache.", { status: 503, statusText: "Offline" });
   }

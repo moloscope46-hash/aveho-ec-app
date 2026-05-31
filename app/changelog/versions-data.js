@@ -119,6 +119,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.21",
+    "kind": "hotfix",
+    "titre": "Mobile : icônes de statut regroupées dans 1 bouton + modale plein écran · fix click action 'Gérer' · fix 503 transient",
+    "chantiers": [
+      { "code": "FE", "txt": "StatusIcons mode mobile (≤768px) : 1 seul bouton bouclier dans la TopBar à côté du panier, avec petite pastille de couleur (rouge si refusé, ambre si non config, vert si tout OK). Au clic, modale plein écran type bottom-sheet avec les 7 features détaillées" },
+      { "code": "UX", "txt": "Modale mobile : header gradient, liste scrollable des features avec icône + nom + badge ACTIF/REFUSÉ/INACTIF + description + bouton 'Autoriser' ou 'Gérer dans Profil' pour chaque" },
+      { "code": "FIX", "txt": "Boutons d'action des popovers : ajout de e.stopPropagation() pour éviter que le clic ne ferme accidentellement le popover avant que la redirection ne s'exécute. 'Gérer' ferme proprement la modale + setTimeout 50ms + router.push('/profil')" },
+      { "code": "FIX", "txt": "SW networkFirst : retry 1× avec délai 100ms en cas d'échec network transient (cause potentielle du 503 sur /profil). Fallback HTML lisible avec bouton 'Réessayer' si /offline.html pas en cache" }
+    ],
+    "themes": ["ux", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.21.html"
+  },
+  {
     "v": "0.55.20",
     "kind": "hotfix",
     "titre": "TopBar : badge version centré et visible sur mobile · Profil : sections empreinte et facial séparées · réduction warning PWA + forced reflow",

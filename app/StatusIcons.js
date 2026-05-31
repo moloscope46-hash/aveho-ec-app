@@ -1,17 +1,13 @@
 "use client";
 // =============================================================
-//  app/StatusIcons.js (Alpha 0.55.19)
+//  app/StatusIcons.js (Alpha 0.55.21)
 //
-//  Petite barre d'icônes de statut dans la TopBar, à côté
-//  des "3 points" (UserMenu).
+//  Indicateurs de statut dans la TopBar :
+//   - Desktop (>768px) : 7 icônes en ligne, popover individuel au clic
+//   - Mobile (≤768px) : 1 seul bouton "bouclier" qui ouvre une
+//     modale plein écran avec toutes les features
 //
-//  Affiche pour chaque feature : icône colorée
-//   - vert = activé / OK / autorisé
-//   - rouge = bloqué / refusé / inactif
-//   - gris = inconnu / non applicable
-//
-//  Au clic sur une icône → popover avec détails et action
-//  (activer, ouvrir paramètres navigateur, etc.)
+//  Code couleur : vert (OK) · rouge (refusé) · gris (non config)
 // =============================================================
 
 import { useEffect, useState } from "react";
@@ -20,27 +16,40 @@ import {
   isWebAuthnSupported,
   isPlatformAuthenticatorAvailable,
   getAvailableMethods,
-  METHOD_LABEL,
-  METHOD_ICON,
 } from "../lib/webauthn";
 
-// Helper : renvoie la couleur selon l'état
 const COLOR = {
-  ok: "#5aa05a",        // vert
-  ko: "#c0392b",        // rouge
-  warn: "#EF9F27",      // ambre
-  unknown: "#8a98a8",   // gris
+  ok: "#5aa05a",
+  ko: "#c0392b",
+  warn: "#EF9F27",
+  unknown: "#8a98a8",
 };
+
+// Hook simple pour détecter mobile
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 768px)");
+    const handler = () => setIsMobile(mq.matches);
+    handler();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
 
 export default function StatusIcons({ auth }) {
   const router = useRouter();
-  const [open, setOpen] = useState(null); // 'feature-id' actuellement déplié
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(null);          // id popover individuel (desktop)
+  const [modalOpen, setModalOpen] = useState(false); // modale plein écran (mobile)
   const [status, setStatus] = useState({
-    online: navigator.onLine,
-    notif: "unknown",      // 'granted' | 'denied' | 'default' | 'unsupported'
-    geoloc: "unknown",     // idem
-    pwa: false,            // installée ?
-    sw: false,             // SW actif ?
+    online: typeof navigator !== "undefined" ? navigator.onLine : true,
+    notif: "unknown",
+    geoloc: "unknown",
+    pwa: false,
+    sw: false,
     bioEmpreinte: false,
     bioFace: false,
     bioSupported: false,
@@ -48,7 +57,6 @@ export default function StatusIcons({ auth }) {
 
   useEffect(() => {
     refreshAll();
-    // Écouter online/offline
     const onOnline = () => setStatus((s) => ({ ...s, online: true }));
     const onOffline = () => setStatus((s) => ({ ...s, online: false }));
     window.addEventListener("online", onOnline);
@@ -62,18 +70,16 @@ export default function StatusIcons({ auth }) {
   async function refreshAll() {
     const s = { online: navigator.onLine };
 
-    // Notifications
     if ("Notification" in window) {
-      s.notif = Notification.permission; // 'granted' | 'denied' | 'default'
+      s.notif = Notification.permission;
     } else {
       s.notif = "unsupported";
     }
 
-    // Géoloc
     if ("geolocation" in navigator && "permissions" in navigator) {
       try {
         const p = await navigator.permissions.query({ name: "geolocation" });
-        s.geoloc = p.state; // 'granted' | 'denied' | 'prompt'
+        s.geoloc = p.state;
       } catch {
         s.geoloc = "unknown";
       }
@@ -81,14 +87,11 @@ export default function StatusIcons({ auth }) {
       s.geoloc = "unsupported";
     }
 
-    // PWA installée (display-mode)
     s.pwa = window.matchMedia?.("(display-mode: standalone)")?.matches
          || window.navigator.standalone === true;
 
-    // Service Worker actif
     s.sw = !!navigator.serviceWorker?.controller;
 
-    // Biométrie supportée + méthodes activées
     s.bioSupported = isWebAuthnSupported() && await isPlatformAuthenticatorAvailable();
     if (auth?.user?.email) {
       const methods = await getAvailableMethods(auth.user.email);
@@ -99,41 +102,39 @@ export default function StatusIcons({ auth }) {
     setStatus(s);
   }
 
-  function togglePopover(id) {
-    setOpen(open === id ? null : id);
-  }
-
-  function closePopover() {
-    setOpen(null);
-  }
-
-  // Demander une permission
   async function requestNotif() {
     if (!("Notification" in window)) return;
     try {
       await Notification.requestPermission();
       await refreshAll();
-      closePopover();
     } catch {}
   }
-  async function requestGeoloc() {
+  function requestGeoloc() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      async () => { await refreshAll(); closePopover(); },
-      async () => { await refreshAll(); closePopover(); },
+      async () => { await refreshAll(); },
+      async () => { await refreshAll(); },
       { timeout: 5000 }
     );
   }
 
-  // Liste des features à afficher dans l'ordre
+  // Naviguer vers /profil — utile pour les boutons "Gérer"
+  function gotoProfil() {
+    setOpen(null);
+    setModalOpen(false);
+    // Petit timeout pour laisser le state se mettre à jour avant la navigation
+    setTimeout(() => router.push("/profil"), 50);
+  }
+
+  // Construction des features
   const features = [
     {
       id: "online",
       icon: status.online ? "ti-wifi" : "ti-wifi-off",
       label: "Réseau",
       ok: status.online,
+      ko: !status.online,
       desc: status.online ? "Connecté à internet" : "Hors-ligne (mode dégradé)",
-      action: null,
     },
     {
       id: "notif",
@@ -145,7 +146,7 @@ export default function StatusIcons({ auth }) {
           : status.notif === "denied" ? "Notifications bloquées (réglages navigateur)"
           : status.notif === "unsupported" ? "Non supporté par ce navigateur"
           : "Notifications non demandées",
-      action: status.notif === "default" ? { label: "Autoriser", fn: requestNotif } : null,
+      action: status.notif === "default" ? { label: "Autoriser", fn: async () => { await requestNotif(); } } : null,
     },
     {
       id: "geoloc",
@@ -157,23 +158,21 @@ export default function StatusIcons({ auth }) {
           : status.geoloc === "denied" ? "Position refusée (réglages navigateur)"
           : status.geoloc === "unsupported" ? "Non supporté"
           : "Position non demandée",
-      action: status.geoloc === "prompt" ? { label: "Autoriser", fn: requestGeoloc } : null,
+      action: status.geoloc === "prompt" ? { label: "Autoriser", fn: () => requestGeoloc() } : null,
     },
     {
       id: "pwa",
       icon: status.pwa ? "ti-device-mobile-check" : "ti-device-mobile",
       label: "Application installée (PWA)",
       ok: status.pwa,
-      desc: status.pwa ? "Installée en tant qu'app" : "Mode navigateur · l'installation est possible",
-      action: null,
+      desc: status.pwa ? "Installée en tant qu'app" : "Mode navigateur — installation possible",
     },
     {
       id: "sw",
       icon: status.sw ? "ti-cloud-check" : "ti-cloud-off",
-      label: "Service Worker (offline / cache)",
+      label: "Service Worker (offline)",
       ok: status.sw,
       desc: status.sw ? "Cache offline actif" : "Service Worker pas encore chargé",
-      action: null,
     },
     ...(status.bioSupported ? [
       {
@@ -182,7 +181,7 @@ export default function StatusIcons({ auth }) {
         label: "Empreinte digitale",
         ok: status.bioEmpreinte,
         desc: status.bioEmpreinte ? "Activée sur cet appareil" : "Non activée sur cet appareil",
-        action: !status.bioEmpreinte ? { label: "Gérer", fn: () => router.push("/profil") } : null,
+        action: !status.bioEmpreinte ? { label: "Gérer dans Profil", fn: gotoProfil } : null,
       },
       {
         id: "bioFace",
@@ -190,18 +189,210 @@ export default function StatusIcons({ auth }) {
         label: "Détection faciale",
         ok: status.bioFace,
         desc: status.bioFace ? "Activée sur cet appareil" : "Non activée sur cet appareil",
-        action: !status.bioFace ? { label: "Gérer", fn: () => router.push("/profil") } : null,
+        action: !status.bioFace ? { label: "Gérer dans Profil", fn: gotoProfil } : null,
       },
     ] : []),
   ];
 
-  // Calcul de la couleur d'une feature
   function colorFor(f) {
     if (f.ok) return COLOR.ok;
     if (f.ko) return COLOR.ko;
     return COLOR.unknown;
   }
 
+  // Compteurs pour badge mobile
+  const koCount = features.filter(f => f.ko).length;
+  const unknownCount = features.filter(f => !f.ok && !f.ko).length;
+  const badgeColor = koCount > 0 ? COLOR.ko : unknownCount > 0 ? COLOR.warn : COLOR.ok;
+
+  // ============== MODE MOBILE : 1 bouton + modale ==============
+  if (isMobile) {
+    return (
+      <>
+        <button
+          className="tb-icon status-mobile-btn"
+          onClick={() => setModalOpen(true)}
+          title="État des permissions et fonctionnalités"
+          aria-label="Statut système"
+          style={{ position: "relative" }}
+        >
+          <i className="ti ti-shield-check" />
+          <span
+            className="status-mobile-badge"
+            style={{ background: badgeColor }}
+          />
+        </button>
+
+        {modalOpen && (
+          <div
+            onClick={(e) => e.target === e.currentTarget && setModalOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(20,33,49,.7)",
+              zIndex: 9991,
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "center",
+              padding: 0,
+              animation: "fadeIn .2s",
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#fff",
+                borderRadius: "16px 16px 0 0",
+                width: "100%",
+                maxHeight: "85vh",
+                display: "flex",
+                flexDirection: "column",
+                animation: "slideUp .25s cubic-bezier(.2,.8,.2,1)",
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                background: "linear-gradient(135deg, #142131 0%, #185FA5 100%)",
+                color: "#fff",
+                padding: "14px 18px",
+                borderRadius: "16px 16px 0 0",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}>
+                <i className="ti ti-shield-check" style={{ fontSize: 22, color: "#7CC8C8" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, letterSpacing: 1.5, color: "#cfe4f5", fontWeight: 700 }}>
+                    STATUT SYSTÈME
+                  </div>
+                  <div style={{ fontSize: 13, marginTop: 2 }}>
+                    {features.filter(f => f.ok).length}/{features.length} actifs
+                  </div>
+                </div>
+                <button
+                  onClick={() => setModalOpen(false)}
+                  style={{
+                    background: "transparent",
+                    color: "#fff",
+                    border: "none",
+                    padding: 6,
+                    cursor: "pointer",
+                    fontSize: 22,
+                  }}
+                  aria-label="Fermer"
+                >
+                  <i className="ti ti-x" />
+                </button>
+              </div>
+
+              {/* Liste features */}
+              <div style={{ flex: 1, overflow: "auto", padding: "8px 0" }}>
+                {features.map((f) => {
+                  const color = colorFor(f);
+                  return (
+                    <div
+                      key={f.id}
+                      style={{
+                        padding: "12px 18px",
+                        borderBottom: "1px solid #f4f7fa",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{
+                        width: 42, height: 42, borderRadius: 10,
+                        background: color + "18",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0,
+                      }}>
+                        <i className={`ti ${f.icon}`} style={{ fontSize: 22, color }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 160 }}>
+                        <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142131", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          {f.label}
+                          <span style={{
+                            background: color + "22",
+                            color: color,
+                            padding: "1px 8px",
+                            borderRadius: 8,
+                            fontSize: 10,
+                            fontWeight: 700,
+                            letterSpacing: 0.3,
+                          }}>
+                            {f.ok ? "ACTIF" : f.ko ? "REFUSÉ" : "INACTIF"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "#6c7a89", marginTop: 2 }}>
+                          {f.desc}
+                        </div>
+                      </div>
+                      {f.action && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            f.action.fn();
+                          }}
+                          style={{
+                            background: `linear-gradient(135deg, #142131, ${color})`,
+                            color: "#fff",
+                            border: "none",
+                            padding: "8px 14px",
+                            borderRadius: 8,
+                            fontSize: 12.5,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            minHeight: 36,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {f.action.label}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Footer */}
+              <div style={{
+                padding: "12px 18px",
+                background: "#f4f7fa",
+                borderTop: "1px solid #e3e9ee",
+                fontSize: 11,
+                color: "#8a98a8",
+                textAlign: "center",
+              }}>
+                <i className="ti ti-info-circle" /> Tout est géré par votre navigateur · paramètres dans les réglages OS pour les permissions refusées
+              </div>
+            </div>
+          </div>
+        )}
+
+        <style jsx>{`
+          .status-mobile-btn { position: relative; }
+          .status-mobile-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid #142131;
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+        `}</style>
+      </>
+    );
+  }
+
+  // ============== MODE DESKTOP : icônes inline + popover individuel ==============
   return (
     <>
       <div className="status-icons">
@@ -211,7 +402,7 @@ export default function StatusIcons({ auth }) {
             <button
               key={f.id}
               className="status-icon-btn"
-              onClick={() => togglePopover(f.id)}
+              onClick={() => setOpen(open === f.id ? null : f.id)}
               title={`${f.label} — ${f.desc}`}
               aria-label={f.label}
               style={{
@@ -220,23 +411,19 @@ export default function StatusIcons({ auth }) {
               }}
             >
               <i className={`ti ${f.icon}`} style={{ color, fontSize: 16 }} />
-              <span
-                className="status-dot"
-                style={{ background: color }}
-              />
+              <span className="status-dot" style={{ background: color }} />
             </button>
           );
         })}
       </div>
 
-      {/* Popover ouvert */}
       {open && (() => {
         const f = features.find((x) => x.id === open);
         if (!f) return null;
         const color = colorFor(f);
         return (
           <>
-            <div className="status-backdrop" onClick={closePopover} />
+            <div className="status-backdrop" onClick={() => setOpen(null)} />
             <div className="status-popover">
               <div style={{
                 display: "flex",
@@ -266,7 +453,11 @@ export default function StatusIcons({ auth }) {
               {f.action && (
                 <div style={{ padding: "0 14px 14px" }}>
                   <button
-                    onClick={() => { f.action.fn(); }}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      f.action.fn();
+                    }}
                     style={{
                       width: "100%",
                       background: `linear-gradient(135deg, #142131, ${color})`,
@@ -345,12 +536,6 @@ export default function StatusIcons({ auth }) {
         @keyframes status-pop {
           from { opacity: 0; transform: translateY(-4px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        /* Mobile : cache les icônes secondaires si écran trop petit */
-        @media (max-width: 520px) {
-          .status-icons :global(.status-icon-btn:nth-child(n+5)) {
-            display: none;
-          }
         }
       `}</style>
     </>
