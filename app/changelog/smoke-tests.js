@@ -27,6 +27,52 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.30 — Partenaires RPPS + hotfix + mail enrichi ==============
+  "0.55.30": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table partenaires_rpps accessible", async () => {
+      const { error } = await supabase.from("partenaires_rpps").select("id").limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Table OK" };
+    }));
+
+    results.push(await runTest("Colonne etablissements.groupement_id ajoutée", async () => {
+      const { error } = await supabase.from("etablissements").select("groupement_id").limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("column")) {
+        return { ok: false, msg: "Colonne absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Hotfix groupement_id OK" };
+    }));
+
+    results.push(await runTest("RPC add_user_to_etablissement disponible", async () => {
+      // Sanity check : appelle avec param bidon → doit répondre (même en erreur logique)
+      const { error } = await supabase.rpc("add_user_to_etablissement", {
+        p_user_id: "00000000-0000-0000-0000-000000000000",
+        p_etablissement_id: "00000000-0000-0000-0000-000000000000",
+      });
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente" };
+      }
+      return { ok: true, msg: "RPC déclarée" };
+    }));
+
+    results.push(await runTest("Page /partenaires-rpps chargeable", async () => {
+      const mod = await import("../partenaires-rpps/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Vue v_partenaires_rpps existante", async () => {
+      const { error } = await supabase.from("v_partenaires_rpps").select("id").limit(1);
+      return { ok: !error, msg: error?.message || "Vue accessible" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.29 — RPPS prod + filtre vue-globale + champs RPPS user ==============
   "0.55.29": async () => {
     const supabase = createClient();

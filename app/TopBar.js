@@ -27,6 +27,7 @@ const MENU = [
   { section: "Établissement", items: [
     { p: "/etablissements", ic: "ti-buildings", lbl: "Annuaire étabs", col: "#185FA5" },
     { p: "/annuaire-rpps", ic: "ti-stethoscope", lbl: "Annuaire RPPS (libéraux)", col: "#7a6fb0" },
+    { p: "/partenaires-rpps", ic: "ti-user-circle", lbl: "Mes partenaires RPPS", col: "#7a6fb0" },
     { p: "/carte", ic: "ti-map", lbl: "Carte logistique", col: "#5aa05a" },
     { p: "/etablissement", ic: "ti-building-hospital", lbl: "Mon établissement", col: "#185FA5" },
     { p: "/etablissement/fiche", ic: "ti-id-badge-2", lbl: "Fiche étab.", col: "#1c5454" },

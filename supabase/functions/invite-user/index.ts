@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
   try {
-    const { email, nom, collectivite, role, etablissements, inviteLink } = await req.json();
+    const { email, nom, collectivite, role, etablissements, inviteLink, rpps_profession, rpps_specialite, rpps, lock_assignment } = await req.json();
 
     if (!inviteLink) {
       throw new Error("inviteLink manquant (doit être fourni par l'app appelante)");
@@ -24,12 +24,31 @@ Deno.serve(async (req) => {
       .map((e: string) => `<div style="display:inline-block;background:#eef6f6;color:#2a5a5a;border:1px solid #cfe6e6;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;margin:3px 4px 3px 0">🏥 ${e}</div>`)
       .join("");
 
+    // 0.55.30 : bloc RPPS si renseigné
+    const rppsHtml = rpps ? `
+      <div style="background:#f3effa;border:1px solid #d6c9ec;border-radius:10px;padding:14px 18px;margin:16px 0">
+        <div style="font-size:11px;color:#5a4a90;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">
+          🩺 Identité professionnelle (RPPS)
+        </div>
+        ${rpps_profession ? `<div style="font-size:14px;color:#142131"><b>${rpps_profession}</b>${rpps_specialite ? ` · ${rpps_specialite}` : ""}</div>` : ""}
+        <div style="font-size:12px;color:#5a4a90;margin-top:4px;font-family:Consolas,monospace">RPPS ${rpps}</div>
+      </div>
+    ` : "";
+
+    const lockHtml = lock_assignment && etablissements?.length ? `
+      <div style="background:#fff8ec;border:1px solid #f0d59f;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:12px;color:#7a4f15">
+        🔒 <b>Rattachement verrouillé :</b> votre rattachement aux établissements a été défini par votre administrateur et ne peut pas être modifié à l'inscription.
+      </div>
+    ` : "";
+
     const html = inviteTemplate({
       nom: nom || "",
       collectivite: collectivite || "votre collectivité",
       role: role || "Utilisateur",
       etabHtml,
       inviteLink,
+      rppsHtml,
+      lockHtml,
     });
 
     const r = await fetch("https://api.resend.com/emails", {
@@ -41,7 +60,9 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "Aveho EC <onboarding@resend.dev>",
         to: [email],
-        subject: `Votre invitation à rejoindre Aveho EC`,
+        subject: rpps_profession
+          ? `Invitation Aveho EC — ${rpps_profession}`
+          : `Votre invitation à rejoindre Aveho EC`,
         html,
       }),
     });
@@ -62,7 +83,7 @@ Deno.serve(async (req) => {
   }
 });
 
-function inviteTemplate({ nom, collectivite, role, etabHtml, inviteLink }: any) {
+function inviteTemplate({ nom, collectivite, role, etabHtml, inviteLink, rppsHtml, lockHtml }: any) {
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -82,13 +103,15 @@ function inviteTemplate({ nom, collectivite, role, etabHtml, inviteLink }: any) 
       <p style="font-size:14px;line-height:1.65;color:#2a3a48;margin:0 0 18px">
         Vous avez été invité(e) à rejoindre <b>${collectivite}</b> sur Aveho EC, la plateforme de gestion de matériel médical et de patients.
       </p>
-      <div style="background:#eef9ef;border:1px solid #bfe2bf;border-radius:10px;padding:14px 18px;margin:0 0 22px">
+      ${rppsHtml || ""}
+      <div style="background:#eef9ef;border:1px solid #bfe2bf;border-radius:10px;padding:14px 18px;margin:0 0 14px">
         <div style="font-size:11px;letter-spacing:2px;font-weight:700;color:#2e6f33;margin-bottom:6px">VOTRE PROFIL</div>
         <div style="font-size:13px;color:#2a3a48;line-height:1.7">
           <div><b>Rôle :</b> <span style="background:#185FA522;color:#185FA5;padding:2px 8px;border-radius:6px;font-weight:600;font-size:12px">${role}</span></div>
           ${etabHtml ? `<div style="margin-top:8px"><b>Établissements :</b> ${etabHtml}</div>` : ""}
         </div>
       </div>
+      ${lockHtml || ""}
       <div style="text-align:center;margin:24px 0">
         <a href="${inviteLink}" style="display:inline-block;background:linear-gradient(135deg,#142131,#185FA5);color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">
           → Finaliser mon inscription

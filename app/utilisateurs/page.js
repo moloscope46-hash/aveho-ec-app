@@ -384,7 +384,16 @@ export default function Utilisateurs() {
     // 3) tenter l'envoi du mail de bienvenue (Edge Function invite-user)
     try {
       const roleNom = roles.find((r) => r.id === inviteForm.role_id)?.nom || "Utilisateur";
-      const etabNoms = auth.etablissements.map((e) => e.nom);
+      // 0.55.30 : si l'invité est rattaché à des établissements spécifiques, on utilise CEUX-LÀ
+      // sinon fallback sur les établissements de l'inviteur
+      let etabNoms;
+      if (inviteForm.etablissement_ids?.length) {
+        etabNoms = auth.etablissements
+          .filter((e) => inviteForm.etablissement_ids.includes(e.id))
+          .map((e) => e.nom);
+      } else {
+        etabNoms = auth.etablissements.map((e) => e.nom);
+      }
       await supabase.functions.invoke("invite-user", {
         body: {
           email: inviteForm.email,
@@ -393,6 +402,11 @@ export default function Utilisateurs() {
           role: roleNom,
           etablissements: etabNoms,
           inviteLink,  // 0.55.12 : passe le lien custom au mail
+          // 0.55.30 : champs RPPS pour personnalisation du mail
+          rpps_profession: inviteForm.rpps_profession || null,
+          rpps_specialite: inviteForm.rpps_specialite || null,
+          rpps: inviteForm.rpps || null,
+          lock_assignment: !!inviteForm.lock_assignment,
         },
       });
     } catch (e) {
@@ -410,8 +424,26 @@ export default function Utilisateurs() {
     });
 
     // 5) Afficher le lien (au cas où l'email n'est pas configuré)
-    setCreatedInviteLink(inviteLink);
-    setInviteForm({ email: "", role_id: "", nom_affiche: "", prenom: "", nom: "", telephone: "", mobile: "", fonction_detail: "" });
+    // 0.55.30 : on stocke aussi un récap complet pour l'afficher dans la popup
+    setCreatedInviteLink({
+      link: inviteLink,
+      email: inviteForm.email,
+      nom: nom_affiche_fallback,
+      role: roles.find((r) => r.id === inviteForm.role_id)?.nom || "Utilisateur",
+      rpps: inviteForm.rpps,
+      rpps_profession: inviteForm.rpps_profession,
+      rpps_specialite: inviteForm.rpps_specialite,
+      etabNoms: inviteForm.etablissement_ids?.length
+        ? auth.etablissements.filter(e => inviteForm.etablissement_ids.includes(e.id)).map(e => e.nom)
+        : [],
+      lock_assignment: inviteForm.lock_assignment,
+      matricule: inviteForm.matricule,
+    });
+    setInviteForm({
+      email: "", role_id: "", nom_affiche: "", prenom: "", nom: "", telephone: "", mobile: "", fonction_detail: "",
+      etablissement_ids: [], lock_assignment: true, matricule: "", date_arrivee: "", notes_admin: "",
+      rpps: "", adeli: "", rpps_profession: "", rpps_specialite: "", rpps_mode_exercice: "",
+    });
     await loadAll();
   }
 
@@ -949,25 +981,84 @@ export default function Utilisateurs() {
         </div>
       )}
 
-      {/* 0.55.12 : Modale post-création avec lien à copier */}
+      {/* 0.55.12 + 0.55.30 : Modale post-création avec récap + lien */}
       {createdInviteLink && (
         <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setCreatedInviteLink(null)}>
-          <div className="modal" style={{ maxWidth: 540 }}>
+          <div className="modal" style={{ maxWidth: 580, maxHeight: "92vh", overflow: "auto" }}>
             <div className="modal-head" style={{ background: "linear-gradient(135deg, #5aa05a, #2e6f33)", color: "#fff" }}>
               <i className="ti ti-circle-check" /> Invitation créée
               <i className="ti ti-x" style={{ cursor: "pointer", color: "#fff" }} onClick={() => { setCreatedInviteLink(null); setInviteModal(false); }} />
             </div>
             <div className="modal-body">
-              <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5 }}>
-                ✓ L'invitation a été créée et un email a été envoyé.
+              <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.5 }}>
+                ✓ L'invitation a été créée et un email a été envoyé à <b>{createdInviteLink.email}</b>.
               </p>
+
+              {/* 0.55.30 : Récap de ce qui a été envoyé */}
+              <div style={{ background: "#f4f7fa", border: "1px solid #e3e9ee", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 13 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                  📧 Contenu de l'invitation
+                </div>
+                <div style={{ display: "grid", gap: 6 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#6c7a89" }}>Nom</span>
+                    <b style={{ color: "#142131" }}>{createdInviteLink.nom}</b>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#6c7a89" }}>Rôle</span>
+                    <span style={{ background: "#185FA522", color: "#185FA5", padding: "2px 8px", borderRadius: 6, fontWeight: 600, fontSize: 12 }}>{createdInviteLink.role}</span>
+                  </div>
+                  {createdInviteLink.matricule && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ color: "#6c7a89" }}>Matricule</span>
+                      <code style={{ color: "#142131", fontFamily: "Consolas, monospace" }}>{createdInviteLink.matricule}</code>
+                    </div>
+                  )}
+                  {createdInviteLink.etabNoms?.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ color: "#6c7a89" }}>
+                        Établissements
+                        {createdInviteLink.lock_assignment && (
+                          <span style={{ marginLeft: 4, fontSize: 10, color: "#7a4f15", background: "#fff8ec", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>
+                            <i className="ti ti-lock" /> VERROUILLÉ
+                          </span>
+                        )}
+                      </span>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {createdInviteLink.etabNoms.map((nom, i) => (
+                          <span key={i} style={{ background: "#eef6f6", color: "#2a5a5a", padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 600 }}>
+                            🏥 {nom}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bloc RPPS si renseigné */}
+              {createdInviteLink.rpps && (
+                <div style={{ background: "#f3effa", border: "1px solid #d6c9ec", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 13 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#5a4a90", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+                    🩺 Identité RPPS
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <b style={{ color: "#142131" }}>{createdInviteLink.rpps_profession || "—"}</b>
+                    {createdInviteLink.rpps_specialite && <span style={{ color: "#5a4a90" }}>{createdInviteLink.rpps_specialite}</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#5a4a90", marginTop: 4, fontFamily: "Consolas, monospace" }}>
+                    RPPS {createdInviteLink.rpps}
+                  </div>
+                </div>
+              )}
+
               <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6c7a89" }}>
                 Si l'email ne se configure pas, copiez le lien ci-dessous et transmettez-le manuellement :
               </p>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
                 <input
                   readOnly
-                  value={createdInviteLink}
+                  value={createdInviteLink.link}
                   onFocus={(e) => e.target.select()}
                   style={{
                     flex: 1,
@@ -982,7 +1073,7 @@ export default function Utilisateurs() {
                 <button
                   className="btn-save"
                   onClick={() => {
-                    navigator.clipboard.writeText(createdInviteLink);
+                    navigator.clipboard.writeText(createdInviteLink.link);
                     alert("Lien copié !");
                   }}
                   title="Copier le lien"

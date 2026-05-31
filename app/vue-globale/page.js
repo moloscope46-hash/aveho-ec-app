@@ -26,7 +26,7 @@ export default function VueGlobale() {
     (async () => {
       const { data: etabs } = await supabase
         .from("etablissements")
-        .select("id,nom,type,ville,actif,est_partenaire,groupement_id")
+        .select("id,nom,type,ville,actif,est_partenaire")
         .eq("structure_id", auth.structureId)
         .order("nom");
       // agréger par établissement (comptages)

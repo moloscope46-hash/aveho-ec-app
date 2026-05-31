@@ -120,6 +120,27 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.30",
+    "kind": "version",
+    "titre": "🤝 Partenaires RPPS (table dédiée non-utilisateurs) · Mail/popup invitation enrichi RPPS · Hotfix vue-globale (groupement_id) · RPC ajout user au bâtiment",
+    "chantiers": [
+      { "code": "FIX", "txt": "Hotfix 400 sur /vue-globale : le SELECT contenait 'groupement_id' qui n'existait pas sur la table etablissements. Colonne ajoutée dans le patch SQL 0.55.30 (avec index partiel) + table groupements créée si absente avec RLS" },
+      { "code": "SQL", "txt": "Patch 0.55.30 : nouvelle table partenaires_rpps (id, structure_id, rpps, adeli, civilite, nom, prenom, profession, specialite, mode_exercice, adresse, cp, commune, telephone, telephone_mobile, email, notes, tags[], est_prescripteur, est_intervenant, etablissement_ids[], created_at, created_by, updated_at, archive)" },
+      { "code": "SQL", "txt": "Contrainte unicité par (structure_id, rpps) avec archive=false → un même praticien ne peut être ajouté qu'une fois. Index sur nom + profession + structure pour recherche rapide. RLS member_rw. Trigger updated_at automatique" },
+      { "code": "SQL", "txt": "Vue v_partenaires_rpps avec colonnes virtuelles (nb_etablissements_lies) + security_invoker. RPCs add_user_to_etablissement(p_user_id, p_etablissement_id) et remove_user_from_etablissement (security definer, vérif droits utilisateurs_write OU parametres_admin)" },
+      { "code": "FE", "txt": "Nouvelle page /partenaires-rpps : liste des partenaires non-utilisateurs (médecins prescripteurs, IDE libéraux, kinés). 3 filtres : Tous / Prescripteurs / Intervenants. Recherche par nom/prénom/profession/RPPS/commune. Cartes avec avatar violet, badges colorés (PRESCRIPTEUR bleu, INTERVENANT vert, RPPS violet)" },
+      { "code": "FE", "txt": "Bouton 'Ajouter un partenaire depuis RPPS' qui ouvre RppsSearch. Au clic sur un résultat : insertion automatique avec classification (médecin → est_prescripteur, infirm/kin/sage → est_intervenant). Détection de doublon par RPPS avec message d'alerte" },
+      { "code": "FE", "txt": "Modale détails partenaire avec coordonnées cliquables (tel: + mailto:) + bouton 'Archiver' (rouge). Lien dans le menu TopBar section Établissement (entre Annuaire RPPS et Carte)" },
+      { "code": "FE", "txt": "Mail d'invitation Resend enrichi : bloc violet 'Identité professionnelle (RPPS)' avec profession + spécialité + n° RPPS. Banner ambre '🔒 Rattachement verrouillé' si lock_assignment=true. Subject du mail personnalisé (ex: 'Invitation Aveho EC — Médecin'). Edge Function invite-user mise à jour" },
+      { "code": "FE", "txt": "Pop-up post-création d'invitation enrichi : récap complet de ce qui a été envoyé (nom, rôle, matricule, établissements rattachés en pills, badge VERROUILLÉ si lock, bloc violet RPPS si renseigné, lien copiable). État createdInviteLink passe de string à object" },
+      { "code": "AI", "txt": "+18 tests Vitest : classification auto (6), filtres recherche partenaires (4), structure objet popup (2), add_user RPC idempotence (1), hotfix groupement_id (1). Total 1169 tests verts (vs 1151)" }
+    ],
+    "themes": ["users", "fixes", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.30.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.30.sql"
+  },
+  {
     "v": "0.55.29",
     "kind": "version",
     "titre": "🩺 RPPS production (API FHIR ANS officielle) · Bouton 'Rechercher RPPS' à la création utilisateur · Champs RPPS dans fiche user · Filtre vue-globale Mes/Partenaires/Tous",
