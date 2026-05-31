@@ -25,6 +25,13 @@ const MENU = [
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins", col: "#5a8f8f" },
     { p: "/promotions", ic: "ti-discount-2", lbl: "Promotions", col: "#e35d5b" },
   ] },
+  // 0.55.46 : nouvelle catégorie Outils scan en haut
+  { section: "Outils scan", items: [
+    { p: "/scan/bulletin-situation", ic: "ti-file-scan", lbl: "Créer patient depuis bulletin", col: "#5aa05a" },
+    { p: "/scan/qr", ic: "ti-qrcode", lbl: "Scan QR code", col: "#185FA5" },
+    { p: "/scan/codebarre", ic: "ti-barcode", lbl: "Scan code-barre", col: "#7a6fb0" },
+    { p: "/scan/ocr", ic: "ti-text-recognition", lbl: "OCR générique", col: "#EF9F27" },
+  ] },
   { section: "Établissement", items: [
     { p: "/etablissements", ic: "ti-buildings", lbl: "Annuaire étabs", col: "#185FA5" },
     { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Étabs partenaires", col: "#7a6fb0" },

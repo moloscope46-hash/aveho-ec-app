@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.47 — Carte recherche libre + icônes voyantes + type verrouillé</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 50%,#7a6fb0 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  .demo-pin{display:inline-block;width:48px;height:48px;border:3px solid #fff;border-radius:50%;background:linear-gradient(135deg,#185FA5,#5aa05a);box-shadow:0 4px 12px rgba(20,33,49,.45),0 0 0 4px rgba(90,160,90,.25);text-align:center;line-height:42px;font-size:22px;color:#fff;vertical-align:middle;margin:0 8px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — CARTE + VERROUILLAGE TYPE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.47 — Carte : recherche libre + icônes voyantes + type étab verrouillé
+      <small>Tape "orthopédiste" et tout sort · mes étab pulsent en vert · 4 boutons actions par popup · plus de switch mine↔partner</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.47-alpha</code></span>
+      <span><b>Tests :</b> 1438 verts (+24)</span>
+      <span><b>SQL :</b> aucun</span>
+    </div>
+  </header>
+
+  <h2>🔒 Type d'établissement verrouillé après création</h2>
+  <div class="panel warn">
+    <h3 style="margin-top:0">Le problème</h3>
+    <p>Avant 0.55.47, dans <code>/etablissement/fiche</code> on pouvait re-cliquer sur "Mon collectivité" / "Partenaire" et basculer le type en édition. Risque : un étab géré devient soudain partenaire et perd l'accès patients/matériel (ou inverse).</p>
+
+    <h3>Le verrouillage</h3>
+    <ul>
+      <li><b>Boutons remplacés par divs</b> non-clickables (cursor: not-allowed)</li>
+      <li><b>Opacity 0.55</b> sur l'option non sélectionnée — visuellement désactivée</li>
+      <li><b>Badge ambre</b> "🔒 Verrouillé après création" à côté du label</li>
+      <li><b>Tooltip</b> au survol : "Le type d'établissement ne peut pas être modifié après création"</li>
+      <li><b>Bandeau d'info</b> en bas : "Pour changer un partenaire en étab géré, il faut supprimer puis recréer la fiche"</li>
+      <li><b>Backend</b> : <code>est_partenaire</code> RETIRÉ du payload update — impossible même via DevTools</li>
+    </ul>
+  </div>
+
+  <h2>🗺 Carte — icône voyante pour mes étab</h2>
+  <div class="panel hi">
+    <p>Avant : tous les étab étaient des cercles uniformes 38px bleus/turquoise. Difficile de repérer ses propres étab parmi 50 partenaires.</p>
+
+    <h3>Maintenant</h3>
+    <ul>
+      <li>Mes étab : <span class="demo-pin">🏥</span> taille <b>48px</b>, gradient <b>bleu→vert</b>, <b>halo pulsant</b> vert 2s, <b>ring blanc</b></li>
+      <li>Partenaires : 38px, gradient turquoise (inchangé)</li>
+      <li>Badge popup : <b>★ Mon étab</b> en vert (au lieu de "Géré" en bleu)</li>
+    </ul>
+    <p>Sur une carte zoomée à mi-distance, les <b>mes étab sortent immédiatement</b> grâce au halo pulsant et la taille +25%.</p>
+  </div>
+
+  <h2>📞 Boutons d'action dans les popups</h2>
+  <div class="panel">
+    <p>Avant : popup statique avec juste texte (📞 et ✉️ étaient juste affichés sans être cliquables).</p>
+
+    <h3>Maintenant — 4 boutons cliquables :</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:12px">
+      <div style="background:#185FA515;color:#185FA5;border:1px solid #185FA540;padding:8px;border-radius:6px;font-size:11.5px;text-align:center">
+        <b style="font-size:14px">📞 Appeler</b><br/>
+        <code style="font-size:10px">tel:0612345678</code><br/>
+        si téléphone présent
+      </div>
+      <div style="background:#EF9F2715;color:#EF9F27;border:1px solid #EF9F2740;padding:8px;border-radius:6px;font-size:11.5px;text-align:center">
+        <b style="font-size:14px">📍 Itinéraire</b><br/>
+        <code style="font-size:10px">maps.google.com/dir</code><br/>
+        toujours présent
+      </div>
+      <div style="background:#5aa05a15;color:#5aa05a;border:1px solid #5aa05a40;padding:8px;border-radius:6px;font-size:11.5px;text-align:center">
+        <b style="font-size:14px">✉️ Email</b><br/>
+        <code style="font-size:10px">mailto:contact@…</code><br/>
+        si email présent
+      </div>
+      <div style="background:#7a6fb015;color:#7a6fb0;border:1px solid #7a6fb040;padding:8px;border-radius:6px;font-size:11.5px;text-align:center">
+        <b style="font-size:14px">📄 Fiche</b><br/>
+        <code style="font-size:10px">/etablissement/fiche</code><br/>
+        ouvre la fiche complète
+      </div>
+    </div>
+  </div>
+
+  <h2>🔍 Recherche libre sur la carte</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Le besoin</h3>
+    <p>Tu tapes <code>"orthopédiste"</code> → tu veux voir tous les orthopédistes (RPPS + SIRENE) sur la carte. Tu tapes <code>"pharmacie"</code> → toutes les pharmacies. Tu tapes <code>"Mayrinhac"</code> → tout ce qui se trouve à Mayrinhac.</p>
+
+    <h3>L'implémentation</h3>
+    <p>Une <b>seule barre de recherche</b> en haut du panneau filtres carte, dans un Panel violet "Recherche libre sur la carte". Quand tu tapes (debounce 600ms) :</p>
+    <pre><code>// 3 appels en parallèle
+[Promise.allSettled]
+├── GET /api/rpps?q=orthopédiste&ville=&lt;centre&gt;&limit=60
+├── GET /api/sirene?q=orthopédiste&commune=&lt;centre&gt;&limit=40
+└── GET /api/finess?q=orthopédiste&limit=40
+
+→ Merge ~30-150 résultats
+→ Géocodage BAN INSEE pour les manquants
+→ Filtre par bbox carte visible
+→ Markers colorés par source</code></pre>
+
+    <h3>Markers colorés par source</h3>
+    <ul>
+      <li><b style="color:#7a6fb0">🩺 RPPS</b> violet · praticiens libéraux</li>
+      <li><b style="color:#5aa05a">🏪 SIRENE</b> vert · entreprises (pharmacies, magasins, etc.)</li>
+      <li><b style="color:#185FA5">🏥 FINESS</b> bleu · établissements de santé</li>
+    </ul>
+
+    <h3>UI</h3>
+    <ul>
+      <li>Input avec loupe à gauche</li>
+      <li>Bouton × à droite pour clear</li>
+      <li>Loader pendant la recherche</li>
+      <li>Badge "X résultats" quand prêt</li>
+      <li>Min 3 caractères avant de chercher</li>
+      <li>Console logs détaillés : <code>[Recherche libre] orthopédiste → RPPS 23 / SIRENE 12 / FINESS 4 / visibles 28</code></li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +24 (1414 → 1438)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Type étab verrouillé</b> (4) : pas de onClick switch, badge verrouillé, bandeau recréation, payload sans est_partenaire</li>
+      <li><b>Icône voyante mine</b> (4) : taille 48, halo pulse-mine, gradient bleu-vert, badge "★ Mon étab"</li>
+      <li><b>Boutons popup</b> (4) : tel:, maps.google, mailto:, fiche</li>
+      <li><b>Recherche libre</b> (11) : state, layer init, fetchFreeSearch, drawFreeSearch, Promise.allSettled 3 APIs, debounce 600ms, min 3 chars, filtre bbox, markers colorés, input UI, bouton clear</li>
+      <li><b>Console logs debug</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>app/etablissement/fiche/page.js</code> : type étab verrouillé en édition · est_partenaire retiré du payload</li>
+    <li><code>app/carte/page.js</code> :
+      <ul>
+        <li>drawEtabs refondu (icône voyante + 4 boutons popup)</li>
+        <li>State freeSearch + layer freeSearchLayerRef</li>
+        <li>fetchFreeSearch + drawFreeSearch (Promise.allSettled sur 3 APIs)</li>
+        <li>useEffect debounce 600ms</li>
+        <li>UI input recherche libre dans panneau filtres</li>
+      </ul>
+    </li>
+    <li><code>__tests__/v055-47-carte-search-libre-type-verrou.test.js</code> : <b>NOUVEAU</b> · +24 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.47</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.47</li>
+    <li><code>package.json</code> : 0.55.46 → 0.55.47</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (<b>pas de SQL</b>)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.47 - Carte recherche libre + icones voyantes + type etab verrouille"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li><code>/etablissement/fiche</code> → essayer de cliquer sur "Partenaire" si étab géré → impossible, badge verrouillé visible</li>
+      <li><code>/carte</code> → mes étab apparaissent en GROS + pulsent en vert</li>
+      <li>Clic sur un de mes étab → popup avec 4 boutons (📞📍✉️📄)</li>
+      <li>Cliquer 📞 → ouvre tel:</li>
+      <li>Cliquer 📍 → ouvre Google Maps avec itinéraire</li>
+      <li>Cliquer 📄 → ouvre /etablissement/fiche?id=X</li>
+      <li>Barre recherche libre : taper <b>"orthopédiste"</b> → résultats avec markers violets/verts/bleus</li>
+      <li>Taper <b>"pharmacie"</b> → SIRENE remonte</li>
+      <li>Taper <b>"Mayrinhac"</b> → tout ce qui est à Mayrinhac</li>
+      <li>F12 Console → voir les logs <code>[Recherche libre] X → RPPS Y / SIRENE Z / FINESS W</code></li>
+    </ol>
+  </div>
+
+  <h2>🔜 Prochaine 0.55.48 — Continuation fiche patient</h2>
+  <ul>
+    <li>Nouvelle UI fiche patient avec onglets : Identité / Sécu-Mutuelle / Adresses / Contacts / Médecin</li>
+    <li>Intégration CaisseSearch + MutuelleSearch dans la fiche</li>
+    <li>Gestion 1-N des adresses de livraison</li>
+    <li>OCR bulletin de situation (Tesseract.js + Claude Vision API)</li>
+  </ul>
+
+  <h2>SW auto-bump — 57ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.46 → <b>0.55.47</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.47 · 31 mai 2026</p>
+    <p>Carte voyante · recherche libre 3 sources · type verrouillé · 1438 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

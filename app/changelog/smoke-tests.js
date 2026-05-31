@@ -27,6 +27,85 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.47 — Carte recherche libre + icônes voyantes + type étab verrouillé ==============
+  "0.55.47": async () => {
+    const results = [];
+
+    results.push(await runTest("Page /carte avec freeSearch", async () => {
+      const mod = await import("../carte/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Page /etablissement/fiche existe", async () => {
+      const mod = await import("../etablissement/fiche/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.46 — Refonte fiche patient + caisses/mutuelles + menu scan ==============
+  "0.55.46": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table caisses_assurance_maladie peuplée", async () => {
+      const { count, error } = await supabase
+        .from("caisses_assurance_maladie")
+        .select("*", { count: "exact", head: true });
+      if (error?.message?.match(/does not exist/)) {
+        return { ok: false, msg: "Table absente — Run patch 0.55.46" };
+      }
+      return { ok: (count || 0) > 50, msg: `${count} caisses` };
+    }));
+
+    results.push(await runTest("Table mutuelles peuplée", async () => {
+      const { count, error } = await supabase
+        .from("mutuelles")
+        .select("*", { count: "exact", head: true });
+      if (error?.message?.match(/does not exist/)) {
+        return { ok: false, msg: "Table absente" };
+      }
+      return { ok: (count || 0) > 20, msg: `${count} mutuelles` };
+    }));
+
+    results.push(await runTest("RPC search_caisses fonctionne", async () => {
+      const { data, error } = await supabase.rpc("search_caisses", {
+        p_query: "Paris", p_dept: null, p_limit: 5,
+      });
+      if (error) return { ok: false, msg: error.message };
+      return { ok: Array.isArray(data), msg: `${data?.length || 0} résultats` };
+    }));
+
+    results.push(await runTest("RPC search_mutuelles fonctionne", async () => {
+      const { data, error } = await supabase.rpc("search_mutuelles", {
+        p_query: "MGEN", p_limit: 5,
+      });
+      if (error) return { ok: false, msg: error.message };
+      return { ok: Array.isArray(data), msg: `${data?.length || 0} résultats` };
+    }));
+
+    results.push(await runTest("Colonnes patient enrichies", async () => {
+      const { error } = await supabase
+        .from("patients")
+        .select("numero_secu, caisse_id, mutuelle_id, contact_urgence_nom, bs_file_url")
+        .limit(1);
+      return { ok: !error?.message?.match(/column|does not exist/), msg: error ? "Manquantes" : "OK" };
+    }));
+
+    results.push(await runTest("Composant CaisseSearch importable", async () => {
+      const mod = await import("../CaisseSearch");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Composant MutuelleSearch importable", async () => {
+      const mod = await import("../MutuelleSearch");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.45 — Refonte API RPPS multi-critères + UI ==============
   "0.55.45": async () => {
     const results = [];

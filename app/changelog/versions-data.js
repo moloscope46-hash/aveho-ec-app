@@ -120,6 +120,45 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.47",
+    "kind": "version",
+    "titre": "🗺 Carte : icônes voyantes mes étab + boutons appel/GPS/email/fiche · Recherche libre (orthopédiste, pharmacie, ville…) en parallèle RPPS+SIRENE+FINESS · Type étab verrouillé après création",
+    "chantiers": [
+      { "code": "FE", "txt": "Page /etablissement/fiche : le type d'établissement (Mon collectivité / Partenaire) est maintenant VERROUILLÉ après création. Boutons remplacés par divs non-clickables avec opacity 0.55 + badge ambré '🔒 Verrouillé après création' + tooltip 'Le type d'établissement ne peut pas être modifié après création'. Bandeau info en bas : 'Pour changer, il faut supprimer puis recréer'. Côté backend : est_partenaire RETIRÉ du payload update — impossible de switcher accidentellement, même via DevTools" },
+      { "code": "FE", "txt": "Carte : icône VOYANTE pour mes établissements. Taille 48px (vs 38 pour partenaires), gradient bleu→vert (#185FA5→#5aa05a au lieu du bleu sombre), halo pulsant (animation pulse-mine 2s ease-out infinite, ring blanc 2px, box-shadow étendu rgba verte). Badge popup change : '★ Mon étab' (au lieu de 'Géré') sur fond vert dff5e0" },
+      { "code": "FE", "txt": "Popups étab carte enrichis avec 4 boutons d'action en pied (border-top séparateur) : 📞 Appeler (tel: nettoyé des espaces et points) en bleu si téléphone présent, 📍 Itinéraire (google.com/maps/dir/?api=1&destination=lat,lng) en ambre toujours présent, ✉️ Email (mailto:) en vert si email présent, 📄 Fiche (lien vers /etablissement/fiche?id=X pour mine ou /etablissements-partenaires?id=X pour partner) en violet" },
+      { "code": "FE", "txt": "Carte : nouvelle barre de RECHERCHE LIBRE en haut du panneau filtres. Tape n'importe quoi : 'orthopédiste', 'boulangerie', 'pharmacie de Mayrinhac', 'Paris'. Debounce 600ms. Cherche en parallèle (Promise.allSettled) dans 3 sources : /api/rpps (praticiens, max 60), /api/sirene (entreprises, max 40), /api/finess (établissements santé, max 40). Géocode les résultats sans coords via BAN, filtre par bbox visible" },
+      { "code": "FE", "txt": "Marqueurs recherche libre colorés par source : RPPS violet 🩺, SIRENE vert 🏪, FINESS bleu 🏥. Popup avec boutons actions identiques. Layer Leaflet dédié freeSearchLayerRef pour pouvoir clear/redraw indépendamment. Reverse géocodage BAN du centre de carte pour cibler la recherche sur la zone visible" },
+      { "code": "FE", "txt": "Compteur résultats live : badge violet 'X résultats' à droite du label. Bouton × pour clear la recherche. Min 3 caractères avant de chercher (sinon clear). Console logs détaillés [Recherche libre] avec les comptes par source" },
+      { "code": "AI", "txt": "+24 tests Vitest : type étab verrouillé (4), icône voyante mine (4), boutons popup (4), recherche libre state/funcs/UI (11), debug logs (1). Total 1438 tests verts (vs 1414)" }
+    ],
+    "themes": ["ui_ux", "fixes", "search"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.47.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.55.46",
+    "kind": "version",
+    "titre": "🏥 Refonte fiche patient niveau bulletin de situation · Tables caisses + mutuelles (seed 100+) · Adresses livraison séparées · Nouveau menu Outils scan (QR/code-barre/OCR) · Page placeholder bulletin de situation",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.46 : nouvelle table caisses_assurance_maladie (code_organisme unique, type CPAM/MSA/CGSS/CSSM, regime, departement, region, adresse, ville). Seed 105 lignes : 96 CPAM métropole + 5 CGSS/CSSM DROM + régimes spéciaux (CNMSS militaires, LMG fonctionnaires, CAMIEG, CAVIMAC, MNH, MSA agricole)" },
+      { "code": "SQL", "txt": "Nouvelle table mutuelles (numero_amc 8 chiffres unique, raison_sociale, type 'mutuelle'/'assurance'/'IP', categorie, gere_c2s pour Complémentaire Santé Solidaire). Seed 44 mutuelles principales : Harmonie, MGEN, Malakoff Humanis, AG2R, Mutuelle Générale, AÉSIO, Pro BTP, Mutex, MGEFI, MGP, UNEO, etc. avec leurs n° AMC connus publiquement" },
+      { "code": "SQL", "txt": "Nouvelle table patients_adresses_livraison (1-N par patient) : libelle ('Domicile', 'Travail', 'Maison campagne'), destinataire (si différent), adresse complète, code_porte digicode, instructions de livraison ('Sonner 2x', 'Au fond de la cour'), est_principale. RLS via membres_structure" },
+      { "code": "SQL", "txt": "20+ colonnes ajoutées sur table patients (idempotent via ADD COLUMN IF NOT EXISTS) : Identité (nom_naissance, sexe, lieu_naissance_ville/code_insee/pays, nationalite). Sécu (numero_secu NIR, caisse_id FK, code_organisme_rattachement, centre_paiement, regime_secu, qualite_assure, rang_naissance, date_debut/fin_droits, ald, ald_commentaire, cmu_c, c2s, ame). Mutuelle (mutuelle_id FK, mutuelle_numero_amc, mutuelle_numero_adherent, mutuelle_date_debut/fin_droits, tiers_payant_actif). Adresse (adresse, complement, code_postal, ville, pays). Contact (telephone_fixe, telephone_portable, email). Urgence (contact_urgence_nom/prenom/lien/telephone, personne_confiance_*). Médecin traitant (medecin_traitant_prenom/telephone/rpps/finess). Audit (source_creation, bs_file_url, bs_ocr_brut, bs_ocr_date, updated_at via trigger)" },
+      { "code": "SQL", "txt": "2 RPCs : search_caisses(p_query, p_dept, p_limit) et search_mutuelles(p_query, p_limit). Indexées + tolérantes à la casse. Visible par tous les authentifiés (référentiel public)" },
+      { "code": "BE", "txt": "Routes API /api/caisses (params q/dept/code) et /api/mutuelles (params q/amc). Proxy léger via Supabase RPC. Retournent {ok, count, results}" },
+      { "code": "FE", "txt": "Nouveaux composants autocomplete CaisseSearch et MutuelleSearch (style FinessSearch). Recherche live 300ms. CaisseSearch a un champ dept à côté + détection 9 chiffres = code organisme. MutuelleSearch détecte 8 chiffres = n° AMC, badges type (mutuelle vert / assurance bleu / IP violet) + badge C2S si gestionnaire" },
+      { "code": "FE", "txt": "Nouvelle catégorie de menu 'Outils scan' en 2ème position (juste après Mon espace, donc tout en haut). 4 entrées : 'Créer patient depuis bulletin' (file-scan vert), 'Scan QR code' (qrcode bleu), 'Scan code-barre' (barcode violet), 'OCR générique' (text-recognition ambre)" },
+      { "code": "FE", "txt": "Page placeholder /scan/bulletin-situation : explique le workflow (4 étapes), compteurs des référentiels disponibles (caisses, mutuelles, FINESS 540k+, RPPS 1,7M), stack technique prévue (Tesseract.js ou Claude Vision pour OCR, regex extraction NIR/AMC, archivage Supabase bucket). L'OCR complet arrive en 0.55.47" },
+      { "code": "AI", "txt": "+26 tests Vitest : tables (4), seed contenu (3), colonnes patient (6), adresses livraison (3), composants UI (2), APIs (2), menu (1), page placeholder (2), formats n° AMC/code (2), divers (1). Total 1414 tests verts (vs 1388)" }
+    ],
+    "themes": ["patient", "users", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.46.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.46.sql"
+  },
+  {
     "v": "0.55.45",
     "kind": "version",
     "titre": "🔍 Refonte recherche RPPS : multi-critères en parallèle (nom OU ville) · API audit + debug · /partenaires-rpps en autocomplete · Carte RPPS améliorée (reverse géocodage + limites)",

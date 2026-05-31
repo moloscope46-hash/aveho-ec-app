@@ -121,6 +121,11 @@ export default function CartePage() {
   const [sireneFilters, setSireneFilters] = useState([]); // ex: ["pharmacie", "matmed"]
   const [sireneLoading, setSireneLoading] = useState(false);
   const [sireneCount, setSireneCount] = useState(0);
+  // 0.55.47 : recherche libre (texte arbitraire — ville, profession, mot-clé)
+  const [freeSearch, setFreeSearch] = useState("");
+  const [freeSearchResults, setFreeSearchResults] = useState([]);
+  const [freeSearchLoading, setFreeSearchLoading] = useState(false);
+  const freeSearchLayerRef = useRef(null);
   // 0.55.41 : indicateur fraîcheur géoloc
   const [geolocLoading, setGeolocLoading] = useState(false);
   const [lastGeolocAt, setLastGeolocAt] = useState(null);
@@ -183,6 +188,7 @@ export default function CartePage() {
         finessOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.9
         rppsOverlayLayerRef.current = L.layerGroup().addTo(map);    // 0.55.38
         sireneOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.38
+        freeSearchLayerRef.current = L.layerGroup().addTo(map);     // 0.55.47 : recherche libre
         mapInstanceRef.current = map;
 
         // 4. Marqueur position user si dispo
@@ -253,41 +259,81 @@ export default function CartePage() {
     geolocalises.forEach(e => {
       // 0.55.3 : marqueur différencié selon est_partenaire
       const isPartner = e.est_partenaire;
+      // 0.55.47 : icône PLUS VOYANTE pour mes étab (taille 48 + halo pulsant)
+      const size = isPartner ? 38 : 48;
       const bgGradient = isPartner 
         ? "linear-gradient(135deg, #7CC8C8, #5a8f8f)"
-        : "linear-gradient(135deg, #185FA5, #1c5454)";
+        : "linear-gradient(135deg, #185FA5, #5aa05a)";  // Mine = bleu→vert plus voyant
       const emoji = isPartner ? "🏢" : "🏥";
-      
+      const haloHtml = isPartner ? "" : `
+        <span style="
+          position:absolute;inset:-6px;
+          border:3px solid #5aa05a;
+          border-radius:50%;
+          opacity:.55;
+          animation: pulse-mine 2s ease-out infinite;
+          pointer-events:none;
+        "></span>`;
+      const ringHtml = isPartner ? "" : `
+        <span style="
+          position:absolute;inset:-3px;
+          border:2px solid #fff;
+          border-radius:50%;
+          pointer-events:none;
+        "></span>`;
+
       const icon = L.divIcon({
-        className: "etab-marker",
-        html: `<div style="
-          width: 38px; height: 38px; 
-          background: ${bgGradient};
-          border: 3px solid #fff; border-radius: 50%;
-          box-shadow: 0 2px 8px rgba(20,33,49,.35);
-          display: flex; align-items: center; justify-content: center;
-          color: #fff; font-size: 18px;
-        ">${emoji}</div>`,
-        iconSize: [38, 38],
-        iconAnchor: [19, 19],
+        className: isPartner ? "etab-marker etab-partner" : "etab-marker etab-mine",
+        html: `<div style="position:relative;width:${size}px;height:${size}px;">
+          ${haloHtml}
+          <div style="
+            width: ${size}px; height: ${size}px; 
+            background: ${bgGradient};
+            border: 3px solid #fff; border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(20,33,49,.45)${isPartner ? "" : ", 0 0 0 4px rgba(90,160,90,.25)"};
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: ${size === 48 ? 22 : 18}px;
+            position:relative;z-index:2;
+          ">${emoji}</div>
+          ${ringHtml}
+        </div>
+        <style>
+          @keyframes pulse-mine {
+            0% { transform: scale(.85); opacity: .65; }
+            70% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(.85); opacity: 0; }
+          }
+        </style>`,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       });
 
       const marker = L.marker([Number(e.latitude), Number(e.longitude)], { icon }).addTo(etabsLayerRef.current);
+      const telClean = (e.telephone || "").replace(/[\s.]/g, "");
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
       const popupHtml = `
-        <div style="min-width: 220px; font-family: 'Segoe UI', sans-serif;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+        <div style="min-width: 240px; font-family: 'Segoe UI', sans-serif;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
             <div style="font-weight: 700; font-size: 15px; color: #142131;">${e.nom}</div>
             ${isPartner 
               ? `<span style="background:#e6f7f7;color:#1c5454;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.3px">Partenaire</span>` 
-              : `<span style="background:#eef5fc;color:#185FA5;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.3px">Géré</span>`}
+              : `<span style="background:#dff5e0;color:#2e6f33;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.3px">★ Mon étab</span>`}
           </div>
           ${e.type ? `<div style="font-size: 11px; color: #6c7a89; background: #eef5fc; display: inline-block; padding: 2px 8px; border-radius: 8px; margin-bottom: 6px;">${e.type}</div>` : ""}
           <div style="font-size: 12px; color: #2a3a48; line-height: 1.5; margin-top: 4px;">
             ${e.adresse ? `📍 ${e.adresse}<br/>` : ""}
             ${e.code_postal || e.ville ? `${e.code_postal || ""} ${e.ville || ""}<br/>` : ""}
-            ${e.telephone ? `📞 ${e.telephone}<br/>` : ""}
-            ${e.email ? `✉️ ${e.email}<br/>` : ""}
             ${e.capacite ? `🛏️ Capacité : ${e.capacite} lits` : ""}
+          </div>
+          <!-- 0.55.47 : boutons actions (téléphone, GPS, email, fiche) -->
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;border-top:1px solid #f4f7fa;padding-top:8px">
+            ${telClean ? `<a href="tel:${telClean}" style="background:#185FA515;color:#185FA5;border:1px solid #185FA540;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px">📞 Appeler</a>` : ""}
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" style="background:#EF9F2715;color:#EF9F27;border:1px solid #EF9F2740;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px">📍 Itinéraire</a>
+            ${e.email ? `<a href="mailto:${e.email}" style="background:#5aa05a15;color:#5aa05a;border:1px solid #5aa05a40;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px">✉️ Email</a>` : ""}
+            ${isPartner
+              ? `<a href="/etablissements-partenaires?id=${e.id}" style="background:#7a6fb015;color:#7a6fb0;border:1px solid #7a6fb040;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px">📄 Fiche</a>`
+              : `<a href="/etablissement/fiche?id=${e.id}" style="background:#7a6fb015;color:#7a6fb0;border:1px solid #7a6fb040;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:3px">📄 Fiche</a>`
+            }
           </div>
         </div>
       `;
@@ -511,6 +557,190 @@ export default function CartePage() {
       return null;
     }
   }
+
+  // 0.55.47 : recherche libre par mot-clé arbitraire (ex "orthopédiste", "boulangerie", "Paris")
+  // Lance 3 requêtes en parallèle : /api/rpps + /api/sirene + /api/finess
+  // Géocode avec BAN si pas de coords, ne garde que les résultats dans la bbox visible.
+  async function fetchFreeSearch(query) {
+    if (!query || query.length < 3) {
+      setFreeSearchResults([]);
+      if (freeSearchLayerRef.current) freeSearchLayerRef.current.clearLayers();
+      return;
+    }
+    if (!mapInstanceRef.current) return;
+    setFreeSearchLoading(true);
+    try {
+      const bounds = mapInstanceRef.current.getBounds();
+      const center = bounds.getCenter();
+      const villeAuCentre = await reverseLookupCity(center.lat, center.lng);
+
+      // 3 appels en parallèle
+      const [rppsRes, sireneRes, finessRes] = await Promise.allSettled([
+        fetch(`/api/rpps?q=${encodeURIComponent(query)}${villeAuCentre ? `&ville=${encodeURIComponent(villeAuCentre)}` : ""}&limit=60`)
+          .then(r => r.json()).catch(() => null),
+        fetch(`/api/sirene?q=${encodeURIComponent(query)}${villeAuCentre ? `&commune=${encodeURIComponent(villeAuCentre)}` : ""}&limit=40`)
+          .then(r => r.json()).catch(() => null),
+        fetch(`/api/finess?q=${encodeURIComponent(query)}&limit=40`)
+          .then(r => r.json()).catch(() => null),
+      ]);
+
+      const all = [];
+
+      // RPPS
+      const rpps = rppsRes.status === "fulfilled" ? rppsRes.value : null;
+      if (rpps?.ok && Array.isArray(rpps.results)) {
+        for (const r of rpps.results) {
+          all.push({
+            kind: "rpps",
+            id: `rpps-${r.rpps || r._fhirId || Math.random()}`,
+            nom: `${r.civilite || ""} ${r.prenom || ""} ${r.nom || ""}`.trim(),
+            sous_titre: r.profession || r.specialite || "",
+            adresse: r.adresse,
+            cp: r.cp,
+            commune: r.commune,
+            telephone: r.telephone,
+            email: r.email,
+            extra: { rpps: r.rpps, finess: r.finess, organization: r.organization_name },
+          });
+        }
+      }
+
+      // SIRENE
+      const sirene = sireneRes.status === "fulfilled" ? sireneRes.value : null;
+      if (sirene?.ok && Array.isArray(sirene.results)) {
+        for (const r of sirene.results) {
+          all.push({
+            kind: "sirene",
+            id: `sirene-${r.siret || Math.random()}`,
+            nom: r.denomination || r.nom || "(sans nom)",
+            sous_titre: r.activite_principale || r.naf || "",
+            adresse: r.adresse,
+            cp: r.code_postal,
+            commune: r.commune || r.ville,
+            telephone: r.telephone,
+            email: r.email,
+            extra: { siret: r.siret, siren: r.siren },
+            latitude: r.latitude,
+            longitude: r.longitude,
+          });
+        }
+      }
+
+      // FINESS
+      const finess = finessRes.status === "fulfilled" ? finessRes.value : null;
+      if (finess?.ok && Array.isArray(finess.results)) {
+        for (const r of finess.results) {
+          all.push({
+            kind: "finess",
+            id: `finess-${r.finess || Math.random()}`,
+            nom: r.raison_sociale || r.nom || "",
+            sous_titre: r.categorie_etablissement || r.libelle_categorie || "",
+            adresse: r.adresse,
+            cp: r.code_postal,
+            commune: r.commune,
+            telephone: r.telephone,
+            extra: { finess: r.finess },
+            latitude: r.latitude,
+            longitude: r.longitude,
+          });
+        }
+      }
+
+      // Géocoder les manquants
+      const toGeocode = all.filter(x => !x.latitude || !x.longitude);
+      const geocoded = await geocodeBatch(toGeocode.map(x => ({
+        ...x, adresse: x.adresse, code_postal: x.cp, ville: x.commune,
+      })));
+      // Remettre les lat/lng dans les items
+      for (let i = 0; i < toGeocode.length; i++) {
+        const g = geocoded[i];
+        if (g?.latitude && g?.longitude) {
+          toGeocode[i].latitude = g.latitude;
+          toGeocode[i].longitude = g.longitude;
+        }
+      }
+
+      // Filtre bbox
+      const visible = all.filter(x =>
+        x.latitude && x.longitude &&
+        x.latitude >= bounds.getSouth() && x.latitude <= bounds.getNorth() &&
+        x.longitude >= bounds.getWest() && x.longitude <= bounds.getEast()
+      );
+
+      console.log("[Recherche libre]", query,
+        "→ RPPS", rpps?.count || 0,
+        "/ SIRENE", sirene?.count || 0,
+        "/ FINESS", finess?.count || 0,
+        "/ visibles", visible.length);
+
+      drawFreeSearch(visible);
+      setFreeSearchResults(visible);
+    } catch (e) {
+      console.error("[Recherche libre]", e);
+      setFreeSearchResults([]);
+    } finally {
+      setFreeSearchLoading(false);
+    }
+  }
+
+  function drawFreeSearch(items) {
+    if (!window.L || !freeSearchLayerRef.current) return;
+    const L = window.L;
+    freeSearchLayerRef.current.clearLayers();
+
+    const colors = {
+      rpps: { bg: "#7a6fb0", emoji: "🩺" },
+      sirene: { bg: "#5aa05a", emoji: "🏪" },
+      finess: { bg: "#185FA5", emoji: "🏥" },
+    };
+
+    for (const it of items) {
+      const c = colors[it.kind] || { bg: "#EF9F27", emoji: "📍" };
+      const icon = L.divIcon({
+        className: "free-search-marker",
+        html: `<div style="
+          width: 30px; height: 30px;
+          background: ${c.bg};
+          border: 2px solid #fff; border-radius: 50%;
+          box-shadow: 0 2px 6px rgba(20,33,49,.4);
+          display: flex; align-items: center; justify-content: center;
+          color: #fff; font-size: 14px;
+        ">${c.emoji}</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+      const m = L.marker([it.latitude, it.longitude], { icon }).addTo(freeSearchLayerRef.current);
+      const telClean = (it.telephone || "").replace(/[\s.]/g, "");
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${it.latitude},${it.longitude}`;
+      m.bindPopup(`
+        <div style="min-width: 220px; font-family: 'Segoe UI', sans-serif;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div style="font-weight:700;font-size:14px;color:#142131">${it.nom}</div>
+            <span style="background:${c.bg}15;color:${c.bg};font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:8px;text-transform:uppercase">${it.kind}</span>
+          </div>
+          ${it.sous_titre ? `<div style="font-size:11px;color:#6c7a89;margin-bottom:4px">${it.sous_titre}</div>` : ""}
+          <div style="font-size:12px;color:#2a3a48;line-height:1.45">
+            ${it.adresse ? `📍 ${it.adresse}<br/>` : ""}
+            ${it.cp || it.commune ? `${it.cp || ""} ${it.commune || ""}` : ""}
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;border-top:1px solid #f4f7fa;padding-top:8px">
+            ${telClean ? `<a href="tel:${telClean}" style="background:#185FA515;color:#185FA5;border:1px solid #185FA540;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">📞 Appeler</a>` : ""}
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" style="background:#EF9F2715;color:#EF9F27;border:1px solid #EF9F2740;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">📍 Itinéraire</a>
+            ${it.email ? `<a href="mailto:${it.email}" style="background:#5aa05a15;color:#5aa05a;border:1px solid #5aa05a40;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">✉️ Email</a>` : ""}
+          </div>
+        </div>
+      `);
+    }
+  }
+
+  // Debounce sur le freeSearch
+  useEffect(() => {
+    if (!leafletReady) return;
+    const t = setTimeout(() => {
+      fetchFreeSearch(freeSearch.trim());
+    }, 600);
+    return () => clearTimeout(t);
+  }, [freeSearch, leafletReady]);
 
   // 0.55.41 : géocoder un batch d'adresses via BAN INSEE (cache par adresse)
   async function geocodeBatch(items) {
@@ -965,6 +1195,56 @@ export default function CartePage() {
                     </span>
                   )}
                 </div>
+              </div>
+            </Panel>
+
+            {/* 0.55.47 — Recherche libre par mot-clé/adresse (orthopédiste, boulangerie, Paris, etc.) */}
+            <Panel style={{ marginBottom: 12, padding: "12px 16px", background: "linear-gradient(135deg, #f3effa 0%, #fff 100%)", borderColor: "#d6c9ec" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <i className="ti ti-search" style={{ fontSize: 18, color: "#7a6fb0" }} />
+                <b style={{ fontSize: 13, color: "#142131" }}>Recherche libre sur la carte</b>
+                {freeSearchLoading && <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite", color: "#7a6fb0" }} />}
+                {!freeSearchLoading && freeSearchResults.length > 0 && (
+                  <span style={{ fontSize: 11, color: "#5a4a90", background: "#e9defc", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>
+                    {freeSearchResults.length} résultat{freeSearchResults.length > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              <div style={{ position: "relative" }}>
+                <input
+                  type="text"
+                  value={freeSearch}
+                  onChange={(e) => setFreeSearch(e.target.value)}
+                  placeholder='Tape "orthopédiste", "pharmacie", "Mayrinhac"…'
+                  style={{
+                    width: "100%",
+                    padding: "8px 30px 8px 32px",
+                    border: "1.5px solid #d6c9ec",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "inherit",
+                    background: "#fff",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <i className="ti ti-search" style={{
+                  position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)",
+                  color: "#7a6fb0", fontSize: 14, pointerEvents: "none",
+                }} />
+                {freeSearch && (
+                  <button
+                    onClick={() => setFreeSearch("")}
+                    style={{
+                      position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
+                      background: "transparent", border: "none", color: "#a0aeb9",
+                      cursor: "pointer", fontSize: 18, padding: 4,
+                    }}
+                    title="Effacer"
+                  >×</button>
+                )}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10.5, color: "#5a4a90", lineHeight: 1.5 }}>
+                <i className="ti ti-info-circle" /> Cherche en parallèle dans <b>RPPS (praticiens)</b>, <b>SIRENE (entreprises)</b> et <b>FINESS (établissements santé)</b>. Résultats limités à la zone visible — dézoome ou déplace la carte pour élargir.
               </div>
             </Panel>
 

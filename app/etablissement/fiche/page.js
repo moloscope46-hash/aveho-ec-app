@@ -115,7 +115,8 @@ export default function FicheEtablissementPage() {
         capacite: form.capacite ? parseInt(form.capacite) : null,
         latitude: form.latitude || null,
         longitude: form.longitude || null,
-        est_partenaire: form.est_partenaire === true,  // 0.55.7
+        // 0.55.47 : est_partenaire RETIRÉ du payload — verrouillé après création
+        // pour éviter qu'un étab passe accidentellement de mine à partner ou vice versa
       };
       
       await safeUpdate(supabase, "etablissements", payload, { id: auth.etabId }, { userId: auth.user?.id });
@@ -281,26 +282,33 @@ export default function FicheEtablissementPage() {
                 Identité
               </h3>
 
-              {/* 0.55.7 : sélecteur type établissement (collectivité vs partenaire) */}
+              {/* 0.55.7 : sélecteur type établissement (collectivité vs partenaire)
+                  0.55.47 : DÉSACTIVÉ en édition — le type est défini à la création */}
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: "#6c7a89", textTransform: "uppercase", letterSpacing: ".4px", fontWeight: 700, marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: "#6c7a89", textTransform: "uppercase", letterSpacing: ".4px", fontWeight: 700, marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
                   Type d'établissement
+                  <span style={{
+                    background: "#fff8ec", color: "#7a4f15",
+                    fontSize: 9.5, fontWeight: 700, padding: "1px 6px", borderRadius: 8,
+                    textTransform: "none", letterSpacing: 0,
+                  }}>
+                    <i className="ti ti-lock" style={{ fontSize: 10 }} /> Verrouillé après création
+                  </span>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }} className="modal-grid-2">
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, est_partenaire: false })}
+                  <div
                     style={{
-                      background: !form.est_partenaire ? "linear-gradient(135deg, #185FA5, #1c5454)" : "#fff",
-                      color: !form.est_partenaire ? "#fff" : "#142131",
+                      background: !form.est_partenaire ? "linear-gradient(135deg, #185FA5, #1c5454)" : "#f4f7fa",
+                      color: !form.est_partenaire ? "#fff" : "#a0aeb9",
                       border: `2px solid ${!form.est_partenaire ? "#185FA5" : "#e3e9ee"}`,
                       borderRadius: 10,
                       padding: "10px 12px",
-                      cursor: "pointer",
                       fontFamily: "inherit",
                       textAlign: "left",
-                      transition: "all .15s",
+                      opacity: !form.est_partenaire ? 1 : 0.55,
+                      cursor: "not-allowed",
                     }}
+                    title="Le type d'établissement ne peut pas être modifié après création"
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                       <i className="ti ti-home" style={{ fontSize: 16 }} />
@@ -309,21 +317,20 @@ export default function FicheEtablissementPage() {
                     <div style={{ fontSize: 11, opacity: 0.85, lineHeight: 1.35 }}>
                       Étab géré : patients, matériel, interventions. Disponible dans le switcher.
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, est_partenaire: true })}
+                  </div>
+                  <div
                     style={{
-                      background: form.est_partenaire ? "linear-gradient(135deg, #7CC8C8, #1c5454)" : "#fff",
-                      color: form.est_partenaire ? "#fff" : "#142131",
+                      background: form.est_partenaire ? "linear-gradient(135deg, #7CC8C8, #1c5454)" : "#f4f7fa",
+                      color: form.est_partenaire ? "#fff" : "#a0aeb9",
                       border: `2px solid ${form.est_partenaire ? "#7CC8C8" : "#e3e9ee"}`,
                       borderRadius: 10,
                       padding: "10px 12px",
-                      cursor: "pointer",
                       fontFamily: "inherit",
                       textAlign: "left",
-                      transition: "all .15s",
+                      opacity: form.est_partenaire ? 1 : 0.55,
+                      cursor: "not-allowed",
                     }}
+                    title="Le type d'établissement ne peut pas être modifié après création"
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
                       <i className="ti ti-route" style={{ fontSize: 16 }} />
@@ -332,7 +339,10 @@ export default function FicheEtablissementPage() {
                     <div style={{ fontSize: 11, opacity: 0.85, lineHeight: 1.35 }}>
                       Hôpital prescripteur, structure tierce. Référencé sans gestion patients/matériel.
                     </div>
-                  </button>
+                  </div>
+                </div>
+                <div style={{ marginTop: 6, padding: "6px 10px", background: "#fff8ec", border: "1px solid #f0d59f", borderRadius: 6, fontSize: 11, color: "#7a4f15" }}>
+                  <i className="ti ti-info-circle" /> Pour changer un partenaire en étab géré (ou vice-versa), il faut <b>supprimer puis recréer</b> la fiche.
                 </div>
               </div>
 
