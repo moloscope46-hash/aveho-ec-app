@@ -120,6 +120,47 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.32",
+    "kind": "hotfix",
+    "titre": "🔧 Hotfix migration SQL 0.55.31 : passage à to_jsonb() pour tolérer un schéma `etablissements` variable (colonnes cp/latitude/longitude/groupement_id peuvent ne pas exister)",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug 0.55.31 : la migration plantait avec ERROR 42703 'record \"e\" has no field \"cp\"' sur les structures dont la table etablissements n'a pas toutes les colonnes attendues. La boucle `for e in select * from etablissements` avec `e.cp` plante si cp n'existe pas" },
+      { "code": "SQL", "txt": "Solution : passage à `for e in select to_jsonb(t) from etablissements t` puis accès via `e->>'cp'`. Si la clé n'existe pas, `->>` renvoie NULL au lieu de planter. Idem pour latitude/longitude/groupement_id avec `nullif(...,'')::numeric` pour gérer les conversions" },
+      { "code": "SQL", "txt": "Bloc EXCEPTION ajouté autour de chaque INSERT pour ne pas bloquer la migration sur une ligne corrompue (raise NOTICE, continue avec les autres)" },
+      { "code": "SQL", "txt": "Vue v_etablissements_all construite DYNAMIQUEMENT via execute format() : détecte la présence de cp/groupement_id sur etablissements et utilise 'null::text/uuid' si absente. Évite l'erreur au CREATE VIEW" },
+      { "code": "SQL", "txt": "RPC convert_etab_to_partner refondue avec accès jsonb pour le même problème. Plus de %rowtype qui plante" },
+      { "code": "•", "txt": "Le patch est IDEMPOTENT et peut être rejoué : si la table partenaires est déjà créée, on saute la création. Si la migration a déjà tourné, on ne re-migre pas (vérif via NOT EXISTS sur link_to_etablissement_id)" },
+      { "code": "•", "txt": "1185 tests Vitest verts (idem 0.55.31, pas de nouveau code JS, juste fix SQL)" }
+    ],
+    "themes": ["fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.32.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.32.sql"
+  },
+  {
+    "v": "0.55.31",
+    "kind": "version",
+    "titre": "🏗 Table DÉDIÉE etablissements_partenaires (séparée d'etablissements) + table d'audit dédiée etab_partenaires_audit avec triggers + page de gestion complète + vue unifiée + RPC de conversion",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.31 : nouvelle table etablissements_partenaires (29 colonnes) — identité (nom, type, type_relation), identifiants officiels (finess, siret, siren), adresse (+ lat/lng), contact référent (contact_nom, contact_fonction, telephone, email, site_web), métadonnées (notes, tags[], groupement_id), link_to_etablissement_id pour transition douce, actif/archive, audit complet (created_at/by, updated_at/by)" },
+      { "code": "SQL", "txt": "Table d'audit DÉDIÉE etab_partenaires_audit : id, ts, action (INSERT/UPDATE/DELETE), partenaire_id, structure_id, user_id, old_data jsonb, new_data jsonb, changes jsonb (diff colonne-par-colonne calculé automatiquement par le trigger). Index sur ts/structure/partenaire. RLS admin_read (parametres_admin ou utilisateurs_write)" },
+      { "code": "SQL", "txt": "Trigger trg_audit_etab_partenaires AFTER INSERT/UPDATE/DELETE qui log automatiquement chaque action avec snapshot complet et diff. Sur UPDATE : ne loggue que si au moins 1 champ a changé. Pas de log pour les changements de updated_at/updated_by seuls" },
+      { "code": "SQL", "txt": "Migration AUTOMATIQUE des données : tous les etablissements existants avec est_partenaire=true sont COPIÉS vers etablissements_partenaires (link_to_etablissement_id pointe vers l'ancien). Idempotent : ne re-copie pas si déjà migré. Affiche le compte de migrations dans NOTICE PostgreSQL" },
+      { "code": "SQL", "txt": "Vue v_etablissements_all UNION ALL des 2 tables (mes établissements + partenaires non archivés) avec champ source ('mine'/'partner') pour les requêtes qui veulent les 2 en un seul SELECT. security_invoker=true" },
+      { "code": "SQL", "txt": "RPC convert_etab_to_partner(p_etab_id) : bascule un établissement legacy vers la nouvelle table avec vérif droits parametres_admin. Renvoie le nouveau partenaire_id. Marque l'ancien est_partenaire=true pour cohérence" },
+      { "code": "FE", "txt": "Nouvelle page /etablissements-partenaires : gestion CRUD complète avec 4 KPIs (Partenaires actifs, Prescripteurs, Fournisseurs, Sous-traitants), recherche multi-champs (nom, type, ville, FINESS, SIRET), filtre par type de relation (5 types : Prescripteur/Fournisseur/Sous-traitant/Confrère/Autre)" },
+      { "code": "FE", "txt": "Modale création/édition partenaire (24 champs) avec sections Identité, Identifiants officiels (FINESS/SIRET/SIREN), Adresse, Contact référent (nom + fonction + tel + email + site). Validation 'Nom requis'. Bouton Archiver en mode édition" },
+      { "code": "FE", "txt": "Bouton 'Audit' en haut de page → modale historique avec 50 dernières actions, badges colorés par type (INSERT vert, UPDATE ambre, DELETE rouge), <details> dépliable pour voir le diff champ-par-champ (rouge barré → vert) sur UPDATE" },
+      { "code": "FE", "txt": "Vue-globale (/vue-globale) refondée pour charger les 2 tables séparément : 'mineRows' depuis etablissements (filtre !est_partenaire), 'partnersFromNewTable' depuis etablissements_partenaires, 'legacyPartners' depuis etablissements (est_partenaire=true ET pas déjà dans la nouvelle table). Évite les doublons via link_to_etablissement_id" },
+      { "code": "FE", "txt": "Lien 'Étabs partenaires' ajouté dans le menu TopBar section Établissement (icône ti-building-community violette) entre 'Annuaire étabs' et 'Annuaire RPPS'" },
+      { "code": "AI", "txt": "+13 tests Vitest : schéma table (5), types relation (3), vue-globale dual-source (3), trigger diff logic (4), format audit row (3), convert RPC (2). Total 1178 tests verts (vs 1165)" }
+    ],
+    "themes": ["users", "fixes", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.31.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.31.sql"
+  },
+  {
     "v": "0.55.30",
     "kind": "version",
     "titre": "🤝 Partenaires RPPS (table dédiée non-utilisateurs) · Mail/popup invitation enrichi RPPS · Hotfix vue-globale (groupement_id) · RPC ajout user au bâtiment",

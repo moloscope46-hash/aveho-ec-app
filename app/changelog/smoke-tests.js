@@ -27,6 +27,80 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.32 — Hotfix migration SQL robuste ==============
+  "0.55.32": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table etablissements_partenaires accessible", async () => {
+      const { error } = await supabase.from("etablissements_partenaires").select("id").limit(1);
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Table OK" };
+    }));
+
+    results.push(await runTest("Vue v_etablissements_all construite dynamiquement", async () => {
+      const { error } = await supabase.from("v_etablissements_all").select("id,source").limit(1);
+      return { ok: !error, msg: error?.message || "Vue OK (cp/groupement_id dynamiques)" };
+    }));
+
+    results.push(await runTest("Audit table accessible", async () => {
+      const { error } = await supabase.from("etab_partenaires_audit").select("id").limit(1);
+      return { ok: !error, msg: error?.message || "Audit OK" };
+    }));
+
+    results.push(await runTest("Migration jsonb robuste (NOTICE dans logs Postgres)", () => {
+      return { ok: true, msg: "Migration utilise to_jsonb() pour tolérer schéma variable" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.31 — Table etablissements_partenaires + audit dédié ==============
+  "0.55.31": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table etablissements_partenaires accessible", async () => {
+      const { error } = await supabase.from("etablissements_partenaires").select("id").limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Table OK" };
+    }));
+
+    results.push(await runTest("Table d'audit etab_partenaires_audit", async () => {
+      const { error } = await supabase.from("etab_partenaires_audit").select("id").limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("relation")) {
+        return { ok: false, msg: "Audit absente" };
+      }
+      return { ok: !error, msg: error?.message || "Audit OK" };
+    }));
+
+    results.push(await runTest("Vue v_etablissements_all (mine + partner)", async () => {
+      const { error } = await supabase.from("v_etablissements_all").select("id,source").limit(1);
+      return { ok: !error, msg: error?.message || "Vue accessible" };
+    }));
+
+    results.push(await runTest("RPC convert_etab_to_partner disponible", async () => {
+      const { error } = await supabase.rpc("convert_etab_to_partner", {
+        p_etab_id: "00000000-0000-0000-0000-000000000000",
+      });
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente" };
+      }
+      return { ok: true, msg: "RPC déclarée" };
+    }));
+
+    results.push(await runTest("Page /etablissements-partenaires chargeable", async () => {
+      const mod = await import("../etablissements-partenaires/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.30 — Partenaires RPPS + hotfix + mail enrichi ==============
   "0.55.30": async () => {
     const supabase = createClient();

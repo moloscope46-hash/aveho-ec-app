@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.55.32 — Migration SQL robuste</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:840px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde0db;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fde0db;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fde0db}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">HOTFIX — MIGRATION SQL ROBUSTE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.55.32 — Fix erreur 42703 sur migration etablissements → partenaires
+      <small>La table etablissements peut ne pas avoir toutes les colonnes attendues (cp, latitude, longitude, groupement_id) selon la structure cliente. Migration via to_jsonb() pour tolérer schéma variable.</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.32-alpha</code></span>
+      <span><b>Tests :</b> 1185 verts (idem 0.55.31)</span>
+    </div>
+  </header>
+
+  <h2>❌ Le bug de la 0.55.31</h2>
+  <div class="panel danger">
+    <pre><code>ERROR: 42703: record "e" has no field "cp"
+CONTEXT: SQL statement "insert into etablissements_partenaires (
+    structure_id, nom, type, adresse, cp, ville, latitude, longitude, ...
+)
+values (
+    e.structure_id, e.nom, e.type, e.adresse, e.cp, e.ville, e.latitude, e.longitude, ...
+)"</code></pre>
+    <p>La boucle utilisait <code>for e in select * from etablissements</code> puis accédait à <code>e.cp</code>, <code>e.latitude</code>, etc. Si la colonne n'existe pas sur ta table, plantage immédiat.</p>
+  </div>
+
+  <h2>✅ La solution 0.55.32</h2>
+  <div class="panel hi">
+    <p><b>Passage à un accès jsonb tolérant :</b></p>
+    <pre><code>for e in
+  select to_jsonb(t) from etablissements t
+  where t.est_partenaire = true
+    and not exists (
+      select 1 from etablissements_partenaires ep
+      where ep.link_to_etablissement_id = t.id
+    )
+loop
+  begin
+    insert into etablissements_partenaires (...)
+    values (
+      (e-&gt;&gt;'structure_id')::uuid,
+      e-&gt;&gt;'nom',
+      e-&gt;&gt;'cp',                   -- NULL si pas de colonne cp
+      nullif(e-&gt;&gt;'latitude', '')::numeric,   -- NULL si vide
+      ...
+    );
+  exception when others then
+    raise notice 'Migration partenaire échouée (id=%) : %', e-&gt;&gt;'id', SQLERRM;
+    -- continue avec les autres
+  end;
+end loop;</code></pre>
+    <p><b>Bénéfices :</b></p>
+    <ul>
+      <li>Si une colonne n'existe pas, <code>e-&gt;&gt;'nom_colonne'</code> renvoie <code>NULL</code> au lieu de planter</li>
+      <li>Le bloc EXCEPTION continue la boucle même si une ligne échoue (le log NOTICE permet de savoir laquelle)</li>
+      <li>Marche sur n'importe quelle variation de schéma <code>etablissements</code></li>
+    </ul>
+  </div>
+
+  <h2>Autres corrections</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Vue v_etablissements_all dynamique</h3>
+    <p>Construite via <code>execute format()</code> qui détecte la présence de <code>cp</code> et <code>groupement_id</code> sur <code>etablissements</code> avant le CREATE VIEW.</p>
+
+    <h3>RPC convert_etab_to_partner</h3>
+    <p>Refondue avec accès jsonb (plus de <code>%rowtype</code>).</p>
+  </div>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.55.32.sql</code> → <b>Run</b>
+        <ul>
+          <li>Si tu avais déjà partiellement joué le 0.55.31, le 0.55.32 reprend tout proprement (idempotent)</li>
+          <li>La table etablissements_partenaires est créée si absente</li>
+          <li>La migration tolère désormais les colonnes manquantes</li>
+        </ul>
+      </li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.32 - Hotfix migration SQL via to_jsonb (schema robuste)"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Le SQL doit s'exécuter <b>sans erreur 42703</b></li>
+      <li>Dans les messages Postgres, vérifie le NOTICE : <code>Migration : N partenaires copiés vers etablissements_partenaires</code></li>
+      <li>Si N=0, c'est que tu n'avais aucun établissement avec est_partenaire=true (normal)</li>
+      <li>Page <code>/etablissements-partenaires</code> charge sans erreur ✓</li>
+      <li>Page <code>/vue-globale</code> charge sans erreur 400 ✓</li>
+      <li>Smoke tests 0.55.32 dans le changelog → 4 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 42ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.31 → <b>0.55.32</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.55.32 · 31 mai 2026</p>
+    <p>Migration SQL robuste · to_jsonb() pour tolérer schéma variable · 1185 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
