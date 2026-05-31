@@ -27,6 +27,44 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.36 — Photos établissements via Wikipedia ==============
+  "0.55.36": async () => {
+    const results = [];
+
+    results.push(await runTest("Composant EtabPhoto importable", async () => {
+      const mod = await import("../components/EtabPhoto");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("API Wikipedia atteignable (CORS)", async () => {
+      try {
+        const res = await fetch("https://fr.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=Aveho&gsrlimit=1&format=json&origin=*", { mode: "cors" });
+        return { ok: res.ok, msg: res.ok ? "Wikipedia accessible" : `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: "Wikipedia bloqué : " + e.message };
+      }
+    }));
+
+    results.push(await runTest("localStorage disponible pour cache photos", () => {
+      try {
+        const k = "aveho:test-" + Date.now();
+        localStorage.setItem(k, "1");
+        const ok = localStorage.getItem(k) === "1";
+        localStorage.removeItem(k);
+        return { ok, msg: ok ? "Cache OK" : "localStorage indisponible" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /vue-globale chargeable avec EtabPhoto", async () => {
+      const mod = await import("../vue-globale/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.35 — Fix RPPS 502/403 + auto-link FINESS ==============
   "0.55.35": async () => {
     const results = [];

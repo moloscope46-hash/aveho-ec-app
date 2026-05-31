@@ -9,6 +9,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
+import EtabPhoto from "../components/EtabPhoto";
 
 export default function VueGlobale() {
   const supabase = createClient();
@@ -173,20 +174,24 @@ export default function VueGlobale() {
               {filteredRows.map((e) => (
                 <div className="mag-tile" key={e.id} onClick={() => entrer(e)}>
                   <div className="mag-photo" style={{
-                    background: e.est_partenaire
-                      ? "linear-gradient(135deg,#7a6fb0,#bfa9e0)"
-                      : "linear-gradient(135deg,#142131,#2a5a5a)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
                     position: "relative",
+                    overflow: "hidden",
                   }}>
-                    <i className={`ti ${e.est_partenaire ? "ti-building-community" : "ti-building-hospital"}`}
-                       style={{ fontSize: 40, color: e.est_partenaire ? "#fff" : "#7CC8C8" }} />
+                    {/* 0.55.36 : photo bannière via Wikipedia + fallback gradient */}
+                    <EtabPhoto
+                      nom={e.nom}
+                      ville={e.ville}
+                      type={e.type}
+                      height={140}
+                      borderRadius={0}
+                    />
                     {e.est_partenaire && (
                       <span style={{
                         position: "absolute", top: 8, right: 8,
                         background: "#7a6fb0", color: "#fff",
                         padding: "2px 8px", borderRadius: 8,
                         fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                        zIndex: 2,
                       }}>
                         PARTENAIRE
                       </span>

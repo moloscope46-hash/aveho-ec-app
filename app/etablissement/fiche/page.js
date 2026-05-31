@@ -15,6 +15,7 @@ import FinessSearch from "../../FinessSearch";
 import SireneSearch from "../../SireneSearch";
 import { logEvent } from "../../../lib/events";
 import { safeUpdate } from "../../../lib/safeWrite";
+import EtabPhoto from "../../components/EtabPhoto";
 
 const TYPES_ETAB = [
   "EHPAD", "EHPA", "Hôpital", "Clinique", "Foyer", 
@@ -159,6 +160,34 @@ export default function FicheEtablissementPage() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
+        {/* 0.55.36 — Bannière photo de l'établissement */}
+        {etab?.nom && (
+          <div style={{ position: "relative", marginBottom: 14, borderRadius: 12, overflow: "hidden" }}>
+            <EtabPhoto
+              nom={etab.nom}
+              ville={etab.ville}
+              type={etab.type}
+              height={180}
+              borderRadius={12}
+            />
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              background: "linear-gradient(to top, rgba(20,33,49,0.88), rgba(20,33,49,0.2) 60%, transparent)",
+              color: "#fff",
+              padding: "30px 22px 16px",
+            }}>
+              <div style={{ fontSize: 11, letterSpacing: 2, fontWeight: 700, color: "#cfe4f5", marginBottom: 4 }}>
+                ÉTABLISSEMENT
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1.1 }}>{etab.nom}</div>
+              <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>
+                {etab.type || "—"}{etab.ville ? ` · ${etab.ville}` : ""}
+                {etab.finess && <span style={{ marginLeft: 8, background: "rgba(255,255,255,0.18)", padding: "1px 8px", borderRadius: 6, fontSize: 11, fontFamily: "Consolas, monospace" }}>FINESS {etab.finess}</span>}
+              </div>
+            </div>
+          </div>
+        )}
+
         <PageHead
           eyebrow="ADMIN · ÉTABLISSEMENT"
           icon="ti-building-hospital"

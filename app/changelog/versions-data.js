@@ -120,6 +120,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.36",
+    "kind": "version",
+    "titre": "📸 Photos établissements via Wikipedia API (gratuit, sans clé) · Bannières dans /vue-globale, /etablissement/fiche, /etablissements-partenaires · Cache localStorage 7 jours · Fallback gradient par type",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouveau composant EtabPhoto.js réutilisable : tente de récupérer une photo de l'établissement via l'API Wikipedia FR (gratuite, sans clé, CORS OK avec origin=*). Requête en un seul appel via generator=search + prop=pageimages + pithumbsize=600. Si succès → affiche l'image en cover. Sinon → fallback gradient + icône colorée par type" },
+      { "code": "FE", "txt": "Mapping type → icône+gradient : Hôpital (bleu hospital), EHPAD (violet community), Clinique (vert stethoscope), Cabinet (ambre prescription), Pharmacie (rouge pill), Fournisseur (teal truck), Sous-traitant (ambre handshake), Autre (gris building). Détection par prefix dans le type (4 premiers chars lowercase)" },
+      { "code": "FE", "txt": "Cache intelligent à 2 niveaux : (1) Mémoire RAM via Map() pour éviter les requêtes parallèles concurrentes pendant la session, (2) localStorage avec TTL 7 jours. Cache aussi les ÉCHECS (URL vide) pour ne pas re-tenter inutilement la même recherche. Clé cache = nom|ville" },
+      { "code": "FE", "txt": "Skeleton loader animé (gradient 90deg animé) pendant la requête Wikipedia. Affichage de la photo en background-image avec gradient overlay foncé en bas pour lisibilité du texte. Watermark discret 'Wikipedia' en bas à droite pour attribution" },
+      { "code": "FE", "txt": "Intégration dans /vue-globale : remplace le simple gradient dans .mag-photo par EtabPhoto avec hauteur 140px. Le badge 'PARTENAIRE' violet est conservé en overlay top-right avec z-index 2" },
+      { "code": "FE", "txt": "Intégration dans /etablissement/fiche : bannière full-width 180px en haut de page avec dégradé navy bas → transparent haut + nom de l'établissement + type + ville + badge FINESS en overlay. Effet hero comme sur Booking/Airbnb" },
+      { "code": "FE", "txt": "Intégration dans /etablissements-partenaires : bannière 100px en tête de chaque tuile + avatar coloré 44x44 (selon type_relation) qui chevauche la photo (margin-top négatif, border 2px blanc, shadow). Hover lift effet (translateY -2px + shadow)" },
+      { "code": "FE", "txt": "Modale édition partenaire : bannière photo 140px en haut avec overlay sombre gradient bas + nom + ville. Look pro et identifiable d'un coup d'œil. Affichage uniquement en mode édition (pas en création vu qu'on n'a pas encore les infos)" },
+      { "code": "AI", "txt": "+19 tests Vitest : construction URL Wikipedia (5), parsing réponse (3), cache localStorage TTL 7j (4), fallback par type (5), query construction (2). Total 1265 tests verts (vs 1246)" }
+    ],
+    "themes": ["ui_ux", "users"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.36.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.35",
     "kind": "hotfix",
     "titre": "🩹 Fix API RPPS HTTP 403/502 (ville sans nom) · Auto-rattachement RPPS→FINESS · Validation 2 lettres min · Rebuild qui devrait corriger 'kind is not defined' (résidu ancien bundle)",

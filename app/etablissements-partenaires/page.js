@@ -16,6 +16,7 @@ import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import Modal from "../components/Modal";
 import ContactActions from "../components/ContactActions";
+import EtabPhoto from "../components/EtabPhoto";
 import SireneSearch from "../SireneSearch";
 import FinessSearch from "../FinessSearch";
 import { dialogs } from "../dialogs";
@@ -283,20 +284,32 @@ export default function EtablissementsPartenaires() {
                   style={{
                     background: "#fff",
                     borderRadius: 12,
-                    padding: 14,
                     cursor: "pointer",
                     border: "1px solid #e3e9ee",
                     transition: "all 0.15s",
+                    overflow: "hidden",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = typeRel?.c || "#7a6fb0"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e3e9ee"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = typeRel?.c || "#7a6fb0"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(20,33,49,0.08)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e3e9ee"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
                 >
+                  {/* 0.55.36 : photo bannière en haut de la tuile */}
+                  <EtabPhoto
+                    nom={p.nom}
+                    ville={p.ville}
+                    type={p.type || p.type_relation}
+                    height={100}
+                    borderRadius={0}
+                  />
+                  <div style={{ padding: 14 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                     <div style={{
                       width: 44, height: 44, borderRadius: 10,
                       background: `linear-gradient(135deg, ${typeRel?.c || "#7a6fb0"}, #bfa9e0)`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
+                      marginTop: -32,
+                      boxShadow: "0 2px 6px rgba(20,33,49,0.2)",
+                      border: "2px solid #fff",
                     }}>
                       <i className="ti ti-building-community" style={{ fontSize: 22, color: "#fff" }} />
                     </div>
@@ -342,6 +355,7 @@ export default function EtablissementsPartenaires() {
                         />
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               );
@@ -415,6 +429,33 @@ export default function EtablissementsPartenaires() {
         }
       >
         <div style={{ display: "grid", gap: 12 }}>
+          {/* 0.55.36 — Photo bannière de l'étab (mode édition) */}
+          {editModal?.mode === "edit" && editModal.data?.nom && (
+            <div style={{ position: "relative", marginBottom: 4 }}>
+              <EtabPhoto
+                nom={editModal.data.nom}
+                ville={editModal.data.ville}
+                type={editModal.data.type || editModal.data.type_relation}
+                height={140}
+                borderRadius={10}
+              />
+              <div style={{
+                position: "absolute", bottom: 0, left: 0, right: 0,
+                background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
+                color: "#fff",
+                padding: "20px 16px 12px",
+                borderRadius: "0 0 10px 10px",
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{editModal.data.nom}</div>
+                {editModal.data.ville && (
+                  <div style={{ fontSize: 12, opacity: 0.9 }}>
+                    <i className="ti ti-map-pin" /> {editModal.data.ville}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 0.55.34 — Bloc recherche FINESS / SIRENE pour création */}
           {editModal?.mode === "create" && (
             <div style={{

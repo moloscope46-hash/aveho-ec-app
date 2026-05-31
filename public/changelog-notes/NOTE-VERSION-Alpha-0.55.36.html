@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.36 — Photos établissements via Wikipedia</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — PHOTOS ÉTABLISSEMENTS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.36 — Photos des établissements via Wikipedia API
+      <small>Gratuit, sans clé, cache 7 jours · bannières dans vue-globale, fiche étab, partenaires · fallback gradient par type</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.36-alpha</code></span>
+      <span><b>Tests :</b> 1265 verts (+19)</span>
+    </div>
+  </header>
+
+  <h2>📸 1. Composant EtabPhoto — récupération auto via Wikipedia</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Pourquoi Wikipedia plutôt que Google Places ?</h3>
+    <ul>
+      <li><b>Gratuit</b> (Google Places facture par requête, ~$17 / 1000 req)</li>
+      <li><b>Pas de clé API</b> à gérer/sécuriser</li>
+      <li><b>CORS OK</b> avec <code>origin=*</code></li>
+      <li>~95% des hôpitaux, EHPAD et grosses cliniques sont sur Wikipedia FR avec photo</li>
+      <li>Les cabinets et petits commerces ne le sont pas → fallback gradient propre</li>
+    </ul>
+
+    <h3>L'API en un seul appel</h3>
+    <pre><code>https://fr.wikipedia.org/w/api.php
+  ?action=query
+  &generator=search          ← cherche par texte
+  &gsrsearch=Hopital+Saint-Joseph+Paris
+  &gsrlimit=1                ← 1 résultat suffit
+  &prop=pageimages           ← inclut le thumbnail
+  &pithumbsize=600           ← taille lisible bannière
+  &format=json
+  &origin=*                  ← CORS</code></pre>
+    <p>Réponse : on extrait <code>pages[0].thumbnail.source</code> qui est l'URL de l'image.</p>
+  </div>
+
+  <h2>⚡ 2. Cache 2 niveaux (mémoire + localStorage 7 jours)</h2>
+  <div class="panel">
+    <ol>
+      <li><b>Mémoire RAM</b> via <code>Map()</code> globale : évite les requêtes parallèles concurrentes pendant la session (si 5 cartes affichent le même étab, 1 seul fetch)</li>
+      <li><b>localStorage</b> avec TTL 7 jours : persiste entre rechargements/sessions</li>
+      <li><b>Cache aussi les échecs</b> (URL vide) pour ne pas re-demander "Hôpital X" qui n'est pas sur Wikipedia</li>
+    </ol>
+    <p>Clé cache : <code>nom|ville</code>. Stockée en <code>aveho:etab-photo:Hôpital Saint-Joseph|Paris</code>.</p>
+  </div>
+
+  <h2>🎨 3. Fallback gradient par type</h2>
+  <div class="panel">
+    <p>Si Wikipedia n'a pas la photo → gradient esthétique + icône selon le type :</p>
+    <table style="width:100%; border-collapse: collapse; font-size: 12.5px;">
+      <tr style="border-bottom:1px solid #e3e9ee">
+        <th style="text-align:left; padding:6px">Type</th>
+        <th style="text-align:left; padding:6px">Icône</th>
+        <th style="text-align:left; padding:6px">Gradient</th>
+      </tr>
+      <tr><td style="padding:5px">Hôpital</td><td><code>ti-building-hospital</code></td><td><span style="display:inline-block;width:100px;height:18px;background:linear-gradient(135deg, #185FA5, #7CC8C8);border-radius:4px"></span></td></tr>
+      <tr><td style="padding:5px">EHPAD</td><td><code>ti-building-community</code></td><td><span style="display:inline-block;width:100px;height:18px;background:linear-gradient(135deg, #7a6fb0, #bfa9e0);border-radius:4px"></span></td></tr>
+      <tr><td style="padding:5px">Clinique</td><td><code>ti-stethoscope</code></td><td><span style="display:inline-block;width:100px;height:18px;background:linear-gradient(135deg, #5aa05a, #a8d590);border-radius:4px"></span></td></tr>
+      <tr><td style="padding:5px">Cabinet</td><td><code>ti-prescription</code></td><td><span style="display:inline-block;width:100px;height:18px;background:linear-gradient(135deg, #EF9F27, #f5c673);border-radius:4px"></span></td></tr>
+      <tr><td style="padding:5px">Pharmacie</td><td><code>ti-pill</code></td><td><span style="display:inline-block;width:100px;height:18px;background:linear-gradient(135deg, #c0392b, #e8857a);border-radius:4px"></span></td></tr>
+      <tr><td style="padding:5px">Fournisseur</td><td><code>ti-truck-delivery</code></td><td><span style="display:inline-block;width:100px;height:18px;background:linear-gradient(135deg, #2a5a5a, #7CC8C8);border-radius:4px"></span></td></tr>
+    </table>
+  </div>
+
+  <h2>🖼 4. Intégrations partout</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Page /vue-globale</h3>
+    <p>Le simple gradient des tuiles est remplacé par EtabPhoto 140px. Badge "PARTENAIRE" violet en overlay top-right préservé.</p>
+
+    <h3>Page /etablissement/fiche</h3>
+    <p>Bannière full-width 180px en haut de page avec dégradé navy bas → transparent haut + nom + type + ville + badge FINESS. Effet hero <i>style Booking</i>.</p>
+
+    <h3>Page /etablissements-partenaires</h3>
+    <p>Bannière 100px en tête de chaque tuile + avatar coloré 44x44 qui chevauche la photo (margin-top négatif, border 2px blanc, shadow). Hover lift effet (translateY -2px + shadow).</p>
+
+    <h3>Modale édition partenaire</h3>
+    <p>Bannière photo 140px en haut de la modale avec overlay sombre + nom + ville (mode édition uniquement).</p>
+  </div>
+
+  <h2>🌀 Skeleton loader pendant la requête</h2>
+  <div class="panel">
+    <p>Avant que la photo arrive, on affiche un skeleton animé (gradient 90deg qui défile) pour éviter le saut de mise en page :</p>
+    <pre><code>@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}</code></pre>
+    <p>Le composant gère 3 états : <b>loading</b> (skeleton) · <b>photo trouvée</b> (image cover) · <b>fallback</b> (gradient + icône).</p>
+  </div>
+
+  <h2>📈 Tests +19 (1246 → 1265)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-36-etab-photo.test.js</code> :</p>
+    <ul>
+      <li><b>URL Wikipedia</b> (5) : encoding, CORS, prop pageimages, taille 600px, gsrlimit=1</li>
+      <li><b>Parsing réponse</b> (3) : extraction thumbnail.source, gestion null, page sans thumbnail</li>
+      <li><b>Cache localStorage</b> (4) : set/get, cache échec, null si absent, expiration 7j</li>
+      <li><b>Fallback par type</b> (5) : Hôpital/EHPAD/Hôpital prefix/inconnu/vide</li>
+      <li><b>Query construction</b> (2) : nom+ville combinés ou juste nom</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>app/components/EtabPhoto.js</code> : <b>NOUVEAU</b> · composant réutilisable avec Wikipedia + cache + fallback</li>
+    <li><code>app/vue-globale/page.js</code> : EtabPhoto dans .mag-photo</li>
+    <li><code>app/etablissement/fiche/page.js</code> : bannière 180px en hero au-dessus du PageHead</li>
+    <li><code>app/etablissements-partenaires/page.js</code> : bannière 100px tête de tuile + avatar chevauchant + modale édition</li>
+    <li><code>__tests__/v055-36-etab-photo.test.js</code> : <b>NOUVEAU</b> · +19 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.36 (4 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.36</li>
+    <li><code>package.json</code> : 0.55.35 → 0.55.36</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL requis)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.36 - Photos etablissements via Wikipedia + bannieres + fallback gradient"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Page <code>/vue-globale</code> → tuiles avec photos (pour les grands hôpitaux) ou gradients (pour les petits)</li>
+      <li>Page <code>/etablissement/fiche</code> → bannière hero en haut</li>
+      <li>Page <code>/etablissements-partenaires</code> → tuiles avec photo bannière + avatar chevauchant</li>
+      <li>Skeleton animé visible 0.5-2s avant la photo (selon ta connexion)</li>
+      <li>Re-charger la même page → photos instantanées (cache localStorage)</li>
+      <li>Inspecter localStorage : clés <code>aveho:etab-photo:*</code></li>
+      <li>Smoke tests 0.55.36 → 4 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>🔜 À venir 0.55.37</h2>
+  <div class="panel">
+    <ul>
+      <li><b>Carte /carte</b> avec filtres croisés : RPPS + SIREN + FINESS sur la même carte</li>
+      <li>Layers toggleables : Mes étabs / Partenaires / Praticiens RPPS</li>
+      <li>Recherche en direct sur les 3 API depuis la carte</li>
+    </ul>
+  </div>
+
+  <h2>SW auto-bump — 46ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.35 → <b>0.55.36</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.36 · 31 mai 2026</p>
+    <p>Photos établissements Wikipedia · cache 7 jours · fallback par type · bannières partout · 1265 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
