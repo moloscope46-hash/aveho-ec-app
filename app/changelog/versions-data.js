@@ -120,6 +120,44 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.44",
+    "kind": "hotfix",
+    "titre": "🩹 Fix SQL 'column rpps does not exist' · Colonne rpps + adeli + profession + specialite ajoutées sur etablissements_partenaires AVANT les index",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug SQL 'ERROR 42703: column rpps does not exist' lors de l'exécution du patch 0.55.43 : la table etablissements_partenaires n'avait pas encore de colonne rpps mais le patch tentait de créer un index dessus. Ordre des instructions incorrect" },
+      { "code": "SQL", "txt": "Patch 0.55.44 : ALTER TABLE etablissements_partenaires ADD COLUMN IF NOT EXISTS rpps text, adeli text, profession text, specialite text (toutes idempotentes). Puis recrée les 3 colonnes traçabilité doublon. PUIS les 5 index. PUIS la RPC check_etab_doublon. PUIS la vue v_doublons_forces. Tout dans le bon ordre" },
+      { "code": "SQL", "txt": "Le patch 0.55.43 a été corrigé aussi (ajout colonnes rpps en première instruction) pour quiconque le rejouerait. Hotfix 100% idempotent — peut être rejoué même si 0.55.43 a partiellement échoué" },
+      { "code": "AI", "txt": "+6 tests Vitest : colonne rpps ajoutée, ordre col avant index, autres colonnes RPPS, patch 0.55.43 corrigé, idempotence (IF NOT EXISTS partout), RPC recréée. Total 1373 tests verts (vs 1367)" }
+    ],
+    "themes": ["fixes", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.44.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.44.sql"
+  },
+  {
+    "v": "0.55.43",
+    "kind": "version",
+    "titre": "🛡 Système anti-doublon réutilisable · RPC check_etab_doublon · Composant DoublonAlert + EtabAutoFiller · Nouveau droit force_doublon_etab · Commentaire obligatoire avec traçabilité",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.43 : 3 nouvelles colonnes sur etablissements ET etablissements_partenaires : doublon_force_commentaire (texte), doublon_force_par (uuid → auth.users), doublon_force_at (timestamptz). Index sur finess/siret/rpps pour lookup rapide. Tout en IF NOT EXISTS / ADD COLUMN IF NOT EXISTS donc idempotent" },
+      { "code": "SQL", "txt": "Nouvelle RPC check_etab_doublon(p_finess, p_siret, p_siren, p_rpps, p_nom, p_exclude_id) qui scanne mes étab ET les partenaires de la structure courante, matche sur n'importe lequel des identifiants, retourne jsonb { ok, found, count, matches[] } avec pour chaque match : kind (mine/partner), id, nom, type, adresse, identifiants matchés, et l'éventuel commentaire de force précédent" },
+      { "code": "SQL", "txt": "Vue v_doublons_forces qui liste tous les doublons forcés (mine + partner) avec leur commentaire et auteur — pour audit admin. security_invoker pour respecter RLS" },
+      { "code": "FE", "txt": "Nouveau composant /app/components/DoublonAlert.js : encart ambre avec icône triangle ⚠, liste des fiches existantes avec badge 'Mon étab'/'Partenaire', adresse complète, identifiants matchés mis en évidence, lien direct vers chaque fiche. Si commentaire de force précédent → affiché en italique. 2 actions : Annuler la création / Créer quand même (avec commentaire)" },
+      { "code": "FE", "txt": "DoublonAlert : si admin (droit force_doublon_etab) → bouton 'Créer quand même' qui ouvre un textarea obligatoire ≥ 10 caractères. Si pas admin → message 'Seul un admin peut forcer la création d'un doublon. Contactez votre référent.' Validation côté UI puis enregistrement en base avec qui/quand/pourquoi" },
+      { "code": "FE", "txt": "Nouveau composant /app/components/EtabAutoFiller.js : regroupe FinessSearch + SireneSearch + RppsAutocomplete dans un seul bloc compact réutilisable. Props : show=['finess','sirene','rpps'] pour filtrer les sources actives, callbacks onSelect séparés. Mode compact (sans titre) ou bloc violet (avec)" },
+      { "code": "FE", "txt": "Helper /app/lib/checkEtabDoublon.js : wrapper autour de la RPC qui retourne format normalisé. Try/catch pour gérer erreurs. Pas de check si aucun critère fourni (return early avec found:false)" },
+      { "code": "FE", "txt": "Intégration dans /etablissements-partenaires (modale création) : DoublonAlert affiché si check trouve un match. State doublons + doublonForceCommentaire. Save() vérifie d'abord les doublons, si trouvé bloque et affiche l'alerte. Si admin force avec commentaire → enregistre doublon_force_commentaire + doublon_force_par + doublon_force_at" },
+      { "code": "FE", "txt": "Intégration dans /etablissements (création depuis FINESS/SIRENE) : remplace l'ancien check 'simple' qui ne regardait que les FINESS de mes étab. Désormais utilise checkEtabDoublon qui scanne aussi les partenaires + matche sur siret/siren/nom. Bloque la création tant que pas confirmé" },
+      { "code": "BE", "txt": "Nouveau droit dans lib/useAuth.js : 'force_doublon_etab' avec format objet { module: 'doublons', perm: 'write' } pour ne matcher QUE ce module précis (pas les autres modules write). canDo() étendu pour supporter ce format ciblé en plus du format string existant" },
+      { "code": "FE", "txt": "Nouveau module 'doublons' dans la liste MODULES de la page /utilisateurs : permission 'write' = peut forcer la création d'un doublon avec commentaire. Visible dans la modale d'édition de rôle, à activer pour les administrateurs qui ont vraiment besoin de cette possibilité" },
+      { "code": "AI", "txt": "+18 tests Vitest : canDo() ciblée par module (6 — admin, lecture, doublons.write, doublons.read insuffisant, etablissement.write ne déborde pas, wildcard), helper checkEtabDoublon (3 — pas de check sans critère, appel RPC, gestion erreur), validation commentaire (3 — short/long/trim), SQL contient les colonnes et RPC (3), EtabAutoFiller (2), module doublons (1). Total 1367 tests verts (vs 1349)" }
+    ],
+    "themes": ["users", "rls_securite", "patient"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.43.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.43.sql"
+  },
+  {
     "v": "0.55.42",
     "kind": "version",
     "titre": "🩺 Composant RppsAutocomplete style FinessSearch/SireneSearch · Dropdown live au fur et à mesure de la frappe · Photo Google au survol · Boutons Appeler/Mail/GPS sur chaque résultat · Intégré dans création partenaire (3ème ligne)",

@@ -21,6 +21,8 @@ import SireneSearch from "../SireneSearch";
 import FinessSearch from "../FinessSearch";
 import RppsAutocomplete from "../RppsAutocomplete";
 import AddressAutocomplete from "../AddressAutocomplete";
+import DoublonAlert from "../components/DoublonAlert";
+import { checkEtabDoublon } from "../lib/checkEtabDoublon";
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 
@@ -53,6 +55,9 @@ export default function EtablissementsPartenaires() {
   const [editModal, setEditModal] = useState(null); // { mode: 'create'|'edit', data }
   const [form, setForm] = useState(emptyForm);
   const [auditOpen, setAuditOpen] = useState(false);
+  // 0.55.43 : détection doublons
+  const [doublons, setDoublons] = useState(null);
+  const [doublonForceCommentaire, setDoublonForceCommentaire] = useState(null);
 
   async function loadAll() {
     if (!auth.ready || !auth.structureId) return;
@@ -112,13 +117,33 @@ export default function EtablissementsPartenaires() {
       await dialogs.alert({ title: "Nom requis", message: "Le nom de l'établissement partenaire est obligatoire." });
       return;
     }
+
+    // 0.55.43 : check doublon AVANT insertion (sauf en édition)
+    if (editModal.mode !== "edit" && !doublonForceCommentaire) {
+      const check = await checkEtabDoublon(supabase, {
+        finess: form.finess?.trim() || null,
+        siret: form.siret?.trim() || null,
+        rpps: form.rpps?.trim() || null,
+        nom: form.nom?.trim() || null,
+      });
+      if (check.found) {
+        setDoublons(check);
+        return;
+      }
+    }
+
     const payload = {
       ...form,
       structure_id: auth.structureId,
       created_by: auth.user?.id,
-      // Nullify empty strings
       ...Object.fromEntries(Object.entries(form).map(([k, v]) => [k, v?.trim?.() || v || null])),
     };
+    // 0.55.43 : si on force un doublon → enregistrer commentaire + traçabilité
+    if (doublonForceCommentaire && editModal.mode !== "edit") {
+      payload.doublon_force_commentaire = doublonForceCommentaire;
+      payload.doublon_force_par = auth.user?.id;
+      payload.doublon_force_at = new Date().toISOString();
+    }
     delete payload.id;
     try {
       if (editModal.mode === "edit") {
@@ -134,6 +159,8 @@ export default function EtablissementsPartenaires() {
         if (error) throw error;
       }
       setEditModal(null);
+      setDoublons(null);
+      setDoublonForceCommentaire(null);
       await loadAll();
     } catch (e) {
       await dialogs.alert({ title: "Erreur", message: e.message, variant: "danger" });
@@ -456,6 +483,22 @@ export default function EtablissementsPartenaires() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* 0.55.43 — DoublonAlert si doublon détecté */}
+          {doublons && doublons.found && (
+            <DoublonAlert
+              doublons={doublons}
+              itemLabel="ce partenaire"
+              canForce={auth.can("force_doublon_etab")}
+              onCancel={() => { setDoublons(null); }}
+              onForce={(commentaire) => {
+                setDoublonForceCommentaire(commentaire);
+                setDoublons(null);
+                // Re-déclencher save avec le commentaire
+                setTimeout(() => save(), 100);
+              }}
+            />
           )}
 
           {/* 0.55.34 — Bloc recherche FINESS / SIRENE pour création */}

@@ -17,6 +17,8 @@ import { PageHead, Panel, Btn, StateMsg, Modal } from "../ui";
 import { dialogs } from "../dialogs";
 import FinessSearch from "../FinessSearch";
 import SireneSearch from "../SireneSearch";
+import DoublonAlert from "../components/DoublonAlert";
+import { checkEtabDoublon } from "../lib/checkEtabDoublon";
 import GPSProviderModal from "../GPSProviderModal";
 import { openItinerary, getGPSProvider } from "../../lib/gpsProvider";
 import { logEvent } from "../../lib/events";
@@ -50,6 +52,9 @@ export default function EtablissementsListPage() {
   const [sortDir, setSortDir] = useState("asc");
   const [modal, setModal] = useState(null);
   const [pickedFiness, setPickedFiness] = useState(null);
+  // 0.55.43 : détection doublons
+  const [doublons, setDoublons] = useState(null);
+  const [doublonForceCommentaire, setDoublonForceCommentaire] = useState(null);
   const [importMode, setImportMode] = useState("collectivite");  // 0.55.3 : "collectivite" ou "partenaire"
   const [importSource, setImportSource] = useState("finess");  // 0.55.4 : "finess" ou "sirene"
   const [busy, setBusy] = useState(false);
@@ -158,14 +163,16 @@ export default function EtablissementsListPage() {
       await dialogs.alert({ title: "Sélectionne d'abord un établissement dans la liste FINESS" });
       return;
     }
-    // Vérif doublon FINESS
-    if (pickedFiness.finess) {
-      const existing = rows.find(r => r.finess === pickedFiness.finess);
-      if (existing) {
-        await dialogs.alert({
-          title: "Doublon détecté",
-          message: `Un établissement avec ce n° FINESS (${pickedFiness.finess}) existe déjà : "${existing.nom}".`,
-        });
+    // 0.55.43 : check doublon centralisé via RPC (mine + partner, finess/siret/siren/nom)
+    if (!doublonForceCommentaire) {
+      const check = await checkEtabDoublon(supabase, {
+        finess: pickedFiness.finess,
+        siret: pickedFiness.siret,
+        siren: pickedFiness.siren,
+        nom: pickedFiness.nom,
+      });
+      if (check.found) {
+        setDoublons(check);
         return;
       }
     }
@@ -186,13 +193,21 @@ export default function EtablissementsListPage() {
         longitude: pickedFiness.longitude || null,
         est_partenaire: importMode === "partenaire",
       };
+      // 0.55.43 : si on force un doublon → traçabilité
+      if (doublonForceCommentaire) {
+        payload.doublon_force_commentaire = doublonForceCommentaire;
+        payload.doublon_force_par = auth.user?.id;
+        payload.doublon_force_at = new Date().toISOString();
+      }
       await safeInsert(supabase, "etablissements", payload, { userId: auth.user?.id });
       await logEvent(supabase, auth, {
         action: "creer", entite: "etablissement",
-        details: { nom: payload.nom, source: "finess", finess: payload.finess, mode: importMode },
+        details: { nom: payload.nom, source: "finess", finess: payload.finess, mode: importMode, doublon_force: !!doublonForceCommentaire },
       });
       setModal(null);
       setPickedFiness(null);
+      setDoublons(null);
+      setDoublonForceCommentaire(null);
       await load();
     } catch (e) {
       await dialogs.alert({ title: "Erreur création", message: e.message });
@@ -640,6 +655,23 @@ export default function EtablissementsListPage() {
               onSelect={(etab) => setPickedFiness(etab)}
               placeholder="Ex : Carrefour, Domidep, 65201405100013…"
             />
+          )}
+
+          {/* 0.55.43 — Alerte doublon */}
+          {doublons && doublons.found && (
+            <div style={{ marginTop: 12 }}>
+              <DoublonAlert
+                doublons={doublons}
+                itemLabel="cet établissement"
+                canForce={auth.can("force_doublon_etab")}
+                onCancel={() => { setDoublons(null); }}
+                onForce={(commentaire) => {
+                  setDoublonForceCommentaire(commentaire);
+                  setDoublons(null);
+                  setTimeout(() => confirmCreate(), 100);
+                }}
+              />
+            </div>
           )}
 
           {pickedFiness && (

@@ -20,6 +20,8 @@ const MODULES = [
   { k: "stock", l: "Stock" }, { k: "transferts", l: "Transferts" },
   { k: "interventions", l: "Interventions" }, { k: "commandes", l: "Commandes" },
   { k: "utilisateurs", l: "Utilisateurs" },
+  // 0.55.43 : module doublons. Permission "write" = peut forcer la création d'un doublon avec commentaire
+  { k: "doublons", l: "Forcer doublons étab (avec commentaire)" },
 ];
 
 export default function Utilisateurs() {

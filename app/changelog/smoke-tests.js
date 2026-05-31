@@ -27,6 +27,81 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.44 — Hotfix SQL : colonne rpps ajoutée avant index ==============
+  "0.55.44": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Colonne rpps existe sur etablissements_partenaires", async () => {
+      const { error } = await supabase
+        .from("etablissements_partenaires")
+        .select("rpps, adeli, profession, specialite")
+        .limit(1);
+      if (error?.message?.match(/column.*does not exist/)) {
+        return { ok: false, msg: "Colonnes RPPS manquantes — Run patch 0.55.44" };
+      }
+      return { ok: !error, msg: "Colonnes OK" };
+    }));
+
+    results.push(await runTest("RPC check_etab_doublon fonctionne avec rpps", async () => {
+      const { error } = await supabase.rpc("check_etab_doublon", { p_rpps: "12345678901" });
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente" };
+      }
+      return { ok: true, msg: "RPC OK avec param rpps" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.43 — Système anti-doublon + droit force_doublon_etab ==============
+  "0.55.43": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("RPC check_etab_doublon déclarée", async () => {
+      const { data, error } = await supabase.rpc("check_etab_doublon", {});
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente — Run patch 0.55.43" };
+      }
+      return { ok: true, msg: "RPC accessible" };
+    }));
+
+    results.push(await runTest("Colonnes doublon_force présentes (mes étab)", async () => {
+      const { error } = await supabase
+        .from("etablissements")
+        .select("doublon_force_commentaire, doublon_force_par, doublon_force_at")
+        .limit(1);
+      if (error?.message?.match(/column|does not exist/)) {
+        return { ok: false, msg: "Colonnes absentes" };
+      }
+      return { ok: true, msg: "Colonnes OK" };
+    }));
+
+    results.push(await runTest("Colonnes doublon_force (partenaires)", async () => {
+      const { error } = await supabase
+        .from("etablissements_partenaires")
+        .select("doublon_force_commentaire, doublon_force_par, doublon_force_at")
+        .limit(1);
+      if (error?.message?.match(/column|does not exist/)) {
+        return { ok: false, msg: "Colonnes absentes" };
+      }
+      return { ok: true, msg: "Colonnes OK" };
+    }));
+
+    results.push(await runTest("Composant DoublonAlert importable", async () => {
+      const mod = await import("../components/DoublonAlert");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Composant EtabAutoFiller importable", async () => {
+      const mod = await import("../components/EtabAutoFiller");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.42 — RppsAutocomplete style FinessSearch ==============
   "0.55.42": async () => {
     const results = [];
