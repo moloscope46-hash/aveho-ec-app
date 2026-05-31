@@ -127,8 +127,9 @@ describe("0.55.47 - Carte : recherche libre", () => {
     expect(src).toContain("query.length < 3");
   });
 
-  it("Filtre bbox sur résultats géocodés", () => {
-    expect(src).toContain("x.latitude >= bounds.getSouth()");
+  it("Affiche tous les résultats avec coords (filtre bbox retiré en 0.55.49)", () => {
+    // 0.55.49 : on a retiré le filtre bbox pour ne plus avoir "visibles 0"
+    expect(src).toContain("all.filter(x => x.latitude && x.longitude)");
   });
 
   it("Markers colorés par source (RPPS violet, SIRENE vert, FINESS bleu)", () => {

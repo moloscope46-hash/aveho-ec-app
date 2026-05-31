@@ -27,6 +27,28 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.49 — Page édition patient + fix carte recherche libre ==============
+  "0.55.49": async () => {
+    const results = [];
+
+    results.push(await runTest("Page /patient/[id]/edit accessible", async () => {
+      const mod = await import("../patient/[id]/edit/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("CaisseSearch importable depuis edit", async () => {
+      const mod = await import("../CaisseSearch");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("MutuelleSearch importable depuis edit", async () => {
+      const mod = await import("../MutuelleSearch");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.48 — Diagnostic API RPPS (IP en production) ==============
   "0.55.48": async () => {
     const results = [];

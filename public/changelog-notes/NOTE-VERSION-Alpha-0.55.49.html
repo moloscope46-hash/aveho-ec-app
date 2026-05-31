@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.49 — Édition patient avec onglets + fix carte</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .tab{padding:6px 10px;border-radius:6px;font-size:11.5px;font-weight:700;border:1.5px solid}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — ÉDITION PATIENT COMPLÈTE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.49 — Nouvelle page édition fiche patient avec 6 onglets · Fix carte recherche libre
+      <small>CaisseSearch + MutuelleSearch intégrés · 1-N adresses livraison · Plus de "visibles 0" sur la carte</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.49-alpha</code></span>
+      <span><b>Tests :</b> 1477 verts (+18)</span>
+      <span><b>SQL :</b> aucun</span>
+    </div>
+  </header>
+
+  <h2>👤 Nouvelle page /patient/[id]/edit</h2>
+  <div class="panel">
+    <p>Page d'édition complète au niveau d'un bulletin de situation. 6 onglets pour ne pas surcharger l'écran.</p>
+    <div class="tabs">
+      <div class="tab" style="color:#185FA5;border-color:#185FA5">🪪 Identité</div>
+      <div class="tab" style="color:#7a6fb0;border-color:#7a6fb0">🛡 Sécu & Mutuelle</div>
+      <div class="tab" style="color:#5aa05a;border-color:#5aa05a">📍 Adresses livraison</div>
+      <div class="tab" style="color:#EF9F27;border-color:#EF9F27">📞 Contacts urgence</div>
+      <div class="tab" style="color:#c0392b;border-color:#c0392b">🩺 Médecin traitant</div>
+      <div class="tab" style="color:#5a8f8f;border-color:#5a8f8f">📄 OCR & audit</div>
+    </div>
+    <p>Accès depuis la fiche patient : bouton <b>"Édition complète"</b> en haut.</p>
+  </div>
+
+  <h2>📋 Détail des onglets</h2>
+
+  <div class="panel">
+    <h3 style="margin-top:0">🪪 Identité</h3>
+    <p>Nom, prénom, <b>nom de naissance</b> (jeune fille), sexe (M/F/X), date naissance, lieu de naissance (ville + code INSEE + pays), nationalité, n° dossier interne.</p>
+  </div>
+
+  <div class="panel violet">
+    <h3 style="margin-top:0">🛡 Sécu & Mutuelle</h3>
+    <p><b>Section AMO (Sécu obligatoire) :</b></p>
+    <ul>
+      <li>NIR 15 chiffres en mono</li>
+      <li>Régime (général/agricole/militaire/fonctionnaire/spécial)</li>
+      <li>Qualité (assuré / ayant droit)</li>
+      <li>Rang naissance, centre paiement</li>
+      <li>Date début/fin droits</li>
+      <li><b>Toggles colorés</b> : ALD (rouge), C2S (ambre, ex-CMU-C), AME (violet)</li>
+      <li>Commentaire ALD apparaît seulement si ALD activé</li>
+      <li><b>CaisseSearch live</b> : tape un nom ou un code, sélectionne → card bleue affiche nom + code + type + dept</li>
+    </ul>
+    <p><b>Section AMC (Mutuelle) :</b></p>
+    <ul>
+      <li><b>MutuelleSearch live</b> avec badges couleur (mutuelle/assurance/IP) + badge C2S</li>
+      <li>N° AMC 8 chiffres mono, n° adhérent, dates début/fin</li>
+      <li>Toggle "Tiers payant actif" (vert)</li>
+    </ul>
+  </div>
+
+  <div class="panel hi">
+    <h3 style="margin-top:0">📍 Adresses livraison (1-N)</h3>
+    <p><b>Adresse principale (sociale)</b> en haut : rue, complément, cp, ville, pays.</p>
+    <p><b>Section verte "Adresses de livraison"</b> : tu peux ajouter autant que tu veux (Domicile, Maison campagne, Chez sa fille…).</p>
+    <p>Pour chaque adresse :</p>
+    <ul>
+      <li><b>Libellé</b> personnalisé en gros (ex "Maison de campagne du Lot")</li>
+      <li><b>Destinataire</b> si différent du patient (ex "Mme Dupont, sa fille")</li>
+      <li>Téléphone contact</li>
+      <li>Adresse + complément + cp + ville</li>
+      <li><b>Code porte / digicode</b> mono</li>
+      <li><b>Instructions livraison</b> : "Sonner 2× au fond de la cour"</li>
+      <li>Case <b>Principale</b></li>
+      <li>Boutons <b>Sauv.</b> par adresse + bouton × suppression</li>
+    </ul>
+  </div>
+
+  <div class="panel warn">
+    <h3 style="margin-top:0">📞 Contacts urgence</h3>
+    <p>3 sections :</p>
+    <ul>
+      <li><b>Contact patient</b> : tel fixe + portable + email</li>
+      <li><b>Personne à prévenir (urgence)</b> en ambre : nom, prénom, lien de parenté, téléphone</li>
+      <li><b>Personne de confiance</b> (loi 4 mars 2002) en violet : nom, prénom, téléphone + bandeau pédagogique sur son rôle</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0">🩺 Médecin traitant</h3>
+    <p>Nom, prénom, téléphone, <b>RPPS 11 chiffres</b> mono, <b>FINESS établissement</b> mono. Bandeau pédagogique sur le parcours de soins coordonné.</p>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-top:0">📄 OCR & audit</h3>
+    <ul>
+      <li><b>Source de création</b> : Saisie manuelle ✍️ / OCR bulletin 📄 / Import CSV 📊</li>
+      <li>Created at / Updated at</li>
+      <li>Si bulletin scanné : <b>lien vers le fichier</b> + date OCR</li>
+      <li>Si OCR effectué : <b>texte brut</b> dépliable en pre dark (pour audit)</li>
+    </ul>
+  </div>
+
+  <h2>💾 Sauvegarde sticky en bas</h2>
+  <div class="panel">
+    <p>Footer en bas de page (sticky pour rester visible en scroll) :</p>
+    <pre><code>┌──────────────────────────────────────────────────────────┐
+│ 💾  Sauvegardé à 14:32  ·  [Retour fiche]  [✓ Sauvegarder] │
+└──────────────────────────────────────────────────────────┘</code></pre>
+    <p>Loader pendant le save, badge ok après. Toute la fiche est sauvegardée en 1 clic.</p>
+  </div>
+
+  <h2>🐛 FIX critique — Carte recherche libre "visibles 0"</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Le bug</h3>
+    <p>Tu tapais <code>"orthopediste"</code> dans la recherche libre carte. Console : <code>RPPS 0 / SIRENE 20 / FINESS 8 / visibles 0</code>. 28 résultats trouvés, 0 affichés !</p>
+
+    <h3>La cause</h3>
+    <p>Les résultats SIRENE/FINESS n'ont souvent pas de coords directes — il faut les géocoder via BAN. Si le géocodage est lent ou que le résultat est hors de la bbox visible, le filtre <code>x.latitude &gt;= bounds.getSouth() && ...</code> les éliminait tous.</p>
+
+    <h3>La correction</h3>
+    <ul>
+      <li><b>Filtre bbox RETIRÉ</b> sur la recherche libre — on affiche TOUS les résultats avec coords</li>
+      <li><b>Auto-fit</b> de la carte sur les résultats trouvés (la carte se positionne automatiquement où sont les résultats)</li>
+      <li>Console log enrichi : <code>[Recherche libre] orthopediste → RPPS 0 / SIRENE 20 / FINESS 8 / total avec coords 28 / affichés 28</code></li>
+    </ul>
+    <p>Maintenant tu vois tout, où qu'ils soient en France.</p>
+  </div>
+
+  <h2>⚠️ Avertissement API ANS sur la carte</h2>
+  <div class="panel warn">
+    <p>Sur le panneau Filtres RPPS de la carte, si des filtres sont actifs mais que résultats = 0 (probable 403), un <b>badge rouge</b> apparaît :</p>
+    <p style="background:#fce5e0;color:#c0392b;padding:6px 10px;border-radius:8px;display:inline-block;font-size:11px;font-weight:700">
+      <i class="ti ti-shield-x" /> API ANS bloquée — voir <u>diagnostic</u>
+    </p>
+    <p>Le lien pointe vers <code>/admin/rpps-diagnostic</code>. Plus besoin d'aller chercher.</p>
+  </div>
+
+  <h2>📈 Tests +18 (1459 → 1477)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Page édition patient</b> (12) : existe, 6 onglets, imports CaisseSearch/MutuelleSearch, Promise.all, hydrate refs, payload save complet, gestion 1-N adresses, champs onglets, sticky save, helpers</li>
+      <li><b>Fix recherche libre carte</b> (4) : plus de bbox, auto-fit, console log, avertissement panneau</li>
+      <li><b>Lien fiche → édition</b> (1)</li>
+      <li><b>Test obsolète corrigé</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/patient/[id]/edit/page.js</code> : <b>NOUVEAU</b> · ~600 lignes · 6 onglets + helpers</li>
+    <li><code>app/patient/[id]/page.js</code> : bouton "Édition complète" → /edit</li>
+    <li><code>app/carte/page.js</code> : fix recherche libre (filtre bbox retiré + auto-fit) + avertissement ANS</li>
+    <li><code>__tests__/v055-49-patient-edit-onglets.test.js</code> : <b>NOUVEAU</b> · +17 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.49 (3 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.49</li>
+    <li><code>package.json</code> : 0.55.48 → 0.55.49</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (<b>pas de SQL</b> — utilise les colonnes ajoutées en 0.55.46)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.49 - Edition patient onglets + fix carte recherche libre"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li><code>/patients</code> → cliquer un patient → bouton "Édition complète" → arrive sur /edit avec 6 onglets</li>
+      <li>Onglet Sécu → tape "MGEN" dans MutuelleSearch → résultats live → sélectionne → badge violet C2S</li>
+      <li>Tape "Paris" dans CaisseSearch (avec dept 75) → CPAM Paris</li>
+      <li>Onglet Adresses → "+ Ajouter" → remplir + Sauv. → l'adresse apparaît dans la liste</li>
+      <li>Onglet Audit → vérifier source_creation + bs_file_url</li>
+      <li>Cliquer "Sauvegarder" → badge "Sauvegardé à HH:MM"</li>
+      <li>Aller sur <code>/carte</code> → recherche libre "orthopediste" → résultats AFFICHÉS (plus de "visibles 0") + carte zoomée dessus</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 59ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.48 → <b>0.55.49</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.49 · 31 mai 2026</p>
+    <p>Édition patient onglets · 1-N adresses livraison · fix carte recherche · 1477 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

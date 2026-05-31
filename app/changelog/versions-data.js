@@ -120,6 +120,29 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.49",
+    "kind": "version",
+    "titre": "👤 Nouvelle page édition fiche patient avec 6 onglets · Intégration CaisseSearch + MutuelleSearch · Gestion 1-N adresses livraison · Fix carte recherche libre (affichage 100%)",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouvelle page /patient/[id]/edit : édition COMPLÈTE de la fiche patient niveau bulletin de situation. 6 onglets : 🪪 Identité (nom, prenom, nom_naissance, sexe, date+lieu naissance, nationalité, n° dossier), 🛡 Sécu & Mutuelle, 📍 Adresses livraison, 📞 Contacts urgence + personne confiance, 🩺 Médecin traitant, 📄 OCR & audit" },
+      { "code": "FE", "txt": "Onglet Sécu : numéro_secu NIR 15 chiffres mono, régime (général/agricole/militaire/fonctionnaire/spécial), qualité (assuré/ayant droit), rang naissance, centre paiement, date début/fin droits, toggles ALD/C2S/AME (avec commentaire ALD conditionnel). Intégration CaisseSearch live — sélection caisse affiche carte bleue avec nom, code, type, dept" },
+      { "code": "FE", "txt": "Onglet Mutuelle (dans Sécu) : intégration MutuelleSearch live avec badge couleur type (mutuelle vert / assurance bleu / IP violet) + badge C2S, n° AMC 8 chiffres mono, n° adhérent, dates début/fin droits, tiers payant actif" },
+      { "code": "FE", "txt": "Onglet Adresses : adresse principale (sociale) avec rue, complement, cp, ville, pays. Section verte 'Adresses de livraison' 1-N avec ajout/édition/suppression inline : libelle (Domicile/Travail/Maison campagne), destinataire si différent (ex 'Mme X, sa fille'), code_porte digicode mono, instructions livraison ('Sonner 2x'), case 'Principale'. Boutons Sauv. par adresse" },
+      { "code": "FE", "txt": "Onglet Contacts : téléphone fixe + portable + email du patient, section ambre 'Personne à prévenir (urgence)' avec nom/prenom/lien parenté/tel, section violette 'Personne de confiance' (loi 4 mars 2002) avec nom/prenom/tel + bandeau pédagogique" },
+      { "code": "FE", "txt": "Onglet Médecin traitant : nom, prenom, téléphone, RPPS 11 chiffres mono, FINESS établissement mono, bandeau pédagogique sur le parcours de soins coordonné" },
+      { "code": "FE", "txt": "Onglet Audit/OCR : source_creation (manuelle/ocr_bs/import_csv avec emoji), created_at, updated_at, bs_file_url (lien externe vers bulletin scanné), bs_ocr_brut (dépliable avec pre dark si OCR effectué)" },
+      { "code": "FE", "txt": "Footer sticky en bas : 'Sauvegardé à HH:MM' + bouton 'Retour fiche' + bouton vert 'Sauvegarder' (loader durant save). Composants Field (input avec label), FieldSelect (dropdown), Toggle (booléens colorés ALD/C2S/AME), KvBlock pour les sections read-only" },
+      { "code": "FE", "txt": "Bouton 'Édition complète' ajouté sur la fiche /patient/[id] qui pointe maintenant vers la nouvelle page edit (au lieu de rediriger vers la liste)" },
+      { "code": "FIX", "txt": "Carte : recherche libre — bug 'visibles 0' corrigé. Le filtre bbox était trop strict : SIRENE/FINESS sans coords sortaient toujours du filtre. Nouveau : on affiche TOUS les résultats avec coords (sans filtre bbox) ET on auto-fit la carte sur les résultats trouvés. L'user voit immédiatement ce qu'il cherche, où qu'il soit. Console log enrichi : 'total avec coords X / affichés Y'" },
+      { "code": "FE", "txt": "Carte : avertissement 'API ANS bloquée — voir diagnostic' affiché en rouge sur le panneau RPPS quand des filtres sont actifs mais résultats = 0 (lien direct vers /admin/rpps-diagnostic)" },
+      { "code": "AI", "txt": "+18 tests Vitest : page édition patient (12 : existe, 6 onglets, imports composants, Promise.all charge, hydrate refs, payload complet save, gestion 1-N adresses, champs onglet adresses, secu, audit, sticky save, helpers Field/Toggle), fix recherche libre (4 : plus de bbox, auto-fit, console log, avertissement panneau), lien depuis fiche (1), test obsolete corrigé (1). Total 1477 tests verts (vs 1459)" }
+    ],
+    "themes": ["patient", "ui_ux", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.49.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.48",
     "kind": "version",
     "titre": "🔬 Diagnostic API RPPS · IP sortante Vercel + status par endpoint + body brut · Page /admin/rpps-diagnostic pour debug en prod",

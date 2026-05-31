@@ -660,21 +660,29 @@ export default function CartePage() {
         }
       }
 
-      // Filtre bbox
-      const visible = all.filter(x =>
-        x.latitude && x.longitude &&
-        x.latitude >= bounds.getSouth() && x.latitude <= bounds.getNorth() &&
-        x.longitude >= bounds.getWest() && x.longitude <= bounds.getEast()
-      );
+      // 0.55.49 : si on a une recherche libre active, on n'applique PAS le filtre bbox
+      // (sinon les résultats apparaissent rarement et le user voit "visibles 0")
+      // On affiche TOUS les résultats avec coords et on AUTO-FIT la carte dessus
+      const allWithCoords = all.filter(x => x.latitude && x.longitude);
+      const visible = allWithCoords;
 
       console.log("[Recherche libre]", query,
         "→ RPPS", rpps?.count || 0,
         "/ SIRENE", sirene?.count || 0,
         "/ FINESS", finess?.count || 0,
-        "/ visibles", visible.length);
+        "/ total avec coords", allWithCoords.length,
+        "/ affichés", visible.length);
 
       drawFreeSearch(visible);
       setFreeSearchResults(visible);
+
+      // Auto-fit sur les résultats trouvés (sinon le user ne voit rien)
+      if (visible.length > 0 && mapInstanceRef.current) {
+        const fitBounds = window.L.latLngBounds(visible.map(x => [x.latitude, x.longitude]));
+        if (fitBounds.isValid()) {
+          mapInstanceRef.current.fitBounds(fitBounds, { padding: [60, 60], maxZoom: 13, animate: true });
+        }
+      }
     } catch (e) {
       console.error("[Recherche libre]", e);
       setFreeSearchResults([]);
@@ -1321,6 +1329,11 @@ export default function CartePage() {
                 {!rppsLoading && rppsCount > 0 && (
                   <span style={{ background: "#dbe7f5", color: "#185FA5", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 10 }}>
                     {rppsCount} résultat{rppsCount > 1 ? "s" : ""}
+                  </span>
+                )}
+                {!rppsLoading && rppsFilters.length > 0 && rppsCount === 0 && (
+                  <span style={{ background: "#fce5e0", color: "#c0392b", fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 10 }}>
+                    <i className="ti ti-shield-x" /> API ANS bloquée — voir <a href="/admin/rpps-diagnostic" style={{ color: "#c0392b", textDecoration: "underline" }}>diagnostic</a>
                   </span>
                 )}
                 {rppsFilters.length > 0 && (

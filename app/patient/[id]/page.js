@@ -178,7 +178,7 @@ export default function FichePatient() {
                   const { imprimerFichePatient } = await import("../../../lib/ficheToPdf");
                   imprimerFichePatient({ patient: pat, etiquettes, materiels, interventions });
                 }}>Imprimer</Btn>
-                <Btn variant="ghost" icon="ti-edit" onClick={() => router.push("/patients")}>Modifier</Btn>
+                <Btn variant="ghost" icon="ti-edit" onClick={() => router.push(`/patient/${patId}/edit`)}>Édition complète</Btn>
               </div>
             )}
           </div>
