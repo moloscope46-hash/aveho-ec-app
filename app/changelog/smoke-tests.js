@@ -27,6 +27,39 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.19 — Status Icons TopBar ==============
+  "0.55.19": async () => {
+    const results = [];
+
+    results.push(await runTest("Notification API disponible", () => {
+      return typeof window.Notification !== "undefined";
+    }));
+
+    results.push(await runTest("Permissions API disponible", () => {
+      return typeof navigator.permissions?.query === "function";
+    }));
+
+    results.push(await runTest("Geolocation API disponible", () => {
+      return typeof navigator.geolocation !== "undefined";
+    }));
+
+    results.push(await runTest("Service Worker controller", () => {
+      const sw = !!navigator.serviceWorker?.controller;
+      return { ok: sw, msg: sw ? "Actif" : "Pas encore chargé (reload)" };
+    }));
+
+    results.push(await runTest("Navigator.onLine", () => {
+      return { ok: navigator.onLine, msg: navigator.onLine ? "Online" : "Offline" };
+    }));
+
+    results.push(await runTest("display-mode standalone détectable", () => {
+      const match = window.matchMedia?.("(display-mode: standalone)");
+      return { ok: !!match, msg: match?.matches ? "Installée en PWA" : "Mode navigateur" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.17 — Détection faciale ==============
   "0.55.17": async () => {
     const supabase = createClient();

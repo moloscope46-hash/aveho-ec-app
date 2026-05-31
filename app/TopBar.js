@@ -16,6 +16,7 @@ import NotifBell from "./NotifBell";
 // et disparaissait quand etabId était null). Bouton visible ci-dessous qui déclenche
 // la palette via event custom "aveho:open-search".
 import UserMenu from "./UserMenu";
+import StatusIcons from "./StatusIcons";
 
 const MENU = [
   { section: "Mon espace", items: [
@@ -210,6 +211,8 @@ export default function TopBar({ cartCount = 0, auth }) {
             <i className="ti ti-shopping-cart" />{cartCount > 0 && <span className="tb-badge">{cartCount}</span>}
           </button>
         )}
+        {/* 0.55.19 : icônes de statut (réseau, perm, bio…) */}
+        {mounted && auth && <StatusIcons auth={auth} />}
         {mounted && auth && <UserMenu auth={auth} />}
       </div>
 

@@ -119,6 +119,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.19",
+    "kind": "version",
+    "titre": "Icônes de statut dans la TopBar : réseau, notifs, géoloc, PWA, SW, empreinte, face — feux vert/rouge + popover détails",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouveau composant StatusIcons monté dans la TopBar (à gauche du menu user) : 7 icônes de statut compactes avec petite pastille colorée en bas à droite" },
+      { "code": "UX", "txt": "Code couleur : vert (#5aa05a) = activé/OK/autorisé, rouge (#c0392b) = refusé/bloqué, gris (#8a98a8) = non configuré ou indéterminé" },
+      { "code": "UX", "txt": "Au clic sur une icône → popover de 280px avec header coloré, état (Activé / Refusé / Non configuré), description, et bouton d'action contextuel (Autoriser / Gérer)" },
+      { "code": "FE", "txt": "Features tracées : Réseau (online/offline live via events), Notifications (Notification.permission), Géolocalisation (Permissions API), PWA installée (display-mode standalone + navigator.standalone iOS), Service Worker actif, Empreinte digitale activée, Détection faciale activée" },
+      { "code": "UX", "txt": "Mobile-responsive : sur écran ≤520px, on cache les icônes secondaires (uniquement réseau + notif + géoloc + pwa visibles)" },
+      { "code": "•", "txt": "Bouton 'Autoriser' déclenche directement Notification.requestPermission() ou geolocation.getCurrentPosition() ; 'Gérer' pour la bio redirige vers /profil" }
+    ],
+    "themes": ["ux", "pwa_offline"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.19.html"
+  },
+  {
     "v": "0.55.18",
     "kind": "hotfix",
     "titre": "Fix bug 'kind is not defined' sur changelog + fix SQL view 0.55.17 + bouton 'Tester' par version + 126 tests ajoutés (944 → 1070)",
