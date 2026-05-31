@@ -31,6 +31,7 @@ export default function GlobalSearch() {
   const [sel, setSel] = useState(0);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]); // Alpha 0.35.0 : historique
+  const [activeFilter, setActiveFilter] = useState(null);  // 0.55.11 : chip filtre visuel
   const inputRef = useRef(null);
 
   // Alpha 0.35.0 : charger l'historique depuis localStorage à l'ouverture
@@ -63,6 +64,7 @@ export default function GlobalSearch() {
         setOpen((o) => !o);
       } else if (e.key === "Escape" && open) {
         setOpen(false);
+        setActiveFilter(null);  // 0.55.11 : reset filter en fermant
       }
     }
     // Alpha 0.35.0 : event custom déclenché par le bouton 🔍 dans la TopBar
@@ -107,6 +109,8 @@ export default function GlobalSearch() {
             c: "consent", f: "fournisseur"  // Alpha 0.52.0 (G)
           }[prefix];
         }
+        // 0.55.11 (AF) : si chip filter active, override
+        if (activeFilter) filterType = activeFilter;
         const term = `%${searchTerm}%`;
         const list = [];
 
@@ -246,7 +250,7 @@ export default function GlobalSearch() {
       finally { setLoading(false); }
     }, 250);
     return () => clearTimeout(t);
-  }, [q, open]);
+  }, [q, open, activeFilter]);
 
   function onKeyInput(e) {
     if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(s + 1, results.length - 1)); }
@@ -276,6 +280,37 @@ export default function GlobalSearch() {
             placeholder="Rechercher  ·  p: patient · m: matériel · c: consent · f: fournisseur…"
             style={{ flex: 1, border: "none", outline: "none", fontSize: 16, fontFamily: "inherit", color: "#142131" }} />
           <kbd style={{ background: "#f4f7fa", padding: "2px 8px", borderRadius: 4, border: "1px solid #e3e9ee", fontSize: 11, color: "#6c7a89" }}>Échap</kbd>
+        </div>
+        {/* 0.55.11 (AF) : chips filtres visuels par catégorie */}
+        <div style={{ padding: "8px 16px", borderBottom: "1px solid #e3e9ee", display: "flex", flexWrap: "wrap", gap: 5, background: "#f9fbfc" }}>
+          <button
+            onClick={() => setActiveFilter(null)}
+            style={{
+              background: !activeFilter ? "#142131" : "#fff",
+              color: !activeFilter ? "#fff" : "#6c7a89",
+              border: `1px solid ${!activeFilter ? "#142131" : "#d9dfe5"}`,
+              padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
+            Tout
+          </button>
+          {Object.entries(TYPES).map(([key, t]) => (
+            <button
+              key={key}
+              onClick={() => setActiveFilter(activeFilter === key ? null : key)}
+              style={{
+                background: activeFilter === key ? t.color : "#fff",
+                color: activeFilter === key ? "#fff" : t.color,
+                border: `1px solid ${t.color}`,
+                padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 4,
+              }}
+            >
+              <i className={`ti ${t.icon}`} style={{ fontSize: 10 }} /> {t.lbl}
+            </button>
+          ))}
         </div>
         <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
           {loading ? (

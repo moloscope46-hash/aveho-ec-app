@@ -15,6 +15,7 @@ import { fmtDate, relativeTime } from "../../lib/format";
 import NotificationPreferences from "../NotificationPreferences";
 import DigestPreferences from "../DigestPreferences";
 import DigestHistory from "../DigestHistory";
+import PasswordInput from "../PasswordInput";
 
 export default function Profil() {
   const supabase = createClient();
@@ -105,7 +106,13 @@ export default function Profil() {
 
   async function savePwd() {
     setPwdMsg(""); setErr("");
-    if (pwd.length < 6) { setErr("Le mot de passe doit faire au moins 6 caractères."); return; }
+    // 0.55.12 : policy stricte
+    const { checkPassword } = await import("../../lib/passwordPolicy");
+    const check = checkPassword(pwd);
+    if (!check.ok) {
+      setErr("Mot de passe non conforme : " + check.problems.join(", "));
+      return;
+    }
     if (pwd !== pwd2) { setErr("Les deux mots de passe ne correspondent pas."); return; }
     try {
       const { error } = await supabase.auth.updateUser({ password: pwd });
@@ -277,15 +284,15 @@ export default function Profil() {
               <div className="fld-row">
                 <div className="fld">
                   <label>Nouveau mot de passe</label>
-                  <input type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="••••••••" autoComplete="new-password" />
+                  <PasswordInput value={pwd} onChange={setPwd} showGenerate />
                 </div>
                 <div className="fld">
                   <label>Confirmer</label>
-                  <input type="password" value={pwd2} onChange={(e) => setPwd2(e.target.value)} placeholder="••••••••" autoComplete="new-password" />
+                  <PasswordInput value={pwd2} onChange={setPwd2} showStrength={false} />
                 </div>
               </div>
               <p style={{ fontSize: 12, color: "#8a98a8", margin: "4px 0 14px" }}>
-                <i className="ti ti-info-circle" /> Au moins 6 caractères. Tu seras déconnecté(e) après changement.
+                <i className="ti ti-shield-lock" /> Au moins 12 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial. Tu seras déconnecté(e) après changement.
               </p>
               <div style={{ textAlign: "right" }}>
                 <Btn variant="primary" icon="ti-lock" onClick={savePwd} disabled={!pwd || !pwd2}>Modifier le mot de passe</Btn>

@@ -992,3 +992,35 @@ body.is-compact .chip-row button {
   padding: 2px 7px !important;
   font-size: 10.5px !important;
 }
+
+/* ============================================================
+   Alpha 0.55.12 — Fix z-index carte Leaflet vs menu drawer
+   ============================================================
+   Leaflet utilise par défaut des z-index très élevés pour ses
+   contrôles (1000 pour les boutons zoom, 700 pour les popups,
+   400 pour les panes). Sur la page /carte, ça passait au-dessus
+   du menu drawer (z-index 49) qui s'ouvre depuis la TopBar.
+   
+   Solution : on crée un stacking context contraint sur le
+   container Leaflet (z-index: 0 + isolation), comme ça TOUT
+   le contenu Leaflet reste à l'intérieur de ce contexte et ne
+   peut pas dépasser le menu drawer / overlay.
+*/
+.carte-leaflet-container,
+.leaflet-container {
+  z-index: 0 !important;
+  isolation: isolate;
+}
+/* Les contrôles Leaflet (zoom, attribution) restent relatifs
+   au container, donc plafonnés naturellement */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: auto !important;
+}
+.leaflet-pane.leaflet-overlay-pane { z-index: 4 !important; }
+.leaflet-pane.leaflet-marker-pane { z-index: 6 !important; }
+.leaflet-pane.leaflet-tooltip-pane { z-index: 7 !important; }
+.leaflet-pane.leaflet-popup-pane { z-index: 8 !important; }
+.leaflet-control { z-index: 10 !important; }

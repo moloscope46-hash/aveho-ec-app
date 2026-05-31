@@ -292,6 +292,32 @@ export default function Patients() {
               <i className={`ti ${showFilters ? "ti-filter-off" : "ti-filter"}`} /> Filtres avancés
               {(filters.q || filters.service || filters.chambre || filters.etat || filters.etiquette) && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
             </button>
+            {/* 0.55.11 (AI) : Export Excel */}
+            <button
+              className="btn-ghost"
+              onClick={async () => {
+                const { exportRows } = await import("../../lib/exportExcel");
+                await exportRows(rows || [], {
+                  filename: `patients_${new Date().toISOString().slice(0,10)}`,
+                  sheetName: "Patients",
+                  columns: {
+                    "Nom": "nom",
+                    "Prénom": "prenom",
+                    "Date naissance": (r) => r.date_naissance || "",
+                    "Chambre": (r) => r.chambre || "",
+                    "Service": (r) => r.services?.nom || "",
+                    "Étage": (r) => r.etages?.nom || "",
+                    "État": (r) => r.etat || "",
+                    "Téléphone": (r) => r.telephone || "",
+                    "Email": (r) => r.email || "",
+                    "Référent": (r) => r.referent_nom || "",
+                  },
+                });
+              }}
+              title="Exporter la liste en Excel"
+            >
+              <i className="ti ti-file-spreadsheet" /> Excel
+            </button>
             <CompactToggle />
           </div>
           {showFilters && (

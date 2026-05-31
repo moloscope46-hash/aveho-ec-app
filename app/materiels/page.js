@@ -79,6 +79,40 @@ export default function Materiels() {
           { label: "Maintenance", value: items.filter((m) => m.etat === "Maintenance").length, icon: "ti-tool", color: "#EF9F27" },
           { label: "Affectés patient", value: items.filter((m) => m.patient_id).length, icon: "ti-user", color: "#7a6fb0" },
         ]} />
+        {/* 0.55.11 (AI) : Export Excel matériels */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <button
+            onClick={async () => {
+              const { exportRows } = await import("../../lib/exportExcel");
+              await exportRows(items || [], {
+                filename: `materiels_${new Date().toISOString().slice(0,10)}`,
+                sheetName: "Matériels",
+                columns: {
+                  "Libellé": "libelle",
+                  "Article": (r) => artLabel[r.article_id] || "",
+                  "Patient affecté": (r) => patLabel[r.patient_id] || "",
+                  "N° série": "num_serie",
+                  "N° parc": "num_parc",
+                  "N° lot": "num_lot",
+                  "État": "etat",
+                  "Marque": "marque",
+                  "Modèle": "modele",
+                  "Date acquisition": (r) => r.date_acquisition || "",
+                },
+              });
+            }}
+            style={{
+              background: "#fff", color: "#1c5454",
+              border: "1px solid #1c5454",
+              padding: "5px 11px", borderRadius: 8,
+              fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+              fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", gap: 5,
+            }}
+          >
+            <i className="ti ti-file-spreadsheet" /> Export Excel
+          </button>
+        </div>
         <Crud
           structureId={auth.structureId}
           etabId={auth.etabId}

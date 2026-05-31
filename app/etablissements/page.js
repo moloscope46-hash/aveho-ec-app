@@ -326,6 +326,43 @@ export default function EtablissementsListPage() {
                 Importer (FINESS/SIRENE)
               </Btn>
             )}
+            {/* 0.55.11 (AI) : Export Excel */}
+            <button
+              onClick={async () => {
+                const { exportRows } = await import("../../lib/exportExcel");
+                await exportRows(filtered, {
+                  filename: `etablissements_${new Date().toISOString().slice(0,10)}`,
+                  sheetName: "Établissements",
+                  columns: {
+                    "Nom": "nom",
+                    "Type": (r) => r.type || "",
+                    "FINESS": (r) => r.finess_et || "",
+                    "Adresse": (r) => r.adresse || "",
+                    "Code postal": (r) => r.code_postal || "",
+                    "Ville": (r) => r.ville || "",
+                    "Téléphone": (r) => r.telephone || "",
+                    "Email": (r) => r.email || "",
+                    "Capacité": (r) => r.capacite ?? "",
+                    "Partenaire": (r) => r.est_partenaire ? "Oui" : "Non",
+                    "Latitude": (r) => r.latitude ?? "",
+                    "Longitude": (r) => r.longitude ?? "",
+                  },
+                });
+              }}
+              title="Exporter la liste filtrée en Excel"
+              style={{
+                background: "#fff", color: "#1c5454",
+                border: "1px solid #1c5454",
+                padding: "6px 12px", borderRadius: 8,
+                fontSize: 13, fontWeight: 600, cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                whiteSpace: "nowrap",
+              }}
+            >
+              <i className="ti ti-file-spreadsheet" /> 
+              <span className="col-hide-xs">Export Excel</span>
+            </button>
           </div>
         </Panel>
 

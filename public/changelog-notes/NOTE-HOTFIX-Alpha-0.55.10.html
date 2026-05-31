@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.55.10 — Fix 502 carte FINESS</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:960px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 70%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde0db;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fde0db;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fde0db}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.fix{background:#fef0ee;border-color:#f0c4be}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="cover">
+    <div class="eyebrow">HOTFIX — 502 CARTE FINESS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.55.10 — Fix 502 carte FINESS (page_size 200 + garde-fou bbox)
+      <small>Trois fixes empilés : limite page_size de tabular-api, garde-fou zone trop large, et proxy qui ne crash plus en 502</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.10-alpha</code></span>
+      <span><b>Type :</b> Hotfix prod</span>
+      <span><b>Tests :</b> 944 verts</span>
+    </div>
+    <div class="badges">
+      <span class="badge">🐛 page_size 300 → 200 (max tabular)</span>
+      <span class="badge">⚠ Garde-fou bbox > 5°lat / 6°lng</span>
+      <span class="badge">🛡 Proxy renvoie 200 vide au lieu de 502</span>
+      <span class="badge">🚀 Carte FINESS fonctionnelle en prod</span>
+    </div>
+  </header>
+
+  <h2>🐛 Diagnostic — Pourquoi 502 répétés</h2>
+  <div class="panel fix">
+    <h3 style="margin-top:0">Symptôme</h3>
+    <p>Sur la 0.55.9 livrée la veille, console F12 montrait :</p>
+    <pre><code>api/finess?bbox=...&categories=pharmacie&limit=300 : HTTP 502 (Bad Gateway)
+api/finess?bbox=...&categories=maison_sante&limit=300 : HTTP 502
+api/finess?bbox=...&categories=...&limit=300 : HTTP 502</code></pre>
+    <p>Tous les fetch FINESS retournaient 502, donc la carte restait sans marqueurs.</p>
+
+    <h3>Test direct sur tabular-api.data.gouv.fr</h3>
+    <pre><code>page_size=50  → HTTP 200, 133 555 bytes ✓
+page_size=100 → HTTP 200, 266 311 bytes ✓
+page_size=150 → HTTP 200, 399 277 bytes ✓
+page_size=200 → HTTP 200, 532 646 bytes ✓
+page_size=300 → HTTP 400 "Page size exceeds allowed maximum: 200" ✗</code></pre>
+    <p><b>Cause</b> : tabular-api limite <code>page_size</code> à <b>200</b>. Notre code envoyait 300. Tabular renvoyait 400. Notre proxy levait une exception → Vercel renvoyait 502.</p>
+  </div>
+
+  <h2>✅ Les 3 fixes</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Fix 1 — limit capé à 200</h3>
+    <pre><code>// app/api/finess/route.js
+const limit = Math.min(Number(searchParams.get("limit") || 10), 200);
+
+// app/carte/page.js
+fetch(`/api/finess?...&amp;limit=200`)  // au lieu de 300</code></pre>
+
+    <h3>Fix 2 — Garde-fou bbox trop large</h3>
+    <p>Quand l'utilisateur est dézoomé sur toute la France (latDelta=10°, lngDelta=15°), même avec limit=200 on aurait des résultats incomplets ou problèmes de perf. On bloque côté carte :</p>
+    <pre><code>if (latDelta &gt; 5 || lngDelta &gt; 6) {
+  setFinessCount(-1);  // signal "zone trop large"
+  return;  // pas de fetch
+}</code></pre>
+    <p>UI : chip orange "🔍 Zoome plus (zone trop large)" remplace le compteur.</p>
+
+    <h3>Fix 3 — Proxy plus robuste</h3>
+    <p>Si tabular-api renvoie 400 (page_size trop grand) ou autre, on logge côté serveur mais on renvoie un <b>200 vide</b> côté client au lieu de 502. Évite le crash visible du SW.</p>
+    <pre><code>if (!res.ok) {
+  console.warn(`[FINESS proxy] tabular-api HTTP ${res.status}: ${detail}`);
+  return new Response(
+    JSON.stringify({ error: ..., results: [], count: 0 }),
+    { status: 200, headers: ... }
+  );
+}</code></pre>
+  </div>
+
+  <h2>SW auto-bump — 20ème consécutif 🎉</h2>
+  <p>0.52.1 → ... → 0.55.7 → 0.55.8 → 0.55.9 → <b>0.55.10</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.55.10 · 31 mai 2026</p>
+    <p>3 fixes carte · 944 tests verts · prod stable</p>
+  </footer>
+</div>
+</body>
+</html>

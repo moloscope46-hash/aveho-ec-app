@@ -2,8 +2,9 @@
 // =============================================================
 //  /changelog — Historique complet + recherche thématique
 //  Alpha 0.52.3 — Téléchargement HTML + filtres par thème
+//  Alpha 0.55.11 — Tooltip hover : preview HTML de la note au survol
 // =============================================================
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "../../lib/useAuth";
 import { useCart } from "../useCart";
 import TopBar from "../TopBar";
@@ -45,6 +46,10 @@ export default function ChangelogPage() {
   const [search, setSearch] = useState("");
   const [selectedThemes, setSelectedThemes] = useState([]);  // multi-select
   const [expandedV, setExpandedV] = useState(null);  // version dont les détails sont ouverts
+  // 0.55.11 : hover preview de la note HTML
+  const [hoverPreview, setHoverPreview] = useState(null); // {noteFile, x, y, html} ou null
+  const noteCacheRef = useRef({}); // cache des HTML chargés
+  const hoverTimeoutRef = useRef(null);
 
   // Stats sur les thèmes filtrés (dynamique)
   const themeCounts = useMemo(() => {
@@ -101,6 +106,53 @@ export default function ChangelogPage() {
   }
 
   const hasActiveFilters = filter !== "all" || search.trim() || selectedThemes.length > 0;
+
+  // 0.55.11 — Hover preview de la note HTML
+  // Charge le HTML, extrait le <body> + styles, et affiche en popup
+  async function fetchNoteHtml(noteFile) {
+    if (noteCacheRef.current[noteFile]) return noteCacheRef.current[noteFile];
+    try {
+      const res = await fetch(`/changelog-notes/${noteFile}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const fullHtml = await res.text();
+      // Extraire body et styles
+      const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      const styleMatch = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+      const body = bodyMatch ? bodyMatch[1] : fullHtml;
+      const styles = styleMatch ? styleMatch[1] : "";
+      // Compose un fragment scopé
+      const scoped = `<style>${styles.replace(/body\s*{/g, '.hover-note-scope {')}</style><div class="hover-note-scope">${body}</div>`;
+      noteCacheRef.current[noteFile] = scoped;
+      return scoped;
+    } catch (e) {
+      console.warn("[Changelog] preview load fail:", noteFile, e);
+      const fallback = `<p style="padding:14px;color:#c0392b;font-family:sans-serif">Impossible de charger ${noteFile}</p>`;
+      noteCacheRef.current[noteFile] = fallback;
+      return fallback;
+    }
+  }
+
+  function handleMouseEnter(e, noteFile) {
+    if (!noteFile) return;
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    const x = e.clientX;
+    const y = e.clientY;
+    // Délai 250ms avant fetch pour éviter de spammer
+    hoverTimeoutRef.current = setTimeout(async () => {
+      const html = await fetchNoteHtml(noteFile);
+      setHoverPreview({ noteFile, x, y, html });
+    }, 250);
+  }
+
+  function handleMouseMove(e) {
+    if (!hoverPreview) return;
+    setHoverPreview(p => p ? { ...p, x: e.clientX, y: e.clientY } : null);
+  }
+
+  function handleMouseLeave() {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHoverPreview(null);
+  }
 
   return (
     <div className="bg-dark">
@@ -240,7 +292,12 @@ export default function ChangelogPage() {
                   borderRadius: 10, padding: "12px 16px",
                 }}>
                   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
-                    <h3 style={{ margin: 0, fontSize: 14.5, color: "#142131", fontWeight: 700, flex: 1, minWidth: 200 }}>
+                    <h3 
+                      onMouseEnter={(e) => handleMouseEnter(e, v.noteFile)}
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={handleMouseLeave}
+                      style={{ margin: 0, fontSize: 14.5, color: "#142131", fontWeight: 700, flex: 1, minWidth: 200, cursor: v.noteFile ? "help" : "default" }}
+                    >
                       <span style={{ background: color, color: "#fff", padding: "2px 8px", borderRadius: 6, fontSize: 11.5, fontFamily: "Consolas, monospace", marginRight: 8, fontWeight: 700 }}>v{v.v}</span>
                       {v.titre}
                       {isCurrent && <span style={{ marginLeft: 8, fontSize: 10, color: "#2e6f33", background: "#cfeacb", padding: "2px 8px", borderRadius: 8, fontWeight: 700, letterSpacing: ".4px" }}>ACTUELLE</span>}
@@ -300,7 +357,15 @@ export default function ChangelogPage() {
                       {(isExpanded ? v.chantiers : v.chantiers.slice(0, 5)).map((c, j) => {
                         const meta = getCodeMeta(c.code);
                         return (
-                          <li key={j} style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45 }}>
+                          <li 
+                            key={j} 
+                            onMouseEnter={(e) => handleMouseEnter(e, v.noteFile)}
+                            onMouseMove={handleMouseMove}
+                            onMouseLeave={handleMouseLeave}
+                            style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45, cursor: v.noteFile ? "help" : "default", padding: "2px 4px", borderRadius: 4, transition: "background .15s" }}
+                            onMouseOver={(e) => { if (v.noteFile) e.currentTarget.style.background = "#fef9ed"; }}
+                            onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                          >
                             <span style={{ display: "inline-block", minWidth: 32, background: meta.color + "22", color: meta.color, fontSize: 10, fontWeight: 700, fontFamily: "Consolas, monospace", padding: "2px 6px", borderRadius: 4, textAlign: "center", flexShrink: 0 }}>{meta.label}</span>
                             <span>{c.txt}</span>
                           </li>
@@ -333,6 +398,54 @@ export default function ChangelogPage() {
           </p>
         </Panel>
       </div>
+
+      {/* 0.55.11 — Popup hover preview de la note HTML */}
+      {hoverPreview && (
+        <div 
+          style={{
+            position: "fixed",
+            // Positionnement : à droite du curseur si y a la place, sinon à gauche
+            left: (typeof window !== "undefined" && hoverPreview.x + 480 < window.innerWidth) 
+              ? hoverPreview.x + 18 
+              : Math.max(10, hoverPreview.x - 478),
+            top: (typeof window !== "undefined" && hoverPreview.y + 480 < window.innerHeight)
+              ? hoverPreview.y + 14
+              : Math.max(10, hoverPreview.y - 478),
+            width: 460,
+            maxHeight: 460,
+            background: "#fff",
+            border: "1px solid #d3d9e0",
+            borderRadius: 10,
+            boxShadow: "0 18px 50px rgba(20,33,49,.28)",
+            overflow: "hidden",
+            zIndex: 9999,
+            pointerEvents: "none",  // ne bloque pas la souris
+          }}
+        >
+          <div style={{
+            background: "linear-gradient(90deg, #142131 0%, #185FA5 100%)",
+            color: "#fff",
+            padding: "6px 12px",
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: ".5px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}>
+            <span><i className="ti ti-eye" /> APERÇU NOTE</span>
+            <span style={{ fontFamily: "Consolas, monospace", opacity: 0.85 }}>{hoverPreview.noteFile}</span>
+          </div>
+          <div 
+            style={{ 
+              maxHeight: 430, 
+              overflow: "auto",
+              fontSize: 12,
+            }}
+            dangerouslySetInnerHTML={{ __html: hoverPreview.html }} 
+          />
+        </div>
+      )}
     </div>
   );
 }

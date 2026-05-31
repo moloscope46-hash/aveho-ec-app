@@ -38,7 +38,19 @@ export default function Utilisateurs() {
   const [roleForm, setRoleForm] = useState({ nom: "", description: "", droits: {} });
   // modale invitation
   const [inviteModal, setInviteModal] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: "", role_id: "", nom_affiche: "" });
+  // 0.55.12 : form enrichi pour création utilisateur
+  const [inviteForm, setInviteForm] = useState({
+    email: "",
+    role_id: "",
+    nom_affiche: "",
+    prenom: "",
+    nom: "",
+    telephone: "",
+    mobile: "",
+    fonction_detail: "",
+  });
+  // 0.55.12 : URL de l'invitation après création (pour la copier/montrer)
+  const [createdInviteLink, setCreatedInviteLink] = useState(null);
   // Alpha 0.16.0 : filtre archive + modale info user
   const [filtreStatut, setFiltreStatut] = useState("actifs"); // 'actifs' | 'archives' | 'tous'
   const [filtreInvit, setFiltreInvit] = useState("non-archivees"); // 'non-archivees' | 'archivees' | 'toutes'
@@ -199,35 +211,69 @@ export default function Utilisateurs() {
     }
   }
 
-  // ---- invitations ----
+  // ---- invitations / création utilisateur (0.55.12) ----
   async function sendInvite() {
     if (!inviteForm.email) { setErr("Email requis."); return; }
     if (!auth.can("inviter")) { setErr("Ton rôle ne permet pas d'inviter."); return; }
-    // 1) enregistrer l'invitation
-    await supabase.from("invitations").insert({
-      structure_id: auth.structureId, email: inviteForm.email, role_id: inviteForm.role_id || null, nom_affiche: inviteForm.nom_affiche,
-    });
-    // 2) tenter l'envoi du mail de bienvenue (Edge Function invite-user)
+    const nom_affiche_fallback = inviteForm.nom_affiche || `${inviteForm.prenom} ${inviteForm.nom}`.trim();
+
+    // 1) enregistrer l'invitation + récupérer le token
+    const { data: invData, error: invErr } = await supabase
+      .from("invitations")
+      .insert({
+        structure_id: auth.structureId,
+        email: inviteForm.email,
+        role_id: inviteForm.role_id || null,
+        nom_affiche: nom_affiche_fallback,
+        prenom: inviteForm.prenom || null,
+        telephone: inviteForm.telephone || null,
+        mobile: inviteForm.mobile || null,
+        fonction_detail: inviteForm.fonction_detail || null,
+      })
+      .select("token")
+      .single();
+
+    if (invErr) {
+      setErr("Erreur création invitation : " + invErr.message);
+      return;
+    }
+
+    // 2) Construire le lien d'inscription
+    const siteUrl = (typeof window !== "undefined" ? window.location.origin : "");
+    const inviteLink = `${siteUrl}/inscription/${invData.token}`;
+
+    // 3) tenter l'envoi du mail de bienvenue (Edge Function invite-user)
     try {
       const roleNom = roles.find((r) => r.id === inviteForm.role_id)?.nom || "Utilisateur";
       const etabNoms = auth.etablissements.map((e) => e.nom);
       await supabase.functions.invoke("invite-user", {
-        body: { email: inviteForm.email, nom: inviteForm.nom_affiche, collectivite: auth.structureNom, role: roleNom, etablissements: etabNoms },
+        body: {
+          email: inviteForm.email,
+          nom: nom_affiche_fallback,
+          collectivite: auth.structureNom,
+          role: roleNom,
+          etablissements: etabNoms,
+          inviteLink,  // 0.55.12 : passe le lien custom au mail
+        },
       });
     } catch (e) {
-      // si la fonction n'est pas déployée, l'invitation reste enregistrée (envoi manuel possible)
       console.warn("Email non envoyé (Edge Function invite-user non déployée ?)", e);
     }
-    // 3) Alpha 0.4 : trace audit + notif à tous
+
+    // 4) trace audit + notif
     await logEvent(supabase, auth, {
       action: "inviter", entite: "invitation",
-      details: { email: inviteForm.email, nom: inviteForm.nom_affiche },
+      details: { email: inviteForm.email, nom: nom_affiche_fallback },
       notif: true, notifType: "invitation",
       titre: "Nouvelle invitation envoyée",
-      message: `${inviteForm.nom_affiche || inviteForm.email} a été invité(e).`,
+      message: `${nom_affiche_fallback || inviteForm.email} a été invité(e).`,
       lien: "/utilisateurs",
     });
-    setInviteModal(false); setInviteForm({ email: "", role_id: "", nom_affiche: "" }); await loadAll();
+
+    // 5) Afficher le lien (au cas où l'email n'est pas configuré)
+    setCreatedInviteLink(inviteLink);
+    setInviteForm({ email: "", role_id: "", nom_affiche: "", prenom: "", nom: "", telephone: "", mobile: "", fonction_detail: "" });
+    await loadAll();
   }
 
   if (!auth.ready) return null;
@@ -406,7 +452,7 @@ export default function Utilisateurs() {
             {tab === "invitations" && (
               <Panel>
                 <div className="di-toolbar" style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:12 }}>
-                  {auth.can("inviter") && <button className="btn-new" onClick={() => { setErr(""); setInviteModal(true); }}><i className="ti ti-mail" /> Inviter un utilisateur</button>}
+                  {auth.can("inviter") && <button className="btn-new" onClick={() => { setErr(""); setInviteModal(true); }}><i className="ti ti-user-plus" /> Créer un utilisateur</button>}
                   <span style={{ marginLeft:"auto" }}>
                     <FilterBar
                       label="Voir :"
@@ -500,22 +546,136 @@ export default function Utilisateurs() {
       {/* modale invitation */}
       {inviteModal && (
         <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setInviteModal(false)}>
-          <div className="modal">
-            <div className="modal-head">Inviter un utilisateur <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setInviteModal(false)} /></div>
+          <div className="modal" style={{ maxWidth: 560, maxHeight: "92vh", overflowY: "auto" }}>
+            <div className="modal-head">
+              <i className="ti ti-user-plus" /> Créer un utilisateur
+              <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setInviteModal(false)} />
+            </div>
             <div className="modal-body">
               {err && <div className="err">{err}</div>}
-              <div className="fld"><label>Email</label><input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="prenom.nom@etablissement.fr" /></div>
-              <div className="fld"><label>Nom affiché</label><input value={inviteForm.nom_affiche} onChange={(e) => setInviteForm({ ...inviteForm, nom_affiche: e.target.value })} /></div>
-              <div className="fld"><label>Rôle</label>
-                <select value={inviteForm.role_id} onChange={(e) => setInviteForm({ ...inviteForm, role_id: e.target.value })}>
-                  <option value="">— Choisir —</option>{roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
-                </select>
+
+              {/* Section 1 : Identité */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                  Identité
+                </div>
+                <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div className="fld">
+                    <label>Prénom</label>
+                    <input value={inviteForm.prenom} onChange={(e) => setInviteForm({ ...inviteForm, prenom: e.target.value })} placeholder="Marie" />
+                  </div>
+                  <div className="fld">
+                    <label>Nom</label>
+                    <input value={inviteForm.nom} onChange={(e) => setInviteForm({ ...inviteForm, nom: e.target.value })} placeholder="Dupont" />
+                  </div>
+                </div>
+                <div className="fld">
+                  <label>Email *</label>
+                  <input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="prenom.nom@etablissement.fr" />
+                </div>
               </div>
-              <p style={{ fontSize: 12, color: "#8a98a8" }}>L'utilisateur recevra le lien d'inscription. Dans cette démo, l'invitation est enregistrée mais l'envoi d'email se configure côté Supabase.</p>
+
+              {/* Section 2 : Contact */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#7CC8C8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                  Contact (optionnel)
+                </div>
+                <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div className="fld">
+                    <label>Téléphone fixe</label>
+                    <input type="tel" value={inviteForm.telephone} onChange={(e) => setInviteForm({ ...inviteForm, telephone: e.target.value })} placeholder="05 12 34 56 78" />
+                  </div>
+                  <div className="fld">
+                    <label>Mobile</label>
+                    <input type="tel" value={inviteForm.mobile} onChange={(e) => setInviteForm({ ...inviteForm, mobile: e.target.value })} placeholder="06 12 34 56 78" />
+                  </div>
+                </div>
+                <div className="fld">
+                  <label>Fonction détaillée</label>
+                  <input value={inviteForm.fonction_detail} onChange={(e) => setInviteForm({ ...inviteForm, fonction_detail: e.target.value })} placeholder="Infirmière coordinatrice pôle gériatrie" />
+                </div>
+              </div>
+
+              {/* Section 3 : Rôle */}
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#EF9F27", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                  Accès et rôle
+                </div>
+                <div className="fld">
+                  <label>Rôle *</label>
+                  <select value={inviteForm.role_id} onChange={(e) => setInviteForm({ ...inviteForm, role_id: e.target.value })}>
+                    <option value="">— Choisir —</option>
+                    {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 12, color: "#8a98a8", margin: "10px 0 0", lineHeight: 1.5 }}>
+                <i className="ti ti-info-circle" /> L'utilisateur recevra un email avec un lien d'inscription pour choisir son mot de passe et compléter ses informations. Lien valide 7 jours.
+              </p>
             </div>
             <div className="modal-foot">
               <button className="btn-ghost" onClick={() => setInviteModal(false)}>Annuler</button>
-              <button className="btn-save" onClick={sendInvite}>Envoyer l'invitation</button>
+              <button className="btn-save" onClick={sendInvite} disabled={!inviteForm.email || !inviteForm.role_id}>
+                <i className="ti ti-send" /> Envoyer l'invitation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 0.55.12 : Modale post-création avec lien à copier */}
+      {createdInviteLink && (
+        <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setCreatedInviteLink(null)}>
+          <div className="modal" style={{ maxWidth: 540 }}>
+            <div className="modal-head" style={{ background: "linear-gradient(135deg, #5aa05a, #2e6f33)", color: "#fff" }}>
+              <i className="ti ti-circle-check" /> Invitation créée
+              <i className="ti ti-x" style={{ cursor: "pointer", color: "#fff" }} onClick={() => { setCreatedInviteLink(null); setInviteModal(false); }} />
+            </div>
+            <div className="modal-body">
+              <p style={{ margin: "0 0 12px", fontSize: 14, lineHeight: 1.5 }}>
+                ✓ L'invitation a été créée et un email a été envoyé.
+              </p>
+              <p style={{ margin: "0 0 8px", fontSize: 12, color: "#6c7a89" }}>
+                Si l'email ne se configure pas, copiez le lien ci-dessous et transmettez-le manuellement :
+              </p>
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                <input
+                  readOnly
+                  value={createdInviteLink}
+                  onFocus={(e) => e.target.select()}
+                  style={{
+                    flex: 1,
+                    padding: "8px 10px",
+                    border: "1px solid #d3d9e0",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontFamily: "Consolas, monospace",
+                    background: "#f4f7fa",
+                  }}
+                />
+                <button
+                  className="btn-save"
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdInviteLink);
+                    alert("Lien copié !");
+                  }}
+                  title="Copier le lien"
+                >
+                  <i className="ti ti-copy" /> Copier
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: "#8a98a8", margin: 0 }}>
+                <i className="ti ti-clock" /> Ce lien est valide pendant 7 jours.
+              </p>
+            </div>
+            <div className="modal-foot">
+              <button
+                className="btn-save"
+                onClick={() => { setCreatedInviteLink(null); setInviteModal(false); }}
+              >
+                Terminer
+              </button>
             </div>
           </div>
         </div>
