@@ -66,33 +66,68 @@ export default function CartePage() {
   const [selectedCamion, setSelectedCamion] = useState(null);
   const [filtreType, setFiltreType] = useState({ livraison: true, sav: true, transit: true });
 
-  // Charger Leaflet via npm (dynamic import — Edge/Brave bloquent les CDN externes)
+  // 0.55.8 : Init Leaflet + carte en un seul useEffect patient
+  // Le problème en prod était une race condition : `setLeafletReady(true)` déclenchait
+  // un 2e effect mais mapRef.current pouvait être null (DOM pas encore commit).
+  // Solution : tout dans un seul effect, avec attente active de mapRef.current.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.L) {
-      setLeafletReady(true);
-      return;
-    }
 
     let cancelled = false;
     (async () => {
       try {
-        // 1. CSS depuis node_modules (bundlé par Next)
-        await import("leaflet/dist/leaflet.css");
-        // 2. JS Leaflet
-        const L = (await import("leaflet")).default;
-        // 3. Fix webpack : Leaflet cherche ses images par URL relative, ça casse avec bundlers
-        delete L.Icon.Default.prototype._getIconUrl;
-        L.Icon.Default.mergeOptions({
-          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        // 1. Charger Leaflet (CSS + JS) si pas déjà fait
+        if (!window.L) {
+          await import("leaflet/dist/leaflet.css");
+          const L = (await import("leaflet")).default;
+          // Fix webpack : Leaflet cherche ses images par URL relative, ça casse avec bundlers
+          delete L.Icon.Default.prototype._getIconUrl;
+          L.Icon.Default.mergeOptions({
+            iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+            iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+            shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          });
+          window.L = L;
+        }
+        if (cancelled) return;
+
+        // 2. Attendre patiemment que React ait commit la div (max 50 tentatives × 60ms = 3s)
+        let tries = 0;
+        while (!mapRef.current && tries < 50) {
+          await new Promise(r => setTimeout(r, 60));
+          tries++;
+        }
+        if (cancelled) return;
+        if (!mapRef.current) {
+          console.error("[Carte] mapRef.current toujours null après 3s, abandon");
+          return;
+        }
+        if (mapInstanceRef.current) return;  // déjà initialisé (HMR ou re-render)
+
+        // 3. Créer la carte
+        const L = window.L;
+        const map = L.map(mapRef.current, {
+          center: [46.7, 2.4],  // centre France
+          zoom: 6,
+          scrollWheelZoom: true,
         });
-        // 4. Exposer en global pour la suite du code
-        window.L = L;
-        if (!cancelled) setLeafletReady(true);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
+        }).addTo(map);
+
+        etabsLayerRef.current = L.layerGroup().addTo(map);
+        camionsLayerRef.current = L.layerGroup().addTo(map);
+        userPosLayerRef.current = L.layerGroup().addTo(map);
+        mapInstanceRef.current = map;
+
+        // 4. Marqueur position user si dispo
+        drawUserPosition();
+
+        // 5. Marquer prêt → déclenche le rendu des étabs/camions
+        setLeafletReady(true);
       } catch (e) {
-        console.error("Erreur chargement Leaflet :", e);
+        console.error("[Carte] Erreur init Leaflet :", e);
       }
     })();
 
@@ -112,30 +147,9 @@ export default function CartePage() {
 
   useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.structureId]);
 
-  // Init carte une fois leaflet chargé
+  // 0.55.8 : 2e effect — animation des camions (la map est créée dans le 1er useEffect)
   useEffect(() => {
-    if (!leafletReady || !mapRef.current || mapInstanceRef.current) return;
-    const L = window.L;
-
-    // Centre France par défaut
-    const map = L.map(mapRef.current, {
-      center: [46.7, 2.4],  // centre France
-      zoom: 6,
-      scrollWheelZoom: true,
-    });
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
-    }).addTo(map);
-
-    etabsLayerRef.current = L.layerGroup().addTo(map);
-    camionsLayerRef.current = L.layerGroup().addTo(map);
-    userPosLayerRef.current = L.layerGroup().addTo(map);
-    mapInstanceRef.current = map;
-
-    // Alpha 0.55.0 : afficher marqueur "Ma position" si dispo
-    drawUserPosition();
+    if (!leafletReady || !mapInstanceRef.current || !camionsLayerRef.current) return;
 
     // Initialiser état mouvements camions (progress 0..1 entre depart et arrivee)
     camionsStateRef.current = CAMIONS_DEMO.map(c => ({
@@ -161,8 +175,7 @@ export default function CartePage() {
 
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
-      map.remove();
-      mapInstanceRef.current = null;
+      // Note : on ne détruit pas la map ici (elle est gérée par le 1er useEffect)
     };
   }, [leafletReady]);
 
