@@ -10,6 +10,7 @@ import AnnoncesBanner from "./AnnoncesBanner";
 import GlobalErrorCapture from "./GlobalErrorCapture";
 import FocusMode from "./FocusMode";
 import GeolocPrompt from "./GeolocPrompt";
+import BiometricOptInModal from "./BiometricOptInModal";
 
 export const metadata = {
   title: "Aveho — Espace Collectivité",
@@ -77,6 +78,8 @@ export default function RootLayout({ children }) {
         <FocusMode />
         {/* Alpha 0.55.0 : demande géolocalisation au premier login */}
         <GeolocPrompt />
+        {/* Alpha 0.55.13 : proposition activation empreinte après login (mobile) */}
+        <BiometricOptInModal />
       </body>
     </html>
   );

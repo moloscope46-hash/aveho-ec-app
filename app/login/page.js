@@ -1,8 +1,16 @@
 "use client";
-// Page Login — Page de connexion (email/mot de passe + magic link)
-import { useState } from "react";
+// Page Login — Page de connexion (email/mot de passe + magic link + empreinte)
+// Alpha 0.55.13 : ajout connexion par empreinte (WebAuthn) si dispo
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
+import {
+  isWebAuthnSupported,
+  isMobileDevice,
+  hasLocalCredential,
+  authenticateBiometric,
+  isPlatformAuthenticatorAvailable,
+} from "../../lib/webauthn";
 
 export default function Login() {
   const supabase = createClient();
@@ -13,6 +21,31 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+  // 0.55.13 : empreinte
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioForEmail, setBioForEmail] = useState(false);
+
+  // Détecter dispo WebAuthn au mount
+  useEffect(() => {
+    (async () => {
+      if (!isWebAuthnSupported()) return;
+      const platformOk = await isPlatformAuthenticatorAvailable();
+      if (platformOk) setBioAvailable(true);
+    })();
+  }, []);
+
+  // À chaque changement d'email, vérifier si on a un credential local
+  useEffect(() => {
+    if (!email || !bioAvailable) {
+      setBioForEmail(false);
+      return;
+    }
+    const t = setTimeout(async () => {
+      const has = await hasLocalCredential(email);
+      setBioForEmail(has);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [email, bioAvailable]);
 
   async function submit() {
     setBusy(true); setErr(""); setOk("");
@@ -40,10 +73,26 @@ export default function Login() {
             });
           }
         } catch (_) { /* non-bloquant */ }
+        // 0.55.13 : signaler login pour déclencher modale opt-in biométrie
+        try { window.dispatchEvent(new CustomEvent("aveho:login-success")); } catch (_) {}
         router.push("/vue-globale");
       }
     } catch (e) {
       setErr(e.message || "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // 0.55.13 : connexion par empreinte
+  async function biometricLogin() {
+    setBusy(true); setErr(""); setOk("");
+    try {
+      const r = await authenticateBiometric({ supabase, email });
+      if (!r?.ok) throw new Error("Échec authentification biométrique");
+      router.push("/vue-globale");
+    } catch (e) {
+      setErr(e.message || "Erreur authentification biométrique");
     } finally {
       setBusy(false);
     }
@@ -78,9 +127,39 @@ export default function Login() {
           {err && <div className="err">{err}</div>}
           {ok && <div className="ok">{ok}</div>}
           <label>Email professionnel</label>
-          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cedric@hop01.fr" />
+          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cedric@hop01.fr" autoComplete="email" />
+
+          {/* 0.55.13 : bouton empreinte (si dispo + credential local pour cet email) */}
+          {bioForEmail && mode === "signin" && (
+            <button
+              className="btn-primary"
+              onClick={biometricLogin}
+              disabled={busy}
+              style={{
+                marginTop: 14,
+                background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                fontSize: 15,
+                minHeight: 48,
+              }}
+            >
+              <i className="ti ti-fingerprint" style={{ fontSize: 22 }} />
+              {busy ? "Authentification…" : "Se connecter avec mon empreinte"}
+            </button>
+          )}
+          {bioForEmail && mode === "signin" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 6px" }}>
+              <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
+              <span style={{ fontSize: 12, color: "#8a98a8" }}>ou mot de passe</span>
+              <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
+            </div>
+          )}
+
           <label>Mot de passe</label>
-          <input className="input" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <input className="input" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === "Enter" && submit()} autoComplete="current-password" />
           <button className="btn-primary" onClick={submit} disabled={busy || !email || !pwd}>
             {busy ? "..." : mode === "signin" ? "Se connecter" : "Créer mon compte"}
           </button>

@@ -16,6 +16,7 @@ import NotificationPreferences from "../NotificationPreferences";
 import DigestPreferences from "../DigestPreferences";
 import DigestHistory from "../DigestHistory";
 import PasswordInput from "../PasswordInput";
+import BiometricSection from "../BiometricSection";
 
 export default function Profil() {
   const supabase = createClient();
@@ -297,6 +298,16 @@ export default function Profil() {
               <div style={{ textAlign: "right" }}>
                 <Btn variant="primary" icon="ti-lock" onClick={savePwd} disabled={!pwd || !pwd2}>Modifier le mot de passe</Btn>
               </div>
+            </CollapsibleSection>
+
+            {/* 0.55.13 : Section Empreinte digitale */}
+            <CollapsibleSection
+              title="Connexion par empreinte"
+              icon="ti-fingerprint"
+              iconColor="#185FA5"
+              defaultOpen={false}
+            >
+              <BiometricSection auth={auth} />
             </CollapsibleSection>
 
             {/* Informations session */}
