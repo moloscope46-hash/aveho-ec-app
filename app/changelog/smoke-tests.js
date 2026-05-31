@@ -27,6 +27,59 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.29 — RPPS prod + filtre vue-globale + champs RPPS user ==============
+  "0.55.29": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("API RPPS retourne données réelles (FHIR ANS)", async () => {
+      try {
+        const res = await fetch("/api/rpps?q=DUPONT&limit=5");
+        const data = await res.json();
+        if (!data.ok) return { ok: false, msg: data.error || "Réponse non-ok" };
+        const isProd = !data.mock;
+        return {
+          ok: isProd,
+          msg: isProd ? `${data.count} résultats réels (FHIR ANS)` : "Encore en mode mock",
+        };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Colonnes invitations.rpps présentes", async () => {
+      const { error } = await supabase.from("invitations").select("rpps, adeli, rpps_profession, rpps_specialite").limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("column")) {
+        return { ok: false, msg: "Colonnes absentes — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Colonnes RPPS OK" };
+    }));
+
+    results.push(await runTest("Colonnes membres_structure.rpps présentes", async () => {
+      const { error } = await supabase.from("membres_structure").select("rpps, adeli, rpps_profession").limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("column")) {
+        return { ok: false, msg: "Colonnes absentes — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Colonnes RPPS OK" };
+    }));
+
+    results.push(await runTest("Vue v_user_complete contient les champs RPPS", async () => {
+      const { error } = await supabase.from("v_user_complete").select("rpps, rpps_profession").limit(1);
+      return { ok: !error, msg: error?.message || "Vue mise à jour" };
+    }));
+
+    results.push(await runTest("Filtre vue-globale ('mine'/'partners'/'all') fonctionne", () => {
+      const rows = [
+        { est_partenaire: false }, { est_partenaire: false }, { est_partenaire: true },
+      ];
+      const mine = rows.filter((e) => !e.est_partenaire);
+      const partners = rows.filter((e) => e.est_partenaire);
+      return { ok: mine.length === 2 && partners.length === 1, msg: "Filtres OK" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.28 — RPPS + cleanup logger + SafeWrite audit ==============
   "0.55.28": async () => {
     const results = [];

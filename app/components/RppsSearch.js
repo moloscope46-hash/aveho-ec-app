@@ -112,9 +112,27 @@ export default function RppsSearch({
         }}>
           <i className="ti ti-alert-triangle" />
           <span>
-            <b>Mode démonstration :</b> données simulées. Configurez{" "}
-            <code style={{ background: "#fff", padding: "1px 5px", borderRadius: 3 }}>RPPS_DATASET_RID</code>{" "}
-            en variable d'environnement Vercel pour interroger le vrai annuaire ANS.
+            <b>Mode démonstration :</b> données simulées. L'API ANS officielle est utilisée en mode production.
+          </span>
+        </div>
+      )}
+
+      {!isMock && (
+        <div style={{
+          background: "#eef9ef",
+          border: "1px solid #bfe2bf",
+          borderRadius: 8,
+          padding: "8px 12px",
+          fontSize: 11.5,
+          color: "#2e6f33",
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}>
+          <i className="ti ti-circle-check" />
+          <span>
+            Source : <b>API FHIR ANS officielle</b> (~1,7 million de praticiens, libre accès).
           </span>
         </div>
       )}

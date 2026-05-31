@@ -1,222 +1,185 @@
-import { logger } from "../../../lib/logger";
-
 // =============================================================
-//  app/api/rpps/route.js
-//  Alpha 0.55.28 — Proxy serveur vers le RPPS officiel
+//  app/api/rpps/route.js (Alpha 0.55.29)
 //
-//  Source : Annuaire santé ANS (Agence du Numérique en Santé)
-//  Référence : https://annuaire.sante.fr/  (recherche prosanté)
-//  Dataset : "psp" (Personnels de santé) sur tabular-api.data.gouv.fr
+//  Proxy serveur RPPS — version PRODUCTION.
+//  Source : API FHIR Annuaire Santé ANS (libre accès, sans clé)
+//    Base URL : https://gateway.api.esante.gouv.fr/fhir/v2/
+//    Doc      : https://ansforge.github.io/annuaire-sante-fhir-documentation/
+//    Format   : FHIR R4 JSON
 //
-//  Cas d'usage Aveho :
-//   - Référencer un médecin/IDE prescripteur sur un patient
-//   - Auto-compléter à partir d'un numéro RPPS/ADELI
-//   - Permettre la recherche par nom + département + profession
+//  Plus de mock par défaut — données réelles ~1.7M praticiens.
 //
-//  Format de retour normalisé :
-//   {
-//     ok: boolean,
-//     count: number,
-//     results: [{
-//       rpps,           // 11 chiffres
-//       adeli,          // 9 chiffres (médecins libéraux pour partie)
-//       civilite,       // "M.", "Mme", "Dr"
-//       nom,
-//       prenom,
-//       profession,     // "Médecin", "Infirmier", etc.
-//       specialite,
-//       mode_exercice,
-//       adresse,
-//       cp,
-//       commune,
-//       telephone,
-//       email,
-//     }]
-//   }
+//  Endpoints FHIR utilisés :
+//    GET /Practitioner?family=DUPONT&_count=20
+//    GET /Practitioner?identifier=10000000001  (RPPS exact)
+//    GET /PractitionerRole?practitioner=<id>&_include=PractitionerRole:organization
 // =============================================================
 
-// Dataset ANS officiel (Annuaire santé) sur data.gouv.fr
-// NB : le RID change quand l'ANS publie une nouvelle version (~mensuel)
-// Pour l'instant on utilise un mock + structure pour démontrer l'API
-const TABULAR_BASE = "https://tabular-api.data.gouv.fr/api/resources/";
-const RPPS_DATASET_RID = process.env.RPPS_DATASET_RID || ""; // à configurer en env
+const FHIR_BASE = "https://gateway.api.esante.gouv.fr/fhir/v2";
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
+/** Normalise une ressource FHIR Practitioner vers notre format */
+function normalizePractitioner(practitioner, roles = []) {
+  // Identifier RPPS / ADELI dans practitioner.identifier[]
+  const ids = practitioner.identifier || [];
+  const rppsId = ids.find((i) => i.system?.includes("rpps") || i.system?.includes("idnatps"));
+  const adeliId = ids.find((i) => i.system?.includes("adeli"));
+
+  // Nom + prénom
+  const name = practitioner.name?.[0] || {};
+  const nom = name.family || "";
+  const prenom = (name.given || []).join(" ") || "";
+  const civilite = name.prefix?.[0] || "";
+
+  // Le PractitionerRole contient profession + adresse + tél
+  const role = roles.find((r) => r.practitioner?.reference?.endsWith(practitioner.id)) || {};
+
+  // Profession depuis code.coding[]
+  let profession = "";
+  let specialite = "";
+  if (role.code) {
+    for (const cc of role.code) {
+      const coding = cc.coding?.[0];
+      if (!coding) continue;
+      if (coding.display) {
+        if (!profession) profession = coding.display;
+        else specialite = coding.display;
+      }
+    }
+  }
+
+  // specialty (savoir-faire / spécialité)
+  if (role.specialty && role.specialty[0]?.coding?.[0]?.display) {
+    specialite = role.specialty[0].coding[0].display;
+  }
+
+  // Telecom (téléphone / email)
+  const telecom = role.telecom || practitioner.telecom || [];
+  const tel = telecom.find((t) => t.system === "phone")?.value || "";
+  const email = telecom.find((t) => t.system === "email")?.value || "";
+
+  // Adresse (location ou directement sur role)
+  let adresse = "", cp = "", commune = "";
+  if (role.location?.[0]?.address) {
+    const a = role.location[0].address;
+    adresse = (a.line || []).join(", ");
+    cp = a.postalCode || "";
+    commune = a.city || "";
+  }
+
+  return {
+    rpps: rppsId?.value || "",
+    adeli: adeliId?.value || "",
+    civilite,
+    nom,
+    prenom,
+    profession,
+    specialite,
+    mode_exercice: "",
+    adresse,
+    cp,
+    commune,
+    telephone: tel,
+    email,
+    // ID interne FHIR pour aller chercher plus de détails si besoin
+    _fhirId: practitioner.id,
+  };
+}
+
+/** Récupère les PractitionerRole d'un practitioner pour avoir profession + adresse */
+async function fetchRolesForPractitioner(practitionerId) {
+  try {
+    const url = `${FHIR_BASE}/PractitionerRole?practitioner=${practitionerId}&_count=5`;
+    const res = await fetch(url, {
+      headers: { Accept: "application/fhir+json" },
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.entry || []).map((e) => e.resource);
+  } catch {
+    return [];
+  }
+}
+
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
-  const rpps = (searchParams.get("rpps") || "").trim();
   const profession = (searchParams.get("profession") || "").trim();
   const cp = (searchParams.get("cp") || "").trim();
-  const limit = Math.min(Number(searchParams.get("limit") || 20), 100);
+  const rppsExact = (searchParams.get("rpps") || "").trim();
+  const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 50);
+  const includeRoles = searchParams.get("withRoles") !== "false";
 
-  if (!q && !rpps) {
+  if (!q && !rppsExact && !profession && !cp) {
     return Response.json({
       ok: false,
-      error: "Requête vide. Fournissez ?q=nom ou ?rpps=12345678901",
+      error: "Au moins un critère requis (q, rpps, profession, cp)",
     }, { status: 400 });
   }
 
-  // Si le dataset RID n'est pas configuré, on retourne un mock
-  // pour permettre le développement et les tests UI sans clé d'API.
-  if (!RPPS_DATASET_RID) {
-    logger.warn("[RPPS proxy] RPPS_DATASET_RID non configuré, utilisation du mock");
-    return Response.json(buildMockResponse(q, rpps, profession, limit));
-  }
-
   try {
-    const url = new URL(`${TABULAR_BASE}${RPPS_DATASET_RID}/data/`);
-    url.searchParams.set("page_size", String(limit));
+    // Build URL FHIR
+    const params = new URLSearchParams();
+    if (rppsExact) {
+      params.set("identifier", rppsExact);
+    } else {
+      if (q) params.set("family", q);
+    }
+    params.set("_count", String(limit));
 
-    // Filtres
-    if (rpps) {
-      url.searchParams.set("identifiant_pp__exact", rpps);
-    } else if (q) {
-      // recherche par nom (insensible casse)
-      url.searchParams.set("nom_d_exercice__contains", q.toUpperCase());
-    }
-    if (profession) {
-      url.searchParams.set("libelle_profession__contains", profession);
-    }
-    if (cp) {
-      url.searchParams.set("code_postal_coord_structure__startswith", cp);
-    }
-
-    const res = await fetch(url.toString(), {
-      next: { revalidate: 3600 }, // cache 1h
-      headers: { "Accept": "application/json" },
+    const url = `${FHIR_BASE}/Practitioner?${params}`;
+    const res = await fetch(url, {
+      headers: { Accept: "application/fhir+json" },
+      next: { revalidate: 3600 }, // Cache 1h serveur
     });
 
     if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      logger.warn(`[RPPS proxy] tabular-api HTTP ${res.status}: ${detail} — URL: ${url}`);
+      const text = await res.text().catch(() => "");
       return Response.json({
         ok: false,
-        error: `RPPS indisponible (HTTP ${res.status})`,
+        error: `FHIR API HTTP ${res.status}`,
+        detail: text.slice(0, 200),
       }, { status: 502 });
     }
 
     const json = await res.json();
-    const results = (json.data || []).map(normalizeEntry);
+    const practitioners = (json.entry || []).map((e) => e.resource);
+
+    // Pour chaque practitioner, récupérer ses rôles (profession + adresse)
+    // Limite à 10 pour ne pas exploser le temps de réponse
+    const limited = practitioners.slice(0, 10);
+    let normalized;
+    if (includeRoles && limited.length > 0) {
+      const roleResults = await Promise.all(
+        limited.map((p) => fetchRolesForPractitioner(p.id))
+      );
+      normalized = limited.map((p, i) => normalizePractitioner(p, roleResults[i]));
+    } else {
+      normalized = limited.map((p) => normalizePractitioner(p, []));
+    }
+
+    // Filtre client côté serveur pour profession et CP (FHIR ne filtre pas dessus directement)
+    let filtered = normalized;
+    if (profession) {
+      const pl = profession.toLowerCase();
+      filtered = filtered.filter((e) => (e.profession || "").toLowerCase().includes(pl));
+    }
+    if (cp) {
+      filtered = filtered.filter((e) => (e.cp || "").startsWith(cp));
+    }
 
     return Response.json({
       ok: true,
-      count: results.length,
-      results,
+      count: filtered.length,
+      total_fhir: practitioners.length,
+      results: filtered,
+      source: "ANS FHIR R4 (gateway.api.esante.gouv.fr)",
     });
   } catch (e) {
     console.error("[RPPS proxy] Exception:", e);
     return Response.json({
       ok: false,
-      error: "Erreur serveur lors de l'appel RPPS",
+      error: e.message || "Erreur inconnue",
     }, { status: 500 });
   }
-}
-
-// Normalise un enregistrement RPPS brut vers notre format unifié
-function normalizeEntry(row) {
-  return {
-    rpps: row.identifiant_pp || row.rpps || "",
-    adeli: row.identifiant_pp_secondaire || row.adeli || "",
-    civilite: row.code_civilite_d_exercice || row.civilite || "",
-    nom: row.nom_d_exercice || row.nom || "",
-    prenom: row.prenom_d_exercice || row.prenom || "",
-    profession: row.libelle_profession || row.profession || "",
-    specialite: row.libelle_savoir_faire || row.specialite || "",
-    mode_exercice: row.libelle_mode_exercice || "",
-    adresse: [row.numero_voie_coord_structure, row.libelle_voie_coord_structure].filter(Boolean).join(" "),
-    cp: row.code_postal_coord_structure || "",
-    commune: row.libelle_commune_coord_structure || "",
-    telephone: row.telephone_coord_structure || "",
-    email: row.adresse_email_coord_structure || "",
-  };
-}
-
-// Mock pour permettre développement / démo sans dataset configuré
-function buildMockResponse(q, rpps, profession, limit) {
-  const mockData = [
-    {
-      rpps: "10101010101",
-      adeli: "012345678",
-      civilite: "Dr",
-      nom: "DUPONT",
-      prenom: "Marie",
-      profession: "Médecin",
-      specialite: "Médecine générale",
-      mode_exercice: "Libéral",
-      adresse: "12 rue de la République",
-      cp: "75011",
-      commune: "PARIS",
-      telephone: "01 23 45 67 89",
-      email: "marie.dupont@example.fr",
-    },
-    {
-      rpps: "10101010102",
-      adeli: "012345679",
-      civilite: "Dr",
-      nom: "MARTIN",
-      prenom: "Jean",
-      profession: "Médecin",
-      specialite: "Cardiologie",
-      mode_exercice: "Libéral",
-      adresse: "5 avenue Foch",
-      cp: "75116",
-      commune: "PARIS",
-      telephone: "01 44 55 66 77",
-      email: "",
-    },
-    {
-      rpps: "10101010103",
-      adeli: "",
-      civilite: "Mme",
-      nom: "BERNARD",
-      prenom: "Sophie",
-      profession: "Infirmier",
-      specialite: "IDEL",
-      mode_exercice: "Libéral",
-      adresse: "27 boulevard Voltaire",
-      cp: "75011",
-      commune: "PARIS",
-      telephone: "06 12 34 56 78",
-      email: "sophie.bernard@example.fr",
-    },
-    {
-      rpps: "10101010104",
-      adeli: "",
-      civilite: "M.",
-      nom: "PETIT",
-      prenom: "Lucas",
-      profession: "Kinésithérapeute",
-      specialite: "Masso-kiné",
-      mode_exercice: "Libéral",
-      adresse: "3 place de la Mairie",
-      cp: "46500",
-      commune: "GRAMAT",
-      telephone: "05 65 12 34 56",
-      email: "",
-    },
-  ];
-
-  // Filtre selon les paramètres
-  let filtered = mockData;
-  if (rpps) {
-    filtered = filtered.filter((e) => e.rpps === rpps);
-  } else if (q) {
-    const qLower = q.toLowerCase();
-    filtered = filtered.filter(
-      (e) => e.nom.toLowerCase().includes(qLower)
-          || e.prenom.toLowerCase().includes(qLower)
-    );
-  }
-  if (profession) {
-    const pLower = profession.toLowerCase();
-    filtered = filtered.filter((e) => e.profession.toLowerCase().includes(pLower));
-  }
-
-  return {
-    ok: true,
-    count: Math.min(filtered.length, limit),
-    results: filtered.slice(0, limit),
-    mock: true,
-    note: "Données simulées — configurez RPPS_DATASET_RID en variable d'environnement pour utiliser le vrai dataset ANS",
-  };
 }

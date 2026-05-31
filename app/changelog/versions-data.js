@@ -120,6 +120,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.29",
+    "kind": "version",
+    "titre": "🩺 RPPS production (API FHIR ANS officielle) · Bouton 'Rechercher RPPS' à la création utilisateur · Champs RPPS dans fiche user · Filtre vue-globale Mes/Partenaires/Tous",
+    "chantiers": [
+      { "code": "FIX", "txt": "Vue globale multi-établissements : filtre est_partenaire dans la requête SQL et toggle UI 'Mes établissements / Partenaires / Tous' avec compteurs. Les partenaires affichent un badge violet 'PARTENAIRE' et un CTA différent ('Voir la fiche partenaire' qui mène à /etablissements?focus=...)" },
+      { "code": "API", "txt": "/api/rpps refondu : utilise l'API FHIR Annuaire Santé ANS officielle (gateway.api.esante.gouv.fr/fhir/v2/Practitioner). Plus de mock par défaut, données réelles ~1.7M praticiens en accès libre, sans clé. Cache serveur 1h" },
+      { "code": "API", "txt": "Normalisation FHIR Practitioner + PractitionerRole → format unifié (rpps, adeli, civilite, nom, prenom, profession, specialite, mode_exercice, adresse, cp, commune, telephone, email). Fetch parallèle des rôles pour chaque résultat (limité à 10 pour la perf)" },
+      { "code": "SQL", "txt": "Patch 0.55.29 : invitations + membres_structure étendus avec rpps, adeli, rpps_profession, rpps_specialite, rpps_mode_exercice. Index partiel idx_invitations_rpps et idx_membres_rpps. Vue v_user_complete régénérée avec les nouveaux champs + security_invoker. RPC get_invitation_full retourne les RPPS" },
+      { "code": "FE", "txt": "Modale 'Créer un utilisateur' : nouveau bouton violet 'Rechercher RPPS' à côté du titre 'Identité' qui ouvre une modale RppsSearch. Au clic sur un praticien, pré-remplit automatiquement prénom/nom/téléphone/fonction + champs RPPS dédiés (rpps/adeli/profession/spécialité/mode)" },
+      { "code": "FE", "txt": "Badge violet 'Pré-rempli depuis RPPS' affiché en haut de la section Identité quand un RPPS est associé, avec affichage profession+spécialité+RPPS et bouton 'Retirer' pour défaire le pré-remplissage" },
+      { "code": "FE", "txt": "Fiche utilisateur (modale info) : nouveau bloc violet 'Données RPPS (annuaire ANS)' affiché si l'user a un RPPS, avec affichage formaté du n° RPPS, n° ADELI, profession, spécialité et mode d'exercice" },
+      { "code": "FE", "txt": "RppsSearch : bandeau d'info adapté — vert 'Source : API FHIR ANS officielle (~1.7M praticiens, libre accès)' en production, jaune 'Mode démonstration' uniquement si l'API tombe en fallback" },
+      { "code": "AI", "txt": "+14 tests Vitest : normalisation FHIR Practitioner (system rpps/idnatps/adeli, prefix civilité, code profession, specialty spécialité), filtre vue-globale, construction URL FHIR, schéma RPPS invitations. Total 1151 tests verts (vs 1137)" }
+    ],
+    "themes": ["users", "fixes", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.29.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.29.sql"
+  },
+  {
     "v": "0.55.28",
     "kind": "version",
     "titre": "🩺 Annuaire RPPS (cabinets libéraux) · Bilan ménage code (console.* déjà à 0, SafeWrite audit ciblé)",

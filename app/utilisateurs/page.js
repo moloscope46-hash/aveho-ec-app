@@ -9,8 +9,9 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, FilterBar, IconButton } from "../ui";
 import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
-
 import { dialogs } from "../dialogs";
+import RppsSearch from "../components/RppsSearch";
+import Modal from "../components/Modal";
 import { logger } from "../../lib/logger";
 const MODULES = [
   { k: "patients", l: "Patients" }, { k: "etablissement", l: "Établissement" },
@@ -55,7 +56,15 @@ export default function Utilisateurs() {
     matricule: "",            // numéro interne
     date_arrivee: "",
     notes_admin: "",
+    // 0.55.29 : champs RPPS pré-remplis depuis l'API FHIR ANS
+    rpps: "",
+    adeli: "",
+    rpps_profession: "",
+    rpps_specialite: "",
+    rpps_mode_exercice: "",
   });
+  // 0.55.29 : modale de recherche RPPS pour pré-remplir
+  const [rppsSearchOpen, setRppsSearchOpen] = useState(false);
   // 0.55.12 : URL de l'invitation après création (pour la copier/montrer)
   const [createdInviteLink, setCreatedInviteLink] = useState(null);
   // Alpha 0.16.0 : filtre archive + modale info user
@@ -69,6 +78,8 @@ export default function Utilisateurs() {
     // 0.55.25 : nouveaux champs RH
     matricule: "", date_naissance: "", contact_urgence_nom: "", contact_urgence_tel: "",
     adresse: "", specialite: "", diplome: "", date_fin_contrat: "",
+    // 0.55.29 : champs RPPS
+    rpps: "", adeli: "", rpps_profession: "", rpps_specialite: "", rpps_mode_exercice: "",
   });
   const [userActivity, setUserActivity] = useState(null); // {nb_actions, derniere_activite, ...}
   const [err, setErr] = useState("");
@@ -194,6 +205,12 @@ export default function Utilisateurs() {
       specialite: m.specialite || "",
       diplome: m.diplome || "",
       date_fin_contrat: m.date_fin_contrat || "",
+      // 0.55.29 : champs RPPS
+      rpps: m.rpps || "",
+      adeli: m.adeli || "",
+      rpps_profession: m.rpps_profession || "",
+      rpps_specialite: m.rpps_specialite || "",
+      rpps_mode_exercice: m.rpps_mode_exercice || "",
     });
     setUserActivity(null);
     // Charger l'activité depuis audit_log
@@ -222,7 +239,7 @@ export default function Utilisateurs() {
       notes: userInfoForm.notes || null,
       date_arrivee: userInfoForm.date_arrivee || null,
     };
-    // 0.55.25 : tenter d'ajouter les nouveaux champs (peut échouer si SQL pas passé → fallback)
+    // 0.55.25 + 0.55.29 : tenter d'ajouter les nouveaux champs (peut échouer si SQL pas passé → fallback)
     try {
       Object.assign(updates, {
         matricule: userInfoForm.matricule || null,
@@ -233,6 +250,12 @@ export default function Utilisateurs() {
         specialite: userInfoForm.specialite || null,
         diplome: userInfoForm.diplome || null,
         date_fin_contrat: userInfoForm.date_fin_contrat || null,
+        // 0.55.29 : RPPS
+        rpps: userInfoForm.rpps || null,
+        adeli: userInfoForm.adeli || null,
+        rpps_profession: userInfoForm.rpps_profession || null,
+        rpps_specialite: userInfoForm.rpps_specialite || null,
+        rpps_mode_exercice: userInfoForm.rpps_mode_exercice || null,
       });
     } catch {}
     const { error } = await supabase.from("membres_structure")
@@ -307,26 +330,47 @@ export default function Utilisateurs() {
     const nom_affiche_fallback = inviteForm.nom_affiche || `${inviteForm.prenom} ${inviteForm.nom}`.trim();
 
     // 1) enregistrer l'invitation + récupérer le token
-    const { data: invData, error: invErr } = await supabase
+    const insertPayload = {
+      structure_id: auth.structureId,
+      email: inviteForm.email,
+      role_id: inviteForm.role_id || null,
+      nom_affiche: nom_affiche_fallback,
+      prenom: inviteForm.prenom || null,
+      telephone: inviteForm.telephone || null,
+      mobile: inviteForm.mobile || null,
+      fonction_detail: inviteForm.fonction_detail || null,
+      // 0.55.25
+      etablissement_ids: inviteForm.etablissement_ids?.length ? inviteForm.etablissement_ids : null,
+      lock_assignment: !!inviteForm.lock_assignment,
+      matricule: inviteForm.matricule || null,
+      date_arrivee: inviteForm.date_arrivee || null,
+      notes_admin: inviteForm.notes_admin || null,
+      // 0.55.29 : champs RPPS
+      rpps: inviteForm.rpps || null,
+      adeli: inviteForm.adeli || null,
+      rpps_profession: inviteForm.rpps_profession || null,
+      rpps_specialite: inviteForm.rpps_specialite || null,
+      rpps_mode_exercice: inviteForm.rpps_mode_exercice || null,
+    };
+
+    let { data: invData, error: invErr } = await supabase
       .from("invitations")
-      .insert({
-        structure_id: auth.structureId,
-        email: inviteForm.email,
-        role_id: inviteForm.role_id || null,
-        nom_affiche: nom_affiche_fallback,
-        prenom: inviteForm.prenom || null,
-        telephone: inviteForm.telephone || null,
-        mobile: inviteForm.mobile || null,
-        fonction_detail: inviteForm.fonction_detail || null,
-        // 0.55.25
-        etablissement_ids: inviteForm.etablissement_ids?.length ? inviteForm.etablissement_ids : null,
-        lock_assignment: !!inviteForm.lock_assignment,
-        matricule: inviteForm.matricule || null,
-        date_arrivee: inviteForm.date_arrivee || null,
-        notes_admin: inviteForm.notes_admin || null,
-      })
+      .insert(insertPayload)
       .select("token")
       .single();
+
+    // Si erreur sur colonnes RPPS (SQL pas passé), retry sans
+    if (invErr && (invErr.message || "").includes("rpps")) {
+      const fallback = { ...insertPayload };
+      delete fallback.rpps;
+      delete fallback.adeli;
+      delete fallback.rpps_profession;
+      delete fallback.rpps_specialite;
+      delete fallback.rpps_mode_exercice;
+      const retry = await supabase.from("invitations").insert(fallback).select("token").single();
+      invData = retry.data;
+      invErr = retry.error;
+    }
 
     if (invErr) {
       setErr("Erreur création invitation : " + invErr.message);
@@ -689,9 +733,72 @@ export default function Utilisateurs() {
 
               {/* Section 1 : Identité */}
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
-                  Identité
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span>Identité</span>
+                  {/* 0.55.29 : pré-remplissage via API FHIR ANS */}
+                  <button
+                    type="button"
+                    onClick={() => setRppsSearchOpen(true)}
+                    style={{
+                      background: "linear-gradient(135deg, #7a6fb0, #bfa9e0)",
+                      color: "#fff",
+                      border: "none",
+                      padding: "5px 10px",
+                      borderRadius: 12,
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4,
+                      letterSpacing: 0.4,
+                    }}
+                    title="Rechercher dans l'annuaire RPPS pour pré-remplir les champs"
+                  >
+                    <i className="ti ti-stethoscope" /> Rechercher RPPS
+                  </button>
                 </div>
+                {/* Badge si pré-rempli via RPPS */}
+                {inviteForm.rpps && (
+                  <div style={{
+                    background: "#f3effa",
+                    border: "1px solid #d6c9ec",
+                    borderRadius: 8,
+                    padding: "8px 10px",
+                    fontSize: 11.5,
+                    marginBottom: 10,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}>
+                    <span style={{ color: "#5a4a90", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <i className="ti ti-stethoscope" style={{ color: "#7a6fb0" }} />
+                      <b>Pré-rempli depuis RPPS :</b> {inviteForm.rpps_profession || "—"}
+                      {inviteForm.rpps_specialite ? ` · ${inviteForm.rpps_specialite}` : ""}
+                      {" · RPPS "}<code style={{ background: "#fff", padding: "0 4px", borderRadius: 3, fontSize: 11 }}>{inviteForm.rpps}</code>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setInviteForm({
+                        ...inviteForm,
+                        rpps: "", adeli: "", rpps_profession: "", rpps_specialite: "", rpps_mode_exercice: "",
+                      })}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "#7a6fb0",
+                        cursor: "pointer",
+                        fontSize: 11,
+                        textDecoration: "underline",
+                      }}
+                    >
+                      <i className="ti ti-x" /> Retirer
+                    </button>
+                  </div>
+                )}
                 <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div className="fld">
                     <label>Prénom</label>
@@ -951,6 +1058,47 @@ export default function Utilisateurs() {
                 <input type="date" value={userInfoForm.date_arrivee} onChange={(e)=>setUserInfoForm({...userInfoForm, date_arrivee:e.target.value})} />
               </div>
 
+              {/* 0.55.29 : Bloc RPPS (visible uniquement si RPPS renseigné) */}
+              {userInfoForm.rpps && (
+                <div style={{
+                  marginTop: 10,
+                  background: "#f3effa",
+                  border: "1px solid #d6c9ec",
+                  borderRadius: 8,
+                  padding: "10px 12px",
+                }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 700, color: "#5a4a90",
+                    display: "flex", alignItems: "center", gap: 6, marginBottom: 8,
+                  }}>
+                    <i className="ti ti-stethoscope" /> Données RPPS (annuaire ANS)
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                    <div>
+                      <div style={{ fontSize: 10.5, color: "#6c7a89", fontWeight: 600, textTransform: "uppercase" }}>N° RPPS</div>
+                      <code style={{ fontSize: 13, fontFamily: "Consolas, monospace", color: "#142131" }}>
+                        {userInfoForm.rpps}
+                      </code>
+                    </div>
+                    {userInfoForm.adeli && (
+                      <div>
+                        <div style={{ fontSize: 10.5, color: "#6c7a89", fontWeight: 600, textTransform: "uppercase" }}>N° ADELI</div>
+                        <code style={{ fontSize: 13, fontFamily: "Consolas, monospace", color: "#142131" }}>
+                          {userInfoForm.adeli}
+                        </code>
+                      </div>
+                    )}
+                  </div>
+                  {(userInfoForm.rpps_profession || userInfoForm.rpps_specialite) && (
+                    <div style={{ marginTop: 8, fontSize: 12, color: "#5a4a90" }}>
+                      <b>{userInfoForm.rpps_profession || "—"}</b>
+                      {userInfoForm.rpps_specialite && <> · {userInfoForm.rpps_specialite}</>}
+                      {userInfoForm.rpps_mode_exercice && <> · <i>{userInfoForm.rpps_mode_exercice}</i></>}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* 0.55.25 : Champs RH étendus dans un bloc séparé */}
               <details style={{ marginTop: 10, background: "#f4f7fa", border: "1px solid #e3e9ee", borderRadius: 8, padding: "8px 12px" }}>
                 <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#142131", padding: "4px 0" }}>
@@ -1045,6 +1193,36 @@ export default function Utilisateurs() {
           </div>
         </div>
       )}
+
+      {/* 0.55.29 — Modale recherche RPPS pour pré-remplir l'invitation */}
+      <Modal
+        open={rppsSearchOpen}
+        onClose={() => setRppsSearchOpen(false)}
+        title="Rechercher dans l'annuaire RPPS"
+        subtitle="Pré-remplit prénom / nom / profession / RPPS / ADELI"
+        icon="ti-stethoscope"
+        color="#7a6fb0"
+        maxWidth={680}
+      >
+        <RppsSearch
+          onSelect={(p) => {
+            setInviteForm((f) => ({
+              ...f,
+              prenom: p.prenom || f.prenom,
+              nom: p.nom || f.nom,
+              nom_affiche: `${p.prenom || ""} ${p.nom || ""}`.trim() || f.nom_affiche,
+              telephone: p.telephone || f.telephone,
+              fonction_detail: p.profession || f.fonction_detail,
+              rpps: p.rpps || "",
+              adeli: p.adeli || "",
+              rpps_profession: p.profession || "",
+              rpps_specialite: p.specialite || "",
+              rpps_mode_exercice: p.mode_exercice || "",
+            }));
+            setRppsSearchOpen(false);
+          }}
+        />
+      </Modal>
     </div>
   );
 }
