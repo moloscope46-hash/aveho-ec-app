@@ -7,9 +7,11 @@ import { createClient } from "../../lib/supabase";
 import {
   isWebAuthnSupported,
   isMobileDevice,
-  hasLocalCredential,
+  getAvailableMethods,
   authenticateBiometric,
   isPlatformAuthenticatorAvailable,
+  METHOD_LABEL,
+  METHOD_ICON,
 } from "../../lib/webauthn";
 
 export default function Login() {
@@ -21,9 +23,9 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
-  // 0.55.13 : empreinte
+  // 0.55.13/17 : empreinte + face
   const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioForEmail, setBioForEmail] = useState(false);
+  const [bioMethodsForEmail, setBioMethodsForEmail] = useState([]); // ['empreinte', 'face'] disponibles
 
   // Détecter dispo WebAuthn au mount
   useEffect(() => {
@@ -34,15 +36,15 @@ export default function Login() {
     })();
   }, []);
 
-  // À chaque changement d'email, vérifier si on a un credential local
+  // À chaque changement d'email, vérifier les méthodes locales activées
   useEffect(() => {
     if (!email || !bioAvailable) {
-      setBioForEmail(false);
+      setBioMethodsForEmail([]);
       return;
     }
     const t = setTimeout(async () => {
-      const has = await hasLocalCredential(email);
-      setBioForEmail(has);
+      const methods = await getAvailableMethods(email);
+      setBioMethodsForEmail(methods);
     }, 300);
     return () => clearTimeout(t);
   }, [email, bioAvailable]);
@@ -84,11 +86,11 @@ export default function Login() {
     }
   }
 
-  // 0.55.13 : connexion par empreinte
-  async function biometricLogin() {
+  // 0.55.13/17 : connexion par empreinte ou détection faciale
+  async function biometricLogin(method) {
     setBusy(true); setErr(""); setOk("");
     try {
-      const r = await authenticateBiometric({ supabase, email });
+      const r = await authenticateBiometric({ supabase, email, method });
       if (!r?.ok) throw new Error("Échec authentification biométrique");
       router.push("/vue-globale");
     } catch (e) {
@@ -129,33 +131,57 @@ export default function Login() {
           <label>Email professionnel</label>
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cedric@hop01.fr" autoComplete="email" />
 
-          {/* 0.55.13 : bouton empreinte (si dispo + credential local pour cet email) */}
-          {bioForEmail && mode === "signin" && (
-            <button
-              className="btn-primary"
-              onClick={biometricLogin}
-              disabled={busy}
-              style={{
-                marginTop: 14,
-                background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                fontSize: 15,
-                minHeight: 48,
-              }}
-            >
-              <i className="ti ti-fingerprint" style={{ fontSize: 22 }} />
-              {busy ? "Authentification…" : "Se connecter avec mon empreinte"}
-            </button>
-          )}
-          {bioForEmail && mode === "signin" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 6px" }}>
-              <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
-              <span style={{ fontSize: 12, color: "#8a98a8" }}>ou mot de passe</span>
-              <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
-            </div>
+          {/* 0.55.13/17 : boutons biométriques (1 par méthode activée pour cet email) */}
+          {bioMethodsForEmail.length > 0 && mode === "signin" && (
+            <>
+              <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
+                {bioMethodsForEmail.includes("face") && (
+                  <button
+                    className="btn-primary"
+                    onClick={() => biometricLogin("face")}
+                    disabled={busy}
+                    style={{
+                      background: "linear-gradient(135deg, #7a6fb0, #bfa9e0)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      fontSize: 15,
+                      minHeight: 48,
+                      margin: 0,
+                    }}
+                  >
+                    <i className="ti ti-face-id" style={{ fontSize: 24 }} />
+                    {busy ? "Authentification…" : "Se connecter avec la détection faciale"}
+                  </button>
+                )}
+                {bioMethodsForEmail.includes("empreinte") && (
+                  <button
+                    className="btn-primary"
+                    onClick={() => biometricLogin("empreinte")}
+                    disabled={busy}
+                    style={{
+                      background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      fontSize: 15,
+                      minHeight: 48,
+                      margin: 0,
+                    }}
+                  >
+                    <i className="ti ti-fingerprint" style={{ fontSize: 22 }} />
+                    {busy ? "Authentification…" : "Se connecter avec mon empreinte"}
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 6px" }}>
+                <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
+                <span style={{ fontSize: 12, color: "#8a98a8" }}>ou mot de passe</span>
+                <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
+              </div>
+            </>
           )}
 
           <label>Mot de passe</label>

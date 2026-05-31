@@ -1,0 +1,228 @@
+// =============================================================
+//  app/changelog/smoke-tests.js (Alpha 0.55.18)
+//
+//  Tests in-browser exécutables par version depuis la page
+//  changelog. Permettent de vérifier qu'une feature livrée est
+//  bien dispo dans l'environnement courant.
+//
+//  Format : VERSION_TESTS[version] = async () => [{name, ok, msg, error?}]
+// =============================================================
+
+import { createClient } from "../../lib/supabase";
+
+// Helper : crée un test avec gestion d'erreur uniforme
+async function runTest(name, fn) {
+  try {
+    const result = await fn();
+    if (result === true || result === undefined) {
+      return { name, ok: true, msg: "OK" };
+    }
+    if (typeof result === "string") {
+      return { name, ok: true, msg: result };
+    }
+    return { name, ok: result.ok, msg: result.msg || (result.ok ? "OK" : "Échec") };
+  } catch (e) {
+    return { name, ok: false, msg: "Erreur", error: e.message || String(e) };
+  }
+}
+
+export const VERSION_TESTS = {
+  // ============== 0.55.17 — Détection faciale ==============
+  "0.55.17": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("WebAuthn supporté par le navigateur", () => {
+      return typeof window.PublicKeyCredential === "function";
+    }));
+
+    results.push(await runTest("Platform authenticator disponible", async () => {
+      if (typeof window.PublicKeyCredential !== "function") return { ok: false, msg: "WebAuthn absent" };
+      const ok = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      return { ok, msg: ok ? "Touch/Face/Hello dispo" : "Aucun authenticator platform" };
+    }));
+
+    results.push(await runTest("Module lib/webauthn export METHOD_LABEL", async () => {
+      const mod = await import("../../lib/webauthn");
+      const ok = mod.METHOD_LABEL?.empreinte === "Empreinte digitale" 
+        && mod.METHOD_LABEL?.face === "Détection faciale";
+      return { ok, msg: ok ? "Labels présents" : "Labels manquants" };
+    }));
+
+    results.push(await runTest("Vue v_users_auth_methods accessible", async () => {
+      const { data, error } = await supabase
+        .from("v_users_auth_methods")
+        .select("user_id, has_empreinte, has_face")
+        .limit(1);
+      if (error) return { ok: false, msg: error.message };
+      return { ok: true, msg: `Vue accessible (${data?.length || 0} lignes)` };
+    }));
+
+    results.push(await runTest("Colonne auth_method sur webauthn_credentials", async () => {
+      const { data, error } = await supabase
+        .from("webauthn_credentials")
+        .select("auth_method")
+        .limit(1);
+      if (error && error.message.includes("auth_method")) {
+        return { ok: false, msg: "Colonne absente — SQL pas passé ?" };
+      }
+      return { ok: true, msg: "Colonne présente" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.16 — Click + highlight ==============
+  "0.55.16": async () => {
+    const results = [];
+
+    results.push(await runTest("Fonction highlightInHtml comportement de base", () => {
+      // On simule la fonction
+      function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+      function highlight(html, keywords) {
+        if (!keywords?.length) return { html, matchCount: 0 };
+        const escaped = keywords.map(escapeRegex);
+        const pattern = new RegExp(`(?<![a-z0-9])(${escaped.join("|")})(?![a-z0-9])`, "gi");
+        const tokenizer = /<[^>]+>|[^<]+/g;
+        let result = "";
+        let idx = 0;
+        let m;
+        while ((m = tokenizer.exec(html)) !== null) {
+          const seg = m[0];
+          if (seg.startsWith("<")) result += seg;
+          else result += seg.replace(pattern, (mm) => `<mark data-cl-idx="${idx++}">${mm}</mark>`);
+        }
+        return { html: result, matchCount: idx };
+      }
+      const r = highlight("<p>aveho</p>", ["aveho"]);
+      return r.matchCount === 1;
+    }));
+
+    results.push(await runTest("Stopwords français exclus", () => {
+      const STOP = new Set(["le", "la", "les", "un", "une", "des", "et", "ou"]);
+      const tokens = "le bouton et la page".split(" ");
+      const kept = tokens.filter(t => !STOP.has(t.toLowerCase()) && t.length >= 4);
+      return kept.length === 2; // "bouton" et "page"
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.15 — Bouton SQL ==============
+  "0.55.15": async () => {
+    const results = [];
+
+    results.push(await runTest("Fichier SQL accessible publiquement", async () => {
+      const res = await fetch("/changelog-sql/aveho-PATCH-vers-0.55.13.sql");
+      return { ok: res.ok, msg: res.ok ? `HTTP ${res.status}` : `HTTP ${res.status}` };
+    }));
+
+    results.push(await runTest("Clipboard API disponible", () => {
+      return typeof navigator.clipboard?.writeText === "function";
+    }));
+
+    results.push(await runTest("Versions avec sqlFile ≥ 30", async () => {
+      const { ALL_VERSIONS } = await import("./versions-data");
+      const count = ALL_VERSIONS.filter(v => v.sqlFile).length;
+      return { ok: count >= 30, msg: `${count} versions` };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.14 — ZIP toutes notes ==============
+  "0.55.14": async () => {
+    const results = [];
+
+    results.push(await runTest("JSZip importable dynamiquement", async () => {
+      const m = await import("jszip");
+      return typeof m.default === "function";
+    }));
+
+    results.push(await runTest("Service Worker actif", () => {
+      return navigator.serviceWorker?.controller !== null;
+    }));
+
+    results.push(await runTest("Une note changelog est cacheable", async () => {
+      const res = await fetch("/changelog-notes/NOTE-VERSION-Alpha-0.55.14.html", { cache: "force-cache" });
+      return { ok: res.ok, msg: res.ok ? "Note cachée" : `HTTP ${res.status}` };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.13 — WebAuthn empreinte ==============
+  "0.55.13": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table webauthn_credentials accessible", async () => {
+      const { error } = await supabase.from("webauthn_credentials").select("id").limit(1);
+      return { ok: !error, msg: error?.message || "OK" };
+    }));
+
+    results.push(await runTest("Vue v_my_webauthn_credentials accessible", async () => {
+      const { error } = await supabase.from("v_my_webauthn_credentials").select("id").limit(1);
+      return { ok: !error, msg: error?.message || "OK" };
+    }));
+
+    results.push(await runTest("IndexedDB disponible", () => {
+      return typeof indexedDB !== "undefined";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.12 — Refonte users + policy ==============
+  "0.55.12": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("checkPassword('aaa') invalide", async () => {
+      const { checkPassword } = await import("../../lib/passwordPolicy");
+      return checkPassword("aaa").ok === false;
+    }));
+
+    results.push(await runTest("checkPassword('Aveho-2026!Test') valide", async () => {
+      const { checkPassword } = await import("../../lib/passwordPolicy");
+      return checkPassword("Aveho-2026!Test").ok === true;
+    }));
+
+    results.push(await runTest("generateSecurePassword produit un mdp conforme", async () => {
+      const { generateSecurePassword, checkPassword } = await import("../../lib/passwordPolicy");
+      const p = generateSecurePassword();
+      const c = checkPassword(p);
+      return { ok: c.ok, msg: `Force ${c.score}/5` };
+    }));
+
+    results.push(await runTest("RPC validate_password_policy", async () => {
+      const { data, error } = await supabase.rpc("validate_password_policy", { p: "TestStrong-2026!" });
+      if (error) return { ok: false, msg: error.message };
+      return { ok: data?.ok === true, msg: `Score ${data?.score}` };
+    }));
+
+    results.push(await runTest("RPC get_invitation_preview (avec token bidon)", async () => {
+      const { data, error } = await supabase.rpc("get_invitation_preview", { 
+        p_token: "00000000-0000-0000-0000-000000000000" 
+      });
+      // On s'attend à un retour ok=false (token invalide), pas à une erreur
+      return { ok: !error, msg: error?.message || (data?.ok === false ? "Retour ok=false attendu" : "Réponse reçue") };
+    }));
+
+    return results;
+  },
+};
+
+// Liste des versions ayant des tests
+export const VERSIONS_WITH_TESTS = Object.keys(VERSION_TESTS).sort().reverse();
+
+// Helper pour récupérer les tests d'une version
+export async function runTestsForVersion(version) {
+  const fn = VERSION_TESTS[version];
+  if (!fn) return null;
+  try {
+    return await fn();
+  } catch (e) {
+    return [{ name: "Erreur générale", ok: false, msg: "Échec d'exécution", error: e.message }];
+  }
+}

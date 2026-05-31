@@ -60,6 +60,8 @@ export default function Utilisateurs() {
   const [userInfoForm, setUserInfoForm] = useState({ nom_affiche: "", telephone: "", poste: "", notes: "", date_arrivee: "" });
   const [userActivity, setUserActivity] = useState(null); // {nb_actions, derniere_activite, ...}
   const [err, setErr] = useState("");
+  // 0.55.17 : méthodes biométriques par user (empreinte/face)
+  const [authMethodsByUser, setAuthMethodsByUser] = useState({}); // { user_id: {has_empreinte, has_face, total_devices} }
 
   async function loadAll() {
     const [m, r, i, s, ms] = await Promise.all([
@@ -80,6 +82,19 @@ export default function Utilisateurs() {
       const map = {};
       (act || []).forEach(a => { map[a.user_id] = a; });
       setLastActivity(map);
+
+      // 0.55.17 : charger les méthodes bio activées par user
+      try {
+        const { data: auth_methods } = await supabase.from("v_users_auth_methods")
+          .select("user_id, has_empreinte, has_face, total_devices")
+          .in("user_id", userIds);
+        const amap = {};
+        (auth_methods || []).forEach(a => { amap[a.user_id] = a; });
+        setAuthMethodsByUser(amap);
+      } catch (e) {
+        // Si la vue n'existe pas (SQL pas encore passé), on ignore silencieusement
+        console.warn("[utilisateurs] v_users_auth_methods non dispo:", e?.message);
+      }
     }
     setLoading(false);
   }
@@ -372,7 +387,30 @@ export default function Utilisateurs() {
                                 <span title={lastActivity[m.user_id]?.derniere_activite ? `Dernière activité ${relativeTime(lastActivity[m.user_id].derniere_activite)}` : "Aucune activité enregistrée"}
                                   style={{ width:8, height:8, borderRadius:"50%", background:activityDotColor(lastActivity[m.user_id]?.derniere_activite), flexShrink:0, display:"inline-block" }} />
                                 <span>
-                                  {m.nom_affiche || m.user_id.slice(0, 8)}
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                    {m.nom_affiche || m.user_id.slice(0, 8)}
+                                    {/* 0.55.17 : icônes méthodes biométriques activées */}
+                                    {authMethodsByUser[m.user_id]?.has_empreinte && (
+                                      <span title="Empreinte digitale activée" style={{
+                                        display: "inline-flex", alignItems: "center",
+                                        background: "#185FA518", color: "#185FA5",
+                                        width: 18, height: 18, borderRadius: "50%",
+                                        justifyContent: "center", fontSize: 11,
+                                      }}>
+                                        <i className="ti ti-fingerprint" />
+                                      </span>
+                                    )}
+                                    {authMethodsByUser[m.user_id]?.has_face && (
+                                      <span title="Détection faciale activée" style={{
+                                        display: "inline-flex", alignItems: "center",
+                                        background: "#7a6fb018", color: "#7a6fb0",
+                                        width: 18, height: 18, borderRadius: "50%",
+                                        justifyContent: "center", fontSize: 11,
+                                      }}>
+                                        <i className="ti ti-face-id" />
+                                      </span>
+                                    )}
+                                  </span>
                                   {m.poste && <span style={{ display:"block", fontSize:11, color:"#8a98a8", fontWeight:400, marginTop:1 }}>{m.poste}</span>}
                                   {lastActivity[m.user_id]?.derniere_activite && (
                                     <span style={{ display:"block", fontSize:10, color:"#8a98a8", fontWeight:400, marginTop:1 }}>

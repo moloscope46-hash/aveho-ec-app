@@ -11,6 +11,7 @@ import TopBar from "../TopBar";
 import { PageHead, Panel } from "../ui";
 import pkg from "../../package.json";
 import { ALL_VERSIONS, THEME_LABELS } from "./versions-data";
+import { VERSION_TESTS, runTestsForVersion } from "./smoke-tests";
 
 const ICONS_BY_CODE = {
   Fix: { color: "#c0392b", label: "FIX" },
@@ -59,6 +60,8 @@ export default function ChangelogPage() {
   const [sqlModal, setSqlModal] = useState(null); // { version, file, content }
   const [sqlCopied, setSqlCopied] = useState(false);
   const sqlCacheRef = useRef({});
+  // 0.55.18 : modale tests + smoke tests
+  const [testModal, setTestModal] = useState(null); // { version, results: [{name, ok, msg, error}], running: bool }
 
   // Stats sur les thèmes filtrés (dynamique)
   const themeCounts = useMemo(() => {
@@ -293,6 +296,17 @@ export default function ChangelogPage() {
       setTimeout(() => setSqlCopied(false), 2000);
     } catch (e) {
       alert("Copie clipboard refusée. Utilisez Ctrl+A puis Ctrl+C dans la fenêtre.");
+    }
+  }
+
+  // 0.55.18 — Lancer les tests in-browser pour une version
+  async function runTests(version) {
+    setTestModal({ version, results: [], running: true });
+    try {
+      const results = await runTestsForVersion(version);
+      setTestModal({ version, results: results || [], running: false });
+    } catch (e) {
+      setTestModal({ version, results: [{ name: "Erreur", ok: false, msg: e.message }], running: false });
     }
   }
 
@@ -632,7 +646,7 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                 }}>
                   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
                     <h3 
-                      onClick={() => v.noteFile && openNote(v, kind, color, v.titre || "")}
+                      onClick={() => v.noteFile && openNote(v, v.kind, color, v.titre || "")}
                       style={{ margin: 0, fontSize: 14.5, color: "#142131", fontWeight: 700, flex: 1, minWidth: 200, cursor: v.noteFile ? "pointer" : "default" }}
                       title={v.noteFile ? "Cliquer pour afficher la note complète" : ""}
                     >
@@ -676,6 +690,22 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                           <i className="ti ti-database" /> SQL
                         </button>
                       )}
+                      {/* 0.55.18 : bouton Tester (si version a des smoke tests) */}
+                      {VERSION_TESTS[v.v] && (
+                        <button
+                          onClick={() => runTests(v.v)}
+                          title={`Lancer les smoke tests de la version ${v.v}`}
+                          style={{ 
+                            display: "inline-flex", alignItems: "center", gap: 3,
+                            background: "#5aa05a", border: "1px solid #5aa05a",
+                            color: "#fff", padding: "3px 8px", borderRadius: 12,
+                            fontSize: 11, fontWeight: 600, cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          <i className="ti ti-flask" /> Tester
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -713,7 +743,7 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                         return (
                           <li 
                             key={j} 
-                            onClick={() => v.noteFile && openNote(v, kind, color, c.txt)}
+                            onClick={() => v.noteFile && openNote(v, v.kind, color, c.txt)}
                             title={v.noteFile ? "Cliquer pour voir cette évolution dans la note" : ""}
                             style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45, cursor: v.noteFile ? "pointer" : "default", padding: "3px 6px", borderRadius: 4, transition: "background .15s" }}
                             onMouseOver={(e) => { if (v.noteFile) e.currentTarget.style.background = "#fef9ed"; }}
@@ -751,6 +781,169 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
           </p>
         </Panel>
       </div>
+
+      {/* 0.55.18 — Modale résultats des tests in-browser */}
+      {testModal && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && setTestModal(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(20,33,49,.7)",
+            zIndex: 9992,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px 14px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: 14,
+              width: "100%",
+              maxWidth: 680,
+              maxHeight: "92vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 30px 80px rgba(0,0,0,.45)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #142131 0%, #5aa05a 100%)",
+              color: "#fff",
+              padding: "14px 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}>
+              <i className="ti ti-flask" style={{ fontSize: 22, color: "#cfeacb", flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#dff5e0", fontWeight: 700 }}>
+                  TESTS IN-BROWSER — VERSION {testModal.version}
+                </div>
+                {!testModal.running && testModal.results.length > 0 && (
+                  <div style={{ fontSize: 12.5, marginTop: 2 }}>
+                    <b>{testModal.results.filter(r => r.ok).length}/{testModal.results.length}</b> tests OK
+                    {testModal.results.filter(r => !r.ok).length > 0 && (
+                      <span style={{ color: "#ffd1c8", marginLeft: 8 }}>
+                        · {testModal.results.filter(r => !r.ok).length} échec(s)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setTestModal(null)}
+                style={{
+                  background: "transparent",
+                  color: "#fff",
+                  border: "none",
+                  padding: 6,
+                  cursor: "pointer",
+                  fontSize: 22,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {/* Contenu */}
+            <div style={{ flex: 1, overflow: "auto", padding: "12px 18px" }}>
+              {testModal.running ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 140,
+                  color: "#8a98a8",
+                  fontSize: 13,
+                }}>
+                  <i className="ti ti-loader-2" style={{ fontSize: 24, animation: "spin 1s linear infinite", marginRight: 10 }} />
+                  Exécution des tests…
+                </div>
+              ) : testModal.results.length === 0 ? (
+                <div style={{ color: "#8a98a8", fontSize: 13, padding: 20, textAlign: "center" }}>
+                  Aucun test défini pour cette version.
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 6 }}>
+                  {testModal.results.map((r, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "9px 12px",
+                        background: r.ok ? "#eef9ef" : "#fef0ee",
+                        border: `1px solid ${r.ok ? "#bfe2bf" : "#f0c4be"}`,
+                        borderRadius: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <i
+                        className={`ti ${r.ok ? "ti-circle-check" : "ti-circle-x"}`}
+                        style={{ fontSize: 18, color: r.ok ? "#2e6f33" : "#c0392b", flexShrink: 0 }}
+                      />
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#142131" }}>{r.name}</div>
+                        <div style={{ fontSize: 11.5, color: "#6c7a89", marginTop: 1 }}>
+                          {r.msg}
+                          {r.error && <span style={{ color: "#c0392b" }}> · {r.error}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              background: "#f4f7fa",
+              borderTop: "1px solid #e3e9ee",
+              padding: "10px 18px",
+              fontSize: 11,
+              color: "#8a98a8",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+            }}>
+              <span>
+                <i className="ti ti-info-circle" /> Tests exécutés dans votre navigateur (HTTPS + session courante)
+              </span>
+              <button
+                onClick={() => runTests(testModal.version)}
+                disabled={testModal.running}
+                style={{
+                  background: "#142131",
+                  color: "#fff",
+                  border: "none",
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: testModal.running ? "wait" : "pointer",
+                  fontFamily: "inherit",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <i className="ti ti-refresh" /> Relancer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 0.55.16 — Modale plein écran d'affichage de la note avec highlight et navigation */}
       {noteModal && (

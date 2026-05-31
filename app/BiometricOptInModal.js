@@ -1,17 +1,12 @@
 "use client";
 // =============================================================
-//  app/BiometricOptInModal.js (Alpha 0.55.13)
+//  app/BiometricOptInModal.js (Alpha 0.55.17)
 //
-//  Modale qui apparaît automatiquement après une connexion réussie
-//  sur mobile, si :
-//   - WebAuthn supporté + platform authenticator dispo
-//   - L'user n'a pas encore enregistré son empreinte pour ce compte
-//     sur ce device
-//   - L'user n'a pas refusé/skippé l'opt-in dans les 7 derniers jours
-//
-//  Le composant se monte sur toutes les pages via le layout, et
-//  écoute l'événement custom "aveho:login-success" pour s'afficher.
-//  Il peut aussi être déclenché manuellement depuis /profil.
+//  Modale qui propose les 2 méthodes biométriques :
+//   - Empreinte digitale
+//   - Détection faciale
+//  L'user peut activer une ou les deux. Apparaît automatiquement
+//  après login si au moins 1 méthode n'est pas encore activée.
 // =============================================================
 
 import { useEffect, useState } from "react";
@@ -21,29 +16,31 @@ import {
   registerBiometric,
   markOptInSkipped,
   getDeviceName,
+  getAvailableMethods,
+  METHOD_LABEL,
+  METHOD_ICON,
+  METHOD_COLOR,
+  isLikelyFaceCapable,
 } from "../lib/webauthn";
 
 export default function BiometricOptInModal({ forceShow = false, onClose }) {
   const supabase = createClient();
   const [open, setOpen] = useState(forceShow);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(null); // 'empreinte' | 'face' | null
   const [err, setErr] = useState("");
-  const [ok, setOk] = useState(false);
+  const [okMsg, setOkMsg] = useState("");
   const [deviceName, setDeviceName] = useState("");
   const [user, setUser] = useState(null);
+  const [enabledMethods, setEnabledMethods] = useState([]);
 
-  // Écouter l'événement post-login + check initial au mount
   useEffect(() => {
     if (forceShow) {
       setOpen(true);
       loadUserAndCheck(true);
       return;
     }
-    function handler() {
-      loadUserAndCheck(false);
-    }
+    function handler() { loadUserAndCheck(false); }
     window.addEventListener("aveho:login-success", handler);
-    // Check aussi au mount si user déjà connecté (cas refresh)
     loadUserAndCheck(false);
     return () => window.removeEventListener("aveho:login-success", handler);
   }, [forceShow]);
@@ -54,30 +51,26 @@ export default function BiometricOptInModal({ forceShow = false, onClose }) {
       if (!session?.user) return;
       setUser(session.user);
       setDeviceName(getDeviceName());
+      const methods = await getAvailableMethods(session.user.email);
+      setEnabledMethods(methods);
 
-      if (force) {
-        setOpen(true);
-        return;
-      }
+      if (force) { setOpen(true); return; }
 
       const should = await shouldShowBiometricOptIn(session.user.email);
-      if (should) {
-        // Petit délai pour éviter de surprendre l'user
-        setTimeout(() => setOpen(true), 1500);
-      }
+      if (should) setTimeout(() => setOpen(true), 1500);
     } catch (e) {
       console.warn("[BiometricOptIn]", e);
     }
   }
 
-  async function activate() {
-    setBusy(true);
+  async function activateMethod(method) {
+    setBusy(method);
     setErr("");
+    setOkMsg("");
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session || !user) throw new Error("Pas de session active");
 
-      // Récupérer la structure de l'user (premier rattachement actif)
       const { data: ms } = await supabase
         .from("membres_structure")
         .select("structure_id")
@@ -93,16 +86,19 @@ export default function BiometricOptInModal({ forceShow = false, onClose }) {
         structureId: ms?.structure_id || null,
         refreshToken: session.refresh_token,
         deviceName: deviceName || getDeviceName(),
+        authMethod: method,
       });
-      setOk(true);
-      setTimeout(() => {
-        setOpen(false);
-        onClose?.();
-      }, 2200);
+      setOkMsg(`${METHOD_LABEL[method]} activée !`);
+      const newMethods = await getAvailableMethods(user.email);
+      setEnabledMethods(newMethods);
+      // Si les 2 méthodes sont maintenant activées, on ferme
+      if (newMethods.length >= 2) {
+        setTimeout(() => { setOpen(false); onClose?.(); }, 2000);
+      }
     } catch (e) {
       setErr(e.message || "Erreur");
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
@@ -112,7 +108,16 @@ export default function BiometricOptInModal({ forceShow = false, onClose }) {
     onClose?.();
   }
 
+  function close() {
+    setOpen(false);
+    onClose?.();
+  }
+
   if (!open) return null;
+
+  const allMethodsActive = enabledMethods.length >= 2;
+  // Suggestion : activer face en priorité si appareil capable
+  const faceSuggested = isLikelyFaceCapable();
 
   return (
     <div
@@ -133,9 +138,10 @@ export default function BiometricOptInModal({ forceShow = false, onClose }) {
         style={{
           background: "#fff",
           borderRadius: 16,
-          maxWidth: 420,
+          maxWidth: 480,
           width: "100%",
-          overflow: "hidden",
+          maxHeight: "92vh",
+          overflow: "auto",
           boxShadow: "0 30px 80px rgba(0,0,0,.45)",
           animation: "modalIn .25s cubic-bezier(.2,.8,.2,1)",
         }}
@@ -145,177 +151,263 @@ export default function BiometricOptInModal({ forceShow = false, onClose }) {
         <div style={{
           background: "linear-gradient(135deg, #142131 0%, #185FA5 100%)",
           color: "#fff",
-          padding: "28px 24px 22px",
+          padding: "26px 24px 22px",
           textAlign: "center",
         }}>
           <div style={{
-            width: 72,
-            height: 72,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,.15)",
-            border: "2px solid rgba(255,255,255,.3)",
-            margin: "0 auto 14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 38,
+            display: "inline-flex",
+            gap: 8,
+            background: "rgba(255,255,255,.12)",
+            border: "1px solid rgba(255,255,255,.25)",
+            borderRadius: 30,
+            padding: "10px 16px",
+            marginBottom: 14,
           }}>
-            <i className="ti ti-fingerprint" style={{ color: "#7CC8C8" }} />
+            <i className="ti ti-fingerprint" style={{ fontSize: 26, color: "#7CC8C8" }} />
+            <i className="ti ti-face-id" style={{ fontSize: 26, color: "#bfa9e0" }} />
           </div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>
-            Connexion par empreinte
+          <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>
+            Connexion biométrique
           </h2>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "#cfe4f5" }}>
-            Connectez-vous plus vite la prochaine fois
+            Activez une ou plusieurs méthodes pour vous connecter plus vite
           </p>
         </div>
 
         {/* Body */}
-        {ok ? (
-          <div style={{ padding: "32px 24px", textAlign: "center" }}>
-            <i className="ti ti-circle-check" style={{ fontSize: 56, color: "#2e6f33" }} />
-            <h3 style={{ margin: "14px 0 6px", color: "#142131", fontSize: 18 }}>
-              Empreinte activée !
-            </h3>
-            <p style={{ margin: 0, color: "#6c7a89", fontSize: 13 }}>
-              <b>{deviceName}</b> a été enregistré.<br/>
-              À votre prochaine connexion, utilisez votre empreinte.
-            </p>
-          </div>
-        ) : (
-          <div style={{ padding: "22px 24px 24px" }}>
-            <ul style={{
-              listStyle: "none",
-              padding: 0,
-              margin: "0 0 18px",
-              fontSize: 13.5,
-              lineHeight: 1.55,
-              color: "#2a3a48",
-            }}>
-              <li style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "8px 0" }}>
-                <span style={{ color: "#5aa05a", fontSize: 16, flexShrink: 0 }}>
-                  <i className="ti ti-bolt" />
-                </span>
-                <span>Connexion rapide en une seconde</span>
-              </li>
-              <li style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "8px 0" }}>
-                <span style={{ color: "#185FA5", fontSize: 16, flexShrink: 0 }}>
-                  <i className="ti ti-lock" />
-                </span>
-                <span>Plus sécurisé qu'un mot de passe — votre empreinte ne quitte jamais votre appareil</span>
-              </li>
-              <li style={{ display: "flex", gap: 10, alignItems: "flex-start", margin: "8px 0" }}>
-                <span style={{ color: "#7a6fb0", fontSize: 16, flexShrink: 0 }}>
-                  <i className="ti ti-device-mobile" />
-                </span>
-                <span>Vous pourrez toujours utiliser votre mot de passe</span>
-              </li>
-            </ul>
-
+        <div style={{ padding: "20px 22px 22px" }}>
+          {err && (
             <div style={{
-              background: "#f4f7fa",
-              border: "1px solid #e3e9ee",
-              borderRadius: 8,
-              padding: "10px 12px",
-              fontSize: 12,
-              color: "#6c7a89",
-              marginBottom: 16,
+              background: "#fce5e0", color: "#7a1f15", padding: "10px 12px",
+              borderRadius: 8, fontSize: 12.5, marginBottom: 12,
+              border: "1px solid #f0c4be",
             }}>
-              <b style={{ color: "#142131" }}>
-                <i className="ti ti-device-mobile" /> Appareil :
-              </b>{" "}
-              <input
-                type="text"
-                value={deviceName}
-                onChange={(e) => setDeviceName(e.target.value)}
-                disabled={busy}
-                style={{
-                  border: "1px solid #d3d9e0",
-                  borderRadius: 6,
-                  padding: "4px 8px",
-                  fontSize: 12,
-                  width: 160,
-                  fontFamily: "inherit",
-                  marginLeft: 4,
-                }}
-              />
+              <i className="ti ti-alert-circle" /> {err}
             </div>
+          )}
+          {okMsg && (
+            <div style={{
+              background: "#dff5e0", color: "#2e6f33", padding: "10px 12px",
+              borderRadius: 8, fontSize: 13, fontWeight: 600, marginBottom: 12,
+              border: "1px solid #bfe2bf",
+            }}>
+              <i className="ti ti-circle-check" /> {okMsg}
+            </div>
+          )}
 
-            {err && (
-              <div style={{
-                background: "#fce5e0",
-                color: "#7a1f15",
-                padding: "10px 12px",
-                borderRadius: 8,
-                fontSize: 12.5,
-                marginBottom: 12,
-                border: "1px solid #f0c4be",
-              }}>
-                <i className="ti ti-alert-circle" /> {err}
-              </div>
-            )}
-
-            <button
-              onClick={activate}
-              disabled={busy}
+          {/* Nom de l'appareil — partagé entre les 2 méthodes */}
+          <div style={{
+            background: "#f4f7fa",
+            border: "1px solid #e3e9ee",
+            borderRadius: 8,
+            padding: "10px 12px",
+            fontSize: 12,
+            color: "#6c7a89",
+            marginBottom: 14,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexWrap: "wrap",
+          }}>
+            <b style={{ color: "#142131" }}>
+              <i className="ti ti-device-mobile" /> Appareil :
+            </b>
+            <input
+              type="text"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
+              disabled={!!busy}
               style={{
-                width: "100%",
-                background: busy ? "#8a98a8" : "linear-gradient(135deg, #142131, #185FA5)",
-                color: "#fff",
-                border: "none",
-                padding: "14px",
-                borderRadius: 10,
-                fontSize: 15,
+                border: "1px solid #d3d9e0",
+                borderRadius: 6,
+                padding: "5px 10px",
+                fontSize: 12,
+                flex: 1,
+                minWidth: 140,
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
+
+          {/* CARDS MÉTHODES */}
+          <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
+            <MethodCard
+              method="empreinte"
+              title="Empreinte digitale"
+              desc="Touch ID, capteur d'empreinte Android, Windows Hello"
+              icon="ti-fingerprint"
+              color="#185FA5"
+              active={enabledMethods.includes("empreinte")}
+              busy={busy === "empreinte"}
+              disabled={!!busy}
+              onActivate={() => activateMethod("empreinte")}
+            />
+            <MethodCard
+              method="face"
+              title="Détection faciale"
+              desc="Face ID (iPhone/iPad), Windows Hello caméra, reconnaissance Android"
+              icon="ti-face-id"
+              color="#7a6fb0"
+              suggested={faceSuggested && !enabledMethods.includes("face")}
+              active={enabledMethods.includes("face")}
+              busy={busy === "face"}
+              disabled={!!busy}
+              onActivate={() => activateMethod("face")}
+            />
+          </div>
+
+          {/* Info sécurité */}
+          <div style={{
+            background: "#eef5fc",
+            border: "1px solid #bfd6f0",
+            borderRadius: 8,
+            padding: "9px 12px",
+            fontSize: 11.5,
+            color: "#142131",
+            lineHeight: 1.55,
+            marginBottom: 14,
+          }}>
+            <i className="ti ti-lock" style={{ color: "#185FA5" }} />{" "}
+            <b>Vos données biométriques ne quittent jamais votre appareil.</b>
+            {" "}Aveho ne reçoit qu'un identifiant cryptographique généré par votre OS.
+          </div>
+
+          {/* Footer actions */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              onClick={allMethodsActive ? close : skip}
+              disabled={!!busy}
+              style={{
+                flex: 1,
+                background: allMethodsActive ? "linear-gradient(135deg, #2e6f33, #5aa05a)" : "#f4f7fa",
+                color: allMethodsActive ? "#fff" : "#6c7a89",
+                border: allMethodsActive ? "none" : "1px solid #d3d9e0",
+                padding: "12px",
+                borderRadius: 8,
+                fontSize: 13.5,
                 fontWeight: 700,
                 cursor: busy ? "wait" : "pointer",
                 fontFamily: "inherit",
-                marginBottom: 8,
-                minHeight: 48,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
+                minHeight: 44,
               }}
             >
-              {busy ? (
-                <>
-                  <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Activation…
-                </>
+              {allMethodsActive ? (
+                <><i className="ti ti-circle-check" /> Terminer</>
+              ) : enabledMethods.length > 0 ? (
+                "C'est bon comme ça"
               ) : (
-                <>
-                  <i className="ti ti-fingerprint" /> Activer maintenant
-                </>
+                "Plus tard"
               )}
             </button>
-
-            <button
-              onClick={skip}
-              disabled={busy}
-              style={{
-                width: "100%",
-                background: "transparent",
-                color: "#6c7a89",
-                border: "none",
-                padding: "10px",
-                fontSize: 13,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-            >
-              Plus tard
-            </button>
-
-            <p style={{
-              textAlign: "center",
-              fontSize: 11,
-              color: "#8a98a8",
-              margin: "8px 0 0",
-            }}>
-              Vous pouvez activer/désactiver dans Profil → Sécurité
-            </p>
           </div>
-        )}
+
+          <p style={{
+            textAlign: "center",
+            fontSize: 10.5,
+            color: "#8a98a8",
+            margin: "10px 0 0",
+          }}>
+            Réactivable à tout moment depuis Profil → Connexion biométrique
+          </p>
+        </div>
       </div>
+    </div>
+  );
+}
+
+// =============================================================
+//  Sub-component : Carte d'une méthode
+// =============================================================
+function MethodCard({ method, title, desc, icon, color, active, busy, disabled, suggested, onActivate }) {
+  return (
+    <div style={{
+      border: `1.5px solid ${active ? "#bfe2bf" : suggested ? color + "55" : "#e3e9ee"}`,
+      background: active ? "#eef9ef" : suggested ? color + "08" : "#fff",
+      borderRadius: 10,
+      padding: "12px 14px",
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      flexWrap: "wrap",
+      transition: "background .15s, border-color .15s",
+    }}>
+      <div style={{
+        width: 44,
+        height: 44,
+        borderRadius: "50%",
+        background: active ? "#2e6f33" : color + "18",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+      }}>
+        <i className={`ti ${icon}`} style={{
+          fontSize: 22,
+          color: active ? "#fff" : color,
+        }} />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 140 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#142131", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {title}
+          {active && (
+            <span style={{
+              background: "#dff5e0",
+              color: "#2e6f33",
+              padding: "1px 8px",
+              borderRadius: 8,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+            }}>ACTIVÉE</span>
+          )}
+          {suggested && !active && (
+            <span style={{
+              background: color + "22",
+              color: color,
+              padding: "1px 8px",
+              borderRadius: 8,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+            }}>RECOMMANDÉ</span>
+          )}
+        </div>
+        <div style={{ fontSize: 11.5, color: "#6c7a89", marginTop: 2 }}>
+          {desc}
+        </div>
+      </div>
+
+      {active ? (
+        <i className="ti ti-circle-check" style={{ fontSize: 24, color: "#2e6f33", flexShrink: 0 }} />
+      ) : (
+        <button
+          onClick={onActivate}
+          disabled={disabled}
+          style={{
+            background: busy ? "#8a98a8" : `linear-gradient(135deg, #142131, ${color})`,
+            color: "#fff",
+            border: "none",
+            padding: "9px 14px",
+            borderRadius: 8,
+            fontSize: 12.5,
+            fontWeight: 700,
+            cursor: disabled ? "wait" : "pointer",
+            fontFamily: "inherit",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            minHeight: 40,
+            flexShrink: 0,
+          }}
+        >
+          {busy ? (
+            <><i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Activation…</>
+          ) : (
+            <><i className={`ti ${icon}`} /> Activer</>
+          )}
+        </button>
+      )}
     </div>
   );
 }

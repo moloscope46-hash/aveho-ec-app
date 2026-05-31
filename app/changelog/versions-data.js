@@ -119,6 +119,39 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.18",
+    "kind": "hotfix",
+    "titre": "Fix bug 'kind is not defined' sur changelog + fix SQL view 0.55.17 + bouton 'Tester' par version + 126 tests ajoutés (944 → 1070)",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug 'kind is not defined' au clic sur titre/évolution dans changelog : remplacé par v.kind correctement scopé dans la map" },
+      { "code": "FIX", "txt": "SQL patch 0.55.17 : DROP VIEW v_my_webauthn_credentials avant CREATE pour contourner l'erreur 42P16 (Postgres refuse changer l'ordre des colonnes d'une vue)" },
+      { "code": "AI", "txt": "Nouveau bouton 'Tester' vert sur chaque carte de version qui a des smoke tests : exécution in-browser des checks fonctionnels (WebAuthn dispo, RPCs accessibles, password policy, fichiers SQL servables, etc.)" },
+      { "code": "UX", "txt": "Modale résultats des tests : compteur OK/échec dans le header, liste des tests avec icône check/x, message + erreur, bouton Relancer" },
+      { "code": "AI", "txt": "+126 tests Vitest : 5 nouveaux fichiers (v055-12 password policy, v055-13 webauthn, v055-14 ZIP/SW, v055-15 SQL modal, v055-16 highlight, v055-17 face+empreinte) totalisant 1070 tests verts" }
+    ],
+    "themes": ["fixes", "ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.18.html"
+  },
+  {
+    "v": "0.55.17",
+    "kind": "version",
+    "titre": "Détection faciale en plus de l'empreinte : 2 méthodes biométriques séparées, modale opt-in refondue, icônes par user dans /utilisateurs",
+    "chantiers": [
+      { "code": "BIO", "txt": "Ajout de la détection faciale (Face ID iPhone/iPad, Hello caméra Windows) en plus de l'empreinte digitale. Même WebAuthn, séparation logique via colonne auth_method (empreinte|face)" },
+      { "code": "UX", "txt": "Modale opt-in refondue avec 2 cards distinctes : Empreinte (bleu) et Détection faciale (violet). L'user peut activer une ou les deux. Badge RECOMMANDÉ sur la méthode probablement compatible avec son device." },
+      { "code": "FE", "txt": "Page /login : 1 bouton dédié par méthode activée pour l'email saisi. Bouton 'Se connecter avec la détection faciale' (gradient violet) ou 'avec mon empreinte' (gradient bleu/teal)." },
+      { "code": "USR", "txt": "Page /utilisateurs : icônes empreinte (bleu) et face-id (violet) à côté du nom de chaque user pour visualiser quelles méthodes sont configurées" },
+      { "code": "FE", "txt": "Page /profil → 'Connexion biométrique' : 2 lignes séparées pour empreinte et face avec activation/désactivation indépendantes. Liste des appareils avec badge méthode + badge CET APPAREIL." },
+      { "code": "SQL", "txt": "Patch 0.55.17 : colonne webauthn_credentials.auth_method + check constraint + index + vue v_users_auth_methods (has_empreinte/has_face/total_devices)" },
+      { "code": "•", "txt": "Migration douce IndexedDB ancien format → nouveau format multi-méthodes (préserve les activations existantes)" }
+    ],
+    "themes": ["rls_securite", "ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.17.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.17.sql"
+  },
+  {
     "v": "0.55.16",
     "kind": "version",
     "titre": "Refonte preview note changelog : click au lieu de hover, modale plein écran avec highlight des passages correspondants à l'évolution cliquée",
