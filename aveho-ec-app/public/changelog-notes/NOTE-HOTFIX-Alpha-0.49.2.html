@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.49.2 — Hydration + UX mobile</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 100%);color:#fff;border-radius:16px;padding:28px 30px;margin-bottom:28px;box-shadow:0 10px 30px rgba(192,57,43,.20)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffd6d2;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:24px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13px;font-weight:500;color:#ffd6d2;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffd6d2}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  p{margin:6px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:12px 0;box-shadow:0 2px 6px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:transparent;color:inherit;padding:0}
+  pre.diff{font-size:12px;line-height:1.5}
+  .del{color:#ff8b80;display:block}
+  .add{color:#a8e6a3;display:block}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid var(--line)}
+  table td{padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  .pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
+  .pill.bug{background:#fef0ee;color:#c0392b}
+  .pill.css{background:#fcefda;color:#7a4f15}
+  .pill.docs{background:#d8e8f0;color:#1c4d6a}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);text-align:center}
+  .fix-block{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:16px 18px;margin:12px 0}
+  .fix-block.green{border-left-color:var(--green)}
+  .fix-num{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:12px;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — HOTFIX POST-LIVRAISON</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Patch 0.49.2 — 3 corrections
+      <small>Hydration mismatch · UX mobile (avatar hors écran) · documentation PowerShell</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.49.2-alpha</code></span>
+      <span><b>Tests :</b> 869 verts (inchangé)</span>
+      <span><b>Build :</b> Toujours OK</span>
+    </div>
+  </header>
+
+  <h2>Résumé des fixes</h2>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Symptôme</th><th>Cause</th><th>Solution</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><code>Hydration failed because the initial UI does not match what was rendered on the server</code> dans <code>&lt;OfflineBanner&gt;</code></td>
+        <td><code>useOffline()</code> lit <code>navigator.onLine</code> qui n'existe que côté browser. SSR rend différemment du client après hydration</td>
+        <td>Ajout d'un guard <code>mounted</code> state — le composant return null tant qu'on n'est pas côté client (cohérent avec ce que rend le serveur)</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Avatar / bulle utilisateur sort de l'écran en mode mobile</td>
+        <td>Avec le nouveau badge version <code>v0.49.0</code> en 0.49, la topbar avait 9 éléments. Le breakpoint à <code>520px</code> laissait le badge visible jusque sur des tablettes</td>
+        <td>Badge caché dès <code>&lt;900px</code> (couvre tablettes + mobiles) + <code>overflow:hidden</code> sur la topbar comme safety net</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Procédures terminal mélangent <code>cmd.exe</code> et <code>PowerShell</code></td>
+        <td>J'écrivais des procédures incohérentes (<code>Remove-Item</code> + <code>npm test # 869 passed</code>) qui ne marchent ni en cmd.exe (pas de Remove-Item) ni en PowerShell (commentaire mal placé)</td>
+        <td>Toutes les procédures à partir d'ici en <b>PowerShell pur</b>. Plus de mélange.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="fix-block">
+    <h3><span class="fix-num">1</span> Hydration mismatch sur OfflineBanner</h3>
+    <p><b>Erreur</b> au load de n'importe quelle page :</p>
+    <pre><code>Unhandled Runtime Error
+Error: Hydration failed because the initial UI does not match what was rendered on the server.
+Expected server HTML to contain a matching &lt;div&gt; in &lt;body&gt;.
+&lt;RootLayout&gt;
+  &lt;html&gt;
+    &lt;body&gt;
+      &lt;OfflineBanner&gt;
+        &lt;div&gt;
+        ^^^^^</code></pre>
+    <p><b>Diagnostic</b> : React compare ce que le serveur a rendu (HTML envoyé au navigateur) avec ce que le client rend après hydration. Si les deux divergent → erreur.</p>
+    <p>Le composant <code>OfflineBanner</code> contient :</p>
+    <pre><code>// Rien à afficher si online + queue vide
+if (online && queueCount === 0 && !syncing) return null;</code></pre>
+    <p>Côté <b>serveur</b> : <code>online</code> par défaut à <code>true</code>, queueCount = 0, syncing = false → <code>return null</code>. Le serveur ne rend RIEN.</p>
+    <p>Côté <b>client</b> au moment de l'hydration : le hook <code>useOffline</code> a déjà lu <code>navigator.onLine</code>, et selon l'état (offline détecté juste à temps, queue non vide depuis IndexedDB, etc.) le composant peut commencer à rendre un <code>&lt;div&gt;</code>. → mismatch.</p>
+    <p><b>Solution</b> — pattern hydration-safe standard React :</p>
+    <pre class="diff">  export default function OfflineBanner() {
+    const auth = useAuth();
+    const { online, queueCount, syncing, ... } = useOffline(userId);
+<span class="add">+   // Alpha 0.49.2 : hydration-safe</span>
+<span class="add">+   const [mounted, setMounted] = useState(false);</span>
+<span class="add">+   useEffect(() =&gt; { setMounted(true); }, []);</span>
+    
+    useEffect(() =&gt; { ... }, [showModal, getQueueItems, queueCount]);
+    
+<span class="add">+   // Tant qu'on n'est pas côté client → null (cohérent avec SSR)</span>
+<span class="add">+   if (!mounted) return null;</span>
+    
+    if (online && queueCount === 0 && !syncing) return null;
+    return (
+      &lt;&gt; ... &lt;/&gt;
+    );
+  }</pre>
+    <p><b>Audit des autres composants client dans le layout</b> :</p>
+    <ul>
+      <li><code>InstallPWA</code> : retourne <code>null</code> en static (juste un useEffect pour enregistrer le SW) — pas de risque</li>
+      <li><code>LectureSeuleBadge</code> : retourne <code>null</code> en static (juste un useEffect pour set un attribute sur body) — pas de risque</li>
+      <li><code>GlobalSearch</code> : <code>if (!open) return null;</code> au début, et open est false par défaut — pas de risque</li>
+      <li><code>InstallBanner</code> : a déjà un <code>useState(show)</code> qui démarre à false → pas de risque</li>
+      <li><code>VersionCheck</code> : a déjà 4 guards <code>typeof window === "undefined"</code> → pas de risque</li>
+      <li><b><code>OfflineBanner</code></b> : seul à risque, fixé</li>
+    </ul>
+  </div>
+
+  <div class="fix-block">
+    <h3><span class="fix-num">2</span> Avatar utilisateur hors écran mobile</h3>
+    <p>En 0.49 j'ai ajouté le <b>badge version</b> à côté du logo dans la TopBar. Sur les écrans entre 521 et 900px (tablettes + grands mobiles paysage), tous les éléments restaient affichés simultanément :</p>
+    <ul>
+      <li>Burger (40px) + Logo (~120px) + <b>Badge version (~80px nouveau)</b> + Titre page + Search button + Etab-switch + NotifBell + Panier + UserMenu = beaucoup trop pour la largeur dispo</li>
+      <li>Le débordement poussait l'avatar utilisateur hors écran à droite</li>
+    </ul>
+    <p><b>Correction CSS</b> :</p>
+    <pre class="diff">  /* Alpha 0.49.0 : badge version dans la TopBar */
+  .version-badge{font-size:10px;font-weight:700;...}
+  .version-badge:hover{background:rgba(124,200,200,.28);color:#fff}
+<span class="del">- @media(max-width:520px){.version-badge{display:none}}</span>
+<span class="add">+ /* Alpha 0.49.1/2 : caché sur tablette/mobile pour ne pas pousser UserMenu hors écran */</span>
+<span class="add">+ @media(max-width:900px){.version-badge{display:none}}</span>
+
+<span class="del">- .topbar{... display:flex; ...position:sticky; ...z-index:40}</span>
+<span class="add">+ .topbar{... display:flex; ...position:sticky; ...z-index:40; overflow:hidden}</span></pre>
+    <p>Le badge reste visible sur desktop large (≥900px). Sur mobile, l'info reste accessible via :</p>
+    <ul>
+      <li>Le menu profil (qui inclut un lien vers <code>/profil</code>)</li>
+      <li>La future route <code>/changelog</code> qui sera dédiée à l'historique des versions</li>
+    </ul>
+  </div>
+
+  <div class="fix-block green">
+    <h3><span class="fix-num">3</span> Procédures terminal : PowerShell pur</h3>
+    <p>Tu es sur Windows, dans le terminal cmd.exe (et tu utilises parfois PowerShell). Je mélangeais les deux dans mes procédures, ce qui cassait :</p>
+    <ul>
+      <li><code>Remove-Item -Recurse -Force .next</code> → ne marche qu'en PowerShell, pas en cmd.exe</li>
+      <li><code>npm test # 869 passed</code> → en cmd.exe le <code>#</code> n'est pas un commentaire, vitest le voit comme un filtre</li>
+      <li><code>npm install && npm test</code> → en PowerShell ≤5.x, <code>&&</code> n'existe pas (juste depuis PS 7)</li>
+    </ul>
+    <p><b>Convention adoptée</b> : à partir de la 0.49.2, toutes les procédures sont en <b>PowerShell pur</b>. Tape <code>powershell</code> dans cmd.exe pour basculer si nécessaire.</p>
+  </div>
+
+  <h2>Procédure d'application — PowerShell</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Ouvrir PowerShell</b> (Démarrer → "PowerShell")</li>
+      <li><b>Décompresser le nouveau zip</b> par-dessus <code>C:\aveho-ec-app\</code></li>
+      <li><b>Installer & lancer</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test
+npm run dev</code></pre>
+        Attendu : <b>869 tests verts</b>, plus d'erreur d'hydration.
+      </li>
+      <li><b>Pour le bouton "Installer l'appli"</b> qui ne s'affichait plus (à faire dans DevTools Chrome, pas PowerShell) :
+        <ol>
+          <li>DevTools (F12) → onglet <b>Application</b></li>
+          <li>Section <b>Service Workers</b> → cliquer <b>Unregister</b> sur celui d'Aveho</li>
+          <li>Section <b>Storage</b> en haut → bouton <b>Clear site data</b> (coche tout)</li>
+          <li>Fermer tous les onglets vers <code>localhost:3000</code></li>
+          <li>Ouvrir une nouvelle fenêtre Chrome → <code>localhost:3000</code></li>
+          <li>Login + <b>attendre 30 secondes</b> sur la page (Chrome attend "user engagement")</li>
+          <li>Le bouton "Télécharger l'appli" doit reparaître dans le menu user en haut à droite</li>
+        </ol>
+      </li>
+    </ol>
+  </div>
+
+  <h2>État après hotfix</h2>
+  <div class="panel hi">
+    <ul>
+      <li>✅ Plus d'erreur d'hydration sur OfflineBanner</li>
+      <li>✅ Avatar utilisateur correctement visible sur mobile et tablette</li>
+      <li>✅ Procédures terminal cohérentes en PowerShell</li>
+      <li>✅ 869 tests verts (inchangé)</li>
+      <li>✅ Build Next clean</li>
+    </ul>
+  </div>
+
+  <h2>Pour ma checklist</h2>
+  <div class="panel" style="border-left:4px solid var(--violet)">
+    <p>2 nouveaux réflexes à ajouter :</p>
+    <p><b>9ᵉ réflexe</b> — Tout composant client qui lit <code>navigator.*</code> / <code>window.*</code> / <code>localStorage</code> avant un éventuel <code>return null</code> conditionnel doit avoir un guard <code>mounted</code> state pour éviter les hydration mismatch React. Pattern :</p>
+    <pre><code>const [mounted, setMounted] = useState(false);
+useEffect(() => { setMounted(true); }, []);
+if (!mounted) return null;
+// Suite du composant qui peut lire navigator/window/localStorage</code></pre>
+    <p><b>10ᵉ réflexe</b> — Ajout d'un nouvel élément visible dans la TopBar (badge, indicateur, etc.) → toujours <b>tester le responsive jusqu'à 900px</b> et cacher dès qu'on déborde. La TopBar mobile est déjà très saturée.</p>
+    <p>Checklist complète (10 réflexes) :</p>
+    <ol>
+      <li>Pattern RLS avec <code>mes_structures()</code></li>
+      <li>Grep <code>create table</code> avant SQL</li>
+      <li>Dates en ms (DST-safe)</li>
+      <li><code>notify pgrst, 'reload schema'</code> + grants en fin de patch</li>
+      <li>Pas de crossover <code>lib/</code> ↔ <code>app/</code> via le layout</li>
+      <li>Test <code>npm run dev</code> sur les pages modifiées avant package</li>
+      <li>Page de fallback offline = HTML statique pur dans <code>/public/</code></li>
+      <li>Procédures terminal en PowerShell pur (pas de mélange cmd/PS)</li>
+      <li><b>Composants lisant navigator/window → guard <code>mounted</code> state</b></li>
+      <li><b>Ajout TopBar → tester responsive jusqu'à 900px</b></li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.49.2 · 31 mai 2026</p>
+    <p>3 corrections : hydration OfflineBanner · responsive avatar mobile · procédures PowerShell — 869 tests verts, build clean</p>
+  </footer>
+
+</div>
+</body>
+</html>

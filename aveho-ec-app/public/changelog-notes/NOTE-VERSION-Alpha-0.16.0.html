@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.16.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .panel.danger{background:#fef0ee;border-color:#f0c4be}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3,.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  .pill.fix{background:#dee9fa;color:#1e4a91}
+  .pill.hot{background:#ffe9d6;color:#c75a16}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  kbd{background:#f4f7fa;padding:2px 8px;border-radius:4px;border:1px solid #e3e9ee;font-size:11px;font-family:monospace}
+  /* avatar mockup */
+  .av-mock{display:inline-flex;align-items:center;gap:8px;background:#142131;color:#fff;padding:4px 10px 4px 4px;border-radius:24px;font-size:13px;font-weight:600;vertical-align:middle}
+  .av-mock .av-circle{width:26px;height:26px;border-radius:50%;background:#7CC8C8;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — UX & ADMINISTRATION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.16.0
+      <small>UserMenu (desktop + mobile) · Archivage utilisateurs · Modale infos enrichie · Tooltips fiche patient</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026 (soir)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.16.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.15.6</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">👤 UserMenu avec avatar + nom</span>
+      <span class="badge green">📱 Bottom-sheet mobile</span>
+      <span class="badge green">🗂️ Archivage utilisateurs</span>
+      <span class="badge green">📊 Stats d'activité par user</span>
+      <span class="badge green">💬 Tooltips réutilisables</span>
+      <span class="badge orange">🔧 1 patch SQL (4 colonnes + 1 vue)</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#topbar">3. TopBar refondue</a></li>
+      <li><a href="#users">4. Archivage & infos utilisateur</a></li>
+      <li><a href="#invitations">5. Workflow invitations</a></li>
+      <li><a href="#tooltips">6. Tooltips fiche patient</a></li>
+      <li><a href="#sql">7. Patch SQL 0.16.0</a></li>
+      <li><a href="#fichiers">8. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">9. Procédure d'application</a></li>
+      <li><a href="#reporte">10. Reste à faire</a></li>
+      <li><a href="#roadmap">11. Roadmap 0.16.1</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.16.0 est une <b>itération UX & administration</b>. Trois chantiers menés en parallèle après stabilisation de la 0.15.6.</p>
+  <ol>
+    <li><b>TopBar refondue</b> avec un bloc utilisateur visible (avatar + nom) qui ouvre un sous-volet contenant les raccourcis : Mon profil, Mon établissement, Paramètres, Télécharger l'appli, Déconnexion. Comportement responsive : popover sur desktop, bottom-sheet sur mobile.</li>
+    <li><b>Archivage des membres et invitations</b> : nouveau filtre Actifs / Archivés / Tous, action archive/restore par ligne, et une <b>modale "Infos utilisateur"</b> qui affiche les statistiques d'activité (dernière connexion, actions 7j / 30j, total) et permet d'ajouter poste, téléphone, date d'arrivée, notes.</li>
+    <li><b>Tooltips réutilisables</b> (composant <code>&lt;Tooltip&gt;</code>) appliqués sur la fiche patient : les infos secondaires (date de naissance, numéro de dossier, médecin, date d'entrée) sont accessibles au survol/tap au lieu d'envahir la ligne.</li>
+  </ol>
+
+  <div class="highlight">
+    <b>1 patch SQL livré :</b> <code>aveho-PATCH-vers-0.16.sql</code> — 39 lignes, idempotent. Ajoute la colonne <code>archive</code>, les colonnes d'infos utilisateur, et la vue <code>v_user_activity</code>.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">3</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Nouveaux composants</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">Raccourcis menu user</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Stats d'activité par user</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Champs infos user</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Filtres archives</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">Tooltips appliqués</div></div>
+    <div class="kpi"><div class="v">293</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>UserMenu desktop (popover)</td><td><span class="pill new">Livré</span></td><td>Avatar coloré + nom + chevron, clic ouvre sous-volet</td></tr>
+      <tr><td>2</td><td>UserMenu mobile (bottom-sheet)</td><td><span class="pill new">Livré</span></td><td>Pastille seule, bottom-sheet plein-écran</td></tr>
+      <tr><td>3</td><td>Bouton Télécharger l'appli intégré</td><td><span class="pill new">Livré</span></td><td>Dans le menu user, gère Android/Chrome + iOS Safari</td></tr>
+      <tr><td>4</td><td>Sélecteur établissement responsive</td><td><span class="pill fix">Patché</span></td><td>Plus de débordement sur écran étroit</td></tr>
+      <tr><td>5</td><td>Archivage membres</td><td><span class="pill new">Livré</span></td><td>Colonne <code>archive</code> + filtre Actifs/Archivés/Tous</td></tr>
+      <tr><td>6</td><td>Modale Infos utilisateur</td><td><span class="pill new">Livré</span></td><td>Stats d'activité + poste / tel / notes / date d'arrivée</td></tr>
+      <tr><td>7</td><td>Renvoi d'invitations</td><td><span class="pill new">Livré</span></td><td>Bouton 'avion en papier' sur les invitations en attente</td></tr>
+      <tr><td>8</td><td>Archivage invitations</td><td><span class="pill new">Livré</span></td><td>Filtre En cours / Archivées / Toutes</td></tr>
+      <tr><td>9</td><td>Composant Tooltip réutilisable</td><td><span class="pill new">Livré</span></td><td>4 positions, hover desktop, tap mobile</td></tr>
+      <tr><td>10</td><td>Tooltips fiche patient</td><td><span class="pill new">Livré</span></td><td>Date naissance, dossier, médecin, date d'entrée</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="topbar">3. TopBar refondue</h2>
+
+  <h3>3.1 Comportement desktop</h3>
+  <p>Le bloc utilisateur remplace l'ancien bouton de déconnexion isolé. Affichage par défaut :</p>
+  <p style="text-align:center;margin:18px 0"><span class="av-mock"><span class="av-circle">CM</span> Cédric MIGNOT ⌄</span></p>
+  <p>Au clic, un <b>sous-volet popover</b> apparaît juste sous le bouton (ancré à droite) avec animation pop d'apparition. Contenu :</p>
+  <ul>
+    <li><b>En-tête</b> : grosse pastille colorée (initiales), nom complet, email, rôle avec icône bouclier</li>
+    <li><b>Mon profil</b> → <code>/profil</code></li>
+    <li><b>Mon établissement</b> → <code>/collectivite</code></li>
+    <li><b>Paramètres</b> → <code>/parametres</code></li>
+    <li><b>Télécharger l'appli</b> (uniquement si installable, item en gradient bleu pour la mise en avant)</li>
+    <li><b>Déconnexion</b> (rouge, en bas)</li>
+  </ul>
+  <p>Couleur de la pastille déterministe à partir du <code>user_id</code> (palette de 8 couleurs). Cédric tombe sur le teal par défaut. Initiales calculées depuis <code>nom_affiche</code>, sinon depuis l'email.</p>
+
+  <h3>3.2 Comportement mobile (≤ 760px)</h3>
+  <p>Sur mobile, le nom complet serait débordant donc on n'affiche que la pastille seule (cercle de 40px). Au clic, un <b>bottom-sheet</b> remonte du bas de l'écran (animation slide-up). Le contenu est identique au desktop mais avec des items plus grands (44px de hauteur, lisibles au pouce).</p>
+
+  <h3>3.3 Sélecteur établissement responsive</h3>
+  <p>L'ancien <code>etab-switch</code> avec <code>max-width: 200px</code> débordait quand le nom de l'établissement était long. Nouveau comportement :</p>
+  <ul>
+    <li><b>≥ 760px</b> : largeur normale (200px max)</li>
+    <li><b>&lt; 760px</b> : largeur réduite (140px) + sélecteur réduit (90px), le titre de la page actuelle est masqué pour libérer de l'espace</li>
+    <li><b>&lt; 480px</b> : le sélecteur d'établissement disparaît complètement, on peut le retrouver dans le menu (Mon établissement)</li>
+  </ul>
+
+  <h3>3.4 Détection installation PWA</h3>
+  <p>Le composant <code>InstallPWA.js</code> historique (bouton flottant en bas de page) est <b>démonté</b>. Sa logique de détection est désormais embarquée dans <code>UserMenu.js</code> :</p>
+  <ul>
+    <li>Android / Chrome desktop : intercepte l'événement <code>beforeinstallprompt</code> et stocke la promesse</li>
+    <li>iOS Safari : détecte le user-agent et affiche une instruction <i>"Touchez Partager puis Sur l'écran d'accueil"</i></li>
+    <li>Déjà installé (display-mode standalone) : l'item Télécharger n'apparaît pas</li>
+  </ul>
+
+  <h2 id="users">4. Archivage & infos utilisateur</h2>
+
+  <h3>4.1 Filtre statut</h3>
+  <p>Tout en haut de l'onglet Membres, trois pastilles cliquables avec compteurs :</p>
+  <ul>
+    <li><b>Actifs</b> (par défaut) — tous les membres avec <code>archive = false</code></li>
+    <li><b>Archivés</b> — affichage en opacité réduite (55%) pour distinguer visuellement</li>
+    <li><b>Tous</b> — actifs + archivés mélangés</li>
+  </ul>
+  <p>Distinction sémantique :</p>
+  <table>
+    <thead><tr><th>État</th><th>Sens</th><th>Visible dans la liste ?</th><th>Peut se connecter ?</th></tr></thead>
+    <tbody>
+      <tr><td><b>Actif</b></td><td>Membre normal</td><td>Oui (filtre Actifs)</td><td>Oui</td></tr>
+      <tr><td><b>Inactif</b></td><td>Suspendu temporairement</td><td>Oui (filtre Actifs)</td><td>Non</td></tr>
+      <tr><td><b>Archivé</b></td><td>Hors équipe, conservé pour historique</td><td>Non (sauf filtre dédié)</td><td>Non (recommandé : passer aussi en Inactif)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Modale Infos utilisateur</h3>
+  <p>Accessible par <b>clic sur le nom</b> ou sur l'icône <code>ti-info-circle</code>. Contenu :</p>
+
+  <p><b>En haut, encart stats d'activité</b> (lecture seule, calculé en direct depuis <code>audit_log</code>) :</p>
+  <ul>
+    <li>Dernière activité (date)</li>
+    <li>Actions totales (nombre)</li>
+    <li>Actions 7 derniers jours (en bleu)</li>
+    <li>Actions 30 derniers jours (en bleu)</li>
+  </ul>
+
+  <p><b>En dessous, formulaire éditable</b> (4 champs nouveaux + nom_affiche existant) :</p>
+  <ul>
+    <li>Nom affiché (existant)</li>
+    <li>Poste / fonction (ex. "Infirmière coordinatrice")</li>
+    <li>Téléphone</li>
+    <li>Date d'arrivée</li>
+    <li>Notes internes (textarea)</li>
+  </ul>
+
+  <p>Dans le tableau Membres, si un membre a un <code>poste</code> renseigné, il s'affiche en sous-titre sous son nom (12 px, gris).</p>
+
+  <h2 id="invitations">5. Workflow invitations</h2>
+  <p>L'onglet Invitations a été enrichi avec :</p>
+  <ul>
+    <li><b>Filtre En cours / Archivées / Toutes</b> avec compteurs (cohérent avec Membres)</li>
+    <li><b>Bouton Renvoyer</b> (icône avion en papier) sur les invitations non acceptées et non archivées. Réinvoque la fonction Edge <code>invite-user</code>.</li>
+    <li><b>Bouton Archiver / Restaurer</b> sur chaque ligne</li>
+    <li><b>Statut affiné</b> : pastille verte pour "Acceptée", rouge pour "Expirée", orange pour "En attente" (par défaut)</li>
+  </ul>
+  <p>Ainsi tu peux faire un suivi d'invitations sans les supprimer (traçabilité), tout en gardant un workspace propre via les archives.</p>
+
+  <h2 id="tooltips">6. Tooltips fiche patient</h2>
+  <p>Nouveau composant <code>&lt;Tooltip content="..." side="top|bottom|left|right"&gt;</code>. Comportement :</p>
+  <ul>
+    <li>Desktop : ouverture au <b>hover</b>, fermeture au <b>mouseleave</b></li>
+    <li>Mobile : ouverture au <b>tap</b>, fermeture au tap ailleurs ou avec Échap</li>
+    <li>Marqueur visuel : soulignement pointillé teal (<code>border-bottom: 1px dotted</code>) pour signaler "il y a plus à voir"</li>
+    <li>Bulle navy sur fond foncé avec flèche pointant vers la cible</li>
+  </ul>
+
+  <p>Application sur la fiche patient (entête) :</p>
+  <table>
+    <thead><tr><th>Élément</th><th>Visible toujours</th><th>Au survol (tooltip)</th></tr></thead>
+    <tbody>
+      <tr><td>Âge</td><td><b>57 ans</b></td><td>Né(e) le 12/05/1969</td></tr>
+      <tr><td>Chambre</td><td><b>Chambre</b> 204</td><td>—</td></tr>
+      <tr><td>Bâtiment</td><td><b>Bât.</b> A</td><td>Bâtiment A</td></tr>
+      <tr><td>Établissement</td><td><b>Étab.</b> EHPAD Les Tilleuls</td><td>—</td></tr>
+      <tr><td>Numéro dossier</td><td><b>N°</b> 2024-0142</td><td>Numéro de dossier : 2024-0142</td></tr>
+      <tr><td>Médecin traitant</td><td>🩺 Médecin</td><td>Médecin traitant : Dr Lambert</td></tr>
+      <tr><td>Date d'entrée</td><td>📅 Entré le 15/03/2024</td><td>Date d'entrée : 15/03/2024</td></tr>
+    </tbody>
+  </table>
+
+  <p>Sur mobile, la ligne reste compacte (wrap automatique) et les infos longues sont accessibles au tap. <b>Plus de scroll horizontal</b> sur les fiches.</p>
+
+  <h2 id="sql">7. Patch SQL 0.16.0</h2>
+  <div class="panel">
+    <p>Le script <code>aveho-PATCH-vers-0.16.sql</code> ajoute en base :</p>
+    <ol>
+      <li><b>Colonne <code>archive</code></b> (boolean, default false) sur <code>membres_structure</code> et <code>invitations</code></li>
+      <li><b>Index</b> sur <code>(structure_id, archive)</code> pour les filtres rapides</li>
+      <li><b>4 colonnes</b> sur <code>membres_structure</code> : <code>telephone</code>, <code>poste</code>, <code>notes</code>, <code>date_arrivee</code></li>
+      <li><b>Vue <code>v_user_activity</code></b> : agrégat par user_id (nb_actions, derniere_activite, actions_7j, actions_30j). Suit les RLS de audit_log par construction.</li>
+    </ol>
+    <p>100% idempotent (<code>add column if not exists</code>, <code>create or replace view</code>), rejouable sans risque. À exécuter <b>avant</b> d'appliquer le zip de code, sinon les nouvelles fonctionnalités plantent avec "column does not exist".</p>
+  </div>
+
+  <h2 id="fichiers">8. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/UserMenu.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Bloc utilisateur avec sous-volet, gère PWA install</td></tr>
+      <tr><td><code>app/Tooltip.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Composant tooltip réutilisable, 4 positions</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">RÉÉCRIT</span></td><td>Intègre UserMenu, retire l'ancien bouton déconnexion isolé</td></tr>
+      <tr><td><code>app/InstallPWA.js</code></td><td><span class="pill imp">SIMPLIFIÉ</span></td><td>Réduit à l'enregistrement du service worker. UI dans UserMenu.</td></tr>
+      <tr><td><code>app/utilisateurs/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ Filtres archive + Modale infos + Stats d'activité + Renvoi invit</td></tr>
+      <tr><td><code>app/patient/[id]/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ Tooltips sur infos secondaires (entête)</td></tr>
+      <tr><td><code>app/globals.css</code></td><td><span class="pill imp">EXTENDU</span></td><td>+ ~80 lignes CSS pour UserMenu + Tooltip + responsive</td></tr>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.16.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Patch SQL 0.16.0 (39 lignes)</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.15.6-alpha → 0.16.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">9. Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> : dans Supabase → SQL Editor → coller le contenu de <code>aveho-PATCH-vers-0.16.sql</code> → Run. Tu dois voir <i>Success</i> sans erreur. C'est idempotent donc rejouable.</li>
+      <li><b>Code ensuite</b> :
+        <pre><code>cd C:\aveho-ec-app
+# Sauvegarde le .env.local d'abord
+# Décompresse aveho-ec-app.zip par-dessus (écrase, garde .env.local)
+npm install
+npm run dev</code></pre>
+      </li>
+      <li><b>Tests dans le navigateur</b> (Ctrl+Shift+R d'abord pour purger le cache) :
+        <ul>
+          <li>TopBar : ton nom + avatar visible en haut à droite, clic ouvre le menu</li>
+          <li>Mode mobile (F12 → toggle device toolbar) : pastille seule, bottom sheet au clic</li>
+          <li><code>/utilisateurs</code> : filtres en haut, clic sur un nom → modale avec stats d'activité</li>
+          <li>Fiche patient : survol des badges sous le nom → bulles d'info en navy</li>
+        </ul>
+      </li>
+      <li><b>Mise en ligne Vercel</b> :
+        <pre><code>cd C:\aveho-ec-app-01
+robocopy C:\aveho-ec-app C:\aveho-ec-app-01 /E /PURGE /XD .git node_modules .next
+git add .
+git commit -m "Aveho EC 0.16.0 - UserMenu + archivage + tooltips"
+git push</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">10. Reste à faire / en attente</h2>
+  <div class="panel warn">
+    <table>
+      <thead><tr><th>Sujet</th><th>État</th></tr></thead>
+      <tbody>
+        <tr><td>Tooltips sur fiche matériel</td><td>À étendre depuis le pattern patient en 0.16.1</td></tr>
+        <tr><td>Tooltips sur listes (patients, matériels)</td><td>0.16.1 — sur les info-bulles des badges</td></tr>
+        <tr><td>Auto-rattachement admin aux établissements</td><td>0.16.1 — trigger SQL ou helper côté useAuth</td></tr>
+        <tr><td>Colonne <code>interventions.due_date</code></td><td>ALTER TABLE simple à faire, voir 0.15.6</td></tr>
+        <tr><td>Modèles d'étiquettes par défaut</td><td>Seeder 0.16.1</td></tr>
+        <tr><td>Notifications push navigateur (VAPID)</td><td>Chantier service worker dédié</td></tr>
+        <tr><td>Intégration Teams / Slack</td><td>Chantier webhook dédié</td></tr>
+        <tr><td>Drag tactile mobile Kanban</td><td>Refactor avec dnd-kit</td></tr>
+        <tr><td>Refactor lourd code (composants partagés)</td><td>0.17</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="roadmap">11. Roadmap 0.16.1 suggérée</h2>
+  <div class="panel ok">
+    <ol>
+      <li><b>Étendre les tooltips</b> à la fiche matériel (S/N, lot, date achat, garantie) et aux listes (badges étiquettes / tags)</li>
+      <li><b>Auto-rattachement admin</b> aux établissements via trigger SQL ou helper côté <code>useAuth</code></li>
+      <li><b>Migration <code>interventions.due_date</code></b> et remise du select calendrier</li>
+      <li><b>Modèles d'étiquettes par défaut</b> : seeder de 8-10 étiquettes types (RGPD, ALD, dépendance, fragile, isolement, soins palliatifs, allergique, MCI, douleur, post-op)</li>
+      <li><b>Affichage <i>"En ligne il y a X"</i></b> sur la liste membres (basé sur <code>v_user_activity.derniere_activite</code>)</li>
+      <li><b>Filtre par poste / par rôle</b> dans la liste membres</li>
+      <li><b>Import en masse</b> des utilisateurs depuis un CSV</li>
+      <li><b>Recherche dans la liste membres</b> (utile dès 20+ users)</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.16.0 · 29 mai 2026</p>
+    <p>UserMenu refondu · Archivage utilisateurs · Modale infos enrichie · Tooltips fiche patient</p>
+  </footer>
+
+</div>
+</body>
+</html>

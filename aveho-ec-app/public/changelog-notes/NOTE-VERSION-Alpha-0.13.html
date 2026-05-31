@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.13</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.13
+      <small>Fiche patient 360° · Stats signalements · Filtres combinés · Mode auto jour/nuit · Aperçu impression A4</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.13.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.12 (29/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">👤 Fiche patient 360°</span>
+      <span class="badge green">📊 Stats signalements</span>
+      <span class="badge green">🔍 Filtres combinés Matériels</span>
+      <span class="badge green">🌗 Mode auto jour/nuit</span>
+      <span class="badge green">🖨️ Aperçu impression A4</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#fiche-pat">3. Fiche patient 360°</a></li>
+      <li><a href="#stats-sg">4. Statistiques signalements</a></li>
+      <li><a href="#filtres-mat">5. Filtres combinés Matériels</a></li>
+      <li><a href="#mode-auto">6. Mode auto jour/nuit</a></li>
+      <li><a href="#preview-pdf">7. Aperçu impression A4</a></li>
+      <li><a href="#delta">8. Delta vs Alpha 0.12</a></li>
+      <li><a href="#fichiers">9. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">10. Procédure de mise à jour</a></li>
+      <li><a href="#reporte">11. Reste à faire</a></li>
+      <li><a href="#roadmap">12. Roadmap suggérée 0.14</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.13 livre <b>cinq chantiers</b> orientés "vision patient" et "confort d'usage". La <b>fiche patient 360°</b> est le pendant naturel de la fiche matériel livrée en 0.12. Les <b>statistiques signalements</b> complètent le module de remontée terrain de la 0.12. Le <b>mode auto jour/nuit</b>, les <b>filtres combinés</b> sur Matériels et l'<b>aperçu impression A4</b> améliorent le confort quotidien.</p>
+
+  <div class="highlight">
+    <b>Pas de nouveau script SQL dans cette version.</b> Tout est en code applicatif. La mise à jour est simple : décompresser, npm install, c'est en ligne.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle page (Fiche patient)</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Modes thème (Clair / Foncé / Auto)</div></div>
+    <div class="kpi"><div class="v">5</div><div class="l">Filtres Matériels</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Graphes Signalements</div></div>
+    <div class="kpi"><div class="v">0</div><div class="l">Script SQL requis</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Fiche patient 360°</td><td><span class="pill new">Livré</span></td><td>Page <code>/patient/[id]</code> · étiquettes, matériels, DI, historique</td></tr>
+      <tr><td>2</td><td>Statistiques signalements</td><td><span class="pill new">Livré</span></td><td>3 graphes : par type, par statut, taux de réponse</td></tr>
+      <tr><td>3</td><td>Filtres combinés Matériels</td><td><span class="pill new">Livré</span></td><td>+ Dépôt + Affecté à un patient (en plus de Tag et État)</td></tr>
+      <tr><td>4</td><td>Mode auto jour/nuit</td><td><span class="pill new">Livré</span></td><td>Suivi du système OU bascule sur l'heure (19h-7h)</td></tr>
+      <tr><td>5</td><td>Aperçu impression A4</td><td><span class="pill new">Livré</span></td><td>Helper réutilisable, déjà appliqué à l'export Maintenance</td></tr>
+      <tr><td>6</td><td>Intégration Teams / Slack</td><td><span class="pill brk">Dédié</span></td><td>Webhook + secrets, chantier dédié</td></tr>
+      <tr><td>7</td><td>Export Excel multi-feuille</td><td><span class="pill brk">SheetJS</span></td><td>Nécessite lib externe</td></tr>
+      <tr><td>8</td><td>Alertes ML légères sur motifs</td><td><span class="pill brk">À spécifier</span></td><td>Spec à préciser</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fiche-pat">3. Fiche patient 360° <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>3.1 Accès</h3>
+  <p>Sur la page Patients, <b>le nom d'un patient devient cliquable</b> et ouvre sa fiche détaillée à l'URL <code>/patient/[id]</code>. C'est le pendant symétrique de la fiche matériel livrée en 0.12.</p>
+
+  <h3>3.2 Contenu de la fiche</h3>
+  <ol>
+    <li><b>Entête</b> — nom prénom, âge calculé depuis la date de naissance, chambre, service, établissement, numéro de dossier, étiquettes, état, médecin traitant</li>
+    <li><b>4 KPIs</b> — matériels affectés, en location active, DI ouvertes, DI sur les 30 derniers jours</li>
+    <li><b>Tableau Matériels affectés</b> — toutes les lignes <code>materiels.patient_id = patient_id</code>, cliquables vers la fiche matériel <code>/materiel/[id]</code></li>
+    <li><b>Tableau DI</b> — toutes les demandes d'intervention sur ce patient, ordonnées par date desc, cliquables</li>
+    <li><b>Historique d'activité</b> — derniers 20 événements rattachés au patient (depuis la table <code>evenements</code>)</li>
+  </ol>
+
+  <h3>3.3 Cas d'usage</h3>
+  <ul>
+    <li><b>Synthèse rapide</b> pour un nouveau membre de l'équipe qui prend en charge un patient</li>
+    <li><b>Revue trimestrielle</b> du dossier : combien de DI, combien de matériels, étiquettes appliquées</li>
+    <li><b>Sortie / décès / transfert</b> : checklist des matériels à récupérer en un coup d'œil</li>
+    <li>Navigation fluide : <b>patient ↔ matériels ↔ DI</b> sans repasser par la liste à chaque fois</li>
+  </ul>
+
+  <h2 id="stats-sg">4. Statistiques signalements <span class="pill new">NOUVEAU</span></h2>
+  <p>La page <code>/statistiques</code> gagne une <b>nouvelle section Signalements anonymes</b> qui s'affiche dès qu'il y a au moins un signalement dans les 6 derniers mois. Trois graphes :</p>
+  <ol>
+    <li><b>Répartition par type</b> (DonutChart) — Problème / Idée / Question / Autre avec les couleurs déjà utilisées dans la page Signalements</li>
+    <li><b>Répartition par statut</b> (DonutChart) — Nouveau / En cours / Traité / Archivé pour suivre l'avancement</li>
+    <li><b>Taux de réponse</b> (jauge KPI) — pourcentage de signalements avec réponse écrite, code couleur : vert ≥ 60%, orange ≥ 30%, rouge sinon. Permet à la direction de mesurer sa réactivité à la remontée terrain.</li>
+  </ol>
+
+  <h3>Cas d'usage métier</h3>
+  <ul>
+    <li>Bilan trimestriel direction : <i>"a-t-on des Problèmes récurrents ? Combien d'idées proposées ? Combien traitées ?"</i></li>
+    <li>Indicateur RH soft : un taux de réponse qui baisse peut signaler un désengagement de la direction</li>
+    <li>Animation du dispositif : voir si le volume de signalements augmente après une communication interne</li>
+  </ul>
+
+  <h2 id="filtres-mat">5. Filtres combinés Matériels <span class="pill new">NOUVEAU</span></h2>
+  <p>Le panneau Filtres avancés de la page Matériels gagne <b>deux nouveaux filtres</b> en plus des existants (Recherche, État, Tag) :</p>
+  <ul>
+    <li><b>Dépôt</b> — sélecteur des dépôts définis dans la collectivité, apparaît seulement s'il y a au moins un dépôt</li>
+    <li><b>Affecté à un patient</b> — booléen Oui / Non, utilise un accessor qui regarde <code>r.patient_id</code></li>
+  </ul>
+
+  <h3>Combinabilité</h3>
+  <p>Tous les filtres sont <b>cumulables</b>. Exemples utiles :</p>
+  <ul>
+    <li><i>"Matériels Critiques au dépôt Figeac"</i> = Tag "Critique" + Dépôt "Figeac"</li>
+    <li><i>"Pompes en location chez un patient"</i> = Recherche "pompe" + Affecté "Oui" + État "En location"</li>
+    <li><i>"Matériels À remplacer libres au dépôt général"</i> = Tag "À remplacer" + Affecté "Non" + Dépôt "Général"</li>
+  </ul>
+
+  <h2 id="mode-auto">6. Mode auto jour/nuit <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>6.1 Concept</h3>
+  <p>Le mode foncé livré en 0.7 nécessitait un toggle manuel. La 0.13 ajoute un <b>troisième mode</b> dans Paramètres : <b>Auto</b>, qui bascule automatiquement entre clair et foncé.</p>
+
+  <h3>6.2 Deux sous-options du mode Auto</h3>
+  <p>Quand tu actives Auto, deux radio-boutons apparaissent dans un encart turquoise :</p>
+  <ol>
+    <li><b>Suivre le système</b> (option par défaut) — utilise <code>prefers-color-scheme</code> du navigateur, donc s'aligne sur le réglage Windows/macOS. Si tu passes ton OS en mode nuit, Aveho suit immédiatement.</li>
+    <li><b>Selon l'heure</b> — bascule en mode foncé entre <b>19h et 7h</b>, mode clair sinon. Vérification toutes les minutes (interval discret) pour passer à 19h pile sans recharger la page.</li>
+  </ol>
+
+  <h3>6.3 Hook enrichi</h3>
+  <p>Le hook <code>useTheme</code> a été élargi pour gérer cette troisième valeur. L'API change peu :</p>
+  <pre><code>const { theme, mode, autoMode, toggle, setMode, setAuto } = useTheme();
+// theme = "light" | "dark" (la valeur effective appliquée)
+// mode  = "light" | "dark" | "auto" (la préférence utilisateur)
+// autoMode = "os" | "horaire" (sous-option si mode=auto)</code></pre>
+  <p>Le badge <i>"Mode foncé"</i> visible dans Paramètres affiche désormais le statut effectif quand le mode est en auto, par exemple <i>"Mode auto actif — actuellement : foncé"</i>.</p>
+
+  <h2 id="preview-pdf">7. Aperçu impression A4 <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>7.1 Concept</h3>
+  <p>Avant la 0.13, les exports PDF (Stats en 0.8, Maintenance en 0.12) ouvraient une nouvelle fenêtre et lançaient l'impression directement. <b>Risque d'imprimer par accident</b> un document mal cadré, et impossible de modifier les filtres après avoir vu le rendu.</p>
+
+  <h3>7.2 Solution</h3>
+  <p>Nouveau helper réutilisable <code>lib/pdfPreview.js</code> qui affiche une <b>modale fullscreen</b> avec :</p>
+  <ul>
+    <li>En-tête turquoise <i>"APERÇU AVANT IMPRESSION"</i> + titre du document</li>
+    <li><b>iframe A4</b> (90% de la largeur, 80vh de hauteur) qui rend le HTML exactement comme à l'impression</li>
+    <li>Bouton <b>Annuler</b> qui ferme la modale</li>
+    <li>Bouton <b>Imprimer</b> qui lance <code>window.print()</code> sur l'iframe (sans recharger la page)</li>
+    <li>Sortie via touche <kbd style="background:#f4f7fa;padding:2px 8px;border-radius:4px;border:1px solid #e3e9ee;font-size:11px">Échap</kbd></li>
+  </ul>
+
+  <h3>7.3 Usage</h3>
+  <pre><code>import { openPdfPreview } from "../../lib/pdfPreview";
+
+openPdfPreview({
+  titre: "Planning Maintenance (12)",
+  html: "&lt;!DOCTYPE html&gt;...",
+  filename: "planning-maintenance"
+});</code></pre>
+  <p>Déjà appliqué à <b>l'export PDF Maintenance</b> en 0.13. Le pattern est facilement portable à l'export Stats (chantier 0.14 si tu veux).</p>
+
+  <h2 id="delta">8. Delta vs Alpha 0.12</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Page <code>/patient/[id]</code></td><td><span class="pill new">NEW</span></td><td>Fiche détaillée par patient (symétrique fiche matériel)</td></tr>
+      <tr><td>Nom patient cliquable dans la liste</td><td><span class="pill new">NEW</span></td><td>Ouvre la fiche, conserve le crayon pour l'édition</td></tr>
+      <tr><td>Section Signalements dans Statistiques</td><td><span class="pill new">NEW</span></td><td>3 graphes (type, statut, taux de réponse)</td></tr>
+      <tr><td>2 nouveaux filtres dans Matériels</td><td><span class="pill new">NEW</span></td><td>Dépôt + Affecté à un patient</td></tr>
+      <tr><td>Mode "Auto" dans <code>useTheme</code></td><td><span class="pill new">NEW</span></td><td>3 boutons dans Paramètres (Clair / Foncé / Auto) + 2 sous-options</td></tr>
+      <tr><td>Helper <code>openPdfPreview</code></td><td><span class="pill new">NEW</span></td><td>Aperçu modale avant impression, réutilisable</td></tr>
+      <tr><td>Export PDF Maintenance utilise l'aperçu</td><td><span class="pill imp">IMP</span></td><td>Plus de window.open direct</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fichiers">9. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/patient/[id]/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Fiche patient 360°</td></tr>
+      <tr><td><code>lib/pdfPreview.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Helper aperçu impression A4</td></tr>
+      <tr><td><code>lib/useTheme.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ mode "auto" avec sous-options OS/horaire</td></tr>
+      <tr><td><code>app/parametres/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ 3 boutons mode + UI sous-options auto</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Nom cliquable → fiche</td></tr>
+      <tr><td><code>app/materiels/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ chargement dépôts + 2 filtres combinés</td></tr>
+      <tr><td><code>app/statistiques/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ chargement signalements + 3 graphes</td></tr>
+      <tr><td><code>app/maintenance/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>exportPdfMaintenance utilise openPdfPreview</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.12.0-alpha → 0.13.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="migration">10. Procédure de mise à jour depuis Alpha 0.12</h2>
+  <div class="panel hi">
+    <p><b>Mise à jour simple : pas de SQL.</b></p>
+    <ol>
+      <li>Sauvegarde ton dossier <code>C:\aveho-ec-app</code>.</li>
+      <li>Décompresse le nouveau zip par-dessus.</li>
+      <li>Dans PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre></li>
+      <li><b>Tests rapides</b> :
+        <ul>
+          <li>Sur Patients, clique le <b>nom d'un patient</b> : tu arrives sur sa fiche 360°</li>
+          <li>Sur Matériels, ouvre les Filtres avancés : tu vois maintenant les sélecteurs <b>Dépôt</b> et <b>Affecté à un patient</b> en plus des existants</li>
+          <li>Sur Paramètres → Apparence : tu vois <b>3 boutons</b> au lieu de 2. Clique Auto : un encart turquoise apparaît avec les sous-options. Bascule entre OS et horaire pour voir l'effet.</li>
+          <li>Sur Maintenance, clique <b>Export PDF planning</b> : tu vois maintenant la <b>modale d'aperçu</b> au lieu d'une nouvelle fenêtre qui imprime. Appuie sur Échap pour fermer sans imprimer.</li>
+          <li>Sur Statistiques (si tu as des signalements dans les 6 derniers mois) : la section Signalements apparaît avec 3 graphes dont la jauge taux de réponse.</li>
+        </ul>
+      </li>
+      <li>Mise en ligne :<pre><code>git add .
+git commit -m "Aveho EC Alpha 0.13"
+git push</code></pre></li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">11. Reste à faire / en attente</h2>
+  <div class="panel warn">
+    <table>
+      <thead><tr><th>Sujet</th><th>Pourquoi pas livré</th></tr></thead>
+      <tbody>
+        <tr><td>Intégration Teams / Slack</td><td>Webhook + secrets, chantier dédié</td></tr>
+        <tr><td>Export Excel multi-feuille</td><td>Nécessite SheetJS et un format de bilan PSAD à définir</td></tr>
+        <tr><td>Alertes ML légères sur motifs récurrents</td><td>Spec à préciser (clustering ? simple comptage ?)</td></tr>
+        <tr><td>Aperçu impression sur l'export Stats</td><td>Pattern porté seulement sur Maintenance pour l'instant — porter ensuite en 0.14 si validé</td></tr>
+        <tr><td>Aperçu impression sur l'export CSV</td><td>Pas pertinent pour CSV (pas d'impression). Garder direct.</td></tr>
+        <tr><td>Notifications push navigateur</td><td>Chantier VAPID dédié</td></tr>
+        <tr><td>Tag matériel → génération auto maintenance</td><td>Chaînage métier complexe</td></tr>
+        <tr><td>Tableau de bord opérationnel kiosque</td><td>Cosmétique, à la demande</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="roadmap">12. Roadmap suggérée pour Alpha 0.14</h2>
+  <div class="panel ok">
+    <p>Pistes pour la prochaine version :</p>
+    <ol>
+      <li><b>Étiquettes patients sur la fiche patient</b> — afficher dynamiquement les étiquettes liées (actuellement code en place mais à brancher sur les vraies relations)</li>
+      <li><b>Aperçu impression sur l'export Stats</b> — porter le pattern de la 0.13</li>
+      <li><b>Bouton "Imprimer la fiche"</b> sur les fiches patient et matériel — synthèse A4 à imprimer pour les dossiers</li>
+      <li><b>Recherche globale (Cmd+K)</b> — palette de recherche par-dessus toute l'app (patients, matériels, DI…)</li>
+      <li><b>Vue Kanban des DI</b> — colonnes par statut, drag & drop entre statuts</li>
+      <li><b>Notifications push navigateur</b> — chantier VAPID dédié</li>
+      <li><b>Intégration Teams</b> — webhook entrant pour relayer les notifs critiques</li>
+      <li><b>Export Excel multi-feuille</b> — bilan PSAD complet en un fichier</li>
+    </ol>
+  </div>
+
+  <h2 style="font-size:22px;color:#142131;margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid #7CC8C8">📌 Pièges connus (rétro-doc depuis 0.17.0)</h2>
+  <p style="font-style:italic;color:#6c7a89;font-size:12.5px">Cette section a été ajoutée après les sessions de migration 0.15.6 et 0.16.1.</p>
+
+  <div style="background:#fef0ee;border:1px solid #f0c4be;border-radius:14px;padding:22px 24px;margin:14px 0">
+    <h3 style="margin-top:0;color:#a32f24;font-size:16px">⚠️ Piège : tables <code style="background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px">etiquettes</code> + <code style="background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px">patient_etiquettes</code></h3>
+    <p>La fonctionnalité étiquettes nécessite les 2 tables créées via <code style="background:#f4f7fa;padding:2px 6px;border-radius:4px;font-size:13px">13_etiquettes.sql</code>. Sans ça, la page <code>/etiquettes</code> et la modale Gérer (livrée 0.15) plantent silencieusement.</p>
+    <p>En 0.16.1, un seeder a été ajouté qui crée 10 étiquettes par défaut (RGPD, ALD, Dépendance, Fragile, Isolement, Soins palliatifs, Allergique, MCI, Douleur, Post-op) pour les structures qui n'en ont pas. Voir <code>aveho-PATCH-vers-0.16.1.sql</code> section 4.</p>
+  </div>
+
+  <div style="background:#fef0ee;border:1px solid #f0c4be;border-radius:14px;padding:22px 24px;margin:14px 0">
+    <h3 style="margin-top:0;color:#a32f24;font-size:16px">⚠️ Piège : <code style="background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px">pdfPreview.js</code> et document.write() deprecated</h3>
+    <p>Le helper d'aperçu PDF utilise <code>document.write()</code> qui génère un warning Chrome. Cosmétique, pas bloquant — l'aperçu fonctionne. À refactoriser en 0.18 avec un blob URL et un iframe propre.</p>
+  </div>
+
+  <footer style="margin-top:50px;padding-top:24px;border-top:1px solid #e3e9ee;font-size:12px;color:#6c7a89;text-align:center">
+    <p>Aveho — Espace Collectivité · Alpha 0.13 · 29 mai 2026 (mise à jour 0.17.0)</p>
+    <p>Document de version interne — 5 chantiers livrés + 2 pièges documentés a posteriori</p>
+  </footer>
+
+</div>
+</body>
+</html>

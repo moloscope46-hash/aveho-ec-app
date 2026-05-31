@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.43.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5e4a8c 50%,#e35d5b 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffd6d2;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#ffd6d2;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#ffd6d2}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--red)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#fff8ec;border-color:#f0d59f}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--red);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--red); color:#fff; font-weight:700; margin-right:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — VERSION MARATHON 6 CHANTIERS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.43.0
+      <small>Stats DI · Calendrier maintenance · Realtime · Duplication templates · Audit heatmap · Récurrences maintenance</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.43.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.42.0</span>
+      <span><b>Statut :</b> Build clean · 710 tests verts · 1 patch SQL (162 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📊 N - Dashboard statistiques DI</span>
+      <span class="badge">📅 M - Vue calendrier mensuel maintenances</span>
+      <span class="badge">⚡ L - Realtime Supabase + animation cloche</span>
+      <span class="badge">📋 K - Duplication templates RGPD multi-etabs</span>
+      <span class="badge">🔍 J - Heatmap temporel audit log filtrable</span>
+      <span class="badge">🔁 A - CRUD récurrences maintenance</span>
+      <span class="badge green">+36 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>6 chantiers en une version. Build clean, <b>710 tests verts</b>. Ajout de <b>2 nouvelles routes</b> (statistiques-interventions + onglet récurrences dans maintenance) avec liens menu, <b>2 nouvelles vues + 1 RPC SQL</b> pour les stats DI, <b>1 nouvelle RPC</b> pour heatmap audit filtrable, et l'introduction du <b>temps réel Supabase</b> dans la cloche de notifs.</p>
+
+  <div class="highlight">
+    <b>6 modules livrés :</b><br/>
+    <b>N</b> Nouveau dashboard <code>/statistiques-interventions</code> calqué sur le pattern activité (0.31) avec 6 vues SQL.<br/>
+    <b>M</b> Toggle Liste / Calendrier dans <code>/maintenance</code> avec grille 7 colonnes, navigation mois et cellules cliquables.<br/>
+    <b>L</b> Supabase Realtime sur INSERT <code>notifications</code> → animation cloche orange + toast natif si tab masqué.<br/>
+    <b>K</b> Modale "Dupliquer vers" avec multiselect des établissements + sélection/désélection groupée.<br/>
+    <b>J</b> Heatmap dow×heure en haut de <code>/audit</code> alimentée par <code>get_audit_heatmap()</code> qui respecte les filtres action/entité actifs.<br/>
+    <b>A</b> Onglet "Récurrences automatiques" dans <code>/maintenance</code> avec CRUD complet, KPIs catégories d'échéance, bouton "Faite" qui recalcule la prochaine due.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">N</span> Dashboard statistiques DI</h3>
+    <ul>
+      <li><b>6 vues SQL</b> calquées sur le modèle activité (0.31) :
+        <ul>
+          <li><code>v_stats_di_global</code> : total, ce mois, mois dernier, % urgent, % résolu, nb_ouvertes, nb_7j/30j</li>
+          <li><code>v_stats_di_par_type</code> : top types avec nb_urgent et nb_30j</li>
+          <li><code>v_stats_di_par_urgence</code> : split urgent/normal</li>
+          <li><code>v_stats_di_heatmap</code> : création par dow×heure sur 90j</li>
+          <li><code>v_stats_di_top_demandeurs</code> : join avec v_users_emails pour avoir les emails (created_by côté DI)</li>
+          <li><code>v_stats_di_par_mois</code> : 12 mois glissants avec <code>generate_series</code></li>
+        </ul>
+      </li>
+      <li><b>Page</b> <code>/statistiques-interventions</code> avec KPIs + tendance + StackedBarChart + Heatmap + Gauge taux résolution + DonutChart urgence + top types (barres horizontales) + top demandeurs (podium 🥇🥈🥉)</li>
+      <li>Lien ajouté au menu TopBar (Administration)</li>
+      <li>Permissions admin uniquement (cohérent avec les autres dashboards)</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">M</span> Vue calendrier mensuelle maintenances</h3>
+    <ul>
+      <li><b>Toggle</b> Liste / Calendrier dans la toolbar (segmented control)</li>
+      <li><b>Composant</b> <code>&lt;CalendrierMaintenance&gt;</code> : grille 7 colonnes (Lun-Dim) avec offset correct pour les mois qui ne démarrent pas un lundi</li>
+      <li><b>Navigation</b> : boutons précédent / mois actuel / suivant</li>
+      <li><b>Cellules</b> : numéro du jour, max 3 maintenances visibles + "+N" si overflow, mini-pills colorées par statut</li>
+      <li><b>Aujourd'hui</b> : cellule en surbrillance bleue (bordure + bg)</li>
+      <li><b>Click</b> sur une maintenance → ouvre la modale d'édition existante</li>
+      <li><b>Légende</b> couleurs des statuts en bas</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">L</span> Notification temps réel Supabase</h3>
+    <ul>
+      <li><b>Subscribe</b> au channel <code>notif:{structureId}</code> avec filtre <code>postgres_changes</code> sur INSERT de <code>notifications</code></li>
+      <li><b>Filtre côté Supabase</b> via <code>structure_id=eq.${structureId}</code> → pas de fuite cross-structure</li>
+      <li><b>Update du state</b> en tête de liste avec déduplication par <code>id</code> (au cas où le polling 60s aurait déjà chopé la notif)</li>
+      <li><b>Animation cloche</b> : shake + couleur orange pendant 3s (keyframes <code>aveho-bell-shake</code>)</li>
+      <li><b>Toast natif</b> via Notification API si <code>permission === "granted"</code> ET <code>document.hidden === true</code> (utilisateur sur un autre onglet)</li>
+      <li><b>Tag</b> de notif = id → pas de toast doublon si la même notif arrive 2× (par exemple via push + realtime)</li>
+      <li><b>Cleanup</b> automatique du channel à l'unmount</li>
+      <li>Le polling 60s existant reste en place comme filet de sécurité (au cas où la connexion Realtime soit perdue)</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">K</span> Duplication templates RGPD multi-établissements</h3>
+    <ul>
+      <li><b>Nouveau bouton</b> <i>building-community</i> sur chaque template (à côté de "dupliquer en nouvelle version")</li>
+      <li>Visible uniquement si <code>etablissements.length > 0</code></li>
+      <li><b>Modale</b> avec liste cochable des établissements (multiselect avec Set)</li>
+      <li><b>Source désactivée</b> : si le template source est déjà spécifique à un etab, cet etab apparaît grisé avec "(source)" pour éviter de dupliquer sur lui-même</li>
+      <li><b>Boutons Tout sélectionner / Tout désélectionner</b> en bas (visible si > 1 etab)</li>
+      <li><b>Action</b> : insère N nouveaux <code>consent_templates</code> en un <code>INSERT</code> bulk Supabase, chacun avec <code>is_active=false</code> et un nom "{source} (copie)"</li>
+      <li>L'admin doit ensuite activer manuellement chaque copie par établissement (évite l'écrasement involontaire)</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">J</span> Heatmap temporel sur /audit</h3>
+    <ul>
+      <li><b>RPC SQL</b> <code>get_audit_heatmap(structure_id, action, entite, jours)</code> retourne <code>(jour_semaine, heure, nb_actions)</code></li>
+      <li>Tous les paramètres action/entité sont optionnels (NULL = pas de filtre)</li>
+      <li><code>security invoker</code> → respecte les RLS du user (admin uniquement)</li>
+      <li><b>UI</b> : nouveau panneau Heatmap au-dessus du tableau, alimenté avec les <b>mêmes filtres</b> que la liste</li>
+      <li>Couleur violette (<code>#5e4a8c</code>) pour distinguer des heatmaps activité (bleu) et RGPD (vert)</li>
+      <li>Note "(filtrée)" affichée si filtreAction ou filtreEntite actif</li>
+      <li>Chargement silencieux : si RPC absente côté SQL, fallback vide sans message d'erreur</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">A</span> CRUD récurrences maintenance</h3>
+    <ul>
+      <li><b>Onglets</b> dans <code>/maintenance</code> : "Maintenances planifiées" (existant) + nouveau "Récurrences automatiques"</li>
+      <li>Compteurs intégrés aux onglets</li>
+      <li><b>Composant</b> <code>&lt;RecurrencesPanel&gt;</code> avec :
+        <ul>
+          <li><b>6 KPIs catégories</b> : En retard (rouge), ≤ 7j (orange urgent), ≤ 30j (bleu), OK (vert), Sans date, Inactives</li>
+          <li>Tableau : Matériel · Type · Fréquence (jours) · Dernière · Prochaine due · Statut · Actions</li>
+          <li>Bouton "Faite" vert : marque comme réalisée aujourd'hui ET recalcule automatiquement <code>prochaine_due</code> à +N jours</li>
+          <li>Bouton modifier + bouton supprimer</li>
+        </ul>
+      </li>
+      <li><b>Modale CRUD</b> : sélection matériel, type (Préventive/Calibration/Vérification/Autre), fréquence jours, dernière réalisée (optionnelle), prochaine due (auto-calculée si vide), actif checkbox, notes</li>
+      <li><b>Calcul automatique</b> : si l'utilisateur renseigne <code>derniere_realisee</code> mais pas <code>prochaine_due</code>, le système calcule via <code>getTime() + freq*86400000</code> (DST-safe leçon de la 0.41)</li>
+    </ul>
+  </div>
+
+  <h2>SQL — Patch 0.43 (162 lignes idempotentes)</h2>
+  <table>
+    <thead><tr><th>Objet</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>v_stats_di_global</code></td><td><span class="pill new">Vue</span></td><td>KPIs DI : total, mois courant vs précédent, % urgent, % résolu</td></tr>
+      <tr><td><code>v_stats_di_par_type</code></td><td><span class="pill new">Vue</span></td><td>Group by type avec compteurs</td></tr>
+      <tr><td><code>v_stats_di_par_urgence</code></td><td><span class="pill new">Vue</span></td><td>Split urgent/normal pour donut</td></tr>
+      <tr><td><code>v_stats_di_heatmap</code></td><td><span class="pill new">Vue</span></td><td>Création DI par dow × heure (90j)</td></tr>
+      <tr><td><code>v_stats_di_top_demandeurs</code></td><td><span class="pill new">Vue</span></td><td>Join v_users_emails pour récupérer emails</td></tr>
+      <tr><td><code>v_stats_di_par_mois</code></td><td><span class="pill new">Vue</span></td><td>12 mois glissants via generate_series</td></tr>
+      <tr><td><code>get_audit_heatmap()</code></td><td><span class="pill new">RPC</span></td><td>Heatmap audit log avec filtres optionnels</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">6</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">6</div><div class="l">Nouvelles vues SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle RPC</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle route</div></div>
+    <div class="kpi"><div class="v">+36</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">710</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">799</div><div class="l">K du zip livré</div></div>
+    <div class="kpi"><div class="v">162</div><div class="l">Lignes SQL idempotent</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.43.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>6 vues stats DI + RPC heatmap audit</td></tr>
+      <tr><td><code>app/statistiques-interventions/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page dashboard DI complète (~270 lignes)</td></tr>
+      <tr><td><code>app/maintenance/page.js</code></td><td><span class="pill imp">REFONDU</span></td><td>+ onglets · + vue calendrier · + CRUD récurrences · + composants RecurrencesPanel/CalendrierMaintenance/KpiSmall</td></tr>
+      <tr><td><code>app/NotifBell.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ Realtime subscribe · + state hasNew · + animation shake · + toast natif si tab masqué</td></tr>
+      <tr><td><code>app/parametres-rgpd/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ bouton "Dupliquer vers" · + state dupModal · + fonctions openDupModal/toggleEtabSelected/executerDuplication · + modale multiselect</td></tr>
+      <tr><td><code>app/audit/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ import Heatmap · + state heatmap · + chargement RPC dans load · + panneau Heatmap au-dessus du tableau</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ lien /statistiques-interventions dans Administration</td></tr>
+      <tr><td><code>__tests__/v043-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>36 tests sur les 6 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.42.0-alpha → 0.43.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.43.sql</code> → Run (idempotent)</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Vues stats DI
+select * from v_stats_di_global 
+where structure_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+
+select * from v_stats_di_heatmap 
+where structure_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' limit 5;
+
+-- RPC heatmap audit
+select * from get_audit_heatmap(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid, null, null, 30);</code></pre>
+      </li>
+      <li><b>Activer Realtime</b> sur la table notifications (Supabase Dashboard → Database → Replication → activer pour public.notifications). Si déjà activée → pas d'action.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Nettoyer le cache + npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test       # 710 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><code>/statistiques-interventions</code> → nouveau dashboard DI avec heatmap, donut, top types, podium demandeurs</li>
+          <li><code>/maintenance</code> → toggle Liste/Calendrier dans la toolbar · onglet "Récurrences automatiques" en haut</li>
+          <li>Ouvrir un autre onglet du navigateur sur <code>/accueil</code>, dans un 2ᵉ onglet faire une action qui crée une notif → <b>l'onglet 1 doit recevoir la notif instantanément</b> (cloche orange qui shake)</li>
+          <li><code>/parametres-rgpd</code> → bouton <i>building-community</i> sur un template → modale multiselect → "Tout sélectionner" → Dupliquer</li>
+          <li><code>/audit</code> → heatmap violette en haut de la page · changer le filtre action/entité → la heatmap se met à jour</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.44+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Notif email auteur signalement</b> (trigger SQL en 0.41, manque le câblage Edge Function)</li>
+      <li><b>Pages config restantes vers safeWrite</b></li>
+      <li><b>Tests Playwright end-to-end</b></li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+      <li><b>Recherche : ajouter consentements + factures</b></li>
+      <li><b>Soumission stores</b> (Play / MS Store)</li>
+      <li><b>Mode présentation : autres vues</b> (achats, RGPD, maintenance)</li>
+      <li><b>Realtime sur autres tables</b> (DI nouvelle, signalements, achats)</li>
+      <li><b>Récurrences maintenance : génération auto</b> d'une maintenance planifiée à l'échéance (Edge Function cron)</li>
+      <li><b>Templates RGPD : activation groupée</b> après duplication multi-etabs</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.43.0 · 31 mai 2026</p>
+    <p>Marathon 6 chantiers — Stats DI · Calendrier maintenance · Realtime · Duplication templates · Audit heatmap · Récurrences · 710 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

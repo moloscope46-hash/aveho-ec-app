@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.44.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 50%,#5aa05a 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#bfe6e6}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--green)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--green);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--green); color:#fff; font-weight:700; margin-right:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — VERSION QUALITÉ + PERF</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.44.0
+      <small>Activation groupée RGPD · Realtime DI/signalements/achats · Cron récurrences · Indexes SQL · Audit a11y</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.44.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.43.0</span>
+      <span><b>Statut :</b> Build clean · 736 tests verts · 1 patch SQL (127 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📋 J - Activation groupée templates RGPD</span>
+      <span class="badge">⚡ K - Realtime DI + signalements + achats</span>
+      <span class="badge">🤖 L - Cron auto-génération récurrences</span>
+      <span class="badge">🚀 M - 19 indexes SQL perf</span>
+      <span class="badge">♿ O - Audit a11y composants</span>
+      <span class="badge green">+26 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>5 chantiers, mais cette fois plus de <b>finition</b> que de nouvelles features — perf, qualité et accessibilité. Build clean, <b>736 tests verts</b>. Patch SQL idempotent qui termine par <code>notify pgrst, 'reload schema'</code> (leçon de la 0.43).</p>
+
+  <div class="highlight">
+    <b>5 modules livrés :</b><br/>
+    <b>J</b> Bouton "Activer en masse" + modale multiselect sur <code>/parametres-rgpd</code> — utile après une duplication multi-etabs pour basculer plusieurs brouillons en actif d'un coup.<br/>
+    <b>K</b> Hook réutilisable <code>useRealtimeTable</code> + helper <code>showRealtimeToast</code>. Appliqué sur <code>/accueil</code> pour les 3 tables critiques : nouvelles DI (rouge si urgent), signalements (teal), achats à valider (orange).<br/>
+    <b>L</b> Extension de la Edge Function existante <code>maintenance-daily-cron</code> : crée auto une maintenance planifiée à chaque échéance de récurrence dans les 7 jours.<br/>
+    <b>M</b> 19 indexes ciblés sur les colonnes les plus filtrées (created_by, patient_id, statut, etc.) + <code>analyze</code> sur 9 tables.<br/>
+    <b>O</b> Composants <code>&lt;Btn&gt;</code> et nouveau <code>&lt;IconButton&gt;</code> avec aria-label intelligent + icônes décoratives masquées aux lecteurs d'écran (<code>aria-hidden="true"</code>).
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">J</span> Activation groupée templates RGPD</h3>
+    <ul>
+      <li><b>Bouton "Activer en masse"</b> apparaît à droite du titre "Historique des versions" dans <code>/parametres-rgpd</code> — visible uniquement si ≥ 2 brouillons</li>
+      <li><b>Modale multiselect</b> avec liste des brouillons :
+        <ul>
+          <li>Affiche pour chaque template : version, nom optionnel, portée (Global ou nom de l'établissement), date de création</li>
+          <li>Boutons "Tout sélectionner" / "Tout désélectionner" si > 1 brouillon</li>
+          <li>Bouton final "Activer (N)" qui affiche le compteur en live</li>
+        </ul>
+      </li>
+      <li><b>Logique d'activation</b> : pour chaque template à activer, le système désactive automatiquement le template actif existant du même couple <code>(structure, etablissement)</code> avant d'activer le nouveau. Pas de risque de doublon actif.</li>
+      <li><b>Validation</b> : exécute la même <code>validateTemplate</code> que l'activation simple — si des warnings critiques apparaissent sur un template, ils sont remontés dans le <code>confirm()</code> avant exécution</li>
+      <li><b>Cas d'usage</b> : après avoir dupliqué un template v2.0 vers 5 établissements via la modale "Dupliquer vers..." (chantier K de la 0.43), tu peux maintenant les activer tous d'un coup au lieu de cliquer 5× sur Activer.</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">K</span> Realtime sur DI, signalements, achats</h3>
+    <ul>
+      <li><b>Hook</b> <code>useRealtimeTable</code> dans <code>lib/useRealtimeTable.js</code> — généralisation du pattern utilisé dans NotifBell en 0.43</li>
+      <li>API simple :
+        <pre><code>useRealtimeTable({
+  table: "interventions",
+  structureId: auth.structureId,
+  event: "INSERT", // ou "UPDATE" ou "*"
+  onInsert: (row) => { ... },
+  onUpdate: (row, old) => { ... },
+});</code></pre>
+      </li>
+      <li><b>Filtre RLS côté Supabase</b> : <code>structure_id=eq.${structureId}</code> → aucune fuite cross-structure</li>
+      <li><b>Pattern useRef</b> pour garder les callbacks à jour sans recréer la subscription à chaque rerender</li>
+      <li><b>Helper</b> <code>showRealtimeToast</code> : crée un toast in-app glissant en bas à droite (alternative au Notification API qui n'est dispo que si tab masqué)
+        <ul>
+          <li>Position fixe, z-index 9999, auto-disparition configurable</li>
+          <li><code>role="status"</code> + <code>aria-live="polite"</code> pour les lecteurs d'écran</li>
+          <li>Bouton ✕ pour fermer manuellement</li>
+        </ul>
+      </li>
+      <li><b>Intégration accueil</b> : 3 subscriptions actives en parallèle
+        <ul>
+          <li><b>interventions</b> : toast rouge vif (8s) si urgent, sinon orange (5s)</li>
+          <li><b>signalements</b> : toast teal avec icône message</li>
+          <li><b>achats</b> : toast orange avec icône shopping-bag</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">L</span> Cron auto-génération récurrences maintenance</h3>
+    <ul>
+      <li><b>Extension</b> de la Edge Function <code>maintenance-daily-cron</code> existante (créée en 0.12)</li>
+      <li><b>Logique ajoutée</b> :
+        <ol>
+          <li>Sélectionner toutes les <code>maintenance_recurrences</code> actives dont la <code>prochaine_due</code> est dans la fenêtre [aujourd'hui ; +7j]</li>
+          <li>Pour chaque récurrence, vérifier qu'aucune maintenance planifiée n'existe déjà pour le couple (matériel, date_prevue, type) → évite les doublons si le cron tourne plusieurs fois</li>
+          <li>Si pas de doublon → INSERT dans <code>maintenances</code> avec statut "Planifiée", notes auto = "Généré auto depuis récurrence"</li>
+          <li>L'établissement de la maintenance est hérité du matériel</li>
+        </ol>
+      </li>
+      <li><b>Réponse JSON enrichie</b> : nouveau champ <code>maintenancesGenerees</code> à côté de <code>notifsEnvoyees</code> et <code>disCreees</code></li>
+      <li><b>Idempotence</b> : la fonction peut tourner plusieurs fois sans créer de doublons (vérif `select` avant `insert`)</li>
+      <li><b>Note</b> : le pg_cron daily à 6h UTC créé en 0.12 prend en charge ces récurrences automatiquement sans config supplémentaire.</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">M</span> Audit perf + 19 indexes SQL</h3>
+    <ul>
+      <li>Indexes créés (tous <code>create index if not exists</code> → idempotent) :</li>
+    </ul>
+    <table>
+      <thead><tr><th>Table</th><th>Index</th><th>Bénéfice</th></tr></thead>
+      <tbody>
+        <tr><td>interventions</td><td>created_by (partiel)</td><td>Top demandeurs DI (chantier N de la 0.43)</td></tr>
+        <tr><td>interventions</td><td>patient_id (partiel)</td><td>Timeline DI fiche patient (L de la 0.42)</td></tr>
+        <tr><td>interventions</td><td>materiel_id (partiel)</td><td>Historique DI sur fiche matériel</td></tr>
+        <tr><td>interventions</td><td>(structure_id, statut)</td><td>Filtre par statut (kanban)</td></tr>
+        <tr><td>interventions</td><td>(structure_id, created_at DESC)</td><td>Liste DI triée par date desc</td></tr>
+        <tr><td>achats</td><td>(structure_id, statut) + demandeur_id</td><td>Liste achats à valider</td></tr>
+        <tr><td>signalements</td><td>(structure_id, statut) + categorie</td><td>Workflow et filtres signalements</td></tr>
+        <tr><td>notifications</td><td>(user_id, lue) + (struct, created_at)</td><td>Compteur non lues + liste NotifBell</td></tr>
+        <tr><td>audit_log</td><td>(struct, entite, created_at) + (user_id, created_at)</td><td>Heatmap RPC 0.43 + filtres /audit</td></tr>
+        <tr><td>consentements</td><td>patient_id + (struct, signed_at)</td><td>Historique RGPD patient</td></tr>
+        <tr><td>patients</td><td>lower(nom) + etablissement_id</td><td>Recherche full-text + filtre etab</td></tr>
+        <tr><td>materiels</td><td>lower(libelle) + num_parc + num_serie</td><td>Recherche par parc/série</td></tr>
+        <tr><td>maintenance_recurrences</td><td>(struct, prochaine_due) where actif</td><td>Cron L (chantier ci-dessus)</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li><b><code>ANALYZE</code></b> exécuté sur 9 tables après création des indexes — le planner Postgres a maintenant les bonnes statistiques pour choisir les indexes</li>
+      <li><b>Indexes partiels</b> (<code>where ... is not null</code>) pour économiser de l'espace sur les colonnes avec beaucoup de NULL</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">O</span> Audit accessibilité (a11y)</h3>
+    <ul>
+      <li><b>Composant <code>&lt;Btn&gt;</code> amélioré</b> :
+        <ul>
+          <li>Icônes décoratives marquées <code>aria-hidden="true"</code> (les lecteurs d'écran lisent le texte du bouton, pas le nom de l'icône)</li>
+          <li>Si bouton icon-only sans texte, <code>aria-label="Action"</code> par défaut + nouveau prop <code>ariaLabel</code> pour le surcharger</li>
+        </ul>
+      </li>
+      <li><b>Nouveau composant <code>&lt;IconButton&gt;</code></b> :
+        <ul>
+          <li>Remplace les <code>&lt;i className="ti ..." onClick&gt;</code> qui étaient inaccessibles au clavier et invisibles pour les lecteurs d'écran</li>
+          <li>Vrai <code>&lt;button&gt;</code> avec <code>aria-label</code> obligatoire, focus visible, support disabled</li>
+          <li>API simple : <code>&lt;IconButton icon="ti-trash" ariaLabel="Supprimer X" onClick={...} /&gt;</code></li>
+        </ul>
+      </li>
+      <li><b>Cas critiques patchés</b> : suppression patient (<code>/patients</code>), suppression article panier (<code>/panier</code>). Audit complet à venir dans une prochaine version.</li>
+      <li><b>Composant <code>&lt;Modal&gt;</code> déjà très complet</b> (depuis 0.18) : <code>role="dialog"</code>, <code>aria-modal="true"</code>, <code>aria-labelledby</code>, focus trap au Tab, ESC pour fermer, restauration du focus à la fermeture</li>
+      <li><b>Toasts realtime</b> : <code>role="status"</code> + conteneur <code>aria-live="polite"</code> pour annonce non intrusive aux lecteurs d'écran</li>
+    </ul>
+  </div>
+
+  <h2>SQL — Patch 0.44 (127 lignes idempotentes)</h2>
+  <table>
+    <thead><tr><th>Objet</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>19 indexes</td><td><span class="pill new">Indexes</span></td><td>Sur interventions, achats, signalements, audit_log, notifications, consentements, patients, materiels, maintenance_recurrences</td></tr>
+      <tr><td>9 <code>ANALYZE</code></td><td><span class="pill imp">Statistiques</span></td><td>Mise à jour des stats pour le planner Postgres</td></tr>
+      <tr><td><code>notify pgrst</code></td><td><span class="pill sql">Cache</span></td><td>Reload schema PostgREST en fin de patch (réflexe 0.43)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">19</div><div class="l">Nouveaux indexes</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Tables Realtime live</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouveaux composants UI</div></div>
+    <div class="kpi"><div class="v">+26</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">736</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">808</div><div class="l">K du zip livré</div></div>
+    <div class="kpi"><div class="v">127</div><div class="l">Lignes SQL idempotent</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.44.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>19 indexes + ANALYZE + notify pgrst</td></tr>
+      <tr><td><code>lib/useRealtimeTable.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Hook réutilisable + helper showRealtimeToast</td></tr>
+      <tr><td><code>app/accueil/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ 3 useRealtimeTable (DI, signalements, achats) + import hook</td></tr>
+      <tr><td><code>app/parametres-rgpd/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state actMassModal · + bouton "Activer en masse" · + fonction executerActivationGroupee · + modale multiselect brouillons</td></tr>
+      <tr><td><code>supabase/functions/maintenance-daily-cron/index.ts</code></td><td><span class="pill imp">ÉTENDU</span></td><td>+ traitement des maintenance_recurrences avec vérification doublons + maintenancesGenerees dans la réponse JSON</td></tr>
+      <tr><td><code>app/ui.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ aria-hidden sur icônes Btn · + ariaLabel auto si icon-only · + nouveau composant IconButton</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>Trash de suppression → IconButton</td></tr>
+      <tr><td><code>app/panier/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>Trash retirer article → IconButton</td></tr>
+      <tr><td><code>__tests__/v044-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>26 tests sur les 5 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.43.0-alpha → 0.44.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.44.sql</code> → Run. Le patch finit par <code>notify pgrst, 'reload schema'</code>, donc pas besoin de le faire manuellement après.</li>
+      <li><b>Vérifier les indexes</b> :
+        <pre><code>-- 19 indexes créés
+select indexname from pg_indexes 
+where schemaname = 'public' 
+  and indexname like 'idx_%' 
+order by indexname;
+
+-- Tester un plan d'exécution sur une query type
+explain analyze 
+select * from interventions 
+where structure_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+  and statut = 'Nouvelle'
+order by created_at desc limit 50;
+-- → tu dois voir "Index Scan using idx_interventions_struct_statut"</code></pre>
+      </li>
+      <li><b>Activer Realtime</b> sur les 3 nouvelles tables (Supabase Dashboard → Database → Replication → activer pour) :
+        <ul>
+          <li><code>public.interventions</code></li>
+          <li><code>public.signalements</code></li>
+          <li><code>public.achats</code></li>
+        </ul>
+        (la table <code>notifications</code> a déjà été activée en 0.43)
+      </li>
+      <li><b>Redéployer la Edge Function</b> :
+        <pre><code>supabase functions deploy maintenance-daily-cron</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Nettoyer le cache + npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test       # 736 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Dans 2 onglets, ouvrir <code>/accueil</code> dans l'un et <code>/interventions</code> dans l'autre. Créer une DI urgente dans le 2ᵉ → <b>toast rouge "Nouvelle DI" doit apparaître en bas à droite de l'onglet 1</b> ✨</li>
+          <li><code>/parametres-rgpd</code> : dupliquer un template vers plusieurs etabs (modale 0.43), puis cliquer "Activer en masse" → cocher tous → "Activer (N)"</li>
+          <li>Manuellement déclencher le cron pour tester :
+            <pre><code>curl -X POST https://&lt;projet&gt;.supabase.co/functions/v1/maintenance-daily-cron \
+  -H "Authorization: Bearer &lt;service_role_key&gt;"
+# → JSON avec maintenancesGenerees: N</code></pre>
+          </li>
+          <li>Mesurer un gain de perf : créer 10 000 interventions de test, recharger <code>/interventions</code> → la liste doit se charger en < 200ms grâce aux indexes</li>
+          <li>A11y : sur <code>/patients</code>, naviguer au clavier (Tab) → tous les boutons d'action sont focusables avec outline visible · sur n'importe quel bouton de suppression, le lecteur d'écran annonce "Supprimer [nom du patient]"</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.45+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>B</b> - Notif email auteur signalement (toujours en attente — trigger SQL en 0.41)</li>
+      <li><b>C</b> - Pages config restantes vers safeWrite</li>
+      <li><b>D</b> - Tests Playwright end-to-end</li>
+      <li><b>E</b> - Upgrade Next.js 14 → 15</li>
+      <li><b>F</b> - Module e-learning / formation (gros chantier)</li>
+      <li><b>G</b> - Recherche : ajouter consentements + factures</li>
+      <li><b>H</b> - Soumission stores (Play / MS Store)</li>
+      <li><b>I</b> - Mode présentation autres vues (achats, RGPD, maintenance)</li>
+      <li><b>O - audit a11y complet</b> : remplacer tous les <code>&lt;i onClick&gt;</code> restants par IconButton (5+ pages encore concernées)</li>
+      <li><b>Indexes</b> : suivi pg_stat_statements pour identifier d'éventuels indexes manquants en production</li>
+      <li><b>Realtime</b> : étendre à <code>maintenances</code>, <code>transferts</code>, <code>commandes</code></li>
+      <li><b>Cron</b> : ajouter une seconde fonction <code>weekly-stats-digest</code> qui envoie un récap stats par email aux admins</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.44.0 · 31 mai 2026</p>
+    <p>Version qualité — Activation groupée RGPD · Realtime DI/signal/achats · Cron récurrences · 19 indexes · A11y · 736 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

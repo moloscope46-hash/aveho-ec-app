@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.55.41 — Géoloc fresh + géocodage carte</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:840px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">HOTFIX — GÉOLOC FRESH + GÉOCODAGE CARTE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.55.41 — Fix géoloc bloquée sur ancienne position + fix filtres RPPS/SIRENE vides
+      <small>Plus de cache stale · enableHighAccuracy · timeout 15s · géocodage BAN INSEE · recherche par proximité SIRENE</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.41-alpha</code></span>
+      <span><b>Tests :</b> 1336 verts (+17)</span>
+    </div>
+  </header>
+
+  <h2>❌ Les 2 bugs</h2>
+  <div class="panel danger">
+    <h3 style="margin-top:0">Bug 1 : Géoloc bloquée sur Lagny au lieu de Mayrinhac</h3>
+    <p>Le code lisait toujours la dernière position depuis <code>localStorage</code> avec un TTL de 24h. Donc quand tu te déplaçais d'une journée à l'autre (ou même quelques heures), la map affichait toujours ta position d'hier.</p>
+    <p>De plus, <code>enableHighAccuracy: false</code> → utilisait la triangulation IP (souvent imprécise au km près) plutôt que le GPS Windows.</p>
+
+    <h3>Bug 2 : Filtres RPPS/SIRENE vides sur la carte</h3>
+    <p>L'API <b>FHIR ANS</b> renvoie l'adresse texte mais <b>pas de lat/lng</b>. L'API <b>SIRENE</b> renvoie les coords seulement quand l'INSEE les a calculées (~70% des entreprises).</p>
+    <p>Résultat : <code>filter(p =&gt; p.latitude &amp;&amp; p.longitude)</code> excluait tous les résultats → 0 marker sur la carte.</p>
+  </div>
+
+  <h2>✅ Fix 1 : Géoloc fresh + GPS</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Bouton "Ma position" refondu</h3>
+    <pre><code>navigator.geolocation.getCurrentPosition(
+  success, error,
+  {
+    enableHighAccuracy: true,   // ← GPS si dispo (était false)
+    timeout: 15000,              // ← 15s (était 8s)
+    maximumAge: 0,               // ← JAMAIS de cache (était 60s)
+  }
+);</code></pre>
+
+    <h3>Nouveau bandeau indicateur</h3>
+    <p>Sous le bouton "Ma position" :</p>
+    <ul>
+      <li><b>"Localisation…"</b> avec spinner pendant la requête</li>
+      <li><b>"±50m · maj à l'instant"</b> en vert si précision GPS (<1km)</li>
+      <li><b>"±2500m · maj à l'instant"</b> en rouge si précision IP (>1km) → indique qu'il faut activer le GPS Windows</li>
+    </ul>
+
+    <h3>Messages d'erreur enrichis</h3>
+    <ul>
+      <li><b>Permission refusée</b> : instructions précises par navigateur (Chrome cadenas, Edge permissions, mobile paramètres)</li>
+      <li><b>Timeout</b> : "vérifie que la géolocalisation est activée dans Paramètres → Confidentialité → Localisation"</li>
+    </ul>
+
+    <h3>Comment activer le GPS Windows</h3>
+    <ol>
+      <li>Touche Windows → "Paramètres de confidentialité"</li>
+      <li>Confidentialité → <b>Localisation</b></li>
+      <li>Activer "Service de localisation" + "Autoriser les apps à accéder à votre position"</li>
+      <li>Dans Chrome/Edge : icône cadenas dans la barre d'adresse → Géolocalisation → Autoriser</li>
+      <li>Recharger la page <code>/carte</code> et cliquer "Ma position"</li>
+    </ol>
+  </div>
+
+  <h2>✅ Fix 2 : Géocodage BAN INSEE pour la carte</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Nouveau pipeline pour RPPS + SIRENE</h3>
+    <ol>
+      <li>API renvoie résultats avec adresse + cp + commune</li>
+      <li>Pour chaque résultat sans lat/lng → on construit la query <code>"12 rue X 75011 Paris"</code></li>
+      <li>Appel à <code>api-adresse.data.gouv.fr/search/?q=...&limit=1</code> (gratuit, sans clé)</li>
+      <li>Extraction <code>features[0].geometry.coordinates</code> → [lng, lat]</li>
+      <li>Cache localStorage par query (jamais regéocodé tant que l'adresse change pas)</li>
+      <li>Filtre bbox côté client → markers visibles</li>
+    </ol>
+
+    <h3>SIRENE recherche par proximité</h3>
+    <p>L'API SIRENE supporte <code>?lat=X&long=Y&radius=50</code>. Désormais la requête est centrée sur la zone visible de la carte → meilleur ratio résultats/bbox.</p>
+
+    <h3>Hints quand 0 résultat</h3>
+    <p>Si après recherche tu as 0 marker → bannière ambre : <i>"Aucun praticien trouvé dans la zone visible. Zoome plus large ou déplace la carte vers une grande ville."</i></p>
+  </div>
+
+  <h2>📈 Tests +17 (1319 → 1336)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-41-geoloc-fix.test.js</code> :</p>
+    <ul>
+      <li><b>Options géoloc</b> (2) : maximumAge=0 si forceFresh, HighAccuracy</li>
+      <li><b>formatRelativeTime</b> (5) : à l'instant / X min / X h / X j / vide</li>
+      <li><b>geocodeBatch</b> (3) : skip si coords, skip query court, construction key</li>
+      <li><b>URL BAN INSEE</b> (1) : format correct avec encoding</li>
+      <li><b>SIRENE proximité</b> (1) : params lat/lng/radius</li>
+      <li><b>Filtre bbox post-géocodage</b> (3) : dedans/dehors/sans coords</li>
+      <li><b>Avertissement précision</b> (2) : rouge >1km, vert ≤1km</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>app/carte/page.js</code> : centerOnMe refondu (maximumAge:0, HighAccuracy, timeout 15s) · états geolocLoading/lastGeolocAt/geolocAccuracy · indicateur visuel · geocodeBatch via BAN INSEE · fetchRpps/fetchSirene avec géocodage · hints si 0 résultat · helper formatRelativeTime</li>
+    <li><code>app/api/sirene/route.js</code> : nouveaux params lat/long/radius=50 pour recherche par proximité</li>
+    <li><code>__tests__/v055-41-geoloc-fix.test.js</code> : <b>NOUVEAU</b> · +17 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.41 (4 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.41</li>
+    <li><code>package.json</code> : 0.55.40 → 0.55.41</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL requis)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.41 - Fix geoloc fresh + geocodage BAN filtres carte"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Activer la géolocalisation Windows (Paramètres → Confidentialité → Localisation)</li>
+      <li>Aller sur <code>/carte</code> → cliquer "Ma position"</li>
+      <li>Voir le spinner "Localisation…" puis la position s'afficher</li>
+      <li>Vérifier l'indicateur <b>±Xm · maj à l'instant</b> sous le bouton</li>
+      <li>Si précision >1km → texte rouge (active le GPS Windows)</li>
+      <li>Activer le filtre "Médecin" dans le panel RPPS → markers apparaissent (géocodage en cours quelques secondes)</li>
+      <li>Activer "Pharmacies" dans SIRENE → markers</li>
+      <li>Si 0 résultat → bannière ambre explicative</li>
+      <li>Déplacer la carte → refresh auto des résultats (debounce 800ms)</li>
+      <li>Smoke tests 0.55.41 → 4 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 51ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.40 → <b>0.55.41</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.55.41 · 31 mai 2026</p>
+    <p>Géoloc fresh · GPS HighAccuracy · géocodage BAN INSEE · SIRENE proximité · 1336 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

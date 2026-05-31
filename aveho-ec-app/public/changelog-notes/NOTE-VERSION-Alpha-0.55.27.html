@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.27 — Cheatsheet raccourcis + migration logger</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  kbd{display:inline-block;background:#fff;border:1px solid #d3d9e0;border-bottom:2px solid #d3d9e0;border-radius:4px;padding:2px 8px;font-size:11px;font-family:'Consolas','Menlo',monospace;color:#142131;font-weight:600}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid #e3e9ee}
+  table td{padding:7px 9px;border-bottom:1px solid #e3e9ee;vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — CHEATSHEET + MIGRATION LOGGER</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.27 — Cheatsheet raccourcis clavier (touche <kbd style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff">?</kbd>) + migration logger sur 7 fichiers
+      <small>Navigation rapide via G+lettre · cheatsheet auto-générée via Modal partagé · 27 console.* restants (vs 51)</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.27-alpha</code></span>
+      <span><b>Tests :</b> 1122 verts (+16)</span>
+    </div>
+  </header>
+
+  <h2>⌨ 1. Cheatsheet raccourcis clavier</h2>
+  <div class="panel">
+    <p>Appuyez sur <kbd>?</kbd> n'importe où dans l'app (hors champs texte) → modale plein écran avec tous les raccourcis disponibles.</p>
+
+    <h3>Navigation par séquences</h3>
+    <p>Pattern type Gmail/GitHub : appuyez sur <kbd>G</kbd> puis dans les 1.5 secondes sur une lettre cible :</p>
+    <table>
+      <thead><tr><th>Séquence</th><th>Destination</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>G</kbd> <kbd>A</kbd></td><td>/accueil</td></tr>
+        <tr><td><kbd>G</kbd> <kbd>P</kbd></td><td>/patients</td></tr>
+        <tr><td><kbd>G</kbd> <kbd>M</kbd></td><td>/materiel</td></tr>
+        <tr><td><kbd>G</kbd> <kbd>U</kbd></td><td>/utilisateurs</td></tr>
+        <tr><td><kbd>G</kbd> <kbd>L</kbd></td><td>/changelog</td></tr>
+        <tr><td><kbd>G</kbd> <kbd>S</kbd></td><td>/profil (Settings)</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Comportement</h3>
+    <ul>
+      <li>Les raccourcis sont DÉSACTIVÉS quand le focus est dans un <code>input</code>, <code>textarea</code>, <code>select</code> ou contenteditable (pour ne pas interférer avec la frappe normale)</li>
+      <li>La séquence G+lettre s'auto-annule après 1.5s</li>
+      <li>La modale utilise le composant <code>&lt;Modal&gt;</code> partagé de la 0.55.26 (Escape pour fermer, backdrop click, etc.)</li>
+    </ul>
+
+    <h3>Cheatsheet organisée en 4 sections</h3>
+    <ul>
+      <li><b>Navigation</b> — ?, Echap, G+lettres</li>
+      <li><b>Recherche</b> — Ctrl+K, /</li>
+      <li><b>Modales et listes</b> — F3, Shift+F3, N, P (navigation matches)</li>
+      <li><b>Débogage (dev)</b> — F12, __avehoEnableDebug()</li>
+    </ul>
+  </div>
+
+  <h2>🔇 2. Migration logger continue</h2>
+  <div class="panel hi">
+    <p>Continuation de la migration entamée en 0.55.26 : 7 fichiers supplémentaires passent de <code>console.*</code> à <code>logger.*</code> :</p>
+    <ul>
+      <li><code>app/inscription/[token]/page.js</code></li>
+      <li><code>app/utilisateurs/page.js</code></li>
+      <li><code>app/signalements/page.js</code></li>
+      <li><code>app/achats/page.js</code></li>
+      <li><code>app/transferts/page.js</code></li>
+      <li><code>lib/events.js</code></li>
+      <li><code>lib/useOffline.js</code></li>
+    </ul>
+
+    <h3>Compteur global</h3>
+    <table>
+      <thead><tr><th>Version</th><th>console.* restants</th></tr></thead>
+      <tbody>
+        <tr><td>0.55.25</td><td>51</td></tr>
+        <tr><td>0.55.26</td><td>51 → 47 (-4, fichiers webauthn)</td></tr>
+        <tr><td>0.55.27</td><td>47 → 27 (-20, gros fichiers app)</td></tr>
+        <tr><td><b>À venir</b></td><td>27 → 0 sur les prochaines versions</td></tr>
+      </tbody>
+    </table>
+
+    <p>Bénéfice : tous ces logs sont maintenant SILENCIEUX en prod (Vercel) et REDACTENT automatiquement les valeurs sensibles (password, token, refresh_token, credential_id, etc.).</p>
+  </div>
+
+  <h2>📈 +16 tests Vitest (1106 → 1122)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-27-keyboard.test.js</code> :</p>
+    <ul>
+      <li><b>isTypingInInput</b> (7 tests) : input/textarea/select/contenteditable/div/button/null</li>
+      <li><b>NAV_MAP</b> (4 tests) : routes G+lettre commencent par /, mapping correct</li>
+      <li><b>SHORTCUTS structure</b> (2 tests) : sections, séquences "puis"</li>
+      <li><b>Migration logger paths</b> (3 tests) : ../../lib/logger correct selon profondeur</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/KeyboardHelp.js</code> : <b>NOUVEAU</b> · cheatsheet + listener G+lettre</li>
+    <li><code>app/layout.js</code> : import + monte <code>&lt;KeyboardHelp /&gt;</code></li>
+    <li><code>app/inscription/[token]/page.js</code>, <code>app/utilisateurs/page.js</code>, <code>app/signalements/page.js</code>, <code>app/achats/page.js</code>, <code>app/transferts/page.js</code>, <code>lib/events.js</code>, <code>lib/useOffline.js</code> : console.* → logger.*</li>
+    <li><code>__tests__/v055-27-keyboard.test.js</code> : <b>NOUVEAU</b> · +16 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.27 (4 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.27</li>
+    <li><code>package.json</code> : 0.55.26 → 0.55.27</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <p>Pas de SQL.</p>
+    <pre><code>cd C:\aveho-ec-app
+git add -A
+git commit -m "Alpha 0.55.27 - Cheatsheet raccourcis + migration logger 7 fichiers"
+git push origin main</code></pre>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sur n'importe quelle page (hors saisie) : appuie sur <kbd>?</kbd> → modale cheatsheet s'ouvre</li>
+      <li>Appuie sur <kbd>G</kbd> puis dans les 1.5s sur <kbd>L</kbd> → redirige vers /changelog</li>
+      <li>Idem <kbd>G</kbd> <kbd>U</kbd> → /utilisateurs</li>
+      <li>Dans un champ input/textarea → appuie sur <kbd>?</kbd> → ça écrit "?" normalement (ne déclenche pas la cheatsheet)</li>
+      <li>Échap dans la cheatsheet ouverte → fermeture</li>
+      <li>Smoke tests 0.55.27 dans le changelog → 4 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 37ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.26 → <b>0.55.27</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.27 · 31 mai 2026</p>
+    <p>Cheatsheet raccourcis · navigation G+lettre · -47% console.* · 1122 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

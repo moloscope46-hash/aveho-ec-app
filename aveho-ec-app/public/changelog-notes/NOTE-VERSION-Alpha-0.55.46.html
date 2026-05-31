@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.46 — Refonte fiche patient + caisses/mutuelles + menu scan</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  td,th{padding:6px 8px;border-bottom:1px solid #e3e9ee;text-align:left}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — REFONTE FICHE PATIENT</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.46 — Fiche patient niveau bulletin de situation + caisses/mutuelles + menu scan
+      <small>20+ nouvelles colonnes patient · table caisses (105 seeds) · table mutuelles (44 seeds) · adresses livraison · menu Outils scan en haut</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.46-alpha</code></span>
+      <span><b>Tests :</b> 1414 verts (+26)</span>
+      <span><b>SQL :</b> 1 patch (idempotent)</span>
+    </div>
+  </header>
+
+  <h2>📋 Audit & cible : un bulletin de situation hospitalier</h2>
+  <div class="panel">
+    <p>Sources consultées : service-public.fr, ameli.fr, drees.solidarites-sante.gouv.fr, transformation.gouv.fr, annuaireamc.fr.</p>
+    <p>Un bulletin de situation contient :</p>
+    <ul>
+      <li><b>Identité</b> : nom, prénom, nom de naissance, sexe, date et lieu de naissance, nationalité</li>
+      <li><b>N° de sécurité sociale</b> (NIR — 15 chiffres dont la clé)</li>
+      <li><b>Caisse d'affiliation</b> + code organisme de rattachement (9 chiffres)</li>
+      <li><b>Régime</b> (général / agricole / militaire / spécial)</li>
+      <li><b>Mutuelle (AMC)</b> avec n° AMC (8 chiffres) + n° adhérent</li>
+      <li><b>Adresse</b> sociale + adresses de livraison séparées si besoin</li>
+      <li><b>Téléphones</b> (fixe + portable) + email</li>
+      <li><b>Personne à prévenir</b> (urgence) + personne de confiance</li>
+      <li><b>Médecin traitant</b> (nom, prénom, tel, RPPS, FINESS étab)</li>
+      <li><b>Droits</b> : date début/fin, ALD, CMU-C / C2S, AME</li>
+    </ul>
+    <p>Tout est dans la nouvelle fiche.</p>
+  </div>
+
+  <h2>🗄 Nouvelles tables</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">caisses_assurance_maladie (105 seeds)</h3>
+    <p><b>96 CPAM métropole</b> + <b>5 CGSS/CSSM DROM</b> (Guadeloupe, Martinique, Guyane, La Réunion, Mayotte) + <b>6 régimes spéciaux nationaux</b> :</p>
+    <ul>
+      <li>CNMSS (militaires)</li>
+      <li>LMG (fonctionnaires)</li>
+      <li>CAMIEG (industries électriques et gazières)</li>
+      <li>CAVIMAC (cultes)</li>
+      <li>MNH (hospitaliers)</li>
+      <li>MSA (agricole)</li>
+    </ul>
+    <p>Colonnes : <code>code_organisme, nom, type_caisse, regime, departement, region, adresse, cp, ville, telephone</code>.</p>
+
+    <h3>mutuelles (44 seeds)</h3>
+    <p>Avec leurs n° AMC officiels (8 chiffres) :</p>
+    <table>
+      <tr><th>Nom</th><th>AMC</th><th>Type</th><th>C2S</th></tr>
+      <tr><td>Harmonie Mutuelle</td><td><code>25992142</code></td><td>Mutuelle</td><td>✓</td></tr>
+      <tr><td>MGEN</td><td><code>27977927</code></td><td>Mutuelle</td><td>✓</td></tr>
+      <tr><td>Malakoff Humanis</td><td><code>44443414</code></td><td>IP</td><td></td></tr>
+      <tr><td>AG2R La Mondiale</td><td><code>41419605</code></td><td>IP</td><td></td></tr>
+      <tr><td>Mutuelle Générale</td><td><code>45225017</code></td><td>Mutuelle</td><td>✓</td></tr>
+      <tr><td>Pro BTP</td><td><code>42799916</code></td><td>IP</td><td></td></tr>
+      <tr><td>MAIF</td><td><code>77567227</code></td><td>Mutuelle</td><td></td></tr>
+      <tr><td>+37 autres…</td><td colspan="3">AÉSIO, MNH, MGEFI, UNEO, LMDE, Apicil, Mutex, AXA, Allianz, April, Generali, Macif, Matmut, etc.</td></tr>
+    </table>
+
+    <h3>patients_adresses_livraison (1-N)</h3>
+    <p>Chaque patient peut avoir plusieurs adresses de livraison différentes de son domicile :</p>
+    <ul>
+      <li><code>libelle</code> : "Domicile", "Travail", "Maison de campagne", "Chez ma fille"</li>
+      <li><code>destinataire</code> : si différent du patient ("Mme Dupont, sa fille")</li>
+      <li><code>code_porte</code> : digicode</li>
+      <li><code>instructions</code> : "Sonner 2×, au fond de la cour"</li>
+      <li><code>est_principale</code></li>
+    </ul>
+    <p>RLS via membres_structure.</p>
+  </div>
+
+  <h2>🏥 Colonnes patient enrichies (20+)</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Identité (5)</h3>
+    <p><code>nom_naissance, sexe, lieu_naissance_ville, lieu_naissance_code_insee, lieu_naissance_pays, nationalite</code></p>
+
+    <h3>Sécurité sociale (12)</h3>
+    <p><code>numero_secu (NIR), caisse_id FK, code_organisme_rattachement, centre_paiement, regime_secu, qualite_assure (assuré|ayant droit), rang_naissance, date_debut_droits, date_fin_droits, ald, ald_commentaire, cmu_c, c2s, ame</code></p>
+
+    <h3>Mutuelle (5)</h3>
+    <p><code>mutuelle_id FK, mutuelle_numero_amc, mutuelle_numero_adherent, mutuelle_date_debut_droits, mutuelle_date_fin_droits, tiers_payant_actif</code></p>
+
+    <h3>Adresse principale (5)</h3>
+    <p><code>adresse, complement_adresse, code_postal, ville, pays</code></p>
+
+    <h3>Contact (3)</h3>
+    <p><code>telephone_fixe, telephone_portable, email</code></p>
+
+    <h3>Contact urgence + personne de confiance (7)</h3>
+    <p><code>contact_urgence_nom, contact_urgence_prenom, contact_urgence_lien, contact_urgence_telephone, personne_confiance_nom, personne_confiance_prenom, personne_confiance_telephone</code></p>
+
+    <h3>Médecin traitant (4)</h3>
+    <p><code>medecin_traitant_prenom, medecin_traitant_telephone, medecin_traitant_rpps, medecin_traitant_finess</code></p>
+
+    <h3>Audit OCR (5)</h3>
+    <p><code>source_creation ('manuelle'|'ocr_bs'|...), bs_file_url, bs_ocr_brut, bs_ocr_date, updated_at</code> (trigger automatique)</p>
+  </div>
+
+  <h2>🔌 APIs proxy</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">/api/caisses</h3>
+    <ul>
+      <li><code>GET /api/caisses?q=Paris</code> → caisses avec "Paris" dans le nom</li>
+      <li><code>GET /api/caisses?dept=75</code> → toutes les caisses de Paris</li>
+      <li><code>GET /api/caisses?code=751</code> → recherche par code organisme</li>
+    </ul>
+
+    <h3>/api/mutuelles</h3>
+    <ul>
+      <li><code>GET /api/mutuelles?q=Harmonie</code> → par nom</li>
+      <li><code>GET /api/mutuelles?amc=25992142</code> → par n° AMC</li>
+    </ul>
+  </div>
+
+  <h2>🎨 Composants autocomplete</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">CaisseSearch</h3>
+    <p>Style FinessSearch + champ département à côté. Détection auto code 9 chiffres → recherche directe. Affichage : nom + type (CPAM/CGSS/MSA) + régime + dept + région.</p>
+
+    <h3>MutuelleSearch</h3>
+    <p>Détection auto n° AMC 8 chiffres. Badges colorés type (mutuelle vert / assurance bleu / IP violet) + badge C2S si gestionnaire de la Complémentaire Santé Solidaire.</p>
+  </div>
+
+  <h2>📁 Nouveau menu "Outils scan"</h2>
+  <div class="panel warn">
+    <p>Catégorie ajoutée <b>en 2ème position</b> (juste après "Mon espace", donc tout en haut du menu de navigation).</p>
+    <ul>
+      <li>🟢 <code>/scan/bulletin-situation</code> — Créer patient depuis bulletin (vert)</li>
+      <li>🔵 <code>/scan/qr</code> — Scan QR code (bleu)</li>
+      <li>🟣 <code>/scan/codebarre</code> — Scan code-barre (violet)</li>
+      <li>🟠 <code>/scan/ocr</code> — OCR générique (ambre)</li>
+    </ul>
+    <p>Pour cette version, seule la 1ère page est créée (placeholder). Les 3 autres pages + l'OCR complet arrivent en 0.55.47.</p>
+  </div>
+
+  <h2>📸 Page /scan/bulletin-situation (placeholder)</h2>
+  <div class="panel">
+    <p>Page d'accueil avec :</p>
+    <ul>
+      <li>Workflow en 4 étapes (capture → OCR → vérification → création)</li>
+      <li>Compteurs live des référentiels (X caisses, Y mutuelles, FINESS, RPPS)</li>
+      <li>Stack technique prévue pour 0.55.47 : Tesseract.js (client gratuit) ou Claude Vision (API Anthropic plus précise), regex NIR/AMC/code, archivage Supabase bucket</li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +26 (1388 → 1414)</h2>
+  <div class="panel hi">
+    <ul>
+      <li>SQL tables (7)</li>
+      <li>Colonnes patient enrichies (6)</li>
+      <li>Adresses livraison (3)</li>
+      <li>Composants UI (2)</li>
+      <li>APIs (2)</li>
+      <li>Menu (1)</li>
+      <li>Page placeholder (2)</li>
+      <li>Formats AMC/code (2)</li>
+      <li>Divers (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.46.sql</code> : <b>NOUVEAU</b> · ~300 lignes · 3 tables + 20+ colonnes + 2 RPCs + seeds</li>
+    <li><code>app/api/caisses/route.js</code> : <b>NOUVEAU</b></li>
+    <li><code>app/api/mutuelles/route.js</code> : <b>NOUVEAU</b></li>
+    <li><code>app/CaisseSearch.js</code> : <b>NOUVEAU</b> · autocomplete style FinessSearch</li>
+    <li><code>app/MutuelleSearch.js</code> : <b>NOUVEAU</b> · autocomplete avec badges</li>
+    <li><code>app/scan/bulletin-situation/page.js</code> : <b>NOUVEAU</b> · placeholder</li>
+    <li><code>app/TopBar.js</code> : nouvelle catégorie "Outils scan" en haut (4 entrées)</li>
+    <li><code>__tests__/v055-46-patient-fiche-refonte.test.js</code> : <b>NOUVEAU</b> · +26 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.46 (7 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.46</li>
+    <li><code>package.json</code> : 0.55.45 → 0.55.46</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : <code>aveho-PATCH-vers-0.55.46.sql</code> → Run (3 tables, 20+ colonnes, 2 RPCs, ~150 seeds)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.46 - Refonte fiche patient + caisses/mutuelles + menu scan"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Run SQL → vérifier : <code>select count(*) from caisses_assurance_maladie</code> → 100+</li>
+      <li><code>select count(*) from mutuelles</code> → 40+</li>
+      <li>Voir le nouveau menu "Outils scan" tout en haut</li>
+      <li>Cliquer sur "Créer patient depuis bulletin" → page placeholder avec compteurs réels</li>
+      <li>Smoke tests 0.55.46 → 7 tests verts</li>
+      <li>Tester /api/caisses?dept=75 → renvoie CPAM de Paris</li>
+      <li>Tester /api/mutuelles?q=MGEN → renvoie MGEN</li>
+    </ol>
+  </div>
+
+  <h2>🔜 Prochaine 0.55.47</h2>
+  <ul>
+    <li>OCR complet bulletin de situation (Tesseract.js + Claude Vision)</li>
+    <li>Pages /scan/qr, /scan/codebarre, /scan/ocr</li>
+    <li>Refonte UI fiche patient avec tous les nouveaux champs (onglets : Identité, Sécu/Mutuelle, Adresses, Contacts, Médecin)</li>
+    <li>Intégration CaisseSearch + MutuelleSearch dans la nouvelle fiche</li>
+  </ul>
+
+  <h2>SW auto-bump — 56ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.45 → <b>0.55.46</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.46 · 31 mai 2026</p>
+    <p>Fiche patient niveau BS · 105 caisses · 44 mutuelles · adresses livraison · menu Outils scan · 1414 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

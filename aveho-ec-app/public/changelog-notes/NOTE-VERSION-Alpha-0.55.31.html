@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.31 — Table dédiée etablissements_partenaires + audit</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#e0d5f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#e0d5f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#e0d5f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — TABLE DÉDIÉE + AUDIT</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.31 — Table dédiée etablissements_partenaires + audit complet avec diff
+      <small>Refonte architecture · migration auto · trigger d'audit · page CRUD · vue unifiée · RPC conversion</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.31-alpha</code></span>
+      <span><b>Tests :</b> 1185 verts (+20)</span>
+      <span><b>SQL :</b> 1 patch lourd</span>
+    </div>
+  </header>
+
+  <h2>⚠ Hotfix précédent (0.55.30) toujours requis</h2>
+  <div class="panel danger">
+    <p>Si tu vois encore l'erreur <code>400 etablissements?...groupement_id...</code> dans la console, c'est que <b>le SQL 0.55.30 n'a pas été joué</b>. Le patch 0.55.31 contient un rappel hotfix qui ajoute la colonne <code>groupement_id</code> de manière idempotente, donc passer 0.55.31 corrige aussi 0.55.30.</p>
+  </div>
+
+  <h2>🏗 1. Table dédiée etablissements_partenaires</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Pourquoi une table séparée ?</h3>
+    <p>Avant : <code>etablissements.est_partenaire = true</code> → mélange dans la même table, requêtes polluées par les filtres, RLS partagée, pas de champs spécifiques.</p>
+    <p>Maintenant : table dédiée <code>etablissements_partenaires</code> avec <b>29 colonnes</b> :</p>
+    <ul>
+      <li><b>Identité</b> : nom, type, type_relation (Prescripteur / Fournisseur / Sous-traitant / Confrère / Autre)</li>
+      <li><b>Identifiants officiels</b> : finess, siret, siren (un partenaire externe a souvent un SIRET et pas de FINESS)</li>
+      <li><b>Adresse</b> : adresse, cp, ville, pays, latitude, longitude</li>
+      <li><b>Contact référent</b> : contact_nom, contact_fonction, telephone, email, site_web</li>
+      <li><b>Métadonnées</b> : notes, tags[], groupement_id</li>
+      <li><b>Transition douce</b> : link_to_etablissement_id (pointe vers etablissements si bascule depuis legacy)</li>
+      <li><b>État</b> : actif, archive</li>
+      <li><b>Audit</b> : created_at, created_by, updated_at, updated_by</li>
+    </ul>
+    <p>Index sur structure_id, finess, siret, groupement_id. RLS member_rw. Trigger updated_at automatique.</p>
+  </div>
+
+  <h2>📜 2. Table d'audit dédiée etab_partenaires_audit</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Schéma</h3>
+    <pre><code>create table etab_partenaires_audit (
+  id uuid primary key,
+  ts timestamptz,
+  action text,        -- 'INSERT' | 'UPDATE' | 'DELETE'
+  partenaire_id uuid,
+  structure_id uuid,
+  user_id uuid,       -- auteur de l'action (auth.uid())
+  old_data jsonb,     -- snapshot AVANT (UPDATE/DELETE)
+  new_data jsonb,     -- snapshot APRÈS (INSERT/UPDATE)
+  changes jsonb       -- diff colonne-par-colonne (UPDATE)
+);</code></pre>
+
+    <h3>Trigger automatique</h3>
+    <ul>
+      <li>AFTER INSERT → log avec new_data</li>
+      <li>AFTER UPDATE → calcule le diff colonne-par-colonne, log SEULEMENT si au moins un champ a changé (skip si seul updated_at/updated_by ont bougé)</li>
+      <li>AFTER DELETE → log avec old_data</li>
+    </ul>
+
+    <h3>RLS</h3>
+    <ul>
+      <li><b>SELECT</b> : seulement les admins de la structure (parametres_admin OU utilisateurs_write)</li>
+      <li><b>INSERT</b> : ouvert (les triggers y écrivent via security definer)</li>
+    </ul>
+
+    <h3>Visualisation dans l'UI</h3>
+    <p>Bouton "Audit" en haut de la page <code>/etablissements-partenaires</code> → modale avec les 50 dernières actions :</p>
+    <ul>
+      <li>Badge coloré par action (INSERT vert, UPDATE ambre, DELETE rouge)</li>
+      <li>Nom du partenaire concerné + timestamp</li>
+      <li>Sur UPDATE : <code>&lt;details&gt;</code> dépliable avec diff champ-par-champ (rouge barré → vert)</li>
+    </ul>
+  </div>
+
+  <h2>📦 3. Migration automatique des données</h2>
+  <div class="panel hi">
+    <p>Le patch SQL fait automatiquement (et idempotent) :</p>
+    <pre><code>for e in (select * from etablissements where est_partenaire = true)
+  if not already_migrated(e.id):
+    insert into etablissements_partenaires (...) values (...);
+    set link_to_etablissement_id = e.id</code></pre>
+    <p>Affiche le compte dans NOTICE PostgreSQL : <code>Migration : N partenaires copiés vers etablissements_partenaires</code></p>
+    <p><b>Pas de DELETE</b> sur l'ancienne table pour garder la rétrocompatibilité (l'ancienne UI continue de fonctionner). La déduplication est gérée côté vue-globale.</p>
+  </div>
+
+  <h2>🖥 4. Page /etablissements-partenaires</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">KPIs</h3>
+    <ul>
+      <li>Partenaires actifs (total)</li>
+      <li>Prescripteurs · Fournisseurs · Sous-traitants (par type_relation)</li>
+    </ul>
+
+    <h3>Filtres</h3>
+    <ul>
+      <li>Recherche multi-champs : nom, type, ville, FINESS, SIRET</li>
+      <li>Sélecteur "Toutes relations / Prescripteur / Fournisseur / Sous-traitant / Confrère / Autre"</li>
+    </ul>
+
+    <h3>Modale création / édition</h3>
+    <p>24 champs organisés en sections :</p>
+    <ul>
+      <li><b>Identité</b> : Nom (requis) · Type · Type de relation</li>
+      <li><b>Identifiants</b> : FINESS · SIRET · SIREN</li>
+      <li><b>Adresse</b> : adresse · CP · ville</li>
+      <li><b>Contact référent</b> : nom · fonction · téléphone · email · site web</li>
+      <li><b>Notes</b> internes</li>
+    </ul>
+
+    <h3>Cartes liste</h3>
+    <ul>
+      <li>Avatar coloré selon type_relation</li>
+      <li>Badge type_relation (couleur sémantique) + FINESS/SIRET (mono)</li>
+      <li>Ligne contact référent en pied de carte</li>
+      <li>Bordure colorée au hover selon type_relation</li>
+    </ul>
+  </div>
+
+  <h2>🔄 5. Vue-globale dual-source</h2>
+  <div class="panel">
+    <p>La page <code>/vue-globale</code> charge maintenant depuis <b>2 tables séparées</b> en parallèle :</p>
+    <pre><code>Promise.all([
+  supabase.from("etablissements").select("...").eq("structure_id", id),
+  supabase.from("etablissements_partenaires").select("...").eq("archive", false),
+  // + patients, materiels, di, commandes
+])</code></pre>
+    <p>Puis fusion intelligente :</p>
+    <ul>
+      <li><b>mineRows</b> = etablissements WHERE !est_partenaire</li>
+      <li><b>partnersFromNewTable</b> = etablissements_partenaires (archive=false)</li>
+      <li><b>legacyPartners</b> = etablissements WHERE est_partenaire=true ET NOT IN (link_to_etablissement_id) — pour éviter les doublons avec la migration</li>
+    </ul>
+    <p>Le toggle Mes / Partenaires / Tous (de 0.55.29) continue de fonctionner.</p>
+  </div>
+
+  <h2>🔧 6. RPC convert_etab_to_partner</h2>
+  <div class="panel tech">
+    <p>Pour basculer manuellement un établissement legacy vers la nouvelle table :</p>
+    <pre><code>const { data, error } = await supabase.rpc("convert_etab_to_partner", {
+  p_etab_id: "uuid-de-l-etab"
+});
+// → { ok: true, partenaire_id: "nouveau-uuid" }
+// L'ancien est marqué est_partenaire=true pour cohérence</code></pre>
+    <p>Vérif droits parametres_admin · security definer · grant authenticated.</p>
+  </div>
+
+  <h2>📈 7. Tests +20 (1165 → 1185)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-31-etab-partenaires.test.js</code> :</p>
+    <ul>
+      <li><b>Schéma table</b> (5 tests) : identité, identifiants, adresse, contact, link_to</li>
+      <li><b>Types de relation</b> (3 tests) : 5 types, Prescripteur en 1er, Autre en dernier</li>
+      <li><b>Vue-globale dual-source</b> (3 tests) : consolidation, déduplication legacy</li>
+      <li><b>Trigger audit diff</b> (4 tests) : pas de changes, change nom, ajout champ, suppression champ</li>
+      <li><b>Format audit row</b> (3 tests) : INSERT new_data, DELETE old_data, UPDATE diff</li>
+      <li><b>RPC convert</b> (2 tests) : succès et permission refusée</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.31.sql</code> : <b>NOUVEAU</b> · table + audit + trigger + migration + vue + RPC</li>
+    <li><code>app/etablissements-partenaires/page.js</code> : <b>NOUVEAU</b> · page CRUD complète + audit + modal édition</li>
+    <li><code>app/vue-globale/page.js</code> : refonte dual-source (2 tables en parallèle)</li>
+    <li><code>app/TopBar.js</code> : + lien "Étabs partenaires"</li>
+    <li><code>__tests__/v055-31-etab-partenaires.test.js</code> : <b>NOUVEAU</b> · +20 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.31 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.31</li>
+    <li><code>package.json</code> : 0.55.30 → 0.55.31</li>
+  </ul>
+
+  <h2>Procédure (IMPORTANT)</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip <b>par-dessus</b> ton dossier <code>C:\aveho-ec-app</code></li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.55.31.sql</code> → <b>Run</b>
+        <ul>
+          <li>Inclut le hotfix 0.55.30 (groupement_id) → ça fixera aussi le bug 400 si pas encore joué</li>
+          <li>Crée la table partenaires + audit + trigger</li>
+          <li>Migre automatiquement les partenaires existants</li>
+        </ul>
+      </li>
+      <li>Push GitHub + déploiement Vercel automatique :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.31 - Table dediee etablissements_partenaires + audit trigger"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire après déploiement</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Vide le cache du navigateur ou ouvre en navigation privée pour forcer le nouveau SW</li>
+      <li>Page <code>/vue-globale</code> charge sans erreur 400 ✓</li>
+      <li>Menu → <i class="ti ti-building-community"></i> "Étabs partenaires" (icône violette)</li>
+      <li>Si tu avais déjà des partenaires (est_partenaire=true), ils sont automatiquement listés ici (migrés via le SQL)</li>
+      <li>Bouton "+ Ajouter un partenaire" → modale 24 champs → enregistrer "Hôpital Saint-Joseph" en tant que Prescripteur</li>
+      <li>La carte apparaît immédiatement avec badge "PRESCRIPTEUR" + couleur bleue</li>
+      <li>Modifier le nom → bouton "Audit" → diff champ-par-champ visible</li>
+      <li>Smoke tests 0.55.31 dans le changelog → 5 tests verts (si SQL passé)</li>
+      <li>Audit accessible uniquement par les admins (RLS)</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 41ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.30 → <b>0.55.31</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.31 · 31 mai 2026</p>
+    <p>Table dédiée etablissements_partenaires · audit avec diff · migration auto · vue unifiée · 1 SQL · 1185 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

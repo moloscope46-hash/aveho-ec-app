@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.22.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1e4a91 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sec{background:#fef0ee;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — RGPD PROFESSIONNEL</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.22.0
+      <small>PDF avec signature intégrée · QR code de vérification · Renouvellement automatique 3 ans</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 30 mai 2026 (23h)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.22.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.21.0</span>
+      <span><b>Statut :</b> Build clean · 94 tests verts · 1 patch SQL</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">📄 Export PDF complet avec signature image</span>
+      <span class="badge green">🔍 QR code de vérification d'intégrité</span>
+      <span class="badge green">🌐 Page publique /verifier (anonyme)</span>
+      <span class="badge green">⏰ Date d'expiration auto (3 ans)</span>
+      <span class="badge green">🔔 Filtre "À renouveler" + alertes 30j</span>
+      <span class="badge orange">🔧 1 patch SQL (193 lignes)</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#pdf">3. Export PDF du consentement</a></li>
+      <li><a href="#qr">4. QR code &amp; vérification publique</a></li>
+      <li><a href="#renouv">5. Renouvellement automatique</a></li>
+      <li><a href="#sql">6. Patch SQL 0.22.0</a></li>
+      <li><a href="#tests">7. Tests Vitest (+7)</a></li>
+      <li><a href="#fichiers">8. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">9. Procédure d'application</a></li>
+      <li><a href="#reporte">10. Reste à faire (0.23+)</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>La 0.22.0 finalise l'axe RGPD professionnel avec 3 chantiers à forte valeur d'audit CNIL :</p>
+  <ol>
+    <li><b>Export PDF du consentement</b> via jsPDF chargé en CDN (~50 KB en lazy load). PDF A4 complet : bandeau navy, identité patient/établissement, texte intégral, signature image intégrée, métadonnées (hash SHA-256, recueilli par, date, device), QR code de vérification, footer avec pagination.</li>
+    <li><b>QR code de vérification d'intégrité</b> sur chaque PDF. Scan → page publique <code>/verifier/<consent_id>?h=<hash></code> qui appelle une RPC Postgres <code>verify_consent_hash()</code>. La RPC compare le hash, retourne un statut minimal (initiales anonymisées + dates + établissement) et trace la vérification dans une table d'audit.</li>
+    <li><b>Renouvellement automatique</b> : date_expiration calculée à signature (= +3 ans). Filtre "À renouveler" sur la page <code>/consentements</code> avec les expirations &lt; 30 jours. KPIs dédiés. Bouton "Demander renouvellement" pour traçabilité.</li>
+  </ol>
+
+  <div class="highlight">
+    <b>Audit CNIL ready.</b> Avec cette release, le module RGPD couvre tous les exigences de conformité : consentement écrit, signé, daté, archivé, vérifiable publiquement, renouvelé périodiquement, immuable (pas de DELETE possible), entièrement tracé.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">3</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Helpers libs créés</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Page publique anonyme</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">RPC Postgres SECURITY DEFINER</div></div>
+    <div class="kpi"><div class="v">+7</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">94</div><div class="l">Tests verts au total</div></div>
+    <div class="kpi"><div class="v">3 ans</div><div class="l">Durée de validité par défaut</div></div>
+    <div class="kpi"><div class="v">30 j</div><div class="l">Préavis renouvellement</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>lib/qrcode.js</code> : helper QR (CDN qrcode-generator)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>2</td><td><code>lib/consentPdf.js</code> : génération PDF avec jsPDF (CDN, lazy load)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>3</td><td>Page publique <code>/verifier/[id]</code> sans auth</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>4</td><td>Colonnes <code>date_expiration</code>, <code>renouvellement_demande*</code> sur <code>consentements_rgpd</code></td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>5</td><td>Backfill <code>date_expiration</code> = signature + 3 ans pour existants</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>6</td><td>Table <code>consent_verifications</code> (audit des scans QR)</td><td><span class="pill sec">Audit</span></td></tr>
+      <tr><td>7</td><td>RPC <code>verify_consent_hash()</code> SECURITY DEFINER + GRANT anon</td><td><span class="pill sec">Sec</span></td></tr>
+      <tr><td>8</td><td>Vues <code>v_consents_a_renouveler</code> + <code>v_consents_expires</code></td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>9</td><td>UI <code>/consentements</code> : KPIs renouvellement, filtre "À renouveler", colonne Expiration, boutons PDF + Renouvellement</td><td><span class="pill imp">Enrichi</span></td></tr>
+      <tr><td>10</td><td>ConsentementRGPD calcule date_expiration à la signature</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>11</td><td>7 tests Vitest sur buildVerifyUrl</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="pdf">3. Export PDF du consentement</h2>
+
+  <h3>3.1 Architecture</h3>
+  <p>jsPDF chargé via CDN <code>cdn.jsdelivr.net/npm/jspdf@2.5.2</code> en lazy load (cohérent avec la stratégie SheetJS de la 0.15+). Aucun ajout au bundle initial — le module se charge uniquement quand l'utilisateur clique sur le bouton PDF.</p>
+
+  <h3>3.2 Structure du PDF</h3>
+  <ul>
+    <li><b>Bandeau navy</b> en en-tête avec titre "CONSENTEMENT RGPD" + collectivité/établissement</li>
+    <li><b>Encadré identité</b> patient (nom, naissance, dossier) avec badge statut signé/refusé + date d'expiration</li>
+    <li><b>Texte intégral du consentement</b> rendu en typographie A4 (Helvetica 9pt), gestion automatique des paragraphes, sous-titres bold, listes à puces, séparateurs horizontaux</li>
+    <li><b>Pagination automatique</b> : ajout de pages si le contenu déborde</li>
+    <li><b>Bloc signature</b> : image PNG de la signature (chargée via URL signée Storage 5 min) à gauche, métadonnées à droite (signataire, rôle, date, recueilli par, hash SHA-256 sur 2 lignes en courier)</li>
+    <li><b>QR code de vérification</b> (si signé + hash dispo) avec description + URL en clair sous le code</li>
+    <li><b>Footer sur chaque page</b> : nom Aveho/collectivité à gauche, "Page X / Y" à droite, "Document généré le ..."</li>
+  </ul>
+
+  <h3>3.3 Nom de fichier généré</h3>
+  <pre><code>consentement-rgpd-{patient-slug}-{YYYY-MM-DD}.pdf
+ex : consentement-rgpd-marie-dupont-2026-05-30.pdf</code></pre>
+  <p>Le slug retire les accents (NFD + normalize), met en minuscules, remplace tout non-alphanumérique par des tirets.</p>
+
+  <h3>3.4 Markdown → PDF</h3>
+  <p>jsPDF ne sait pas interpréter le markdown du template. La fonction interne <code>markdownToPlainBlocks</code> transforme le markdown léger en blocs typés :</p>
+  <ul>
+    <li><code>{type: "p", text}</code> → paragraphe</li>
+    <li><code>{type: "h", text}</code> → sous-titre (bold + bleu)</li>
+    <li><code>{type: "li", text}</code> → puce</li>
+    <li><code>{type: "hr"}</code> → séparateur horizontal</li>
+  </ul>
+  <p>Les <code>**gras**</code> intra-ligne sont retirés (jsPDF ne supporte pas le rich-text inline simplement). Pour de vrai bold inline, il faudrait utiliser <code>doc.text()</code> mot par mot avec changement de style — overkill pour la valeur ajoutée.</p>
+
+  <h2 id="qr">4. QR code &amp; vérification publique</h2>
+
+  <h3>4.1 Workflow utilisateur</h3>
+  <ol>
+    <li>L'utilisateur télécharge le PDF du consentement</li>
+    <li>Il imprime le PDF pour archive papier ou l'envoie à un auditeur/CNIL</li>
+    <li>Pour vérifier l'authenticité, l'auditeur scanne le QR avec son smartphone</li>
+    <li>Le navigateur ouvre <code>https://aveho-app.vercel.app/verifier/&lt;id&gt;?h=&lt;hash&gt;</code></li>
+    <li>La page appelle la RPC <code>verify_consent_hash(consent_id, hash, ip, ua)</code></li>
+    <li>La RPC compare le hash en base avec celui fourni dans l'URL</li>
+    <li>Trace la vérification dans <code>consent_verifications</code></li>
+    <li>Affiche :
+      <ul>
+        <li><b>✓ Vert</b> : Consentement authentique (hash correspond, pas expiré)</li>
+        <li><b>⏰ Orange</b> : Authentique mais expiré (renouvellement nécessaire)</li>
+        <li><b>✗ Rouge</b> : Le hash ne correspond pas (altération potentielle)</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h3>4.2 Sécurité &amp; anonymisation</h3>
+  <p>La page publique n'expose <b>aucune donnée personnelle complète</b> :</p>
+  <ul>
+    <li>Patient : seules ses <b>initiales</b> sont retournées par la RPC (anonymisation)</li>
+    <li>Établissement et collectivité : noms publics (déjà visibles dans des annuaires officiels comme FINESS)</li>
+    <li>Dates : OK pour l'audit</li>
+    <li>Le texte complet du consentement n'est jamais retourné</li>
+    <li>Pas de nom de signataire, pas de N° dossier, pas de date de naissance</li>
+  </ul>
+
+  <h3>4.3 RPC <code>verify_consent_hash</code></h3>
+  <p>Définie avec <code>SECURITY DEFINER</code> + GRANT EXECUTE TO anon → accessible sans authentification. La trace dans <code>consent_verifications</code> est insérée par la RPC elle-même (en bypass RLS via SECURITY DEFINER), donc impossible de scanner sans laisser trace.</p>
+
+  <h3>4.4 Page <code>/verifier/[id]</code></h3>
+  <p>Composant React client-side léger (2.2 kB) sans dépendances Aveho (pas de TopBar, pas d'auth). Design plein écran avec gradient navy → teal pour un effet "page de vérification officielle". 5 états :</p>
+  <ul>
+    <li><b>loading</b> : "Vérification en cours..."</li>
+    <li><b>missing</b> : URL incomplète (id ou hash manquant)</li>
+    <li><b>valid</b> : ✓ vert ou ⏰ orange si expiré</li>
+    <li><b>invalid</b> : ✗ rouge "Vérification échouée"</li>
+    <li><b>error</b> : Erreur technique RPC</li>
+  </ul>
+
+  <h2 id="renouv">5. Renouvellement automatique</h2>
+
+  <h3>5.1 Date d'expiration</h3>
+  <p>Calculée côté frontend à la signature : <code>date_signature + 3 ans</code>. Stockée en colonne <code>date_expiration date</code>. Index partial <code>idx_consent_expiration</code> pour optimiser les vues.</p>
+
+  <h3>5.2 Vues SQL d'aide</h3>
+  <ul>
+    <li><b><code>v_consents_a_renouveler</code></b> : consentements signés non archivés dont l'expiration ≤ 30 jours mais non encore expirés. Trié par échéance ascendante.</li>
+    <li><b><code>v_consents_expires</code></b> : consentements dont la date d'expiration est dépassée + nombre de jours depuis expiration.</li>
+  </ul>
+
+  <h3>5.3 UI <code>/consentements</code></h3>
+  <p>Modifications visibles :</p>
+  <ul>
+    <li><b>KPIs refondus</b> : Signés / À renouveler / Expirés / Refusés (au lieu de "7 derniers jours")</li>
+    <li><b>Filtre "À renouveler"</b> : nouvelle option du FilterBar avec compteur. Sélectionne les expire ≤ 30j OU les renouvellement_demande=true.</li>
+    <li><b>Colonne "Expiration"</b> dans le tableau, remplaçant "Recueilli par" (déplacé dans la modale de détail). Couleurs : vert (sain), orange (≤ 30j), rouge (expiré).</li>
+    <li><b>Badge "Renouv. demandé"</b> sur les lignes concernées</li>
+    <li><b>Icône <code>ti-refresh</code></b> dans les actions ligne quand l'expiration approche ou est dépassée</li>
+    <li><b>Bouton "Demander renouvellement"</b> dans la modale de visualisation</li>
+  </ul>
+
+  <h3>5.4 Champs ajoutés sur consentements_rgpd</h3>
+  <table>
+    <thead><tr><th>Colonne</th><th>Type</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>date_expiration</code></td><td>date</td><td>Date de fin de validité (signature + 3 ans)</td></tr>
+      <tr><td><code>renouvellement_demande</code></td><td>boolean</td><td>true si un utilisateur a cliqué "Demander renouvellement"</td></tr>
+      <tr><td><code>renouvellement_demande_at</code></td><td>timestamptz</td><td>Quand la demande a été faite</td></tr>
+      <tr><td><code>notification_30j_envoyee</code></td><td>boolean</td><td>Pour un futur cron (éviter doublons d'alertes)</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="sql">6. Patch SQL 0.22.0</h2>
+  <div class="panel">
+    <p>Le script <code>aveho-PATCH-vers-0.22.sql</code> (193 lignes) effectue :</p>
+    <ol>
+      <li><b>ALTER TABLE</b> consentements_rgpd : 4 colonnes ajoutées</li>
+      <li><b>Backfill</b> date_expiration pour les consentements existants (= signature + 3 ans)</li>
+      <li><b>Index partial</b> idx_consent_expiration</li>
+      <li><b>Table consent_verifications</b> + indices + RLS select</li>
+      <li><b>RPC verify_consent_hash</b> SECURITY DEFINER + GRANT anon/authenticated</li>
+      <li><b>Vues</b> v_consents_a_renouveler + v_consents_expires</li>
+    </ol>
+    <p>Idempotent (<code>if not exists</code>, <code>create or replace</code>). Rejouable.</p>
+  </div>
+
+  <h2 id="tests">7. Tests Vitest (+7)</h2>
+  <p>7 nouveaux tests sur <code>lib/qrcode.js</code> :</p>
+  <ul>
+    <li><code>buildVerifyUrl</code> : construit l'URL avec l'origin, encode les caractères spéciaux, gère le SSR (window indéfini), préserve UUID et hash SHA-256, génère une URL parsable par <code>new URL()</code></li>
+  </ul>
+  <p>Les helpers <code>generateQR</code>, <code>generateQRDataURL</code> et <code>generateConsentPDF</code> nécessitent un DOM avec <code>document</code> + chargement de scripts CDN. Pas testables en Vitest pur sans jsdom complet. Reportés à des tests Playwright.</p>
+  <p>Total : <b>94 tests verts</b> (étaient 87 en 0.21).</p>
+
+  <h2 id="fichiers">8. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.22.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Renouvellement + vérification publique (193 lignes)</td></tr>
+      <tr><td><code>lib/qrcode.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Helper QR via CDN qrcode-generator + buildVerifyUrl</td></tr>
+      <tr><td><code>lib/consentPdf.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Génération PDF avec jsPDF + signature image + QR code</td></tr>
+      <tr><td><code>app/verifier/[id]/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page publique de vérification d'intégrité</td></tr>
+      <tr><td><code>__tests__/qrcode.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>7 tests sur buildVerifyUrl</td></tr>
+      <tr><td><code>app/consentements/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ KPIs renouv, filtre, colonne expiration, boutons PDF + renouvellement</td></tr>
+      <tr><td><code>app/ConsentementRGPD.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ Calcul date_expiration à la signature</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.21.0-alpha → 0.22.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">9. Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.22.sql</code> → Run.</li>
+      <li><b>Vérifier les vues</b> :
+        <pre><code>select count(*) from v_consents_a_renouveler;
+select count(*) from v_consents_expires;</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app</code> (garder .env.local).</li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+npm install
+npm test       # 94 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller dans <code>/consentements</code> → les KPIs ont changé, la colonne Expiration apparaît</li>
+          <li>Cliquer sur l'icône PDF rouge d'une ligne → le PDF se télécharge avec signature + QR code</li>
+          <li>Scanner le QR avec ton téléphone → page <code>/verifier/...</code> qui valide</li>
+          <li>Cliquer "Demander renouvellement" sur un consentement → badge apparaît + dispo dans le filtre</li>
+          <li>Pour tester le filtre "À renouveler" : forcer une expiration proche en SQL :
+            <pre><code>update consentements_rgpd
+set date_expiration = current_date + 15
+where id = '...';</code></pre>
+          </li>
+        </ul>
+      </li>
+      <li><b>Pousser sur Vercel</b>.</li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">10. Reste à faire (0.23+)</h2>
+  <div class="panel warn">
+    <p>Améliorations possibles :</p>
+    <ul>
+      <li><b>Edge Function cron quotidien</b> qui scanne <code>v_consents_a_renouveler</code> et envoie push/email au DPO + au prescripteur (avec setting <code>notification_30j_envoyee = true</code> pour éviter doublons). Setup : <code>supabase functions deploy send-renouvellement-rappels</code> + <code>supabase secrets schedule cron</code>.</li>
+      <li><b>Modèles de consentement personnalisables</b> par collectivité (éditeur de template avec preview live)</li>
+      <li><b>Page admin /consent-verifications</b> pour voir l'historique des scans QR (qui a vérifié quoi, depuis quelle IP)</li>
+      <li><b>Auto-archivage</b> des consentements expirés depuis &gt; 6 mois</li>
+      <li><b>Durée de validité configurable par collectivité</b> (au lieu de 3 ans en dur) — colonne <code>structures.parametres.consent_validite_jours</code></li>
+      <li><b>Préférences notif par utilisateur</b> (qui veut recevoir quoi)</li>
+      <li><b>Mode hors-ligne avec queue d'écritures</b> — gros chantier en journée</li>
+      <li><b>Tests Playwright</b> sur le flow complet création → signature → PDF → vérification QR</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.22.0 · 30 mai 2026 (23h)</p>
+    <p>RGPD professionnel — PDF avec signature intégrée — QR de vérification — Renouvellement 3 ans</p>
+  </footer>
+
+</div>
+</body>
+</html>

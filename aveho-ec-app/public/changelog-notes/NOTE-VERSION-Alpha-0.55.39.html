@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.39 — Compteur API + page Intégrations + clé Google</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b;--google:#4285F4}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#4285F4 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--google)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — COMPTEUR API + PAGE INTÉGRATIONS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.39 — Compteur de requêtes + page Paramètres Intégrations + clé Google Places + login amélioré
+      <small>5 APIs trackées · quotas + coûts · .env.local préparé · astuce biométrie</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.39-alpha</code></span>
+      <span><b>Tests :</b> 1313 verts (+14)</span>
+      <span><b>SQL :</b> 1 patch</span>
+    </div>
+  </header>
+
+  <h2>🚨 CLÉ GOOGLE PLACES — sécurité</h2>
+  <div class="panel danger">
+    <p>La clé <code>AIzaSyCZFeYA4ln-3BfkTUmNOc3l11OkcRHM8zU</code> que tu as partagée dans le chat est désormais <b>exposée dans l'historique de conversation</b>. Tu dois :</p>
+    <ol>
+      <li>Aller sur <a href="https://console.cloud.google.com/google/maps-apis/credentials">console.cloud.google.com/google/maps-apis/credentials</a></li>
+      <li><b>Régénérer la clé</b> (Edit → Regenerate Key)</li>
+      <li><b>Restreindre l'usage</b> :
+        <ul>
+          <li><b>Référents HTTP</b> autorisés : <code>aveho-ec-app.vercel.app/*</code>, <code>localhost:*</code></li>
+          <li><b>API limitée à</b> : Places API uniquement (pas Maps JS, pas Directions, etc.)</li>
+          <li><b>Quota max/jour</b> : 1000 requêtes (largement assez avec le cache)</li>
+        </ul>
+      </li>
+      <li>Mettre la nouvelle clé dans <code>.env.local</code> en local ET dans Vercel → Settings → Environment Variables</li>
+      <li>Le fichier <code>.env.local</code> ne sera <b>jamais</b> poussé sur GitHub (grâce à <code>.gitignore</code>)</li>
+    </ol>
+  </div>
+
+  <h2>🗄 1. SQL — Compteur de requêtes API</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Table api_usage_log</h3>
+    <ul>
+      <li><code>id, structure_id, user_id</code> : qui a fait l'appel</li>
+      <li><code>api_name</code> : 'google_places', 'rpps', 'finess', 'sirene', 'ban_insee'</li>
+      <li><code>endpoint</code> : 'findplacefromtext', 'details', etc.</li>
+      <li><code>status</code> : 'ok' / 'error' / 'no_key' / 'cache_hit'</li>
+      <li><code>http_status, error_message, duration_ms</code></li>
+      <li><code>created_at</code></li>
+    </ul>
+
+    <h3>Vue v_api_usage_current_month</h3>
+    <p>Agrégat par api_name pour le mois en cours : calls_ok / calls_error / calls_no_key / calls_cached / calls_total + avg_duration_ms.</p>
+
+    <h3>3 RPCs</h3>
+    <ul>
+      <li><code>get_api_usage_stats()</code> — récupère les stats (admin uniquement)</li>
+      <li><code>log_api_call(api_name, endpoint, status, http_status, error_msg, duration_ms)</code> — utilisé par les route handlers</li>
+      <li><code>cleanup_old_api_logs()</code> — supprime les logs > 90 jours</li>
+    </ul>
+
+    <h3>RLS</h3>
+    <ul>
+      <li>INSERT pour tous les authentifiés (via RPC log_api_call)</li>
+      <li>SELECT uniquement pour <code>parametres_admin</code></li>
+    </ul>
+  </div>
+
+  <h2>🔌 2. Page /parametres/integrations</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">5 cartes API</h3>
+    <table style="width:100%; border-collapse: collapse; font-size: 12.5px">
+      <tr style="border-bottom:1px solid #e3e9ee">
+        <th style="text-align:left; padding:6px">API</th>
+        <th style="text-align:left; padding:6px">Quota</th>
+        <th style="text-align:left; padding:6px">Coût après quota</th>
+      </tr>
+      <tr><td style="padding:5px">🌐 Google Places API</td><td>1000 req/mois gratuits</td><td>~17€/1000 req</td></tr>
+      <tr><td style="padding:5px">🩺 RPPS (FHIR ANS)</td><td>Illimité</td><td><b>GRATUIT</b></td></tr>
+      <tr><td style="padding:5px">🏥 FINESS (data.gouv.fr)</td><td>Illimité</td><td><b>GRATUIT</b></td></tr>
+      <tr><td style="padding:5px">🏢 SIRENE</td><td>Illimité</td><td><b>GRATUIT</b></td></tr>
+      <tr><td style="padding:5px">📍 BAN INSEE</td><td>Illimité</td><td><b>GRATUIT</b></td></tr>
+    </table>
+
+    <h3>Pour chaque API</h3>
+    <ul>
+      <li>Statut <b>CONNECTÉ</b> (vert) ou <b>NON CONFIGURÉ</b> (rouge)</li>
+      <li>4 compteurs : total / succès / erreurs / temps moyen</li>
+      <li>Barre de quota visuel (vert → ambre > 80% → rouge si dépassé)</li>
+      <li><b>Coût estimé du mois</b> en € pour Google Places</li>
+      <li>Lien direct vers la documentation officielle</li>
+    </ul>
+
+    <h3>Bloc procédure si clé manquante</h3>
+    <p>Pour Google Places non configuré → bloc ambre avec étapes :</p>
+    <ol>
+      <li>Récupère ta clé sur Google Cloud Console</li>
+      <li>Vercel → Settings → Environment Variables → <code>GOOGLE_PLACES_API_KEY=...</code></li>
+      <li>Redeploy</li>
+    </ol>
+
+    <h3>Accès</h3>
+    <p>Réservé aux admins avec droit <code>parametres_admin</code>. Lien dans le menu admin : <code>Administration → Intégrations API</code>.</p>
+  </div>
+
+  <h2>⚙ 3. .env.local créé en local</h2>
+  <div class="panel">
+    <p>Fichier <code>.env.local</code> ajouté dans le zip (mais <b>jamais commit sur GitHub</b> grâce à <code>.gitignore</code> qui le contient déjà). Contient :</p>
+    <pre><code># Google Places API
+GOOGLE_PLACES_API_KEY=AIzaSyCZFeYA4ln-3BfkTUmNOc3l11OkcRHM8zU</code></pre>
+    <p>⚠ <b>À régénérer absolument</b> car la clé a été exposée dans le chat. Le fichier <code>.env.local.example</code> a aussi été mis à jour avec la procédure pour les autres devs.</p>
+
+    <h3>Procédure Vercel (pour la prod)</h3>
+    <ol>
+      <li>vercel.com → ton projet aveho-ec-app → Settings → Environment Variables</li>
+      <li>Add new : Name = <code>GOOGLE_PLACES_API_KEY</code>, Value = ta nouvelle clé restreinte</li>
+      <li>Environments : cocher Production, Preview, Development</li>
+      <li>Save → Redeploy</li>
+    </ol>
+  </div>
+
+  <h2>🔐 4. Login : astuce biométrie</h2>
+  <div class="panel">
+    <p>Tu disais "je vois pas les autres moyens de co" → c'est parce que les boutons biométriques ne s'affichent qu'<b>après</b> avoir activé la biométrie depuis ton profil pour cet email précis.</p>
+    <p>Désormais, quand tu saisis ton email et que la biométrie est <b>supportée par le navigateur</b> mais <b>pas encore enregistrée</b>, un bloc bleu s'affiche :</p>
+    <p style="background: linear-gradient(135deg, #eef5fc, #fff); border: 1px solid #c7dcef; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #185FA5">
+      💡 <b>Astuce :</b> après ta connexion, active la biométrie dans <a style="color: #185FA5; font-weight: 600">Mon profil</a> pour te connecter en un coup d'œil.
+    </p>
+  </div>
+
+  <h2>📈 Tests +14 (1299 → 1313)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-39-api-counter.test.js</code> :</p>
+    <ul>
+      <li><b>.env.local + .gitignore</b> (2) : présence GOOGLE_PLACES_API_KEY, .env.local dans gitignore</li>
+      <li><b>Schéma SQL</b> (2) : colonnes essentielles, 4 statuts</li>
+      <li><b>Page intégrations</b> (3) : 5 APIs, quota Google, autres gratuites</li>
+      <li><b>Calcul coût</b> (4) : sous quota, à la limite, au-dessus, très au-dessus</li>
+      <li><b>Login biométrie hint</b> (2) : affichage conditionnel</li>
+      <li><b>Logging best-effort</b> (1) : try/catch swallow</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.39.sql</code> : <b>NOUVEAU</b> · table + vue + 3 RPCs</li>
+    <li><code>.env.local</code> : <b>NOUVEAU</b> (non commit) · clé Google Places</li>
+    <li><code>.env.local.example</code> : mis à jour avec procédure</li>
+    <li><code>app/api/place/route.js</code> : ajout du logging via log_api_call à chaque appel (status, endpoint, duration_ms)</li>
+    <li><code>app/parametres/integrations/page.js</code> : <b>NOUVEAU</b> · 5 cartes API + compteur + barre quota + coût estimé</li>
+    <li><code>app/TopBar.js</code> : nouveau lien "Intégrations API" dans menu admin</li>
+    <li><code>app/login/page.js</code> : bloc bleu astuce biométrie quand pas encore enregistrée</li>
+    <li><code>__tests__/v055-39-api-counter.test.js</code> : <b>NOUVEAU</b> · +14 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.39 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.39</li>
+    <li><code>package.json</code> : 0.55.38 → 0.55.39</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : <code>aveho-PATCH-vers-0.55.39.sql</code> → Run</li>
+      <li><b>RÉGÉNÉRER la clé Google Places</b> (la précédente est exposée) + restreindre par référent HTTP</li>
+      <li>Mettre la nouvelle clé dans <code>.env.local</code> (déjà créé, à modifier) et dans Vercel Settings → Environment Variables</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.39 - Compteur API + page Integrations + cle Google Places + login bio hint"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Aller dans <code>Administration → Intégrations API</code> (menu admin)</li>
+      <li>Voir 5 cartes : Google Places, RPPS, FINESS, SIRENE, BAN INSEE</li>
+      <li>Si clé Google configurée → badge vert "CONNECTÉ" sur Google Places</li>
+      <li>Sinon → badge rouge "NON CONFIGURÉ" + procédure de configuration ambre</li>
+      <li>Aller sur <code>/vue-globale</code> ou <code>/etablissement/fiche</code> → ça génère des appels Google Places</li>
+      <li>Retourner sur <code>/parametres/integrations</code> → voir le compteur incrémenté</li>
+      <li>Login : saisir un email → si pas de biométrie configurée, voir l'astuce bleue 💡</li>
+      <li>Smoke tests 0.55.39 → 5 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 49ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.38 → <b>0.55.39</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.39 · 31 mai 2026</p>
+    <p>Compteur API · 5 APIs trackées · page Intégrations · login biométrie hint · 1313 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.38.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1e4a91 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  .preview-mockup{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 12px 40px rgba(20,33,49,.2);max-width:320px;margin:14px auto;font-size:13px}
+  .preview-mockup .pm-head{background:linear-gradient(135deg,#142131,#1e4a91);color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px}
+  .preview-mockup .pm-head .av{width:36px;height:36px;border-radius:8px;background:rgba(124,200,200,.22);display:flex;align-items:center;justify-content:center;color:#7CC8C8}
+  .preview-mockup .pm-body{padding:12px 14px}
+  .preview-mockup .pm-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12.5px}
+  .preview-mockup .pm-row i{color:#5aa05a}
+  .preview-mockup .pm-tags{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+  .preview-mockup .pm-tag{background:#185FA522;color:#185FA5;border:1px solid #185FA544;padding:2px 8px;border-radius:8px;font-size:10.5px;font-weight:600}
+  .preview-mockup .pm-stats{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee}
+  .preview-mockup .pm-stat{flex:1;background:#f4f7fa;border-radius:6px;padding:6px 8px;text-align:center}
+  .preview-mockup .pm-stat .v{font-size:16px;font-weight:700;color:#185FA5;line-height:1}
+  .preview-mockup .pm-stat .l{font-size:9.5px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-top:2px}
+  .preview-mockup .pm-foot{padding:10px 14px;background:#f4f7fa;border-top:1px solid var(--line)}
+  .preview-mockup .pm-foot button{width:100%;background:#185FA5;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:600}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — UX TERRAIN</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.38.0
+      <small>Aperçu rapide patient au hover — popover contextuel, navigation accélérée</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.38.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.37.0</span>
+      <span><b>Statut :</b> Build clean · 536 tests verts · 0 patch SQL</span>
+    </div>
+    <div class="badges">
+      <span class="badge">🔍 Popover au survol nom patient (desktop)</span>
+      <span class="badge">📱 Tap direct sur mobile (pas de hover)</span>
+      <span class="badge">⏱️ Délai 500ms anti-flicker</span>
+      <span class="badge">📊 Compteurs DI/achats préchargés</span>
+      <span class="badge">🛡️ Badge RGPD intégré</span>
+      <span class="badge">📍 Positionnement intelligent (bord d'écran)</span>
+      <span class="badge green">+23 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>Sur le terrain, un soignant qui survole une liste de patients veut souvent juste vérifier <b>la chambre, le statut RGPD, ou s'il y a une DI en cours</b>, sans avoir à cliquer puis revenir. La 0.38 ajoute un popover discret qui apparaît au survol du nom et donne ces informations instantanément.</p>
+
+  <div class="highlight">
+    <b>Zero friction.</b> Sur desktop : survol 500ms → popover apparaît. Sur tactile : tap = navigation directe (pas de hover natif sur mobile). Pas de fetch supplémentaire au hover : toutes les données sont déjà chargées avec la liste.
+  </div>
+
+  <h2>Aperçu visuel du popover</h2>
+  <div class="preview-mockup">
+    <div class="pm-head">
+      <div class="av"><i class="ti ti-user"></i></div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700">Dupont Marie</div>
+        <div style="font-size:11px;color:#bfe6e6;margin-top:1px">66 ans · Né(e) le 12/03/1958</div>
+      </div>
+    </div>
+    <div class="pm-body">
+      <div class="pm-row">
+        <i class="ti ti-bed"></i>
+        <div>
+          <div style="font-weight:600">Service A › Chambre 12</div>
+          <div style="color:#6c7a89;font-size:11px">Lit 12A</div>
+        </div>
+      </div>
+      <div class="pm-row" style="color:#2a3a48;font-size:12px">
+        <i class="ti ti-id" style="color:#185FA5"></i>
+        Dossier <b>D-2026-042</b>
+      </div>
+      <div class="pm-row" style="color:#2a3a48;font-size:12px">
+        <i class="ti ti-calendar-event" style="color:#7a6fb0"></i>
+        Entrée le <b>15/04/2026</b>
+      </div>
+      <div style="font-size:10px;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-top:10px;margin-bottom:4px">Étiquettes</div>
+      <div class="pm-tags">
+        <span class="pm-tag" style="background:#c0392b22;color:#c0392b;border-color:#c0392b44">🏷️ Allergique</span>
+        <span class="pm-tag">🏷️ PMR</span>
+      </div>
+      <div class="pm-row" style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee">
+        <i class="ti ti-shield-check"></i>
+        <div>
+          <div style="color:#2e6f33;font-weight:600;font-size:12px">Consentement RGPD signé</div>
+          <div style="color:#8a98a8;font-size:10.5px">le 16/04/2026</div>
+        </div>
+      </div>
+      <div class="pm-stats">
+        <div class="pm-stat">
+          <div class="v">3</div>
+          <div class="l">DI actives</div>
+        </div>
+        <div class="pm-stat">
+          <div class="v" style="color:#EF9F27">1</div>
+          <div class="l">Achat</div>
+        </div>
+      </div>
+    </div>
+    <div class="pm-foot">
+      <button>Voir la fiche complète →</button>
+    </div>
+  </div>
+
+  <h2>Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>Audit existant</b> : aucun composant similaire (pas de doublon)</td><td><span class="pill imp">Audit</span></td></tr>
+      <tr><td>2</td><td>Composant <code>&lt;PatientPreview&gt;</code> wrapper avec hover delay, positionnement intelligent et fallback tactile</td><td><span class="pill new">Composant</span></td></tr>
+      <tr><td>3</td><td>Intégration dans <code>/patients</code> : wrap du nom dans le tableau (préserve les badges RGPD/étiquettes existants en sibling)</td><td><span class="pill imp">Patché</span></td></tr>
+      <tr><td>4</td><td>Préchargement compteurs DI/achats par patient (Promise.all parallèle, non bloquant)</td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>5</td><td>23 tests Vitest (computeAge, statutColor, détection touch, positionnement, agrégation stats, scénarios)</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2>1. Comportement du composant</h2>
+
+  <h3>Sur desktop (souris)</h3>
+  <ul>
+    <li><b>Survol > 500ms</b> → popover apparaît avec animation fade-in (.15s)</li>
+    <li><b>Souris sort du trigger</b> → délai 150ms avant disparition (laisse le temps de bouger vers le popover)</li>
+    <li><b>Souris entre dans le popover</b> → annule la fermeture (utilisateur peut interagir avec le contenu)</li>
+    <li><b>Clic court</b> → navigation directe vers <code>/patient/{id}</code></li>
+  </ul>
+
+  <h3>Sur tactile (téléphone, tablette)</h3>
+  <ul>
+    <li>Détection via <code>window.matchMedia("(pointer: coarse)")</code></li>
+    <li>Pas de hover natif → on désactive le popover</li>
+    <li>Tap = navigation directe (comportement inchangé par rapport à avant la 0.38)</li>
+    <li>Permet d'éviter les bugs UX type "popover collé après tap"</li>
+  </ul>
+
+  <h2>2. Positionnement intelligent</h2>
+  <p>Le popover (320×280 max) est positionné en <code>position: fixed</code> en fonction du trigger :</p>
+  <ol>
+    <li><b>Position par défaut</b> : sous le trigger, aligné à gauche</li>
+    <li><b>Si trop à droite</b> (déborderait) : aligne à 16px du bord droit</li>
+    <li><b>Si trop en bas</b> (déborderait) : remonte au-dessus du trigger</li>
+    <li><b>Si vraiment trop petit viewport</b> : clamp à 16px du haut</li>
+  </ol>
+  <p>Le calcul se fait à l'apparition (au moment du hover), donc fonctionne même si la page a scrollé entre temps.</p>
+
+  <h2>3. Contenu du popover</h2>
+  <table>
+    <thead><tr><th>Section</th><th>Affichage</th></tr></thead>
+    <tbody>
+      <tr><td>Header gradient</td><td>Avatar + Nom + Prénom + Âge calculé + Date de naissance</td></tr>
+      <tr><td>Emplacement</td><td>Chambre + Lit (icône verte) ou "Sans chambre" (icône grise italique)</td></tr>
+      <tr><td>Dossier</td><td>Numéro de dossier (si renseigné)</td></tr>
+      <tr><td>Date d'entrée</td><td>Date formatée (si renseignée)</td></tr>
+      <tr><td>Étiquettes</td><td>Max 4 affichées + compteur "+N" si plus</td></tr>
+      <tr><td>RGPD</td><td>3 états : signé (vert), refusé (rouge), à recueillir (orange)</td></tr>
+      <tr><td>Stats</td><td>Cartes "DI actives" (bleu) et "Achats" (orange) si > 0</td></tr>
+      <tr><td>Footer</td><td>Bouton "Voir la fiche complète →" en bleu pleine largeur</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Préchargement compteurs DI/achats</h2>
+  <p>Pour afficher des compteurs <b>sans fetch supplémentaire au hover</b> (sinon délai désagréable), les données sont chargées en parallèle de la liste patients :</p>
+  <pre><code>// Dans /patients : Promise.all parallèle non bloquant
+Promise.all([
+  supabase.from("interventions")
+    .select("patient_id, statut")
+    .eq("etablissement_id", auth.etabId)
+    .not("statut", "in", "(\"Clôturée\",\"Refusée\")"),  // DI actives uniquement
+  supabase.from("achats")
+    .select("patient_id, statut")
+    .eq("etablissement_id", auth.etabId)
+    .gte("created_at", new Date(Date.now() - 90 * 86400000).toISOString()),  // 90 derniers jours
+]).then(...)</code></pre>
+  <p>Si le fetch échoue (offline, RLS), le hover affiche juste la preview sans les compteurs. Pas de plantage.</p>
+
+  <h2>5. Intégration dans /patients (préserve l'existant)</h2>
+  <p>Le wrap est minimal — uniquement autour du <code>nom prenom</code>. Les badges RGPD et les étiquettes restent <b>sibling</b> dans la même cellule. Conséquences :</p>
+  <ul>
+    <li><b>Hover sur le nom</b> → popover apparaît</li>
+    <li><b>Hover sur les badges (RGPD, étiquettes)</b> → aucun popover, comportement inchangé</li>
+    <li><b>Clic sur "RGPD à recueillir"</b> → continue d'ouvrir la modale ConsentementRGPD (stopPropagation préservé)</li>
+  </ul>
+
+  <h2>6. Helpers internes</h2>
+
+  <h3>computeAge(dateNaissance)</h3>
+  <p>Calcul d'âge robuste qui prend en compte le mois/jour pour ne pas afficher 31 ans à quelqu'un qui aura son anniversaire demain.</p>
+  <ul>
+    <li>Retourne <code>null</code> si date invalide, future, ou > 130 ans (sécurité)</li>
+    <li>Gère le cas anniversaire passé / à venir cette année</li>
+  </ul>
+
+  <h3>statutColor(statut)</h3>
+  <p>Mapping statut DI → couleurs cohérentes avec le reste de l'app (6 statuts + fallback).</p>
+
+  <h2>Limites volontaires</h2>
+  <ul>
+    <li><b>Pas de fetch async au hover</b> : performance garantie, mais limité aux données déjà en mémoire</li>
+    <li><b>Dernière DI non affichée par défaut</b> : nécessiterait un fetch supplémentaire de l'intervention la plus récente. Possible en 0.39+ si besoin.</li>
+    <li><b>Préview uniquement dans <code>/patients</code></b> : pourra être étendu à d'autres listes (patients dans une DI, dans un achat, etc.) en 0.39+</li>
+    <li><b>Pas de panneau latéral</b> : l'option "Clic latéral → fiche complète" évoquée dans le brief a été remplacée par un popover central pour rester cohérent avec les autres modales Aveho. Plus simple, moins intrusif.</li>
+  </ul>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">1</div><div class="l">Composant PatientPreview</div></div>
+    <div class="kpi"><div class="v">500</div><div class="l">ms délai apparition</div></div>
+    <div class="kpi"><div class="v">150</div><div class="l">ms délai disparition</div></div>
+    <div class="kpi"><div class="v">320</div><div class="l">px largeur popover</div></div>
+    <div class="kpi"><div class="v">8</div><div class="l">Sections affichées</div></div>
+    <div class="kpi"><div class="v">+23</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">536</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">735</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/PatientPreview.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Wrapper hover avec popover + helpers (computeAge, statutColor)</td></tr>
+      <tr><td><code>__tests__/patient-preview.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>23 tests sur âge, couleurs, touch, positionnement, agrégation</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ import + state patStats + fetch DI/achats parallèle + wrap du nom dans PatientPreview</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.37.0-alpha → 0.38.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>Pas de SQL</b> à appliquer.</li>
+      <li><b>Pas de redéploiement Edge Function</b>.</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Nettoyer le cache + npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test       # 536 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> sur desktop :
+        <ul>
+          <li>Aller dans <code>/patients</code></li>
+          <li>Passer la souris sur le nom d'un patient pendant ~500ms</li>
+          <li>Le popover apparaît avec : nom, âge, chambre, étiquettes, statut RGPD, compteurs DI/achats</li>
+          <li>Déplacer la souris vers le popover → il reste ouvert</li>
+          <li>Sortir → fade-out après 150ms</li>
+          <li>Clic court sur le nom OU le bouton "Voir la fiche complète" → navigation</li>
+        </ul>
+      </li>
+      <li><b>Tester</b> sur mobile (ou émulation responsive F12) :
+        <ul>
+          <li>Tap sur le nom → navigation directe (pas de popover, comportement standard)</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.39+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Tableau de bord Accueil enrichi</b> (widgets configurables)</li>
+      <li><b>Migration pages config restantes</b> vers safeWrite</li>
+      <li><b>Tests Playwright end-to-end</b></li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+      <li><b>Notifications digest hebdo</b></li>
+      <li><b>Variables custom templates RGPD</b></li>
+      <li><b>Recherche : ajouter consentements + factures</b></li>
+      <li><b>Soumission stores</b> (Google Play / Microsoft Store)</li>
+      <li><b>Filtres avancés stats activité</b></li>
+      <li><b>PatientPreview étendu à d'autres listes</b> : DI, achats, transferts (mêmes mécaniques de hover)</li>
+      <li><b>Dernière DI dans le popover</b> : fetch ciblé au hover si on accepte un petit délai</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.38.0 · 31 mai 2026</p>
+    <p>UX terrain — Aperçu rapide patient · Popover hover · Compteurs préchargés · 536 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

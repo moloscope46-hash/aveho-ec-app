@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.12</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.amber{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f5d09f}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.ok{background:#eef9ef;border-color:#bfe2bf}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.brk{background:#fde0dc;color:#a32f24}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — NOTE DE VERSION</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.12
+      <small>Fiche matériel 360° · Export PDF planning · Stats Maintenance · Signalements anonymes · Cron quotidien</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 29 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.12.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.11 (29/05/2026)</span>
+      <span><b>Statut :</b> Alpha de test interne</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">📋 Fiche matériel 360°</span>
+      <span class="badge green">📄 Export PDF planning</span>
+      <span class="badge green">📊 Stats Maintenance</span>
+      <span class="badge green">💬 Signalements anonymes</span>
+      <span class="badge green">⏰ Cron quotidien Supabase</span>
+      <span class="badge amber">⚠ Nouveau script SQL + Edge Function</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#fiche-mat">3. Fiche matériel 360°</a></li>
+      <li><a href="#pdf-maint">4. Export PDF planning Maintenance</a></li>
+      <li><a href="#stats-maint">5. Statistiques Maintenance</a></li>
+      <li><a href="#signalements">6. Signalements anonymes</a></li>
+      <li><a href="#cron">7. Cron quotidien Supabase</a></li>
+      <li><a href="#delta">8. Delta vs Alpha 0.11</a></li>
+      <li><a href="#fichiers">9. Fichiers modifiés / créés</a></li>
+      <li><a href="#migration">10. Procédure de mise à jour</a></li>
+      <li><a href="#reporte">11. Reste à faire</a></li>
+      <li><a href="#roadmap">12. Roadmap suggérée 0.13</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>L'Alpha 0.12 livre <b>cinq chantiers</b> orientés "vision matériel" et "remontée terrain". Le module Maintenance gagne sa vue dédiée par équipement (fiche 360°), son export PDF pour les prestataires, et ses statistiques. La <b>boîte à signalements anonymes</b> ouvre un canal de communication montant pour l'équipe. Le <b>cron Supabase</b> rend les automatismes de la 0.11 indépendants de l'ouverture de l'app.</p>
+
+  <div class="highlight">
+    <b>Cette version introduit 1 nouvelle table SQL</b> (<code>signalements</code>) et <b>1 Edge Function</b> à programmer dans Supabase. Script de migration <code>16_signalements.sql</code>.
+  </div>
+
+  <div class="grid3">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles pages</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Edge Function Supabase</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Stats Maintenance (mois/statut/type)</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">Types de signalements</div></div>
+    <div class="kpi"><div class="v">4</div><div class="l">KPIs sur la fiche matériel</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>État</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Fiche matériel 360°</td><td><span class="pill new">Livré</span></td><td>Page <code>/materiel/[id]</code> · tags, maintenances, DI, transferts</td></tr>
+      <tr><td>2</td><td>Export PDF planning Maintenance</td><td><span class="pill new">Livré</span></td><td>Document A4 prêt à envoyer au prestataire</td></tr>
+      <tr><td>3</td><td>Statistiques Maintenance</td><td><span class="pill new">Livré</span></td><td>3 graphes : par mois, par statut, top types</td></tr>
+      <tr><td>4</td><td>Signalements anonymes</td><td><span class="pill new">Livré</span></td><td>Nouvelle page + table SQL avec RLS spéciale anonymat</td></tr>
+      <tr><td>5</td><td>Cron quotidien Supabase</td><td><span class="pill new">Livré</span></td><td>Edge Function + doc de programmation pg_cron</td></tr>
+      <tr><td>6</td><td>Notifications push navigateur</td><td><span class="pill brk">Dédié</span></td><td>VAPID encore</td></tr>
+      <tr><td>7</td><td>Tag matériel → génération auto maintenance</td><td><span class="pill brk">Complexe</span></td><td>Chaînage métier qui mérite spec</td></tr>
+      <tr><td>8</td><td>Tableau de bord opérationnel kiosque</td><td><span class="pill brk">Cosmétique</span></td><td>À la demande</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fiche-mat">3. Fiche matériel 360° <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>3.1 Accès</h3>
+  <p>Sur la page Matériels, <b>le libellé d'un matériel devient cliquable</b> et ouvre sa fiche détaillée à l'URL <code>/materiel/[id]</code>. Le reste de la ligne reste sélectionnable pour l'édition rapide via le crayon comme avant.</p>
+
+  <h3>3.2 Contenu de la fiche</h3>
+  <p>Une page dédiée qui rassemble tout ce qu'on sait sur l'équipement, en 4 blocs :</p>
+  <ol>
+    <li><b>Entête</b> — libellé, identifiants (S/N, parc, lot), article rattaché, tags actifs, état, dépôt, zone, patient affecté</li>
+    <li><b>4 KPIs</b> — total maintenances, à venir/en cours, en retard, DI ouvertes</li>
+    <li><b>Tableau Maintenances</b> — toutes les maintenances liées au matériel (toutes dates, tous statuts) avec statut "En retard" calculé automatiquement</li>
+    <li><b>Tableau DI</b> — toutes les demandes d'intervention sur ce matériel, cliquables pour ouvrir <code>/interventions</code></li>
+    <li><b>Tableau Transferts</b> — derniers 20 transferts (origine, destination, statut)</li>
+  </ol>
+
+  <h3>3.3 Cas d'usage</h3>
+  <ul>
+    <li>Audit pré-révision : <b>"qu'a-t-on déjà fait sur ce lit ?"</b> avant de planifier la prochaine</li>
+    <li>Conflit avec prestataire : on peut sortir tout l'historique d'un appareil en quelques clics</li>
+    <li>Retraçage : <b>"d'où vient ce matériel ?"</b> via le bloc transferts</li>
+    <li>Décision de fin de vie : tags + nombre de DI + maintenances accumulées donnent une vision claire</li>
+  </ul>
+
+  <h2 id="pdf-maint">4. Export PDF planning Maintenance <span class="pill new">NOUVEAU</span></h2>
+  <p>Sur la page <code>/maintenance</code>, un nouveau bouton <b>Export PDF planning</b> dans la toolbar permet d'imprimer ou enregistrer en PDF la liste des maintenances actuellement affichées (avec les filtres en cours).</p>
+
+  <h3>Format du document</h3>
+  <ul>
+    <li>A4 portrait, marges 12 mm</li>
+    <li>En-tête Aveho avec eyebrow turquoise, titre <i>"Planning Maintenance"</i>, nom de la collectivité et de l'établissement</li>
+    <li>Bandeau droit : nombre de maintenances + date d'édition</li>
+    <li>Tableau : Date prévue, Matériel (avec S/N/Parc/Lot en sous-ligne), Type, Intervenant, Statut (badge coloré)</li>
+    <li>Footer : <i>"Document à transmettre au prestataire concerné"</i></li>
+  </ul>
+
+  <h3>Cas d'usage métier</h3>
+  <ul>
+    <li>Préparer un PDF pour <b>Bureau Veritas</b> = filtrer Type "Contrôle sécurité" + Export → un document pro</li>
+    <li>Préparer un envoi mensuel à <b>Philips Healthcare</b> pour leurs équipements = filtre matériel + Export</li>
+    <li>Réunion fournisseur : on arrive avec le PDF, ils voient tout d'un coup</li>
+  </ul>
+
+  <h2 id="stats-maint">5. Statistiques Maintenance <span class="pill new">NOUVEAU</span></h2>
+  <p>La page <code>/statistiques</code> gagne une <b>nouvelle section Maintenance</b> qui s'affiche dès qu'il y a au moins une maintenance dans les 6 derniers mois. Trois graphes :</p>
+  <ol>
+    <li><b>Maintenances par mois (BarChart turquoise)</b> — répartition sur les 6 derniers mois selon la date prévue. Permet de voir la charge de travail mensuelle.</li>
+    <li><b>Répartition par statut (Donut)</b> — Planifiée / À faire / Faite / En retard / Annulée avec le calcul "En retard" effectif (la date passée + non Faite/Annulée). Permet de mesurer la dérive.</li>
+    <li><b>Top 5 types (barres horizontales)</b> — quels types reviennent le plus souvent. Aide à identifier les chantiers récurrents pour les prestataires.</li>
+  </ol>
+
+  <h2 id="signalements">6. Signalements anonymes <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>6.1 Concept</h3>
+  <p>Une <b>boîte à idées et problèmes terrain</b> où n'importe quel membre de la collectivité peut déposer un signalement <b>sans laisser de trace de qui l'a écrit</b>. La signature est optionnelle : on peut signer si on veut être contacté en retour.</p>
+
+  <h3>6.2 Modèle SQL</h3>
+  <pre><code>signalements (
+  id, structure_id, etablissement_id,
+  type,            -- "Problème" | "Idée" | "Question" | "Autre"
+  titre, description,
+  signature,       -- optionnel : nom/poste si l'auteur veut signer
+  statut,          -- "Nouveau" | "En cours" | "Traité" | "Archivé"
+  reponse,         -- réponse de la direction
+  reponse_par,     -- qui a répondu (visible publiquement)
+  reponse_le,
+  created_at
+  -- NOTE : pas de user_id. Volontaire pour garantir l'anonymat.
+)</code></pre>
+
+  <h3>6.3 RLS spéciale</h3>
+  <ul>
+    <li><b>INSERT</b> : tous les membres de la collectivité — pas de trace de l'auteur</li>
+    <li><b>SELECT</b> : tous les membres voient tous les signalements (transparence)</li>
+    <li><b>UPDATE / DELETE</b> : <b>réservés aux Administrateurs</b> (pour répondre, changer le statut, supprimer)</li>
+  </ul>
+
+  <h3>6.4 Interface</h3>
+  <ul>
+    <li>4 <b>KPIs cliquables</b> en haut : Nouveau, En cours, Traité, Archivé (filtrage instantané)</li>
+    <li>Filtre par type dans la toolbar</li>
+    <li><b>Cartes</b> au lieu d'un tableau : pour mettre en valeur le contenu lisible</li>
+    <li>Chaque carte affiche : type (badge coloré + icône), statut, date, signature ou "Anonyme" en italique, titre, description, et la <b>réponse de l'administration</b> en bloc vert si elle existe</li>
+    <li>Modale de création : <b>"Ton signalement est anonyme par défaut"</b> rappelé en bandeau, champ Signature optionnel en bas</li>
+    <li>Mode admin : bouton "Répondre" sur chaque carte → édition du statut + champ Réponse</li>
+  </ul>
+
+  <h3>6.5 Cas d'usage</h3>
+  <ul>
+    <li><b>Problèmes terrain</b> sensibles : un soignant signale un dysfonctionnement sans risquer une retombée hiérarchique</li>
+    <li><b>Boîte à idées</b> : tout le monde peut proposer une amélioration</li>
+    <li><b>Questions FAQ</b> : les réponses servent à toute la collectivité</li>
+    <li>Le format <b>"avec signature optionnelle"</b> évite l'auto-censure tout en permettant le suivi quand l'auteur veut être contacté</li>
+  </ul>
+
+  <h2 id="cron">7. Cron quotidien Supabase <span class="pill new">NOUVEAU</span></h2>
+
+  <h3>7.1 Pourquoi</h3>
+  <p>Les automatismes de la 0.11 (création auto de DI quand maintenance en retard, notifs J-7) étaient déclenchés <b>au chargement de la page Maintenance</b>. Si personne n'ouvre l'app pendant une semaine de vacances, rien ne part. La 0.12 livre une <b>Edge Function Supabase</b> qui fait le même travail côté serveur, à programmer en tâche quotidienne.</p>
+
+  <h3>7.2 Edge Function</h3>
+  <p>Fichier <code>supabase/functions/maintenance-daily-cron/index.ts</code>. Au déclenchement :</p>
+  <ol>
+    <li>Détecte toutes les maintenances dans la fenêtre [aujourd'hui ; +7 jours] sans notif envoyée → notifie tous les membres de la collectivité + flag <code>notif_j7_envoyee</code> à true</li>
+    <li>Détecte toutes les maintenances en retard sans DI liée → crée la DI + lie via <code>di_id</code> + notifie</li>
+    <li>Retourne un JSON avec <code>{ok, notifsEnvoyees, disCreees, erreurs}</code></li>
+  </ol>
+
+  <h3>7.3 Déploiement</h3>
+  <pre><code># Dans le projet local
+supabase functions deploy maintenance-daily-cron
+
+# Dans Supabase SQL Editor, programmer pg_cron une seule fois
+select cron.schedule(
+  'maintenance-daily-cron',
+  '0 6 * * *',   -- tous les jours à 6h UTC
+  $$ select net.http_post(
+       url := 'https://VOTRE_PROJET.supabase.co/functions/v1/maintenance-daily-cron',
+       headers := jsonb_build_object('Authorization', 'Bearer VOTRE_SERVICE_ROLE_KEY')
+     ); $$
+);</code></pre>
+
+  <h3>7.4 Limites</h3>
+  <ul>
+    <li>Nécessite l'activation des extensions <code>pg_cron</code> et <code>pg_net</code> dans Supabase (Pro plan ou Free avec activation manuelle)</li>
+    <li>Le code reste idempotent : si le cron tombe en panne 3 jours, au prochain run il rattrape les maintenances en retard et les J-7 manqués</li>
+    <li>La détection au chargement de la page (0.11) reste active en plus du cron : double sécurité, anti-doublon assuré par les flags</li>
+  </ul>
+
+  <h2 id="delta">8. Delta vs Alpha 0.11</h2>
+  <table>
+    <thead><tr><th>Évolution</th><th>Type</th><th>Détail</th></tr></thead>
+    <tbody>
+      <tr><td>Page <code>/materiel/[id]</code></td><td><span class="pill new">NEW</span></td><td>Fiche détaillée par matériel</td></tr>
+      <tr><td>Libellé matériel cliquable dans la liste</td><td><span class="pill new">NEW</span></td><td>Ouvre la fiche, conserve le crayon pour l'édition</td></tr>
+      <tr><td>Bouton Export PDF planning Maintenance</td><td><span class="pill new">NEW</span></td><td>Génération HTML imprimable A4</td></tr>
+      <tr><td>Section Maintenance dans Statistiques</td><td><span class="pill new">NEW</span></td><td>3 graphes (mois, statut, top types)</td></tr>
+      <tr><td>Page <code>/signalements</code></td><td><span class="pill new">NEW</span></td><td>Boîte à signalements anonymes</td></tr>
+      <tr><td>Table SQL <code>signalements</code></td><td><span class="pill new">NEW</span></td><td>RLS spéciale anonymat + 3 démos</td></tr>
+      <tr><td>Edge Function <code>maintenance-daily-cron</code></td><td><span class="pill new">NEW</span></td><td>À déployer + programmer dans Supabase</td></tr>
+      <tr><td>Entrée menu Signalements</td><td><span class="pill imp">IMP</span></td><td>Catégorie Communication</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fichiers">9. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/16_signalements.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Table signalements + RLS + 3 démos</td></tr>
+      <tr><td><code>supabase/functions/maintenance-daily-cron/index.ts</code></td><td><span class="pill new">CRÉÉ</span></td><td>Edge Function cron quotidien</td></tr>
+      <tr><td><code>app/signalements/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page complète avec KPIs + cartes + modale</td></tr>
+      <tr><td><code>app/materiel/[id]/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Fiche matériel 360°</td></tr>
+      <tr><td><code>app/maintenance/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ bouton Export PDF + fonction exportPdfMaintenance</td></tr>
+      <tr><td><code>app/materiels/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>Libellé devient lien vers fiche</td></tr>
+      <tr><td><code>app/statistiques/page.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ chargement maintenances + 3 graphes</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">MODIF</span></td><td>+ entrée Signalements</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.11.0-alpha → 0.12.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="migration">10. Procédure de mise à jour depuis Alpha 0.11</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sauvegarde ton dossier <code>C:\aveho-ec-app</code>.</li>
+      <li>Décompresse le nouveau zip par-dessus.</li>
+      <li><b>Dans Supabase SQL Editor</b> : exécute <code>supabase/16_signalements.sql</code>.</li>
+      <li><b>Optionnel mais recommandé : déploie l'Edge Function</b><br>
+        Si tu as installé le CLI Supabase :
+        <pre><code>cd C:\aveho-ec-app
+supabase functions deploy maintenance-daily-cron</code></pre>
+        Puis programme le cron dans SQL Editor (voir section 7.3 de cette note).<br>
+        <i>Si tu sautes cette étape, l'app continue de fonctionner — les automatismes restent déclenchés à l'ouverture de la page Maintenance comme en 0.11.</i></li>
+      <li>Dans PowerShell :<pre><code>cd C:\aveho-ec-app
+npm install
+npm run dev</code></pre></li>
+      <li><b>Tests rapides</b> :
+        <ul>
+          <li>Sur Matériels, clique le libellé d'un matériel : tu arrives sur sa fiche complète</li>
+          <li>Sur Maintenances, clique <b>Export PDF planning</b> : un nouvel onglet s'ouvre avec le PDF, dialogue d'impression automatique</li>
+          <li>Sur Statistiques : si tu as des maintenances dans les 6 derniers mois, la section Maintenance apparaît avec 3 graphes</li>
+          <li>Sur <code>/signalements</code> : 3 signalements démo (1 anonyme, 1 signé "Marie IDE", 1 avec réponse de l'admin)</li>
+          <li>Dépose un signalement anonyme : aucune trace de ton compte n'est enregistrée</li>
+          <li>Si tu es admin, clique "Répondre" sur un signalement : tu peux changer le statut et écrire une réponse publique</li>
+        </ul>
+      </li>
+      <li>Mise en ligne :<pre><code>git add .
+git commit -m "Aveho EC Alpha 0.12"
+git push</code></pre></li>
+    </ol>
+  </div>
+
+  <h2 id="reporte">11. Reste à faire / en attente</h2>
+  <div class="panel warn">
+    <table>
+      <thead><tr><th>Sujet</th><th>Pourquoi pas livré</th></tr></thead>
+      <tbody>
+        <tr><td>Notifications push navigateur</td><td>Chantier VAPID dédié, plus tard</td></tr>
+        <tr><td>Tag matériel → génération auto maintenance</td><td>Chaînage métier complexe qui mérite une spec écrite</td></tr>
+        <tr><td>Tableau de bord opérationnel kiosque</td><td>Cosmétique, à la demande</td></tr>
+        <tr><td>Templates d'étiquettes / tags par défaut</td><td>Nécessite ta liste métier</td></tr>
+        <tr><td>Statistiques signalements</td><td>Pas demandé encore, à la demande</td></tr>
+        <tr><td>Export Excel multi-feuille (au lieu de CSV)</td><td>Nécessite l'ajout de la lib SheetJS</td></tr>
+        <tr><td>Écriture hors-ligne / domaine email / récap quotidien email</td><td>Toujours selon ton besoin</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="roadmap">12. Roadmap suggérée pour Alpha 0.13</h2>
+  <div class="panel ok">
+    <p>Pistes pour la prochaine version :</p>
+    <ol>
+      <li><b>Statistiques signalements</b> — graphes par type / statut / taux de réponse</li>
+      <li><b>Mode jour/nuit automatique</b> — bascule sombre selon l'heure (synchronisée avec OS)</li>
+      <li><b>Intégration messagerie</b> (Teams ou Slack) — pour relayer les notifs Aveho dans les outils déjà utilisés</li>
+      <li><b>Export Excel multi-feuille</b> — bilan PSAD complet en un fichier (matériels, patients, DI, maintenances, stock)</li>
+      <li><b>Filtre matériel par tag combiné avec emplacement</b> — ex: "tous les matériels Critiques au dépôt Figeac"</li>
+      <li><b>Alertes intelligentes</b> — détection ML léger des motifs récurrents dans les signalements / DI</li>
+      <li><b>Aperçu impression A4</b> avant export PDF (modale preview)</li>
+      <li><b>Fiche patient 360°</b> symétrique à la fiche matériel — historique soins, DI, matériels affectés, étiquettes</li>
+    </ol>
+  </div>
+
+  <h2 style="font-size:22px;color:#142131;margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid #7CC8C8">📌 Pièges connus (rétro-doc depuis 0.17.0)</h2>
+  <p style="font-style:italic;color:#6c7a89;font-size:12.5px">Cette section a été ajoutée après les sessions de migration 0.15.6 et 0.16.1, qui ont permis de documenter les écarts entre le schéma de la 0.12 et la réalité du terrain.</p>
+
+  <div style="background:#fef0ee;border:1px solid #f0c4be;border-radius:14px;padding:22px 24px;margin:14px 0">
+    <h3 style="margin-top:0;color:#a32f24;font-size:16px">⚠️ Piège : table <code style="background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px">signalements</code> à créer manuellement</h3>
+    <p>Le script SQL <code style="background:#f4f7fa;padding:2px 6px;border-radius:4px;font-size:13px">16_signalements.sql</code> doit être exécuté côté Supabase pour que la page <code>/signalements</code> fonctionne. Si tu as installé la 0.12 mais que la table n'est pas créée, l'app plantera silencieusement avec un résultat vide.</p>
+    <p>Pour valider : <code style="background:#f4f7fa;padding:2px 6px;border-radius:4px;font-size:13px">select tablename from pg_tables where tablename = 'signalements';</code> doit retourner 1 ligne.</p>
+  </div>
+
+  <div style="background:#fef0ee;border:1px solid #f0c4be;border-radius:14px;padding:22px 24px;margin:14px 0">
+    <h3 style="margin-top:0;color:#a32f24;font-size:16px">⚠️ Piège : RLS du script 16 (corrigé en 0.15.0)</h3>
+    <p>La version originale du script <code style="background:#f4f7fa;padding:2px 6px;border-radius:4px;font-size:13px">16_signalements.sql</code> contenait une politique RLS faisant <code>join roles r on r.id = ms.role</code> qui plantait avec <code>operator does not exist: uuid = text</code>. Corrigé en 0.15.0 : les RLS de signalements n'utilisent plus que <code>mes_structures()</code> sans dépendance à <code>roles</code>.</p>
+    <p>Si tu migres depuis une 0.12 d'origine, exécute <code style="background:#f4f7fa;padding:2px 6px;border-radius:4px;font-size:13px">aveho-PATCH-vers-0.15.sql</code> (section 3) qui réécrit les policies proprement.</p>
+  </div>
+
+  <footer style="margin-top:50px;padding-top:24px;border-top:1px solid #e3e9ee;font-size:12px;color:#6c7a89;text-align:center">
+    <p>Aveho — Espace Collectivité · Alpha 0.12 · 29 mai 2026 (mise à jour 0.17.0)</p>
+    <p>Document de version interne — 5 chantiers livrés + 2 pièges documentés a posteriori</p>
+  </footer>
+
+</div>
+</body>
+</html>

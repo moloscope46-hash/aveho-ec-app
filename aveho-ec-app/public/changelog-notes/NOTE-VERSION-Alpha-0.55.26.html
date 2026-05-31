@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.26 — Maintenance sécurité + perf + dédup</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 40%,#185FA5 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde0db;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fde0db;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fde0db}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid #185FA5}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid #e3e9ee}
+  table td{padding:7px 9px;border-bottom:1px solid #e3e9ee;vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — MAINTENANCE COMPLÈTE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.26 — Maintenance sécurité + optimisations + dédup code
+      <small>Durcissement RLS · logger sécurisé avec redaction · constants centralisées · composant Modal partagé · cache SW borné · 1 patch SQL · 1106 tests verts</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.26-alpha</code></span>
+      <span><b>Tests :</b> 1106 verts (+19)</span>
+    </div>
+  </header>
+
+  <h2>⚠ RAPPEL DE SÉCURITÉ CRITIQUE</h2>
+  <div class="panel danger">
+    <p><b>Ton mot de passe Supabase <code style="background:#fff;color:#7a1f15">Molotof46!</code> a été exposé dans les logs console plus de 20 fois</b> au cours des versions précédentes. Il faut absolument :</p>
+    <ol>
+      <li><b>Changer ton mot de passe</b> dans Supabase Dashboard → Authentication → Users → ton compte → Reset password</li>
+      <li>Choisir un nouveau mot de passe fort (12+ chars, mix maj/min/chiffre/spécial)</li>
+      <li>Ne plus jamais le saisir dans la console / le partager en logs</li>
+    </ol>
+    <p>Le nouveau logger sécurisé ajouté en 0.55.26 redacte automatiquement les valeurs sensibles, mais les logs HISTORIQUES contenant ton ancien mot de passe restent accessibles dans tes traces console de débogage. Change-le.</p>
+  </div>
+
+  <h2>🔒 1. Durcissement SQL</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">security_invoker sur toutes les vues récentes</h3>
+    <p>Par défaut, les vues PostgreSQL exécutent les requêtes avec les droits de leur créateur (souvent <code>postgres</code> ou <code>service_role</code>), ce qui peut contourner les RLS. Avec <code>security_invoker = true</code>, les vues respectent les RLS de l'appelant.</p>
+    <pre><code>alter view v_users_auth_methods set (security_invoker = true);
+alter view v_my_webauthn_credentials set (security_invoker = true);
+alter view v_user_complete set (security_invoker = true);</code></pre>
+
+    <h3>Index manquants pour performance</h3>
+    <ul>
+      <li><code>idx_webauthn_user_active</code> (user_id WHERE active=true) — gain sur listage des credentials</li>
+      <li><code>idx_invitations_token_active</code> (token WHERE archive=false) — gain sur lookup d'invitations</li>
+      <li><code>idx_audit_log_struct_user_date</code> — gain sur historique d'activité utilisateur</li>
+      <li><code>idx_app_logs_user_date</code> — gain sur logs applicatifs</li>
+      <li><code>idx_membres_matricule</code> (structure_id + matricule, partial) — pour la recherche par matricule (nouveau en 0.55.25)</li>
+    </ul>
+
+    <h3>GRANT explicites sur les RPCs</h3>
+    <pre><code>revoke all on function reset_user_password(uuid) from public;
+grant execute on function reset_user_password(uuid) to authenticated;
+-- idem pour get_invitation_full, revoke_webauthn_credential, update_webauthn_last_used</code></pre>
+
+    <h3>Table d'audit security_audit_log</h3>
+    <p>Stocke les événements sensibles (changements de rôle, demandes de réinit mdp, etc.) avec RLS qui limite la lecture aux admins de la structure. Un trigger sur <code>membres_structure</code> log automatiquement les changements de <code>role_id</code>.</p>
+  </div>
+
+  <h2>🔇 2. Logger sécurisé avec redaction</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Nouveau <code>lib/logger.js</code></h3>
+    <ul>
+      <li><b>En développement</b> (localhost) → tous les logs passent comme avant</li>
+      <li><b>En production</b> (Vercel) → <code>logger.debug</code>, <code>logger.info</code>, <code>logger.warn</code> sont silencieux. Seuls <code>logger.error</code> et <code>logger.security</code> passent</li>
+      <li><b>Redaction automatique</b> : avant d'imprimer, les clés sensibles (password, token, refresh_token, credential_id, etc.) sont remplacées par <code>"[REDACTED]"</code></li>
+      <li><b>Troncature strings</b> : les valeurs > 100 caractères sont tronquées (12 premiers chars + "[redacted]") — évite que des tokens longs ne fuitent</li>
+      <li><b>Helpers globaux</b> : tu peux activer/désactiver les debug logs en prod depuis la console :
+        <pre><code>__avehoEnableDebug()    // active les logs
+__avehoDisableDebug()   // désactive</code></pre>
+      </li>
+    </ul>
+
+    <h3>Fichiers patchés automatiquement</h3>
+    <ul>
+      <li><code>lib/webauthn.js</code> : 4 console.warn → logger.warn</li>
+      <li><code>app/BiometricSection.js</code> : 1 console.warn → logger.warn</li>
+      <li><code>app/BiometricOptInModal.js</code> : 1 console.warn → logger.warn</li>
+      <li><code>app/StatusIcons.js</code> : 1 console.warn → logger.warn</li>
+    </ul>
+    <p>Les autres fichiers seront migrés progressivement dans les prochaines versions.</p>
+  </div>
+
+  <h2>🎨 3. Constants centralisées</h2>
+  <div class="panel">
+    <p>Avant : 683 occurrences de couleurs hardcodées (#185FA5, #7CC8C8, #5aa05a, #c0392b…) éparpillées dans tous les composants. Modifier la charte = chasse au remplacement.</p>
+    <p>Maintenant : <code>lib/constants.js</code> exporte :</p>
+    <pre><code>// Couleurs
+export const COLOR = { navy, teal, blue, violet, ok, ko, warn, unknown, text, ... };
+
+// Gradients
+export const GRADIENT = { primary, success, danger, warn, empreinte, face, ... };
+
+// Icônes (Tabler)
+export const ICON = { fingerprint, face, wifi, bell, mapPin, pwa, sw, ... };
+
+// Helpers
+colorForState({ok}) → COLOR.ok
+labelForState({ko}) → "REFUSÉ"</code></pre>
+    <p>Les composants existants ne sont pas migrés (énorme refactor). Les nouveaux composants utiliseront ces constants. Migration progressive.</p>
+  </div>
+
+  <h2>🪟 4. Composant Modal partagé</h2>
+  <div class="panel">
+    <p>Avant : 18 occurrences de <code>className="modal-bg"</code> dans le code, chacune avec son propre boilerplate (backdrop, header, body, footer). Énorme duplication.</p>
+    <p>Maintenant : <code>app/components/Modal.js</code></p>
+    <pre><code>&lt;Modal
+  open={!!myModal}
+  onClose={() =&gt; setMyModal(null)}
+  title="Mon titre"
+  subtitle="Sous-titre"
+  icon="ti-info-circle"
+  color="#185FA5"
+  variant="centered"        // ou "bottom-sheet" (mobile)
+  maxWidth={680}
+  footer={&lt;button onClick={save}&gt;Enregistrer&lt;/button&gt;}
+&gt;
+  &lt;div&gt;Contenu...&lt;/div&gt;
+&lt;/Modal&gt;</code></pre>
+    <p><b>Features intégrées :</b></p>
+    <ul>
+      <li>Backdrop click → ferme (sauf si <code>preventBackdropClose</code>)</li>
+      <li>Touche Escape → ferme</li>
+      <li>Animation slide-up sur mobile (variant bottom-sheet)</li>
+      <li>Animation fadeIn+scale sur desktop</li>
+      <li>Header gradient automatique selon <code>color</code></li>
+      <li>Body scrollable avec maxHeight 92vh</li>
+      <li>Footer optionnel avec separator</li>
+    </ul>
+  </div>
+
+  <h2>⚡ 5. Service Worker — cache borné</h2>
+  <div class="panel">
+    <p>Le cache pouvait croître indéfiniment (chaque page visitée, chaque RPC Supabase fetché). Sur les comptes utilisateurs intensifs ça pouvait représenter plusieurs Mo après quelques semaines.</p>
+    <pre><code>const MAX_DATA_CACHE_ENTRIES = 100;   // Supabase REST/RPC
+const MAX_PAGE_CACHE_ENTRIES = 30;    // pages HTML
+
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length &lt;= maxEntries) return;
+  const toDelete = keys.slice(0, keys.length - maxEntries);
+  await Promise.all(toDelete.map((k) =&gt; cache.delete(k)));
+}</code></pre>
+    <p>Appelé après chaque <code>cache.put</code> dans <code>networkFirst</code> et <code>staleWhileRevalidate</code>. LRU : supprime les plus anciennes entrées.</p>
+  </div>
+
+  <h2>📈 6. Tests +19 (1087 → 1106)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-26-security.test.js</code> :</p>
+    <ul>
+      <li><b>logger.redact</b> (9 tests) : masque password/token/refresh_token/credential_id, casse-insensitif, récursif, troncature longue, profondeur max 4, null/undefined, arrays tronqués</li>
+      <li><b>constants.js</b> (5 tests) : COLOR hexa valide, GRADIENT linear-gradient, ICON fingerprint/face, colorForState helper, labelForState helper</li>
+      <li><b>SW trim logic</b> (3 tests) : seuil correct, calcul de count à supprimer</li>
+      <li><b>SQL sanity</b> (2 tests) : MAX_DATA/PAGE raisonnables</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.26.sql</code> : <b>NOUVEAU</b> · 7 sections (security_invoker, indexes, GRANTs, audit log, RPCs, trigger)</li>
+    <li><code>lib/logger.js</code> : <b>NOUVEAU</b> · redaction + silence prod</li>
+    <li><code>lib/constants.js</code> : <b>NOUVEAU</b> · COLOR/GRADIENT/ICON + helpers</li>
+    <li><code>app/components/Modal.js</code> : <b>NOUVEAU</b> · composant partagé</li>
+    <li><code>public/sw.js</code> : trimCache + MAX limits</li>
+    <li><code>lib/webauthn.js</code>, <code>app/BiometricSection.js</code>, <code>app/BiometricOptInModal.js</code>, <code>app/StatusIcons.js</code> : console.warn → logger.warn</li>
+    <li><code>__tests__/v055-26-security.test.js</code> : <b>NOUVEAU</b> · +19 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.26 (6 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.26</li>
+    <li><code>package.json</code> : 0.55.25 → 0.55.26</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>D'abord : change ton mot de passe Supabase !</b> (cf. rappel ci-dessus)</li>
+      <li>Décompresser le zip</li>
+      <li><b>SQL</b> : Dashboard Supabase → SQL Editor → <code>aveho-PATCH-vers-0.55.26.sql</code> → Run</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.26 - Securite RLS + logger + constants + Modal shared + SW cache borne"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sur Vercel (prod) : ouvre la console F12 → les logs <code>[WebAuthn] ...</code> n'apparaissent plus (sauf erreur critique)</li>
+      <li>Pour réactiver les logs en prod : taper <code>__avehoEnableDebug()</code> dans la console puis recharger</li>
+      <li>Cache SW : aller dans DevTools → Application → Cache Storage → après navigation intensive, vérifier que les caches data ne dépassent pas 100 entrées</li>
+      <li>Smoke tests 0.55.26 dans le changelog → 6 tests verts (security_audit_log + RPC log_security_event + indexes)</li>
+      <li>Changement de rôle d'un user → vérifier ligne dans <code>security_audit_log</code> (via Supabase Dashboard)</li>
+    </ol>
+  </div>
+
+  <h2>📋 Migration progressive</h2>
+  <div class="panel warn">
+    <p>Cette version <b>introduit</b> les nouveaux outils (logger, constants, Modal) mais ne migre pas tout le code existant (énorme refactor). Les versions futures consommeront progressivement ces outils :</p>
+    <ul>
+      <li>Modales existantes (sql modal, test modal, note modal, etc.) → migration vers <code>&lt;Modal&gt;</code></li>
+      <li>Couleurs hardcodées (683 occurrences) → migration vers <code>COLOR.*</code></li>
+      <li>console.* restants (51 occurrences) → migration vers logger.*</li>
+    </ul>
+  </div>
+
+  <h2>SW auto-bump — 36ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.25 → <b>0.55.26</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.26 · 31 mai 2026</p>
+    <p>Maintenance complète · Sécurité + Perf + Dédup · 1 SQL · 1106 tests Vitest verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

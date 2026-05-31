@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.40.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5e4a8c 50%,#EF9F27 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffe5b8;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#ffe5b8;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#ffe5b8}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--amber)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#fff8ec;border-color:#f0d59f}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--amber);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--amber); color:#fff; font-weight:700; margin-right:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — VERSION MARATHON 5 CHANTIERS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.40.0
+      <small>Digest email · Signalements votes + catégories · Stats RGPD enrichies · Variables custom RGPD · Preview étendus</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.40.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.39.0</span>
+      <span><b>Statut :</b> Build clean · 607 tests verts · 1 patch SQL (166 lignes) · 1 Edge Function</span>
+    </div>
+    <div class="badges">
+      <span class="badge">📧 F - Digest email (jamais/quotidien/hebdo)</span>
+      <span class="badge">💬 K - Votes + catégories signalements</span>
+      <span class="badge">📊 L - Heatmap RGPD + renouvellements + finalités</span>
+      <span class="badge">🔧 G - Variables custom dans templates RGPD</span>
+      <span class="badge">👁️ J - PatientPreview étendu à /interventions</span>
+      <span class="badge green">+39 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>5 chantiers en une version, sélectionnés directement dans la roadmap. Audit préalable (leçon de la 0.35) : aucun doublon détecté. Build clean, 607 tests verts.</p>
+
+  <div class="highlight">
+    <b>5 modules livrés d'un coup :</b><br/>
+    <b>F</b> Préférences digest email + Edge Function <code>send-digest</code> qui envoie des récaps personnalisés. <br/>
+    <b>K</b> Signalements enrichis avec système de votes (1 vote / user) + champ catégorie libre + badge "Sujet populaire" automatique.<br/>
+    <b>L</b> Stats RGPD avec heatmap des signatures, alertes renouvellements 7/15/30j, drill par finalité.<br/>
+    <b>G</b> Variables personnalisées dans les templates RGPD (ex: <code>{{partenaire_nom}}</code>) stockées dans <code>structures.parametres</code>.<br/>
+    <b>J</b> PatientPreview étendu à la liste des DI (en plus de la 0.38 sur /patients).
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">F</span> Notifications digest (email récap automatique)</h3>
+    <ul>
+      <li><b>Table SQL</b> <code>notification_digest_prefs</code> : 1 ligne par user avec frequence (<i>jamais</i> / <i>quotidien</i> / <i>hebdo</i>)</li>
+      <li><b>Table SQL</b> <code>notification_digest_log</code> : trace anti-doublon</li>
+      <li><b>Composant React</b> <code>&lt;DigestPreferences&gt;</code> : 3 cartes cliquables avec auto-save</li>
+      <li><b>Integration</b> dans <code>/profil</code> juste sous le bloc "Mes notifications"</li>
+      <li><b>Edge Function</b> <code>send-digest</code> : envoie via Resend, template HTML brandé avec compteurs colorés par catégorie (DI / Achats / Signalements / Renouvellements RGPD)</li>
+      <li><b>Logique</b> : quotidien tous les jours à 8h UTC, hebdo uniquement le lundi. Filtre côté SQL.</li>
+      <li><b>Anti-spam intelligent</b> : si <code>hasContent === false</code> (rien à signaler), pas d'envoi (sauf dry_run pour test)</li>
+      <li><b>RLS</b> : un user ne lit/écrit que ses propres prefs et logs</li>
+    </ul>
+    <h4>Test manuel de la Edge Function</h4>
+    <pre><code># Dry-run pour un user spécifique
+curl -X POST https://&lt;projet&gt;.functions.supabase.co/send-digest \
+  -H "Authorization: Bearer &lt;service-role-key&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"dry_run": true, "user_id": "&lt;ton-uuid&gt;"}'</code></pre>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">K</span> Signalements enrichis : votes + catégories</h3>
+    <ul>
+      <li><b>Colonne SQL</b> <code>signalements.categorie</code> (text libre, optionnel) — alimenté par un input avec datalist de suggestions (UI/UX, Bug, Performance, Sécurité…)</li>
+      <li><b>Colonne SQL</b> <code>signalements.nb_votes</code> (int, maintenu par trigger)</li>
+      <li><b>Table SQL</b> <code>signalement_votes</code> : PK composite <code>(signalement_id, user_id)</code> garantit 1 vote / user / signalement</li>
+      <li><b>Trigger</b> <code>trg_signalement_votes</code> : maintient automatiquement <code>nb_votes</code> sur INSERT/DELETE</li>
+      <li><b>RLS</b> : tout user authentifié peut voir les votes (transparence), insérer/supprimer ses propres votes uniquement</li>
+      <li><b>UI</b> : bouton like compact à côté de chaque signalement, état actif coloré navy, animation transition</li>
+      <li><b>Badge "Sujet populaire"</b> automatique dès <b>3 votes</b> (flame orange à côté du compteur)</li>
+      <li><b>Champ catégorie</b> dans le formulaire de création/édition avec autocomplete via <code>&lt;datalist&gt;</code></li>
+      <li><b>Affichage</b> : badge violet visible sous le titre du signalement</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">L</span> Stats RGPD enrichies (3 nouveaux blocs)</h3>
+    <ul>
+      <li><b>Heatmap des signatures</b> <code>v_stats_rgpd_heatmap</code> : signatures par jour de semaine × heure sur 90 jours (vert au lieu de bleu pour différencier de la heatmap d'activité)</li>
+      <li><b>Vue <code>v_stats_rgpd_par_finalite</code></b> : compteurs par finalité avec tendance ce mois — drill complémentaire à <code>v_stats_rgpd_finalites</code> qui agrégeait déjà mais sans le détail temporel</li>
+      <li><b>Vue <code>v_stats_rgpd_renouvellements</code></b> : compteurs des consentements qui arrivent à expiration (en supposant un renouvellement annuel à 365j)
+        <ul>
+          <li>Expirés (passé 365j)</li>
+          <li>Expire dans ≤ 7 jours</li>
+          <li>Expire dans ≤ 15 jours</li>
+          <li>Expire dans ≤ 30 jours</li>
+        </ul>
+      </li>
+      <li><b>UI</b> : 4 cartes "RenouvCard" colorées (rouge si expiré, orange si urgent, bleu sinon). Bordure gauche orange sur le panneau pour signaler une zone d'attention</li>
+      <li><b>UI finalités</b> : barres horizontales avec gradient violet→vert, ordre décroissant par nb_acceptations, top 10 affichés, badge "+N ce mois" en vert si actualité récente</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">G</span> Variables custom dans les templates RGPD</h3>
+    <ul>
+      <li><b>Stockage</b> dans <code>structures.parametres.rgpd_custom_vars</code> (jsonb array — pas de nouvelle table)</li>
+      <li><b>Format</b> : <code>[{ key, label, value, example }]</code> avec validation key minuscules + underscores uniquement</li>
+      <li><b>Helpers lib/rgpd.js</b> :
+        <ul>
+          <li><code>loadCustomVariables(supabase, structureId)</code></li>
+          <li><code>saveCustomVariables(supabase, structureId, variables)</code></li>
+        </ul>
+      </li>
+      <li><b>UI</b> nouveau panneau dans <code>/parametres-rgpd</code> avec bordure gauche violette, liste des variables actuelles en grille + bouton "Modifier"</li>
+      <li><b>Modale d'édition</b> : 4 colonnes par ligne (clé, libellé, valeur, suppression), bouton "+ Ajouter une variable", nettoyage automatique de la clé (regex)</li>
+      <li><b>Intégration</b> dans <code>renderConsentement</code> : substitution des <code>{{cle}}</code> custom appliquée après les variables standard. Sécurité : la clé est re-nettoyée à la substitution pour éviter toute injection regex</li>
+      <li><b>validateTemplate</b> signature étendue : 2e paramètre optionnel <code>customVarKeys</code> évite les warnings "variable inconnue" sur les clés custom de la structure</li>
+      <li><b>ConsentementRGPD</b> (signature côté patient) charge les variables custom et les passe au render — le texte final substitue tout en une passe</li>
+    </ul>
+    <p><b>Exemple d'usage :</b> une collectivité partenaire d'un télé-service ajoute :</p>
+    <pre><code>key: partenaire_nom        value: TéléSuivi+ SAS
+key: partenaire_url        value: https://telesuivi.fr</code></pre>
+    <p>Puis dans le template : "Les données pourront être partagées avec notre partenaire <code>{{partenaire_nom}}</code> (<code>{{partenaire_url}}</code>)."</p>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">J</span> PatientPreview étendu à /interventions</h3>
+    <ul>
+      <li>Le PatientPreview de la 0.38 ne fonctionnait que dans <code>/patients</code></li>
+      <li><b>Extension</b> : wrap du nom patient dans la liste DI (<code>/interventions</code>)</li>
+      <li>Select Supabase enrichi pour inclure <code>patient.id, date_naissance, numero_dossier</code></li>
+      <li>Le preview affiche les infos disponibles (sans lit ni étiquettes ni compteur DI/achats préchargés), mais la <b>dernière DI lazy</b> est toujours fetchée au hover</li>
+      <li><b>Note</b> : pour <code>/achats</code> et <code>/transferts</code>, le patient n'est pas affiché dans les listes actuelles → reporté à plus tard si besoin métier</li>
+    </ul>
+  </div>
+
+  <h2>SQL — Patch 0.40 (166 lignes idempotentes)</h2>
+
+  <h3>Tables créées</h3>
+  <table>
+    <thead><tr><th>Table</th><th>Description</th><th>RLS</th></tr></thead>
+    <tbody>
+      <tr><td><code>notification_digest_prefs</code></td><td>Préférences digest par user</td><td>Own user only</td></tr>
+      <tr><td><code>notification_digest_log</code></td><td>Trace anti-doublon envois</td><td>Own user read only</td></tr>
+      <tr><td><code>signalement_votes</code></td><td>1 vote / user / signalement (PK composite)</td><td>Read all, write own</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Colonnes ajoutées à signalements</h3>
+  <pre><code>alter table signalements add column if not exists categorie text;
+alter table signalements add column if not exists nb_votes int default 0;
+alter table signalements add column if not exists reponse_notifie boolean default false;</code></pre>
+
+  <h3>Trigger</h3>
+  <ul>
+    <li><code>trg_signalement_votes</code> : maintient <code>signalements.nb_votes</code> automatiquement</li>
+  </ul>
+
+  <h3>Vues créées</h3>
+  <ul>
+    <li><code>v_stats_rgpd_heatmap</code> — signatures par dow × heure (90j)</li>
+    <li><code>v_stats_rgpd_par_finalite</code> — compteurs par finalité (avec ce_mois + 30j)</li>
+    <li><code>v_stats_rgpd_renouvellements</code> — alertes expirations 7/15/30j + expirés</li>
+  </ul>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">5</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Nouvelles tables SQL</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Nouvelles vues SQL</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle Edge Function</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Trigger maintien votes</div></div>
+    <div class="kpi"><div class="v">+39</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">607</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">759</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.40.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Tables digest + votes + colonnes signalements + 3 vues RGPD + trigger</td></tr>
+      <tr><td><code>supabase/functions/send-digest/index.ts</code></td><td><span class="pill new">CRÉÉ</span></td><td>Edge Function digest avec Resend + template HTML brandé</td></tr>
+      <tr><td><code>app/DigestPreferences.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>3 cartes cliquables avec auto-save (jamais/quotidien/hebdo)</td></tr>
+      <tr><td><code>app/profil/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ Panel DigestPreferences sous Notifications</td></tr>
+      <tr><td><code>app/signalements/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state userVotes + toggleVote · + bouton like par signalement · + datalist catégorie · + badge "Sujet populaire" · + payload categorie</td></tr>
+      <tr><td><code>app/statistiques-rgpd/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ 3 vues chargées · + Heatmap signatures (vert) · + Panel renouvellements 4 cartes · + Panel finalités détail barres horizontales · + helper RenouvCard</td></tr>
+      <tr><td><code>lib/rgpd.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ loadCustomVariables · + saveCustomVariables · + validateTemplate accepte customVarKeys · + renderConsentement traite custom_vars</td></tr>
+      <tr><td><code>app/parametres-rgpd/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state customVars · + Panel variables custom · + Modale édition complète · + propagation customVars à validateTemplate</td></tr>
+      <tr><td><code>app/ConsentementRGPD.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ loadCustomVariables au mount · + passage custom_vars à renderConsentement</td></tr>
+      <tr><td><code>app/interventions/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ import PatientPreview · + élargissement select patient (id, date_naissance, numero_dossier) · + wrap nom patient</td></tr>
+      <tr><td><code>__tests__/v040-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>39 tests couvrant les 5 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.39.0-alpha → 0.40.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.40.sql</code> → Run (idempotent).</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Nouvelles tables
+select count(*) from notification_digest_prefs;
+select count(*) from signalement_votes;
+-- → 0 (vide au début)
+
+-- Colonnes ajoutées
+select column_name from information_schema.columns 
+where table_name='signalements' 
+  and column_name in ('categorie','nb_votes','reponse_notifie');
+-- → 3 lignes
+
+-- Vues RGPD
+select * from v_stats_rgpd_heatmap limit 5;
+select * from v_stats_rgpd_renouvellements 
+  where structure_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';</code></pre>
+      </li>
+      <li><b>Déployer la Edge Function</b> <code>send-digest</code> (Supabase CLI ou copier le code via Dashboard) :
+        <pre><code>supabase functions deploy send-digest
+# Vérifier les secrets : RESEND_API_KEY, RESEND_FROM_EMAIL déjà en place depuis 0.33</code></pre>
+      </li>
+      <li><b>Programmer le cron</b> côté Supabase :
+        <pre><code>-- Tous les jours à 8h UTC
+select cron.schedule(
+  'aveho-digest-8h',
+  '0 8 * * *',
+  $$ select net.http_post(
+       url := 'https://&lt;projet&gt;.functions.supabase.co/send-digest',
+       headers := jsonb_build_object(
+         'Authorization', 'Bearer &lt;service-role-key&gt;',
+         'Content-Type', 'application/json'
+       ),
+       body := '{}'::jsonb
+     ); $$
+);</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Nettoyer le cache + npm install + tests + dev</b> :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test       # 607 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><code>/profil</code> → nouveau bloc "Récap email automatique" → choisir "Quotidien" ou "Hebdo"</li>
+          <li><code>/signalements</code> → bouton 👍 sur un signalement → compteur s'incrémente. Réessayer = retrait. À partir de 3 votes : badge "Sujet populaire"</li>
+          <li>Créer un signalement → champ catégorie avec autocomplete (Bug, UI/UX…)</li>
+          <li><code>/statistiques-rgpd</code> → bloc Heatmap signatures (vert), bloc Renouvellements (4 cartes), bloc Acceptation par finalité (barres horizontales)</li>
+          <li><code>/parametres-rgpd</code> → nouveau Panel "Variables personnalisées" → "Définir des variables" → modale d'édition → ajouter <code>partenaire_nom</code> = "Société XYZ" → enregistrer</li>
+          <li>Créer ou modifier un template, utiliser <code>{{partenaire_nom}}</code> dans le contenu → preview live montre la substitution</li>
+          <li>Signer un consentement réel pour un patient → le PDF/affichage contient bien la valeur substituée</li>
+          <li><code>/interventions</code> → hover sur le nom d'un patient dans la liste DI → mini-preview avec dernière DI lazy</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <h2>Reste à faire (0.41+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Tableau de bord Accueil enrichi</b> (widgets configurables)</li>
+      <li><b>Migration pages config restantes</b> vers safeWrite</li>
+      <li><b>Tests Playwright end-to-end</b></li>
+      <li><b>Upgrade Next.js 14 → 15</b></li>
+      <li><b>Module e-learning / formation</b></li>
+      <li><b>Recherche : ajouter consentements + factures</b></li>
+      <li><b>Soumission stores</b> (Google Play / Microsoft Store)</li>
+      <li><b>Module signalements — workflow avancé</b> (transitions automatiques, notif auteur quand réponse)</li>
+      <li><b>Stats RGPD — drill-down heatmap signatures</b> (équivalent de ce qu'on a fait pour activité en 0.37)</li>
+      <li><b>Digest — preview avant envoi</b> dans /profil ("envoie-moi un test maintenant")</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.40.0 · 31 mai 2026</p>
+    <p>Marathon 5 chantiers — Digest · Votes · Stats RGPD · Variables custom · Preview · 607 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

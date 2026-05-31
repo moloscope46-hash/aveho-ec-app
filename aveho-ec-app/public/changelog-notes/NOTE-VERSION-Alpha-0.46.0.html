@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.46.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--amber:#EF9F27;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 40%,#EF9F27 100%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.22)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fcefda;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#fcefda;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#fcefda}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--amber)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#fff8ec;border-color:#f0d59f}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.sql{background:#e8e0f0;color:#5e4a8c}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .highlight{background:#fff;border-left:4px solid var(--amber);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+  .chantier-block{background:linear-gradient(135deg, #fff 0%, #fafbfc 100%); border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin:14px 0}
+  .chantier-block h3{margin-top:0}
+  .chantier-letter{display:inline-block; width:32px; height:32px; line-height:32px; text-align:center; border-radius:50%; background:var(--amber); color:#fff; font-weight:700; margin-right:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO — VERSION MARATHON 7 CHANTIERS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version Alpha 0.46.0
+      <small>pg_stat_statements · Bulk patients · Calendrier RGPD · Sections rétractables · dialogs.confirm() · Push API · Onboarding tour</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.46.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.45.0</span>
+      <span><b>Statut :</b> Build clean · 793 tests verts · 1 patch SQL (85 lignes)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">🚀 Y - pg_stat_statements + page /admin-perf</span>
+      <span class="badge">☑️ X - Bulk patients (sélection multi-actions)</span>
+      <span class="badge">📅 U - Calendrier signatures RGPD</span>
+      <span class="badge">📚 W - CollapsibleSection + /profil refondu</span>
+      <span class="badge">💬 P - dialogs.confirm() singleton</span>
+      <span class="badge">📲 Q - Push API câblé sur signalements</span>
+      <span class="badge">🗺️ T - Onboarding tour</span>
+      <span class="badge green">+34 tests Vitest</span>
+    </div>
+  </header>
+
+  <h2>Résumé</h2>
+  <p>7 chantiers d'un coup — version dense mais ciblée sur la qualité d'usage et la perf. Build clean, <b>793 tests verts</b>, patch SQL idempotent terminé par <code>notify pgrst, 'reload schema'</code> (réflexe 0.43).</p>
+
+  <div class="highlight">
+    <b>7 modules livrés :</b><br/>
+    <b>Y</b> Extension <code>pg_stat_statements</code> + RPC <code>get_top_slow_queries()</code> + page <code>/admin-perf</code> avec classification vitesse en 4 niveaux + bouton reset.<br/>
+    <b>X</b> Sélection multi sur <code>/patients</code> avec bandeau sticky : export CSV groupé, suppression bulk, désélection. Checkbox header "Tout cocher" pour la vue filtrée.<br/>
+    <b>U</b> Calendrier mensuel des signatures RGPD dans <code>/statistiques-rgpd</code> avec intensité de couleur par jour (palette verte 4 niveaux + signal rouge si refus).<br/>
+    <b>W</b> Nouveau composant <code>&lt;CollapsibleSection&gt;</code> accessible (aria-expanded). Intégré dans <code>/profil</code> : 4 sections rétractables (digest, historique, mot de passe, aide).<br/>
+    <b>P</b> Nouvelle utility <code>lib/dialogs.js</code> avec singleton global + <code>&lt;DialogsHost /&gt;</code> dans le layout. Remplace <code>confirm()</code> et <code>alert()</code> natifs depuis n'importe où via promise.<br/>
+    <b>Q</b> Câblage <code>send-push</code> dans <code>notifierAuteurSignalement</code> — l'auteur reçoit maintenant aussi un push browser en plus de l'email/notif in-app.<br/>
+    <b>T</b> Composant <code>&lt;OnboardingTour&gt;</code> auto-démarré sur <code>/accueil</code> à la 1ère connexion. 4 étapes guidées (menu, notifs, dashboard, terminer). Persistance localStorage. Re-lançable depuis <code>/profil</code>.
+  </div>
+
+  <h2>Chantiers livrés</h2>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">Y</span> pg_stat_statements + dashboard /admin-perf</h3>
+    <ul>
+      <li><b>SQL</b> : <code>create extension if not exists pg_stat_statements</code> (déjà pré-installé sur Supabase, juste à activer)</li>
+      <li><b>RPC</b> <code>get_top_slow_queries(limit)</code> en <code>security definer</code> avec :
+        <ul>
+          <li><b>Anonymisation</b> des requêtes : remplace les littéraux <code>'abc'</code> par <code>?</code>, les <code>$1/$2</code> par <code>$N</code>, les nombres par <code>N</code> → pas de fuite de données métier dans l'audit</li>
+          <li><b>Filtre</b> des queries inutiles (pg_stat_statements lui-même, pg_catalog, COMMIT/BEGIN/SET)</li>
+          <li><b>Tri par <code>mean_exec_time</code> desc</b></li>
+        </ul>
+      </li>
+      <li><b>RPC bonus</b> <code>reset_query_stats()</code> pour vider les compteurs après une optim et mesurer son impact</li>
+      <li><b>Page</b> <code>/admin-perf</code> réservée aux administrateurs avec :
+        <ul>
+          <li>Sélecteur du nombre de requêtes (10/20/50/100)</li>
+          <li>Boutons Recharger / Reset stats (Reset utilise <code>dialogs.confirm()</code> du chantier P)</li>
+          <li>Pills coloré par classification : Rapide (vert, &lt;10ms), Moyen (bleu, 10-100ms), Lent (orange, 100-1000ms), Très lent (rouge, &ge;1000ms)</li>
+          <li>Colonnes : Vitesse · Requête anonymisée (tronquée + tooltip) · Appels · Moyenne · Total · Lignes/appel</li>
+        </ul>
+      </li>
+      <li><b>Lien menu</b> ajouté dans TopBar (Administration)</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">X</span> Bulk patients — actions sur sélection multiple</h3>
+    <ul>
+      <li><b>Colonne checkbox</b> ajoutée à gauche du tableau patients</li>
+      <li><b>Checkbox header</b> "Tout sélectionner" qui ne coche que les lignes filtrées (respecte la recherche)</li>
+      <li><b>Bandeau sticky</b> (top:8px, z-index 5) affiché dès qu'il y a au moins 1 patient sélectionné :
+        <ul>
+          <li>Gradient bleu→teal, fond accrocheur mais discret</li>
+          <li>Compteur en gauche : "N patient(s) sélectionné(s)"</li>
+          <li>3 actions à droite : Export CSV · Supprimer · Tout désélectionner</li>
+        </ul>
+      </li>
+      <li><b>Export CSV</b> bulk : BOM UTF-8 + CRLF + séparateur <code>;</code> + escape correct. Colonnes : Nom, Prénom, Chambre, Bâtiment, Date d'entrée. Nom de fichier <code>patients-export-YYYY-MM-DD.csv</code></li>
+      <li><b>Suppression bulk</b> via <code>delete().in("id", [...])</code>. Confirm natif avec compteur + warning irréversible. Permission <code>supprimer</code> vérifiée.</li>
+      <li><b>State sélection</b> via <code>Set</code> (pour add/delete O(1))</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">U</span> Calendrier signatures RGPD</h3>
+    <ul>
+      <li><b>Nouveau panneau</b> en bas de <code>/statistiques-rgpd</code></li>
+      <li><b>Composant <code>&lt;CalendrierSignatures&gt;</code></b> avec grille 7 colonnes, navigation mois prev/today/next</li>
+      <li><b>Chargement</b> des consentements du mois affiché via <code>consentements_rgpd</code> filtré par <code>date_signature</code> entre 1er du mois et 1er du mois suivant</li>
+      <li><b>Groupement par jour</b> côté front : <code>{ total, oui, non }</code> pour chaque date</li>
+      <li><b>Intensité visuelle</b> en 4 niveaux (palette verte heatmap-style) :
+        <ul>
+          <li><b>1-1 signature</b> : très clair (#e8f5e6)</li>
+          <li><b>2-4 signatures</b> : clair (#bfe2bf)</li>
+          <li><b>5-9 signatures</b> : moyen (#8fcc8f)</li>
+          <li><b>≥ 10 signatures</b> : foncé (#5aa05a)</li>
+        </ul>
+      </li>
+      <li><b>Signal refus</b> : si <code>non > 0</code> sur un jour, mini-badge rouge "✗N" sous le compteur</li>
+      <li><b>Tooltip</b> au hover : "X signatures le YYYY-MM-DD (✓ oui · ✗ non)"</li>
+      <li><b>Légende</b> "Moins → Plus" en bas</li>
+      <li><b>Aujourd'hui</b> en surbrillance bordure bleue</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">W</span> CollapsibleSection + /profil refondu</h3>
+    <ul>
+      <li><b>Nouveau composant</b> <code>&lt;CollapsibleSection&gt;</code> dans <code>app/ui.js</code> :
+        <ul>
+          <li>Bouton header cliquable avec <code>aria-expanded</code> et <code>aria-controls</code></li>
+          <li>Icône chevron-up/down qui change selon l'état</li>
+          <li>Props : <code>title</code>, <code>icon</code>, <code>iconColor</code>, <code>defaultOpen</code></li>
+          <li>État interne via <code>useState</code></li>
+        </ul>
+      </li>
+      <li><b>Application sur <code>/profil</code></b> : 4 sections converties en rétractables (toutes <code>defaultOpen=false</code> sauf info principale) :
+        <ul>
+          <li>Récap email automatique</li>
+          <li>Historique des envois</li>
+          <li>Changer mon mot de passe</li>
+          <li>Aide & visite guidée (nouvelle section avec bouton "Refaire la visite")</li>
+        </ul>
+      </li>
+      <li><b>UX</b> : profil bien plus court à l'ouverture, les utilisateurs n'ont pas besoin de tout voir d'un coup</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">P</span> dialogs.confirm() / alert() singleton</h3>
+    <ul>
+      <li><b>Approche</b> : composants <code>ConfirmModal</code> / <code>AlertModal</code> (créés en 0.45) exposés via un singleton global avec promesses</li>
+      <li><b>Nouvelle utility</b> <code>lib/dialogs.js</code> avec :
+        <ul>
+          <li><code>dialogs.confirm({ title, message, variant, icon })</code> → renvoie <code>Promise&lt;boolean&gt;</code></li>
+          <li><code>dialogs.alert(message | options)</code> → renvoie <code>Promise&lt;void&gt;</code></li>
+          <li>État interne via listeners pour synchroniser le composant host</li>
+        </ul>
+      </li>
+      <li><b><code>&lt;DialogsHost /&gt;</code></b> à mettre une seule fois dans <code>app/layout.js</code> — c'est fait</li>
+      <li><b>Utilisation type</b> :
+        <pre><code>import { dialogs } from "@/lib/dialogs";
+const ok = await dialogs.confirm({
+  title: "Supprimer ce patient ?",
+  message: "Cette action est irréversible.",
+  variant: "danger",
+});
+if (ok) doDelete();</code></pre>
+      </li>
+      <li><b>Premier usage</b> dans <code>/admin-perf</code> sur le bouton Reset stats</li>
+      <li><b>Migration progressive</b> : les pages restantes (66 <code>confirm()</code> natifs à remplacer) seront migrées dans les prochaines versions</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">Q</span> Push browser API câblé sur signalements</h3>
+    <ul>
+      <li>L'infra Push existait déjà (table <code>push_subscriptions</code> depuis 0.17.1, Edge Function <code>send-push</code> depuis 0.29) mais n'était utilisée que par <code>auto-archive-consents</code></li>
+      <li><b>Ajout d'un 5ème étape</b> dans <code>notifierAuteurSignalement</code> : appel <code>POST /functions/v1/send-push</code> avec payload <code>{ userId, title, body, url }</code></li>
+      <li><b>Best-effort</b> : si l'auteur n'a pas activé les push (pas de subscription en base), la fonction renvoie OK sans erreur. Les autres canaux (email + notif in-app) restent fonctionnels.</li>
+      <li><b>Bénéfice</b> : l'auteur peut être notifié <b>même si Aveho est fermé</b> (Service Worker reçoit le push en arrière-plan)</li>
+      <li><b>À étendre dans la 0.47</b> : câblage send-push dans les autres helpers (maintenance-daily-cron, send-digest…)</li>
+    </ul>
+  </div>
+
+  <div class="chantier-block">
+    <h3><span class="chantier-letter">T</span> Onboarding tour 4 étapes</h3>
+    <ul>
+      <li><b>Composant léger natif</b> (pas de lib externe type driver.js) dans <code>app/OnboardingTour.js</code></li>
+      <li><b>4 étapes</b> :
+        <ol>
+          <li>Menu principal (<code>.menu-burger</code>) — "Voici le menu, accède à toutes les sections"</li>
+          <li>Cloche notifications (<code>.notif-btn</code>) — "Tes notifications en temps réel"</li>
+          <li>Logo / dashboard (<code>[href='/accueil']</code>) — "Reviens ici pour tes KPIs"</li>
+          <li>Conclusion (center) — "Tu peux refaire ce tour depuis ton profil"</li>
+        </ol>
+      </li>
+      <li><b>UX</b> :
+        <ul>
+          <li>Overlay sombre rgba(20,33,49,0.75) qui couvre toute la page</li>
+          <li>Spotlight cyan animé pulse autour de l'élément cible</li>
+          <li>Tooltip en dessous de la cible (ou centré si "center")</li>
+          <li>Indicateur "ÉTAPE N / 4" en eyebrow</li>
+          <li>Boutons Précédent / Suivant + lien "Passer le tour" en bas à gauche</li>
+        </ul>
+      </li>
+      <li><b>Persistance</b> : <code>localStorage["aveho_onboarding_done"]</code> ne déclenche le tour qu'à la 1ère connexion</li>
+      <li><b>Re-lançable</b> via <code>resetOnboarding()</code> appelé depuis le bouton "Refaire la visite" dans <code>/profil</code></li>
+      <li><b>Auto-démarré</b> sur <code>/accueil</code> avec délai 1.5s pour laisser l'UI se monter</li>
+      <li><b>A11y</b> : <code>role="dialog"</code>, <code>aria-modal="true"</code>, <code>aria-labelledby</code></li>
+    </ul>
+  </div>
+
+  <h2>SQL — Patch 0.46 (85 lignes idempotentes)</h2>
+  <table>
+    <thead><tr><th>Objet</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>pg_stat_statements</code></td><td><span class="pill new">Extension</span></td><td>Préinstallée sur Supabase, juste activée</td></tr>
+      <tr><td><code>get_top_slow_queries(limit)</code></td><td><span class="pill new">RPC</span></td><td>Security definer · anonymisation par regex · grant authenticated</td></tr>
+      <tr><td><code>reset_query_stats()</code></td><td><span class="pill new">RPC</span></td><td>Vide les compteurs pg_stat_statements · grant authenticated</td></tr>
+      <tr><td><code>notify pgrst</code></td><td><span class="pill sql">Cache</span></td><td>Reload schema PostgREST (réflexe 0.43)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">7</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">Nouvelles RPC</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Nouvelle route admin</div></div>
+    <div class="kpi"><div class="v">3</div><div class="l">Nouveaux composants UI</div></div>
+    <div class="kpi"><div class="v">+34</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">793</div><div class="l">Tests verts total</div></div>
+    <div class="kpi"><div class="v">831</div><div class="l">K du zip livré</div></div>
+    <div class="kpi"><div class="v">85</div><div class="l">Lignes SQL idempotent</div></div>
+  </div>
+
+  <h2>Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.46.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Extension + 2 RPC + grants + notify pgrst</td></tr>
+      <tr><td><code>app/admin-perf/page.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Page dashboard performance SQL</td></tr>
+      <tr><td><code>app/patients/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ state sélection bulk · + checkbox col · + bandeau sticky · + export CSV · + suppression bulk</td></tr>
+      <tr><td><code>app/statistiques-rgpd/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ état signatures par jour · + chargement mensuel · + composant CalendrierSignatures en fin</td></tr>
+      <tr><td><code>app/ui.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ composant CollapsibleSection</td></tr>
+      <tr><td><code>app/profil/page.js</code></td><td><span class="pill imp">REFONDU</span></td><td>4 Panels convertis en CollapsibleSection · + section Aide avec resetOnboarding</td></tr>
+      <tr><td><code>lib/dialogs.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Singleton dialogs.confirm() / alert() + DialogsHost component</td></tr>
+      <tr><td><code>app/layout.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ import DialogsHost · + DialogsHost dans body</td></tr>
+      <tr><td><code>app/signalements/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ appel send-push dans notifierAuteurSignalement (étape 5)</td></tr>
+      <tr><td><code>app/OnboardingTour.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>Tour 4 étapes natif + resetOnboarding export</td></tr>
+      <tr><td><code>app/accueil/page.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ import + &lt;OnboardingTour /&gt; au début du rendu</td></tr>
+      <tr><td><code>app/TopBar.js</code></td><td><span class="pill imp">PATCHÉ</span></td><td>+ lien /admin-perf dans Administration</td></tr>
+      <tr><td><code>__tests__/v046-features.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>34 tests sur les 7 chantiers</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.45.0-alpha → 0.46.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.46.sql</code> → Run. Le patch finit par <code>notify pgrst, 'reload schema'</code>.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Extension activée
+select extname from pg_extension where extname = 'pg_stat_statements';
+
+-- RPC accessible
+select * from get_top_slow_queries(5);
+-- → 5 requêtes lentes (peut être vide si stats fraîchement reset)</code></pre>
+      </li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app\</code>.</li>
+      <li><b>Cache + tests + dev</b> (PowerShell — pas de <code>&&</code>) :
+        <pre><code>cd C:\aveho-ec-app
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm install
+npm test
+npm run dev</code></pre>
+        Attendu : <b>793 tests verts</b>.
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li><b>Y</b> : aller sur <code>/admin-perf</code> → voir le top 20 des requêtes lentes avec pills colorées</li>
+          <li><b>X</b> : <code>/patients</code> → cocher 2-3 patients → bandeau bleu apparaît → cliquer "Export CSV"</li>
+          <li><b>U</b> : <code>/statistiques-rgpd</code> → tout en bas, calendrier mensuel des signatures avec heatmap verte</li>
+          <li><b>W</b> : <code>/profil</code> → 4 sections rétractées par défaut, cliquer pour ouvrir</li>
+          <li><b>P</b> : sur <code>/admin-perf</code>, cliquer "Reset stats" → modale ConfirmModal stylée (pas de confirm() natif laid)</li>
+          <li><b>Q</b> : répondre à un signalement nominatif → l'auteur reçoit notif in-app + push si abonné</li>
+          <li><b>T</b> : se déconnecter, supprimer <code>localStorage["aveho_onboarding_done"]</code> dans DevTools, relogger → tour démarre automatiquement sur <code>/accueil</code></li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Reste à faire (0.47+)</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>C</b> - Pages config restantes vers safeWrite</li>
+      <li><b>D</b> - Tests Playwright end-to-end</li>
+      <li><b>E</b> - Upgrade Next.js 14 → 15</li>
+      <li><b>F</b> - Module e-learning / formation (gros chantier)</li>
+      <li><b>G</b> - Recherche : ajouter consentements + factures</li>
+      <li><b>H</b> - Soumission stores (Play / MS Store)</li>
+      <li><b>I</b> - Mode présentation autres vues (achats, RGPD, maintenance)</li>
+      <li><b>M</b> - Mode sombre</li>
+      <li><b>Migration progressive vers dialogs.confirm()</b> : 66 <code>confirm()</code> natifs encore présents</li>
+      <li><b>Push API câblé sur autres helpers</b> : cron maintenance, weekly-digest, send-digest</li>
+      <li><b>Onboarding tour</b> : ajouter des étapes spécifiques par rôle (admin → admin-perf, user → patients…)</li>
+      <li><b>Bulk actions</b> : étendre à <code>/articles</code>, <code>/materiels</code>, <code>/transferts</code></li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.46.0 · 31 mai 2026</p>
+    <p>Version marathon 7 chantiers — Perf SQL · Bulk · Calendar RGPD · Collapsible · Dialogs · Push · Onboarding · 793 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

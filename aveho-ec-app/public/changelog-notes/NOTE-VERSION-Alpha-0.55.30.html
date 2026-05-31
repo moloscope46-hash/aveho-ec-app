@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.30 — Partenaires RPPS + mail enrichi + hotfix vue-globale</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#e0d5f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#e0d5f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#e0d5f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — PARTENAIRES RPPS + MAIL ENRICHI</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.30 — Partenaires RPPS (table dédiée, non-utilisateurs) + mail/popup enrichis + hotfix vue-globale
+      <small>Médecins prescripteurs et IDE libéraux référencés via API ANS · classification auto · RPC ajout utilisateur au bâtiment</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.30-alpha</code></span>
+      <span><b>Tests :</b> 1165 verts (+14)</span>
+      <span><b>SQL :</b> 1 patch</span>
+    </div>
+  </header>
+
+  <h2>🔧 Hotfix : vue-globale 400</h2>
+  <div class="panel danger">
+    <p><b>Bug 0.55.29 :</b> le SELECT de <code>/vue-globale</code> contenait <code>groupement_id</code> qui n'existait pas sur la table <code>etablissements</code> → erreur HTTP 400.</p>
+    <p><b>Fix :</b> colonne <code>groupement_id uuid</code> ajoutée dans le patch SQL 0.55.30 (avec index partiel), et la table <code>groupements</code> est créée si absente avec RLS member_rw.</p>
+  </div>
+
+  <h2>🤝 1. Partenaires RPPS — table dédiée</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Cas d'usage</h3>
+    <p>Référencer des <b>professionnels de santé qui interagissent avec votre structure mais qui n'ont PAS de compte Aveho</b> :</p>
+    <ul>
+      <li><b>Prescripteurs</b> : médecins traitants des patients, médecins hospitaliers prescripteurs de DM</li>
+      <li><b>Intervenants</b> : IDE libéraux qui passent au domicile, kinésithérapeutes, sages-femmes</li>
+      <li><b>Autres</b> : pharmaciens, dentistes, etc.</li>
+    </ul>
+
+    <h3>Page <code>/partenaires-rpps</code></h3>
+    <ul>
+      <li>Accessible depuis le menu TopBar → section Établissement → <i class="ti ti-user-circle"></i> Mes partenaires RPPS</li>
+      <li>3 KPIs en haut : Partenaires actifs / Prescripteurs / Intervenants</li>
+      <li>Filtres : Tous / Prescripteurs / Intervenants + recherche par nom/prénom/profession/RPPS/commune</li>
+      <li>Bouton violet "<i class="ti ti-stethoscope"></i> Ajouter un partenaire depuis RPPS" → ouvre RppsSearch</li>
+    </ul>
+
+    <h3>Ajout automatique</h3>
+    <ol>
+      <li>Clic sur le bouton → modale RppsSearch (API FHIR ANS officielle)</li>
+      <li>Recherche par nom / RPPS / profession / CP</li>
+      <li>Clic sur un praticien → insertion automatique avec :
+        <ul>
+          <li>Classification auto : <b>Médecin</b> → est_prescripteur=true, <b>Infirm/Kin/Sage</b> → est_intervenant=true</li>
+          <li>Détection doublon par RPPS → message "Déjà partenaire" si présent</li>
+          <li>Tous les champs (nom, prénom, profession, spécialité, adresse, tél, etc.) pré-remplis</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>Cartes partenaires</h3>
+    <ul>
+      <li>Avatar violet avec icône user-circle</li>
+      <li>Badges colorés : <span style="background:#dbe7f5;color:#185FA5;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">PRESCRIPTEUR</span> · <span style="background:#dff5e0;color:#2e6f33;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">INTERVENANT</span> · <span style="background:#f3effa;color:#5a4a90;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700;font-family:Consolas,monospace">RPPS 1000…</span></li>
+      <li>Clic → modale détails avec coordonnées cliquables (tel: + mailto:) + bouton Archiver</li>
+    </ul>
+  </div>
+
+  <h2>🗄 SQL Patch 0.55.30</h2>
+  <div class="panel tech">
+    <pre><code>-- HOTFIX
+alter table etablissements add column if not exists groupement_id uuid;
+create index idx_etablissements_groupement on etablissements(groupement_id) where groupement_id is not null;
+
+-- Crée la table groupements si absente (avec RLS)
+do $$ begin
+  if not exists (select 1 from pg_tables where tablename = 'groupements') then
+    create table groupements (id uuid primary key, structure_id uuid, nom text, ...);
+    -- + RLS member_rw
+  end if;
+end $$;
+
+-- Nouvelle table partenaires_rpps
+create table partenaires_rpps (
+  id uuid primary key default gen_random_uuid(),
+  structure_id uuid not null references structures(id),
+  rpps text, adeli text, civilite text,
+  nom text not null, prenom text,
+  profession text, specialite text, mode_exercice text,
+  adresse text, cp text, commune text,
+  telephone text, telephone_mobile text, email text,
+  notes text, tags text[],
+  est_prescripteur boolean, est_intervenant boolean,
+  etablissement_ids uuid[],
+  created_at, created_by, updated_at, archive
+);
+
+-- Contrainte unicité par (structure_id, rpps) where archive = false
+-- RLS member_rw + trigger updated_at
+
+-- RPC add_user_to_etablissement + remove_user_from_etablissement
+-- Vérif droits utilisateurs_write OU parametres_admin via roles.droits</code></pre>
+  </div>
+
+  <h2>📧 2. Mail d'invitation enrichi RPPS</h2>
+  <div class="panel">
+    <p>L'Edge Function <code>invite-user</code> reçoit désormais 4 champs supplémentaires :</p>
+    <pre><code>body: {
+  email, nom, collectivite, role, etablissements, inviteLink,
+  // 0.55.30
+  rpps_profession,   // "Médecin"
+  rpps_specialite,   // "Cardiologie"
+  rpps,              // "10000000001"
+  lock_assignment,   // true
+}</code></pre>
+
+    <h3>Ce qui s'affiche dans le mail si RPPS renseigné</h3>
+    <ul>
+      <li><b>Sujet</b> personnalisé : "Invitation Aveho EC — Médecin"</li>
+      <li><b>Bloc violet</b> "🩺 Identité professionnelle (RPPS)" avec profession + spécialité + N° RPPS (format mono)</li>
+      <li><b>Banner ambre</b> "🔒 Rattachement verrouillé" si <code>lock_assignment=true</code></li>
+    </ul>
+  </div>
+
+  <h2>🔔 3. Pop-up post-création enrichi</h2>
+  <div class="panel hi">
+    <p>Quand l'invitation est créée, la modale "Invitation créée" affiche maintenant :</p>
+    <ul>
+      <li><b>Récap "Contenu de l'invitation"</b> : nom, rôle (badge bleu), matricule (mono), établissements rattachés en pills 🏥</li>
+      <li>Badge <code>VERROUILLÉ</code> à côté de "Établissements" si lock_assignment=true</li>
+      <li><b>Bloc violet RPPS</b> : profession + spécialité + N° RPPS (mono) si renseigné</li>
+      <li>Lien d'invitation copiable (comme avant)</li>
+    </ul>
+    <p>L'admin voit en un coup d'œil ce qui a été envoyé au nouvel utilisateur.</p>
+  </div>
+
+  <h2>🏢 4. RPC ajout utilisateur au bâtiment</h2>
+  <div class="panel">
+    <p>2 nouvelles RPCs côté SQL :</p>
+    <ul>
+      <li><code>add_user_to_etablissement(p_user_id, p_etablissement_id)</code></li>
+      <li><code>remove_user_from_etablissement(p_user_id, p_etablissement_id)</code></li>
+    </ul>
+    <p>Vérifient :</p>
+    <ul>
+      <li>L'établissement existe et appartient à une structure</li>
+      <li>L'appelant a le droit <code>utilisateurs_write</code> OU <code>parametres_admin</code> sur cette structure</li>
+      <li>L'utilisateur cible est bien membre de la structure</li>
+    </ul>
+    <p>Insert idempotent avec <code>ON CONFLICT DO NOTHING</code>. Delete clean. Toutes deux <code>security definer</code> avec <code>search_path = public</code>.</p>
+    <p>→ Ces RPCs pourront être utilisées dans la <b>fiche groupement</b> (0.55.31) pour ajouter/retirer un user d'un bâtiment d'un simple clic.</p>
+  </div>
+
+  <h2>📈 5. Tests +14 (1151 → 1165)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-30-partenaires.test.js</code> :</p>
+    <ul>
+      <li><b>Classification auto</b> (6 tests) : Médecin→prescripteur, IDE/IDE/Kiné/Sage→intervenant, Pharmacien neutre</li>
+      <li><b>Filtres partenaires</b> (4 tests) : tag prescripteur/intervenant, par RPPS exact, par commune</li>
+      <li><b>Popup objet</b> (2 tests) : structure complète + rétro-compat sans RPPS</li>
+      <li><b>add_user idempotence</b> (1 test)</li>
+      <li><b>Hotfix vue-globale</b> (1 test) : SELECT ne contient plus groupement_id</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.30.sql</code> : <b>NOUVEAU</b> · hotfix + table partenaires_rpps + RPCs</li>
+    <li><code>app/partenaires-rpps/page.js</code> : <b>NOUVEAU</b> · page de gestion avec filtres + ajout RPPS + modale détails</li>
+    <li><code>app/vue-globale/page.js</code> : retrait groupement_id du SELECT (hotfix)</li>
+    <li><code>app/TopBar.js</code> : + lien "Mes partenaires RPPS"</li>
+    <li><code>app/utilisateurs/page.js</code> : body invite enrichi (rpps_*, lock_assignment) + popup post-création refondue (object au lieu de string)</li>
+    <li><code>supabase/functions/invite-user/index.ts</code> : Edge Function enrichie avec rppsHtml + lockHtml + subject personnalisé</li>
+    <li><code>__tests__/v055-30-partenaires.test.js</code> : <b>NOUVEAU</b> · +14 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.30 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.30</li>
+    <li><code>package.json</code> : 0.55.29 → 0.55.30</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.55.30.sql</code> → Run</li>
+      <li>Déployer l'Edge Function mise à jour :
+        <pre><code>cd C:\aveho-ec-app
+supabase functions deploy invite-user</code></pre>
+      </li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.30 - Partenaires RPPS + mail enrichi + hotfix vue-globale"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>D'abord : page <code>/vue-globale</code> charge sans erreur 400 (hotfix groupement_id)</li>
+      <li>Menu → <i class="ti ti-user-circle"></i> "Mes partenaires RPPS" → page vide au début</li>
+      <li>Clic "Ajouter un partenaire depuis RPPS" → recherche "DUPONT" → clic sur un médecin → message "Partenaire ajouté"</li>
+      <li>Carte du partenaire s'affiche avec badge PRESCRIPTEUR (auto, car profession contient "Médecin")</li>
+      <li>Réessayer d'ajouter le MÊME RPPS → message "Déjà partenaire"</li>
+      <li>Ajouter un IDE → badge INTERVENANT auto</li>
+      <li>Filtre "Prescripteurs" → seulement les médecins. Filtre "Intervenants" → seulement IDE/kiné</li>
+      <li>Recherche par commune ou RPPS → résultats filtrés</li>
+      <li>Clic sur une carte → modale détails avec tel: + mailto: cliquables + bouton Archiver</li>
+      <li>Créer une invitation avec un praticien RPPS (bouton 0.55.29) → la popup post-création montre récap RPPS + établissements en pills</li>
+      <li>Smoke tests 0.55.30 dans le changelog → 5 tests verts (si SQL passé)</li>
+    </ol>
+  </div>
+
+  <h2>🔜 À venir 0.55.31</h2>
+  <div class="panel">
+    <ul>
+      <li><b>UI ajout utilisateur au bâtiment</b> (via les RPCs add/remove créées en 0.55.30) dans la fiche groupement/établissement</li>
+      <li>Compte par bâtiment des utilisateurs rattachés + recherche</li>
+    </ul>
+  </div>
+
+  <h2>SW auto-bump — 40ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.29 → <b>0.55.30</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.30 · 31 mai 2026</p>
+    <p>Partenaires RPPS · mail invitation enrichi · hotfix vue-globale · RPC ajout user au bâtiment · 1 SQL · 1165 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

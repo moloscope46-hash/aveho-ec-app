@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Note de version Alpha 0.24.0</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--ink:#2a3a48;--muted:#6c7a89;--bg:#f4f7fa;--line:#e3e9ee}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  .wrap{max-width:1000px;margin:0 auto;padding:40px 30px 80px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#1e4a91 70%,#7CC8C8 130%);color:#fff;border-radius:20px;padding:42px 38px;margin-bottom:36px;box-shadow:0 14px 40px rgba(20,33,49,.18)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;margin-bottom:8px}
+  .logo{font-size:30px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:30px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe0e0;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:13px;color:#cfe0e0}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600}
+  .badge.green{background:rgba(132,200,124,.22);border-color:rgba(132,200,124,.5);color:#cfeacb}
+  .badge.orange{background:rgba(239,159,39,.22);border-color:rgba(239,159,39,.5);color:#f4d49a}
+  h2{font-size:22px;color:var(--navy);margin:40px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--teal)}
+  h3{font-size:16px;color:var(--navy);margin:24px 0 10px}
+  p{margin:8px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.hi{background:#eaf7f7;border-color:#bfe6e6}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid4{grid-template-columns:1fr 1fr}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .kpi .v{font-size:26px;font-weight:700;color:var(--navy)}
+  .kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:9px 10px;border-bottom:2px solid var(--line)}
+  table td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:13px}
+  pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.6}
+  pre code{background:transparent;color:inherit;padding:0}
+  .pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+  .pill.new{background:#dff5e0;color:#2e6f33}
+  .pill.imp{background:#fcefda;color:#7a4f15}
+  .pill.test{background:#d8e8f0;color:#1c4d6a}
+  .pill.cron{background:#e8d8f0;color:#5a2a7a}
+  ul{padding-left:22px;margin:6px 0}
+  li{margin:4px 0}
+  .toc{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:30px}
+  .toc h3{margin-top:0}
+  .toc ul{list-style:none;padding:0;columns:2;column-gap:24px}
+  @media(max-width:760px){.toc ul{columns:1}}
+  .toc a{color:var(--navy);text-decoration:none;font-size:13.5px;display:block;padding:3px 0}
+  .toc a:hover{color:var(--teal)}
+  .highlight{background:#fff;border-left:4px solid var(--teal);padding:12px 18px;margin:12px 0;border-radius:6px}
+  footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">AVEHO PRÉSENTE — FINITION RGPD</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="opacity:.7;font-size:14px;font-weight:400;margin-left:6px">ESPACE COLLECTIVITÉ</span></div>
+    <h1>Version Alpha 0.24.0
+      <small>Resend API · Auto-archivage 6 mois · Export CSV audit annuel</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026 (matin)</span>
+      <span><b>Tag :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.24.0-alpha</code></span>
+      <span><b>Précédente :</b> Alpha 0.23.0</span>
+      <span><b>Statut :</b> Build clean · 139 tests verts · 1 patch SQL · 1 nouvelle Edge Function</span>
+    </div>
+    <div class="badges">
+      <span class="badge green">📧 Email DPO via Resend API (HTML brandé)</span>
+      <span class="badge green">📦 Auto-archivage cron mensuel</span>
+      <span class="badge green">📊 Export CSV audit annuel</span>
+      <span class="badge green">⚙️ Seuil archivage configurable par collectivité</span>
+      <span class="badge green">+22 tests Vitest</span>
+      <span class="badge orange">🔧 1 patch SQL + 1 Edge Function</span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <h3>Sommaire</h3>
+    <ul>
+      <li><a href="#resume">1. Résumé exécutif</a></li>
+      <li><a href="#chantiers">2. Chantiers livrés</a></li>
+      <li><a href="#resend">3. Branchement Resend</a></li>
+      <li><a href="#archive">4. Auto-archivage 6 mois</a></li>
+      <li><a href="#export">5. Export CSV audit annuel</a></li>
+      <li><a href="#sql">6. Patch SQL 0.24.0</a></li>
+      <li><a href="#deploy">7. Déploiement Edge Function</a></li>
+      <li><a href="#tests">8. Tests Vitest (+22)</a></li>
+      <li><a href="#fichiers">9. Fichiers modifiés / créés</a></li>
+      <li><a href="#proc">10. Procédure d'application</a></li>
+      <li><a href="#bilan">11. Bilan axe RGPD</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="resume">1. Résumé exécutif</h2>
+  <p>La 0.24.0 <b>clôt définitivement l'axe RGPD</b>. Plus de TODO sur ce sujet. 3 finitions qui transforment la chaîne en quelque chose de vraiment "production-ready / vendable à un PSAD" :</p>
+  <ol>
+    <li><b>Resend API branché</b> : le code de la 0.23 qui faisait <code>console.log</code> envoie maintenant un vrai email HTML au DPO via Resend. Configuration via 2 secrets Supabase (<code>RESEND_API_KEY</code> + <code>RESEND_FROM_EMAIL</code>). Si pas configuré, mode dégradé : log + warning, l'app ne plante pas.</li>
+    <li><b>Auto-archivage cron mensuel</b> : nouvelle Edge Function <code>auto-archive-consents</code> qui s'exécute le 1er du mois à 4h UTC. Archive automatiquement les consentements expirés depuis &gt; 6 mois (seuil configurable par collectivité). Trace via une note "Auto-archivé le ...". Notif push aux structures concernées.</li>
+    <li><b>Export CSV audit annuel</b> : bouton vert "Export CSV" dans <code>/consent-verifications</code>. Génère un fichier UTF-8 BOM avec séparateur ; (Excel FR compatible), nommé avec slug collectivité + date. Inclut TOUTES les vérifications (pas de limite 500).</li>
+  </ol>
+
+  <div class="highlight">
+    <b>Axe RGPD complet.</b> Avec cette release, plus rien à TODO côté RGPD pour vendre Aveho à un PSAD avec audit CNIL. Le module couvre : recueil → signature électronique → archivage → vérification publique → renouvellement automatique → auto-archivage → export pour audit. Toute la chaîne est tracée, configurable, conforme.
+  </div>
+
+  <div class="grid4">
+    <div class="kpi"><div class="v">3</div><div class="l">Chantiers livrés</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Edge Function créée</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Vue export CSV plate</div></div>
+    <div class="kpi"><div class="v">1</div><div class="l">Fonction RPC archivage</div></div>
+    <div class="kpi"><div class="v">+22</div><div class="l">Tests Vitest</div></div>
+    <div class="kpi"><div class="v">139</div><div class="l">Tests verts au total</div></div>
+    <div class="kpi"><div class="v">180j</div><div class="l">Seuil archivage par défaut</div></div>
+    <div class="kpi"><div class="v">391</div><div class="l">K du zip livré</div></div>
+  </div>
+
+  <h2 id="chantiers">2. Chantiers livrés</h2>
+  <table>
+    <thead><tr><th>#</th><th>Chantier</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Branchement Resend dans <code>send-renouvellement-rappels</code></td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>2</td><td>Mode dégradé si Resend non configuré (log + warning)</td><td><span class="pill imp">Robust</span></td></tr>
+      <tr><td>3</td><td>Edge Function <code>auto-archive-consents</code> mensuelle</td><td><span class="pill cron">Cron</span></td></tr>
+      <tr><td>4</td><td>RPC SQL <code>auto_archive_consents_expires()</code> SECURITY DEFINER</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>5</td><td>Vue <code>v_consents_a_auto_archiver</code> pour preview avant exécution</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>6</td><td>Vue <code>v_audit_verifications_export</code> plate pour CSV</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>7</td><td>Seuil <code>auto_archive_apres_jours</code> configurable par collectivité</td><td><span class="pill new">SQL</span></td></tr>
+      <tr><td>8</td><td>Bouton "Export CSV" dans <code>/consent-verifications</code></td><td><span class="pill new">Feature</span></td></tr>
+      <tr><td>9</td><td>22 tests Vitest sur escapeCSV + auto-archivage + config Resend</td><td><span class="pill test">Tests</span></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="resend">3. Branchement Resend</h2>
+
+  <h3>3.1 Architecture</h3>
+  <p>La 0.23 avait livré l'email HTML brandé Aveho mais avec un <code>console.log</code> à la place de l'envoi réel. La 0.24 remplace ça par un appel HTTP à l'API Resend :</p>
+  <pre><code>POST https://api.resend.com/emails
+Authorization: Bearer {RESEND_API_KEY}
+
+{
+  "from": "Aveho RGPD <rgpd@aveho.fr>",
+  "to": ["dpo@etablissement.fr"],
+  "subject": "[Aveho RGPD] 3 consentements à renouveler",
+  "html": "<html>...</html>",
+  "tags": [
+    { "name": "type", "value": "consent_renouvellement" },
+    { "name": "structure_id", "value": "..." }
+  ]
+}</code></pre>
+
+  <h3>3.2 Configuration requise</h3>
+  <p>2 secrets Supabase à configurer :</p>
+  <pre><code># 1. Créer un compte Resend (gratuit jusqu'à 100 emails/jour)
+# 2. Vérifier le domaine d'envoi (DNS DKIM/SPF)
+# 3. Créer une clé API
+# 4. Dans Supabase Dashboard → Project Settings → Edge Functions → Secrets
+supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+supabase secrets set RESEND_FROM_EMAIL="Aveho RGPD <rgpd@TON-DOMAINE.fr>"</code></pre>
+
+  <h3>3.3 Mode dégradé</h3>
+  <p>Si <code>RESEND_API_KEY</code> n'est pas configuré, la fonction ne plante pas. Elle log un warning et ajoute à <code>errors[]</code> du résultat. Les push et webhooks continuent de fonctionner normalement. Ça permet de déployer la 0.24 sans Resend dans un premier temps et de le brancher quand le compte est prêt.</p>
+
+  <h3>3.4 Tags Resend</h3>
+  <p>Chaque email est tagué avec <code>type=consent_renouvellement</code> et <code>structure_id=...</code>. Ça permet sur le dashboard Resend de filtrer/analyser les envois par type et par client. Utile pour debug et facturation.</p>
+
+  <h2 id="archive">4. Auto-archivage 6 mois</h2>
+
+  <h3>4.1 Pourquoi</h3>
+  <p>Sans auto-archivage, les consentements expirés s'accumulent dans la liste "actifs" et polluent la vue. Au bout de quelques années, un EHPAD peut avoir des centaines de consentements expirés qui restent "actifs" alors qu'ils ne valent plus rien juridiquement. L'auto-archivage les déplace automatiquement dans "Archivés" sans perdre l'historique.</p>
+
+  <h3>4.2 Fonctionnement</h3>
+  <ol>
+    <li>Le 1er du mois à 4h UTC, <code>pg_cron</code> appelle <code>auto-archive-consents</code></li>
+    <li>La fonction lit <code>v_consents_a_auto_archiver</code> qui liste les consentements signés non archivés expirés depuis &gt; seuil_jours</li>
+    <li>Elle appelle la RPC <code>auto_archive_consents_expires()</code> qui :
+      <ul>
+        <li>Met <code>archive = true</code> sur tous ces consentements</li>
+        <li>Ajoute une note "Auto-archivé le DD/MM/YYYY (expiré depuis plus de N jours)"</li>
+        <li>Retourne un agrégat par structure pour les notifications</li>
+      </ul>
+    </li>
+    <li>Envoie une notif push aux structures concernées : "X consentements auto-archivés"</li>
+  </ol>
+
+  <h3>4.3 Configuration du seuil</h3>
+  <p>Stocké dans <code>structures.parametres.auto_archive_apres_jours</code>. Par défaut 180 (6 mois). Configurable par collectivité — TODO UI : pour l'instant, modification manuelle en SQL :</p>
+  <pre><code>update structures
+set parametres = jsonb_set(parametres, '{auto_archive_apres_jours}', '365'::jsonb)
+where id = 'xxx';</code></pre>
+  <p>(L'UI dans <code>/parametres</code> sera ajoutée en 0.25+ si besoin — pour l'instant le défaut 6 mois convient à tous les usages PSAD courants.)</p>
+
+  <h3>4.4 Réversibilité</h3>
+  <p>L'auto-archivage est <b>réversible</b>. Depuis <code>/consentements</code> avec le filtre "Archivés", clic sur l'icône <code>ti-archive-off</code> pour désarchiver. La note "Auto-archivé le ..." reste pour traçabilité.</p>
+
+  <h2 id="export">5. Export CSV audit annuel</h2>
+
+  <h3>5.1 Workflow utilisateur</h3>
+  <ol>
+    <li>Admin va dans <code>/consent-verifications</code></li>
+    <li>Clic sur le bouton vert "Export CSV" en haut à droite</li>
+    <li>Téléchargement immédiat d'un fichier CSV nommé <code>audit-verifications-rgpd-{collectivite}-{YYYY-MM-DD}.csv</code></li>
+    <li>Le fichier s'ouvre directement dans Excel français (séparateur ;, BOM UTF-8)</li>
+  </ol>
+
+  <h3>5.2 Format du CSV</h3>
+  <table>
+    <thead><tr><th>Colonne</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td>Date vérification</td><td>2026-05-30 14:23:11</td></tr>
+      <tr><td>Résultat</td><td>Valide / Invalide</td></tr>
+      <tr><td>Patient</td><td>Marie Dupont</td></tr>
+      <tr><td>Consent. signé le</td><td>2026-05-30</td></tr>
+      <tr><td>Consent. expire le</td><td>2029-05-30</td></tr>
+      <tr><td>Statut consent.</td><td>signe</td></tr>
+      <tr><td>Consent. archivé</td><td>Non</td></tr>
+      <tr><td>Origine IP</td><td>82.65.123.45</td></tr>
+      <tr><td>Navigateur</td><td>Chrome</td></tr>
+      <tr><td>Système</td><td>Windows</td></tr>
+      <tr><td>Hash fourni</td><td>a1b2c3...</td></tr>
+      <tr><td>Hash attendu</td><td>a1b2c3...</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 Caractéristiques techniques</h3>
+  <ul>
+    <li><b>Pas de limite 500 lignes</b> contrairement à l'affichage tableau (export complet)</li>
+    <li><b>BOM UTF-8</b> (<code>\uFEFF</code> en tête) → Excel ouvre directement en UTF-8 sans demander</li>
+    <li><b>Séparateur ;</b> → Excel FR détecte automatiquement</li>
+    <li><b>Échappement RFC 4180</b> : valeurs avec ;, guillemets ou retours ligne sont entourées de "..." et les guillemets internes sont doublés</li>
+    <li><b>Filtré par structure</b> automatiquement (RLS au niveau de la vue)</li>
+    <li><b>Vue SQL plate</b> <code>v_audit_verifications_export</code> avec formatage des dates ISO et colonnes "Oui"/"Non" plutôt que booleans</li>
+  </ul>
+
+  <h2 id="sql">6. Patch SQL 0.24.0</h2>
+  <div class="panel">
+    <p>Le script <code>aveho-PATCH-vers-0.24.sql</code> (156 lignes) effectue :</p>
+    <ol>
+      <li><b>Backfill</b> <code>auto_archive_apres_jours = 180</code> dans <code>structures.parametres</code></li>
+      <li><b>Fonction RPC <code>auto_archive_consents_expires()</code></b> SECURITY DEFINER + GRANT authenticated. CTE pour structures_config + a_archiver + archive_result, retourne un agrégat (structure_id, collectivite_nom, count, exemple_consent_ids)</li>
+      <li><b>Vue <code>v_consents_a_auto_archiver</code></b> pour preview de ce qui sera archivé</li>
+      <li><b>Vue <code>v_audit_verifications_export</code></b> plate avec dates formatées et booléens en Oui/Non</li>
+    </ol>
+    <p>Idempotent (<code>create or replace</code>, <code>not exists</code>). Rejouable sans risque.</p>
+  </div>
+
+  <h2 id="deploy">7. Déploiement Edge Function</h2>
+
+  <h3>7.1 Déploiement</h3>
+  <pre><code>cd C:\aveho-ec-app-01
+supabase functions deploy auto-archive-consents</code></pre>
+
+  <h3>7.2 Programmation du cron mensuel</h3>
+  <pre><code>select cron.schedule(
+  'auto-archive-consents',
+  '0 4 1 * *',  -- le 1er du mois à 4h UTC
+  $$ select net.http_post(
+       url := 'https://rnvlzddgxiuslgljkobm.supabase.co/functions/v1/auto-archive-consents',
+       headers := jsonb_build_object('Authorization', 'Bearer VOTRE_SERVICE_ROLE_KEY')
+     ); $$
+);</code></pre>
+
+  <h3>7.3 Test manuel</h3>
+  <pre><code># Preview : combien va-t-on archiver ?
+select count(*), structure_id 
+from v_consents_a_auto_archiver
+group by structure_id;
+
+# Forcer une expiration ancienne pour tester
+update consentements_rgpd 
+set date_expiration = current_date - 200  -- > 180j
+where id = '...';
+
+# Lancement manuel
+curl -X POST \
+  https://rnvlzddgxiuslgljkobm.supabase.co/functions/v1/auto-archive-consents \
+  -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY"
+
+# Réponse :
+# {"success":true,"total_archives":1,"structures_concernees":1,
+#  "push_sent":1,"detail":[...],"errors":[]}</code></pre>
+
+  <h3>7.4 Configuration Resend (optionnel)</h3>
+  <p>Si tu veux activer les vrais emails au DPO :</p>
+  <pre><code># 1. Compte Resend gratuit : https://resend.com
+# 2. Vérifier ton domaine (DKIM/SPF dans la zone DNS)
+# 3. Créer une clé API
+# 4. Configurer dans Supabase :
+supabase secrets set RESEND_API_KEY=re_xxxxxxxxxxxxxxxx
+supabase secrets set RESEND_FROM_EMAIL="Aveho RGPD <rgpd@TON-DOMAINE.fr>"</code></pre>
+
+  <h2 id="tests">8. Tests Vitest (+22)</h2>
+  <p>Nouveau fichier <code>__tests__/csv-export.test.js</code> :</p>
+  <ul>
+    <li><b>escapeCSV (8 tests)</b> : null/undefined, nombres, texte simple, point-virgule, guillemets, retours ligne, hash SHA-256, user-agent</li>
+    <li><b>Génération CSV (2 tests)</b> : format Excel FR, BOM, slugify nom de fichier</li>
+    <li><b>estAAutoArchiver (10 tests)</b> : archivé, refusé, 30j, 180j (limite), 181j, 2 ans, seuil 90j, seuil 365j, sans date, futur</li>
+    <li><b>Configuration Resend (2 tests)</b> : format RFC du from, structure body API</li>
+  </ul>
+  <p>Total : <b>139 tests verts</b> (étaient 117 en 0.23).</p>
+
+  <h2 id="fichiers">9. Fichiers modifiés / créés</h2>
+  <table>
+    <thead><tr><th>Fichier</th><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>supabase/aveho-PATCH-vers-0.24.sql</code></td><td><span class="pill new">CRÉÉ</span></td><td>Auto-archivage + vue export CSV</td></tr>
+      <tr><td><code>supabase/functions/auto-archive-consents/index.ts</code></td><td><span class="pill new">CRÉÉ</span></td><td>Edge Function cron mensuel auto-archivage</td></tr>
+      <tr><td><code>__tests__/csv-export.test.js</code></td><td><span class="pill new">CRÉÉ</span></td><td>22 tests sur escapeCSV + auto-archivage + Resend</td></tr>
+      <tr><td><code>supabase/functions/send-renouvellement-rappels/index.ts</code></td><td><span class="pill imp">ENRICHI</span></td><td>Branchement Resend API + mode dégradé</td></tr>
+      <tr><td><code>app/consent-verifications/page.js</code></td><td><span class="pill imp">ENRICHI</span></td><td>+ Bouton Export CSV + fonction exportCSV()</td></tr>
+      <tr><td><code>package.json</code></td><td><span class="pill imp">MODIF</span></td><td>0.23.0-alpha → 0.24.0-alpha</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="proc">10. Procédure d'application</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>SQL d'abord</b> dans Supabase → SQL Editor → coller <code>aveho-PATCH-vers-0.24.sql</code> → Run.</li>
+      <li><b>Vérifier</b> :
+        <pre><code>-- Backfill seuil archivage ?
+select id, nom, parametres->>'auto_archive_apres_jours' as seuil
+from structures;
+-- Toutes les structures doivent avoir seuil = 180</code></pre>
+      </li>
+      <li><b>Déployer la nouvelle Edge Function</b> :
+        <pre><code>cd C:\aveho-ec-app-01
+supabase functions deploy auto-archive-consents</code></pre>
+      </li>
+      <li><b>Redéployer send-renouvellement-rappels</b> (modifiée pour Resend) :
+        <pre><code>supabase functions deploy send-renouvellement-rappels</code></pre>
+      </li>
+      <li><b>Programmer le cron mensuel</b> dans Supabase SQL Editor (voir section 7.2)</li>
+      <li><b>(Optionnel)</b> Configurer Resend pour les emails DPO (voir section 7.4)</li>
+      <li><b>Décompresser le zip</b> par-dessus <code>C:\aveho-ec-app-01\</code></li>
+      <li><b>npm install + tests + dev</b> :
+        <pre><code>npm install
+npm test       # 139 passed
+npm run dev</code></pre>
+      </li>
+      <li><b>Tester</b> :
+        <ul>
+          <li>Aller dans <code>/consent-verifications</code> → bouton "Export CSV" en haut à droite</li>
+          <li>Cliquer → fichier CSV téléchargé, ouvrir dans Excel → toutes colonnes lisibles</li>
+          <li>Forcer une expiration ancienne en SQL puis appel manuel du cron → vérifier que le consentement est passé en "archivé"</li>
+        </ul>
+      </li>
+      <li><b>Pousser sur Vercel</b> via git.</li>
+    </ol>
+  </div>
+
+  <h2 id="bilan">11. Bilan axe RGPD (clôture)</h2>
+  <div class="panel hi">
+    <p><b>L'axe RGPD est OFFICIELLEMENT CLÔTURÉ.</b> Récapitulatif de tout ce qui a été livré sur 4 versions :</p>
+    <table>
+      <thead><tr><th>Version</th><th>Apport principal</th></tr></thead>
+      <tbody>
+        <tr><td><b>0.21.0</b></td><td>Consentement RGPD complet : modale, signature électronique (tactile + WebHID), hash SHA-256, stockage Supabase Storage privé, page /consentements (liste, filtres, archivage)</td></tr>
+        <tr><td><b>0.22.0</b></td><td>PDF du consentement avec signature intégrée (jsPDF CDN), QR code de vérification, page publique /verifier/[id] (anonyme), renouvellement automatique 3 ans</td></tr>
+        <tr><td><b>0.23.0</b></td><td>Cron renouvellement quotidien (push + webhook + email DPO), page admin /consent-verifications (audit scans QR), durée validité configurable par collectivité</td></tr>
+        <tr><td><b>0.24.0</b></td><td>Branchement Resend, auto-archivage mensuel des expirés &gt; 6 mois, export CSV audit annuel</td></tr>
+      </tbody>
+    </table>
+    <p><b>Aveho EC RGPD = produit vendable</b> à un PSAD avec audit CNIL ready. Plus aucun TODO sur l'axe RGPD lui-même.</p>
+  </div>
+
+  <h3>11.1 Pistes futures (NOT en RGPD)</h3>
+  <ul>
+    <li><b>Modèles personnalisables</b> : éditeur de template du consentement par collectivité (en option, si demande commerciale)</li>
+    <li><b>Sauvegarde des filtres par utilisateur</b> (localStorage)</li>
+    <li><b>Préférences notifications par utilisateur</b></li>
+    <li><b>Mode hors-ligne avec queue d'écritures</b> (gros chantier, en journée)</li>
+    <li><b>Tests Playwright</b> sur les flows critiques</li>
+    <li><b>Dashboard statistiques</b> RGPD dans /statistiques</li>
+  </ul>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Alpha 0.24.0 · 31 mai 2026 (matin)</p>
+    <p>FINITION RGPD — Resend · Auto-archivage · Export CSV — Axe RGPD clôturé ✓</p>
+  </footer>
+
+</div>
+</body>
+</html>

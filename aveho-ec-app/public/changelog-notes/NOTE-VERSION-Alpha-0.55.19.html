@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.19 — Icônes de statut TopBar</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b;--gray:#8a98a8}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.demo{background:#142131;color:#fff;padding:24px}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid #e3e9ee}
+  table td{padding:7px 9px;border-bottom:1px solid #e3e9ee;vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — ICÔNES DE STATUT TOPBAR</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.19 — Icônes de statut dans la TopBar
+      <small>7 indicateurs visuels compacts à côté du menu user · feux vert/rouge/gris · popover détail au clic · bouton d'action contextuel</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.19-alpha</code></span>
+      <span><b>Tests :</b> 1087 verts (+17)</span>
+    </div>
+    <div class="badges">
+      <span class="badge">🌐 Réseau live</span>
+      <span class="badge">🔔 Permissions</span>
+      <span class="badge">📍 Géoloc</span>
+      <span class="badge">📱 PWA installée</span>
+      <span class="badge">☁ Service Worker</span>
+      <span class="badge">👆 Empreinte</span>
+      <span class="badge">😀 Face</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Une <b>barre de statut</b> dans la TopBar pour voir d'un coup d'œil ce qui est activé / autorisé / dispo sur l'appareil courant. Comme la barre de statut système d'un téléphone mais pour Aveho EC.</p>
+    <p>Chaque icône a une petite pastille colorée en bas à droite :</p>
+    <ul>
+      <li><span class="dot" style="background:#5aa05a"></span><b>Vert</b> — feature active / autorisée / OK</li>
+      <li><span class="dot" style="background:#c0392b"></span><b>Rouge</b> — feature refusée / bloquée / KO</li>
+      <li><span class="dot" style="background:#8a98a8"></span><b>Gris</b> — feature non configurée / indéterminée</li>
+    </ul>
+  </div>
+
+  <h2>📊 Les 7 indicateurs</h2>
+  <table>
+    <thead><tr><th>Icône</th><th>Feature</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><code>ti-wifi</code> / <code>ti-wifi-off</code></td><td><b>Réseau</b></td><td><code>navigator.onLine</code> + events online/offline live</td></tr>
+      <tr><td><code>ti-bell</code> / <code>ti-bell-off</code></td><td><b>Notifications</b></td><td><code>Notification.permission</code> (granted/denied/default)</td></tr>
+      <tr><td><code>ti-map-pin</code> / <code>ti-map-pin-off</code></td><td><b>Géolocalisation</b></td><td><code>navigator.permissions.query({name:"geolocation"})</code></td></tr>
+      <tr><td><code>ti-device-mobile-check</code></td><td><b>PWA installée</b></td><td><code>(display-mode: standalone)</code> + iOS <code>navigator.standalone</code></td></tr>
+      <tr><td><code>ti-cloud-check</code> / <code>ti-cloud-off</code></td><td><b>Service Worker</b></td><td><code>navigator.serviceWorker?.controller</code></td></tr>
+      <tr><td><code>ti-fingerprint</code></td><td><b>Empreinte</b></td><td><code>getAvailableMethods()</code> contient 'empreinte'</td></tr>
+      <tr><td><code>ti-face-id</code></td><td><b>Détection faciale</b></td><td><code>getAvailableMethods()</code> contient 'face'</td></tr>
+    </tbody>
+  </table>
+
+  <h2>👆 Au clic sur une icône → popover détail</h2>
+  <div class="panel">
+    <p>Largeur 280px, ancré sous l'icône. Contient :</p>
+    <ol>
+      <li><b>Header coloré</b> avec icône grande taille + libellé + état (✓ Activé / ✗ Refusé / ○ Non configuré)</li>
+      <li><b>Description</b> contextuelle (ex. "Notifications bloquées (réglages navigateur)")</li>
+      <li><b>Bouton d'action</b> selon état :
+        <ul>
+          <li>Notification "default" → bouton <b>Autoriser</b> qui appelle <code>Notification.requestPermission()</code></li>
+          <li>Géoloc "prompt" → bouton <b>Autoriser</b> qui appelle <code>geolocation.getCurrentPosition()</code></li>
+          <li>Empreinte/Face inactive → bouton <b>Gérer</b> qui redirige vers <code>/profil</code></li>
+          <li>Si denied : pas de bouton (impossible de re-demander, il faut passer par les réglages navigateur) — info donnée dans la description</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>📱 Responsive mobile</h2>
+  <div class="panel">
+    <p>Sur écran ≤ 520px, on cache les icônes secondaires (Service Worker, Empreinte, Face) pour ne pas saturer la TopBar. Les 4 plus importantes restent visibles :</p>
+    <ul>
+      <li>Réseau (critique en mobile)</li>
+      <li>Notifications</li>
+      <li>Géolocalisation</li>
+      <li>PWA installée</li>
+    </ul>
+    <p>Les autres restent accessibles via le menu Profil → Connexion biométrique.</p>
+  </div>
+
+  <h2>🛠 Architecture</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Composant <code>app/StatusIcons.js</code></h3>
+    <ul>
+      <li>State <code>status</code> avec tous les flags</li>
+      <li>useEffect au mount qui calcule l'état initial + écoute online/offline events</li>
+      <li>Construction d'un array <code>features[]</code> avec { id, icon, label, ok, ko, desc, action }</li>
+      <li>Render : boutons avec icône + pastille colorée. État ouvert = popover affiché en dessous</li>
+      <li>Backdrop transparent pour fermer le popover au clic en dehors</li>
+    </ul>
+
+    <h3>Intégration TopBar</h3>
+    <pre><code>{mounted && auth && &lt;StatusIcons auth={auth} /&gt;}
+{mounted && auth && &lt;UserMenu auth={auth} /&gt;}</code></pre>
+    <p>Monté juste avant <code>UserMenu</code> (les 3 points), donc apparaît à gauche de celui-ci dans le flow horizontal.</p>
+  </div>
+
+  <h2>📈 Tests</h2>
+  <div class="panel hi">
+    <p>+17 tests Vitest dans <code>__tests__/v055-19-status-icons.test.js</code> :</p>
+    <ul>
+      <li>Logique colorFor() (ok/ko/neutre)</li>
+      <li>parseNotifState pour les 4 valeurs possibles de Notification.permission</li>
+      <li>isPwaInstalled (display-mode + iOS standalone)</li>
+      <li>buildFeatureIds (5 sans bio, 7 avec)</li>
+      <li>getAction (bouton Autoriser/Gérer conditionnel)</li>
+    </ul>
+    <p>Total : <b>1087 tests verts</b> (vs 1070 en 0.55.18).</p>
+    <p>Smoke test in-browser 0.55.19 vérifie la dispo des APIs Notification / Permissions / Geolocation / Service Worker / matchMedia.</p>
+  </div>
+
+  <h2>Fichiers</h2>
+  <ul>
+    <li><code>app/StatusIcons.js</code> : <b>NOUVEAU</b> (~310 lignes)</li>
+    <li><code>app/TopBar.js</code> : import + insertion avant UserMenu</li>
+    <li><code>__tests__/v055-19-status-icons.test.js</code> : <b>NOUVEAU</b> (+17 tests)</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.19 (6 smoke tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.19</li>
+    <li><code>package.json</code> : 0.55.18 → 0.55.19</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <p>Pas de SQL. Juste :</p>
+    <pre><code>cd C:\aveho-ec-app
+# Décompresser le zip par-dessus
+git add -A
+git commit -m "Alpha 0.55.19 - Icones de statut TopBar (reseau, perms, bio, PWA, SW)"
+git push origin main</code></pre>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Reload n'importe quelle page de l'app</li>
+      <li>Regarde la TopBar à droite : entre le panier et les 3 points, tu vois maintenant 7 petites icônes avec pastilles colorées</li>
+      <li>Réseau wifi-on → vert (active mode avion → rouge en live ✓)</li>
+      <li>Clic sur l'icône notif → popover. Si "default" → bouton "Autoriser" → prompt navigateur → popover se met à jour en vert</li>
+      <li>Clic sur empreinte/face : selon ce qui est activé sur l'appareil</li>
+      <li>Clic en dehors → popover se ferme</li>
+      <li>Sur mobile < 520px : seules les 4 premières icônes restent visibles</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 29ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.18 → <b>0.55.19</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.19 · 31 mai 2026</p>
+    <p>StatusIcons · 7 indicateurs live · popover détail · +17 tests · 1087 verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

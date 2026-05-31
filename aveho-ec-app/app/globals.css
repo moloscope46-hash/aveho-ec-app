@@ -1,0 +1,1027 @@
+@import "@tabler/icons-webfont/tabler-icons.css";
+
+:root{
+  --navy:#142131; --teal:#7CC8C8; --tealdk:#2a5a5a; --terra:#C9867F;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:'Quicksand',sans-serif;color:#142131;background:#0f1b28}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+/* fond foncé dégradé façon maquette */
+.bg-dark{min-height:100vh;background:radial-gradient(1200px 600px at 70% -10%, #244a55 0%, #18202c 45%, #0f1b28 100%)}
+
+/* === Topbar compacte === */
+.topbar{height:58px;background:linear-gradient(90deg,#142131 0%,#2a5a5a 75%,#7CC8C8 140%);display:flex;align-items:center;gap:12px;padding:0 16px;color:#fff;position:sticky;top:0;z-index:40;max-width:100vw}
+.topbar > *{min-width:0;flex-shrink:1}
+.logo{font-size:21px;font-weight:500;letter-spacing:2px;cursor:pointer;display:inline-flex;align-items:center;line-height:1;height:24px;flex-shrink:0}
+.logo .v{color:var(--teal)}
+/* Alpha 0.49.0 : badge version dans la TopBar */
+.version-badge{font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#bfe6e6;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.28);padding:0 10px;border-radius:12px;cursor:pointer;margin-left:8px;transition:all .15s;user-select:none;display:inline-flex;align-items:center;justify-content:center;line-height:1;height:24px;flex-shrink:0;white-space:nowrap}
+.version-badge:hover{background:rgba(124,200,200,.28);color:#fff}
+@media(max-width:520px){.version-badge{font-size:9.5px;padding:0 8px;height:22px}}
+/* Alpha 0.49.1 : caché sur tablette/mobile pour ne pas pousser UserMenu hors écran */
+@media(max-width:900px){.version-badge{margin-left:4px}}
+.topbar .spacer{flex:1}
+.tb-page{font-size:14px;font-weight:600;opacity:.92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
+.burger{background:rgba(255,255,255,.14);border:none;color:#fff;width:40px;height:40px;border-radius:10px;font-size:20px;display:flex;align-items:center;justify-content:center}
+.tb-icon{position:relative;background:rgba(255,255,255,.12);border:none;color:#fff;width:40px;height:40px;border-radius:10px;font-size:19px;display:flex;align-items:center;justify-content:center}
+.tb-badge{position:absolute;top:-5px;right:-5px;background:#e35d5b;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.menu-overlay{position:fixed;inset:0;background:rgba(8,14,22,.55);z-index:48;opacity:0;pointer-events:none;transition:opacity .25s}
+.menu-overlay.open{opacity:1;pointer-events:auto}
+.menu-drawer{position:fixed;top:0;left:0;height:100vh;width:380px;max-width:88vw;background:#f4f7fa;z-index:49;transform:translateX(-104%);transition:transform .28s cubic-bezier(.22,.61,.36,1);display:flex;flex-direction:column;box-shadow:8px 0 40px rgba(0,0,0,.25)}
+.menu-drawer.open{transform:translateX(0)}
+.menu-head{height:58px;background:#142131;display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;position:relative}
+.menu-head .logo{color:#fff;font-size:22px}
+.menu-close{background:rgba(255,255,255,.14);border:none;color:#fff;width:38px;height:38px;border-radius:10px;font-size:18px}
+/* Alpha 0.48.0 : indicateur swipe visible uniquement sur tactile/mobile */
+.swipe-hint{display:none}
+@media(max-width:768px){.swipe-hint{display:inline-block !important}}
+.menu-scroll{flex:1;overflow-y:auto;padding:16px 16px 30px}
+.menu-section{margin-bottom:20px}
+.menu-section-h{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9aa7b4;margin:0 4px 10px;display:flex;align-items:center;gap:7px}
+.menu-section-h .bar{flex:1;height:1px;background:#e1e7ec}
+.menu-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.menu-tile{position:relative;background:#fff;border:1px solid #e6ebf0;border-radius:14px;padding:14px 12px;display:flex;flex-direction:column;gap:9px;cursor:pointer;transition:.14s;text-align:left}
+.menu-tile:hover{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.08)}
+.menu-tile.on{box-shadow:0 0 0 2px var(--teal) inset;background:#f4fbfb}
+.menu-tile .mt-ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.menu-tile .mt-lbl{font-size:13px;font-weight:600;color:var(--navy);line-height:1.2}
+.menu-tile .mt-count{position:absolute;top:10px;right:10px;background:#e35d5b;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.menu-tile .mt-count.teal{background:var(--teal);color:var(--navy)}
+@media(max-width:520px){.menu-drawer{width:100vw;max-width:100vw}.tb-page{max-width:34vw}}
+
+/* layout contenu */
+.wrap{max-width:1180px;margin:0 auto;padding:30px 24px 60px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(124,200,200,.15);color:#bfe6e6;border:1px solid rgba(124,200,200,.3);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.h1{color:#fff;font-size:34px;font-weight:700;margin:16px 0 6px}
+.h1 .accent{color:var(--teal)}
+.sub{color:#9fb6c2;font-size:15px;max-width:640px;line-height:1.5}
+
+/* pavé promotions */
+.promo-panel{background:linear-gradient(180deg,#fff,#fbfcfd);border-radius:18px;padding:22px 24px;margin-top:28px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.promo-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.promo-head .icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#f08a5d,#e35d5b);color:#fff;display:flex;align-items:center;justify-content:center}
+.promo-head h2{margin:0;font-size:18px;color:var(--navy)}
+.promo-head .live{background:#FEEFC7;color:#8a5a00;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px}
+.promo-head .count{margin-left:auto;background:#e35d5b;color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.promo-sub{color:#8a98a8;font-size:13px;margin-bottom:16px}
+
+.promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.promo-card{border:1px solid #eee;border-radius:14px;padding:16px;position:relative;background:#fff;transition:transform .15s, box-shadow .15s}
+.promo-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.08)}
+.tag{font-size:10px;font-weight:700;letter-spacing:.5px;padding:4px 9px;border-radius:8px;color:#fff;text-transform:uppercase}
+.t-flash{background:#c0407a}.t-destockage{background:#c97a2a}.t-nouveau{background:#7a6fb0}
+.t-promo{background:#c0407a}.t-bonus{background:#5a8f8f}.t-eco{background:#5aa05a}
+.remise{position:absolute;top:14px;right:14px;background:#142131;color:#fff;font-size:13px;font-weight:700;padding:5px 10px;border-radius:10px}
+.emoji{width:40px;height:40px;border-radius:10px;background:#f4f6f8;display:flex;align-items:center;justify-content:center;font-size:20px;margin:12px 0 8px}
+.mag{font-size:11px;color:#8a98a8;display:inline-flex;align-items:center;gap:5px;margin-bottom:8px}
+.pname{font-size:15px;font-weight:600;color:var(--navy);margin:0 0 3px}
+.pdesc{font-size:12px;color:#8a98a8;margin:0 0 10px;min-height:32px}
+.prices{margin-bottom:12px}
+.pbefore{color:#b8c0c8;text-decoration:line-through;font-size:13px;margin-right:6px}
+.pafter{color:#e35d5b;font-size:19px;font-weight:700}
+.punit{color:#e35d5b;font-size:13px;font-weight:600}
+.promo-foot{display:flex;align-items:center;justify-content:space-between}
+.days{font-size:11px;color:#8a98a8;display:inline-flex;align-items:center;gap:5px}
+.btn-cmd{background:#c0407a;color:#fff;border:none;border-radius:18px;padding:7px 14px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn-cmd.t-destockage{background:#c97a2a}.btn-cmd.t-nouveau{background:#7a6fb0}
+.btn-cmd.t-bonus{background:#5a8f8f}.btn-cmd.t-eco{background:#5aa05a}.btn-cmd.t-promo{background:#c0407a}
+
+/* tables / cartes claires (panier, commandes) */
+.panel{background:#fff;border-radius:16px;padding:22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.panel h2{margin:0 0 16px;color:var(--navy);font-size:20px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 12px;font-size:12px;color:#5a6776;border-bottom:1px solid #eee}
+td{padding:11px 12px;font-size:13px;border-bottom:1px solid #f4f4f4}
+.statut{border-radius:14px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.s-encours{background:#FFF3E0;color:#8a5300}.s-validee{background:#E6F1FB;color:#185FA5}.s-livree{background:#E1F5EE;color:#0F6E56}
+
+/* login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{display:grid;grid-template-columns:1fr 1fr;max-width:1000px;width:100%;border-radius:22px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.login-left{background:linear-gradient(160deg,#142131,#23404a);color:#fff;padding:48px 44px}
+.login-left .logo{font-size:30px}
+.login-left h2{font-size:30px;font-weight:700;line-height:1.2;margin:28px 0 18px}
+.login-left h2 .accent{color:var(--teal)}
+.login-left p{color:#9fb6c2;font-size:14px;line-height:1.6}
+.feat{display:flex;align-items:center;gap:10px;color:#cfe0e6;font-size:13px;margin:12px 0}
+.feat .fi{width:30px;height:30px;border-radius:8px;background:rgba(124,200,200,.18);color:var(--teal);display:flex;align-items:center;justify-content:center}
+.login-right{background:#fff;padding:48px 44px;display:flex;flex-direction:column;justify-content:center}
+.login-right h1{font-size:26px;margin:0 0 6px;color:var(--navy)}
+.login-right .muted{color:#8a98a8;font-size:13px;margin-bottom:22px}
+label{font-size:11px;font-weight:700;letter-spacing:.5px;color:#8a98a8;text-transform:uppercase}
+.input{width:100%;height:46px;border:1px solid #e1e6eb;border-radius:10px;padding:0 14px;font-size:14px;font-family:inherit;margin:6px 0 16px;background:#fafbfc}
+.btn-primary{width:100%;height:48px;background:var(--teal);color:var(--navy);border:none;border-radius:10px;font-size:15px;font-weight:700}
+.btn-primary:disabled{opacity:.6}
+.err{background:#FDECEA;color:#9b2c2c;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+.ok{background:#E1F5EE;color:#0F6E56;border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px}
+
+@media(max-width:760px){.login-card{grid-template-columns:1fr}.login-left{display:none}}
+
+/* KPI tuiles (tableau de bord accueil) */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:24px}
+.kpi-tile{text-align:left;border:none;background:#fff;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.kpi-tile:hover{transform:translateY(-2px);transition:transform .15s}
+.kpi-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px}
+.kpi-val{font-size:25px;font-weight:700;color:var(--navy)}
+.kpi-lbl{font-size:13px;color:#5a6776}
+
+/* tuiles magasins (choix fournisseur) */
+.mag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:24px}
+.mag-tile{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.14);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.mag-tile:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.2)}
+.mag-photo{height:150px;background-size:cover;background-position:center;position:relative}
+.mag-photo .fav{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#C9867F}
+.mag-body{padding:16px 18px}
+.mag-name{font-size:17px;font-weight:700;color:var(--navy);margin:0 0 2px}
+.mag-meta{font-size:12px;color:#8a98a8;display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.mag-stats{display:flex;gap:18px;margin-bottom:14px}
+.mag-stat{display:flex;flex-direction:column}
+.mag-stat .v{font-size:18px;font-weight:700;color:var(--navy)}
+.mag-stat .l{font-size:11px;color:#8a98a8}
+.mag-cta{width:100%;border:none;border-radius:10px;padding:11px 0;font-weight:700;font-size:14px;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* CRUD : toolbar, modale, formulaire */
+.di-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px;flex-wrap:wrap}
+.btn-new{background:var(--teal);color:var(--navy);border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.btn-new:disabled{opacity:.5}
+.modal-bg{position:fixed;inset:0;background:rgba(20,33,49,.5);display:flex;align-items:center;justify-content:center;z-index:80;padding:20px}
+.modal{width:560px;max-width:100%;background:#fff;border-radius:16px;overflow:hidden;max-height:92vh;overflow-y:auto;padding:22px}
+/* Alpha 0.52.6 : si la modale a sa propre structure header/body/footer, retirer le padding parent */
+.modal:has(> .modal-head),
+.modal:has(> .modal-body),
+.modal:has(> .modal-foot){padding:0}
+/* Fallback pour navigateurs sans :has() : classe explicite */
+.modal-structured{padding:0 !important}
+.modal-head{background:var(--navy);color:#fff;padding:14px 18px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px}
+.fld{margin-bottom:14px}
+.fld label{display:block;margin-bottom:5px;font-size:11px;font-weight:700;letter-spacing:.5px;color:#8a98a8;text-transform:uppercase}
+.fld select,.fld input,.fld textarea{width:100%;border:1px solid #e1e6eb;border-radius:9px;padding:10px 12px;font-family:inherit;font-size:14px;background:#fafbfc}
+.fld textarea{min-height:80px;resize:vertical}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 18px;border-top:1px solid #eee}
+.btn-ghost{background:#ECEEF0;color:#5a6776;border:none;border-radius:18px;padding:9px 18px;font-weight:600}
+.btn-save{background:var(--teal);color:var(--navy);border:none;border-radius:18px;padding:9px 20px;font-weight:700}
+.btn-save:disabled{opacity:.5}
+.tag-type{font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px;background:#eef1f4;color:#3c4856;white-space:nowrap}
+
+/* formulaire 2 colonnes, segmented control, bouton mini (transferts) */
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:inline-flex;border:1px solid #e1e6eb;border-radius:9px;overflow:hidden}
+.seg button{background:#fff;border:none;padding:9px 16px;font-family:inherit;font-size:13px;color:#5a6776}
+.seg button.on{background:var(--teal);color:var(--navy);font-weight:700}
+.btn-mini{background:#eef6f6;color:#2a5a5a;border:1px solid #cfe6e6;border-radius:14px;padding:5px 11px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.s-encours2{background:#FFF3E0;color:#8a5300}
+
+/* DI : filtres, urgence, statut nouvelle */
+.di-filters{display:flex;gap:8px;flex-wrap:wrap}
+.di-filters select{height:38px;border:1px solid #e1e6eb;border-radius:9px;padding:0 10px;font-family:inherit;font-size:13px;background:#fff}
+.urg{font-size:11px;font-weight:700;padding:3px 9px;border-radius:8px}
+.urg-normal{background:#eef1f4;color:#5a6776}.urg-urgent{background:#FDECEA;color:#c0392b}
+.s-nouvelle{background:#EDEBFB;color:#5b46c0}
+
+/* === Mon établissement (plan + arbre) === */
+.btn-etab{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:10px 18px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.etab-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.etab-filters{display:flex;gap:8px;flex-wrap:wrap}
+.etab-filters select{height:38px;border:1px solid #e1e6eb;border-radius:9px;padding:0 10px;font-family:inherit;font-size:13px;background:#fff;min-width:130px}
+.active-flt{display:inline-flex;align-items:center;gap:8px;background:#eef6f6;color:#2a5a5a;border:1px solid #cfe6e6;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;margin-right:8px}
+.active-flt i.x{cursor:pointer;color:#c0392b}
+.plan-bat{border:1px solid #e3e8ed;border-radius:14px;margin-bottom:16px;overflow:hidden}
+.plan-bat-h{background:linear-gradient(90deg,#142131,#23404a);color:#fff;padding:10px 16px;font-weight:700;display:flex;align-items:center;gap:8px;font-size:14px}
+.plan-etage{padding:12px 16px;border-top:1px solid #f0f3f6}
+.plan-etage-h{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.plan-service{margin:0 0 12px 8px;padding-left:12px;border-left:3px solid #e3e8ed}
+.plan-service-h{font-size:12px;font-weight:600;color:#5a6776;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px}
+.chambres{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.chambre{border:1px solid #e3e8ed;border-radius:11px;padding:10px;cursor:pointer;transition:.12s;background:#fff}
+.chambre:hover{border-color:var(--teal);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.chambre.sel{box-shadow:0 0 0 2px var(--teal) inset}
+.chambre-h{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;color:var(--navy);margin-bottom:8px;gap:6px}
+.chambre-h .occ{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px}
+.lits{display:flex;flex-direction:column;gap:5px}
+.lit{display:flex;align-items:center;gap:7px;font-size:11px;padding:5px 7px;border-radius:7px;background:#f7f9fb}
+.lit .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.lit .lmat{margin-left:auto;color:#2a5a5a}
+.badge-di{background:#FDECEA;color:#c0392b;font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;margin-left:4px}
+.tree ul{list-style:none;margin:0;padding-left:18px}
+.tree>ul{padding-left:0}
+.tree li{margin:3px 0}
+.tree .node{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border-radius:8px;cursor:pointer;font-size:13px}
+.tree .node:hover{background:#f4fbfb}
+.tree .node.sel{background:#eef6f6;font-weight:700;color:#2a5a5a}
+.tree .n-bat{font-weight:700;color:var(--navy)}
+.tree .n-lit{color:#5a6776;font-size:12px}
+
+.btn-magic{width:100%;height:46px;background:#fff;color:#2a5a5a;border:1.5px solid #cfe6e6;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-magic:disabled{opacity:.5}
+
+/* sélecteur établissement dans la topbar */
+.etab-switch{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border-radius:10px;padding:0 6px 0 10px;height:38px;color:#fff;max-width:200px}
+.etab-switch select{background:transparent;border:none;color:#fff;font-family:inherit;font-size:13px;font-weight:600;max-width:150px;height:38px;cursor:pointer}
+.etab-switch select option{color:#142131}
+
+/* === PWA : boutons d'installation === */
+.pwa-mobile{position:fixed;left:14px;right:14px;bottom:16px;z-index:60;height:52px;border:none;border-radius:14px;background:linear-gradient(90deg,#142131,#2a5a5a);color:#fff;font-family:inherit;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.pwa-desktop{position:fixed;top:12px;right:18px;z-index:60;height:38px;padding:0 16px;border:1.5px solid var(--teal);border-radius:20px;background:#fff;color:#2a5a5a;font-family:inherit;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);cursor:pointer}
+.pwa-desktop:hover{background:#f4fbfb}
+.pwa-ios{position:fixed;left:12px;right:12px;bottom:14px;z-index:60;background:#142131;color:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.pwa-ios b{color:var(--teal)}
+.pwa-ios button{margin-left:auto;background:rgba(255,255,255,.15);border:none;color:#fff;width:30px;height:30px;border-radius:8px;flex-shrink:0}
+
+/* ============================================================
+   RESPONSIVE MOBILE — corrige le débordement des tableaux
+   ============================================================ */
+
+/* tableaux : largeur mini pour garder les colonnes lisibles + scroll dans le panel */
+.panel{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{min-width:560px}                 /* force le scroll plutôt que d'écraser les colonnes */
+.panel table{margin:0}
+
+@media(max-width:760px){
+  .wrap{padding:18px 12px 90px}
+  .h1{font-size:25px}
+  .h1.small{font-size:21px}
+  .sub{font-size:13px}
+  /* KPIs : 2 par ligne sur mobile */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi-val{font-size:20px}
+  .kpi-tile{padding:14px}
+  /* filtres & toolbars : pleine largeur, empilés */
+  .di-toolbar{flex-direction:column;align-items:stretch}
+  .di-filters{flex-direction:column}
+  .di-filters select,.etab-filters select{width:100%;min-width:0}
+  .etab-bar{flex-direction:column;align-items:stretch}
+  .etab-bar .seg{margin-left:0!important;width:100%}
+  .etab-bar .seg button{flex:1}
+  .seg{width:100%}
+  .seg button{flex:1}
+  /* modales : plein écran bas */
+  .modal{width:100%;max-width:100%;border-radius:18px 18px 0 0;position:fixed;bottom:0;left:0;max-height:90vh}
+  .modal-bg{align-items:flex-end;padding:0}
+  .fld-row{grid-template-columns:1fr}        /* champs empilés */
+  /* tuiles magasins/établissements pleine largeur */
+  .mag-grid{grid-template-columns:1fr}
+  /* panel garde le scroll horizontal pour les tables */
+  .panel{padding:14px;border-radius:14px}
+  /* titres de page : laisser le bouton passer dessous */
+  .chambres{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:420px){
+  .kpi-grid{grid-template-columns:1fr}      /* 1 KPI par ligne sur très petit écran */
+  .chambres{grid-template-columns:1fr}
+}
+
+/* indicateur visuel "scroll →" sur les tables en mobile */
+@media(max-width:760px){
+  .panel{position:relative}
+}
+
+/* login : "Aveho présente" + badge version */
+.presente{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--teal);opacity:.85;margin-bottom:14px}
+.version-badge{display:inline-block;margin-top:24px;background:rgba(124,200,200,.16);border:1px solid rgba(124,200,200,.35);color:#bfe6e6;font-size:11px;font-weight:700;letter-spacing:1px;padding:5px 12px;border-radius:20px}
+
+/* login responsive : panneau gauche visible aussi sur mobile (version compacte) */
+@media(max-width:760px){
+  .login-card{grid-template-columns:1fr!important}
+  .login-left{display:block!important;padding:24px 22px!important}
+  .login-left h2{font-size:22px}
+  .login-left p{font-size:13px}
+  .login-left .feat{font-size:12px}
+  .version-badge{margin-top:16px}
+}
+
+/* =================== Alpha 0.2 — Modal v2 unifiée =================== */
+.modal-v2{padding:0;overflow:hidden;animation:modalIn .25s cubic-bezier(.2,.8,.2,1)}
+@keyframes modalIn{from{transform:translateY(20px) scale(.97);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.modal-head-v2{display:flex;align-items:center;gap:12px;padding:18px 22px;color:#fff;border-radius:18px 18px 0 0}
+.modal-head-v2 .modal-ic{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);font-size:18px}
+.modal-head-v2 .modal-title{flex:1;font-size:16px;font-weight:700;letter-spacing:.2px}
+.modal-head-v2 .modal-x{background:rgba(255,255,255,.16);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:16px;transition:background .15s}
+.modal-head-v2 .modal-x:hover{background:rgba(255,255,255,.3)}
+.modal-v2 .modal-body{padding:22px 24px;max-height:68vh;overflow-y:auto}
+.modal-v2 .modal-foot{padding:14px 22px 18px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;background:#fafbfc;border-radius:0 0 18px 18px}
+
+/* Bouton danger (suppressions, actions destructives) */
+.btn-danger{background:#C9867F;color:#fff;border:none;padding:9px 18px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+.btn-danger:hover{background:#b27068}
+.btn-danger:disabled{opacity:.5;cursor:not-allowed}
+
+/* Petits ajustements modal mobile pour la v2 */
+@media(max-width:760px){
+  .modal-v2{border-radius:18px 18px 0 0!important;width:100%!important;max-width:100%!important}
+  .modal-head-v2{border-radius:18px 18px 0 0}
+  .modal-v2 .modal-foot{border-radius:0}
+}
+
+/* Édition hiérarchie (Alpha 0.2) */
+.hier-block{border:1px solid #eef1f4;border-radius:12px;padding:12px;margin-bottom:14px;background:#fbfcfd}
+.hier-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;gap:10px;transition:background .15s}
+.hier-row:hover{background:#f4f7fa}
+.hier-info{display:flex;align-items:center;gap:12px}
+.hier-actions{display:flex;align-items:center;gap:10px}
+.hier-children{margin-left:22px;border-left:2px solid #e3e9ee;padding-left:14px;margin-top:4px}
+@media(max-width:760px){.hier-children{margin-left:8px;padding-left:8px}.hier-row{flex-wrap:wrap}}
+
+/* ===== Alpha 0.3 — Notifications (cloche TopBar + panneau) ===== */
+.notif-wrap{position:relative;display:inline-flex;align-items:center}
+.notif-btn{background:rgba(255,255,255,.1);border:none;color:#fff;width:38px;height:38px;border-radius:10px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:18px;position:relative;transition:background .15s}
+.notif-btn:hover{background:rgba(255,255,255,.2)}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:#e35d5b;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;animation:notifPulse 2s infinite}
+@keyframes notifPulse{0%,100%{box-shadow:0 0 0 0 rgba(227,93,91,.5)}50%{box-shadow:0 0 0 6px rgba(227,93,91,0)}}
+.notif-panel{position:absolute;top:46px;right:-8px;width:360px;max-width:calc(100vw - 16px);background:#fff;border:1px solid #e3e9ee;border-radius:14px;box-shadow:0 14px 40px rgba(20,33,49,.2);z-index:100;overflow:hidden;animation:notifIn .2s cubic-bezier(.2,.8,.2,1)}
+@keyframes notifIn{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.notif-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #eef1f4;background:#fafbfc;color:#142131}
+.notif-readall{background:transparent;border:none;color:#2a5a5a;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline}
+.notif-list{max-height:440px;overflow-y:auto}
+.notif-empty{padding:36px;text-align:center;color:#8a98a8;font-size:13px}
+.notif-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #f4f7fa;cursor:pointer;transition:background .15s;position:relative}
+.notif-item:hover{background:#f4f7fa}
+.notif-item.unread{background:#eaf7f7}
+.notif-item.unread::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;border-radius:3px;background:#7CC8C8;transform:translateY(-50%)}
+.notif-ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;font-size:17px;flex-shrink:0;margin-top:2px}
+.notif-body{flex:1;min-width:0}
+.notif-titre{font-weight:600;color:#142131;font-size:13.5px;line-height:1.35}
+.notif-msg{color:#6c7a89;font-size:12.5px;line-height:1.5;margin-top:3px}
+.notif-date{color:#9aa7b4;font-size:11px;margin-top:4px}
+.notif-del{position:absolute;top:8px;right:8px;color:#c0c7d0;cursor:pointer;font-size:14px;padding:4px;border-radius:4px}
+.notif-del:hover{background:#fde0dc;color:#a32f24}
+@media(max-width:760px){.notif-panel{position:fixed;top:62px;right:8px;left:8px;width:auto}}
+
+/* ===== Alpha 0.3 — Recherche globale (TopBar) ===== */
+.gs-wrap{position:relative;min-width:240px;max-width:360px;flex:1}
+.gs-input{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:0 12px;height:38px;transition:background .15s}
+.gs-input:focus-within{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35)}
+.gs-input i{color:#cfe0e0;font-size:16px}
+.gs-input input{flex:1;background:transparent;border:none;color:#fff;font-family:inherit;font-size:13px;outline:none;min-width:0}
+.gs-input input::placeholder{color:rgba(255,255,255,.55)}
+.gs-clear{cursor:pointer}
+.gs-clear:hover{color:#fff}
+.gs-panel{position:absolute;top:46px;left:0;right:0;max-width:480px;background:#fff;border:1px solid #e3e9ee;border-radius:14px;box-shadow:0 14px 40px rgba(20,33,49,.2);z-index:100;overflow:hidden;animation:notifIn .2s cubic-bezier(.2,.8,.2,1);max-height:520px;overflow-y:auto}
+.gs-empty{padding:24px;text-align:center;color:#8a98a8;font-size:13px}
+.gs-group{padding:4px 0}
+.gs-group+.gs-group{border-top:1px solid #f4f7fa}
+.gs-grouph{padding:8px 16px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8a98a8;font-weight:700;background:#fafbfc;display:flex;align-items:center;gap:8px}
+.gs-item{padding:10px 16px;cursor:pointer;font-size:13.5px;color:#142131;transition:background .12s}
+.gs-item:hover{background:#eaf7f7}
+.gs-item b{color:#142131}
+.gs-meta{color:#8a98a8;font-size:12.5px}
+@media(max-width:760px){
+  .gs-wrap{display:none}    /* sur mobile, on cache la barre (place limitée) */
+}
+
+/* ===== Alpha 0.6 — Bandeau hors-ligne ===== */
+.offline-banner{position:fixed;top:0;left:0;right:0;z-index:200;background:linear-gradient(90deg,#e35d5b 0%,#C9867F 100%);color:#fff;padding:10px 18px;display:flex;align-items:center;gap:12px;font-size:13.5px;box-shadow:0 4px 14px rgba(227,93,91,.3);animation:slideDown .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.offline-banner i{font-size:20px}
+.offline-banner b{font-weight:700}
+body:has(.offline-banner) .bg-dark{padding-top:44px}
+@media(max-width:760px){.offline-banner{font-size:12px;padding:8px 12px}}
+
+/* ===== Alpha 0.7 — Mode foncé ===== */
+html[data-theme="dark"]{
+  --aveho-bg:#0e1620;
+  --aveho-panel:#1a2434;
+  --aveho-line:#2a3645;
+  --aveho-text:#e8edf2;
+  --aveho-muted:#9aa7b4;
+}
+html[data-theme="dark"] body{background:var(--aveho-bg);color:var(--aveho-text)}
+html[data-theme="dark"] .bg-dark{background:var(--aveho-bg)}
+html[data-theme="dark"] .panel{background:var(--aveho-panel);border-color:var(--aveho-line);color:var(--aveho-text)}
+html[data-theme="dark"] table th{background:#243044;color:var(--aveho-text);border-color:var(--aveho-line)}
+html[data-theme="dark"] table td{border-color:var(--aveho-line);color:var(--aveho-text)}
+html[data-theme="dark"] tbody tr:hover{background:#222d40}
+html[data-theme="dark"] .h1,html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3{color:var(--aveho-text)}
+html[data-theme="dark"] .sub,html[data-theme="dark"] .eyebrow{color:var(--aveho-muted)}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background:#243044;color:var(--aveho-text);border-color:var(--aveho-line)}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#6c7a89}
+html[data-theme="dark"] .kpi-tile{background:var(--aveho-panel);border-color:var(--aveho-line)}
+html[data-theme="dark"] .kpi-tile .kpi-val{color:var(--aveho-text)}
+html[data-theme="dark"] .kpi-tile .kpi-lbl{color:var(--aveho-muted)}
+html[data-theme="dark"] .modal{background:var(--aveho-panel);color:var(--aveho-text)}
+html[data-theme="dark"] .modal-foot{background:#162032;border-color:var(--aveho-line)}
+html[data-theme="dark"] .gs-item{color:var(--aveho-text)}
+html[data-theme="dark"] .gs-panel{background:var(--aveho-panel);border-color:var(--aveho-line)}
+html[data-theme="dark"] .gs-grouph{background:#162032;color:var(--aveho-muted)}
+html[data-theme="dark"] .notif-panel{background:var(--aveho-panel);border-color:var(--aveho-line)}
+html[data-theme="dark"] .notif-head{background:#162032;color:var(--aveho-text)}
+html[data-theme="dark"] .notif-item{border-color:var(--aveho-line)}
+html[data-theme="dark"] .notif-item.unread{background:#1a2c3a}
+html[data-theme="dark"] .notif-titre{color:var(--aveho-text)}
+html[data-theme="dark"] .notif-msg{color:var(--aveho-muted)}
+html[data-theme="dark"] .btn-ghost{background:#243044;color:var(--aveho-text)}
+html[data-theme="dark"] .btn-ghost:hover{background:#2e3c52}
+html[data-theme="dark"] .hier-block{background:#162032;border-color:var(--aveho-line)}
+html[data-theme="dark"] .hier-row:hover{background:#243044}
+
+/* ===== Alpha 0.7 — Filtres avancés ===== */
+.adv-filters{background:#fafbfc;border:1px solid #e3e9ee;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.adv-filters .fld{margin:0}
+.adv-filters label{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:4px;display:block}
+html[data-theme="dark"] .adv-filters{background:#162032;border-color:var(--aveho-line)}
+
+/* ===== Alpha 0.8 — Pagination ===== */
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:14px 0 4px;border-top:1px solid #eef1f4;margin-top:14px;gap:12px;flex-wrap:wrap}
+.pagination-info{font-size:13px;color:#6c7a89}
+.pagination-info b{color:#142131}
+.pagination button:disabled{opacity:.4;cursor:not-allowed}
+html[data-theme="dark"] .pagination{border-color:var(--aveho-line)}
+html[data-theme="dark"] .pagination-info{color:var(--aveho-muted)}
+html[data-theme="dark"] .pagination-info b{color:var(--aveho-text)}
+
+/* En-têtes de colonnes triables avec curseur */
+table th[title="Cliquer pour trier"]:hover{background:#eef9f9}
+html[data-theme="dark"] table th[title="Cliquer pour trier"]:hover{background:#2a3a52}
+
+/* ===== Alpha 0.9 — Étiquettes patients ===== */
+.etq-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:14px;font-size:12px;font-weight:600;white-space:nowrap}
+.etq-tag i{font-size:11px}
+
+/* Sélection multiple + bulk actions */
+.bulk-bar{background:#142131;color:#fff;padding:10px 16px;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;animation:bulkIn .25s cubic-bezier(.2,.8,.2,1)}
+@keyframes bulkIn{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bulk-bar b{color:#7CC8C8}
+.bulk-actions{display:flex;gap:8px;flex-wrap:wrap}
+.bulk-actions button{background:rgba(255,255,255,.15);color:#fff;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:5px;font-family:inherit;transition:background .15s}
+.bulk-actions button:hover{background:rgba(255,255,255,.25)}
+.bulk-actions button.danger{background:#C9867F}
+.bulk-actions button.danger:hover{background:#b27068}
+.tr-selected{background:#eaf7f7!important}
+html[data-theme="dark"] .tr-selected{background:#1a2c3a!important}
+
+/* Calendrier interventions */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;background:#e3e9ee;padding:4px;border-radius:10px}
+.cal-h{background:#142131;color:#fff;padding:8px 6px;font-size:11px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:.5px;border-radius:6px}
+.cal-c{background:#fff;min-height:80px;padding:6px;border-radius:6px;font-size:12px;display:flex;flex-direction:column;gap:3px;cursor:default}
+.cal-c.out{background:#fafbfc;color:#cfd5db}
+.cal-c.today{background:#eaf7f7;border:1.5px solid #7CC8C8}
+.cal-c-day{font-weight:700;font-size:13px;margin-bottom:2px}
+.cal-evt{padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;color:#fff;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-more{font-size:10px;color:#8a98a8;font-style:italic}
+html[data-theme="dark"] .cal-grid{background:#2a3645}
+html[data-theme="dark"] .cal-c{background:#1a2434;color:var(--aveho-text)}
+html[data-theme="dark"] .cal-c.out{background:#162032;color:#506070}
+html[data-theme="dark"] .cal-c.today{background:#1a2c3a}
+@media(max-width:760px){.cal-c{min-height:60px;font-size:10px}.cal-c-day{font-size:11px}.cal-evt{font-size:9px;padding:1px 4px}}
+
+/* ===== Alpha 0.10 — Mode kiosque ===== */
+html[data-kiosque="1"] .topbar{display:none}
+html[data-kiosque="1"] .bg-dark{padding-top:0}
+html[data-kiosque="1"] .wrap{max-width:1400px;padding:30px 40px}
+html[data-kiosque="1"] .h1{font-size:48px!important;line-height:1.1}
+html[data-kiosque="1"] .kpi-tile{padding:30px 24px}
+html[data-kiosque="1"] .kpi-val{font-size:48px!important}
+html[data-kiosque="1"] .kpi-lbl{font-size:14px!important}
+html[data-kiosque="1"] .kpi-grid{gap:24px}
+html[data-kiosque="1"] body::before{content:"MODE KIOSQUE — Échap pour sortir";position:fixed;top:8px;right:12px;background:#142131;color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.5px;z-index:300;opacity:.5}
+html[data-kiosque="1"] body:hover::before{opacity:1}
+
+/* Calendrier vue semaine — cases plus grandes */
+.cal-grid-sem .cal-c-sem{min-height:160px;padding:8px}
+.cal-evt-sem{padding:5px 8px;border-radius:5px;font-size:11px;line-height:1.3;margin-bottom:2px;white-space:normal;overflow:visible;text-overflow:initial;cursor:pointer;color:#fff}
+.cal-evt-sem b{font-size:12px;display:block;margin-bottom:1px}
+@media(max-width:760px){.cal-grid-sem .cal-c-sem{min-height:110px}}
+
+/* Indicateur mode lecture seule (badge subtil) */
+body[data-lecture="1"]::after{content:"LECTURE SEULE";position:fixed;bottom:12px;right:12px;background:#EF9F27;color:#142131;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.5px;z-index:99;box-shadow:0 4px 12px rgba(239,159,39,.3)}
+
+/* ============================================================
+   Alpha 0.16.0 — UserMenu (bloc utilisateur en TopBar)
+   ============================================================ */
+.um-root{position:relative;display:flex;align-items:center}
+.um-btn{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);color:#fff;padding:4px 10px 4px 4px;border-radius:24px;cursor:pointer;height:40px;font-family:inherit;transition:background .15s}
+.um-btn:hover,.um-btn.open{background:rgba(255,255,255,.22)}
+.um-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;letter-spacing:.5px;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.15) inset}
+.um-avatar.lg{width:48px;height:48px;font-size:17px}
+.um-name{font-size:13px;font-weight:600;color:#fff;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.um-chev{font-size:13px;color:rgba(255,255,255,.7);transition:transform .18s}
+.um-btn.open .um-chev{transform:rotate(180deg)}
+
+/* Sous-volet desktop : popover ancré au bouton */
+.um-backdrop{position:fixed;inset:0;background:transparent;z-index:48}
+.um-sheet{position:absolute;top:calc(100% + 8px);right:0;min-width:280px;background:#fff;border:1px solid #e3e9ee;border-radius:14px;box-shadow:0 14px 40px rgba(20,33,49,.16),0 2px 8px rgba(0,0,0,.04);z-index:49;overflow:hidden;animation:um-pop .15s ease-out}
+@keyframes um-pop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.um-head{display:flex;gap:12px;padding:16px;align-items:center;background:linear-gradient(135deg,#f4f7fa,#eaf2f4)}
+.um-id{flex:1;min-width:0}
+.um-id-name{font-weight:700;color:#142131;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.um-id-mail{font-size:11.5px;color:#6c7a89;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.um-id-role{font-size:11px;color:#2a5a5a;margin-top:6px;display:flex;align-items:center;gap:5px;font-weight:600}
+.um-divider{height:1px;background:#eef2f5;margin:0}
+.um-item{display:flex;align-items:center;gap:12px;padding:11px 16px;width:100%;border:none;background:#fff;cursor:pointer;font-family:inherit;font-size:13.5px;color:#2a3a48;text-align:left;transition:background .12s}
+.um-item:hover{background:#f4f7fa}
+.um-item i{font-size:17px;color:#5a8f8f;width:20px;text-align:center;flex-shrink:0}
+.um-item.logout{color:#c0392b}
+.um-item.logout i{color:#c0392b}
+.um-item.highlight{background:linear-gradient(90deg,#eaf7f7 0%,#fff 100%);color:#1e4a91;font-weight:600}
+.um-item.highlight i{color:#185FA5}
+.um-hint{margin-left:auto;font-size:10px;color:#8a98a8;font-weight:600;background:#f0f4f8;padding:2px 7px;border-radius:8px}
+.um-ios-hint{font-size:11.5px;color:#5a6776;padding:0 16px 12px;line-height:1.45}
+.um-ios-hint i{font-size:14px;vertical-align:middle;color:#2a5a5a;margin:0 2px}
+
+/* Mobile : pastille seule, sous-volet en bottom-sheet */
+@media(max-width:760px){
+  .um-name{display:none}
+  .um-chev{display:none}
+  .um-btn{padding:4px;border-radius:50%;width:40px;height:40px;justify-content:center}
+  .um-sheet{position:fixed;top:auto;bottom:0;left:0;right:0;width:100vw;border-radius:18px 18px 0 0;animation:um-up .2s ease-out;min-width:0;max-height:80vh;overflow-y:auto}
+  @keyframes um-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .um-backdrop{background:rgba(20,33,49,.4)}
+  .um-head{padding:18px}
+  .um-item{padding:14px 18px;font-size:14.5px}
+  .um-item i{font-size:19px;width:24px}
+}
+
+/* etab-switch responsive — évite le débordement sur mobile */
+@media(max-width:760px){
+  .etab-switch{max-width:140px}
+  .etab-switch select{max-width:90px;font-size:12px}
+  .tb-page{display:none}
+}
+@media(max-width:480px){
+  .etab-switch{display:none}
+  .topbar{gap:6px;padding:0 8px}
+  .topbar .logo{font-size:18px}
+  /* Alpha 0.49.6 : cacher le bouton recherche en mobile (accessible via burger menu) */
+  .topbar .tb-icon[aria-label*="Recherche"]{display:none}
+  /* Forcer l'avatar à rester visible et compact */
+  .um-btn{flex-shrink:0}
+}
+
+/* ============================================================
+   Alpha 0.16.0 — Tooltip réutilisable
+   ============================================================ */
+.tt-wrap{position:relative;display:inline-block;cursor:help;border-bottom:1px dotted rgba(124,200,200,.5)}
+.tt-wrap:hover{border-bottom-color:#7CC8C8}
+.tt-bubble{position:absolute;z-index:60;background:#142131;color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:500;line-height:1.45;box-shadow:0 6px 20px rgba(20,33,49,.25);white-space:normal;min-width:160px;max-width:280px;text-align:left;animation:tt-pop .12s ease-out;pointer-events:auto}
+@keyframes tt-pop{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:translateY(0)}}
+.tt-bubble::after{content:"";position:absolute;border:6px solid transparent}
+.tt-top{bottom:calc(100% + 8px);left:50%;transform:translateX(-50%)}
+.tt-top::after{top:100%;left:50%;transform:translateX(-50%);border-top-color:#142131}
+.tt-bottom{top:calc(100% + 8px);left:50%;transform:translateX(-50%)}
+.tt-bottom::after{bottom:100%;left:50%;transform:translateX(-50%);border-bottom-color:#142131}
+.tt-right{left:calc(100% + 8px);top:50%;transform:translateY(-50%)}
+.tt-right::after{right:100%;top:50%;transform:translateY(-50%);border-right-color:#142131}
+.tt-left{right:calc(100% + 8px);top:50%;transform:translateY(-50%)}
+.tt-left::after{left:100%;top:50%;transform:translateY(-50%);border-left-color:#142131}
+@media(max-width:760px){
+  .tt-bubble{max-width:240px;font-size:12.5px}
+}
+
+/* ============================================================
+   Alpha 0.16.1 — FilterBar (barre de filtres pastilles)
+   ============================================================ */
+.filter-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar-label{font-size:12px;color:#6c7a89;font-weight:600;flex-shrink:0}
+.filter-bar-chip{cursor:pointer;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:5px 12px;border-radius:12px;background:#f1f3f5;color:#6c7a89;transition:background .12s,color .12s;display:inline-flex;align-items:center}
+.filter-bar-chip:hover:not(.on){background:#e6ebf0}
+.filter-bar-chip.on{color:#fff;background:#7CC8C8}
+.filter-bar-cnt{opacity:.7;margin-left:4px;font-weight:500}
+
+/* ============================================================
+   Alpha 0.17.1 — Notifications opt-in card & webhook config
+   ============================================================ */
+.optin-card{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:10px;border:1px solid #e3e9ee;background:#fff}
+.optin-card > i:first-child{font-size:22px;flex-shrink:0;margin-top:2px}
+.optin-card > div{font-size:13px;line-height:1.45}
+.optin-card small{color:#6c7a89;font-size:12px}
+
+.webhook-section{margin-top:18px;padding:16px;background:#f4f7fa;border-radius:10px;border:1px solid #e3e9ee}
+.webhook-section h3{margin-top:0;font-size:14px;color:#142131}
+.webhook-row{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;margin-bottom:8px}
+.webhook-row label{font-size:12.5px;color:#5a6776;font-weight:600;display:flex;align-items:center;gap:6px}
+.webhook-row input{padding:7px 10px;border:1px solid #e1e6eb;border-radius:6px;font-family:inherit;font-size:12.5px;background:#fff}
+.webhook-row button{padding:6px 12px;border-radius:6px;border:1px solid #7CC8C8;background:#fff;color:#2a5a5a;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.webhook-row button:hover{background:#eaf7f7}
+@media(max-width:760px){
+  .webhook-row{grid-template-columns:1fr;gap:6px}
+  .webhook-row label{margin-bottom:0}
+}
+
+/* ============================================================
+   Alpha 0.18.0 — A11y : focus visible accessible
+   Améliore l'accessibilité clavier (Tab, Shift+Tab) en rendant
+   le focus clairement visible sur tous les éléments interactifs.
+   ============================================================ */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #7CC8C8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Boutons primaires sur fond foncé : outline plus contrasté */
+.btn-save:focus-visible,
+.modal-head-v2 .modal-x:focus-visible,
+.topbar button:focus-visible {
+  outline-color: #fff;
+  outline-offset: 3px;
+}
+/* Skip-link pour passer au contenu principal (accessible navigation clavier) */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: #142131;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+}
+.skip-to-content:focus {
+  left: 0;
+  outline: 2px solid #7CC8C8;
+}
+
+/* ============================================================
+   Alpha 0.19.0 — Audit mode sombre : couvre les classes ajoutées
+   en 0.16, 0.17 et 0.18 qui n'avaient pas leur variante dark
+   ============================================================ */
+
+/* UserMenu (0.16.0) — popover et bottom-sheet */
+html[data-theme="dark"] .um-sheet{background:var(--aveho-panel);border-color:var(--aveho-line);box-shadow:0 14px 40px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.2)}
+html[data-theme="dark"] .um-head{background:linear-gradient(135deg,#1d2940,#243044)}
+html[data-theme="dark"] .um-id-name{color:var(--aveho-text)}
+html[data-theme="dark"] .um-id-mail{color:var(--aveho-muted)}
+html[data-theme="dark"] .um-id-role{color:#9fc8c8}
+html[data-theme="dark"] .um-divider{background:var(--aveho-line)}
+html[data-theme="dark"] .um-item{background:var(--aveho-panel);color:var(--aveho-text)}
+html[data-theme="dark"] .um-item:hover{background:#243044}
+html[data-theme="dark"] .um-item i{color:#9fc8c8}
+html[data-theme="dark"] .um-item.logout{color:#ff7066}
+html[data-theme="dark"] .um-item.logout i{color:#ff7066}
+html[data-theme="dark"] .um-item.highlight{background:linear-gradient(90deg,#1d3550 0%,var(--aveho-panel) 100%);color:#8fbfff}
+html[data-theme="dark"] .um-item.highlight i{color:#8fbfff}
+html[data-theme="dark"] .um-hint{background:#243044;color:var(--aveho-muted)}
+html[data-theme="dark"] .um-ios-hint{color:var(--aveho-muted)}
+
+/* Tooltip (0.16.0) — bulle */
+html[data-theme="dark"] .tt-bubble{background:#0a131f;box-shadow:0 6px 20px rgba(0,0,0,.6)}
+html[data-theme="dark"] .tt-top::after{border-top-color:#0a131f}
+html[data-theme="dark"] .tt-bottom::after{border-bottom-color:#0a131f}
+html[data-theme="dark"] .tt-right::after{border-right-color:#0a131f}
+html[data-theme="dark"] .tt-left::after{border-left-color:#0a131f}
+html[data-theme="dark"] .tt-wrap{border-bottom-color:rgba(124,200,200,.3)}
+html[data-theme="dark"] .tt-wrap:hover{border-bottom-color:#7CC8C8}
+
+/* FilterBar (0.16.1) — chips de filtre */
+html[data-theme="dark"] .filter-bar-label{color:var(--aveho-muted)}
+html[data-theme="dark"] .filter-bar-chip{background:#243044;color:var(--aveho-muted)}
+html[data-theme="dark"] .filter-bar-chip:hover:not(.on){background:#2c3a52}
+html[data-theme="dark"] .filter-bar-chip.on{background:#7CC8C8;color:#0a131f}
+
+/* NotificationOptIn & WebhookConfig (0.17.1) */
+html[data-theme="dark"] .optin-card{background:var(--aveho-panel);border-color:var(--aveho-line);color:var(--aveho-text)}
+html[data-theme="dark"] .optin-card small{color:var(--aveho-muted)}
+html[data-theme="dark"] .webhook-section{background:#1a2438;border-color:var(--aveho-line)}
+html[data-theme="dark"] .webhook-section h3{color:var(--aveho-text)}
+html[data-theme="dark"] .webhook-row label{color:var(--aveho-text)}
+html[data-theme="dark"] .webhook-row input{background:#243044;color:var(--aveho-text);border-color:var(--aveho-line)}
+html[data-theme="dark"] .webhook-row button{background:var(--aveho-panel);color:var(--aveho-text);border-color:#7CC8C8}
+html[data-theme="dark"] .webhook-row button:hover{background:#243044}
+
+/* Modale Infos utilisateur (0.16.0) — encart stats d'activité */
+html[data-theme="dark"] .modal-body div[style*="linear-gradient(135deg,#f4f7fa"]{background:linear-gradient(135deg,#1d2940,#243044)!important}
+
+/* Pastille d'activité dans liste membres */
+/* Les couleurs vert/orange/gris du dot restent identiques en dark — bonne lisibilité */
+
+/* Skip-link (0.18.0) — déjà en navy, pas de variante dark nécessaire */
+
+/* ============================================================
+   Alpha 0.19.0 — Perf : content-visibility sur les rangées de tables
+   Le navigateur ne rend que ce qui est visible à l'écran.
+   Gain : sur 200+ lignes, scroll fluide. Aucune lib requise.
+   ============================================================ */
+table tbody tr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 48px;
+}
+/* Cartes / panels longs : idem */
+.kpi-grid,
+.menu-tiles {
+  contain: layout style;
+}
+
+/* ============================================================
+   Alpha 0.21.0 — Consentement RGPD : modale + SignaturePad
+   ============================================================ */
+
+/* SignaturePad */
+.sig-pad-wrap{display:inline-flex;flex-direction:column;gap:6px;align-items:flex-start}
+.sig-pad-canvas{background:#fff;border:2px dashed #7CC8C8;border-radius:10px;box-shadow:inset 0 1px 3px rgba(0,0,0,.04);touch-action:none}
+.sig-pad-canvas:hover{border-color:#185FA5}
+.sig-pad-status{display:flex;align-items:center;gap:8px;min-height:20px}
+.sig-pad-hid-btn{background:#fff;border:1px solid #cfe6e6;color:#2a5a5a;padding:4px 10px;border-radius:6px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.sig-pad-hid-btn:hover{background:#eaf7f7;border-color:#7CC8C8}
+
+/* Modale Consentement */
+.consent-modal{max-width:760px;width:96vw}
+.consent-head{background:linear-gradient(135deg,#142131,#1e4a91);color:#fff;display:flex;align-items:center;padding:14px 22px;font-weight:600}
+.consent-head i.ti{font-size:18px}
+.consent-body{padding:0;max-height:75vh;overflow-y:auto}
+.consent-doc{padding:24px 28px;background:#f9fbfc;border-bottom:1px solid #e3e9ee;font-size:12.5px;line-height:1.6;color:#2a3a48}
+.consent-doc h2{font-size:14px;color:#142131;margin:18px 0 10px}
+.consent-doc h3{font-size:13px;color:#185FA5;margin:14px 0 8px}
+.consent-doc p{margin:8px 0}
+.consent-doc strong{color:#142131;font-weight:700}
+.consent-doc ul{padding-left:22px;margin:6px 0}
+.consent-doc li{margin:3px 0}
+.consent-doc hr{border:none;border-top:1px solid #cfd5db;margin:14px 0}
+
+.consent-section{padding:18px 28px;border-bottom:1px solid #eef2f5}
+.consent-section h3{display:flex;align-items:center;gap:6px}
+.consent-section h3 i.ti{color:#7CC8C8;font-size:16px}
+
+.consent-finalites{display:flex;flex-direction:column;gap:8px}
+.consent-fin{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid #e3e9ee;border-radius:8px;cursor:pointer;background:#fff;transition:background .12s,border-color .12s}
+.consent-fin:hover{background:#f4f7fa}
+.consent-fin.checked{background:#eaf7f7;border-color:#7CC8C8}
+.consent-fin.required{cursor:default}
+.consent-fin input[type=checkbox]{margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:#7CC8C8;cursor:inherit}
+.consent-req-tag{font-size:10px;color:#185FA5;background:#dee9fa;padding:1px 6px;border-radius:8px;font-weight:600;margin-left:6px}
+
+.consent-signataire{display:flex;flex-direction:column;gap:8px;font-size:13px}
+
+.consent-sigbox{padding:8px;background:#fafbfc;border-radius:10px;display:inline-block}
+
+.consent-foot{display:flex;gap:8px;padding:14px 22px;background:#fff;border-top:1px solid #eef2f5}
+.consent-foot .btn-refuse:hover{background:#fef0ee !important}
+
+/* Mobile : pleine largeur, pad redimensionné */
+@media(max-width:760px){
+  .consent-modal{max-width:100vw;width:100vw;border-radius:0;height:100vh;max-height:100vh}
+  .consent-body{max-height:calc(100vh - 130px)}
+  .consent-doc{padding:16px 18px;font-size:12px}
+  .consent-section{padding:14px 18px}
+  .consent-foot{padding:12px 16px;flex-wrap:wrap}
+  .consent-foot .btn-refuse{margin-right:0!important;order:3;width:100%}
+  .consent-foot .btn-ghost{flex:1}
+  .consent-foot .btn-save{flex:2}
+  .sig-pad-canvas{max-width:100%}
+}
+
+/* Dark mode */
+html[data-theme="dark"] .consent-doc{background:#1a2438;color:var(--aveho-text);border-color:var(--aveho-line)}
+html[data-theme="dark"] .consent-doc h2,
+html[data-theme="dark"] .consent-doc strong{color:var(--aveho-text)}
+html[data-theme="dark"] .consent-doc h3{color:#8fbfff}
+html[data-theme="dark"] .consent-doc hr{border-top-color:var(--aveho-line)}
+html[data-theme="dark"] .consent-section{border-bottom-color:var(--aveho-line)}
+html[data-theme="dark"] .consent-fin{background:var(--aveho-panel);border-color:var(--aveho-line);color:var(--aveho-text)}
+html[data-theme="dark"] .consent-fin:hover{background:#243044}
+html[data-theme="dark"] .consent-fin.checked{background:#1d3550;border-color:#7CC8C8}
+html[data-theme="dark"] .consent-sigbox{background:#1a2438}
+html[data-theme="dark"] .sig-pad-canvas{background:#fff} /* signature toujours sur fond blanc */
+html[data-theme="dark"] .consent-foot{background:var(--aveho-panel);border-top-color:var(--aveho-line)}
+html[data-theme="dark"] .consent-foot .btn-refuse{background:var(--aveho-panel)!important;color:#ff7066!important;border-color:#ff7066!important}
+
+/* ============================================================
+   Alpha 0.25.0 — Mode hors-ligne enrichi
+   ============================================================ */
+.offline-banner{cursor:pointer;transition:filter .15s}
+.offline-banner:hover{filter:brightness(1.08)}
+.offline-banner.offline{background:linear-gradient(90deg,#e35d5b 0%,#C9867F 100%)}
+.offline-banner.queued{background:linear-gradient(90deg,#EF9F27 0%,#d4860f 100%);box-shadow:0 4px 14px rgba(239,159,39,.3)}
+.offline-banner.syncing{background:linear-gradient(90deg,#185FA5 0%,#2a5a5a 100%);box-shadow:0 4px 14px rgba(24,95,165,.3)}
+.offline-banner.syncing i{animation:spin 1.2s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* Dark mode */
+html[data-theme="dark"] .offline-banner.offline{background:linear-gradient(90deg,#7a1f15 0%,#a83a33 100%)}
+html[data-theme="dark"] .offline-banner.queued{background:linear-gradient(90deg,#a06a15 0%,#7a4f15 100%)}
+html[data-theme="dark"] .offline-banner.syncing{background:linear-gradient(90deg,#0e3a6a 0%,#1a3838 100%)}
+
+/* ============================================================
+   Alpha 0.36.0 — PWA finalisée : standalone + touch optimizations
+   ============================================================ */
+
+/* Mode standalone (app installée) — ajustements visuels */
+@media all and (display-mode: standalone) {
+  /* Pas de souligné sur liens en mode app */
+  body { -webkit-tap-highlight-color: transparent; }
+  /* Safe area pour iPhone X+ (notch + home indicator) */
+  body { 
+    padding-top: env(safe-area-inset-top); 
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  .topbar {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Optimisations touch (zones tactiles min 44×44px = recommandation Apple/Google) */
+@media (pointer: coarse) {
+  /* Tous les boutons cliquables hors texte */
+  .tb-icon, .burger, .um-trigger {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* Liens dans le menu burger */
+  .menu-item a, .menu-item button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  /* Actions de tableau (boutons icône) */
+  table button, .panel button[class*="icon"] {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  /* Inputs plus larges sur tactile */
+  input, select, textarea {
+    min-height: 40px;
+    font-size: 16px; /* évite le zoom auto iOS */
+  }
+}
+
+/* Empêcher le pull-to-refresh natif (peut être pénible en app) */
+@media all and (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Masquer la barre d'URL en standalone (déjà géré par display:standalone mais explicite) */
+@media all and (display-mode: standalone) {
+  .pwa-hide-when-installed {
+    display: none !important;
+  }
+}
+
+/* Animation install banner (déjà inline mais aussi disponible globalement) */
+@keyframes aveho-slide-up {
+  from { transform: translateY(120%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Optim FOUC : transition lisse au chargement */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Alpha 0.52.4 — Responsive cleanup pour pages récentes
+   ============================================================ */
+
+/* Tables scrollables horizontalement sur mobile */
+.panel table,
+.panel-table {
+  width: 100%;
+}
+@media (max-width: 640px) {
+  /* Le .panel-table wrapper permet le scroll horizontal */
+  .panel-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;  /* compense le padding du panel pour scroll edge-to-edge */
+    padding: 0 16px;
+  }
+  .panel-table table {
+    min-width: 600px;  /* force le scroll si le contenu est large */
+  }
+  
+  /* Modales pleine largeur sur mobile */
+  .modal-bg {
+    padding: 12px;
+  }
+  .modal {
+    max-height: 95vh;
+    padding: 16px;  /* Alpha 0.52.6 : réduit le padding interne sur mobile */
+  }
+  
+  /* Header de page : titre + accent en colonne sur mobile */
+  .page-head {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  /* Grilles 1fr 1fr → 1 colonne sur très petit écran */
+  .grid-2-mobile-1 {
+    grid-template-columns: 1fr !important;
+  }
+  /* Grilles 1fr 1fr 1fr → 1 colonne sur très petit écran */
+  .grid-3-mobile-1 {
+    grid-template-columns: 1fr !important;
+  }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  /* Grilles 3 col passent en 2 sur tablette */
+  .grid-3-mobile-1 {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+@media (max-width: 640px) {
+  
+  /* Wrap du flex de filtres */
+  .wrap {
+    padding: 18px 14px 50px;
+  }
+  
+  /* Inputs date/time : pleine largeur */
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Filter chips responsifs : wrappent toujours */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+@media (max-width: 480px) {
+  .chip-row button {
+    font-size: 11px !important;
+    padding: 4px 9px !important;
+  }
+}
+
+/* Sur très petit écran, masquer les colonnes optionnelles */
+@media (max-width: 480px) {
+  .col-hide-xs {
+    display: none;
+  }
+}
+
+/* Modal détail : grid en 1 colonne sur mobile */
+@media (max-width: 600px) {
+  .modal-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* TopBar : sur mobile assure que la bannière annonce du bas (BG) 
+   ne masque pas le contenu en fin de page */
+@media (max-width: 768px) {
+  .has-bottom-banner main,
+  .has-bottom-banner .wrap {
+    padding-bottom: 100px !important;  /* espace pour la bannière fixed */
+  }
+}
+
+/* ============================================================
+   Alpha 0.53.0 (BJ) — Mode compact pour les tables
+   ============================================================ */
+body.is-compact .panel-table table th,
+body.is-compact .panel-table table td {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+body.is-compact .panel-table table {
+  font-size: 12px !important;
+}
+body.is-compact .chip-row {
+  gap: 4px;
+}
+body.is-compact .chip-row button {
+  padding: 2px 7px !important;
+  font-size: 10.5px !important;
+}
+
+/* ============================================================
+   Alpha 0.55.12 — Fix z-index carte Leaflet vs menu drawer
+   ============================================================
+   Leaflet utilise par défaut des z-index très élevés pour ses
+   contrôles (1000 pour les boutons zoom, 700 pour les popups,
+   400 pour les panes). Sur la page /carte, ça passait au-dessus
+   du menu drawer (z-index 49) qui s'ouvre depuis la TopBar.
+   
+   Solution : on crée un stacking context contraint sur le
+   container Leaflet (z-index: 0 + isolation), comme ça TOUT
+   le contenu Leaflet reste à l'intérieur de ce contexte et ne
+   peut pas dépasser le menu drawer / overlay.
+*/
+.carte-leaflet-container,
+.leaflet-container {
+  z-index: 0 !important;
+  isolation: isolate;
+}
+/* Les contrôles Leaflet (zoom, attribution) restent relatifs
+   au container, donc plafonnés naturellement */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: auto !important;
+}
+.leaflet-pane.leaflet-overlay-pane { z-index: 4 !important; }
+.leaflet-pane.leaflet-marker-pane { z-index: 6 !important; }
+.leaflet-pane.leaflet-tooltip-pane { z-index: 7 !important; }
+.leaflet-pane.leaflet-popup-pane { z-index: 8 !important; }
+.leaflet-control { z-index: 10 !important; }
