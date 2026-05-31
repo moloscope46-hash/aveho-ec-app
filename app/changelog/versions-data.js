@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.41",
+    "kind": "hotfix",
+    "titre": "🩹 Fix géoloc bloquée sur ancienne position (cache 24h) · Fix filtres carte RPPS/SIRENE vides (géocodage BAN INSEE) · Bouton 'Recentrer' fresh · Indicateur précision + heure de maj",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug géoloc bloquée sur Lagny au lieu de Mayrinhac (vraie ville) : le code lisait toujours localStorage avec un TTL de 24h. Désormais le bouton 'Ma position' force TOUJOURS un nouvel appel getCurrentPosition avec maximumAge: 0 (jamais de cache) et enableHighAccuracy: true (utilise le GPS si dispo au lieu de la triangulation IP)" },
+      { "code": "FIX", "txt": "Timeout porté de 8s à 15s pour laisser le GPS faire son fix (sur PC fixe sans GPS, ça utilise la triangulation Wi-Fi qui peut prendre plus de temps). Messages d'erreur enrichis : si code 1 (refus) → instructions navigateur précises (Chrome cadenas, Edge permissions, mobile paramètres). Si code 3 (timeout) → vérifier Windows Paramètres → Confidentialité → Localisation" },
+      { "code": "FE", "txt": "Nouvel indicateur visuel sous le bouton 'Ma position' : '±50m · maj à l'instant' avec couleur verte si précision GPS (<1km) ou rouge si précision IP (>1km). Helper formatRelativeTime() pour l'affichage (à l'instant / il y a X min / X h / X j). États geolocLoading, lastGeolocAt, geolocAccuracy" },
+      { "code": "FIX", "txt": "Bug filtres carte RPPS et SIRENE : 0 résultat affiché parce que l'API FHIR ANS ne renvoie pas de lat/lng et l'API SIRENE ne les renvoie pas systématiquement. Solution : nouvelle fonction geocodeBatch() qui géocode chaque résultat via l'API BAN INSEE (api-adresse.data.gouv.fr/search) à partir de l'adresse complète (adresse + cp + commune). Cache localStorage par query pour éviter les requêtes répétées" },
+      { "code": "FE", "txt": "API SIRENE proxy /api/sirene supporte maintenant les params lat/lng/radius=50km pour recherche par proximité géographique (recentre les résultats sur la zone visible). Avant : recherche nationale qui filtrait après → ratio résultats / bbox catastrophique. Désormais : recherche localisée → la plupart des résultats sont dans la bbox" },
+      { "code": "FE", "txt": "Hints UI ambres si 0 résultat sur RPPS ou SIRENE : 'Aucun praticien trouvé dans la zone visible. Zoome plus large ou déplace la carte vers une grande ville.' Évite la confusion 'pourquoi rien ne s'affiche ?'" },
+      { "code": "AI", "txt": "+17 tests Vitest : options géoloc (2), formatRelativeTime (5), geocodeBatch logique (3), URL BAN INSEE (1), params SIRENE (1), filtre bbox post-géocodage (3), avertissement précision (2). Total 1336 tests verts (vs 1319)" }
+    ],
+    "themes": ["fixes", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.41.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.40",
     "kind": "hotfix",
     "titre": "🩹 Fix SQL 42P17 'functions in index expression must be marked IMMUTABLE' · date_trunc() retiré de l'index · Les 2 autres index suffisent pour la perf",

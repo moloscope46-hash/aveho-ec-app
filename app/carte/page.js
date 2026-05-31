@@ -81,6 +81,16 @@ const SIRENE_OVERLAY_CATS = {
   "opticien":           { lbl: "Opticiens",          color: "#EF9F27", emoji: "👓" },
 };
 
+// 0.55.41 : helper temps relatif
+function formatRelativeTime(ts) {
+  if (!ts) return "";
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return "à l'instant";
+  if (diff < 3_600_000) return `il y a ${Math.floor(diff / 60_000)} min`;
+  if (diff < 86_400_000) return `il y a ${Math.floor(diff / 3_600_000)} h`;
+  return `il y a ${Math.floor(diff / 86_400_000)} j`;
+}
+
 export default function CartePage() {
   const supabase = createClient();
   const auth = useAuth();
@@ -111,6 +121,10 @@ export default function CartePage() {
   const [sireneFilters, setSireneFilters] = useState([]); // ex: ["pharmacie", "matmed"]
   const [sireneLoading, setSireneLoading] = useState(false);
   const [sireneCount, setSireneCount] = useState(0);
+  // 0.55.41 : indicateur fraîcheur géoloc
+  const [geolocLoading, setGeolocLoading] = useState(false);
+  const [lastGeolocAt, setLastGeolocAt] = useState(null);
+  const [geolocAccuracy, setGeolocAccuracy] = useState(null);
   const fetchDebounceRef = useRef(null);
 
   // 0.55.8 : Init Leaflet + carte en un seul useEffect patient
@@ -430,38 +444,91 @@ export default function CartePage() {
   }, [finessFilters, leafletReady]);
 
   // 0.55.38 : fetch RPPS dans bbox
+  // 0.55.41 : géocodage des adresses via BAN INSEE car l'API ANS ne renvoie pas de coords
   async function fetchRppsInBbox() {
     if (!mapInstanceRef.current || rppsFilters.length === 0) {
       setRppsCount(0);
       if (rppsOverlayLayerRef.current) rppsOverlayLayerRef.current.clearLayers();
       return;
     }
-    const bounds = mapInstanceRef.current.getBounds();
-    const center = bounds.getCenter();
     setRppsLoading(true);
     try {
-      // L'API ANS ne supporte pas la bbox, on cherche par ville/cp dérivés du centre
-      // (approche pragmatique : on prend les CP couverts via les codes postaux INSEE)
-      // Pour MVP : on requête par profession seulement et on filtre côté client.
+      const bounds = mapInstanceRef.current.getBounds();
       const allResults = [];
       for (const prof of rppsFilters) {
-        const params = new URLSearchParams({ profession: prof, limit: "100" });
+        const params = new URLSearchParams({ profession: prof, limit: "30" });
         const res = await fetch(`/api/rpps?${params}`);
         if (!res.ok) continue;
         const data = await res.json();
         if (data.ok && Array.isArray(data.results)) {
-          allResults.push(...data.results.filter(p => p.cp));
+          allResults.push(...data.results.filter(p => p.adresse || p.commune || p.cp));
         }
       }
-      // Filtre par bbox côté client (sur les CP qui ont des coords approximatives)
-      drawRppsOverlay(allResults);
-      setRppsCount(allResults.length);
+      // 0.55.41 : géocoder chaque adresse via BAN INSEE
+      const geocoded = await geocodeBatch(allResults);
+      // Filtre par bbox
+      const inBbox = geocoded.filter(p =>
+        p.latitude && p.longitude &&
+        p.latitude >= bounds.getSouth() && p.latitude <= bounds.getNorth() &&
+        p.longitude >= bounds.getWest() && p.longitude <= bounds.getEast()
+      );
+      drawRppsOverlay(inBbox);
+      setRppsCount(inBbox.length);
     } catch (e) {
       console.error("[Carte] fetchRpps error:", e);
       setRppsCount(0);
     } finally {
       setRppsLoading(false);
     }
+  }
+
+  // 0.55.41 : géocoder un batch d'adresses via BAN INSEE (cache par adresse)
+  async function geocodeBatch(items) {
+    if (!items?.length) return [];
+    const out = [];
+    for (const item of items) {
+      // Si déjà des coords, ne pas géocoder
+      if (item.latitude && item.longitude) {
+        out.push(item);
+        continue;
+      }
+      const queryParts = [item.adresse, item.cp, item.commune].filter(Boolean);
+      const query = queryParts.join(" ").trim();
+      if (!query || query.length < 4) {
+        out.push(item);
+        continue;
+      }
+      // Cache local
+      const cacheKey = "aveho:geocode:" + query;
+      let coords = null;
+      try {
+        const raw = localStorage.getItem(cacheKey);
+        if (raw) coords = JSON.parse(raw);
+      } catch {}
+      if (!coords) {
+        try {
+          const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=1`;
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            const feat = data?.features?.[0];
+            if (feat?.geometry?.coordinates) {
+              coords = {
+                lat: feat.geometry.coordinates[1],
+                lng: feat.geometry.coordinates[0],
+              };
+              try { localStorage.setItem(cacheKey, JSON.stringify(coords)); } catch {}
+            }
+          }
+        } catch {}
+      }
+      if (coords) {
+        out.push({ ...item, latitude: coords.lat, longitude: coords.lng });
+      } else {
+        out.push(item);
+      }
+    }
+    return out;
   }
 
   function drawRppsOverlay(items) {
@@ -510,6 +577,7 @@ export default function CartePage() {
   }, [rppsFilters, leafletReady]);
 
   // 0.55.38 : fetch SIRENE dans bbox
+  // 0.55.41 : utilise les coords directes SIRENE si dispo, sinon géocode BAN
   async function fetchSireneInBbox() {
     if (!mapInstanceRef.current || sireneFilters.length === 0) {
       setSireneCount(0);
@@ -519,20 +587,37 @@ export default function CartePage() {
     const bounds = mapInstanceRef.current.getBounds();
     setSireneLoading(true);
     try {
+      const center = bounds.getCenter();
       const allResults = [];
       for (const cat of sireneFilters) {
-        const params = new URLSearchParams({ q: cat, limit: "50" });
+        // 0.55.41 : recherche centrée sur la zone visible (lat/long)
+        const params = new URLSearchParams({
+          q: cat,
+          limit: "25",
+          lat: center.lat.toFixed(4),
+          lng: center.lng.toFixed(4),
+        });
         const res = await fetch(`/api/sirene?${params}`);
         if (!res.ok) continue;
         const data = await res.json();
         if (Array.isArray(data.results)) {
-          allResults.push(...data.results.filter(s => s.latitude && s.longitude
-            && s.latitude >= bounds.getSouth() && s.latitude <= bounds.getNorth()
-            && s.longitude >= bounds.getWest() && s.longitude <= bounds.getEast()));
+          allResults.push(...data.results.map(s => ({ ...s, _cat: cat })));
         }
       }
-      drawSireneOverlay(allResults);
-      setSireneCount(allResults.length);
+      // Géocoder ceux qui n'ont pas de coords directes
+      const geocoded = await geocodeBatch(allResults.map(s => ({
+        ...s,
+        adresse: s.adresse,
+        cp: s.code_postal || s.cp,
+        commune: s.ville || s.commune,
+      })));
+      const inBbox = geocoded.filter(s =>
+        s.latitude && s.longitude &&
+        s.latitude >= bounds.getSouth() && s.latitude <= bounds.getNorth() &&
+        s.longitude >= bounds.getWest() && s.longitude <= bounds.getEast()
+      );
+      drawSireneOverlay(inBbox);
+      setSireneCount(inBbox.length);
     } catch (e) {
       console.error("[Carte] fetchSirene error:", e);
       setSireneCount(0);
@@ -712,40 +797,49 @@ export default function CartePage() {
     setFiltreType(prev => ({ ...prev, [t]: !prev[t] }));
   }
 
-  // Alpha 0.55.0 : centrer la carte sur la position user
-  function centerOnMe() {
+  // 0.55.41 : centrer + RAFRAICHIR la position en live (plus de cache stale)
+  function centerOnMe(forceFresh = true) {
     if (!mapInstanceRef.current) return;
-    const pos = (typeof window !== "undefined" && window._avehoUserPosition) || getStoredPosition();
-    if (pos) {
-      mapInstanceRef.current.flyTo([pos.lat, pos.lng], 13, { duration: 1 });
-      // Réactiver le marqueur au cas où il n'y soit pas encore
-      drawUserPosition();
-    } else {
-      // Demander la position en live si pas dispo
-      if (!navigator.geolocation) {
-        alert("Géolocalisation non disponible sur cet appareil");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          const data = { lat: p.coords.latitude, lng: p.coords.longitude, t: Date.now() };
-          try { 
-            localStorage.setItem("aveho_geoloc_choice", "accepted");
-            localStorage.setItem("aveho_geoloc_last_pos", JSON.stringify(data)); 
-          } catch {}
-          window._avehoUserPosition = { lat: data.lat, lng: data.lng };
-          drawUserPosition();
-          mapInstanceRef.current.flyTo([data.lat, data.lng], 13, { duration: 1 });
-        },
-        (err) => {
-          alert(err.code === 1 
-            ? "Permission refusée — active la géoloc dans les paramètres de ton navigateur" 
-            : "Impossible de récupérer ta position : " + err.message
-          );
-        },
-        { enableHighAccuracy: false, timeout: 8000 }
-      );
+    if (!navigator.geolocation) {
+      alert("Géolocalisation non disponible sur cet appareil");
+      return;
     }
+    setGeolocLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        const data = {
+          lat: p.coords.latitude,
+          lng: p.coords.longitude,
+          accuracy: p.coords.accuracy,
+          t: Date.now(),
+        };
+        try {
+          localStorage.setItem("aveho_geoloc_choice", "accepted");
+          localStorage.setItem("aveho_geoloc_last_pos", JSON.stringify(data));
+        } catch {}
+        window._avehoUserPosition = { lat: data.lat, lng: data.lng, accuracy: data.accuracy };
+        setLastGeolocAt(data.t);
+        setGeolocAccuracy(data.accuracy);
+        drawUserPosition();
+        mapInstanceRef.current.flyTo([data.lat, data.lng], 14, { duration: 1 });
+        setGeolocLoading(false);
+      },
+      (err) => {
+        setGeolocLoading(false);
+        if (err.code === 1) {
+          alert("Permission refusée. Active la géolocalisation dans les paramètres de ton navigateur :\n\n• Chrome : icône cadenas → Géolocalisation → Autoriser\n• Edge : icône cadenas → Permissions du site\n• Mobile : Paramètres → Apps → Navigateur → Autorisations");
+        } else if (err.code === 3) {
+          alert("Délai dépassé. Sur PC Windows, vérifie que la géolocalisation est activée dans Paramètres → Confidentialité → Localisation.");
+        } else {
+          alert("Impossible de récupérer ta position : " + err.message);
+        }
+      },
+      {
+        enableHighAccuracy: true,   // 0.55.41 : précision max (GPS si dispo)
+        timeout: 15000,              // 15s pour laisser le GPS faire son fix
+        maximumAge: forceFresh ? 0 : 60000,  // 0 = jamais de cache
+      }
+    );
   }
 
   const geolocalises = etabs.filter(e => e.latitude && e.longitude);
@@ -804,27 +898,42 @@ export default function CartePage() {
                       <span>{m.icon}</span> {m.label}
                     </button>
                   ))}
-                  {/* Alpha 0.55.0 : bouton centrer ma position */}
+                  {/* 0.55.41 : bouton centrer + indicateur fraîcheur */}
                   <button
-                    onClick={centerOnMe}
-                    title="Centrer la carte sur ma position"
+                    onClick={() => centerOnMe(true)}
+                    disabled={geolocLoading}
+                    title="Recentrer sur ma position actuelle (force le rafraîchissement)"
                     style={{
-                      background: "#fff",
-                      color: "#185FA5",
+                      background: geolocLoading ? "#8a98a8" : "#fff",
+                      color: geolocLoading ? "#fff" : "#185FA5",
                       border: "1px solid #185FA5",
                       padding: "4px 12px",
                       borderRadius: 14,
                       fontSize: 12,
                       fontWeight: 600,
-                      cursor: "pointer",
+                      cursor: geolocLoading ? "wait" : "pointer",
                       fontFamily: "inherit",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 4,
                     }}
                   >
-                    <i className="ti ti-current-location" /> Ma position
+                    {geolocLoading ? (
+                      <><i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Localisation…</>
+                    ) : (
+                      <><i className="ti ti-current-location" /> Ma position</>
+                    )}
                   </button>
+                  {lastGeolocAt && !geolocLoading && (
+                    <span style={{
+                      fontSize: 10.5,
+                      color: geolocAccuracy && geolocAccuracy > 1000 ? "#c0392b" : "#5aa05a",
+                      fontWeight: 600,
+                      marginLeft: -4,
+                    }}>
+                      {geolocAccuracy ? `±${Math.round(geolocAccuracy)}m` : ""} · maj {formatRelativeTime(lastGeolocAt)}
+                    </span>
+                  )}
                 </div>
               </div>
             </Panel>
@@ -936,8 +1045,13 @@ export default function CartePage() {
                 })}
               </div>
               <div style={{ marginTop: 8, fontSize: 10.5, color: "#185FA5" }}>
-                <i className="ti ti-info-circle" /> Source : <b>API FHIR ANS officielle</b> · 1,7M praticiens.
+                <i className="ti ti-info-circle" /> Source : <b>API FHIR ANS officielle</b> · 1,7M praticiens. Adresses géocodées via BAN INSEE.
               </div>
+              {rppsFilters.length > 0 && rppsCount === 0 && !rppsLoading && (
+                <div style={{ marginTop: 6, padding: "8px 10px", background: "#fff8ec", border: "1px solid #f0d59f", borderRadius: 6, fontSize: 11, color: "#7a4f15" }}>
+                  <i className="ti ti-info-circle" /> Aucun praticien trouvé dans la zone visible. Zoome plus large ou déplace la carte vers une grande ville.
+                </div>
+              )}
             </Panel>
 
             {/* 0.55.38 — Filtres SIRENE entreprises */}
@@ -982,8 +1096,13 @@ export default function CartePage() {
                 })}
               </div>
               <div style={{ marginTop: 8, fontSize: 10.5, color: "#5a4a90" }}>
-                <i className="ti ti-info-circle" /> Source : <b>API SIRENE</b> (recherche-entreprises.api.gouv.fr).
+                <i className="ti ti-info-circle" /> Source : <b>API SIRENE</b> (recherche-entreprises.api.gouv.fr). Recherche géographique sur la zone visible.
               </div>
+              {sireneFilters.length > 0 && sireneCount === 0 && !sireneLoading && (
+                <div style={{ marginTop: 6, padding: "8px 10px", background: "#fff8ec", border: "1px solid #f0d59f", borderRadius: 6, fontSize: 11, color: "#7a4f15" }}>
+                  <i className="ti ti-info-circle" /> Aucune entreprise trouvée dans la zone visible. Zoome plus large ou déplace la carte.
+                </div>
+              )}
             </Panel>
 
             {/* Conteneur carte */}

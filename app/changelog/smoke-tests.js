@@ -27,6 +27,45 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.41 — Fix géoloc + géocodage BAN INSEE filtres carte ==============
+  "0.55.41": async () => {
+    const results = [];
+
+    results.push(await runTest("API BAN INSEE accessible (géocodage)", async () => {
+      try {
+        const res = await fetch("https://api-adresse.data.gouv.fr/search/?q=Mayrinhac-Lentour&limit=1");
+        if (!res.ok) return { ok: false, msg: `HTTP ${res.status}` };
+        const data = await res.json();
+        const feat = data?.features?.[0];
+        return { ok: !!feat, msg: feat ? `${feat.geometry?.coordinates}` : "Aucun résultat" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Géolocalisation supportée navigateur", () => {
+      const ok = typeof navigator !== "undefined" && !!navigator.geolocation;
+      return { ok, msg: ok ? "Disponible" : "Non supportée" };
+    }));
+
+    results.push(await runTest("Permission géoloc - test query", async () => {
+      try {
+        if (!navigator.permissions) return { ok: true, msg: "API permissions indisponible (Safari)" };
+        const result = await navigator.permissions.query({ name: "geolocation" });
+        return { ok: true, msg: `État : ${result.state}` };
+      } catch (e) {
+        return { ok: true, msg: "Permission API non testable" };
+      }
+    }));
+
+    results.push(await runTest("Page /carte chargeable", async () => {
+      const mod = await import("../carte/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.40 — Hotfix SQL : date_trunc pas IMMUTABLE ==============
   "0.55.40": async () => {
     const supabase = createClient();

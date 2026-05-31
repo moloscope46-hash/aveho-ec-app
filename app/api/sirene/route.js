@@ -49,6 +49,14 @@ export async function GET(request) {
     } else {
       const params = new URLSearchParams({ q, per_page: String(limit) });
       if (codePostal) params.set("code_postal", codePostal);
+      // 0.55.41 : recherche par proximité géographique
+      const lat = searchParams.get("lat");
+      const lng = searchParams.get("lng");
+      if (lat && lng) {
+        params.set("lat", lat);
+        params.set("long", lng);
+        params.set("radius", "50"); // 50km autour
+      }
       // Filtre catégorie
       if (categorie && NAF_FILTERS[categorie]) {
         const filt = NAF_FILTERS[categorie];
