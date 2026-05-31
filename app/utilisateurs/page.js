@@ -389,27 +389,42 @@ export default function Utilisateurs() {
                                 <span>
                                   <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                                     {m.nom_affiche || m.user_id.slice(0, 8)}
-                                    {/* 0.55.17 : icônes méthodes biométriques activées */}
-                                    {authMethodsByUser[m.user_id]?.has_empreinte && (
-                                      <span title="Empreinte digitale activée" style={{
-                                        display: "inline-flex", alignItems: "center",
-                                        background: "#185FA518", color: "#185FA5",
-                                        width: 18, height: 18, borderRadius: "50%",
-                                        justifyContent: "center", fontSize: 11,
-                                      }}>
-                                        <i className="ti ti-fingerprint" />
-                                      </span>
-                                    )}
-                                    {authMethodsByUser[m.user_id]?.has_face && (
-                                      <span title="Détection faciale activée" style={{
-                                        display: "inline-flex", alignItems: "center",
-                                        background: "#7a6fb018", color: "#7a6fb0",
-                                        width: 18, height: 18, borderRadius: "50%",
-                                        justifyContent: "center", fontSize: 11,
-                                      }}>
-                                        <i className="ti ti-face-id" />
-                                      </span>
-                                    )}
+                                    {/* 0.55.22 : icônes méthodes bio toujours affichées (vert si activé, gris si pas) */}
+                                    {(() => {
+                                      const am = authMethodsByUser[m.user_id] || {};
+                                      const e = am.has_empreinte;
+                                      const f = am.has_face;
+                                      return (
+                                        <span style={{ display: "inline-flex", gap: 3, marginLeft: 4 }}>
+                                          <span
+                                            title={e ? "Empreinte digitale activée" : "Empreinte digitale non activée"}
+                                            style={{
+                                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                              width: 18, height: 18, borderRadius: "50%",
+                                              background: e ? "#5aa05a22" : "#e3e9ee",
+                                              color: e ? "#5aa05a" : "#c0c5cc",
+                                              fontSize: 11,
+                                              border: e ? "1px solid #5aa05a55" : "1px solid #d3d9e0",
+                                            }}
+                                          >
+                                            <i className="ti ti-fingerprint" />
+                                          </span>
+                                          <span
+                                            title={f ? "Détection faciale activée" : "Détection faciale non activée"}
+                                            style={{
+                                              display: "inline-flex", alignItems: "center", justifyContent: "center",
+                                              width: 18, height: 18, borderRadius: "50%",
+                                              background: f ? "#5aa05a22" : "#e3e9ee",
+                                              color: f ? "#5aa05a" : "#c0c5cc",
+                                              fontSize: 11,
+                                              border: f ? "1px solid #5aa05a55" : "1px solid #d3d9e0",
+                                            }}
+                                          >
+                                            <i className="ti ti-face-id" />
+                                          </span>
+                                        </span>
+                                      );
+                                    })()}
                                   </span>
                                   {m.poste && <span style={{ display:"block", fontSize:11, color:"#8a98a8", fontWeight:400, marginTop:1 }}>{m.poste}</span>}
                                   {lastActivity[m.user_id]?.derniere_activite && (

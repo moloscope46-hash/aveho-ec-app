@@ -119,6 +119,19 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.22",
+    "kind": "hotfix",
+    "titre": "Privacy : getDeviceName plus neutre · /utilisateurs : icônes bio toujours visibles avec couleur · smoke tests pour toutes les versions 0.55.18-22",
+    "chantiers": [
+      { "code": "FIX", "txt": "getDeviceName() : remplace les noms bruts 'Windows' / 'Mac' / 'iPhone' / modèle Android par des noms plus naturels et privacy-friendly ('Mon ordinateur (Windows)', 'Mon Mac', 'Mon iPhone', 'Mon téléphone Android' — sans modèle exact)" },
+      { "code": "FE", "txt": "Page /utilisateurs : les 2 icônes biométriques (empreinte + face) sont maintenant TOUJOURS affichées à côté du nom de chaque user. Vert si méthode activée, gris si pas — comme ça on voit clairement l'état pour chaque user" },
+      { "code": "AI", "txt": "Smoke tests ajoutés pour les versions 0.55.18, 19, 20, 21 et 22. La page changelog a maintenant 11 versions testables in-browser (de 0.55.12 à 0.55.22)" }
+    ],
+    "themes": ["ux", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.22.html"
+  },
+  {
     "v": "0.55.21",
     "kind": "hotfix",
     "titre": "Mobile : icônes de statut regroupées dans 1 bouton + modale plein écran · fix click action 'Gérer' · fix 503 transient",

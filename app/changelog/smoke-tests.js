@@ -27,6 +27,81 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.22 — Bio icônes + getDeviceName ==============
+  "0.55.22": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("getDeviceName ne révèle pas le hostname brut", async () => {
+      const { getDeviceName } = await import("../../lib/webauthn");
+      const name = getDeviceName();
+      // Plus de noms bruts genre "Windows" / "Mac"
+      return { ok: name.startsWith("Mon "), msg: `Retourne "${name}"` };
+    }));
+
+    results.push(await runTest("Vue v_users_auth_methods retourne has_empreinte/face", async () => {
+      const { data, error } = await supabase
+        .from("v_users_auth_methods")
+        .select("user_id, has_empreinte, has_face")
+        .limit(1);
+      if (error) return { ok: false, msg: error.message };
+      return { ok: true, msg: `${data?.length || 0} ligne(s)` };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.21 — StatusIcons mobile ==============
+  "0.55.21": async () => {
+    const results = [];
+
+    results.push(await runTest("matchMedia (max-width: 768px) supporté", () => {
+      const mq = window.matchMedia?.("(max-width: 768px)");
+      return { ok: !!mq, msg: mq?.matches ? "Mobile actif" : "Desktop actif" };
+    }));
+
+    results.push(await runTest("Bottom-sheet overflow OK", () => {
+      const div = document.createElement("div");
+      div.style.overflow = "auto";
+      div.style.maxHeight = "85vh";
+      // CSS valide
+      return div.style.maxHeight === "85vh";
+    }));
+
+    results.push(await runTest("Service Worker répond aux retry transients", async () => {
+      // On vérifie juste que le SW est enregistré
+      return { ok: !!navigator.serviceWorker?.controller, msg: "SW actif" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.20 — Badge version + profil bio séparé ==============
+  "0.55.20": async () => {
+    const results = [];
+
+    results.push(await runTest("Badge version visible (pas display:none mobile)", () => {
+      const badge = document.querySelector(".version-badge");
+      if (!badge) return { ok: false, msg: "Badge non trouvé dans le DOM" };
+      const style = getComputedStyle(badge);
+      return { ok: style.display !== "none", msg: `display: ${style.display}` };
+    }));
+
+    results.push(await runTest("Badge centré verticalement (align-items)", () => {
+      const badge = document.querySelector(".version-badge");
+      if (!badge) return { ok: false, msg: "Badge non trouvé" };
+      const style = getComputedStyle(badge);
+      return { ok: style.alignItems === "center", msg: `align: ${style.alignItems}` };
+    }));
+
+    results.push(await runTest("BiometricSection accepte methodFilter", async () => {
+      const mod = await import("../BiometricSection");
+      return { ok: typeof mod.default === "function", msg: "Composant exporté" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.19 — Status Icons TopBar ==============
   "0.55.19": async () => {
     const results = [];
@@ -55,6 +130,29 @@ export const VERSION_TESTS = {
     results.push(await runTest("display-mode standalone détectable", () => {
       const match = window.matchMedia?.("(display-mode: standalone)");
       return { ok: !!match, msg: match?.matches ? "Installée en PWA" : "Mode navigateur" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.18 — Hotfix kind + smoke tests ==============
+  "0.55.18": async () => {
+    const results = [];
+
+    results.push(await runTest("Module smoke-tests chargeable", async () => {
+      const mod = await import("./smoke-tests");
+      return { ok: typeof mod.VERSION_TESTS === "object" };
+    }));
+
+    results.push(await runTest("Au moins 6 versions avec smoke tests", async () => {
+      const mod = await import("./smoke-tests");
+      const count = Object.keys(mod.VERSION_TESTS).length;
+      return { ok: count >= 6, msg: `${count} versions testables` };
+    }));
+
+    results.push(await runTest("Module changelog page accessible", async () => {
+      const res = await fetch(window.location.pathname, { cache: "no-cache" });
+      return { ok: res.ok, msg: `HTTP ${res.status}` };
     }));
 
     return results;

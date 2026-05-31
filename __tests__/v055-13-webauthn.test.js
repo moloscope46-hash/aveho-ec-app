@@ -58,13 +58,15 @@ describe("0.55.13 - WebAuthn - détection device", () => {
   it("getDeviceName iPhone reconnu", async () => {
     vi.stubGlobal("navigator", { userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)" });
     const { getDeviceName } = await import("../lib/webauthn?t=4");
-    expect(getDeviceName()).toBe("iPhone");
+    expect(getDeviceName()).toContain("iPhone");
   });
 
-  it("getDeviceName Android extrait modèle", async () => {
+  it("getDeviceName Android format générique (pas de modèle exposé)", async () => {
     vi.stubGlobal("navigator", { userAgent: "Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit" });
     const { getDeviceName } = await import("../lib/webauthn?t=5");
-    expect(getDeviceName()).toContain("Pixel");
+    expect(getDeviceName()).toContain("Android");
+    // 0.55.22 : ne doit PAS contenir le modèle exact pour la privacy
+    expect(getDeviceName()).not.toContain("Pixel");
   });
 });
 
