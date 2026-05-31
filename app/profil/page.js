@@ -300,14 +300,23 @@ export default function Profil() {
               </div>
             </CollapsibleSection>
 
-            {/* 0.55.13 : Section Empreinte digitale */}
+            {/* 0.55.13/17/20 : Sections biométriques séparées (empreinte + face) */}
             <CollapsibleSection
-              title="Connexion par empreinte"
+              title="Connexion par empreinte digitale"
               icon="ti-fingerprint"
               iconColor="#185FA5"
               defaultOpen={false}
             >
-              <BiometricSection auth={auth} />
+              <BiometricSection auth={auth} methodFilter="empreinte" />
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title="Connexion par détection faciale"
+              icon="ti-face-id"
+              iconColor="#7a6fb0"
+              defaultOpen={false}
+            >
+              <BiometricSection auth={auth} methodFilter="face" />
             </CollapsibleSection>
 
             {/* Informations session */}

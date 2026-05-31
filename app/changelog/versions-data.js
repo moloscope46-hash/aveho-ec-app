@@ -119,6 +119,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.20",
+    "kind": "hotfix",
+    "titre": "TopBar : badge version centré et visible sur mobile · Profil : sections empreinte et facial séparées · réduction warning PWA + forced reflow",
+    "chantiers": [
+      { "code": "FIX", "txt": "Badge version (v0.55.x) dans la TopBar : centré verticalement (display:inline-flex + align-items:center + line-height:1 + height:22px), maintenant aussi visible sur mobile (était caché en display:none ≤900px)" },
+      { "code": "FE", "txt": "Page Profil : section unique 'Connexion par empreinte' séparée en 2 sections distinctes — 'Connexion par empreinte digitale' (bleu) et 'Connexion par détection faciale' (violet). Chacune avec son icône, sa liste d'appareils filtrée par méthode" },
+      { "code": "FIX", "txt": "BiometricSection accepte prop methodFilter pour n'afficher qu'une méthode (empreinte ou face). Liste credentials filtrée en conséquence" },
+      { "code": "FIX", "txt": "Warning 'Banner not shown: beforeinstallprompt' : preventDefault appelé uniquement si l'install banner n'a pas été dismissed forever, sinon laisse Chrome gérer nativement" },
+      { "code": "FIX", "txt": "Forced reflow 106ms : remplacé setTimeout(50) par requestAnimationFrame x2 dans le scroll auto vers le match courant (modale highlight)" }
+    ],
+    "themes": ["fixes", "ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.20.html"
+  },
+  {
     "v": "0.55.19",
     "kind": "version",
     "titre": "Icônes de statut dans la TopBar : réseau, notifs, géoloc, PWA, SW, empreinte, face — feux vert/rouge + popover détails",

@@ -314,18 +314,19 @@ export default function ChangelogPage() {
   useEffect(() => {
     if (!noteModal || !noteContentRef.current || noteModal.currentMatch < 0) return;
     const container = noteContentRef.current;
-    // Petit delay pour laisser le DOM se mettre à jour
-    const t = setTimeout(() => {
-      // Enlever .active de tous
+    // 0.55.20 : utiliser requestAnimationFrame pour éviter le forced reflow
+    const raf = requestAnimationFrame(() => {
       container.querySelectorAll("mark.cl-match.active").forEach((el) => el.classList.remove("active"));
-      // Ajouter .active sur le current
       const target = container.querySelector(`mark.cl-match[data-cl-idx="${noteModal.currentMatch}"]`);
       if (target) {
         target.classList.add("active");
-        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        // scrollIntoView dans un 2e RAF pour laisser le navigateur appliquer la classe
+        requestAnimationFrame(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
       }
-    }, 50);
-    return () => clearTimeout(t);
+    });
+    return () => cancelAnimationFrame(raf);
   }, [noteModal?.currentMatch, noteModal?.html]);
 
   // 0.55.16 — Escape pour fermer la modale note + raccourcis nav (F3 / n / p)

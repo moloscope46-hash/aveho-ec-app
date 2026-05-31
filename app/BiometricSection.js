@@ -26,14 +26,14 @@ import {
   METHOD_COLOR,
 } from "../lib/webauthn";
 
-export default function BiometricSection({ auth }) {
+export default function BiometricSection({ auth, methodFilter = null }) {
   const supabase = createClient();
   const [supported, setSupported] = useState(false);
   const [platformOk, setPlatformOk] = useState(false);
   const [localMethods, setLocalMethods] = useState([]);
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(null); // method en cours d'activation
+  const [busy, setBusy] = useState(null);
   const [err, setErr] = useState("");
   const [okMsg, setOkMsg] = useState("");
 
@@ -127,49 +127,61 @@ export default function BiometricSection({ auth }) {
     return <div style={{ color: "#8a98a8", fontSize: 13 }}>Chargement…</div>;
   }
 
+  // Filtrage selon methodFilter : si présent, on n'affiche qu'une méthode
+  const showEmpreinte = !methodFilter || methodFilter === "empreinte";
+  const showFace = !methodFilter || methodFilter === "face";
+  // Filtrage liste credentials sur la méthode
+  const filteredCredentials = methodFilter
+    ? credentials.filter((c) => (c.auth_method || "empreinte") === methodFilter)
+    : credentials;
+
   return (
     <div>
       {err && <div className="err" style={{ marginBottom: 10 }}>{err}</div>}
       {okMsg && <div className="ok" style={{ marginBottom: 10 }}>{okMsg}</div>}
 
-      {/* Bandeau état device courant pour les 2 méthodes */}
+      {/* Bandeau état device courant (1 ou 2 selon filter) */}
       <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
-        <MethodRow
-          method="empreinte"
-          title="Empreinte digitale"
-          desc="Touch ID, capteur d'empreinte Android, Windows Hello"
-          icon="ti-fingerprint"
-          color="#185FA5"
-          active={localMethods.includes("empreinte")}
-          busy={busy === "empreinte"}
-          disabled={!!busy}
-          onActivate={() => activate("empreinte")}
-        />
-        <MethodRow
-          method="face"
-          title="Détection faciale"
-          desc="Face ID (iPhone/iPad), Windows Hello caméra"
-          icon="ti-face-id"
-          color="#7a6fb0"
-          suggested={isLikelyFaceCapable() && !localMethods.includes("face")}
-          active={localMethods.includes("face")}
-          busy={busy === "face"}
-          disabled={!!busy}
-          onActivate={() => activate("face")}
-        />
+        {showEmpreinte && (
+          <MethodRow
+            method="empreinte"
+            title="Empreinte digitale"
+            desc="Touch ID, capteur d'empreinte Android, Windows Hello"
+            icon="ti-fingerprint"
+            color="#185FA5"
+            active={localMethods.includes("empreinte")}
+            busy={busy === "empreinte"}
+            disabled={!!busy}
+            onActivate={() => activate("empreinte")}
+          />
+        )}
+        {showFace && (
+          <MethodRow
+            method="face"
+            title="Détection faciale"
+            desc="Face ID (iPhone/iPad), Windows Hello caméra"
+            icon="ti-face-id"
+            color="#7a6fb0"
+            suggested={isLikelyFaceCapable() && !localMethods.includes("face")}
+            active={localMethods.includes("face")}
+            busy={busy === "face"}
+            disabled={!!busy}
+            onActivate={() => activate("face")}
+          />
+        )}
       </div>
 
-      {/* Liste des appareils enregistrés */}
+      {/* Liste des appareils enregistrés (filtrée selon methodFilter) */}
       <h3 style={{ fontSize: 14, color: "#142131", margin: "16px 0 8px", fontWeight: 700 }}>
-        <i className="ti ti-devices" /> Appareils enregistrés ({credentials.length})
+        <i className="ti ti-devices" /> Appareils enregistrés ({filteredCredentials.length})
       </h3>
-      {credentials.length === 0 ? (
+      {filteredCredentials.length === 0 ? (
         <p style={{ fontSize: 13, color: "#8a98a8", margin: "8px 0" }}>
-          Aucun appareil enregistré.
+          Aucun appareil enregistré{methodFilter ? ` pour cette méthode` : ""}.
         </p>
       ) : (
         <div style={{ display: "grid", gap: 8 }}>
-          {credentials.map((c) => {
+          {filteredCredentials.map((c) => {
             const isCurrentDevice = c.user_agent && c.user_agent.slice(0, 80) === navigator.userAgent.slice(0, 80);
             const methodKey = c.auth_method || "empreinte";
             const methodColor = METHOD_COLOR[methodKey] || "#185FA5";

@@ -47,8 +47,17 @@ export default function InstallBanner() {
     setIsIos(iosLike);
 
     // Écouter beforeinstallprompt (Chrome/Edge/etc.)
+    // On preventDefault() pour utiliser notre banner custom au lieu du natif.
+    // Chrome loggue un warning informatif ("Banner not shown:...") qui dit
+    // qu'il faut appeler .prompt() plus tard — ce qu'on fait au click du
+    // bouton "Installer". Ce warning est inoffensif et attendu.
     let prompt = null;
     const onPrompt = (e) => {
+      // Vérifie si dismissé "forever" → on laisse Chrome gérer
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw && JSON.parse(raw).dismissed === "forever") return;
+      } catch {}
       e.preventDefault();
       prompt = e;
       setInstallPrompt(e);
