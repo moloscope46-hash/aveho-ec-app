@@ -46,10 +46,12 @@ export default function ChangelogPage() {
   const [search, setSearch] = useState("");
   const [selectedThemes, setSelectedThemes] = useState([]);  // multi-select
   const [expandedV, setExpandedV] = useState(null);  // version dont les détails sont ouverts
-  // 0.55.11 : hover preview de la note HTML
-  const [hoverPreview, setHoverPreview] = useState(null); // {noteFile, x, y, html} ou null
+  // 0.55.16 : modale d'affichage de la note HTML avec highlight des termes
+  // Remplace le hover preview (qui se coupait sur mobile et flashait sur PC)
+  const [noteModal, setNoteModal] = useState(null);
+  // noteModal = { version, noteFile, rawHtml, html (avec marks), matchCount, currentMatch, searchText, kind, color }
   const noteCacheRef = useRef({}); // cache des HTML chargés
-  const hoverTimeoutRef = useRef(null);
+  const noteContentRef = useRef(null); // ref vers le div scrollable du contenu
   // 0.55.14 : télécharger toutes les notes en ZIP
   const [zipBusy, setZipBusy] = useState(false);
   const [zipProgress, setZipProgress] = useState("");
@@ -114,65 +116,152 @@ export default function ChangelogPage() {
 
   const hasActiveFilters = filter !== "all" || search.trim() || selectedThemes.length > 0;
 
-  // 0.55.11 — Hover preview de la note HTML
-  // 0.55.14 — Cache miss retry + meilleur fallback
+  // 0.55.16 — Chargement de la note HTML (avec cache et fallback)
   async function fetchNoteHtml(noteFile) {
     if (noteCacheRef.current[noteFile]) return noteCacheRef.current[noteFile];
     try {
       const res = await fetch(`/changelog-notes/${noteFile}`, { cache: "force-cache" });
       if (!res.ok) {
-        // Retry sans force-cache (au cas où le SW serve un 503 cacheable)
         const res2 = await fetch(`/changelog-notes/${noteFile}`, { cache: "no-cache" });
         if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
-        const fullHtml = await res2.text();
-        const scoped = scopeHtml(fullHtml);
+        const txt = await res2.text();
+        const scoped = scopeHtml(txt);
         noteCacheRef.current[noteFile] = scoped;
         return scoped;
       }
-      const fullHtml = await res.text();
-      const scoped = scopeHtml(fullHtml);
+      const txt = await res.text();
+      const scoped = scopeHtml(txt);
       noteCacheRef.current[noteFile] = scoped;
       return scoped;
     } catch (e) {
-      console.warn("[Changelog] preview load fail:", noteFile, e);
-      // Fallback élégant — pas cacheé pour qu'on retente la fois suivante
-      return `<div style="padding:24px;font-family:sans-serif;color:#7a4f15;background:#fff8ec">
-        <p style="margin:0 0 8px"><b>⏳ Aperçu indisponible</b></p>
-        <p style="margin:0;font-size:12px;color:#8a98a8">${noteFile}</p>
-        <p style="margin:8px 0 0;font-size:12px">Réessaie le hover dans quelques secondes ou télécharge directement la note.</p>
+      console.warn("[Changelog] note load fail:", noteFile, e);
+      return `<div style="padding:30px;font-family:sans-serif;color:#7a4f15;background:#fff8ec;text-align:center">
+        <p style="margin:0 0 8px;font-size:18px"><b>⏳ Note indisponible</b></p>
+        <p style="margin:0;font-size:13px;color:#8a98a8">${noteFile}</p>
       </div>`;
     }
   }
 
-  // Helper : scope les styles du body de la note pour qu'ils ne fuient pas
+  // Helper : scope les styles du body de la note pour ne pas écraser la page
   function scopeHtml(fullHtml) {
     const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     const styleMatch = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
     const body = bodyMatch ? bodyMatch[1] : fullHtml;
     const styles = styleMatch ? styleMatch[1] : "";
-    return `<style>${styles.replace(/body\s*{/g, '.hover-note-scope {')}</style><div class="hover-note-scope">${body}</div>`;
+    // Préfixe ".cl-note-scope" sur tous les sélecteurs pour les confiner
+    const scopedStyles = styles
+      .replace(/body\s*\{/g, '.cl-note-scope {')
+      .replace(/(^|\})\s*\.wrap\b/g, '$1 .cl-note-scope .wrap');
+    return `<style>${scopedStyles}</style><div class="cl-note-scope">${body}</div>`;
   }
 
-  function handleMouseEnter(e, noteFile) {
-    if (!noteFile) return;
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    const x = e.clientX;
-    const y = e.clientY;
-    // Délai 250ms avant fetch pour éviter de spammer
-    hoverTimeoutRef.current = setTimeout(async () => {
-      const html = await fetchNoteHtml(noteFile);
-      setHoverPreview({ noteFile, x, y, html });
-    }, 250);
+  // 0.55.16 — Extraction des mots-clés significatifs d'un texte d'évolution
+  // pour pouvoir les surligner dans la note HTML.
+  const STOPWORDS_FR = new Set([
+    "le","la","les","un","une","des","de","du","au","aux","et","ou","mais","donc","car","ni","or",
+    "à","en","dans","sur","sous","pour","par","avec","sans","chez","vers","entre","contre","selon",
+    "ce","cet","cette","ces","mon","ma","mes","ton","ta","tes","son","sa","ses","notre","votre","leur","leurs","nos","vos",
+    "qui","que","quoi","dont","où","quand","comme","si","ne","pas","plus","moins","très","trop","aussi","encore","déjà","puis",
+    "est","sont","être","était","sera","ont","avoir","avait","fait","faire","peut","peuvent","doit","doivent",
+    "tous","toutes","tout","toute","chaque","autre","autres","même","mêmes","aucun","aucune",
+    "alors","ainsi","puis","ensuite","enfin","cependant","toutefois","néanmoins",
+    "via","sans","cas","mode","etc",
+  ]);
+
+  function extractKeywords(text) {
+    if (!text) return [];
+    // Normalise et tokenise
+    const tokens = text
+      .toLowerCase()
+      .replace(/[«»''""()[\]{},;:!?.…]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+    const kws = new Set();
+    for (const t of tokens) {
+      // Garde les mots de 4+ caractères, non-stopword
+      // OU les versions/numéros (ex: "0.55.12") ou les codes (ex: "CERFA")
+      if (t.length >= 4 && !STOPWORDS_FR.has(t) && /[a-zà-ÿ0-9]/i.test(t)) {
+        // Strip leading/trailing punct restant
+        const clean = t.replace(/^[^a-zà-ÿ0-9]+|[^a-zà-ÿ0-9]+$/gi, "");
+        if (clean.length >= 4) kws.add(clean);
+      } else if (/^\d+(\.\d+)+$/.test(t)) {
+        kws.add(t); // versions
+      } else if (t.length >= 3 && /^[A-Z0-9]+$/i.test(t) && /[A-Z]/.test(t)) {
+        kws.add(t); // acronymes type RPC, FR, etc.
+      }
+    }
+    return Array.from(kws);
   }
 
-  function handleMouseMove(e) {
-    if (!hoverPreview) return;
-    setHoverPreview(p => p ? { ...p, x: e.clientX, y: e.clientY } : null);
+  // Échappe les caractères regex spéciaux dans un mot-clé
+  function escapeRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function handleMouseLeave() {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    setHoverPreview(null);
+  // Surligne les keywords dans le HTML scopé en injectant des <mark>
+  // Renvoie { html, matchCount }
+  function highlightInHtml(html, keywords) {
+    if (!keywords || keywords.length === 0) return { html, matchCount: 0 };
+    // Construit une regex OR des keywords avec word boundaries (compatible accents)
+    // \b ne marche pas bien avec les accents, donc on utilise lookaround
+    const escaped = keywords.map(escapeRegex).sort((a, b) => b.length - a.length); // long d'abord
+    const pattern = new RegExp(
+      `(?<![a-zà-ÿ0-9])(${escaped.join("|")})(?![a-zà-ÿ0-9])`,
+      "gi"
+    );
+
+    // On découpe le HTML en alternance tag/texte pour ne pas matcher dans les attributs
+    const tokenizer = /<[^>]+>|[^<]+/g;
+    let result = "";
+    let matchIdx = 0;
+    let match;
+    while ((match = tokenizer.exec(html)) !== null) {
+      const seg = match[0];
+      if (seg.startsWith("<")) {
+        // C'est un tag, on le laisse intact
+        result += seg;
+      } else {
+        // C'est du texte, on applique le highlight
+        result += seg.replace(pattern, (m) => {
+          const idx = matchIdx++;
+          return `<mark class="cl-match" data-cl-idx="${idx}">${m}</mark>`;
+        });
+      }
+    }
+    return { html: result, matchCount: matchIdx };
+  }
+
+  // 0.55.16 — Ouvrir la modale de note avec highlight optionnel
+  async function openNote(version, kind, color, searchText = "") {
+    if (!version.noteFile) return;
+    // Affiche immédiatement la modale en mode chargement
+    setNoteModal({
+      version: version.v,
+      noteFile: version.noteFile,
+      kind, color,
+      searchText,
+      rawHtml: null,
+      html: null,
+      matchCount: 0,
+      currentMatch: 0,
+      loading: true,
+    });
+    try {
+      const rawHtml = await fetchNoteHtml(version.noteFile);
+      const keywords = extractKeywords(searchText);
+      const { html, matchCount } = highlightInHtml(rawHtml, keywords);
+      setNoteModal((m) => m && m.version === version.v ? {
+        ...m,
+        rawHtml,
+        html,
+        matchCount,
+        currentMatch: matchCount > 0 ? 0 : -1,
+        keywords,
+        loading: false,
+      } : m);
+    } catch (e) {
+      console.error("[Changelog] openNote fail:", e);
+    }
   }
 
   // 0.55.15 — fetch du contenu SQL quand on ouvre la modale
@@ -206,6 +295,63 @@ export default function ChangelogPage() {
       alert("Copie clipboard refusée. Utilisez Ctrl+A puis Ctrl+C dans la fenêtre.");
     }
   }
+
+  // 0.55.16 — Scroll auto vers le match courant + toggle classe .active
+  useEffect(() => {
+    if (!noteModal || !noteContentRef.current || noteModal.currentMatch < 0) return;
+    const container = noteContentRef.current;
+    // Petit delay pour laisser le DOM se mettre à jour
+    const t = setTimeout(() => {
+      // Enlever .active de tous
+      container.querySelectorAll("mark.cl-match.active").forEach((el) => el.classList.remove("active"));
+      // Ajouter .active sur le current
+      const target = container.querySelector(`mark.cl-match[data-cl-idx="${noteModal.currentMatch}"]`);
+      if (target) {
+        target.classList.add("active");
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 50);
+    return () => clearTimeout(t);
+  }, [noteModal?.currentMatch, noteModal?.html]);
+
+  // 0.55.16 — Escape pour fermer la modale note + raccourcis nav (F3 / n / p)
+  useEffect(() => {
+    if (!noteModal) return;
+    function handleKey(e) {
+      if (e.key === "Escape") {
+        setNoteModal(null);
+        return;
+      }
+      if (noteModal.matchCount > 0) {
+        if (e.key === "F3" || (e.key === "n" && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== "INPUT")) {
+          e.preventDefault();
+          setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch + 1) % m.matchCount } : m);
+        }
+        if ((e.shiftKey && e.key === "F3") || (e.key === "p" && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== "INPUT")) {
+          e.preventDefault();
+          setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch - 1 + m.matchCount) % m.matchCount } : m);
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [noteModal]);
+
+  // Style des boutons de navigation matches
+  const navBtn = {
+    background: "transparent",
+    border: "none",
+    color: "#fff",
+    width: 30,
+    height: 30,
+    borderRadius: 6,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 14,
+    transition: "background .15s",
+  };
 
   // 0.55.15 — Escape pour fermer la modale SQL
   useEffect(() => {
@@ -486,10 +632,9 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                 }}>
                   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
                     <h3 
-                      onMouseEnter={(e) => handleMouseEnter(e, v.noteFile)}
-                      onMouseMove={handleMouseMove}
-                      onMouseLeave={handleMouseLeave}
-                      style={{ margin: 0, fontSize: 14.5, color: "#142131", fontWeight: 700, flex: 1, minWidth: 200, cursor: v.noteFile ? "help" : "default" }}
+                      onClick={() => v.noteFile && openNote(v, kind, color, v.titre || "")}
+                      style={{ margin: 0, fontSize: 14.5, color: "#142131", fontWeight: 700, flex: 1, minWidth: 200, cursor: v.noteFile ? "pointer" : "default" }}
+                      title={v.noteFile ? "Cliquer pour afficher la note complète" : ""}
                     >
                       <span style={{ background: color, color: "#fff", padding: "2px 8px", borderRadius: 6, fontSize: 11.5, fontFamily: "Consolas, monospace", marginRight: 8, fontWeight: 700 }}>v{v.v}</span>
                       {v.titre}
@@ -568,10 +713,9 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                         return (
                           <li 
                             key={j} 
-                            onMouseEnter={(e) => handleMouseEnter(e, v.noteFile)}
-                            onMouseMove={handleMouseMove}
-                            onMouseLeave={handleMouseLeave}
-                            style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45, cursor: v.noteFile ? "help" : "default", padding: "2px 4px", borderRadius: 4, transition: "background .15s" }}
+                            onClick={() => v.noteFile && openNote(v, kind, color, c.txt)}
+                            title={v.noteFile ? "Cliquer pour voir cette évolution dans la note" : ""}
+                            style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45, cursor: v.noteFile ? "pointer" : "default", padding: "3px 6px", borderRadius: 4, transition: "background .15s" }}
                             onMouseOver={(e) => { if (v.noteFile) e.currentTarget.style.background = "#fef9ed"; }}
                             onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
                           >
@@ -608,51 +752,214 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
         </Panel>
       </div>
 
-      {/* 0.55.11 — Popup hover preview de la note HTML */}
-      {hoverPreview && (
-        <div 
+      {/* 0.55.16 — Modale plein écran d'affichage de la note avec highlight et navigation */}
+      {noteModal && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && setNoteModal(null)}
           style={{
             position: "fixed",
-            // Positionnement : à droite du curseur si y a la place, sinon à gauche
-            left: (typeof window !== "undefined" && hoverPreview.x + 480 < window.innerWidth) 
-              ? hoverPreview.x + 18 
-              : Math.max(10, hoverPreview.x - 478),
-            top: (typeof window !== "undefined" && hoverPreview.y + 480 < window.innerHeight)
-              ? hoverPreview.y + 14
-              : Math.max(10, hoverPreview.y - 478),
-            width: 460,
-            maxHeight: 460,
-            background: "#fff",
-            border: "1px solid #d3d9e0",
-            borderRadius: 10,
-            boxShadow: "0 18px 50px rgba(20,33,49,.28)",
-            overflow: "hidden",
-            zIndex: 9999,
-            pointerEvents: "none",  // ne bloque pas la souris
+            inset: 0,
+            background: "rgba(20,33,49,.75)",
+            zIndex: 9991,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px 14px",
+            animation: "fadeIn .15s",
           }}
         >
-          <div style={{
-            background: "linear-gradient(90deg, #142131 0%, #185FA5 100%)",
-            color: "#fff",
-            padding: "6px 12px",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: ".5px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}>
-            <span><i className="ti ti-eye" /> APERÇU NOTE</span>
-            <span style={{ fontFamily: "Consolas, monospace", opacity: 0.85 }}>{hoverPreview.noteFile}</span>
-          </div>
-          <div 
-            style={{ 
-              maxHeight: 430, 
-              overflow: "auto",
-              fontSize: 12,
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: 14,
+              width: "100%",
+              maxWidth: 960,
+              height: "92vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 30px 80px rgba(0,0,0,.45)",
+              overflow: "hidden",
             }}
-            dangerouslySetInnerHTML={{ __html: hoverPreview.html }} 
-          />
+          >
+            {/* Header */}
+            <div style={{
+              background: `linear-gradient(135deg, #142131 0%, ${noteModal.color || "#185FA5"} 100%)`,
+              color: "#fff",
+              padding: "14px 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}>
+              <i className="ti ti-file-text" style={{ fontSize: 22, color: "#7CC8C8", flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#cfe4f5", fontWeight: 700 }}>
+                  NOTE DE VERSION — {noteModal.version}
+                </div>
+                <div style={{ fontSize: 12.5, fontFamily: "Consolas, monospace", marginTop: 2, opacity: 0.85 }}>
+                  {noteModal.noteFile}
+                </div>
+              </div>
+
+              {/* Navigation matches */}
+              {noteModal.matchCount > 0 && (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  background: "rgba(255,255,255,.12)",
+                  border: "1px solid rgba(255,255,255,.22)",
+                  borderRadius: 8,
+                  padding: "2px 4px",
+                }}>
+                  <button
+                    onClick={() => setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch - 1 + m.matchCount) % m.matchCount } : m)}
+                    title="Match précédent"
+                    style={navBtn}
+                  >
+                    <i className="ti ti-chevron-up" />
+                  </button>
+                  <span style={{
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    padding: "0 8px",
+                    minWidth: 56,
+                    textAlign: "center",
+                    fontFamily: "Consolas, monospace",
+                  }}>
+                    {noteModal.currentMatch + 1}/{noteModal.matchCount}
+                  </span>
+                  <button
+                    onClick={() => setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch + 1) % m.matchCount } : m)}
+                    title="Match suivant"
+                    style={navBtn}
+                  >
+                    <i className="ti ti-chevron-down" />
+                  </button>
+                </div>
+              )}
+
+              <a
+                href={`/changelog-notes/${noteModal.noteFile}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                title="Télécharger la note"
+                style={{
+                  background: "#7CC8C8",
+                  color: "#142131",
+                  border: "none",
+                  padding: "7px 12px",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  minHeight: 34,
+                }}
+              >
+                <i className="ti ti-download" /> HTML
+              </a>
+
+              <button
+                onClick={() => setNoteModal(null)}
+                title="Fermer (Échap)"
+                style={{
+                  background: "transparent",
+                  color: "#fff",
+                  border: "none",
+                  padding: 6,
+                  cursor: "pointer",
+                  fontSize: 22,
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {/* Bandeau search context */}
+            {noteModal.searchText && noteModal.keywords?.length > 0 && (
+              <div style={{
+                background: noteModal.matchCount > 0 ? "#fff8ec" : "#f4f7fa",
+                borderBottom: `1px solid ${noteModal.matchCount > 0 ? "#f0d59f" : "#e3e9ee"}`,
+                padding: "8px 18px",
+                fontSize: 12,
+                color: noteModal.matchCount > 0 ? "#7a4f15" : "#6c7a89",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "wrap",
+              }}>
+                <i className={`ti ${noteModal.matchCount > 0 ? "ti-highlight" : "ti-search-off"}`} />
+                <span>
+                  {noteModal.matchCount > 0 ? (
+                    <>
+                      <b>{noteModal.matchCount} passage{noteModal.matchCount > 1 ? "s" : ""}</b> surligné{noteModal.matchCount > 1 ? "s" : ""} pour&nbsp;
+                    </>
+                  ) : (
+                    <>Aucun passage correspondant trouvé pour&nbsp;</>
+                  )}
+                  <i style={{ color: "#142131" }}>« {noteModal.searchText.slice(0, 90)}{noteModal.searchText.length > 90 ? "…" : ""} »</i>
+                </span>
+                {noteModal.keywords?.length > 0 && (
+                  <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.7 }}>
+                    Mots : {noteModal.keywords.slice(0, 6).join(", ")}{noteModal.keywords.length > 6 ? "…" : ""}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Contenu HTML scrollable */}
+            <div
+              ref={noteContentRef}
+              style={{
+                flex: 1,
+                overflow: "auto",
+                background: "#f4f7fa",
+              }}
+            >
+              {noteModal.loading || !noteModal.html ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 200,
+                  color: "#8a98a8",
+                }}>
+                  <i className="ti ti-loader-2" style={{ fontSize: 24, animation: "spin 1s linear infinite" }} />
+                  <span style={{ marginLeft: 10, fontSize: 13 }}>Chargement de la note…</span>
+                </div>
+              ) : (
+                <div dangerouslySetInnerHTML={{ __html: noteModal.html }} />
+              )}
+            </div>
+          </div>
+
+          {/* Styles inline pour les <mark> */}
+          <style>{`
+            .cl-note-scope mark.cl-match {
+              background: #ffeb9c;
+              color: #142131;
+              padding: 1px 3px;
+              border-radius: 3px;
+              box-shadow: 0 0 0 1px rgba(239,159,39,.4);
+              transition: background .15s, box-shadow .15s, outline .15s;
+            }
+            .cl-note-scope mark.cl-match.active {
+              background: #EF9F27;
+              color: #fff;
+              box-shadow: 0 0 0 2px #EF9F27, 0 0 12px rgba(239,159,39,.5);
+              outline: 2px solid #fff;
+              outline-offset: 2px;
+            }
+            .cl-note-scope { font-family: 'Segoe UI', sans-serif; }
+            .cl-note-scope .wrap { padding: 24px 28px 40px; }
+          `}</style>
         </div>
       )}
 

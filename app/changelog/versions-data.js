@@ -119,6 +119,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.16",
+    "kind": "version",
+    "titre": "Refonte preview note changelog : click au lieu de hover, modale plein écran avec highlight des passages correspondants à l'évolution cliquée",
+    "chantiers": [
+      { "code": "UX", "txt": "Suppression du hover preview qui était coupé sur mobile et flashait sur desktop. Remplacé par un clic sur le titre ou sur une évolution." },
+      { "code": "AI", "txt": "Modale plein écran (max 960×92vh) qui affiche la note HTML scopée avec ses styles confinés au scope .cl-note-scope (pas de pollution CSS)" },
+      { "code": "AI", "txt": "Highlight automatique des passages correspondant à l'évolution cliquée. Extraction des mots-clés du txt (4+ caractères, sans stopwords FR), injection de <mark class='cl-match'> dans le HTML scopé." },
+      { "code": "UX", "txt": "Navigation entre les matches : boutons ⬆/⬇ + compteur 'X/Y' + scroll auto vers le match courant avec animation et bordure orange vif sur le match actif" },
+      { "code": "UX", "txt": "Bandeau jaune indiquant le nombre de passages trouvés + l'évolution cherchée + les mots-clés extraits. Bandeau gris si aucun match." },
+      { "code": "UX", "txt": "Raccourcis clavier dans la modale : Échap (ferme), F3 ou n (match suivant), Shift+F3 ou p (précédent)" },
+      { "code": "UX", "txt": "Boutons header : compteur matches, Télécharger HTML, X fermer. Curseur 'pointer' + hover ambre sur les évolutions cliquables." }
+    ],
+    "themes": ["ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.16.html"
+  },
+  {
     "v": "0.55.15",
     "kind": "version",
     "titre": "Bouton 'Requête SQL' sur chaque version du changelog : popup avec contenu, copier, télécharger",
