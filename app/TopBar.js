@@ -17,6 +17,7 @@ import NotifBell from "./NotifBell";
 // la palette via event custom "aveho:open-search".
 import UserMenu from "./UserMenu";
 import StatusIcons from "./StatusIcons";
+import Modal from "./components/Modal";
 
 const MENU = [
   { section: "Mon espace", items: [
@@ -127,6 +128,8 @@ export default function TopBar({ cartCount = 0, auth }) {
   const router = useRouter();
   const path = usePathname();
   const [open, setOpen] = useState(false);
+  // Alpha 0.55.34 : popup info version (remplace la bulle visible)
+  const [versionOpen, setVersionOpen] = useState(false);
   // Alpha 0.55.1 : guard contre l'hydratation mismatch sur le badge NEW
   // (isPageNew lit localStorage → résultat différent serveur/client)
   const [mounted, setMounted] = useState(false);
@@ -168,17 +171,33 @@ export default function TopBar({ cartCount = 0, auth }) {
       <div className="topbar">
         <button className="burger" onClick={() => setOpen(true)} aria-label="Menu"><i className="ti ti-menu-2" /></button>
         <span className="logo" onClick={() => router.push("/accueil")}>a<span className="v">v</span>eho</span>
-        {/* Alpha 0.49.0 : badge version cliquable */}
-        <span 
-          className="version-badge" 
-          onClick={() => router.push("/changelog")}
-          title="Voir le changelog"
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === "Enter") router.push("/changelog"); }}
+        {/* Alpha 0.55.34 : bouton info compact (i) qui ouvre un popup version */}
+        <button
+          onClick={() => setVersionOpen(true)}
+          title="À propos de cette version"
+          aria-label="À propos de cette version"
+          style={{
+            background: "rgba(255,255,255,.08)",
+            border: "1px solid rgba(255,255,255,.15)",
+            color: "#cfd5dd",
+            width: 26,
+            height: 26,
+            borderRadius: "50%",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+            marginLeft: 6,
+            fontFamily: "inherit",
+            fontWeight: 700,
+            fontSize: 13,
+            lineHeight: 1,
+            flexShrink: 0,
+          }}
         >
-          v{pkg.version.replace(/-alpha$/, "")}
-        </span>
+          <i className="ti ti-info-circle" style={{ fontSize: 16 }} />
+        </button>
         <span className="tb-page">{TITLES[path] || ""}</span>
         <div className="spacer" />
         {/* Alpha 0.55.2 : tout ce qui dépend de auth (async) ou du panier (client) 
@@ -281,6 +300,79 @@ export default function TopBar({ cartCount = 0, auth }) {
           ))}
         </div>
       </nav>
+
+      {/* 0.55.34 : popup info version (remplace la bulle ALPHA visible) */}
+      <Modal
+        open={versionOpen}
+        onClose={() => setVersionOpen(false)}
+        title="À propos d'Aveho EC"
+        subtitle="Espace Collectivité"
+        icon="ti-info-circle"
+        color="#185FA5"
+        maxWidth={420}
+        footer={
+          <>
+            <button
+              onClick={() => { setVersionOpen(false); router.push("/changelog"); }}
+              style={{
+                background: "linear-gradient(135deg, #142131, #185FA5)",
+                color: "#fff",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: 8,
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              <i className="ti ti-history" /> Voir le changelog
+            </button>
+            <button
+              onClick={() => setVersionOpen(false)}
+              style={{
+                background: "transparent",
+                color: "#142131",
+                border: "1px solid #d3d9e0",
+                padding: "8px 14px",
+                borderRadius: 8,
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              Fermer
+            </button>
+          </>
+        }
+      >
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          <div style={{ fontSize: 32, fontWeight: 600, letterSpacing: 2, marginBottom: 8 }}>
+            a<span style={{ color: "#7CC8C8" }}>v</span>eho
+          </div>
+          <div style={{ fontSize: 12, color: "#6c7a89", letterSpacing: 1, marginBottom: 16 }}>
+            ESPACE COLLECTIVITÉ
+          </div>
+          <div style={{
+            display: "inline-block",
+            background: "linear-gradient(135deg, #142131, #185FA5)",
+            color: "#fff",
+            padding: "10px 20px",
+            borderRadius: 10,
+            fontSize: 18,
+            fontWeight: 700,
+            fontFamily: "Consolas, monospace",
+            letterSpacing: 1,
+          }}>
+            v{pkg.version}
+          </div>
+          <div style={{ fontSize: 12, color: "#8a98a8", marginTop: 14, lineHeight: 1.6 }}>
+            Plateforme de gestion de matériel médical<br />
+            et de patients pour les collectivités
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

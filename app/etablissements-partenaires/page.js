@@ -15,6 +15,9 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import Modal from "../components/Modal";
+import ContactActions from "../components/ContactActions";
+import SireneSearch from "../SireneSearch";
+import FinessSearch from "../FinessSearch";
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 
@@ -326,6 +329,18 @@ export default function EtablissementsPartenaires() {
                           <i className="ti ti-user" style={{ fontSize: 11 }} /> {p.contact_nom}{p.contact_fonction ? ` (${p.contact_fonction})` : ""}
                         </div>
                       )}
+                      {/* 0.55.34 : ContactActions */}
+                      <div style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                        <ContactActions
+                          telephone={p.telephone}
+                          email={p.email}
+                          adresse={p.adresse}
+                          cp={p.cp}
+                          commune={p.ville}
+                          latitude={p.latitude}
+                          longitude={p.longitude}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -400,6 +415,66 @@ export default function EtablissementsPartenaires() {
         }
       >
         <div style={{ display: "grid", gap: 12 }}>
+          {/* 0.55.34 — Bloc recherche FINESS / SIRENE pour création */}
+          {editModal?.mode === "create" && (
+            <div style={{
+              background: "linear-gradient(135deg, #f3effa, #fff)",
+              border: "1px solid #d6c9ec",
+              borderRadius: 10,
+              padding: 12,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#5a4a90", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                <i className="ti ti-bolt" /> Remplir automatiquement
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <div>
+                  <label style={{ fontSize: 10.5, color: "#6c7a89", fontWeight: 600, display: "block", marginBottom: 4 }}>
+                    🏥 FINESS (santé)
+                  </label>
+                  <FinessSearch
+                    placeholder="Hôpital, EHPAD, n° FINESS…"
+                    onSelect={(etab) => {
+                      setForm({
+                        ...form,
+                        nom: etab.nom || form.nom,
+                        type: etab.type || form.type,
+                        finess: etab.finess || form.finess,
+                        siret: etab.siret || form.siret,
+                        adresse: etab.adresse || form.adresse,
+                        cp: etab.code_postal || form.cp,
+                        ville: etab.ville || form.ville,
+                        telephone: etab.telephone || form.telephone,
+                      });
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10.5, color: "#6c7a89", fontWeight: 600, display: "block", marginBottom: 4 }}>
+                    🏢 SIRENE (entreprises)
+                  </label>
+                  <SireneSearch
+                    placeholder="Société, SIRET, SIREN…"
+                    onSelect={(s) => {
+                      setForm({
+                        ...form,
+                        nom: s.nom || form.nom,
+                        type: s.type || form.type,
+                        siret: s.siret || form.siret,
+                        siren: s.siren || form.siren,
+                        adresse: s.adresse || form.adresse,
+                        cp: s.code_postal || form.cp,
+                        ville: s.ville || form.ville,
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "#7a6fb0", marginTop: 6 }}>
+                <i className="ti ti-info-circle" /> Sélectionnez un résultat pour pré-remplir tous les champs ci-dessous.
+              </div>
+            </div>
+          )}
+
           {/* Identité */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 10 }}>
             <Field label="Nom *">

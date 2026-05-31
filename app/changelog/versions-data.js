@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.34",
+    "kind": "version",
+    "titre": "📞 Actions Appeler/Mail/GPS (popup choix Maps/Apple/Waze/OSM) dans toutes les listes RPPS/partenaires · Création partenaire par FINESS/SIRENE · Badge version → bouton i avec popup · Rappel SQL idempotent (fix 404 partenaires_rpps)",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.34 : RAPPEL idempotent de toutes les tables précédentes (partenaires_rpps, etablissements_partenaires, colonnes etablissements). Permet de rattraper si les patchs 0.55.30/0.55.31/0.55.33 n'ont pas tous été joués. CREATE TABLE IF NOT EXISTS + ADD COLUMN IF NOT EXISTS + policies DO $$ EXISTS$$ → 100% safe à rejouer" },
+      { "code": "FE", "txt": "Nouveau composant ContactActions.js (réutilisable partout) : 3 boutons compacts Appeler (tel:) bleu, Mail (mailto:) vert, GPS (popup choix) ambre. S'affichent uniquement si la donnée correspondante existe (telephone/email/adresse ou coords). N'apparaît pas du tout si aucune donnée" },
+      { "code": "FE", "txt": "Popup GPS au clic sur le bouton GPS : 4 options (Google Maps, Apple Plans, Waze, OpenStreetMap) avec icônes + couleurs de marque + lien externe. 5ème option 'Copier l'adresse' via clipboard.writeText. Utilise les coords si disponibles, sinon l'adresse encodée. URLs : maps.google.com/dir/?api=1&destination= · maps.apple.com/?daddr= · waze.com/ul?ll=...&navigate=yes · openstreetmap.org/?mlat=&mlon=#map=18/" },
+      { "code": "FE", "txt": "Intégration ContactActions dans : tuiles RppsSearch (toutes les pages qui l'utilisent : /annuaire-rpps, modales /utilisateurs et /partenaires-rpps), cartes /partenaires-rpps, cartes /etablissements-partenaires (utilise lat/lng en plus pour précision GPS). Tous les onClick sur le bouton ont un stopPropagation pour ne pas déclencher le onClick de la carte parente" },
+      { "code": "FE", "txt": "Création d'un partenaire dans /etablissements-partenaires : nouveau bloc violet 'Remplir automatiquement' en haut de la modale CRÉATION (pas en édition) avec 2 champs side-by-side — FinessSearch (santé) et SireneSearch (entreprises). Sélection d'un résultat → pré-remplit nom/type/finess/siret/siren/adresse/cp/ville/telephone du form. Composants déjà existants réutilisés sans duplication" },
+      { "code": "FE", "txt": "TopBar : badge 'v0.55.x' visible remplacé par un bouton 'i' compact (cercle 26x26 avec icône ti-info-circle). Au clic, ouvre un Modal centré 'À propos d'Aveho EC' avec logo gradient, badge version mono, et 2 actions (Voir le changelog / Fermer). Idem mode mobile : juste un i discret, popup centré au clic" },
+      { "code": "AI", "txt": "+18 tests Vitest : ContactActions affichage conditionnel (4), URLs GPS générées (5), tel/mailto encoding (3), recherche FINESS/SIRENE pré-remplissage (3), popup version (2), test global +1. Total 1224 tests verts (vs 1206)" }
+    ],
+    "themes": ["users", "ui_ux", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.34.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.34.sql"
+  },
+  {
     "v": "0.55.33",
     "kind": "version",
     "titre": "🔍 RPPS production unifié : filtres ville/mode/CP, liste 100 résultats, actions Rattacher + Inviter dans les tuiles · Colonnes manquantes etablissements · Verrouillage SQL est_partenaire/groupement_id après création",

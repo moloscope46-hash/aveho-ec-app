@@ -18,6 +18,7 @@
 
 import { useEffect, useState } from "react";
 import { logger } from "../../lib/logger";
+import ContactActions from "./ContactActions";
 
 const PROFESSIONS = [
   { value: "", label: "Toutes professions" },
@@ -288,17 +289,14 @@ function RppsResultTile({ praticien: p, onSelect, renderActions }) {
             {" "}{p.adresse ? `${p.adresse}, ` : ""}{p.cp} {p.commune}
           </div>
         )}
-        <div style={{ display: "flex", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
-          {p.telephone && (
-            <span style={{ fontSize: 11, color: "#185FA5" }}>
-              <i className="ti ti-phone" style={{ fontSize: 11 }} /> {p.telephone}
-            </span>
-          )}
-          {p.email && (
-            <span style={{ fontSize: 11, color: "#5aa05a" }}>
-              <i className="ti ti-mail" style={{ fontSize: 11 }} /> {p.email}
-            </span>
-          )}
+        <div style={{ display: "flex", gap: 10, marginTop: 6, flexWrap: "wrap" }}>
+          <ContactActions
+            telephone={p.telephone}
+            email={p.email}
+            adresse={p.adresse}
+            cp={p.cp}
+            commune={p.commune}
+          />
         </div>
         <div style={{ fontSize: 10, color: "#a0aeb9", marginTop: 4, fontFamily: "Consolas, monospace" }}>
           {p.rpps && <>RPPS {p.rpps}</>}

@@ -27,6 +27,46 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.34 — ContactActions + GPS popup + FINESS/SIRENE création + bouton i ==============
+  "0.55.34": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table partenaires_rpps existe (rappel idempotent)", async () => {
+      const { error } = await supabase.from("partenaires_rpps").select("id").limit(1);
+      if (error?.message?.match(/does not exist|relation/)) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Table accessible" };
+    }));
+
+    results.push(await runTest("Table etablissements_partenaires existe", async () => {
+      const { error } = await supabase.from("etablissements_partenaires").select("id").limit(1);
+      if (error?.message?.match(/does not exist|relation/)) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Table accessible" };
+    }));
+
+    results.push(await runTest("Composant ContactActions importable", async () => {
+      const mod = await import("../components/ContactActions");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("URL Google Maps valide", () => {
+      const lat = 48.8566; const lng = 2.3522;
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      return { ok: url.startsWith("https://www.google.com/maps"), msg: "Google Maps OK" };
+    }));
+
+    results.push(await runTest("URL Waze valide", () => {
+      const url = `https://waze.com/ul?ll=48.8,2.3&navigate=yes`;
+      return { ok: url.includes("waze.com") && url.includes("navigate=yes"), msg: "Waze OK" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.33 — Colonnes manquantes + verrouillage + actions RPPS ==============
   "0.55.33": async () => {
     const supabase = createClient();

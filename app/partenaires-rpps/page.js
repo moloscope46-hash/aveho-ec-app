@@ -18,6 +18,7 @@ import { PageHead, Panel, StateMsg, FilterBar } from "../ui";
 import { KpiRow } from "../kpis";
 import RppsSearch from "../components/RppsSearch";
 import Modal from "../components/Modal";
+import ContactActions from "../components/ContactActions";
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 
@@ -282,6 +283,16 @@ export default function PartenairesRpps() {
                           RPPS {p.rpps}
                         </span>
                       )}
+                    </div>
+                    {/* 0.55.34 : ContactActions tel/mail/GPS */}
+                    <div style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                      <ContactActions
+                        telephone={p.telephone}
+                        email={p.email}
+                        adresse={p.adresse}
+                        cp={p.cp}
+                        commune={p.commune}
+                      />
                     </div>
                   </div>
                 </div>

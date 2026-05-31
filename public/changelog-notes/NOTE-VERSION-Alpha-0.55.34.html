@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.34 — Contact actions + GPS popup + FINESS/SIRENE création + bouton i</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#EF9F27 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffe5c5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#ffe5c5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffe5c5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--amber)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — CONTACT ACTIONS + GPS POPUP + FINESS/SIRENE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.34 — Appeler / Mail / GPS partout · Création partenaire par FINESS+SIRENE · Bouton i version · Fix 404 partenaires_rpps
+      <small>Composant ContactActions réutilisable · popup choix Maps/Apple/Waze/OSM · pré-remplissage automatique · UI version épurée</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.34-alpha</code></span>
+      <span><b>Tests :</b> 1223 verts (+17)</span>
+    </div>
+  </header>
+
+  <h2>🩹 Fix 404 sur partenaires_rpps</h2>
+  <div class="panel warn">
+    <p>Si tu voyais l'erreur HTTP 404 sur <code>rest/v1/partenaires_rpps</code>, c'est que le SQL 0.55.30 n'avait pas été joué. Le patch 0.55.34 contient un <b>rappel idempotent</b> de toutes les tables précédentes :</p>
+    <ul>
+      <li><code>partenaires_rpps</code> (de 0.55.30)</li>
+      <li><code>etablissements_partenaires</code> (de 0.55.31)</li>
+      <li>Colonnes manquantes sur <code>etablissements</code> (de 0.55.33)</li>
+    </ul>
+    <p>Tout en <code>CREATE TABLE IF NOT EXISTS</code> / <code>ADD COLUMN IF NOT EXISTS</code> + policies dans <code>do $$ if not exists $$</code> → 100% safe à rejouer.</p>
+  </div>
+
+  <h2>📞 1. Composant ContactActions — appel / mail / GPS</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">3 boutons compacts contextuels</h3>
+    <ul>
+      <li>🔵 <b>Appeler</b> (tel:) — bleu, ouvre l'app de téléphone (mobile) ou Skype/Teams (PC)</li>
+      <li>🟢 <b>Mail</b> (mailto:) — vert, ouvre le client de messagerie par défaut</li>
+      <li>🟠 <b>GPS</b> — ambre, ouvre un <b>popup de choix</b> d'application</li>
+    </ul>
+    <p>S'affichent uniquement si la donnée existe (pas de bouton GPS si pas d'adresse, etc.). Le composant ne s'affiche pas du tout si rien n'est défini.</p>
+
+    <h3>Popup choix GPS (5 options)</h3>
+    <ul>
+      <li>🔵 <b>Google Maps</b> — <code>maps.google.com/dir/?api=1&destination=...</code></li>
+      <li>⚪ <b>Apple Plans</b> — <code>maps.apple.com/?daddr=...</code></li>
+      <li>🔷 <b>Waze</b> — <code>waze.com/ul?ll=...&navigate=yes</code></li>
+      <li>🟢 <b>OpenStreetMap</b> — <code>openstreetmap.org/?mlat=...&mlon=#map=18/...</code></li>
+      <li>⚫ <b>Copier l'adresse</b> — clipboard.writeText pour coller ailleurs</li>
+    </ul>
+    <p>Utilise les coordonnées GPS (lat/lng) si disponibles pour précision maximale, sinon l'adresse encodée URI.</p>
+  </div>
+
+  <h2>🔌 2. Intégration partout (sans duplication)</h2>
+  <div class="panel hi">
+    <p>ContactActions est intégré dans :</p>
+    <ul>
+      <li><b>Tuiles RppsSearch</b> (utilisé dans /annuaire-rpps, modale /utilisateurs, modale /partenaires-rpps) — donc <b>tous</b> les résultats RPPS ont les actions</li>
+      <li><b>Cartes /partenaires-rpps</b> — sous les badges PRESCRIPTEUR/INTERVENANT</li>
+      <li><b>Cartes /etablissements-partenaires</b> — avec coordonnées lat/lng en bonus pour GPS précis</li>
+    </ul>
+    <p>Tous les clics sur les boutons ont un <code>stopPropagation</code> pour ne pas déclencher l'ouverture de la modale parente.</p>
+  </div>
+
+  <h2>🏥 3. Création partenaire par FINESS / SIRENE</h2>
+  <div class="panel violet">
+    <p>Dans <code>/etablissements-partenaires</code> → bouton "Ajouter un partenaire" → en haut de la modale (mode <b>création uniquement</b>) :</p>
+    <pre><code>┌─────────────────────────────────────────────┐
+│  ⚡ Remplir automatiquement                  │
+│                                              │
+│  ┌──────────────────┐  ┌──────────────────┐ │
+│  │ 🏥 FINESS         │  │ 🏢 SIRENE         │ │
+│  │ Hôpital, EHPAD…   │  │ Société, SIRET…   │ │
+│  └──────────────────┘  └──────────────────┘ │
+│                                              │
+│  ℹ Sélectionnez un résultat pour pré-remplir │
+└─────────────────────────────────────────────┘</code></pre>
+    <p><b>FINESS</b> (santé) : tape un nom d'hôpital, d'EHPAD ou un n° FINESS. Réutilise <code>app/FinessSearch.js</code> existant.</p>
+    <p><b>SIRENE</b> (entreprises) : tape un nom de société, un SIRET (14) ou un SIREN (9). Réutilise <code>app/SireneSearch.js</code> existant.</p>
+    <p>Au clic sur un résultat → <b>pré-remplit automatiquement</b> nom, type, finess, siret, siren, adresse, cp, ville, téléphone. Le user peut éditer ensuite manuellement.</p>
+    <p>Composants <b>déjà existants réutilisés sans duplication</b>.</p>
+  </div>
+
+  <h2>ℹ 4. Badge version → bouton i + popup</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Avant (mobile + PC)</h3>
+    <p>Bulle "v0.55.x" affichée en permanence à côté du logo → encombrant.</p>
+
+    <h3>Maintenant</h3>
+    <p>Petit cercle 26×26 avec icône <code>ti-info-circle</code> ⓘ discret. Au clic, ouvre un Modal centré "À propos d'Aveho EC" avec :</p>
+    <ul>
+      <li>Logo <code>aveho</code> centré, taille 32px</li>
+      <li>Sous-titre "ESPACE COLLECTIVITÉ"</li>
+      <li>Badge gros et stylé avec la version mono <code>v0.55.34-alpha</code></li>
+      <li>Sous-titre "Plateforme de gestion de matériel médical et de patients pour les collectivités"</li>
+      <li>2 actions : "Voir le changelog" (router vers /changelog) ou "Fermer"</li>
+    </ul>
+    <p>Le comportement est identique mobile/PC.</p>
+  </div>
+
+  <h2>📈 5. Tests +17 (1206 → 1223)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-34-contact-gps.test.js</code> :</p>
+    <ul>
+      <li><b>ContactActions affichage</b> (4) : conditional rendering selon données</li>
+      <li><b>URLs GPS</b> (5) : Google Maps coords + adresse, Apple Plans, Waze navigate, OSM zoom 18</li>
+      <li><b>tel:/mailto: encoding</b> (3) : espaces retirés, + international, +alias mail</li>
+      <li><b>Pré-remplissage FINESS/SIRENE</b> (3) : mapping FINESS, mapping SIRENE, fallback</li>
+      <li><b>Popup version</b> (2) : état useState + accessibilité</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.34.sql</code> : <b>NOUVEAU</b> · rappel idempotent partenaires_rpps + etablissements_partenaires + colonnes etablissements</li>
+    <li><code>app/components/ContactActions.js</code> : <b>NOUVEAU</b> · 3 boutons + popup GPS choix d'app</li>
+    <li><code>app/components/RppsSearch.js</code> : import ContactActions + remplacement des spans tel/email texte par le composant</li>
+    <li><code>app/partenaires-rpps/page.js</code> : ContactActions dans les cartes</li>
+    <li><code>app/etablissements-partenaires/page.js</code> : ContactActions + bloc violet recherche FINESS/SIRENE au-dessus de la modale création</li>
+    <li><code>app/TopBar.js</code> : suppression badge version + ajout bouton i + Modal popup centré</li>
+    <li><code>__tests__/v055-34-contact-gps.test.js</code> : <b>NOUVEAU</b> · +17 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.34 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.34</li>
+    <li><code>package.json</code> : 0.55.33 → 0.55.34</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> (surtout si erreur 404 sur partenaires_rpps) : <code>aveho-PATCH-vers-0.55.34.sql</code> → Run</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.34 - ContactActions GPS popup + FINESS/SIRENE creation + bouton i version + fix idempotent"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire après déploiement</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Page <code>/partenaires-rpps</code> charge sans 404 ✓</li>
+      <li>Sur n'importe quelle carte avec téléphone/email/adresse → 3 boutons compacts visibles</li>
+      <li>Clic "GPS" → popup avec Google Maps / Apple / Waze / OSM / Copier</li>
+      <li>Clic sur Google Maps → ouvre dans un nouvel onglet avec destination pré-remplie</li>
+      <li>Page <code>/etablissements-partenaires</code> → "Ajouter un partenaire" → bloc violet en haut avec 2 champs FINESS + SIRENE</li>
+      <li>Recherche FINESS "Saint-Joseph" → résultats → clic → tous les champs pré-remplis</li>
+      <li>Recherche SIRENE "Aveho" → résultats → clic → SIRET + SIREN remplis</li>
+      <li>Top de la page : plus de bulle "v0.55.x" — juste un petit <b>i</b> à côté du logo</li>
+      <li>Clic sur le <b>i</b> → popup centré avec logo + version + 2 boutons</li>
+      <li>Smoke tests 0.55.34 → 5 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>🔜 À venir 0.55.35</h2>
+  <div class="panel">
+    <ul>
+      <li><b>RPPS sur la carte</b> : afficher les praticiens géolocalisés depuis l'API FHIR ANS</li>
+      <li><b>Filtres SIREN/SIRET sur la carte</b> : couche supplémentaire pour les partenaires entreprises</li>
+      <li>Marker custom selon le type (médecin / IDE / partenaire)</li>
+    </ul>
+  </div>
+
+  <h2>SW auto-bump — 44ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.33 → <b>0.55.34</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.34 · 31 mai 2026</p>
+    <p>ContactActions partout · GPS popup 5 options · FINESS/SIRENE création · bouton i version · 1 SQL idempotent · 1223 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
