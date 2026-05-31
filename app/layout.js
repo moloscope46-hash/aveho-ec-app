@@ -1,6 +1,7 @@
 import "./globals.css";
 import InstallPWA from "./InstallPWA";
 import InstallBanner from "./InstallBanner";
+import KeyboardHelp from "./KeyboardHelp";
 import OfflineBanner from "./OfflineBanner";
 import LectureSeuleBadge from "./LectureSeuleBadge";
 import GlobalSearch from "./GlobalSearch";
@@ -66,6 +67,7 @@ export default function RootLayout({ children }) {
         <InstallPWA />
         {/* Alpha 0.36.0 : banner contextuel d'installation PWA */}
         <InstallBanner />
+        <KeyboardHelp />
         {/* Alpha 0.46.0 : host global pour dialogs.confirm() / dialogs.alert() */}
         <DialogsHost />
         {/* Alpha 0.48.0 : vérification version dispo */}

@@ -15,6 +15,7 @@ import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
 
 import { dialogs } from "../dialogs";
+import { logger } from "../../lib/logger";
 const TYPES = [
   { value: "Problème", color: "#e35d5b", icon: "ti-alert-triangle" },
   { value: "Idée", color: "#7CC8C8", icon: "ti-bulb" },
@@ -125,7 +126,7 @@ export default function SignalementsPage() {
         setRows(rows.map((x) => x.id === r.id ? { ...x, nb_votes: (x.nb_votes || 0) + 1 } : x));
       }
     } catch (e) {
-      console.warn("vote:", e.message);
+      logger.warn("vote:", e.message);
     } finally {
       setVoteBusy({ ...voteBusy, [r.id]: false });
     }
@@ -173,7 +174,7 @@ export default function SignalementsPage() {
           await notifierAuteurSignalement(supabase, modal.id, modal.created_by, modal.titre, payload.reponse);
         } catch (e) {
           // Silencieux : la notif est best-effort, ne pas bloquer le save
-          console.warn("Notif signalement auteur:", e?.message);
+          logger.warn("Notif signalement auteur:", e?.message);
         }
       }
     } else {
@@ -580,7 +581,7 @@ ${reponse?.replace(/\n/g, "<br>") || "(pas de contenu fourni)"}
       }
     } catch (e) {
       // Email best-effort, ne pas bloquer
-      console.warn("Send email signalement:", e?.message);
+      logger.warn("Send email signalement:", e?.message);
     }
   }
 
@@ -605,6 +606,6 @@ ${reponse?.replace(/\n/g, "<br>") || "(pas de contenu fourni)"}
     }
   } catch (e) {
     // Push best-effort
-    console.warn("Send push signalement:", e?.message);
+    logger.warn("Send push signalement:", e?.message);
   }
 }

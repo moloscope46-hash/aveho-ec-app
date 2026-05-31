@@ -18,6 +18,7 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import PasswordInput from "../../PasswordInput";
 import { checkPassword } from "../../../lib/passwordPolicy";
+import { logger } from "../../../lib/logger";
 
 export default function InscriptionPage() {
   const supabase = createClient();
@@ -156,7 +157,7 @@ export default function InscriptionPage() {
           },
         });
       } catch (e) {
-        console.warn("[Inscription] Mail bienvenue non envoyé :", e);
+        logger.warn("[Inscription] Mail bienvenue non envoyé :", e);
       }
 
       setStep("done");

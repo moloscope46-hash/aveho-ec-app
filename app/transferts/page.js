@@ -12,6 +12,7 @@ import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
 import BulkActions, { useBulkSelection } from "../BulkActions";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
+import { logger } from "../../lib/logger";
 
 const STATUTS = ["Demandé", "Validé", "Reçu"];
 const MOTIFS = ["Réapprovisionnement", "Retour", "Prêt", "Régularisation"];
@@ -140,7 +141,7 @@ export default function Transferts() {
           }, { userId });
         }
       } catch (e) {
-        console.warn("Décrément stock impossible :", e);
+        logger.warn("Décrément stock impossible :", e);
       }
     }
     await load();

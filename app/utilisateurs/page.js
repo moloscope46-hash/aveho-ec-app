@@ -11,6 +11,7 @@ import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
 
 import { dialogs } from "../dialogs";
+import { logger } from "../../lib/logger";
 const MODULES = [
   { k: "patients", l: "Patients" }, { k: "etablissement", l: "Établissement" },
   { k: "materiels", l: "Matériel" }, { k: "articles", l: "Articles" },
@@ -104,7 +105,7 @@ export default function Utilisateurs() {
         setAuthMethodsByUser(amap);
       } catch (e) {
         // Si la vue n'existe pas (SQL pas encore passé), on ignore silencieusement
-        console.warn("[utilisateurs] v_users_auth_methods non dispo:", e?.message);
+        logger.warn("[utilisateurs] v_users_auth_methods non dispo:", e?.message);
       }
     }
     setLoading(false);
@@ -240,7 +241,7 @@ export default function Utilisateurs() {
       .eq("structure_id", auth.structureId);
     if (error) {
       // Si la colonne n'existe pas, on retire les champs étendus et on réessaie
-      console.warn("[saveUserInfo] colonnes étendues absentes, retry sans:", error.message);
+      logger.warn("[saveUserInfo] colonnes étendues absentes, retry sans:", error.message);
       const basicUpdates = {
         nom_affiche: userInfoForm.nom_affiche || null,
         telephone: userInfoForm.telephone || null,
@@ -351,7 +352,7 @@ export default function Utilisateurs() {
         },
       });
     } catch (e) {
-      console.warn("Email non envoyé (Edge Function invite-user non déployée ?)", e);
+      logger.warn("Email non envoyé (Edge Function invite-user non déployée ?)", e);
     }
 
     // 4) trace audit + notif

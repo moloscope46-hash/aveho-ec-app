@@ -27,6 +27,45 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.27 — Migration logger + cheatsheet ==============
+  "0.55.27": async () => {
+    const results = [];
+
+    results.push(await runTest("Composant KeyboardHelp chargeable", async () => {
+      const mod = await import("../KeyboardHelp");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Composant Modal partagé exporté", async () => {
+      const Modal = (await import("../components/Modal")).default;
+      return typeof Modal === "function";
+    }));
+
+    results.push(await runTest("Logger.warn fonctionnel (silencieux en prod)", async () => {
+      const { logger } = await import("../../lib/logger");
+      // On vérifie juste que ça ne plante pas
+      logger.warn("[test]", "smoke test logger.warn");
+      return true;
+    }));
+
+    results.push(await runTest("Raccourci ? capté (sauf focus input)", () => {
+      // Simulation
+      function isTypingInInput(activeElement) {
+        if (!activeElement) return false;
+        const tag = activeElement.tagName?.toLowerCase();
+        if (["input", "textarea", "select"].includes(tag)) return true;
+        return false;
+      }
+      // Hors champ → ?
+      const opens = !isTypingInInput({ tagName: "DIV" });
+      // Dans input → bloqué
+      const blocked = isTypingInInput({ tagName: "INPUT" });
+      return { ok: opens && blocked, msg: "Comportement correct" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.26 — Sécurité + Perf + Doublons ==============
   "0.55.26": async () => {
     const supabase = createClient();

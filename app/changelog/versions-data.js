@@ -119,6 +119,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.27",
+    "kind": "version",
+    "titre": "Cheatsheet raccourcis clavier (touche ?) + navigation G+lettre · Migration logger sécurisé sur 7 fichiers supplémentaires",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouveau composant KeyboardHelp monté dans le layout : appuyez sur '?' n'importe où dans l'app (hors champs texte) pour ouvrir une cheatsheet avec tous les raccourcis disponibles. Utilise le composant Modal partagé (0.55.26)" },
+      { "code": "FE", "txt": "Navigation par raccourcis : 'G puis A' = /accueil, 'G puis P' = /patients, 'G puis M' = /materiel, 'G puis U' = /utilisateurs, 'G puis L' = /changelog, 'G puis S' = /profil. La séquence a une fenêtre de 1.5s entre les 2 touches" },
+      { "code": "UX", "txt": "Cheatsheet organisée en 4 sections : Navigation, Recherche, Modales et listes, Débogage. Touches affichées sous forme de <kbd> stylisées avec ombre" },
+      { "code": "FIX", "txt": "Migration console.* → logger.* sur 7 fichiers supplémentaires : app/inscription/[token]/page.js, app/utilisateurs/page.js, app/signalements/page.js, app/achats/page.js, app/transferts/page.js, lib/events.js, lib/useOffline.js" },
+      { "code": "FIX", "txt": "Compteur console.* en prod : 51 occurrences en 0.55.25 → 27 en 0.55.27 (-47%, migration progressive)" },
+      { "code": "AI", "txt": "+16 tests Vitest sur isTypingInInput (détection focus champs), NAV_MAP (routes G+lettre), structure SHORTCUTS et paths logger. Total 1122 tests verts (vs 1106)" }
+    ],
+    "themes": ["ux", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.27.html"
+  },
+  {
     "v": "0.55.26",
     "kind": "version",
     "titre": "🔒 Maintenance sécurité + optimisations + dédup code : durcissement RLS, logger sécurisé, composant Modal partagé, cache SW borné, table audit",

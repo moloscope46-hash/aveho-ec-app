@@ -19,6 +19,7 @@ import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
 
 import { dialogs } from "../dialogs";
+import { logger } from "../../lib/logger";
 const STATUTS = [
   { value: "Brouillon", color: "#8a98a8", icon: "ti-file-pencil" },
   { value: "À valider", color: "#EF9F27", icon: "ti-clock" },
@@ -214,11 +215,11 @@ function AchatsInner() {
         achat: c, 
         demandeurEmail: auth.user?.email,
       }).then(({ sent, errors }) => {
-        if (sent > 0) console.log(`📧 ${sent} valideur(s) notifié(s) par email`);
-        if (errors.length > 0) console.warn("Erreurs envoi email :", errors);
+        if (sent > 0) logger.debug(`📧 ${sent} valideur(s) notifié(s) par email`);
+        if (errors.length > 0) logger.warn("Erreurs envoi email :", errors);
       });
     } catch (e) {
-      console.warn("notifyValideurs non disponible :", e?.message);
+      logger.warn("notifyValideurs non disponible :", e?.message);
     }
     await load();
   }
