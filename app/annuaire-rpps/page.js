@@ -50,8 +50,34 @@ export default function AnnuaireRppsPage() {
   }, [auth.ready, auth.structureId]);
 
   // ============== ACTION 1 : Rattacher à un établissement ==============
-  function openLinkModal(p) {
-    setLinkModal({ praticien: p, choix: null });
+  async function openLinkModal(p) {
+    // 0.55.35 : si le RPPS contient un FINESS, on cherche d'abord
+    // l'établissement correspondant dans la base pour pré-sélection
+    let preSelected = null;
+    if (p.finess) {
+      try {
+        const { data: matchMine } = await supabase
+          .from("etablissements")
+          .select("id, nom, type, ville, est_partenaire")
+          .eq("structure_id", auth.structureId)
+          .eq("finess", p.finess)
+          .maybeSingle();
+        if (matchMine) preSelected = { ...matchMine, kind: "mine" };
+
+        if (!preSelected) {
+          const { data: matchPart } = await supabase
+            .from("etablissements_partenaires")
+            .select("id, nom, type, ville, type_relation")
+            .eq("structure_id", auth.structureId)
+            .eq("finess", p.finess)
+            .maybeSingle();
+          if (matchPart) preSelected = { ...matchPart, kind: "partner" };
+        }
+      } catch (e) {
+        logger.warn("[annuaire-rpps] auto-link FINESS échec:", e?.message);
+      }
+    }
+    setLinkModal({ praticien: p, choix: preSelected, autoMatched: !!preSelected });
   }
 
   async function confirmLink() {
@@ -275,6 +301,34 @@ export default function AnnuaireRppsPage() {
           </>
         }
       >
+        {/* 0.55.35 : badge auto-match si FINESS détecté */}
+        {linkModal?.autoMatched && linkModal?.choix && (
+          <div style={{
+            background: "linear-gradient(135deg, #eef9ef, #fff)",
+            border: "1px solid #bfe2bf",
+            borderRadius: 10,
+            padding: "10px 14px",
+            marginBottom: 12,
+            fontSize: 12.5,
+            color: "#2e6f33",
+          }}>
+            <b><i className="ti ti-magic-wand" /> Auto-rattachement détecté !</b><br />
+            Le FINESS <code style={{ background: "#dff5e0", padding: "1px 6px", borderRadius: 4, fontFamily: "Consolas, monospace" }}>{linkModal.praticien.finess}</code> du praticien correspond à <b>{linkModal.choix.nom}</b>. Tu peux valider directement, ou changer ci-dessous.
+          </div>
+        )}
+        {linkModal?.praticien?.finess && !linkModal?.autoMatched && (
+          <div style={{
+            background: "#fff8ec",
+            border: "1px solid #f0d59f",
+            borderRadius: 8,
+            padding: "8px 12px",
+            marginBottom: 12,
+            fontSize: 11.5,
+            color: "#7a4f15",
+          }}>
+            <i className="ti ti-info-circle" /> FINESS détecté <code style={{ background: "#fff", padding: "0 4px", borderRadius: 3 }}>{linkModal.praticien.finess}</code>{linkModal.praticien.organization_name ? ` (${linkModal.praticien.organization_name})` : ""} mais aucun établissement avec ce FINESS dans ta base. Choisis manuellement ci-dessous.
+          </div>
+        )}
         {allEtabs.length === 0 ? (
           <p style={{ color: "#8a98a8" }}>Aucun établissement disponible. Crée-en d'abord dans /etablissements.</p>
         ) : (

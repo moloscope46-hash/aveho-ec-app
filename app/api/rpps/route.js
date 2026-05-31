@@ -30,7 +30,7 @@ function normalizePractitioner(practitioner, roles = []) {
   const prenom = (name.given || []).join(" ") || "";
   const civilite = name.prefix?.[0] || "";
 
-  // Le PractitionerRole contient profession + adresse + tél
+  // Le PractitionerRole contient profession + adresse + tél + organization (FINESS)
   const role = roles.find((r) => r.practitioner?.reference?.endsWith(practitioner.id)) || {};
 
   // Profession depuis code.coding[]
@@ -66,6 +66,17 @@ function normalizePractitioner(practitioner, roles = []) {
     commune = a.city || "";
   }
 
+  // 0.55.35 : extraire le FINESS de l'organization (pour auto-rattachement)
+  let finess = "";
+  let organization_name = "";
+  if (role.organization?.reference) {
+    // ref format : "Organization/<id>" ou "Organization/<finess>" selon ANS
+    const ref = role.organization.reference;
+    const match = ref.match(/Organization\/(\d{9})/);
+    if (match) finess = match[1];
+    organization_name = role.organization.display || "";
+  }
+
   return {
     rpps: rppsId?.value || "",
     adeli: adeliId?.value || "",
@@ -80,6 +91,9 @@ function normalizePractitioner(practitioner, roles = []) {
     commune,
     telephone: tel,
     email,
+    // 0.55.35 : info organization pour auto-link FINESS
+    finess,
+    organization_name,
     // ID interne FHIR pour aller chercher plus de détails si besoin
     _fhirId: practitioner.id,
   };
@@ -122,12 +136,74 @@ export async function GET(req) {
   try {
     // Build URL FHIR
     const params = new URLSearchParams();
+    const cleanQ = q.trim();
     if (rppsExact) {
       params.set("identifier", rppsExact);
-    } else {
-      if (q) params.set("family", q);
+    } else if (cleanQ.length >= 2) {
+      // Ne JAMAIS envoyer family=" " (espace) → l'API ANS retourne 403
+      params.set("family", cleanQ);
     }
-    params.set("_count", String(limit));
+    // 0.55.35 : si on cherche par ville/cp/profession sans nom, on doit
+    // passer par PractitionerRole (qui a address-city) puis remonter aux practitioners
+    const useRoleSearch = !rppsExact && cleanQ.length < 2 && (ville || cp || profession);
+    if (useRoleSearch) {
+      // Cherche directement les rôles avec city/postal-code, _include practitioner
+      const roleParams = new URLSearchParams();
+      if (ville) roleParams.set("location.address-city", ville);
+      if (cp) roleParams.set("location.address-postalcode", cp);
+      roleParams.set("_include", "PractitionerRole:practitioner");
+      roleParams.set("_count", String(Math.min(limit, 50)));
+      const roleUrl = `${FHIR_BASE}/PractitionerRole?${roleParams}`;
+      try {
+        const rRes = await fetch(roleUrl, {
+          headers: { Accept: "application/fhir+json" },
+          next: { revalidate: 3600 },
+        });
+        if (rRes.ok) {
+          const rJson = await rRes.json();
+          const allResources = (rJson.entry || []).map((e) => e.resource);
+          const practitioners = allResources.filter((r) => r.resourceType === "Practitioner");
+          const roles = allResources.filter((r) => r.resourceType === "PractitionerRole");
+          let normalized = practitioners.map((p) => normalizePractitioner(p, roles));
+          // Filtre client final
+          if (profession) {
+            const pl = profession.toLowerCase();
+            normalized = normalized.filter((e) => (e.profession || "").toLowerCase().includes(pl));
+          }
+          if (ville) {
+            const vl = ville.toLowerCase();
+            normalized = normalized.filter((e) => (e.commune || "").toLowerCase().includes(vl));
+          }
+          if (cp) {
+            normalized = normalized.filter((e) => (e.cp || "").startsWith(cp));
+          }
+          return Response.json({
+            ok: true,
+            count: normalized.length,
+            results: normalized,
+            source: "ANS FHIR R4 (PractitionerRole search)",
+          });
+        }
+      } catch (e) {
+        console.warn("[RPPS] role search failed:", e.message);
+      }
+      // Si on est ici : la recherche role a échoué → tomber dans le mock fallback
+      return Response.json({
+        ok: true,
+        count: 0,
+        results: [],
+        source: "ANS FHIR R4 (aucun résultat — précisez un nom pour affiner)",
+        hint: "Pour de meilleurs résultats, ajoute au moins 2 lettres dans le champ nom.",
+      });
+    }
+    if (!params.has("family") && !params.has("identifier")) {
+      // Pas de critère valide → on ne tape pas l'API
+      return Response.json({
+        ok: false,
+        error: "Précise au moins un nom (2 lettres min.) ou un n° RPPS.",
+      }, { status: 400 });
+    }
+    params.set("_count", String(Math.min(limit, 100)));
 
     const url = `${FHIR_BASE}/Practitioner?${params}`;
     const res = await fetch(url, {
@@ -137,11 +213,13 @@ export async function GET(req) {
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
+      // 0.55.35 : fallback gracieux au lieu de 502 brutal
       return Response.json({
         ok: false,
-        error: `FHIR API HTTP ${res.status}`,
+        error: `API ANS HTTP ${res.status}. Vérifie tes critères ou réessaie plus tard.`,
         detail: text.slice(0, 200),
-      }, { status: 502 });
+        results: [],
+      }, { status: 200 }); // 200 pour que le composant frontend l'affiche normalement
     }
 
     const json = await res.json();

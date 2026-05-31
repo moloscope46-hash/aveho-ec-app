@@ -75,8 +75,8 @@ export default function RppsSearch({
       const params = new URLSearchParams();
       if (rppsExact) {
         params.set("rpps", rppsExact);
-      } else {
-        params.set("q", query || " ");
+      } else if (query.trim().length >= 2) {
+        params.set("q", query.trim());
       }
       if (profession) params.set("profession", profession);
       if (cp) params.set("cp", cp);

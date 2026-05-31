@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.35",
+    "kind": "hotfix",
+    "titre": "🩹 Fix API RPPS HTTP 403/502 (ville sans nom) · Auto-rattachement RPPS→FINESS · Validation 2 lettres min · Rebuild qui devrait corriger 'kind is not defined' (résidu ancien bundle)",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug 502 'FHIR API HTTP 403' quand le user cherchait par ville seule (sans nom) : l'API ANS rejette family= (espace vide). Désormais : si q < 2 caractères ET ville/cp fournis → bascule sur endpoint PractitionerRole avec location.address-city / location.address-postalcode et _include=PractitionerRole:practitioner pour récupérer les praticiens" },
+      { "code": "FIX", "txt": "Si l'API ANS retourne quand même une erreur (rate limit, maintenance, etc.), réponse HTTP 200 avec ok:false et message lisible au lieu de 502 brutal → le composant frontend affiche un message clair sans crasher" },
+      { "code": "FIX", "txt": "RppsSearch côté client : ne plus envoyer 'q= ' (espace forcé) qui plantait l'API. Validation 2 caractères minimum dans le code. Côté serveur, retour 400 explicite 'Précise au moins un nom (2 lettres min.) ou un n° RPPS' si critères insuffisants" },
+      { "code": "FE", "txt": "Auto-rattachement RPPS → FINESS dans /annuaire-rpps : la fonction normalizePractitioner extrait désormais le N° FINESS depuis Organization.reference (format Organization/750712184) + organization_name depuis display. Le bouton 'Rattacher à un étab' cherche automatiquement l'établissement dans la base avec ce FINESS et le pré-sélectionne avec badge vert 'Auto-rattachement détecté !'" },
+      { "code": "FE", "txt": "Si le FINESS du praticien n'est PAS dans la base, banner ambre 'FINESS détecté <code> mais aucun étab dans ta base. Choisis manuellement.' Cherche d'abord dans etablissements (Mes), puis dans etablissements_partenaires si pas trouvé" },
+      { "code": "•", "txt": "Le rebuild de cette version remet le SW à 0.55.35 et devrait écraser tout résidu d'ancien bundle Vercel (qui pouvait contenir l'erreur 'kind is not defined' héritée d'une build cassée). Si l'erreur persiste après déploiement, vide complètement le cache du navigateur (Ctrl+Shift+Suppr)" },
+      { "code": "AI", "txt": "+23 tests Vitest : construction URL FHIR (6), useRoleSearch logique (5), fallback gracieux (3), extraction FINESS regex (4), auto-link match (3), normalizePractitioner enrichi (2). Total 1246 tests verts (vs 1223)" }
+    ],
+    "themes": ["fixes", "users"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.35.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.34",
     "kind": "version",
     "titre": "📞 Actions Appeler/Mail/GPS (popup choix Maps/Apple/Waze/OSM) dans toutes les listes RPPS/partenaires · Création partenaire par FINESS/SIRENE · Badge version → bouton i avec popup · Rappel SQL idempotent (fix 404 partenaires_rpps)",

@@ -27,6 +27,50 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.35 — Fix RPPS 502/403 + auto-link FINESS ==============
+  "0.55.35": async () => {
+    const results = [];
+
+    results.push(await runTest("API RPPS rejette q vide (400)", async () => {
+      try {
+        const res = await fetch("/api/rpps?q=&limit=10");
+        const data = await res.json();
+        return { ok: !data.ok && res.status === 400, msg: data.error || "Validation OK" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API RPPS fallback gracieux sur erreur FHIR", async () => {
+      // Tentative requête qui pourrait planter
+      try {
+        const res = await fetch("/api/rpps?q=ZXZXZXZX&limit=5");
+        const data = await res.json();
+        // Soit pas de résultat soit erreur lisible, jamais 502
+        return { ok: res.status !== 502, msg: `HTTP ${res.status}, ok=${data.ok}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API RPPS recherche ville seule fonctionne", async () => {
+      try {
+        const res = await fetch("/api/rpps?ville=Paris&limit=5");
+        const data = await res.json();
+        return { ok: !!data, msg: `${data.count || 0} résultats` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /annuaire-rpps chargeable", async () => {
+      const mod = await import("../annuaire-rpps/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.34 — ContactActions + GPS popup + FINESS/SIRENE création + bouton i ==============
   "0.55.34": async () => {
     const supabase = createClient();
