@@ -120,6 +120,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.37",
+    "kind": "hotfix",
+    "titre": "🩹 Fix version login (0.1 → dynamique pkg) · Retry RPPS name= si family= retourne 403 (ex: 'lacroix') · AddressAutocomplete INSEE BAN intégré sur fiche partenaire + fiche user · Features list login mise à jour (FINESS/SIRENE/RPPS/biométrie)",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug 'Version Alpha 0.1' hardcoded dans le popup de connexion : remplacé par <code>{pkg.version.replace(/-alpha$/, '')}</code> dynamique. Tooltip 'Build 0.55.37-alpha' au survol. Synchronisé automatiquement à chaque bump de version" },
+      { "code": "FIX", "txt": "Bug RPPS 'API ANS HTTP 403' sur le nom 'lacroix' (et d'autres) : l'API ANS rejette certains noms via le paramètre family=. Désormais : si family= retourne 403 ou 400 et que le nom fait 2+ caractères, retry automatique avec name= (paramètre FHIR plus permissif qui cherche sur l'ensemble des champs name). Message d'erreur amélioré : 'API ANS HTTP 403. Essayez avec un autre nom ou ajoutez un critère (ville, profession).'" },
+      { "code": "FE", "txt": "Login mis à jour avec les évolutions récentes : 5 features listées au lieu de 3 — Multi-établissements + partenaires (FINESS, SIRENE, RPPS), Annuaire RPPS national 1,7M praticiens API FHIR ANS, Connexion biométrique (empreinte + reconnaissance faciale), Plan de l'établissement, HDS+RGPD. Icônes adaptées (ti-building-community, ti-stethoscope, ti-fingerprint, ti-bed, ti-shield-check)" },
+      { "code": "FE", "txt": "AddressAutocomplete (BAN INSEE api-adresse.data.gouv.fr, gratuit sans clé) intégré dans la modale création/édition de /etablissements-partenaires : remplace l'input adresse simple par un champ avec suggestions live. onSelect remplit automatiquement adresse + cp + ville + latitude + longitude. Badge vert '(autocomplétée INSEE)' à côté du label" },
+      { "code": "FE", "txt": "AddressAutocomplete aussi intégré dans /utilisateurs (fiche détaillée d'un user, onglet info personnelle) : le champ 'Adresse postale' devient autocomplété. Badge vert (autocomplétée INSEE) visible" },
+      { "code": "AI", "txt": "+16 tests Vitest : version dynamique (2), features list (3), RPPS retry conditions (6), message d'erreur (2), AddressAutocomplete onSelect (2), hint UI (1). Total 1281 tests verts (vs 1265)" }
+    ],
+    "themes": ["fixes", "users", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.37.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.36",
     "kind": "version",
     "titre": "📸 Photos établissements via Wikipedia API (gratuit, sans clé) · Bannières dans /vue-globale, /etablissement/fiche, /etablissements-partenaires · Cache localStorage 7 jours · Fallback gradient par type",

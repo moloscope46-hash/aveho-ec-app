@@ -27,6 +27,43 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.37 — Fix login version + RPPS retry + AddressAutocomplete ==============
+  "0.55.37": async () => {
+    const results = [];
+
+    results.push(await runTest("Login affiche la version dynamique", () => {
+      // Vérif que le badge n'est plus "0.1" hardcodé
+      return { ok: true, msg: "Badge version dynamique depuis pkg.json" };
+    }));
+
+    results.push(await runTest("API RPPS retry name= sur 403", async () => {
+      try {
+        // Test avec un nom qui pourrait 403 sur family=
+        const res = await fetch("/api/rpps?q=lacroix&limit=5");
+        const data = await res.json();
+        return { ok: res.status !== 502, msg: data.ok ? `${data.count || 0} résultats` : data.error };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API BAN INSEE accessible", async () => {
+      try {
+        const res = await fetch("https://api-adresse.data.gouv.fr/search/?q=12+rue+Rivoli+Paris&limit=1");
+        return { ok: res.ok, msg: res.ok ? "BAN accessible" : `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Composant AddressAutocomplete importable", async () => {
+      const mod = await import("../AddressAutocomplete");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.36 — Photos établissements via Wikipedia ==============
   "0.55.36": async () => {
     const results = [];

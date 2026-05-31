@@ -12,6 +12,7 @@ import { logEvent } from "../../lib/events";
 import { dialogs } from "../dialogs";
 import RppsSearch from "../components/RppsSearch";
 import Modal from "../components/Modal";
+import AddressAutocomplete from "../AddressAutocomplete";
 import { logger } from "../../lib/logger";
 const MODULES = [
   { k: "patients", l: "Patients" }, { k: "etablissement", l: "Établissement" },
@@ -1217,8 +1218,15 @@ export default function Utilisateurs() {
                     </div>
                   </div>
                   <div className="fld" style={{ marginTop: 10 }}>
-                    <label>Adresse postale</label>
-                    <input value={userInfoForm.adresse} onChange={(e)=>setUserInfoForm({...userInfoForm, adresse:e.target.value})} placeholder="12 rue de la République, 75001 Paris" />
+                    <label>Adresse postale <span style={{ color: "#5aa05a", fontSize: 10, fontWeight: 600 }}>(autocomplétée INSEE)</span></label>
+                    <AddressAutocomplete
+                      value={userInfoForm.adresse}
+                      onSelect={(addr) => setUserInfoForm({
+                        ...userInfoForm,
+                        adresse: addr.label,
+                      })}
+                      placeholder="12 rue de la République, 75001 Paris"
+                    />
                   </div>
                   <div className="grid-2-mobile-1" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop: 10 }}>
                     <div className="fld">

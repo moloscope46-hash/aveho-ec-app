@@ -19,6 +19,7 @@ import ContactActions from "../components/ContactActions";
 import EtabPhoto from "../components/EtabPhoto";
 import SireneSearch from "../SireneSearch";
 import FinessSearch from "../FinessSearch";
+import AddressAutocomplete from "../AddressAutocomplete";
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 
@@ -547,10 +548,24 @@ export default function EtablissementsPartenaires() {
             </Field>
           </div>
 
-          {/* Adresse */}
-          <Field label="Adresse">
-            <input value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} placeholder="12 rue de la République" />
-          </Field>
+          {/* Adresse - 0.55.37 : autocomplete INSEE BAN */}
+          <div>
+            <label style={{ fontSize: 11.5, color: "#6c7a89", fontWeight: 600, display: "block", marginBottom: 4 }}>
+              Adresse <span style={{ color: "#5aa05a", fontSize: 10 }}>(autocomplétée INSEE)</span>
+            </label>
+            <AddressAutocomplete
+              value={form.adresse}
+              onSelect={(addr) => setForm({
+                ...form,
+                adresse: addr.label,
+                cp: addr.cp || form.cp,
+                ville: addr.ville || form.ville,
+                latitude: addr.lat || form.latitude,
+                longitude: addr.lng || form.longitude,
+              })}
+              placeholder="12 rue de la République, Paris"
+            />
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
             <Field label="Code postal">
               <input value={form.cp} onChange={(e) => setForm({ ...form, cp: e.target.value })} placeholder="75011" />

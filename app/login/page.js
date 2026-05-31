@@ -1,9 +1,11 @@
 "use client";
 // Page Login — Page de connexion (email/mot de passe + magic link + empreinte)
 // Alpha 0.55.13 : ajout connexion par empreinte (WebAuthn) si dispo
+// Alpha 0.55.37 : version dynamique + features list mise à jour
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
+import pkg from "../../package.json";
 import {
   isWebAuthnSupported,
   isMobileDevice,
@@ -118,10 +120,14 @@ export default function Login() {
           <div style={{ fontSize: 9, letterSpacing: 1, opacity: .7 }}>SOFTS &amp; SERVICES</div>
           <h2>L'espace pro<br />du <span className="accent">matériel médical</span></h2>
           <p>Une seule connexion pour les collectivités clientes : gérez vos établissements, votre matériel, votre stock et passez commande à vos magasins Aveho.</p>
-          <div className="feat"><span className="fi"><i className="ti ti-building-community" /></span> Multi-établissements : pilotez toute la collectivité</div>
+          <div className="feat"><span className="fi"><i className="ti ti-building-community" /></span> Multi-établissements + partenaires (FINESS, SIRENE, RPPS)</div>
+          <div className="feat"><span className="fi"><i className="ti ti-stethoscope" /></span> Annuaire RPPS national · 1,7M praticiens · API FHIR ANS</div>
+          <div className="feat"><span className="fi"><i className="ti ti-fingerprint" /></span> Connexion biométrique (empreinte + reconnaissance faciale)</div>
           <div className="feat"><span className="fi"><i className="ti ti-bed" /></span> Plan de l'établissement, lits, patients & matériel</div>
           <div className="feat"><span className="fi"><i className="ti ti-shield-check" /></span> Hébergement HDS · Certifié RGPD</div>
-          <div className="version-badge">Version Alpha 0.1</div>
+          <div className="version-badge" title={`Build ${pkg.version}`}>
+            Version Alpha {pkg.version.replace(/-alpha$/, "")}
+          </div>
         </div>
         <div className="login-right">
           <h1>Bienvenue 👋</h1>

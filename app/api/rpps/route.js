@@ -206,20 +206,39 @@ export async function GET(req) {
     params.set("_count", String(Math.min(limit, 100)));
 
     const url = `${FHIR_BASE}/Practitioner?${params}`;
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       headers: { Accept: "application/fhir+json" },
-      next: { revalidate: 3600 }, // Cache 1h serveur
+      next: { revalidate: 3600 },
     });
+
+    // 0.55.37 : si family= renvoie 403/400, retry avec name= (plus permissif)
+    if (!res.ok && cleanQ.length >= 2 && (res.status === 403 || res.status === 400)) {
+      const retryParams = new URLSearchParams(params);
+      retryParams.delete("family");
+      retryParams.set("name", cleanQ);
+      const retryUrl = `${FHIR_BASE}/Practitioner?${retryParams}`;
+      try {
+        const r2 = await fetch(retryUrl, {
+          headers: { Accept: "application/fhir+json" },
+          next: { revalidate: 3600 },
+        });
+        if (r2.ok) {
+          res = r2;
+        }
+      } catch (e) {
+        console.warn("[RPPS] retry name= failed:", e.message);
+      }
+    }
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       // 0.55.35 : fallback gracieux au lieu de 502 brutal
       return Response.json({
         ok: false,
-        error: `API ANS HTTP ${res.status}. Vérifie tes critères ou réessaie plus tard.`,
+        error: `API ANS HTTP ${res.status}. Essayez avec un autre nom ou ajoutez un critère (ville, profession).`,
         detail: text.slice(0, 200),
         results: [],
-      }, { status: 200 }); // 200 pour que le composant frontend l'affiche normalement
+      }, { status: 200 });
     }
 
     const json = await res.json();
