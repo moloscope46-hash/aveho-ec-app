@@ -27,6 +27,38 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.42 — RppsAutocomplete style FinessSearch ==============
+  "0.55.42": async () => {
+    const results = [];
+
+    results.push(await runTest("Composant RppsAutocomplete importable", async () => {
+      const mod = await import("../RppsAutocomplete");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("API /api/rpps répond en mode autocomplete", async () => {
+      try {
+        const res = await fetch("/api/rpps?q=DU&limit=10");
+        const data = await res.json();
+        return { ok: !!data, msg: `${data.count || 0} résultats` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API /api/place atteignable pour hover photo", async () => {
+      try {
+        const res = await fetch("/api/place?nom=test");
+        const data = await res.json();
+        return { ok: data.ok !== undefined, msg: data.note?.includes("non configurée") ? "Sans clé Google" : "Avec clé ✓" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.41 — Fix géoloc + géocodage BAN INSEE filtres carte ==============
   "0.55.41": async () => {
     const results = [];

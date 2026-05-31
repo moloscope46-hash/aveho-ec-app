@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.42",
+    "kind": "version",
+    "titre": "🩺 Composant RppsAutocomplete style FinessSearch/SireneSearch · Dropdown live au fur et à mesure de la frappe · Photo Google au survol · Boutons Appeler/Mail/GPS sur chaque résultat · Intégré dans création partenaire (3ème ligne)",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouveau composant /app/RppsAutocomplete.js (style FinessSearch.js et SireneSearch.js) : 1 seul input avec selecteur profession compact à gauche, dropdown live au fur et à mesure de la frappe avec debounce 350ms, fermeture au clic extérieur. Recherche min 2 caractères (ou profession active). Détection auto numéro RPPS (11 chiffres) → recherche exacte" },
+      { "code": "FE", "txt": "Tuiles dropdown enrichies : avatar 38x38 avec photo Google au survol (sinon gradient bleu/teal), nom + civilité + badge profession, spécialité avec icône prescription, adresse complète avec map-pin, RPPS/ADELI mono en footer. Hover light gris (#f4f7fa)" },
+      { "code": "FE", "txt": "Photo Google au survol : useEffect au mouseEnter qui appelle /api/place avec nom+adresse complete. Mémoïzation par RPPS (jamais re-fetch). Si pas de clé Google ou pas de photo trouvée → fallback gradient sans casser le rendu. Cache localStorage 7j par requête" },
+      { "code": "FE", "txt": "Boutons ContactActions (Appeler tel:, Mail mailto:, GPS popup choix Maps/Apple/Waze/OSM/Copier) intégrés sur chaque résultat — visibles tout le temps, pas seulement au survol. Cliquables sans déclencher la sélection (stopPropagation)" },
+      { "code": "FE", "txt": "9 professions dans le select compact : Toutes / Médecin / Infirmier / Kinésithérapeute / Pharmacien / Sage-femme / Dentiste / Pédicure / Orthophoniste. Changement de profession → relance la recherche live" },
+      { "code": "FE", "txt": "Intégration dans /etablissements-partenaires modale création : 3ème ligne 🩺 RPPS (en plus de 🏥 FINESS et 🏢 SIRENE). Sélection d'un praticien → pré-remplit nom (avec civilité), type (Cabinet médical si médecin sinon profession), type_relation (Prescripteur par défaut), adresse, cp, ville, téléphone, email. Garde l'existant si déjà rempli (form.nom || ...)" },
+      { "code": "AI", "txt": "+13 tests Vitest : logique search (4), construction params API (3), hover Google photo (3), intégration création partenaire (2), 9 professions (1). Total 1349 tests verts (vs 1336)" }
+    ],
+    "themes": ["users", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.42.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.41",
     "kind": "hotfix",
     "titre": "🩹 Fix géoloc bloquée sur ancienne position (cache 24h) · Fix filtres carte RPPS/SIRENE vides (géocodage BAN INSEE) · Bouton 'Recentrer' fresh · Indicateur précision + heure de maj",

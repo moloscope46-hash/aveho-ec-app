@@ -19,6 +19,7 @@ import ContactActions from "../components/ContactActions";
 import EtabPhoto from "../components/EtabPhoto";
 import SireneSearch from "../SireneSearch";
 import FinessSearch from "../FinessSearch";
+import RppsAutocomplete from "../RppsAutocomplete";
 import AddressAutocomplete from "../AddressAutocomplete";
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
@@ -510,6 +511,28 @@ export default function EtablissementsPartenaires() {
                     }}
                   />
                 </div>
+              </div>
+              {/* 0.55.42 : 3ème ligne RPPS autocomplete */}
+              <div style={{ marginTop: 8 }}>
+                <label style={{ fontSize: 10.5, color: "#6c7a89", fontWeight: 600, display: "block", marginBottom: 4 }}>
+                  🩺 RPPS (praticiens — libéraux/cabinets)
+                </label>
+                <RppsAutocomplete
+                  placeholder="Médecin, IDE, kiné… (recherche en direct)"
+                  onSelect={(p) => {
+                    setForm({
+                      ...form,
+                      nom: form.nom || `${p.civilite || ""} ${p.prenom || ""} ${p.nom || ""}`.trim(),
+                      type: form.type || (p.profession === "Médecin" ? "Cabinet médical" : p.profession || "Cabinet"),
+                      type_relation: form.type_relation || "Prescripteur",
+                      adresse: p.adresse || form.adresse,
+                      cp: p.cp || form.cp,
+                      ville: p.commune || form.ville,
+                      telephone: p.telephone || form.telephone,
+                      email: p.email || form.email,
+                    });
+                  }}
+                />
               </div>
               <div style={{ fontSize: 11, color: "#7a6fb0", marginTop: 6 }}>
                 <i className="ti ti-info-circle" /> Sélectionnez un résultat pour pré-remplir tous les champs ci-dessous.

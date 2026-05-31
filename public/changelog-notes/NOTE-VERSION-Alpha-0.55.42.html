@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.42 — RppsAutocomplete dropdown live</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:840px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — RPPS AUTOCOMPLETE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.42 — RppsAutocomplete style FinessSearch · Dropdown live · Photo Google au survol
+      <small>Même UX que FINESS et SIRENE · 1 input + selecteur profession · debounce 350ms · ContactActions sur chaque résultat</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.42-alpha</code></span>
+      <span><b>Tests :</b> 1349 verts (+13)</span>
+    </div>
+  </header>
+
+  <h2>🩺 Nouveau composant RppsAutocomplete</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Pourquoi ?</h3>
+    <p>Le composant <code>RppsSearch</code> existant est complet mais "lourd" : 6 filtres, bouton Rechercher, etc. → adapté à la page <code>/annuaire-rpps</code> mais pas pour une intégration rapide dans un formulaire (création partenaire).</p>
+    <p>Tu voulais quelque chose du même genre que <code>FinessSearch</code> et <code>SireneSearch</code> : 1 input simple, dropdown live au fur et à mesure de la frappe.</p>
+
+    <h3>L'UI</h3>
+    <pre><code>┌────────┬────────────────────────────────────┐
+│ Toutes ▼│ 🩺 DUP                            │  ← input + selecteur profession
+├────────┴────────────────────────────────────┤
+│ 👤 Dr Marie DUPONT  MÉDECIN                 │
+│ 💊 Cardiologie                              │
+│ 📍 12 rue X, 75011 Paris                    │
+│ RPPS 10000000001                            │
+│ [📞 Appeler] [✉ Mail] [📍 GPS]              │
+├─────────────────────────────────────────────┤
+│ 👤 Jean DUPUIS  INFIRMIER                   │
+│ ...                                          │
+└─────────────────────────────────────────────┘</code></pre>
+  </div>
+
+  <h2>⚡ Caractéristiques</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Debounce 350ms</b> entre la frappe et l'appel API → évite de spammer l'API ANS</li>
+      <li><b>Min 2 caractères</b> (ou profession active) avant de lancer la recherche</li>
+      <li><b>Détection auto RPPS</b> : si tu tapes 11 chiffres → recherche exacte par identifier</li>
+      <li><b>Limite 10 résultats</b> dans le dropdown (volontairement court pour ne pas saturer)</li>
+      <li><b>Clic en dehors → ferme</b> le dropdown automatiquement</li>
+      <li><b>Selecteur profession compact</b> à gauche (9 valeurs) → relance la recherche au changement</li>
+    </ul>
+  </div>
+
+  <h2>📸 Photo Google au survol</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Mécanisme</h3>
+    <ol>
+      <li>Au <code>mouseEnter</code> d'une tuile résultat → appel à <code>/api/place</code> avec <code>nom + adresse complète</code></li>
+      <li>Si Google Places trouve un match → l'avatar passe de gradient à la photo</li>
+      <li>Mémoïzation par RPPS dans <code>useState hoverPhoto</code> → jamais re-fetch sur le même</li>
+      <li>Si pas de clé Google ou pas de match → reste sur le gradient sans erreur</li>
+    </ol>
+    <p>Effet visuel : tu survoles → l'avatar se remplace en douceur par la vraie photo de l'établissement où le praticien exerce.</p>
+  </div>
+
+  <h2>📞 Boutons d'action sur chaque résultat</h2>
+  <div class="panel">
+    <p>Le composant <code>ContactActions</code> (créé en 0.55.34) est intégré sur chaque tuile :</p>
+    <ul>
+      <li>🔵 <b>Appeler</b> → ouvre l'app téléphone (mobile) ou Teams/Skype (PC)</li>
+      <li>🟢 <b>Mail</b> → ouvre le client mail</li>
+      <li>🟠 <b>GPS</b> → popup choix Google Maps / Apple Plans / Waze / OSM / Copier</li>
+    </ul>
+    <p>Les boutons utilisent <code>stopPropagation</code> donc cliquer dessus ne déclenche pas la sélection du praticien.</p>
+  </div>
+
+  <h2>🔗 Intégration dans création partenaire</h2>
+  <div class="panel hi">
+    <p>Dans <code>/etablissements-partenaires</code> → "Ajouter un partenaire" → bloc violet "Remplir automatiquement" :</p>
+    <pre><code>┌──────────────────┬──────────────────┐
+│ 🏥 FINESS         │ 🏢 SIRENE         │  (existaient déjà)
+└──────────────────┴──────────────────┘
+┌─────────────────────────────────────┐
+│ 🩺 RPPS (libéraux/cabinets)         │  ← NOUVEAU 0.55.42
+└─────────────────────────────────────┘</code></pre>
+    <p>Sélection d'un praticien → pré-remplit :</p>
+    <ul>
+      <li><b>Nom</b> : "Dr Marie DUPONT" (avec civilité)</li>
+      <li><b>Type</b> : "Cabinet médical" si médecin, sinon profession ("Cabinet kinésithérapeute" etc.)</li>
+      <li><b>Type de relation</b> : "Prescripteur" par défaut</li>
+      <li><b>Adresse + CP + Ville</b> : depuis l'API ANS</li>
+      <li><b>Téléphone + Email</b> : si renseignés dans l'annuaire</li>
+    </ul>
+    <p>Garde l'existant si déjà rempli (<code>form.nom || ...</code>).</p>
+  </div>
+
+  <h2>📈 Tests +13 (1336 → 1349)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-42-rpps-autocomplete.test.js</code> :</p>
+    <ul>
+      <li><b>Logique search</b> (4) : min 2 chars, profession active, détection RPPS 11 chiffres</li>
+      <li><b>Construction params API</b> (3) : RPPS prioritaire, q sinon, limite 10</li>
+      <li><b>Hover Google photo</b> (3) : params, skip sans adresse, mémoïzation</li>
+      <li><b>Intégration création partenaire</b> (2) : pré-remplissage complet, garde existant</li>
+      <li><b>9 professions select</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/RppsAutocomplete.js</code> : <b>NOUVEAU</b> · dropdown live style FinessSearch + photo Google au survol + ContactActions</li>
+    <li><code>app/etablissements-partenaires/page.js</code> : intégration 3ème ligne RPPS dans bloc "Remplir automatiquement"</li>
+    <li><code>__tests__/v055-42-rpps-autocomplete.test.js</code> : <b>NOUVEAU</b> · +13 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.42 (3 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.42</li>
+    <li><code>package.json</code> : 0.55.41 → 0.55.42</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.42 - RppsAutocomplete dropdown live + hover Google photo + ContactActions"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Aller dans <code>/etablissements-partenaires</code> → "Ajouter un partenaire"</li>
+      <li>Voir le bloc violet "Remplir automatiquement" avec 3 lignes : 🏥 FINESS · 🏢 SIRENE · 🩺 RPPS</li>
+      <li>Dans 🩺 RPPS : taper "DU" → dropdown apparaît après 350ms</li>
+      <li>Changer profession à "Médecin" → résultats filtrés</li>
+      <li>Survoler un résultat → photo Google (si clé configurée) ou gradient</li>
+      <li>Cliquer sur "Appeler" / "Mail" / "GPS" → actions directes sans sélectionner</li>
+      <li>Cliquer sur le corps de la tuile → sélectionne le praticien, pré-remplit le form</li>
+      <li>Smoke tests 0.55.42 → 3 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 52ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.41 → <b>0.55.42</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.42 · 31 mai 2026</p>
+    <p>RppsAutocomplete · dropdown live · photo Google au survol · ContactActions partout · 1349 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
