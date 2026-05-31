@@ -11,6 +11,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
+import { logger } from "../lib/logger";
 import {
   shouldShowBiometricOptIn,
   registerBiometric,
@@ -59,7 +60,7 @@ export default function BiometricOptInModal({ forceShow = false, onClose }) {
       const should = await shouldShowBiometricOptIn(session.user.email);
       if (should) setTimeout(() => setOpen(true), 1500);
     } catch (e) {
-      console.warn("[BiometricOptIn]", e);
+      logger.warn("[BiometricOptIn]", e);
     }
   }
 

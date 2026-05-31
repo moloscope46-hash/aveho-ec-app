@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.55.25";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.55.26";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -30,6 +30,23 @@ const STATIC_ASSETS = [
 
 // Alpha 0.48.1 : page offline 100% statique (HTML pur, pas de chunks Next)
 const OFFLINE_PAGES = ["/offline.html"];
+
+// Alpha 0.55.26 : limites pour éviter cache débordant indéfiniment
+const MAX_DATA_CACHE_ENTRIES = 100;   // Supabase REST/RPC
+const MAX_PAGE_CACHE_ENTRIES = 30;    // pages HTML
+
+/** Trim un cache LRU-style en supprimant les entrées les plus anciennes */
+async function trimCache(cacheName, maxEntries) {
+  try {
+    const cache = await caches.open(cacheName);
+    const keys = await cache.keys();
+    if (keys.length <= maxEntries) return;
+    const toDelete = keys.slice(0, keys.length - maxEntries);
+    await Promise.all(toDelete.map((k) => cache.delete(k)));
+  } catch (e) {
+    // silent — pas critique
+  }
+}
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -116,7 +133,12 @@ async function networkFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
   try {
     const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
+    if (res.ok) {
+      cache.put(req, res.clone());
+      // 0.55.26 : éviter croissance infinie
+      const limit = cacheName.endsWith("-pages") ? MAX_PAGE_CACHE_ENTRIES : MAX_DATA_CACHE_ENTRIES;
+      trimCache(cacheName, limit);
+    }
     return res;
   } catch (e) {
     // 0.55.21 : retry 1x avec petit délai (transient network errors)
@@ -156,7 +178,14 @@ async function staleWhileRevalidate(req, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(req);
   const fetchPromise = fetch(req)
-    .then((res) => { if (res.ok) cache.put(req, res.clone()); return res; })
+    .then((res) => {
+      if (res.ok) {
+        cache.put(req, res.clone());
+        // 0.55.26 : trim cache après ajout
+        trimCache(cacheName, MAX_DATA_CACHE_ENTRIES);
+      }
+      return res;
+    })
     .catch(() => cached || new Response("Hors-ligne", { status: 503 }));
   return cached || fetchPromise;
 }

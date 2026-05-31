@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
+import { logger } from "../lib/logger";
 import {
   isWebAuthnSupported,
   isPlatformAuthenticatorAvailable,
@@ -57,7 +58,7 @@ export default function BiometricSection({ auth, methodFilter = null }) {
         setLocalMethods(methods);
       }
     } catch (e) {
-      console.warn("[BiometricSection] refresh fail:", e);
+      logger.warn("[BiometricSection] refresh fail:", e);
     }
   }
 

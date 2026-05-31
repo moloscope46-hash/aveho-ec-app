@@ -119,6 +119,25 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.26",
+    "kind": "version",
+    "titre": "🔒 Maintenance sécurité + optimisations + dédup code : durcissement RLS, logger sécurisé, composant Modal partagé, cache SW borné, table audit",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.26 : security_invoker=true sur les 3 vues récentes (v_users_auth_methods, v_my_webauthn_credentials, v_user_complete) pour forcer le respect des RLS de l'appelant. Index manquants (idx_webauthn_user_active, idx_invitations_token_active, idx_audit_log_struct_user_date, idx_app_logs_user_date, idx_membres_matricule)" },
+      { "code": "SQL", "txt": "REVOKE PUBLIC + GRANT explicit authenticated sur les RPCs sensibles (reset_user_password, get_invitation_full, revoke_webauthn_credential, update_webauthn_last_used). Table security_audit_log + RPC log_security_event + trigger audit changements de rôle" },
+      { "code": "FE", "txt": "Nouveau lib/logger.js : remplace console.log/warn/info par un logger qui REDACTE automatiquement les valeurs sensibles (password, token, refresh_token, credential_id, etc.) et qui se TAIT en production (sauf si flag debug activé via __avehoEnableDebug() dans la console)" },
+      { "code": "FE", "txt": "Nouveau lib/constants.js : centralise les couleurs (COLOR.ok/ko/warn/...), gradients (GRADIENT.primary/danger/...) et icônes (ICON.fingerprint/face/...). Helpers colorForState() et labelForState() pour réduire le code dupliqué" },
+      { "code": "FE", "txt": "Nouveau app/components/Modal.js : composant partagé qui encapsule le pattern modal-bg+modal+modal-head+modal-body+modal-foot. Supporte variant='centered' ou 'bottom-sheet' (mobile). Escape pour fermer, backdrop click, animation, header coloré gradient" },
+      { "code": "FE", "txt": "Service Worker : limite MAX_DATA_CACHE_ENTRIES=100 (Supabase REST/RPC) et MAX_PAGE_CACHE_ENTRIES=30 (HTML). Helper trimCache LRU appelé après chaque put pour éviter la croissance illimitée du cache" },
+      { "code": "FIX", "txt": "lib/webauthn.js, app/BiometricSection.js, app/BiometricOptInModal.js, app/StatusIcons.js : remplacement automatique de console.warn par logger.warn pour neutralisation en production" },
+      { "code": "AI", "txt": "+19 tests Vitest sur le logger (redaction, profondeur max, troncature longue), constants (couleurs, gradients, helpers) et logique SW trim. Total 1106 tests verts (vs 1087)" }
+    ],
+    "themes": ["rls_securite", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.26.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.26.sql"
+  },
+  {
     "v": "0.55.25",
     "kind": "version",
     "titre": "Invitation enrichie : rattachement multi-établissements + lock + RH · Fiche utilisateur étendue (matricule, contact urgence, spécialité…) · Réinitialiser mot de passe (admin)",

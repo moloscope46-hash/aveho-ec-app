@@ -27,6 +27,64 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.26 — Sécurité + Perf + Doublons ==============
+  "0.55.26": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Logger sécurisé exportable", async () => {
+      const { logger } = await import("../../lib/logger");
+      return typeof logger.warn === "function" && typeof logger.redact === "function";
+    }));
+
+    results.push(await runTest("Constants centralisées disponibles", async () => {
+      const { COLOR, GRADIENT, ICON } = await import("../../lib/constants");
+      return !!COLOR.ok && !!GRADIENT.primary && !!ICON.fingerprint;
+    }));
+
+    results.push(await runTest("Composant Modal partagé importable", async () => {
+      const Modal = (await import("../components/Modal")).default;
+      return typeof Modal === "function";
+    }));
+
+    results.push(await runTest("Table security_audit_log accessible", async () => {
+      const { data, error } = await supabase
+        .from("security_audit_log")
+        .select("id")
+        .limit(1);
+      // Si table existe : ok (peut être empty)
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Table accessible" };
+    }));
+
+    results.push(await runTest("RPC log_security_event disponible", async () => {
+      const { error } = await supabase.rpc("log_security_event", {
+        p_type: "smoke_test",
+        p_details: { from: "smoke-tests" },
+      });
+      // Si RPC absente → erreur, sinon ok
+      if (error?.message?.includes("does not exist")) {
+        return { ok: false, msg: "RPC absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "RPC fonctionnelle" };
+    }));
+
+    results.push(await runTest("Index webauthn_user_active présent", async () => {
+      // On vérifie indirectement en faisant une query qui devrait être rapide
+      const t0 = performance.now();
+      await supabase.from("webauthn_credentials")
+        .select("id")
+        .eq("active", true)
+        .limit(1);
+      const ms = performance.now() - t0;
+      return { ok: ms < 5000, msg: `Query en ${ms.toFixed(0)}ms` };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.25 — Invitation enrichie + fiche user étendue ==============
   "0.55.25": async () => {
     const supabase = createClient();

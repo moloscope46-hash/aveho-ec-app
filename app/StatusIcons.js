@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { logger } from "../lib/logger";
 import {
   isWebAuthnSupported,
   isPlatformAuthenticatorAvailable,
@@ -128,7 +129,7 @@ export default function StatusIcons({ auth }) {
             silent: false,
           });
         } catch (e) {
-          console.warn("[StatusIcons] notif test fail:", e);
+          logger.warn("[StatusIcons] notif test fail:", e);
         }
       } else if (result === "denied") {
         showFeedback("error",
