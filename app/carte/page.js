@@ -61,10 +61,16 @@ export default function CartePage() {
   const etabsLayerRef = useRef(null);
   const camionsLayerRef = useRef(null);
   const userPosLayerRef = useRef(null);  // Alpha 0.55.0 : marqueur "Ma position"
+  const finessOverlayLayerRef = useRef(null);  // 0.55.9 : marqueurs FINESS éphémères
   const camionsStateRef = useRef([]); // état mouvement
   const animRef = useRef(null);
   const [selectedCamion, setSelectedCamion] = useState(null);
   const [filtreType, setFiltreType] = useState({ livraison: true, sav: true, transit: true });
+  // 0.55.9 : overlay FINESS
+  const [finessFilters, setFinessFilters] = useState([]);  // catégories actives : ["pharmacie", "maison_sante"]
+  const [finessLoading, setFinessLoading] = useState(false);
+  const [finessCount, setFinessCount] = useState(0);
+  const fetchDebounceRef = useRef(null);
 
   // 0.55.8 : Init Leaflet + carte en un seul useEffect patient
   // Le problème en prod était une race condition : `setLeafletReady(true)` déclenchait
@@ -119,6 +125,7 @@ export default function CartePage() {
         etabsLayerRef.current = L.layerGroup().addTo(map);
         camionsLayerRef.current = L.layerGroup().addTo(map);
         userPosLayerRef.current = L.layerGroup().addTo(map);
+        finessOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.9
         mapInstanceRef.current = map;
 
         // 4. Marqueur position user si dispo
@@ -248,6 +255,137 @@ export default function CartePage() {
       }
     }
   }, [leafletReady, etabs, filtreType]);
+
+  // ============================================================
+  // 0.55.9 — Overlay FINESS (ressources santé proches)
+  // ============================================================
+  // Catégories disponibles dans l'overlay carte
+  // Chaque catégorie = {key, lbl, color, icon, emoji}
+  const FINESS_OVERLAY_CATS = {
+    pharmacie:     { lbl: "Pharmacies",          color: "#c0392b", emoji: "💊" },
+    maison_sante:  { lbl: "Maisons de santé",    color: "#5aa05a", emoji: "🏠" },
+    centre_sante:  { lbl: "Centres de santé",    color: "#185FA5", emoji: "⚕️" },
+    ehpad:         { lbl: "EHPAD",               color: "#7a6fb0", emoji: "🏘" },
+    hopitaux:      { lbl: "Hôpitaux/Cliniques",  color: "#142131", emoji: "🏥" },
+    ssr_psy:       { lbl: "SSR / Psy",           color: "#e35d5b", emoji: "💓" },
+    handicap:      { lbl: "Handicap (MAS/FAM)",  color: "#EF9F27", emoji: "♿" },
+    pharma_lpp:    { lbl: "Pharma & LPP",        color: "#7CC8C8", emoji: "⚕" },
+  };
+
+  // Fetch FINESS dans la bbox actuelle de la carte + selon catégories choisies
+  async function fetchFinessInBbox() {
+    if (!mapInstanceRef.current || finessFilters.length === 0) {
+      setFinessCount(0);
+      if (finessOverlayLayerRef.current) finessOverlayLayerRef.current.clearLayers();
+      return;
+    }
+    const bounds = mapInstanceRef.current.getBounds();
+    const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+    const cats = finessFilters.join(",");
+    setFinessLoading(true);
+    try {
+      const res = await fetch(`/api/finess?bbox=${encodeURIComponent(bbox)}&categories=${encodeURIComponent(cats)}&limit=300`);
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.results)) {
+        drawFinessOverlay(data.results);
+        setFinessCount(data.results.length);
+      } else {
+        setFinessCount(0);
+      }
+    } catch (e) {
+      console.error("[Carte] fetchFiness error:", e);
+      setFinessCount(0);
+    } finally {
+      setFinessLoading(false);
+    }
+  }
+
+  function drawFinessOverlay(items) {
+    if (!window.L || !finessOverlayLayerRef.current) return;
+    const L = window.L;
+    finessOverlayLayerRef.current.clearLayers();
+
+    items.forEach(r => {
+      if (!r.latitude || !r.longitude) return;
+      // Determiner la catégorie d'affichage via le groupe
+      const grp = (r.categorie_groupe || guessGroup(r));
+      const cat = FINESS_OVERLAY_CATS[grp] || { color: "#8a98a8", emoji: "📍", lbl: "Autre" };
+
+      const icon = L.divIcon({
+        className: "finess-overlay-marker",
+        html: `<div style="
+          width:28px; height:28px;
+          background:${cat.color}; border:2px solid #fff; border-radius:50%;
+          box-shadow:0 1px 4px rgba(0,0,0,.3);
+          display:flex; align-items:center; justify-content:center;
+          color:#fff; font-size:13px;
+        ">${cat.emoji}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const marker = L.marker([Number(r.latitude), Number(r.longitude)], { icon })
+        .addTo(finessOverlayLayerRef.current);
+      const popupHtml = `
+        <div style="min-width:200px;font-family:'Segoe UI',sans-serif">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="background:${cat.color};color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px">${cat.lbl}</span>
+          </div>
+          <div style="font-weight:700;font-size:14px;color:#142131;margin-bottom:4px">${r.raison_sociale || r.nom || "—"}</div>
+          ${r.categorie ? `<div style="font-size:11px;color:#6c7a89;margin-bottom:6px">${r.categorie}</div>` : ""}
+          <div style="font-size:12px;color:#2a3a48;line-height:1.5">
+            ${r.adresse ? `📍 ${r.adresse}<br/>` : ""}
+            ${r.code_postal || r.ville ? `${r.code_postal || ""} ${r.ville || ""}<br/>` : ""}
+            ${r.telephone ? `📞 ${r.telephone}<br/>` : ""}
+            ${r.finess ? `<code style="font-size:10px;color:#5a8f8f">FINESS ${r.finess}</code>` : ""}
+          </div>
+        </div>
+      `;
+      marker.bindPopup(popupHtml);
+    });
+  }
+
+  // Devine le groupe d'une catégorie FINESS à partir du code (fallback si pas explicite)
+  function guessGroup(r) {
+    const code = String(r.categorie_code || "");
+    if (code === "620") return "pharmacie";
+    if (code === "603") return "maison_sante";
+    if (code === "124") return "centre_sante";
+    if (["500","501","202"].includes(code)) return "ehpad";
+    if (["355","365","366","356","362","411"].includes(code)) return "hopitaux";
+    if (["292","660","344"].includes(code)) return "ssr_psy";
+    if (["255","437","183","186","182","188","190","402","246","395","446","249","381"].includes(code)) return "handicap";
+    if (["619","3201","3299"].includes(code)) return "pharma_lpp";
+    return null;
+  }
+
+  // Toggle d'une catégorie + refresh
+  function toggleFinessCat(key) {
+    setFinessFilters(prev => prev.includes(key)
+      ? prev.filter(k => k !== key)
+      : [...prev, key]);
+  }
+
+  // Refetch quand les filtres changent ou que la map bouge (debounced)
+  useEffect(() => {
+    if (!leafletReady) return;
+    if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+    fetchDebounceRef.current = setTimeout(fetchFinessInBbox, 600);
+    return () => fetchDebounceRef.current && clearTimeout(fetchDebounceRef.current);
+  }, [finessFilters, leafletReady]);
+
+  // Écoute les déplacements de carte pour refresh auto (debounced)
+  useEffect(() => {
+    if (!leafletReady || !mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
+    const handler = () => {
+      if (finessFilters.length === 0) return;
+      if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+      fetchDebounceRef.current = setTimeout(fetchFinessInBbox, 800);
+    };
+    map.on("moveend", handler);
+    return () => map.off("moveend", handler);
+  }, [leafletReady, finessFilters]);
 
   // Alpha 0.55.0 : afficher marqueur "Ma position" sur la carte
   function drawUserPosition() {
@@ -484,10 +622,69 @@ export default function CartePage() {
               </div>
             </Panel>
 
+            {/* 0.55.9 — Overlay FINESS : ressources santé proches */}
+            <Panel style={{ marginBottom: 14, padding: "12px 16px", background: "linear-gradient(135deg, #fffaf0 0%, #fff 100%)", borderColor: "#f0d59f" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#142131", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <i className="ti ti-stethoscope" style={{ color: "#185FA5" }} />
+                  Ressources santé proches (FINESS)
+                </div>
+                {finessLoading && (
+                  <span style={{ fontSize: 11, color: "#6c7a89" }}>
+                    <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Recherche…
+                  </span>
+                )}
+                {!finessLoading && finessCount > 0 && (
+                  <span style={{ fontSize: 11, color: "#2e6f33", background: "#dff5e0", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>
+                    <i className="ti ti-circle-check" /> {finessCount} résultat{finessCount > 1 ? "s" : ""} affiché{finessCount > 1 ? "s" : ""}
+                  </span>
+                )}
+                {finessFilters.length > 0 && (
+                  <button
+                    onClick={() => setFinessFilters([])}
+                    style={{ background: "transparent", border: "none", color: "#c0392b", padding: "2px 8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", marginLeft: "auto" }}
+                  >
+                    Masquer tout
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(FINESS_OVERLAY_CATS).map(([key, cat]) => {
+                  const active = finessFilters.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => toggleFinessCat(key)}
+                      style={{
+                        background: active ? cat.color : "#fff",
+                        color: active ? "#fff" : cat.color,
+                        border: `1.5px solid ${cat.color}`,
+                        padding: "4px 10px",
+                        borderRadius: 14,
+                        fontSize: 11.5,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span>{cat.emoji}</span> {cat.lbl}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10.5, color: "#7a4f15" }}>
+                <i className="ti ti-info-circle" /> Les résultats sont rechargés automatiquement quand tu déplaces ou zoomes la carte. Source : <b>FINESS officiel</b> (data.gouv.fr / Atlasanté).
+              </div>
+            </Panel>
+
             {/* Conteneur carte */}
-            <Panel style={{ padding: 0, overflow: "hidden" }}>
+            <Panel style={{ padding: 0, overflow: "hidden", position: "relative" }}>
               {!leafletReady && (
-                <div style={{ height: 600, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, background: "#f4f7fa" }}>
+                <div style={{ position: "absolute", inset: 0, zIndex: 5, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, background: "rgba(244,247,250,.95)" }}>
                   <i className="ti ti-loader-2" style={{ fontSize: 32, color: "#185FA5", animation: "spin 1.2s linear infinite" }} />
                   <span style={{ fontSize: 13, color: "#6c7a89" }}>Chargement de la carte…</span>
                 </div>
@@ -497,8 +694,8 @@ export default function CartePage() {
                 className="carte-leaflet-container"
                 style={{
                   width: "100%",
+                  height: 600,
                   background: "#e3e9ee",
-                  display: leafletReady ? "block" : "none",
                 }}
               />
               {geolocalises.length === 0 && leafletReady && (

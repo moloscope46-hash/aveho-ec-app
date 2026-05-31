@@ -26,22 +26,28 @@ const CATEGORY_CODES = {
   formation: ["455", "456"],
   enfance: ["175", "176"],
   social: ["214", "246", "257"],
+  // 0.55.9 : nouvelles catégories pour la carte (ressources santé proches)
+  pharmacie: ["620"],                       // 38 530 pharmacies d'officine
+  maison_sante: ["603"],                    // 1 115 maisons de santé pluripro
+  centre_sante: ["124"],                    // 3 395 centres de santé (multi-disciplinaire)
 };
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
-  const limit = Math.min(Number(searchParams.get("limit") || 10), 20);
+  const limit = Math.min(Number(searchParams.get("limit") || 10), 500);  // 0.55.9 : jusqu'à 500 pour bbox
   const finess = searchParams.get("finess");
   const type = (searchParams.get("type") || "ET").toUpperCase();
   // 0.55.5 : filtre par groupe(s) de catégorie (CSV : "ehpad,hopitaux")
   const categories = (searchParams.get("categories") || "").split(",").filter(Boolean);
   // 0.55.5 : filtre par département / code postal (préfixe)
   const codePostalPrefix = searchParams.get("cp_prefix");
+  // 0.55.9 : filtre par bbox (lat1,lng1,lat2,lng2) — lat1<lat2, lng1<lng2
+  const bbox = searchParams.get("bbox");
 
-  if (!q && !finess && categories.length === 0 && !codePostalPrefix) {
+  if (!q && !finess && categories.length === 0 && !codePostalPrefix && !bbox) {
     return new Response(
-      JSON.stringify({ error: "Param 'q', 'finess', 'categories' ou 'cp_prefix' requis", results: [] }),
+      JSON.stringify({ error: "Param 'q', 'finess', 'categories', 'cp_prefix' ou 'bbox' requis", results: [] }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -66,6 +72,17 @@ export async function GET(request) {
       }
       if (codePostalPrefix) {
         params.set("adresse_code_postal__contains", codePostalPrefix);
+      }
+      // 0.55.9 : filtre par bbox (carte logistique)
+      if (bbox) {
+        const parts = bbox.split(",").map(Number);
+        if (parts.length === 4 && parts.every(n => !isNaN(n))) {
+          const [lat1, lng1, lat2, lng2] = parts;
+          params.set("geoloc_4326_lat__greater", String(Math.min(lat1, lat2)));
+          params.set("geoloc_4326_lat__less", String(Math.max(lat1, lat2)));
+          params.set("geoloc_4326_long__greater", String(Math.min(lng1, lng2)));
+          params.set("geoloc_4326_long__less", String(Math.max(lng1, lng2)));
+        }
       }
       url = `${TABULAR_BASE}?${params.toString()}`;
     }
@@ -117,6 +134,7 @@ function normalize(payload) {
       finess: f.finess || "",
       raison_sociale: f.rs || "",
       categorie: f.categ_lib || "",
+      categorie_code: f.categ_code || "",  // 0.55.9 : nécessaire pour guessGroup côté carte
       categorie_courte: f.categ_lib_court || "",
       categorie_niv1: f.categ_niv1_lib || "",
       categorie_niv2: f.categ_niv2_lib || "",
