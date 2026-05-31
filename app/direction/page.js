@@ -16,6 +16,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
+import { logger } from "../../lib/logger";
 
 export default function DirectionPage() {
   const supabase = createClient();
@@ -50,7 +51,7 @@ export default function DirectionPage() {
         .order("nb_di_ce_mois", { ascending: false });
       setStructures(s || []);
     } catch (e) {
-      console.warn("Direction load:", e?.message);
+      logger.warn("Direction load:", e?.message);
     }
     setLoading(false);
   }

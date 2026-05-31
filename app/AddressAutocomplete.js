@@ -20,6 +20,7 @@
 //   />
 // =============================================================
 import { useState, useEffect, useRef } from "react";
+import { logger } from "../lib/logger";
 
 export default function AddressAutocomplete({ value, onSelect, placeholder = "Ex : 12 rue de Rivoli, Paris", style }) {
   const [query, setQuery] = useState(value || "");
@@ -74,7 +75,7 @@ export default function AddressAutocomplete({ value, onSelect, placeholder = "Ex
         setSuggestions(features);
         setOpen(features.length > 0);
       } catch (e) {
-        console.warn("Autocomplete adresse :", e?.message);
+        logger.warn("Autocomplete adresse :", e?.message);
       } finally {
         setLoading(false);
       }

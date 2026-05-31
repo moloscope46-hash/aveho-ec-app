@@ -11,6 +11,7 @@
 // =============================================================
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
+import { logger } from "../lib/logger";
 
 export default function MultiEtabSummary({ auth, onSwitchEtab }) {
   const supabase = createClient();
@@ -42,7 +43,7 @@ export default function MultiEtabSummary({ auth, onSwitchEtab }) {
         }
         setStats(result);
       } catch (e) {
-        console.warn("MultiEtabSummary:", e?.message);
+        logger.warn("MultiEtabSummary:", e?.message);
       }
       setLoading(false);
     })();

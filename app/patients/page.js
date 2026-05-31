@@ -26,6 +26,7 @@ import { safeFetch } from "../../lib/offlineCache";
 import { useStickyState } from "../../lib/useStickyState";
 
 import { dialogs } from "../dialogs";
+import { logger } from "../../lib/logger";
 export default function Patients() {
   const supabase = createClient();
   const router = useRouter();
@@ -139,7 +140,7 @@ export default function Patients() {
         });
         setPatStats(stats);
       })
-      .catch((e) => console.warn("patStats:", e?.message));
+      .catch((e) => logger.warn("patStats:", e?.message));
 
     setLoading(false);
   }
@@ -150,14 +151,16 @@ export default function Patients() {
     const current = patEtiquettes[patientId] || [];
     if (current.includes(etiquetteId)) {
       // retirer
-      await supabase.from("patient_etiquettes").delete()
-        .eq("patient_id", patientId).eq("etiquette_id", etiquetteId);
+      await safeDelete(supabase, "patient_etiquettes",
+        { patient_id: patientId, etiquette_id: etiquetteId },
+        { userId: auth.user?.id }
+      );
       setPatEtiquettes({ ...patEtiquettes, [patientId]: current.filter((id) => id !== etiquetteId) });
     } else {
       // ajouter
-      await supabase.from("patient_etiquettes").insert({
+      await safeInsert(supabase, "patient_etiquettes", {
         patient_id: patientId, etiquette_id: etiquetteId, structure_id: auth.structureId,
-      });
+      }, { userId: auth.user?.id });
       setPatEtiquettes({ ...patEtiquettes, [patientId]: [...current, etiquetteId] });
     }
   }
@@ -259,7 +262,7 @@ export default function Patients() {
     if (!await dialogs.confirm({ title: `Supprimer le ${lbl("patient", "patient").toLowerCase()} ${r.nom} ?`, variant: "danger" })) return;
     // on libère son lit avant de supprimer
     const lit = litDuPatient(r.id);
-    if (lit) await supabase.from("lits").update({ patient_id: null }).eq("id", lit.id);
+    if (lit) await safeUpdate(supabase, "lits", { patient_id: null }, { id: lit.id }, { userId: auth.user?.id });
     await safeDelete(supabase, "patients", { id: r.id }, { userId: auth.user?.id });
     await load();
   }

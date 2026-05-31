@@ -13,6 +13,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { getStoredPosition, getGeolocChoice } from "../GeolocPrompt";
+import { logger } from "../../lib/logger";
 
 // 12 camions de démonstration — trajets simulés sur la France métropolitaine
 // Chaque camion a un trajet départ → destination + une vitesse, et boucle.
@@ -301,7 +302,7 @@ export default function CartePage() {
         drawFinessOverlay(data.results);
         setFinessCount(data.results.length);
       } else {
-        console.warn("[Carte] FINESS API error:", data.error || res.status);
+        logger.warn("[Carte] FINESS API error:", data.error || res.status);
         setFinessCount(0);
       }
     } catch (e) {

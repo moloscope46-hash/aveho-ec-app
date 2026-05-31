@@ -17,6 +17,7 @@
 //    padRef.current.clear();
 // =============================================================
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { logger } from "../lib/logger";
 
 const SignaturePad = forwardRef(function SignaturePad(
   { width = 500, height = 200, penColor = "#142131", backgroundColor = "#fff", lineWidth = 2.5, onChange },
@@ -60,7 +61,7 @@ const SignaturePad = forwardRef(function SignaturePad(
       });
       if (devs.length > 0) await connectHid(devs[0]);
     } catch (e) {
-      console.warn("WebHID request failed:", e);
+      logger.warn("WebHID request failed:", e);
     }
   }
 
@@ -71,7 +72,7 @@ const SignaturePad = forwardRef(function SignaturePad(
       setHidStatus("connected");
       device.addEventListener("inputreport", handleHidInput);
     } catch (e) {
-      console.warn("WebHID connect failed:", e);
+      logger.warn("WebHID connect failed:", e);
     }
   }
 

@@ -13,6 +13,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
 import { useConfirm } from "../dialogs";
+import { logger } from "../../lib/logger";
 
 export default function AdminPerfPage() {
   const supabase = createClient();
@@ -39,7 +40,7 @@ export default function AdminPerfPage() {
       setQueries(data || []);
     } catch (e) {
       // pg_stat_statements peut-être pas activé
-      console.warn("Erreur chargement stats :", e?.message);
+      logger.warn("Erreur chargement stats :", e?.message);
       setQueries([]);
     }
     setLoading(false);

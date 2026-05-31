@@ -21,6 +21,7 @@ import { KpiRow } from "../kpis";
 import { BarChart, Heatmap, Gauge, TrendBadge } from "../Charts";
 import { Modal } from "../ui";
 import { relativeTime, fmtDate } from "../../lib/format";
+import { logger } from "../../lib/logger";
 
 export default function StatistiquesActivite() {
   const supabase = createClient();
@@ -112,7 +113,7 @@ export default function StatistiquesActivite() {
       if (error) throw error;
       setDrillData({ ...cell, loading: false, items: data || [] });
     } catch (e) {
-      console.warn("drill error:", e.message);
+      logger.warn("drill error:", e.message);
       setDrillData({ ...cell, loading: false, items: [], error: e.message });
     }
   }

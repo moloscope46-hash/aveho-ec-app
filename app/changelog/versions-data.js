@@ -1,3 +1,4 @@
+import { logger } from "../../lib/logger";
 // =============================================================
 //  app/changelog/versions-data.js
 //  Historique complet auto-généré depuis les notes HTML
@@ -118,6 +119,24 @@ export const THEME_LABELS = {
 };
 
 export const ALL_VERSIONS = [
+  {
+    "v": "0.55.28",
+    "kind": "version",
+    "titre": "🩺 Annuaire RPPS (cabinets libéraux) · Bilan ménage code (console.* déjà à 0, SafeWrite audit ciblé)",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouvelle page /annuaire-rpps : recherche de professionnels de santé libéraux (médecins, infirmiers, kinés, sages-femmes, pharmaciens, etc.) par nom, n° RPPS, profession et code postal. Complémentaire au FINESS qui ne couvre que les établissements" },
+      { "code": "API", "txt": "Nouvel endpoint /api/rpps : proxy serveur vers data.gouv.fr (Tabular API du dataset Annuaire ANS). Cache 1h serveur. Mock fallback automatique si RPPS_DATASET_RID non configuré (mode démo avec 4 praticiens fictifs)" },
+      { "code": "FE", "txt": "Nouveau composant RppsSearch (app/components/RppsSearch.js) réutilisable : champs nom + RPPS + profession + CP, validation regex sur RPPS (11 chiffres exactement), bandeau jaune si mode démo, liste résultats avec carte cliquable hover" },
+      { "code": "FE", "txt": "Modale détails au clic sur un résultat : affichage des champs profession, spécialité, mode d'exercice, RPPS/ADELI (mono), adresse complète, téléphone cliquable, email mailto. Utilise le composant <Modal> partagé (0.55.26)" },
+      { "code": "UX", "txt": "Lien 'Annuaire RPPS (libéraux)' ajouté dans le menu TopBar section Établissement (entre 'Établissements' et 'Carte'), icône stéthoscope violette" },
+      { "code": "FE", "txt": "Page dédiée avec header icône teal, bloc d'aide sombre avec lien vers https://annuaire.sante.fr/ (annuaire officiel ANS) pour les recherches avancées" },
+      { "code": "AI", "txt": "+15 tests Vitest : normalizeEntry (format ANS officiel + alternatif), validation RPPS/ADELI regex, filtres mock par nom/rpps/profession/cp, PROFESSIONS list. Total 1137 tests verts (vs 1122)" },
+      { "code": "•", "txt": "Bilan ménage technique : migration console.* officiellement TERMINÉE (les 27 du compteur étaient des .error autorisés + texte changelog). SafeWrite : audit montre que les 26 writes directs restants sont majoritairement légitimes (config admin, batch CRUD, ConflictResolver), pas de cleanup massif nécessaire" }
+    ],
+    "themes": ["users", "ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.28.html"
+  },
   {
     "v": "0.55.27",
     "kind": "version",

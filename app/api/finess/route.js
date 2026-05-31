@@ -1,3 +1,4 @@
+import { logger } from "../../../lib/logger";
 // =============================================================
 //  app/api/finess/route.js
 //  Alpha 0.55.0 — Proxy serveur vers la base FINESS officielle
@@ -99,7 +100,7 @@ export async function GET(request) {
         const errBody = await res.json();
         detail = errBody?.errors?.[0]?.detail || JSON.stringify(errBody);
       } catch {}
-      console.warn(`[FINESS proxy] tabular-api HTTP ${res.status}: ${detail} — URL: ${url}`);
+      logger.warn(`[FINESS proxy] tabular-api HTTP ${res.status}: ${detail} — URL: ${url}`);
       // On renvoie un 200 avec results vide pour ne pas faire crash le client
       return new Response(
         JSON.stringify({ 

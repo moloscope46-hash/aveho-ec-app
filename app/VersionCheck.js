@@ -13,6 +13,7 @@
 //   5. L'user peut cliquer "Recharger" ou "Plus tard" (snooze 1h)
 // =============================================================
 import { useEffect, useState, useCallback } from "react";
+import { logger } from "../lib/logger";
 
 const STORAGE_KEY = "aveho_app_version";
 const SNOOZE_KEY = "aveho_version_snooze_until";
@@ -78,7 +79,7 @@ export default function VersionCheck() {
       }
     } catch (e) {
       // Best-effort, on continue même si ça plante
-      console.warn("Cleanup SW/caches:", e?.message);
+      logger.warn("Cleanup SW/caches:", e?.message);
     }
     // 3) Effacer la version stockée pour que la nouvelle s'écrive au prochain load
     try {

@@ -15,6 +15,7 @@
 // =============================================================
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
+import { logger } from "../lib/logger";
 
 // Convertit la clé VAPID base64-url en Uint8Array (format attendu par pushManager)
 function urlBase64ToUint8Array(base64String) {

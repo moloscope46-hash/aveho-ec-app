@@ -15,6 +15,7 @@ import { openPdfPreview } from "../../lib/pdfPreview";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 
 import { dialogs } from "../dialogs";
+import { logger } from "../../lib/logger";
 const TYPES_MAINT = ["Révision annuelle", "Contrôle sécurité", "Étalonnage", "Nettoyage approfondi", "Mise à jour firmware", "Remplacement de pièces", "Autre"];
 
 // Alpha 0.11 : récurrences proposées en jours
@@ -197,7 +198,7 @@ export default function MaintenancePage() {
               lien: "/interventions",
             });
           }
-        } catch (e) { console.warn("Création DI auto échouée :", e.message); }
+        } catch (e) { logger.warn("Création DI auto échouée :", e.message); }
       }
       // 2) Maintenance à 7 jours (ou moins) : envoyer notif J-7 si pas déjà fait
       if (m.date_prevue >= aujourdhui && m.date_prevue <= dansSeptJours && m.statut !== "Faite" && m.statut !== "Annulée" && !m.notif_j7_envoyee) {
@@ -211,7 +212,7 @@ export default function MaintenancePage() {
             message: `${m.type} sur ${m.materiels?.libelle || "matériel"} prévue le ${fmtDate(m.date_prevue)}.`,
             lien: "/maintenance",
           });
-        } catch (e) { console.warn("Notif J-7 échouée :", e.message); }
+        } catch (e) { logger.warn("Notif J-7 échouée :", e.message); }
       }
     }
   }

@@ -12,6 +12,7 @@ import { PageHead, Panel } from "../ui";
 import pkg from "../../package.json";
 import { ALL_VERSIONS, THEME_LABELS } from "./versions-data";
 import { VERSION_TESTS, runTestsForVersion, runAllTests } from "./smoke-tests";
+import { logger } from "../../lib/logger";
 
 const ICONS_BY_CODE = {
   Fix: { color: "#c0392b", label: "FIX" },
@@ -139,7 +140,7 @@ export default function ChangelogPage() {
       noteCacheRef.current[noteFile] = scoped;
       return scoped;
     } catch (e) {
-      console.warn("[Changelog] note load fail:", noteFile, e);
+      logger.warn("[Changelog] note load fail:", noteFile, e);
       return `<div style="padding:30px;font-family:sans-serif;color:#7a4f15;background:#fff8ec;text-align:center">
         <p style="margin:0 0 8px;font-size:18px"><b>⏳ Note indisponible</b></p>
         <p style="margin:0;font-size:13px;color:#8a98a8">${noteFile}</p>
@@ -416,10 +417,10 @@ export default function ChangelogPage() {
             zip.file(v.noteFile, txt);
             count++;
           } else {
-            console.warn(`[Zip] ${v.noteFile} → HTTP ${res.status}`);
+            logger.warn(`[Zip] ${v.noteFile} → HTTP ${res.status}`);
           }
         } catch (e) {
-          console.warn(`[Zip] ${v.noteFile} fail:`, e);
+          logger.warn(`[Zip] ${v.noteFile} fail:`, e);
         }
       }
 

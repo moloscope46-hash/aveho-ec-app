@@ -25,6 +25,7 @@ import {
   renderConsentement, consentementToHtml, validateTemplate, nextVersion,
   loadCustomVariables, saveCustomVariables,
 } from "../../lib/rgpd";
+import { logger } from "../../lib/logger";
 
 export default function ParametresRgpd() {
   const supabase = createClient();
@@ -60,7 +61,7 @@ export default function ParametresRgpd() {
       .select("*")
       .eq("structure_id", auth.structureId)
       .order("created_at", { ascending: false });
-    if (error) console.warn("load templates:", error.message);
+    if (error) logger.warn("load templates:", error.message);
     setTemplates(data || []);
     // Compteur d'usage : nombre de consentements signés référençant chaque template
     if (data && data.length > 0) {

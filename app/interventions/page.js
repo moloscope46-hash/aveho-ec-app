@@ -142,7 +142,7 @@ export default function Interventions() {
       contenu: "materiel", materiel_id: r.materiel_id, libelle: matLabel, quantite: 1, created_by: auth.user.id,
     }).select().single();
     if (error) { alert(error.message); return; }
-    await supabase.from("interventions").update({ transfert_id: trf.id }).eq("id", r.id);
+    await safeUpdate(supabase, "interventions", { transfert_id: trf.id }, { id: r.id }, { userId: auth.user?.id });
     await load();
     alert(`Transfert ${numero} généré (reprise vers ${depGeneral.label}).`);
   }
@@ -166,10 +166,11 @@ export default function Interventions() {
   async function saveAssign(userId) {
     const di = assignModal.di;
     const user = usersList.find((u) => u.id === userId);
-    await supabase.from("interventions").update({
-      assignee_id: userId || null,
-      assignee_email: user ? user.label : null,
-    }).eq("id", di.id);
+    await safeUpdate(supabase, "interventions",
+      { assignee_id: userId || null, assignee_email: user ? user.label : null },
+      { id: di.id },
+      { userId: auth.user?.id }
+    );
     // Trace audit + notif ciblée à l'assigné
     await logEvent(supabase, auth, {
       action: "modifier", entite: "intervention", entite_id: di.id,

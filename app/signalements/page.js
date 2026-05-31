@@ -112,16 +112,18 @@ export default function SignalementsPage() {
     try {
       if (userVotes[r.id]) {
         // Retrait
-        await supabase.from("signalement_votes").delete()
-          .eq("signalement_id", r.id).eq("user_id", auth.user.id);
+        await safeDelete(supabase, "signalement_votes",
+          { signalement_id: r.id, user_id: auth.user.id },
+          { userId: auth.user?.id }
+        );
         setUserVotes({ ...userVotes, [r.id]: false });
         setRows(rows.map((x) => x.id === r.id ? { ...x, nb_votes: Math.max((x.nb_votes || 0) - 1, 0) } : x));
       } else {
         // Ajout
-        await supabase.from("signalement_votes").insert({
+        await safeInsert(supabase, "signalement_votes", {
           signalement_id: r.id,
           user_id: auth.user.id,
-        });
+        }, { userId: auth.user?.id });
         setUserVotes({ ...userVotes, [r.id]: true });
         setRows(rows.map((x) => x.id === r.id ? { ...x, nb_votes: (x.nb_votes || 0) + 1 } : x));
       }
