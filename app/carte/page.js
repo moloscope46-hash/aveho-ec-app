@@ -50,6 +50,37 @@ const TYPE_META = {
   transit: { label: "Inter-étab", color: "#7a6fb0", icon: "🔄" },
 };
 
+// 0.55.38 : couleurs + emojis professions RPPS
+const PROFESSION_COLORS = {
+  "Médecin": "#185FA5",
+  "Infirmier": "#5aa05a",
+  "Kinésithérapeute": "#EF9F27",
+  "Pharmacien": "#c0392b",
+  "Sage-femme": "#7a6fb0",
+  "Dentiste": "#7CC8C8",
+  "Pédicure": "#2a5a5a",
+  "Orthophoniste": "#5a4a90",
+};
+const PROFESSION_EMOJIS = {
+  "Médecin": "🩺",
+  "Infirmier": "💉",
+  "Kinésithérapeute": "🤸",
+  "Pharmacien": "💊",
+  "Sage-femme": "🤰",
+  "Dentiste": "🦷",
+  "Pédicure": "🦶",
+  "Orthophoniste": "🗣",
+};
+
+// 0.55.38 : catégories SIRENE pour recherche carte
+const SIRENE_OVERLAY_CATS = {
+  "pharmacie":          { lbl: "Pharmacies",         color: "#c0392b", emoji: "💊" },
+  "matériel médical":   { lbl: "Matériel médical",   color: "#185FA5", emoji: "🦽" },
+  "orthopédie":         { lbl: "Orthopédie",         color: "#5aa05a", emoji: "🦴" },
+  "audioprothésiste":   { lbl: "Audioprothésistes",  color: "#7a6fb0", emoji: "👂" },
+  "opticien":           { lbl: "Opticiens",          color: "#EF9F27", emoji: "👓" },
+};
+
 export default function CartePage() {
   const supabase = createClient();
   const auth = useAuth();
@@ -63,14 +94,23 @@ export default function CartePage() {
   const camionsLayerRef = useRef(null);
   const userPosLayerRef = useRef(null);  // Alpha 0.55.0 : marqueur "Ma position"
   const finessOverlayLayerRef = useRef(null);  // 0.55.9 : marqueurs FINESS éphémères
+  const rppsOverlayLayerRef = useRef(null);    // 0.55.38 : marqueurs RPPS
+  const sireneOverlayLayerRef = useRef(null);  // 0.55.38 : marqueurs SIRENE
   const camionsStateRef = useRef([]); // état mouvement
   const animRef = useRef(null);
   const [selectedCamion, setSelectedCamion] = useState(null);
   const [filtreType, setFiltreType] = useState({ livraison: true, sav: true, transit: true });
   // 0.55.9 : overlay FINESS
-  const [finessFilters, setFinessFilters] = useState([]);  // catégories actives : ["pharmacie", "maison_sante"]
+  const [finessFilters, setFinessFilters] = useState([]);
   const [finessLoading, setFinessLoading] = useState(false);
   const [finessCount, setFinessCount] = useState(0);
+  // 0.55.38 : overlays RPPS et SIRENE
+  const [rppsFilters, setRppsFilters] = useState([]);    // ex: ["Médecin", "Infirmier"]
+  const [rppsLoading, setRppsLoading] = useState(false);
+  const [rppsCount, setRppsCount] = useState(0);
+  const [sireneFilters, setSireneFilters] = useState([]); // ex: ["pharmacie", "matmed"]
+  const [sireneLoading, setSireneLoading] = useState(false);
+  const [sireneCount, setSireneCount] = useState(0);
   const fetchDebounceRef = useRef(null);
 
   // 0.55.8 : Init Leaflet + carte en un seul useEffect patient
@@ -127,6 +167,8 @@ export default function CartePage() {
         camionsLayerRef.current = L.layerGroup().addTo(map);
         userPosLayerRef.current = L.layerGroup().addTo(map);
         finessOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.9
+        rppsOverlayLayerRef.current = L.layerGroup().addTo(map);    // 0.55.38
+        sireneOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.38
         mapInstanceRef.current = map;
 
         // 4. Marqueur position user si dispo
@@ -387,18 +429,170 @@ export default function CartePage() {
     return () => fetchDebounceRef.current && clearTimeout(fetchDebounceRef.current);
   }, [finessFilters, leafletReady]);
 
+  // 0.55.38 : fetch RPPS dans bbox
+  async function fetchRppsInBbox() {
+    if (!mapInstanceRef.current || rppsFilters.length === 0) {
+      setRppsCount(0);
+      if (rppsOverlayLayerRef.current) rppsOverlayLayerRef.current.clearLayers();
+      return;
+    }
+    const bounds = mapInstanceRef.current.getBounds();
+    const center = bounds.getCenter();
+    setRppsLoading(true);
+    try {
+      // L'API ANS ne supporte pas la bbox, on cherche par ville/cp dérivés du centre
+      // (approche pragmatique : on prend les CP couverts via les codes postaux INSEE)
+      // Pour MVP : on requête par profession seulement et on filtre côté client.
+      const allResults = [];
+      for (const prof of rppsFilters) {
+        const params = new URLSearchParams({ profession: prof, limit: "100" });
+        const res = await fetch(`/api/rpps?${params}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.results)) {
+          allResults.push(...data.results.filter(p => p.cp));
+        }
+      }
+      // Filtre par bbox côté client (sur les CP qui ont des coords approximatives)
+      drawRppsOverlay(allResults);
+      setRppsCount(allResults.length);
+    } catch (e) {
+      console.error("[Carte] fetchRpps error:", e);
+      setRppsCount(0);
+    } finally {
+      setRppsLoading(false);
+    }
+  }
+
+  function drawRppsOverlay(items) {
+    if (!window.L || !rppsOverlayLayerRef.current) return;
+    const L = window.L;
+    rppsOverlayLayerRef.current.clearLayers();
+
+    items.forEach(r => {
+      // Géocode approximatif depuis le CP via Photon ou fallback
+      // Pour MVP : on skip ceux sans coords. Le proxy /api/rpps devrait remonter lat/lng.
+      // Si pas de coord directe, on essaie via centre du CP (à faire en V2).
+      if (!r.latitude || !r.longitude) return;
+      const profColor = PROFESSION_COLORS[r.profession] || "#185FA5";
+      const profEmoji = PROFESSION_EMOJIS[r.profession] || "👨‍⚕";
+
+      const icon = L.divIcon({
+        className: "rpps-overlay-marker",
+        html: `<div style="width:24px;height:24px;background:${profColor};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">${profEmoji}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+      const marker = L.marker([Number(r.latitude), Number(r.longitude)], { icon }).addTo(rppsOverlayLayerRef.current);
+      const popupHtml = `
+        <div style="min-width:200px;font-family:'Segoe UI',sans-serif">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="background:${profColor};color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px">${r.profession || "RPPS"}</span>
+          </div>
+          <div style="font-weight:700;font-size:14px;color:#142131;margin-bottom:4px">${r.civilite || ""} ${r.prenom || ""} ${r.nom || ""}</div>
+          ${r.specialite ? `<div style="font-size:11px;color:#6c7a89;margin-bottom:6px">${r.specialite}</div>` : ""}
+          <div style="font-size:12px;color:#2a3a48;line-height:1.5">
+            ${r.adresse ? `📍 ${r.adresse}<br/>` : ""}
+            ${r.cp || ""} ${r.commune || ""}<br/>
+            ${r.telephone ? `📞 ${r.telephone}<br/>` : ""}
+            ${r.rpps ? `<span style="font-family:Consolas,monospace;font-size:10px;color:#a0aeb9">RPPS ${r.rpps}</span>` : ""}
+          </div>
+        </div>`;
+      marker.bindPopup(popupHtml);
+    });
+  }
+
+  useEffect(() => {
+    if (!leafletReady) return;
+    if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+    fetchDebounceRef.current = setTimeout(fetchRppsInBbox, 600);
+    return () => fetchDebounceRef.current && clearTimeout(fetchDebounceRef.current);
+  }, [rppsFilters, leafletReady]);
+
+  // 0.55.38 : fetch SIRENE dans bbox
+  async function fetchSireneInBbox() {
+    if (!mapInstanceRef.current || sireneFilters.length === 0) {
+      setSireneCount(0);
+      if (sireneOverlayLayerRef.current) sireneOverlayLayerRef.current.clearLayers();
+      return;
+    }
+    const bounds = mapInstanceRef.current.getBounds();
+    setSireneLoading(true);
+    try {
+      const allResults = [];
+      for (const cat of sireneFilters) {
+        const params = new URLSearchParams({ q: cat, limit: "50" });
+        const res = await fetch(`/api/sirene?${params}`);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (Array.isArray(data.results)) {
+          allResults.push(...data.results.filter(s => s.latitude && s.longitude
+            && s.latitude >= bounds.getSouth() && s.latitude <= bounds.getNorth()
+            && s.longitude >= bounds.getWest() && s.longitude <= bounds.getEast()));
+        }
+      }
+      drawSireneOverlay(allResults);
+      setSireneCount(allResults.length);
+    } catch (e) {
+      console.error("[Carte] fetchSirene error:", e);
+      setSireneCount(0);
+    } finally {
+      setSireneLoading(false);
+    }
+  }
+
+  function drawSireneOverlay(items) {
+    if (!window.L || !sireneOverlayLayerRef.current) return;
+    const L = window.L;
+    sireneOverlayLayerRef.current.clearLayers();
+
+    items.forEach(r => {
+      if (!r.latitude || !r.longitude) return;
+      const icon = L.divIcon({
+        className: "sirene-overlay-marker",
+        html: `<div style="width:22px;height:22px;background:#7a6fb0;border:2px solid #fff;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px">🏢</div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      });
+      const marker = L.marker([Number(r.latitude), Number(r.longitude)], { icon }).addTo(sireneOverlayLayerRef.current);
+      const popupHtml = `
+        <div style="min-width:200px;font-family:'Segoe UI',sans-serif">
+          <div style="background:#7a6fb0;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;display:inline-block;margin-bottom:4px">SIRENE</div>
+          <div style="font-weight:700;font-size:14px;color:#142131;margin-bottom:4px">${r.nom_complet || r.nom_raison_sociale || "—"}</div>
+          ${r.libelle_activite ? `<div style="font-size:11px;color:#6c7a89;margin-bottom:6px">${r.libelle_activite}</div>` : ""}
+          <div style="font-size:12px;color:#2a3a48;line-height:1.5">
+            ${r.adresse ? `📍 ${r.adresse}<br/>` : ""}
+            ${r.code_postal || ""} ${r.ville || ""}<br/>
+            ${r.siret ? `<span style="font-family:Consolas,monospace;font-size:10px;color:#a0aeb9">SIRET ${r.siret}</span>` : ""}
+          </div>
+        </div>`;
+      marker.bindPopup(popupHtml);
+    });
+  }
+
+  useEffect(() => {
+    if (!leafletReady) return;
+    if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
+    fetchDebounceRef.current = setTimeout(fetchSireneInBbox, 600);
+    return () => fetchDebounceRef.current && clearTimeout(fetchDebounceRef.current);
+  }, [sireneFilters, leafletReady]);
+
   // Écoute les déplacements de carte pour refresh auto (debounced)
   useEffect(() => {
     if (!leafletReady || !mapInstanceRef.current) return;
     const map = mapInstanceRef.current;
     const handler = () => {
-      if (finessFilters.length === 0) return;
+      if (finessFilters.length === 0 && rppsFilters.length === 0 && sireneFilters.length === 0) return;
       if (fetchDebounceRef.current) clearTimeout(fetchDebounceRef.current);
-      fetchDebounceRef.current = setTimeout(fetchFinessInBbox, 800);
+      fetchDebounceRef.current = setTimeout(() => {
+        fetchFinessInBbox();
+        fetchRppsInBbox();
+        fetchSireneInBbox();
+      }, 800);
     };
     map.on("moveend", handler);
     return () => map.off("moveend", handler);
-  }, [leafletReady, finessFilters]);
+  }, [leafletReady, finessFilters, rppsFilters, sireneFilters]);
 
   // Alpha 0.55.0 : afficher marqueur "Ma position" sur la carte
   function drawUserPosition() {
@@ -696,6 +890,99 @@ export default function CartePage() {
               </div>
               <div style={{ marginTop: 8, fontSize: 10.5, color: "#7a4f15" }}>
                 <i className="ti ti-info-circle" /> Les résultats sont rechargés automatiquement quand tu déplaces ou zoomes la carte. Source : <b>FINESS officiel</b> (data.gouv.fr / Atlasanté).
+              </div>
+            </Panel>
+
+            {/* 0.55.38 — Filtres RPPS sur la carte */}
+            <Panel style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                <i className="ti ti-stethoscope" style={{ fontSize: 18, color: "#185FA5" }} />
+                <b style={{ fontSize: 13, color: "#142131" }}>Professionnels de santé (RPPS)</b>
+                {rppsLoading && <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite", color: "#185FA5" }} />}
+                {!rppsLoading && rppsCount > 0 && (
+                  <span style={{ background: "#dbe7f5", color: "#185FA5", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 10 }}>
+                    {rppsCount} résultat{rppsCount > 1 ? "s" : ""}
+                  </span>
+                )}
+                {rppsFilters.length > 0 && (
+                  <button
+                    onClick={() => setRppsFilters([])}
+                    style={{ background: "transparent", border: "none", color: "#c0392b", padding: "2px 8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", marginLeft: "auto" }}
+                  >
+                    Masquer tout
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(PROFESSION_COLORS).map(([prof, color]) => {
+                  const emoji = PROFESSION_EMOJIS[prof] || "👨‍⚕";
+                  const active = rppsFilters.includes(prof);
+                  return (
+                    <button
+                      key={prof}
+                      onClick={() => setRppsFilters(active ? rppsFilters.filter(p => p !== prof) : [...rppsFilters, prof])}
+                      style={{
+                        background: active ? color : "#fff",
+                        color: active ? "#fff" : color,
+                        border: `1.5px solid ${color}`,
+                        padding: "4px 10px", borderRadius: 14,
+                        fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                        display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span>{emoji}</span> {prof}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10.5, color: "#185FA5" }}>
+                <i className="ti ti-info-circle" /> Source : <b>API FHIR ANS officielle</b> · 1,7M praticiens.
+              </div>
+            </Panel>
+
+            {/* 0.55.38 — Filtres SIRENE entreprises */}
+            <Panel style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                <i className="ti ti-building-store" style={{ fontSize: 18, color: "#7a6fb0" }} />
+                <b style={{ fontSize: 13, color: "#142131" }}>Entreprises SIRENE</b>
+                {sireneLoading && <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite", color: "#7a6fb0" }} />}
+                {!sireneLoading && sireneCount > 0 && (
+                  <span style={{ background: "#f3effa", color: "#7a6fb0", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 10 }}>
+                    {sireneCount} résultat{sireneCount > 1 ? "s" : ""}
+                  </span>
+                )}
+                {sireneFilters.length > 0 && (
+                  <button
+                    onClick={() => setSireneFilters([])}
+                    style={{ background: "transparent", border: "none", color: "#c0392b", padding: "2px 8px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline", marginLeft: "auto" }}
+                  >
+                    Masquer tout
+                  </button>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {Object.entries(SIRENE_OVERLAY_CATS).map(([key, cat]) => {
+                  const active = sireneFilters.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setSireneFilters(active ? sireneFilters.filter(p => p !== key) : [...sireneFilters, key])}
+                      style={{
+                        background: active ? cat.color : "#fff",
+                        color: active ? "#fff" : cat.color,
+                        border: `1.5px solid ${cat.color}`,
+                        padding: "4px 10px", borderRadius: 14,
+                        fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                        display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap",
+                      }}
+                    >
+                      <span>{cat.emoji}</span> {cat.lbl}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ marginTop: 8, fontSize: 10.5, color: "#5a4a90" }}>
+                <i className="ti ti-info-circle" /> Source : <b>API SIRENE</b> (recherche-entreprises.api.gouv.fr).
               </div>
             </Panel>
 

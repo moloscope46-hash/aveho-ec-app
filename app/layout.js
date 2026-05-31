@@ -5,6 +5,7 @@ import KeyboardHelp from "./KeyboardHelp";
 import OfflineBanner from "./OfflineBanner";
 import LectureSeuleBadge from "./LectureSeuleBadge";
 import GlobalSearch from "./GlobalSearch";
+import AlertToastContainer from "./components/AlertToast";
 import { DialogsHost } from "./dialogs";
 import VersionCheck from "./VersionCheck";
 import AnnoncesBanner from "./AnnoncesBanner";
@@ -63,6 +64,7 @@ export default function RootLayout({ children }) {
         <OfflineBanner />
         <LectureSeuleBadge />
         <GlobalSearch />
+        <AlertToastContainer />
         {children}
         <InstallPWA />
         {/* Alpha 0.36.0 : banner contextuel d'installation PWA */}

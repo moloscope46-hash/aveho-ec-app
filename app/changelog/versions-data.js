@@ -120,6 +120,27 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.38",
+    "kind": "version",
+    "titre": "🗺 Filtres carte RPPS + SIRENE croisés (en plus de FINESS) · Wikipedia retiré · Google Places API préparé (photo + horaires + étoiles + avis) · Popup d'alerte 20s · SQL préférences alertes Google par étab · Modal avec étoiles de notation",
+    "chantiers": [
+      { "code": "FE", "txt": "EtabPhoto Wikipedia COMPLÈTEMENT RETIRÉ : les photos ne correspondaient pas à l'adresse (Wikipedia matche le premier hit textuel sans vérifier la géoloc). Remplacé par un système basé sur Google Places API qui interroge par 'nom + adresse complète' garantissant que la photo correspond vraiment à l'endroit" },
+      { "code": "FE", "txt": "Nouveau composant EtabPhoto.js qui appelle /api/place (proxy serveur). Si GOOGLE_PLACES_API_KEY définie côté serveur (dans .env Vercel) → photo Google + note + nb d'avis + horaires. Sinon → fallback gradient propre selon le type. Cache localStorage 7 jours" },
+      { "code": "BE", "txt": "Nouveau route handler /api/place qui proxifie Google Places API (sécurise la clé côté serveur). 2 appels : findplacefromtext pour récupérer le place_id, puis details pour les fields (photos, rating, user_ratings_total, opening_hours, formatted_phone_number, website, url, name, formatted_address). Cache Next.js 24h" },
+      { "code": "FE", "txt": "Nouveau composant EtabGoogleDetails.js : affiche dans une modale les détails Google d'un établissement — étoiles de notation visuelles (★★★★⯨ avec demi-étoile), nombre d'avis, statut Ouvert maintenant/Fermé, horaires d'ouverture par jour, téléphone/site/lien Google Maps avec icônes. Bouton 'Voir les avis Google' qui ouvre la page Google Maps de l'établissement" },
+      { "code": "SQL", "txt": "Patch 0.55.38 : table user_review_alert_prefs (préférences alertes commentaires Google par utilisateur ET par établissement, avec min_rating/max_rating pour filtrer ex: 'alerte si avis ≤ 2 étoiles'). Table google_reviews_seen (historique pour ne pas re-notifier le même avis). RPCs get_my_review_alert_prefs() et set_review_alert_pref(). RLS activées" },
+      { "code": "FE", "txt": "Composant AlertToast.js avec API globale showAlert() : popup en bas à droite qui disparaît automatiquement après 20s. Supporte alertes multiples empilées. Barre de progression du timer animée en bas. Couleur selon rating (vert ≥4★, ambre 3★, rouge ≤2★). Click sur l'alerte → action custom (redirection vers la fiche etab). AlertToastContainer monté dans layout.js" },
+      { "code": "FE", "txt": "Carte /carte : 3 nouveaux panels de filtres en plus du FINESS — RPPS (8 professions avec couleurs et emojis : Médecin 🩺 bleu, Infirmier 💉 vert, Kiné 🤸 ambre, Pharmacien 💊 rouge, Sage-femme 🤰 violet, Dentiste 🦷 teal, Pédicure 🦶 dark teal, Orthophoniste 🗣 violet foncé). SIRENE (5 catégories : pharmacies, matériel médical, orthopédie, audioprothésistes, opticiens)" },
+      { "code": "FE", "txt": "Carte : 3 layers Leaflet séparés (finessOverlay, rppsOverlay, sireneOverlay). Marqueurs custom différenciés (cercle pour FINESS, cercle plus petit pour RPPS, carré arrondi pour SIRENE entreprises). Refresh auto au déplacement de la carte (debounce 800ms). Compteur de résultats par layer" },
+      { "code": "FE", "txt": "Carte : popups marqueurs enrichies avec emoji + badge profession (RPPS) ou badge SIRENE + nom + spécialité + adresse + tel + ID officiel. Croisement possible : on peut activer FINESS + RPPS + SIRENE en même temps pour voir un quartier complet" },
+      { "code": "AI", "txt": "+18 tests Vitest : Wikipedia retiré + /api/place utilisé (2), réponse sans clé (2), RatingStars logique (3), AlertToast system (5), filtres carte (3), schéma SQL (3). Total 1299 tests verts (vs 1281)" }
+    ],
+    "themes": ["users", "ui_ux", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.38.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.38.sql"
+  },
+  {
     "v": "0.55.37",
     "kind": "hotfix",
     "titre": "🩹 Fix version login (0.1 → dynamique pkg) · Retry RPPS name= si family= retourne 403 (ex: 'lacroix') · AddressAutocomplete INSEE BAN intégré sur fiche partenaire + fiche user · Features list login mise à jour (FINESS/SIRENE/RPPS/biométrie)",

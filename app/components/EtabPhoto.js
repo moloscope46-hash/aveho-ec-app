@@ -1,30 +1,26 @@
 "use client";
 // =============================================================
-//  app/components/EtabPhoto.js (Alpha 0.55.36)
+//  app/components/EtabPhoto.js (Alpha 0.55.38)
 //
-//  Récupère une photo d'établissement via l'API Wikipedia
-//  (gratuite, sans clé, CORS OK avec origin=*).
-//  Cache localStorage 7 jours pour éviter les appels répétés.
+//  Wikipedia retiré (les photos ne correspondaient pas à l'adresse).
+//  Si NEXT_PUBLIC_GOOGLE_PLACES_KEY est défini :
+//    → recherche Google Places "Find Place" par nom + adresse
+//    → récupère la photo, horaires, étoiles, avis
+//  Sinon : fallback gradient propre selon le type.
 //
-//  Si aucune photo trouvée → fallback gradient avec icône.
-//
-//  Usage :
-//    <EtabPhoto
-//      nom="Hôpital Saint-Joseph"
-//      ville="Paris"
-//      type="Hôpital"               // pour le fallback icône
-//      height={140}                  // hauteur
-//      variant="card"                // 'card' | 'banner' | 'avatar'
-//    />
+//  Pour activer Google Places API :
+//    1. Aller sur https://console.cloud.google.com/google/maps-apis
+//    2. Activer "Places API"
+//    3. Créer une clé API et la restreindre par domaine
+//    4. Ajouter dans .env.local :
+//         NEXT_PUBLIC_GOOGLE_PLACES_KEY=AIzaSy...
+//    5. Coût : ~1000 req gratuites/mois, ~$17/1000 ensuite
 // =============================================================
 
 import { useEffect, useState, useRef } from "react";
 
-const CACHE_KEY_PREFIX = "aveho:etab-photo:";
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
-
-// Mémoire en RAM pendant la session (évite re-fetch même si pas en localStorage)
-const inFlightCache = new Map();
+const CACHE_KEY_PREFIX = "aveho:etab-place:";
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const ICON_BY_TYPE = {
   "Hôpital":       { ic: "ti-building-hospital", grad: "linear-gradient(135deg, #185FA5, #7CC8C8)" },
@@ -52,51 +48,54 @@ function getCached(key) {
     if (!raw) return null;
     const obj = JSON.parse(raw);
     if (Date.now() - obj.t > CACHE_TTL_MS) return null;
-    return obj.url; // peut être "" pour "pas trouvé, ne pas redemander"
+    return obj.data;
   } catch { return null; }
 }
 
-function setCached(key, url) {
+function setCached(key, data) {
   try {
-    localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({ t: Date.now(), url }));
+    localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({ t: Date.now(), data }));
   } catch {}
 }
 
-async function fetchWikiPhoto(query) {
-  if (!query) return "";
-  // Mémoire RAM
-  if (inFlightCache.has(query)) return inFlightCache.get(query);
+const inFlightCache = new Map();
+
+async function fetchGooglePlace(nom, adresseComplete) {
+  if (!nom) return null;
+  const key = `${nom}|${adresseComplete || ""}`;
+  if (inFlightCache.has(key)) return inFlightCache.get(key);
 
   const promise = (async () => {
     try {
-      // API Wikipedia FR : generator=search + prop=pageimages → 1 seul appel
-      const url = `https://fr.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=1&prop=pageimages&pithumbsize=600&format=json&origin=*`;
-      const res = await fetch(url, { mode: "cors" });
-      if (!res.ok) return "";
+      // Appel via notre proxy serveur (pour cacher la clé API)
+      const params = new URLSearchParams({ nom });
+      if (adresseComplete) params.set("adresse", adresseComplete);
+      const res = await fetch(`/api/place?${params}`);
+      if (!res.ok) return null;
       const data = await res.json();
-      const pages = data?.query?.pages;
-      if (!pages) return "";
-      const firstPage = Object.values(pages)[0];
-      return firstPage?.thumbnail?.source || "";
+      if (!data.ok) return null;
+      return data.place || null;
     } catch {
-      return "";
+      return null;
     }
   })();
-  inFlightCache.set(query, promise);
+  inFlightCache.set(key, promise);
   return promise;
 }
 
 export default function EtabPhoto({
   nom,
   ville,
+  adresse,
   type,
   height = 140,
   variant = "card",
   borderRadius,
   className = "",
   style = {},
+  onPlaceLoaded, // (place) => void, pour exposer les détails au parent
 }) {
-  const [photoUrl, setPhotoUrl] = useState(null); // null = loading, "" = no photo, "..." = url
+  const [place, setPlace] = useState(null); // null = loading, {} = no data
   const [photoError, setPhotoError] = useState(false);
   const mountedRef = useRef(true);
 
@@ -104,37 +103,37 @@ export default function EtabPhoto({
 
   useEffect(() => {
     if (!nom) {
-      setPhotoUrl("");
+      setPlace({});
       return;
     }
-    const cacheKey = `${nom}|${ville || ""}`;
-    // 1) localStorage cache
+    const adresseComplete = [adresse, ville].filter(Boolean).join(", ");
+    const cacheKey = `${nom}|${adresseComplete}`;
     const cached = getCached(cacheKey);
     if (cached !== null) {
-      setPhotoUrl(cached);
+      setPlace(cached);
+      onPlaceLoaded?.(cached);
       return;
     }
-    // 2) Fetch
-    setPhotoUrl(null); // loading
+    setPlace(null);
     setPhotoError(false);
-    const query = ville ? `${nom} ${ville}` : nom;
-    fetchWikiPhoto(query).then((url) => {
+    fetchGooglePlace(nom, adresseComplete).then((p) => {
       if (!mountedRef.current) return;
-      setCached(cacheKey, url);
-      setPhotoUrl(url);
+      const final = p || {};
+      setCached(cacheKey, final);
+      setPlace(final);
+      onPlaceLoaded?.(final);
     });
-  }, [nom, ville]);
+  }, [nom, ville, adresse]);
 
   const fallback = getFallback(type);
-  const hasPhoto = !!photoUrl && !photoError;
+  const hasPhoto = !!place?.photoUrl && !photoError;
 
   const radius = borderRadius != null ? borderRadius : (variant === "avatar" ? "50%" : 10);
 
-  // Skeleton pendant chargement
-  if (photoUrl === null) {
+  // Skeleton chargement
+  if (place === null) {
     return (
-      <div
-        className={className}
+      <div className={className}
         style={{
           height,
           width: variant === "avatar" ? height : "100%",
@@ -145,62 +144,66 @@ export default function EtabPhoto({
           ...style,
         }}
       >
-        <style>{`
-          @keyframes skeleton {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-          }
-        `}</style>
+        <style>{`@keyframes skeleton{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
       </div>
     );
   }
 
-  // Photo trouvée
+  // Photo Google trouvée
   if (hasPhoto) {
     return (
-      <div
-        className={className}
+      <div className={className}
         style={{
           height,
           width: variant === "avatar" ? height : "100%",
-          backgroundImage: `url(${photoUrl})`,
+          backgroundImage: `url(${place.photoUrl})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           borderRadius: radius,
           position: "relative",
           overflow: "hidden",
           ...style,
-        }}
-      >
-        {/* Watermark Wikipedia discret */}
-        <div style={{
-          position: "absolute",
-          bottom: 4,
-          right: 6,
-          fontSize: 8.5,
-          color: "rgba(255,255,255,0.85)",
-          textShadow: "0 1px 2px rgba(0,0,0,0.6)",
-          fontWeight: 600,
-          letterSpacing: 0.3,
-          pointerEvents: "none",
         }}>
-          📷 Wikipedia
+        {/* Note Google si dispo */}
+        {place.rating > 0 && (
+          <div style={{
+            position: "absolute", top: 6, left: 6,
+            background: "rgba(255,255,255,0.95)",
+            padding: "3px 8px",
+            borderRadius: 12,
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#142131",
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+          }}>
+            <span style={{ color: "#EF9F27" }}>★</span> {place.rating.toFixed(1)}
+            {place.userRatingsTotal > 0 && (
+              <span style={{ color: "#6c7a89", fontWeight: 500, fontSize: 10 }}>
+                ({place.userRatingsTotal})
+              </span>
+            )}
+          </div>
+        )}
+        {/* Watermark Google discret */}
+        <div style={{
+          position: "absolute", bottom: 4, right: 6,
+          fontSize: 8.5, color: "rgba(255,255,255,0.85)",
+          textShadow: "0 1px 2px rgba(0,0,0,0.6)",
+          fontWeight: 600, letterSpacing: 0.3, pointerEvents: "none",
+        }}>
+          📍 Google Maps
         </div>
-        {/* Image cachée pour détecter l'erreur de chargement */}
-        <img
-          src={photoUrl}
-          alt=""
-          onError={() => setPhotoError(true)}
-          style={{ display: "none" }}
-        />
+        <img src={place.photoUrl} alt="" onError={() => setPhotoError(true)} style={{ display: "none" }} />
       </div>
     );
   }
 
   // Fallback gradient + icône
   return (
-    <div
-      className={className}
+    <div className={className}
       style={{
         height,
         width: variant === "avatar" ? height : "100%",
@@ -211,8 +214,7 @@ export default function EtabPhoto({
         justifyContent: "center",
         color: "#fff",
         ...style,
-      }}
-    >
+      }}>
       <i className={`ti ${fallback.ic}`} style={{ fontSize: Math.min(height * 0.5, 60), opacity: 0.85 }} />
     </div>
   );

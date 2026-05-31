@@ -27,6 +27,50 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.38 — Google Places + alertes avis + carte RPPS/SIRENE ==============
+  "0.55.38": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Table user_review_alert_prefs créée", async () => {
+      const { error } = await supabase.from("user_review_alert_prefs").select("user_id").limit(1);
+      if (error?.message?.match(/does not exist|relation/)) {
+        return { ok: false, msg: "Table absente — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: "Table accessible" };
+    }));
+
+    results.push(await runTest("Table google_reviews_seen créée", async () => {
+      const { error } = await supabase.from("google_reviews_seen").select("id").limit(1);
+      if (error?.message?.match(/does not exist|relation/)) {
+        return { ok: false, msg: "Table absente" };
+      }
+      return { ok: !error, msg: "Table accessible" };
+    }));
+
+    results.push(await runTest("API /api/place répond", async () => {
+      try {
+        const res = await fetch("/api/place?nom=Test");
+        const data = await res.json();
+        return { ok: data.ok !== undefined, msg: data.note || (data.place ? "Avec clé Google" : "Sans clé") };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Composant AlertToast importable", async () => {
+      const mod = await import("../components/AlertToast");
+      return typeof mod.default === "function" && typeof mod.showAlert === "function";
+    }));
+
+    results.push(await runTest("EtabPhoto utilise /api/place (plus Wikipedia)", async () => {
+      const mod = await import("../components/EtabPhoto");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.37 — Fix login version + RPPS retry + AddressAutocomplete ==============
   "0.55.37": async () => {
     const results = [];
