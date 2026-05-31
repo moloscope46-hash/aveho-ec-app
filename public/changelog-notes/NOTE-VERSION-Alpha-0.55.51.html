@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.51 — Fix SIRENE 502 + pages scan</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde0db;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fde0db;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fde0db}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — FIX SIRENE 502 + PAGES SCAN</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.51 — Fix critique API SIRENE 502 + pages stub QR/Code-barre + OCR générique
+      <small>maxDuration + AbortController · plus jamais de 502 · 4 pages Outils scan complétées</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.51-alpha</code></span>
+      <span><b>Tests :</b> 1539 verts (+27)</span>
+      <span><b>SQL :</b> aucun</span>
+    </div>
+  </header>
+
+  <h2>❌ Le bug critique</h2>
+  <div class="panel danger">
+    <p>Dans les logs prod Vercel, plusieurs requêtes <code>/api/sirene</code> retournaient <b>HTTP 502 Bad Gateway</b> :</p>
+    <pre><code>GET /api/sirene?q=matériel médical&limit=25&lat=47.3582&lng=0.9943
+→ 502 Bad Gateway
+
+GET /api/sirene?q=orthopédie&limit=25&lat=47.3894&lng=0.6732
+→ 502 Bad Gateway</code></pre>
+    <p>La carte ne pouvait pas afficher les résultats SIRENE — recherche libre cassée.</p>
+
+    <h3>La cause</h3>
+    <ul>
+      <li><b>Aucun maxDuration</b> côté route Next.js → Vercel utilise la valeur par défaut (10s sur plan Hobby, 60s sur Pro)</li>
+      <li><b>Aucun AbortController</b> côté code → la requête vers <code>recherche-entreprises.api.gouv.fr</code> n'avait pas de timeout</li>
+      <li>Quand l'API gouv mettait &gt;10s à répondre (requête lourde avec geo + filtres), Vercel killait → 502</li>
+    </ul>
+  </div>
+
+  <h2>✅ La correction</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Route /api/sirene robustifiée</h3>
+    <ul>
+      <li><b>maxDuration = 30</b> et <b>dynamic = "force-dynamic"</b> exportés</li>
+      <li><b>AbortController interne 25s</b> (avant le 30s Vercel pour avoir le temps de répondre proprement)</li>
+      <li><b>Plus JAMAIS de 502</b> : toutes les erreurs (timeout, network, HTTP not-ok) sont catchées et retournent <b>HTTP 200 avec <code>ok: false</code></b> + message explicite</li>
+      <li><b>Format unifié</b> : <code>{ ok, count, results, error?, duration_ms, timeout? }</code></li>
+      <li><b>Limite max remontée de 20 → 50</b> (le user demandait limit=25, ignoré silencieusement avant)</li>
+      <li><b>Message pédagogique</b> en cas de timeout : "Timeout SIRENE >25s — la requête est trop lourde, essaie avec plus de critères"</li>
+      <li><b>User-Agent</b> "Aveho-EC/0.55" pour traçabilité</li>
+      <li>Support <b>commune</b> (nom de ville) en plus de code_postal</li>
+    </ul>
+
+    <h3>/api/finess aussi</h3>
+    <p>maxDuration 30s + dynamic force-dynamic ajoutés pour éviter le même bug en cascade.</p>
+  </div>
+
+  <h2>📁 Pages Outils scan complétées</h2>
+  <div class="panel">
+    <p>Le menu <b>Outils scan</b> avait 4 entrées mais 3 ne menaient nulle part. Maintenant :</p>
+    <ul>
+      <li>✅ <code>/scan/bulletin-situation</code> — OCR complet (déjà fonctionnel depuis 0.55.50)</li>
+      <li>🆕 <code>/scan/qr</code> — Stub avec liste des usages prévus</li>
+      <li>🆕 <code>/scan/codebarre</code> — Stub GS1/UDI/LPP/EAN-13</li>
+      <li>🆕 <code>/scan/ocr</code> — <b>FONCTIONNEL</b> : OCR libre via Claude Vision</li>
+    </ul>
+  </div>
+
+  <h2>👁 Page /scan/ocr (générique)</h2>
+  <div class="panel warn">
+    <p>Page d'OCR libre — utile pour tout document que l'OCR bulletin spécifique ne traite pas :</p>
+    <ul>
+      <li>Prescriptions médicales</li>
+      <li>Factures fournisseurs</li>
+      <li>Courriers patient</li>
+      <li>Photos de matériel avec étiquettes texte</li>
+      <li>Captures d'écran avec texte</li>
+    </ul>
+
+    <h3>Workflow</h3>
+    <ol>
+      <li>Drag & drop ou clic pour parcourir / capture caméra mobile</li>
+      <li>Aperçu image</li>
+      <li>Bouton ambré <b>"Extraire le texte"</b></li>
+      <li>Claude Vision renvoie le texte brut conservant la structure (sauts de ligne, paragraphes, tableaux)</li>
+      <li>Textarea <b>éditable</b> + bouton <b>"Copier"</b> dans le presse-papier</li>
+      <li>Tokens IN/OUT affichés pour audit coût</li>
+    </ol>
+
+    <h3>Différence avec /scan/bulletin-situation</h3>
+    <p>Bulletin → JSON structuré 40+ champs + création patient. Générique → juste le texte brut, à toi d'en faire ce que tu veux.</p>
+  </div>
+
+  <h2>📋 Pages stub /scan/qr et /scan/codebarre</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">/scan/qr (à venir)</h3>
+    <p>Liste des usages prévus :</p>
+    <ul>
+      <li>QR carte Vitale (attestation tiers payant)</li>
+      <li>Étiquettes patient (bracelet hôpital)</li>
+      <li>QR matériel (étiquettes Aveho EC sur DM)</li>
+      <li>QR adresse (pré-remplir une livraison)</li>
+    </ul>
+    <p>Stack prévue : html5-qrcode + caméra native</p>
+
+    <h3>/scan/codebarre (à venir)</h3>
+    <ul>
+      <li>GS1/UDI sur dispositifs médicaux (n° série, lot, péremption)</li>
+      <li>EAN-13 sur produits commerciaux</li>
+      <li>LPP (Liste des Produits et Prestations remboursables)</li>
+      <li>Codes Aveho EC (étiquettes parc interne)</li>
+    </ul>
+    <p>Stack prévue : ZXing + parser Application Identifiers GS1</p>
+  </div>
+
+  <h2>🤖 Route /api/ocr/generic</h2>
+  <div class="panel">
+    <p>Architecture identique à <code>/api/ocr/bulletin-situation</code> mais avec un prompt simple :</p>
+    <pre><code>"Extrais TOUT le texte visible dans le document, dans l'ordre
+de lecture (haut→bas, gauche→droite). Conserve la structure
+naturelle. Réponds UNIQUEMENT avec le texte, sans markdown."</code></pre>
+    <p>Modèle : <code>claude-sonnet-4</code>, max_tokens 4096, maxDuration 60s.</p>
+    <p>Si image illisible, retourne "(aucun texte détecté)".</p>
+  </div>
+
+  <h2>📈 Tests +27 (1512 → 1539)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Fix SIRENE</b> (10) : maxDuration 30, dynamic, AbortController 25s, no 502, format unifié, limite 50, msg timeout, UA, commune, duration_ms</li>
+      <li><b>Fix FINESS</b> (2) : maxDuration + dynamic</li>
+      <li><b>Pages stub QR/Code-barre</b> (4) : exist + contenu mentionné</li>
+      <li><b>Page /scan/ocr</b> (6) : upload, preview, fetch, textarea, copy, limite, capture</li>
+      <li><b>Route /api/ocr/generic</b> (5) : env, prompt libre, max_duration, sonnet 4, tokens</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/api/sirene/route.js</code> : <b>REFONDU</b> · maxDuration 30s + AbortController + format unifié</li>
+    <li><code>app/api/finess/route.js</code> : + maxDuration 30s</li>
+    <li><code>app/api/ocr/generic/route.js</code> : <b>NOUVEAU</b> · OCR libre Claude Vision</li>
+    <li><code>app/scan/qr/page.js</code> : <b>NOUVEAU</b> · stub</li>
+    <li><code>app/scan/codebarre/page.js</code> : <b>NOUVEAU</b> · stub</li>
+    <li><code>app/scan/ocr/page.js</code> : <b>NOUVEAU</b> · fonctionnel</li>
+    <li><code>__tests__/v055-51-sirene-fix-scan-stubs.test.js</code> : <b>NOUVEAU</b> · +27 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.51 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.51</li>
+    <li><code>package.json</code> : 0.55.50 → 0.55.51</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.51 - Fix SIRENE 502 + pages scan QR/codebarre/OCR generique"
+git push origin main</code></pre>
+      </li>
+      <li>Attendre redéploiement Vercel</li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li><code>/carte</code> → tape une recherche libre (ex "matériel médical") → plus de 502 dans la console, résultats SIRENE s'affichent ou message d'erreur clair</li>
+      <li>Menu Outils scan → <code>/scan/qr</code> → page placeholder propre</li>
+      <li>Menu Outils scan → <code>/scan/codebarre</code> → page placeholder propre</li>
+      <li>Menu Outils scan → <code>/scan/ocr</code> → upload prescription, "Extraire le texte" → texte brut → "Copier"</li>
+      <li>Smoke tests 0.55.51 → 5 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 61ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.50 → <b>0.55.51</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.51 · 31 mai 2026</p>
+    <p>Fix SIRENE 502 · pages scan complétées · OCR générique · 1539 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

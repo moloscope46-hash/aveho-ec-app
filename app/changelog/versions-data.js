@@ -120,6 +120,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.51",
+    "kind": "version",
+    "titre": "🔧 Fix API SIRENE 502 (maxDuration + AbortController) · Pages stub QR/Code-barre · OCR générique avec Claude Vision",
+    "chantiers": [
+      { "code": "FIX", "txt": "Bug critique : /api/sirene retournait régulièrement HTTP 502 Bad Gateway en production (vu dans les logs Vercel). Cause : aucune limite maxDuration côté serverless + aucun AbortController côté code → Vercel killait la requête à 10s par défaut, renvoyant 502" },
+      { "code": "BE", "txt": "Fix /api/sirene : maxDuration = 30s + dynamic = 'force-dynamic' + AbortController interne 25s (avant le 30s Vercel). Plus AUCUN retour 502 — toutes les erreurs (timeout, network, HTTP not-ok) sont catchées et retournent 200 avec ok:false + message explicite. Format unifié { ok, count, results, error?, duration_ms, timeout? }" },
+      { "code": "BE", "txt": "/api/sirene : limite max remontée de 20 → 50 (le user demandait limit=25, ignoré silencieusement avant). User-Agent 'Aveho-EC/0.55' ajouté pour traçabilité. Support param 'commune' (en plus de 'code_postal') pour recherche par nom de ville. Message timeout pédagogique : 'Timeout SIRENE >25s — la requête est trop lourde, essaie avec plus de critères'" },
+      { "code": "BE", "txt": "/api/finess : ajout maxDuration = 30s + dynamic = 'force-dynamic' pour éviter le même bug 502 sur les requêtes lourdes" },
+      { "code": "FE", "txt": "Nouvelle page /scan/qr (stub) : placeholder qui liste les futurs usages (QR Vitale, étiquettes patient, étabs, matériel, adresses). Stack prévue : html5-qrcode + caméra native" },
+      { "code": "FE", "txt": "Nouvelle page /scan/codebarre (stub) : placeholder pour scan GS1/UDI matériel médical, EAN-13, LPP, codes parc Aveho EC. Stack prévue : ZXing + parser Application Identifiers" },
+      { "code": "FE", "txt": "Nouvelle page /scan/ocr GÉNÉRIQUE (fonctionnelle) : upload n'importe quel document (prescription, facture, courrier…) → Claude Vision retourne le texte brut. Différence avec /scan/bulletin-situation : pas de schéma JSON forcé, juste l'extraction libre. Textarea éditable + bouton 'Copier dans le presse-papier' + tokens IN/OUT affichés" },
+      { "code": "BE", "txt": "Nouvelle route /api/ocr/generic : prompt simple 'Extrais TOUT le texte visible, conserve la structure naturelle, sans markdown'. Modèle claude-sonnet-4, max_tokens 4096, maxDuration 60s. Si image illisible, retourne '(aucun texte détecté)'" },
+      { "code": "AI", "txt": "+27 tests Vitest : Fix SIRENE (10 : maxDuration, dynamic, AbortController, no 502, format unifié, limite 50, msg timeout, UA, commune, duration_ms), Fix FINESS (2), Pages stub QR/Code-barre (4 : exist + contenu mentionné), OCR générique page (6 : upload, preview, fetch, textarea, copy, limite, capture), Route OCR générique (5 : env, prompt libre, max_duration, sonnet 4, tokens). Total 1539 tests verts (vs 1512)" }
+    ],
+    "themes": ["fixes", "ai", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.51.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.50",
     "kind": "version",
     "titre": "🤖 OCR bulletin de situation via Claude Vision · 40+ champs extraits automatiquement · Auto-link caisse + mutuelle · Patient créé en 1 photo",

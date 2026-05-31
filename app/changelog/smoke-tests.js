@@ -27,6 +27,48 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.51 — Fix SIRENE 502 + scan QR/codebarre/OCR ==============
+  "0.55.51": async () => {
+    const results = [];
+
+    results.push(await runTest("API /api/sirene retourne format { ok, results } même en erreur", async () => {
+      try {
+        const res = await fetch("/api/sirene?q=test_query_court_xyzabc123");
+        const data = await res.json();
+        return { ok: typeof data.ok === "boolean", msg: `ok=${data.ok}, count=${data.count || 0}, duration=${data.duration_ms || "?"}ms` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API SIRENE ne renvoie JAMAIS 502 (status 200 toujours)", async () => {
+      try {
+        const res = await fetch("/api/sirene?q=test");
+        // 200 attendu, ou autre code mais pas 502
+        return { ok: res.status !== 502, msg: `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /scan/ocr accessible", async () => {
+      const mod = await import("../scan/ocr/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Page /scan/qr accessible", async () => {
+      const mod = await import("../scan/qr/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Page /scan/codebarre accessible", async () => {
+      const mod = await import("../scan/codebarre/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.50 — OCR bulletin de situation via Claude Vision ==============
   "0.55.50": async () => {
     const results = [];

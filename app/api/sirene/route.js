@@ -1,47 +1,54 @@
 // =============================================================
-//  app/api/sirene/route.js
-//  Alpha 0.55.4 — Proxy serveur vers l'API Recherche d'Entreprises
+//  app/api/sirene/route.js (Alpha 0.55.51)
 //
-//  Source : API officielle DINUM/INSEE
+//  Proxy serveur vers l'API Recherche d'Entreprises (DINUM/INSEE)
 //  URL : https://recherche-entreprises.api.gouv.fr/search
-//  Rate limit : 7 req/s (très large)
-//  Doc : https://recherche-entreprises.api.gouv.fr/docs/
+//
+//  0.55.51 :
+//   - maxDuration 30s (Vercel) + AbortController 25s (interne)
+//   - Plus jamais de 502 — on retourne 200 avec ok:false en cas d'erreur
+//   - Format unifié { ok, count, results, error?, duration_ms }
+//   - Limit max remontée à 50 (était 20)
+//   - User-Agent pour traçabilité
 // =============================================================
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const SIRENE_BASE = "https://recherche-entreprises.api.gouv.fr/search";
 
+const NAF_FILTERS = {
+  sante: { section: "Q" },
+  pharma: { codes: ["47.73Z"] },
+  materiel_medical_orthopedie: { codes: ["47.74Z", "32.50A", "32.50B", "26.60Z"] },
+  audio_optique: { codes: ["47.78A", "47.74Z"] },
+  transport_sanitaire: { codes: ["86.90A"] },
+  laboratoires: { codes: ["86.90B"] },
+  fab_pharma: { codes: ["21.20Z"] },
+};
+
 export async function GET(request) {
+  const t0 = Date.now();
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
   const siret = searchParams.get("siret");
   const siren = searchParams.get("siren");
-  const limit = Math.min(Number(searchParams.get("limit") || 10), 20);
+  const limit = Math.min(Number(searchParams.get("limit") || 10), 50);
   const codePostal = searchParams.get("code_postal");
+  const commune = searchParams.get("commune");
+  const categorie = (searchParams.get("categorie") || "").trim();
 
   if (!q && !siret && !siren) {
-    return new Response(
-      JSON.stringify({ error: "Param 'q', 'siret' ou 'siren' requis", results: [] }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return Response.json({
+      ok: false,
+      results: [],
+      error: "Param 'q', 'siret' ou 'siren' requis",
+      duration_ms: 0,
+    }, { status: 200 });
   }
 
-  // 0.55.5 : filtre par catégorie métier
-  const categorie = (searchParams.get("categorie") || "").trim();
-  // Codes NAF par catégorie médicale (multiple via section ou code précis)
-  const NAF_FILTERS = {
-    // Sections (lettres NAF)
-    sante: { section: "Q" },  // Santé humaine et action sociale (tout le secteur)
-    // Codes APE précis
-    pharma: { codes: ["47.73Z"] },  // Pharmacies
-    materiel_medical_orthopedie: { codes: ["47.74Z", "32.50A", "32.50B", "26.60Z"] },  // Commerce art. médicaux/ortho · fab. matériel médical
-    audio_optique: { codes: ["47.78A", "47.74Z"] },  // Optique · audioprothèse
-    transport_sanitaire: { codes: ["86.90A"] },  // Ambulances
-    laboratoires: { codes: ["86.90B"] },  // Laboratoires d'analyses
-    fab_pharma: { codes: ["21.20Z"] },  // Fabrication produits pharmaceutiques
-  };
-
+  let url;
   try {
-    let url;
     if (siret) {
       url = `${SIRENE_BASE}?q=siret:${encodeURIComponent(siret)}&per_page=1`;
     } else if (siren) {
@@ -49,79 +56,88 @@ export async function GET(request) {
     } else {
       const params = new URLSearchParams({ q, per_page: String(limit) });
       if (codePostal) params.set("code_postal", codePostal);
-      // 0.55.41 : recherche par proximité géographique
+      if (commune) params.set("nom_commune", commune);
+
       const lat = searchParams.get("lat");
       const lng = searchParams.get("lng");
       if (lat && lng) {
         params.set("lat", lat);
         params.set("long", lng);
-        params.set("radius", "50"); // 50km autour
+        params.set("radius", searchParams.get("radius") || "50");
       }
-      // Filtre catégorie
+
       if (categorie && NAF_FILTERS[categorie]) {
         const filt = NAF_FILTERS[categorie];
         if (filt.section) {
           params.set("section_activite_principale", filt.section);
         } else if (filt.codes && filt.codes.length > 0) {
-          // L'API supporte activite_principale en filtre — on prend le premier (limitation de l'API)
-          // Pour avoir tous les codes en OR, il faudrait faire plusieurs appels ou utiliser code_naf
           params.set("activite_principale", filt.codes.join(","));
         }
       }
       url = `${SIRENE_BASE}?${params.toString()}`;
     }
+  } catch (e) {
+    return Response.json({
+      ok: false, results: [],
+      error: `URL build error: ${e.message}`,
+      duration_ms: Date.now() - t0,
+    }, { status: 200 });
+  }
 
+  // 0.55.51 : AbortController 25s (avant le 30s Vercel pour avoir le temps de répondre)
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), 25000);
+
+  try {
     const res = await fetch(url, {
-      headers: { "Accept": "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Aveho-EC/0.55",
+      },
+      signal: ctrl.signal,
       next: { revalidate: 3600 },
     });
+    clearTimeout(timeout);
 
     if (!res.ok) {
-      throw new Error(`SIRENE API HTTP ${res.status}`);
+      return Response.json({
+        ok: false, results: [],
+        error: `SIRENE API HTTP ${res.status}`,
+        api_status: res.status,
+        duration_ms: Date.now() - t0,
+      }, { status: 200 });
     }
 
     const payload = await res.json();
-    return normalize(payload);
+    return normalize(payload, Date.now() - t0);
   } catch (e) {
-    return new Response(
-      JSON.stringify({ 
-        error: e.message || "Erreur API SIRENE", 
-        results: [] 
-      }),
-      { status: 502, headers: { "Content-Type": "application/json" } }
-    );
+    clearTimeout(timeout);
+    const isTimeout = e.name === "AbortError";
+    return Response.json({
+      ok: false, results: [],
+      error: isTimeout
+        ? "Timeout SIRENE (>25s) — la requête est trop lourde, essaie avec plus de critères"
+        : `Erreur SIRENE : ${e.message}`,
+      duration_ms: Date.now() - t0,
+      timeout: isTimeout,
+    }, { status: 200 });
   }
 }
 
-function normalize(payload) {
+function normalize(payload, duration_ms) {
   const records = payload.results || [];
   const results = records.map(r => {
     const siege = r.siege || {};
-    
-    // Adresse complète : on prend d'abord celle pré-formatée par l'API
     let adresse = siege.adresse || "";
-    // Si pas dispo, reconstruire
     if (!adresse) {
-      const parts = [
-        siege.numero_voie,
-        siege.type_voie,
-        siege.libelle_voie,
-      ].filter(Boolean);
+      const parts = [siege.numero_voie, siege.type_voie, siege.libelle_voie].filter(Boolean);
       adresse = parts.join(" ").trim();
     }
-
     const latitude = siege.latitude ? Number(siege.latitude) : null;
     const longitude = siege.longitude ? Number(siege.longitude) : null;
-
-    // État : "A" = actif, "F" = fermé
     const actif = (siege.etat_administratif || "A") === "A";
-    
-    // Téléphone n'est PAS dans l'API publique (RGPD), seulement dans API Entreprise (besoin clé)
-    // On laisse vide.
-    
-    // Effectifs / catégorie : approximation type d'organisation
     const effectifs = r.tranche_effectif_salarie || siege.tranche_effectif_salarie || "";
-    
+
     return {
       siren: r.siren || "",
       siret: siege.siret || "",
@@ -130,34 +146,32 @@ function normalize(payload) {
       sigle: r.sigle || "",
       activite_principale: r.activite_principale || "",
       libelle_activite: r.libelle_activite_principale || "",
-      activite_section: r.section_activite_principale || "",  // "Q" = santé/social, "G" = commerce, etc.
+      activite_section: r.section_activite_principale || "",
       categorie_entreprise: r.categorie_entreprise || "",
       effectifs,
       date_creation: r.date_creation || "",
       nature_juridique: r.nature_juridique || "",
-      // Adresse du siège
       adresse: adresse || null,
       code_postal: siege.code_postal || "",
       ville: siege.libelle_commune || "",
-      // Géo
       latitude,
       longitude,
       actif,
       etat_administratif: siege.etat_administratif || "",
-      // Méta
       nombre_etablissements: r.nombre_etablissements || 1,
       nombre_etablissements_ouverts: r.nombre_etablissements_ouverts || 0,
     };
   });
 
-  return new Response(
-    JSON.stringify({ count: results.length, results }),
-    { 
-      status: 200, 
-      headers: { 
-        "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=300, s-maxage=3600",
-      } 
-    }
-  );
+  return Response.json({
+    ok: true,
+    count: results.length,
+    results,
+    duration_ms,
+    total: payload.total_results || results.length,
+  }, {
+    headers: {
+      "Cache-Control": "public, max-age=300, s-maxage=3600",
+    },
+  });
 }

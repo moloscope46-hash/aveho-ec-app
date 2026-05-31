@@ -2,16 +2,11 @@ import { logger } from "../../../lib/logger";
 // =============================================================
 //  app/api/finess/route.js
 //  Alpha 0.55.0 — Proxy serveur vers la base FINESS officielle
-//
-//  Source : référentiel t_finess (Atlasanté / data.gouv.fr)
-//  RID : 796dfff7-cf54-493a-a0a7-ba3c2024c6f3 (mis à jour bi-mensuel)
-//
-//  Le proxy permet :
-//   - de cacher la réponse côté serveur Next (revalidate 1h)
-//   - d'uniformiser le format de retour
-//   - de filtrer les entrées OBSOLETES
-//   - d'éviter les soucis CORS éventuels
+//  0.55.51 — maxDuration 30s + dynamic force-dynamic
 // =============================================================
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const TABULAR_BASE = "https://tabular-api.data.gouv.fr/api/resources/796dfff7-cf54-493a-a0a7-ba3c2024c6f3/data/";
 
