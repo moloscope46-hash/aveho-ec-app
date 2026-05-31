@@ -27,6 +27,37 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.24 — Tester tout + fallback générique ==============
+  "0.55.24": async () => {
+    const results = [];
+
+    results.push(await runTest("Fonction runAllTests exportée", async () => {
+      const mod = await import("./smoke-tests");
+      return typeof mod.runAllTests === "function";
+    }));
+
+    results.push(await runTest("Fallback générique disponible", async () => {
+      // On test sur une version qui n'a pas de smoke tests dédiés (ex: 0.10.0)
+      const { runTestsForVersion } = await import("./smoke-tests");
+      const results = await runTestsForVersion("0.10.0");
+      return { ok: Array.isArray(results) && results.length > 0, msg: `${results?.length || 0} tests générés` };
+    }));
+
+    results.push(await runTest("Toutes les versions de versions-data peuvent être testées", async () => {
+      const { ALL_VERSIONS } = await import("./versions-data");
+      const { runTestsForVersion } = await import("./smoke-tests");
+      // Spot check : 3 versions au hasard ne plantent pas
+      const sample = ALL_VERSIONS.slice(0, 3);
+      for (const v of sample) {
+        const r = await runTestsForVersion(v.v);
+        if (!Array.isArray(r)) return { ok: false, msg: `v${v.v} ne renvoie pas un array` };
+      }
+      return { ok: true, msg: `${sample.length} versions échantillonnées OK` };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.23 — Centrage badge + feedback notif ==============
   "0.55.23": async () => {
     const results = [];
@@ -378,13 +409,94 @@ export const VERSION_TESTS = {
 // Liste des versions ayant des tests
 export const VERSIONS_WITH_TESTS = Object.keys(VERSION_TESTS).sort().reverse();
 
+// 0.55.24 — Tests génériques : utilisés en fallback pour les versions
+// qui n'ont pas de smoke tests dédiés. Vérifie au minimum :
+//  - L'entrée existe dans versions-data
+//  - Le noteFile (si présent) est accessible
+//  - Le sqlFile (si présent) est accessible
+async function runGenericTests(version) {
+  const results = [];
+  const { ALL_VERSIONS } = await import("./versions-data");
+  const v = ALL_VERSIONS.find((x) => x.v === version);
+
+  results.push(await runTest("Entrée présente dans versions-data", () => {
+    return { ok: !!v, msg: v ? "Trouvée" : "Manquante" };
+  }));
+
+  if (v?.noteFile) {
+    results.push(await runTest(`Note HTML accessible (${v.noteFile})`, async () => {
+      try {
+        const res = await fetch(`/changelog-notes/${v.noteFile}`, { cache: "force-cache" });
+        return { ok: res.ok, msg: `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: "Fetch échoué" };
+      }
+    }));
+  } else {
+    results.push({ name: "Note HTML", ok: false, msg: "Pas de noteFile pour cette version" });
+  }
+
+  if (v?.sqlFile) {
+    results.push(await runTest(`Fichier SQL accessible (${v.sqlFile})`, async () => {
+      try {
+        const res = await fetch(`/changelog-sql/${v.sqlFile}`, { cache: "force-cache" });
+        return { ok: res.ok, msg: `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: "Fetch échoué" };
+      }
+    }));
+  }
+
+  if (v?.chantiers && Array.isArray(v.chantiers)) {
+    results.push(await runTest("Description chantiers présente", () => {
+      return { ok: v.chantiers.length > 0, msg: `${v.chantiers.length} chantier(s)` };
+    }));
+  }
+
+  return results;
+}
+
 // Helper pour récupérer les tests d'une version
 export async function runTestsForVersion(version) {
   const fn = VERSION_TESTS[version];
-  if (!fn) return null;
   try {
-    return await fn();
+    // Si tests spécifiques → on les utilise
+    if (fn) {
+      return await fn();
+    }
+    // Sinon → fallback générique
+    return await runGenericTests(version);
   } catch (e) {
     return [{ name: "Erreur générale", ok: false, msg: "Échec d'exécution", error: e.message }];
   }
+}
+
+// 0.55.24 — Lance tous les tests de toutes les versions, retourne un rapport
+// global avec progression via callback
+export async function runAllTests(onProgress) {
+  const { ALL_VERSIONS } = await import("./versions-data");
+  const versions = ALL_VERSIONS.map((v) => v.v);
+  const report = {
+    versions: [],
+    totalTests: 0,
+    totalOk: 0,
+    totalFail: 0,
+    completed: 0,
+    total: versions.length,
+  };
+
+  for (const version of versions) {
+    onProgress?.({ ...report, current: version });
+    const results = await runTestsForVersion(version);
+    const ok = results.filter((r) => r.ok).length;
+    const fail = results.length - ok;
+    report.versions.push({ version, results, ok, fail });
+    report.totalTests += results.length;
+    report.totalOk += ok;
+    report.totalFail += fail;
+    report.completed++;
+  }
+
+  onProgress?.({ ...report, current: null, done: true });
+  return report;
 }

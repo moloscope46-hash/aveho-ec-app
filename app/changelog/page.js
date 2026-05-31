@@ -11,7 +11,7 @@ import TopBar from "../TopBar";
 import { PageHead, Panel } from "../ui";
 import pkg from "../../package.json";
 import { ALL_VERSIONS, THEME_LABELS } from "./versions-data";
-import { VERSION_TESTS, runTestsForVersion } from "./smoke-tests";
+import { VERSION_TESTS, runTestsForVersion, runAllTests } from "./smoke-tests";
 
 const ICONS_BY_CODE = {
   Fix: { color: "#c0392b", label: "FIX" },
@@ -62,6 +62,8 @@ export default function ChangelogPage() {
   const sqlCacheRef = useRef({});
   // 0.55.18 : modale tests + smoke tests
   const [testModal, setTestModal] = useState(null); // { version, results: [{name, ok, msg, error}], running: bool }
+  // 0.55.24 : modale rapport global "Tester tout"
+  const [globalTestModal, setGlobalTestModal] = useState(null); // { running, report, current }
 
   // Stats sur les thèmes filtrés (dynamique)
   const themeCounts = useMemo(() => {
@@ -307,6 +309,19 @@ export default function ChangelogPage() {
       setTestModal({ version, results: results || [], running: false });
     } catch (e) {
       setTestModal({ version, results: [{ name: "Erreur", ok: false, msg: e.message }], running: false });
+    }
+  }
+
+  // 0.55.24 — Lancer TOUS les tests de toutes les versions
+  async function runAll() {
+    setGlobalTestModal({ running: true, report: null, current: null });
+    try {
+      const report = await runAllTests((progress) => {
+        setGlobalTestModal({ running: !progress.done, report: progress, current: progress.current });
+      });
+      setGlobalTestModal({ running: false, report, current: null });
+    } catch (e) {
+      setGlobalTestModal({ running: false, report: null, current: null, error: e.message });
     }
   }
 
@@ -570,6 +585,32 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                 <><i className="ti ti-file-zip" /> Télécharger toutes les notes ({ALL_VERSIONS.filter(v => v.noteFile).length})</>
               )}
             </button>
+            {/* 0.55.24 : Tester toutes les versions */}
+            <button
+              onClick={runAll}
+              disabled={globalTestModal?.running}
+              title={`Lancer tous les smoke tests des ${ALL_VERSIONS.length} versions`}
+              style={{
+                background: globalTestModal?.running ? "#8a98a8" : "linear-gradient(135deg, #142131, #5aa05a)",
+                color: "#fff",
+                border: "none",
+                padding: "5px 12px",
+                borderRadius: 14,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: globalTestModal?.running ? "wait" : "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              {globalTestModal?.running ? (
+                <><i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Test {globalTestModal.report?.completed || 0}/{ALL_VERSIONS.length}…</>
+              ) : (
+                <><i className="ti ti-flask" /> Tester toutes les versions ({ALL_VERSIONS.length})</>
+              )}
+            </button>
           </div>
 
           {/* Thèmes (multi-select) */}
@@ -691,22 +732,21 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                           <i className="ti ti-database" /> SQL
                         </button>
                       )}
-                      {/* 0.55.18 : bouton Tester (si version a des smoke tests) */}
-                      {VERSION_TESTS[v.v] && (
-                        <button
-                          onClick={() => runTests(v.v)}
-                          title={`Lancer les smoke tests de la version ${v.v}`}
-                          style={{ 
-                            display: "inline-flex", alignItems: "center", gap: 3,
-                            background: "#5aa05a", border: "1px solid #5aa05a",
-                            color: "#fff", padding: "3px 8px", borderRadius: 12,
-                            fontSize: 11, fontWeight: 600, cursor: "pointer",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          <i className="ti ti-flask" /> Tester
-                        </button>
-                      )}
+                      {/* 0.55.24 : bouton Tester sur TOUTES les versions (fallback générique si pas de tests dédiés) */}
+                      <button
+                        onClick={() => runTests(v.v)}
+                        title={`Lancer les smoke tests de la version ${v.v}`}
+                        style={{ 
+                          display: "inline-flex", alignItems: "center", gap: 3,
+                          background: VERSION_TESTS[v.v] ? "#5aa05a" : "#8a98a8",
+                          border: `1px solid ${VERSION_TESTS[v.v] ? "#5aa05a" : "#8a98a8"}`,
+                          color: "#fff", padding: "3px 8px", borderRadius: 12,
+                          fontSize: 11, fontWeight: 600, cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        <i className="ti ti-flask" /> Tester
+                      </button>
                     </div>
                   </div>
 
@@ -782,6 +822,197 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
           </p>
         </Panel>
       </div>
+
+      {/* 0.55.24 — Modale rapport global "Tester toutes les versions" */}
+      {globalTestModal && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && !globalTestModal.running && setGlobalTestModal(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(20,33,49,.7)",
+            zIndex: 9993,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px 14px",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: 14,
+              width: "100%",
+              maxWidth: 820,
+              maxHeight: "92vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 30px 80px rgba(0,0,0,.45)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #142131 0%, #5aa05a 100%)",
+              color: "#fff",
+              padding: "14px 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+            }}>
+              <i className="ti ti-flask" style={{ fontSize: 22, color: "#cfeacb", flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#dff5e0", fontWeight: 700 }}>
+                  RAPPORT GLOBAL — TOUTES LES VERSIONS
+                </div>
+                {globalTestModal.report && (
+                  <div style={{ fontSize: 12.5, marginTop: 2 }}>
+                    <b>{globalTestModal.report.completed}/{globalTestModal.report.total}</b> versions ·{" "}
+                    <span style={{ color: "#cfeacb" }}>{globalTestModal.report.totalOk}</span> tests OK
+                    {globalTestModal.report.totalFail > 0 && (
+                      <span style={{ color: "#ffd1c8", marginLeft: 6 }}>· {globalTestModal.report.totalFail} échec(s)</span>
+                    )}
+                    {globalTestModal.running && globalTestModal.current && (
+                      <span style={{ color: "#cfeacb", marginLeft: 8, fontStyle: "italic" }}>
+                        → en cours : v{globalTestModal.current}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => !globalTestModal.running && setGlobalTestModal(null)}
+                disabled={globalTestModal.running}
+                style={{
+                  background: "transparent",
+                  color: "#fff",
+                  border: "none",
+                  padding: 6,
+                  cursor: globalTestModal.running ? "not-allowed" : "pointer",
+                  fontSize: 22,
+                  opacity: globalTestModal.running ? 0.4 : 1,
+                }}
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {/* Progress bar */}
+            {globalTestModal.report && (
+              <div style={{ height: 4, background: "#e3e9ee", overflow: "hidden" }}>
+                <div style={{
+                  height: "100%",
+                  width: `${(globalTestModal.report.completed / globalTestModal.report.total) * 100}%`,
+                  background: globalTestModal.running ? "linear-gradient(90deg, #5aa05a, #7CC8C8)" : "#5aa05a",
+                  transition: "width 0.2s",
+                }} />
+              </div>
+            )}
+
+            {/* Contenu */}
+            <div style={{ flex: 1, overflow: "auto", padding: "12px 18px" }}>
+              {globalTestModal.error ? (
+                <div style={{ color: "#c0392b", padding: 20, textAlign: "center" }}>
+                  Erreur : {globalTestModal.error}
+                </div>
+              ) : !globalTestModal.report ? (
+                <div style={{ color: "#8a98a8", padding: 20, textAlign: "center" }}>
+                  Initialisation…
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 4 }}>
+                  {globalTestModal.report.versions.map((vr) => (
+                    <div
+                      key={vr.version}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "8px 10px",
+                        background: vr.fail > 0 ? "#fef0ee" : "#eef9ef",
+                        border: `1px solid ${vr.fail > 0 ? "#f0c4be" : "#bfe2bf"}`,
+                        borderRadius: 6,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <code style={{
+                        background: "#142131",
+                        color: "#7CC8C8",
+                        padding: "2px 8px",
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}>v{vr.version}</code>
+                      <span style={{ fontSize: 12.5, color: "#142131", fontWeight: 600, flex: 1, minWidth: 100 }}>
+                        {vr.ok}/{vr.results.length} tests OK
+                      </span>
+                      {vr.fail > 0 ? (
+                        <details style={{ width: "100%" }}>
+                          <summary style={{ cursor: "pointer", fontSize: 11.5, color: "#c0392b", fontWeight: 600 }}>
+                            <i className="ti ti-alert-triangle" /> {vr.fail} échec(s) · voir détails
+                          </summary>
+                          <div style={{ marginTop: 6, paddingLeft: 14, fontSize: 11, color: "#6c7a89" }}>
+                            {vr.results.filter(r => !r.ok).map((r, i) => (
+                              <div key={i} style={{ padding: "3px 0", borderTop: i ? "1px solid #f0c4be" : "none" }}>
+                                <b style={{ color: "#7a1f15" }}>✗ {r.name}</b>
+                                {r.msg && <span> · {r.msg}</span>}
+                                {r.error && <span style={{ color: "#c0392b" }}> · {r.error}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ) : (
+                        <i className="ti ti-circle-check" style={{ color: "#2e6f33", fontSize: 18 }} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              background: "#f4f7fa",
+              borderTop: "1px solid #e3e9ee",
+              padding: "10px 18px",
+              fontSize: 11,
+              color: "#8a98a8",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+            }}>
+              <span>
+                <i className="ti ti-info-circle" /> Tests exécutés séquentiellement dans votre navigateur · les versions sans tests dédiés utilisent un fallback générique (note + SQL accessibles)
+              </span>
+              {!globalTestModal.running && (
+                <button
+                  onClick={runAll}
+                  style={{
+                    background: "#142131",
+                    color: "#fff",
+                    border: "none",
+                    padding: "6px 12px",
+                    borderRadius: 6,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  <i className="ti ti-refresh" /> Relancer tout
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 0.55.18 — Modale résultats des tests in-browser */}
       {testModal && (

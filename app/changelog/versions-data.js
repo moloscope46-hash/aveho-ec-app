@@ -119,6 +119,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.24",
+    "kind": "version",
+    "titre": "Smoke tests sur TOUTES les versions du changelog (fallback générique) + bouton 'Tester toutes les versions' avec rapport global",
+    "chantiers": [
+      { "code": "AI", "txt": "Système de smoke tests étendu : les versions sans tests dédiés bénéficient maintenant d'un fallback générique qui vérifie la présence de l'entrée dans versions-data, l'accessibilité de la note HTML et du fichier SQL (si applicable), et la description des chantiers" },
+      { "code": "FE", "txt": "Bouton 'Tester' maintenant visible sur TOUTES les versions du changelog (vert si tests dédiés, gris si fallback générique) — chaque carte de version a son bouton" },
+      { "code": "FE", "txt": "Nouveau bouton 'Tester toutes les versions' en haut de la page changelog : lance séquentiellement les tests de toutes les versions (73+) et affiche un rapport global avec progress bar" },
+      { "code": "UX", "txt": "Modale rapport global : header gradient avec compteur dynamique X/Y versions testées, totaux OK/échec, version en cours d'exécution, progress bar live" },
+      { "code": "UX", "txt": "Affichage des résultats : liste compacte des versions avec badge OK/échec, détails dépliables (<details>) pour les versions en échec montrant le nom du test fail + message + erreur éventuelle" }
+    ],
+    "themes": ["ux", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.24.html"
+  },
+  {
     "v": "0.55.23",
     "kind": "hotfix",
     "titre": "Badge version vraiment centré avec le logo · Feedback détaillé sur activation notifs/géoloc (succès, bloqué par browser, refusé) + notif de test au succès",
