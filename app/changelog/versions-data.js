@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.48",
+    "kind": "version",
+    "titre": "🔬 Diagnostic API RPPS · IP sortante Vercel + status par endpoint + body brut · Page /admin/rpps-diagnostic pour debug en prod",
+    "chantiers": [
+      { "code": "BE", "txt": "Nouvel endpoint /api/rpps/diagnostic : lance 4 tests en parallèle (Promise.all) — (1) ANS Practitioner family=DUPONT, (2) ANS PractitionerRole city=Paris, (3) ANS Practitioner identifier RPPS exact, (4) BAN data.gouv.fr pour contrôle. Récupère aussi l'IP sortante via api.ipify.org, et les variables d'environnement Vercel (VERCEL_ENV production/preview/dev, VERCEL_REGION cdg1/iad1/etc, Node version)" },
+      { "code": "BE", "txt": "Diagnostic intelligent : 4 codes de résumé — OK (vert : 3/3 endpoints répondent), PARTIAL (ambre : 1-2 sur 3), BLACKLISTED (rouge : ≥ 2 retours 403 → l'IP est blacklistée par l'ANS), DOWN (rouge : 0 endpoint OK). Messages explicatifs avec IP affichée. Timeout 10s par requête, AbortController, body tronqué à 800 chars" },
+      { "code": "FE", "txt": "Page /admin/rpps-diagnostic : UI complète avec relancer + champ query custom (ex 'Martin'). Affiche en gros : IP sortante (mono violet), hébergeur (Vercel/local), environnement, région Vercel, Node version, durée totale. Bandeau résumé coloré selon diagnostic" },
+      { "code": "FE", "txt": "Card par test avec : label, badge status HTTP (vert ok / rouge 403 / ambre autre), durée ms, URL appelée, total FHIR + entries si JSON valide, error message si exception. Détails dépliables : body brut tronqué dans pre dark + headers de réponse (10 premiers)" },
+      { "code": "FE", "txt": "Pédagogie intégrée : panneau jaune en bas explique comment lire les codes HTTP (200/403/0/400/500), et 3 solutions si blacklist — (1) Demander whitelist à l'ANS via cyber@esante.gouv.fr avec l'IP affichée, (2) Utiliser un proxy/relay (Cloudflare Workers), (3) Importer le dump RPPS open data depuis data.gouv.fr (mensuel, 1,7M praticiens)" },
+      { "code": "FE", "txt": "Entrée menu Administration ajoutée : '🩺 Diagnostic API RPPS' juste après 'Performance SQL'" },
+      { "code": "AI", "txt": "+21 tests Vitest : endpoint route (10 : exists, 4 tests parallel, ipify, env Vercel, timeout, body tronqué, 3 codes summary, query custom, no-store), page UI (10 : exists, useEffect mount, bouton + custom, IP en évidence, région, TestCard, pédagogie, 3 solutions, couleur summary), menu (1). Total 1459 tests verts (vs 1438)" }
+    ],
+    "themes": ["users", "fixes"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.48.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.47",
     "kind": "version",
     "titre": "🗺 Carte : icônes voyantes mes étab + boutons appel/GPS/email/fiche · Recherche libre (orthopédiste, pharmacie, ville…) en parallèle RPPS+SIRENE+FINESS · Type étab verrouillé après création",

@@ -27,6 +27,38 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.48 — Diagnostic API RPPS (IP en production) ==============
+  "0.55.48": async () => {
+    const results = [];
+
+    results.push(await runTest("Endpoint /api/rpps/diagnostic répond", async () => {
+      try {
+        const res = await fetch("/api/rpps/diagnostic", { cache: "no-store" });
+        const data = await res.json();
+        return { ok: !!data.ok, msg: `Summary: ${data?.summary?.code || "?"} · IP ${data?.outgoing_ip || "?"}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Diagnostic retourne 4 tests (3 ANS + 1 BAN)", async () => {
+      try {
+        const res = await fetch("/api/rpps/diagnostic");
+        const data = await res.json();
+        return { ok: Array.isArray(data.tests) && data.tests.length >= 4, msg: `${data?.tests?.length || 0} tests effectués` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /admin/rpps-diagnostic accessible", async () => {
+      const mod = await import("../admin/rpps-diagnostic/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.47 — Carte recherche libre + icônes voyantes + type étab verrouillé ==============
   "0.55.47": async () => {
     const results = [];

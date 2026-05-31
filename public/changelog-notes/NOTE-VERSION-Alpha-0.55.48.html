@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.48 — Diagnostic API RPPS</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:6px 8px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — DIAGNOSTIC API RPPS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.48 — Diagnostic API RPPS pour vérifier l'IP en production
+      <small>4 tests parallèles · IP sortante Vercel · region/env · body brut · pédagogie 3 solutions si blacklist</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.48-alpha</code></span>
+      <span><b>Tests :</b> 1459 verts (+21)</span>
+      <span><b>SQL :</b> aucun</span>
+    </div>
+  </header>
+
+  <h2>🎯 Pourquoi cette page ?</h2>
+  <div class="panel">
+    <p>L'API ANS (Annuaire Santé Pratique) bloque souvent les IPs cloud par défaut. Quand tu tapes "Paris" dans /partenaires-rpps et que ça sort 0 résultat, deux causes possibles :</p>
+    <ol>
+      <li><b>L'IP sortante de Vercel est blacklistée</b> par l'ANS (403 Forbidden)</li>
+      <li><b>L'API ANS est down</b> (maintenance, surcharge, timeout)</li>
+    </ol>
+    <p>Sans diagnostic, tu ne peux pas savoir laquelle. D'où cette page : elle teste en direct l'API ANS depuis Vercel et te dit exactement ce qui se passe.</p>
+  </div>
+
+  <h2>🔬 Comment ça marche</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">4 tests en parallèle (Promise.all)</h3>
+    <ol>
+      <li><code>GET /Practitioner?family=DUPONT</code> → recherche par nom</li>
+      <li><code>GET /PractitionerRole?location.address-city=Paris</code> → par ville</li>
+      <li><code>GET /Practitioner?identifier=10000000001</code> → RPPS exact (test du chemin "lookup")</li>
+      <li><code>GET api-adresse.data.gouv.fr/search?q=Paris</code> → BAN pour contrôle (sait-on encore appeler des APIs gouvernementales ?)</li>
+    </ol>
+
+    <h3>Récupération de l'IP sortante</h3>
+    <p>Via <code>api.ipify.org?format=json</code> côté serveur Vercel. C'est l'IP que voit l'ANS, donc celle qu'il faut faire whitelister.</p>
+
+    <h3>Variables d'environnement Vercel</h3>
+    <p><code>VERCEL_ENV</code> (production / preview / development), <code>VERCEL_REGION</code> (cdg1=Paris, iad1=Washington, etc.), Node version.</p>
+
+    <h3>Pour chaque test, on capture</h3>
+    <ul>
+      <li>HTTP status + statusText</li>
+      <li>Durée ms</li>
+      <li>Body brut (tronqué à 800 chars)</li>
+      <li>Headers de réponse (10 premiers)</li>
+      <li>Si JSON FHIR valide : <code>total</code> + nombre d'entries</li>
+      <li>Erreurs (timeout 10s, network, etc.)</li>
+    </ul>
+  </div>
+
+  <h2>📊 Les 4 codes de diagnostic</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Code</th><th>Couleur</th><th>Signification</th></tr>
+      <tr><td><b>OK</b></td><td>🟢 vert</td><td>3/3 endpoints ANS répondent. Tout marche.</td></tr>
+      <tr><td><b>PARTIAL</b></td><td>🟠 ambre</td><td>1-2 endpoints sur 3. Inspect par requête.</td></tr>
+      <tr><td><b>BLACKLISTED</b></td><td>🔴 rouge</td><td>≥ 2 retours 403. L'IP affichée est blacklistée par l'ANS.</td></tr>
+      <tr><td><b>DOWN</b></td><td>🔴 rouge</td><td>0 endpoint OK. L'ANS ne répond pas du tout.</td></tr>
+      <tr><td><b>OK_ANS_BAN_DOWN</b></td><td>🟠 ambre</td><td>ANS OK mais BAN down — géocodage carte affecté.</td></tr>
+    </table>
+  </div>
+
+  <h2>🎨 La page /admin/rpps-diagnostic</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Lancée au mount + bouton "Relancer"</h3>
+    <p>Plus un champ "Tester une query custom" pour debug — tape <code>Martin</code> ou <code>Mayrinhac</code> et vois ce qui se passe.</p>
+
+    <h3>Section "Environnement"</h3>
+    <p>Cards avec IP sortante en violet mono (gros), hébergeur, env, région Vercel, Node, durée totale. Bandeau d'info : "Si l'API ANS bloque, c'est cette IP qu'il faut whitelister auprès de cyber@esante.gouv.fr".</p>
+
+    <h3>Section "Tests par endpoint"</h3>
+    <p>Une card par test avec :</p>
+    <ul>
+      <li>Label + badge status HTTP coloré (vert/ambre/rouge)</li>
+      <li>Durée ms</li>
+      <li>URL appelée (cassable)</li>
+      <li>Total FHIR si parsing JSON OK</li>
+      <li>Erreur si exception</li>
+      <li><b>Détails dépliables</b> : body brut tronqué en pre dark + headers</li>
+    </ul>
+
+    <h3>Panneau pédagogique</h3>
+    <p>Explique chaque code HTTP (200/403/0/400/500). Si blacklist, donne <b>3 solutions concrètes</b> :</p>
+    <ol>
+      <li>Whitelist ANS : email à <code>cyber@esante.gouv.fr</code> avec l'IP affichée</li>
+      <li>Proxy/relay : Cloudflare Workers en EU avec une IP française fixe</li>
+      <li><b>Dump RPPS open data</b> : import du fichier annuel data.gouv.fr (1,7M praticiens, mise à jour mensuelle) → recherche full-text en local sans dépendre de l'API ANS</li>
+    </ol>
+  </div>
+
+  <h2>📈 Tests +21 (1438 → 1459)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Endpoint route</b> (11) : existe, 4 tests parallèles, ipify, env Vercel, timeout, body tronqué, 3 summaries (BLACKLISTED/DOWN/PARTIAL), query custom, no-store cache</li>
+      <li><b>Page UI</b> (9) : existe, useEffect mount, bouton+custom, IP en évidence, région, TestCard, pédagogie HTTP, 3 solutions, couleur summary</li>
+      <li><b>Menu</b> (1) : entrée admin</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/api/rpps/diagnostic/route.js</code> : <b>NOUVEAU</b> · endpoint test</li>
+    <li><code>app/admin/rpps-diagnostic/page.js</code> : <b>NOUVEAU</b> · UI complète</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration</li>
+    <li><code>__tests__/v055-48-rpps-diagnostic.test.js</code> : <b>NOUVEAU</b> · +21 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.48 (3 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.48</li>
+    <li><code>package.json</code> : 0.55.47 → 0.55.48</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.48 - Diagnostic API RPPS"
+git push origin main</code></pre>
+      </li>
+      <li>Attendre redéploiement Vercel</li>
+      <li>Aller sur <b>aveho-ec-app.vercel.app/admin/rpps-diagnostic</b> ou via menu Administration → "Diagnostic API RPPS"</li>
+      <li><b>Voir le résultat</b> : si BLACKLISTED, noter l'IP affichée et la communiquer à l'ANS</li>
+    </ol>
+  </div>
+
+  <h2>🔜 Suite logique</h2>
+  <p>Une fois le diagnostic fait, on saura quoi faire :</p>
+  <ul>
+    <li><b>Si OK</b> → bug applicatif côté requêtes, à corriger dans /api/rpps/route.js</li>
+    <li><b>Si BLACKLISTED</b> → demande whitelist OU plan B : import dump data.gouv.fr</li>
+    <li><b>Si DOWN</b> → attendre que l'ANS revienne</li>
+  </ul>
+
+  <p>Et après ça, on enchaîne sur la <b>nouvelle UI fiche patient</b> (onglets Identité/Sécu/Mutuelle/Adresses/Contacts/Médecin avec CaisseSearch et MutuelleSearch intégrés).</p>
+
+  <h2>SW auto-bump — 58ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.47 → <b>0.55.48</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.48 · 31 mai 2026</p>
+    <p>Diagnostic RPPS · IP sortante · pédagogie blacklist · 1459 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
