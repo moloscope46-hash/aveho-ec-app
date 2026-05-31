@@ -1,39 +1,36 @@
 // =============================================================
-//  app/api/rpps/route.js (Alpha 0.55.29)
+//  app/api/rpps/route.js (Alpha 0.55.45)
 //
-//  Proxy serveur RPPS — version PRODUCTION.
-//  Source : API FHIR Annuaire Santé ANS (libre accès, sans clé)
+//  Proxy serveur RPPS — RECHERCHE INTELLIGENTE multi-critères
+//  Source : API FHIR Annuaire Santé ANS
 //    Base URL : https://gateway.api.esante.gouv.fr/fhir/v2/
 //    Doc      : https://ansforge.github.io/annuaire-sante-fhir-documentation/
-//    Format   : FHIR R4 JSON
 //
-//  Plus de mock par défaut — données réelles ~1.7M praticiens.
+//  Modes de recherche :
+//    GET /api/rpps?q=DUPONT                      → cherche family=DUPONT
+//    GET /api/rpps?q=Paris                       → cherche family=Paris ET ville=Paris
+//                                                  (en parallèle, merge des résultats)
+//    GET /api/rpps?ville=Paris&profession=Méd…  → search par ville+profession
+//    GET /api/rpps?rpps=10000000001              → recherche exacte RPPS
 //
-//  Endpoints FHIR utilisés :
-//    GET /Practitioner?family=DUPONT&_count=20
-//    GET /Practitioner?identifier=10000000001  (RPPS exact)
-//    GET /PractitionerRole?practitioner=<id>&_include=PractitionerRole:organization
+//  Si l'API ANS bloque (403, timeout) → fallback graceful avec error msg
 // =============================================================
 
 const FHIR_BASE = "https://gateway.api.esante.gouv.fr/fhir/v2";
 
 /** Normalise une ressource FHIR Practitioner vers notre format */
 function normalizePractitioner(practitioner, roles = []) {
-  // Identifier RPPS / ADELI dans practitioner.identifier[]
   const ids = practitioner.identifier || [];
   const rppsId = ids.find((i) => i.system?.includes("rpps") || i.system?.includes("idnatps"));
   const adeliId = ids.find((i) => i.system?.includes("adeli"));
 
-  // Nom + prénom
   const name = practitioner.name?.[0] || {};
   const nom = name.family || "";
   const prenom = (name.given || []).join(" ") || "";
   const civilite = name.prefix?.[0] || "";
 
-  // Le PractitionerRole contient profession + adresse + tél + organization (FINESS)
   const role = roles.find((r) => r.practitioner?.reference?.endsWith(practitioner.id)) || {};
 
-  // Profession depuis code.coding[]
   let profession = "";
   let specialite = "";
   if (role.code) {
@@ -46,18 +43,14 @@ function normalizePractitioner(practitioner, roles = []) {
       }
     }
   }
-
-  // specialty (savoir-faire / spécialité)
   if (role.specialty && role.specialty[0]?.coding?.[0]?.display) {
     specialite = role.specialty[0].coding[0].display;
   }
 
-  // Telecom (téléphone / email)
   const telecom = role.telecom || practitioner.telecom || [];
   const tel = telecom.find((t) => t.system === "phone")?.value || "";
   const email = telecom.find((t) => t.system === "email")?.value || "";
 
-  // Adresse (location ou directement sur role)
   let adresse = "", cp = "", commune = "";
   if (role.location?.[0]?.address) {
     const a = role.location[0].address;
@@ -66,11 +59,9 @@ function normalizePractitioner(practitioner, roles = []) {
     commune = a.city || "";
   }
 
-  // 0.55.35 : extraire le FINESS de l'organization (pour auto-rattachement)
   let finess = "";
   let organization_name = "";
   if (role.organization?.reference) {
-    // ref format : "Organization/<id>" ou "Organization/<finess>" selon ANS
     const ref = role.organization.reference;
     const match = ref.match(/Organization\/(\d{9})/);
     if (match) finess = match[1];
@@ -85,208 +76,238 @@ function normalizePractitioner(practitioner, roles = []) {
     prenom,
     profession,
     specialite,
-    mode_exercice: "",
+    telephone: tel,
+    email,
     adresse,
     cp,
     commune,
-    telephone: tel,
-    email,
-    // 0.55.35 : info organization pour auto-link FINESS
     finess,
     organization_name,
-    // ID interne FHIR pour aller chercher plus de détails si besoin
     _fhirId: practitioner.id,
   };
 }
 
-/** Récupère les PractitionerRole d'un practitioner pour avoir profession + adresse */
-async function fetchRolesForPractitioner(practitionerId) {
+/** Helper : fetch FHIR avec timeout + retry */
+async function fetchFhir(url, label = "") {
+  const t0 = Date.now();
   try {
-    const url = `${FHIR_BASE}/PractitionerRole?practitioner=${practitionerId}&_count=5`;
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 12000);
     const res = await fetch(url, {
-      headers: { Accept: "application/fhir+json" },
+      headers: {
+        Accept: "application/fhir+json",
+        "User-Agent": "Aveho-EC/0.55",
+      },
+      signal: ctrl.signal,
       next: { revalidate: 3600 },
     });
-    if (!res.ok) return [];
+    clearTimeout(timeout);
+    const dur = Date.now() - t0;
+    if (!res.ok) {
+      console.warn(`[RPPS ${label}] HTTP ${res.status} in ${dur}ms — ${url}`);
+      return { ok: false, status: res.status, duration: dur };
+    }
     const json = await res.json();
-    return (json.entry || []).map((e) => e.resource);
-  } catch {
-    return [];
+    return { ok: true, status: 200, data: json, duration: dur };
+  } catch (e) {
+    const dur = Date.now() - t0;
+    console.warn(`[RPPS ${label}] error in ${dur}ms : ${e.message}`);
+    return { ok: false, status: 0, error: e.message, duration: dur };
   }
 }
 
 export async function GET(req) {
+  const t0 = Date.now();
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
   const profession = (searchParams.get("profession") || "").trim();
   const cp = (searchParams.get("cp") || "").trim();
   const ville = (searchParams.get("ville") || "").trim();
-  const mode = (searchParams.get("mode") || "").trim();
   const rppsExact = (searchParams.get("rpps") || "").trim();
-  const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
-  const includeRoles = searchParams.get("withRoles") !== "false";
+  const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 200);
 
+  // Si rien, refuse
   if (!q && !rppsExact && !profession && !cp && !ville) {
     return Response.json({
       ok: false,
-      error: "Au moins un critère requis (q, rpps, profession, cp, ville)",
-    }, { status: 400 });
+      results: [],
+      error: "Précise au moins un critère (q, rpps, profession, cp, ville)",
+    }, { status: 200 });
   }
 
-  try {
-    // Build URL FHIR
-    const params = new URLSearchParams();
-    const cleanQ = q.trim();
-    if (rppsExact) {
-      params.set("identifier", rppsExact);
-    } else if (cleanQ.length >= 2) {
-      // Ne JAMAIS envoyer family=" " (espace) → l'API ANS retourne 403
-      params.set("family", cleanQ);
-    }
-    // 0.55.35 : si on cherche par ville/cp/profession sans nom, on doit
-    // passer par PractitionerRole (qui a address-city) puis remonter aux practitioners
-    const useRoleSearch = !rppsExact && cleanQ.length < 2 && (ville || cp || profession);
-    if (useRoleSearch) {
-      // Cherche directement les rôles avec city/postal-code, _include practitioner
-      const roleParams = new URLSearchParams();
-      if (ville) roleParams.set("location.address-city", ville);
-      if (cp) roleParams.set("location.address-postalcode", cp);
-      roleParams.set("_include", "PractitionerRole:practitioner");
-      roleParams.set("_count", String(Math.min(limit, 50)));
-      const roleUrl = `${FHIR_BASE}/PractitionerRole?${roleParams}`;
-      try {
-        const rRes = await fetch(roleUrl, {
-          headers: { Accept: "application/fhir+json" },
-          next: { revalidate: 3600 },
-        });
-        if (rRes.ok) {
-          const rJson = await rRes.json();
-          const allResources = (rJson.entry || []).map((e) => e.resource);
-          const practitioners = allResources.filter((r) => r.resourceType === "Practitioner");
-          const roles = allResources.filter((r) => r.resourceType === "PractitionerRole");
-          let normalized = practitioners.map((p) => normalizePractitioner(p, roles));
-          // Filtre client final
-          if (profession) {
-            const pl = profession.toLowerCase();
-            normalized = normalized.filter((e) => (e.profession || "").toLowerCase().includes(pl));
-          }
-          if (ville) {
-            const vl = ville.toLowerCase();
-            normalized = normalized.filter((e) => (e.commune || "").toLowerCase().includes(vl));
-          }
-          if (cp) {
-            normalized = normalized.filter((e) => (e.cp || "").startsWith(cp));
-          }
-          return Response.json({
-            ok: true,
-            count: normalized.length,
-            results: normalized,
-            source: "ANS FHIR R4 (PractitionerRole search)",
-          });
-        }
-      } catch (e) {
-        console.warn("[RPPS] role search failed:", e.message);
-      }
-      // Si on est ici : la recherche role a échoué → tomber dans le mock fallback
+  // Mode RPPS exact (11 chiffres)
+  if (rppsExact) {
+    const url = `${FHIR_BASE}/Practitioner?identifier=${encodeURIComponent(rppsExact)}&_count=1`;
+    const r = await fetchFhir(url, "exact");
+    if (!r.ok) {
       return Response.json({
-        ok: true,
-        count: 0,
+        ok: false,
         results: [],
-        source: "ANS FHIR R4 (aucun résultat — précisez un nom pour affiner)",
-        hint: "Pour de meilleurs résultats, ajoute au moins 2 lettres dans le champ nom.",
+        error: r.status === 403 ? "API ANS bloquée (403)" : `API ANS HTTP ${r.status}`,
+        api_status: r.status,
+        duration_ms: r.duration,
       });
     }
-    if (!params.has("family") && !params.has("identifier")) {
-      // Pas de critère valide → on ne tape pas l'API
-      return Response.json({
-        ok: false,
-        error: "Précise au moins un nom (2 lettres min.) ou un n° RPPS.",
-      }, { status: 400 });
-    }
-    params.set("_count", String(Math.min(limit, 100)));
-
-    const url = `${FHIR_BASE}/Practitioner?${params}`;
-    let res = await fetch(url, {
-      headers: { Accept: "application/fhir+json" },
-      next: { revalidate: 3600 },
-    });
-
-    // 0.55.37 : si family= renvoie 403/400, retry avec name= (plus permissif)
-    if (!res.ok && cleanQ.length >= 2 && (res.status === 403 || res.status === 400)) {
-      const retryParams = new URLSearchParams(params);
-      retryParams.delete("family");
-      retryParams.set("name", cleanQ);
-      const retryUrl = `${FHIR_BASE}/Practitioner?${retryParams}`;
-      try {
-        const r2 = await fetch(retryUrl, {
-          headers: { Accept: "application/fhir+json" },
-          next: { revalidate: 3600 },
-        });
-        if (r2.ok) {
-          res = r2;
-        }
-      } catch (e) {
-        console.warn("[RPPS] retry name= failed:", e.message);
+    const entries = r.data?.entry || [];
+    const pracs = entries.map(e => e.resource).filter(x => x.resourceType === "Practitioner");
+    // Récupérer les rôles pour avoir profession/adresse
+    let roles = [];
+    if (pracs.length) {
+      const ru = `${FHIR_BASE}/PractitionerRole?practitioner=${pracs[0].id}&_include=PractitionerRole:location&_count=20`;
+      const rr = await fetchFhir(ru, "roles");
+      if (rr.ok) {
+        roles = (rr.data?.entry || []).map(e => e.resource).filter(x => x.resourceType === "PractitionerRole");
       }
     }
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      // 0.55.35 : fallback gracieux au lieu de 502 brutal
-      return Response.json({
-        ok: false,
-        error: `API ANS HTTP ${res.status}. Essayez avec un autre nom ou ajoutez un critère (ville, profession).`,
-        detail: text.slice(0, 200),
-        results: [],
-      }, { status: 200 });
-    }
-
-    const json = await res.json();
-    const practitioners = (json.entry || []).map((e) => e.resource);
-
-    // Pour chaque practitioner, récupérer ses rôles (profession + adresse)
-    // Limite à 20 pour ne pas exploser le temps de réponse
-    const limited = practitioners.slice(0, Math.min(limit, 20));
-    let normalized;
-    if (includeRoles && limited.length > 0) {
-      const roleResults = await Promise.all(
-        limited.map((p) => fetchRolesForPractitioner(p.id))
-      );
-      normalized = limited.map((p, i) => normalizePractitioner(p, roleResults[i]));
-    } else {
-      normalized = limited.map((p) => normalizePractitioner(p, []));
-    }
-
-    // Filtre client côté serveur (FHIR ne filtre pas dessus directement)
-    let filtered = normalized;
-    if (profession) {
-      const pl = profession.toLowerCase();
-      filtered = filtered.filter((e) => (e.profession || "").toLowerCase().includes(pl));
-    }
-    if (cp) {
-      filtered = filtered.filter((e) => (e.cp || "").startsWith(cp));
-    }
-    if (ville) {
-      const vl = ville.toLowerCase();
-      filtered = filtered.filter((e) => (e.commune || "").toLowerCase().includes(vl));
-    }
-    if (mode) {
-      const ml = mode.toLowerCase();
-      filtered = filtered.filter((e) => (e.mode_exercice || "").toLowerCase().includes(ml));
-    }
-
+    const normalized = pracs.map(p => normalizePractitioner(p, roles));
     return Response.json({
       ok: true,
-      count: filtered.length,
-      total_fhir: practitioners.length,
-      results: filtered,
-      source: "ANS FHIR R4 (gateway.api.esante.gouv.fr)",
+      count: normalized.length,
+      results: normalized,
+      duration_ms: Date.now() - t0,
+      source: "ANS FHIR (exact RPPS)",
     });
-  } catch (e) {
-    console.error("[RPPS proxy] Exception:", e);
+  }
+
+  // ====================================================
+  // 0.55.45 : recherche INTELLIGENTE multi-critères
+  // Si l'user tape "Paris" → on cherche en parallèle
+  //   - family=Paris (au cas où nom de famille)
+  //   - PractitionerRole avec address-city=Paris (probablement le sens voulu)
+  // ====================================================
+  const queries = [];
+
+  if (q.length >= 2 || profession || ville || cp) {
+    // 1) Recherche par family/given si q
+    if (q.length >= 2) {
+      const p1 = new URLSearchParams({ _count: String(Math.min(limit, 50)) });
+      p1.set("name", q); // name = family + given (plus permissif que family seul)
+      if (profession) p1.set("active", "true"); // pas filtrage profession côté API mais OK
+      queries.push({
+        url: `${FHIR_BASE}/Practitioner?${p1}`,
+        type: "name",
+        priority: 1,
+      });
+    }
+
+    // 2) Recherche par PractitionerRole avec address-city/postalcode/profession
+    // (toujours utile : ramène les rôles avec adresse complète)
+    if (ville || cp || (q.length >= 2 && /^[A-ZÀ-Ÿ][a-zà-ÿ]/.test(q))) {
+      const p2 = new URLSearchParams({ _count: String(Math.min(limit, 50)) });
+      // Si q ressemble à un nom propre, on tente aussi en ville
+      const cityQuery = ville || (q.length >= 3 ? q : "");
+      if (cityQuery) p2.set("location.address-city", cityQuery);
+      if (cp) p2.set("location.address-postalcode", cp);
+      p2.set("_include", "PractitionerRole:practitioner");
+      p2.set("_include", "PractitionerRole:location");
+      if (cityQuery || cp) {
+        queries.push({
+          url: `${FHIR_BASE}/PractitionerRole?${p2}`,
+          type: "city",
+          priority: 2,
+        });
+      }
+    }
+  }
+
+  if (!queries.length) {
     return Response.json({
       ok: false,
-      error: e.message || "Erreur inconnue",
-    }, { status: 500 });
+      results: [],
+      error: "Précise au moins 2 lettres ou un critère ville/cp/profession",
+    });
   }
+
+  // Exécution PARALLÈLE des queries
+  const allResults = await Promise.all(queries.map(q => fetchFhir(q.url, q.type)));
+
+  const errors = allResults.filter(r => !r.ok);
+  const successes = allResults.filter(r => r.ok);
+
+  // Si toutes les requêtes ont échoué
+  if (successes.length === 0) {
+    const first = errors[0] || {};
+    return Response.json({
+      ok: false,
+      results: [],
+      error: first.status === 403
+        ? "API ANS bloquée (403 Forbidden) — vérifier IP en production"
+        : `API ANS indisponible (HTTP ${first.status || "timeout"})`,
+      api_status: first.status,
+      duration_ms: Date.now() - t0,
+      debug_url_count: queries.length,
+    }, { status: 200 });
+  }
+
+  // Merger les résultats : tous les Practitioners + tous les PractitionerRole
+  const allEntries = [];
+  for (const r of successes) {
+    if (r.data?.entry) allEntries.push(...r.data.entry);
+  }
+  const allRes = allEntries.map(e => e.resource).filter(Boolean);
+  const pracsByID = new Map();
+  const rolesByPracID = new Map();
+  for (const r of allRes) {
+    if (r.resourceType === "Practitioner") {
+      pracsByID.set(r.id, r);
+    } else if (r.resourceType === "PractitionerRole") {
+      const ref = r.practitioner?.reference || "";
+      const pid = ref.split("/").pop();
+      if (pid) {
+        if (!rolesByPracID.has(pid)) rolesByPracID.set(pid, []);
+        rolesByPracID.get(pid).push(r);
+      }
+    }
+  }
+
+  // Normaliser
+  let normalized = [];
+  for (const [id, p] of pracsByID.entries()) {
+    const roles = rolesByPracID.get(id) || [];
+    if (roles.length === 0) {
+      normalized.push(normalizePractitioner(p, []));
+    } else {
+      // Une entrée par rôle pour avoir toutes les adresses
+      for (const role of roles) {
+        normalized.push(normalizePractitioner(p, [role]));
+      }
+    }
+  }
+
+  // Filtre client final (au cas où l'API n'a pas filtré)
+  if (profession) {
+    const pl = profession.toLowerCase();
+    normalized = normalized.filter((e) => (e.profession || "").toLowerCase().includes(pl));
+  }
+  if (ville && !cp) {
+    const vl = ville.toLowerCase();
+    normalized = normalized.filter((e) => (e.commune || "").toLowerCase().includes(vl));
+  }
+  if (cp) {
+    normalized = normalized.filter((e) => (e.cp || "").startsWith(cp));
+  }
+
+  // Dédupliquer par RPPS+adresse
+  const seen = new Set();
+  const dedup = normalized.filter(p => {
+    const key = `${p.rpps}|${p.cp}|${p.commune}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, limit);
+
+  return Response.json({
+    ok: true,
+    count: dedup.length,
+    results: dedup,
+    duration_ms: Date.now() - t0,
+    source: "ANS FHIR (multi-query parallel)",
+    debug: {
+      queries_count: queries.length,
+      success_count: successes.length,
+      error_count: errors.length,
+      pracs_found: pracsByID.size,
+      roles_found: allRes.filter(r => r.resourceType === "PractitionerRole").length,
+    },
+  });
 }

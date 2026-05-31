@@ -27,6 +27,51 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.45 — Refonte API RPPS multi-critères + UI ==============
+  "0.55.45": async () => {
+    const results = [];
+
+    results.push(await runTest("API RPPS répond avec query 'Paris'", async () => {
+      try {
+        const res = await fetch("/api/rpps?q=Paris&limit=10");
+        const data = await res.json();
+        if (!data.ok) {
+          return { ok: false, msg: `API ANS : ${data.error || "?"}` };
+        }
+        return { ok: true, msg: `${data.count} résultats (durée ${data.duration_ms}ms)` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API RPPS répond avec query 'Dupont'", async () => {
+      try {
+        const res = await fetch("/api/rpps?q=Dupont&limit=10");
+        const data = await res.json();
+        return { ok: data.ok, msg: data.ok ? `${data.count} résultats` : data.error };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("API RPPS debug info présent", async () => {
+      try {
+        const res = await fetch("/api/rpps?q=Test");
+        const data = await res.json();
+        return { ok: !!data.duration_ms, msg: `durée ${data.duration_ms || "?"}ms` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /partenaires-rpps charge le composant RppsAutocomplete", async () => {
+      const mod = await import("../partenaires-rpps/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.44 — Hotfix SQL : colonne rpps ajoutée avant index ==============
   "0.55.44": async () => {
     const supabase = createClient();

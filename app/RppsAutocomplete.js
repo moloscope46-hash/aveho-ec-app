@@ -68,7 +68,7 @@ export default function RppsAutocomplete({
   function triggerSearch(val) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const trimmed = val.trim();
-    // Min 2 chars sauf si profession active
+    // 0.55.45 : min 2 chars (comme FinessSearch) — pas de restriction profession
     if (trimmed.length < 2 && !profession) {
       setResults([]);
       setOpen(false);
@@ -86,21 +86,27 @@ export default function RppsAutocomplete({
           params.set("q", trimmed);
         }
         if (profession) params.set("profession", profession);
-        params.set("limit", "10");
+        // 0.55.45 : limite remontée à 50 (était 10) pour ne pas brider la recherche
+        params.set("limit", "50");
 
         const res = await fetch(`/api/rpps?${params}`);
         const data = await res.json();
-        if (!res.ok || !data.ok) {
+        if (!data.ok) {
+          // 0.55.45 : message d'erreur clair pour debug
           setError(data?.error || "Erreur recherche RPPS");
           setResults([]);
           setOpen(true);
         } else {
           setResults(data.results || []);
-          setOpen((data.results || []).length > 0 || !!data.error);
+          setOpen(true);
+          if ((data.results || []).length === 0) {
+            setError(null);
+          }
         }
       } catch (e) {
-        setError(e.message);
+        setError("Connexion API : " + e.message);
         setResults([]);
+        setOpen(true);
       } finally {
         setLoading(false);
       }

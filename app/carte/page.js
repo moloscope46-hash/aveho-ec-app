@@ -444,7 +444,8 @@ export default function CartePage() {
   }, [finessFilters, leafletReady]);
 
   // 0.55.38 : fetch RPPS dans bbox
-  // 0.55.41 : géocodage des adresses via BAN INSEE car l'API ANS ne renvoie pas de coords
+  // 0.55.41 : géocodage des adresses via BAN INSEE
+  // 0.55.45 : ville depuis centre carte + limite haute + debug
   async function fetchRppsInBbox() {
     if (!mapInstanceRef.current || rppsFilters.length === 0) {
       setRppsCount(0);
@@ -454,24 +455,35 @@ export default function CartePage() {
     setRppsLoading(true);
     try {
       const bounds = mapInstanceRef.current.getBounds();
+      const center = bounds.getCenter();
+      // 0.55.45 : essayer de trouver le nom de la ville au centre via reverse géocodage BAN
+      const villeAuCentre = await reverseLookupCity(center.lat, center.lng);
       const allResults = [];
       for (const prof of rppsFilters) {
-        const params = new URLSearchParams({ profession: prof, limit: "30" });
+        const params = new URLSearchParams({ profession: prof, limit: "100" });
+        // 0.55.45 : si on a la ville au centre, l'utiliser comme critère
+        if (villeAuCentre) params.set("ville", villeAuCentre);
         const res = await fetch(`/api/rpps?${params}`);
-        if (!res.ok) continue;
+        if (!res.ok) {
+          console.warn("[Carte RPPS]", prof, "HTTP", res.status);
+          continue;
+        }
         const data = await res.json();
         if (data.ok && Array.isArray(data.results)) {
+          console.log("[Carte RPPS]", prof, "→", data.results.length, "résultats");
           allResults.push(...data.results.filter(p => p.adresse || p.commune || p.cp));
+        } else if (!data.ok) {
+          console.warn("[Carte RPPS]", prof, "API error:", data.error);
         }
       }
-      // 0.55.41 : géocoder chaque adresse via BAN INSEE
+      // Géocoder via BAN les adresses sans coords
       const geocoded = await geocodeBatch(allResults);
-      // Filtre par bbox
       const inBbox = geocoded.filter(p =>
         p.latitude && p.longitude &&
         p.latitude >= bounds.getSouth() && p.latitude <= bounds.getNorth() &&
         p.longitude >= bounds.getWest() && p.longitude <= bounds.getEast()
       );
+      console.log("[Carte RPPS] résultats finaux", inBbox.length, "/ total fetchés", allResults.length);
       drawRppsOverlay(inBbox);
       setRppsCount(inBbox.length);
     } catch (e) {
@@ -479,6 +491,24 @@ export default function CartePage() {
       setRppsCount(0);
     } finally {
       setRppsLoading(false);
+    }
+  }
+
+  // 0.55.45 : reverse géocodage BAN pour trouver le nom de ville au centre de la carte
+  async function reverseLookupCity(lat, lng) {
+    try {
+      const cacheKey = `aveho:reverse:${lat.toFixed(2)}|${lng.toFixed(2)}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) return cached;
+      const url = `https://api-adresse.data.gouv.fr/reverse/?lat=${lat}&lon=${lng}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const ville = data?.features?.[0]?.properties?.city || null;
+      if (ville) try { localStorage.setItem(cacheKey, ville); } catch {}
+      return ville;
+    } catch {
+      return null;
     }
   }
 

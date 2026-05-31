@@ -16,7 +16,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, FilterBar } from "../ui";
 import { KpiRow } from "../kpis";
-import RppsSearch from "../components/RppsSearch";
+import RppsAutocomplete from "../RppsAutocomplete";
 import Modal from "../components/Modal";
 import ContactActions from "../components/ContactActions";
 import { dialogs } from "../dialogs";
@@ -302,17 +302,25 @@ export default function PartenairesRpps() {
         )}
       </div>
 
-      {/* Modale recherche RPPS pour ajouter un partenaire */}
+      {/* Modale recherche RPPS pour ajouter un partenaire — 0.55.45 : autocomplete live, plus de bouton Rechercher */}
       <Modal
         open={rppsSearchOpen}
         onClose={() => setRppsSearchOpen(false)}
         title="Ajouter un partenaire RPPS"
-        subtitle="Recherche dans l'annuaire ANS officiel"
+        subtitle="Recherche en direct dans l'annuaire ANS (tape un nom OU une ville)"
         icon="ti-stethoscope"
         color="#7a6fb0"
-        maxWidth={680}
+        maxWidth={720}
       >
-        <RppsSearch onSelect={addPartenaireFromRpps} maxResults={20} />
+        <div style={{ minHeight: 380 }}>
+          <RppsAutocomplete
+            placeholder="Nom, ville, profession ou n° RPPS (recherche en direct)…"
+            onSelect={addPartenaireFromRpps}
+          />
+          <div style={{ marginTop: 14, padding: 10, background: "#f4f7fa", borderRadius: 8, fontSize: 11.5, color: "#6c7a89", lineHeight: 1.6 }}>
+            <b><i className="ti ti-info-circle" /> Astuce :</b> tape un <b>nom</b> de famille (ex : <i>"Dupont"</i>) ou une <b>ville</b> (ex : <i>"Paris"</i>) ou les deux séparés par un espace. Le sélecteur profession à gauche filtre encore plus précisément.
+          </div>
+        </div>
       </Modal>
 
       {/* Modale détails / édition d'un partenaire */}

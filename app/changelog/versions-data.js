@@ -120,6 +120,27 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.45",
+    "kind": "version",
+    "titre": "🔍 Refonte recherche RPPS : multi-critères en parallèle (nom OU ville) · API audit + debug · /partenaires-rpps en autocomplete · Carte RPPS améliorée (reverse géocodage + limites)",
+    "chantiers": [
+      { "code": "BE", "txt": "Audit API ANS FHIR : depuis le sandbox dev → 403 Forbidden (IP probablement blacklistée). En production sur Vercel, l'IP française devrait passer. L'API ANS distingue strictement family/given/city/postalcode — taper 'Paris' en family= retourne forcément 0 (personne ne s'appelle Paris en famille)" },
+      { "code": "BE", "txt": "Refonte complète /api/rpps : recherche INTELLIGENTE en PARALLÈLE. Si l'user tape 'Paris' → 2 requêtes simultanées via Promise.all : (1) Practitioner?name=Paris (au cas où nom propre), (2) PractitionerRole avec location.address-city=Paris + _include practitioner. Merge des Practitioners + dédup par RPPS+adresse" },
+      { "code": "BE", "txt": "Limite par défaut remontée de 20 → 50 et max passe de 100 → 200 pour éviter de brider. Helper fetchFhir() avec timeout 12s + AbortController + User-Agent 'Aveho-EC/0.55' + headers complets" },
+      { "code": "BE", "txt": "Messages d'erreur enrichis : si 403 → 'API ANS bloquée (403 Forbidden) — vérifier IP en production'. Si timeout → 'API ANS indisponible (HTTP timeout)'. Champs debug ajoutés à la réponse : duration_ms, queries_count, success_count, error_count, pracs_found, roles_found" },
+      { "code": "BE", "txt": "Gestion des PractitionerRole multiples : un même praticien peut avoir plusieurs adresses (cabinets multiples). On crée maintenant une entrée par rôle pour les afficher tous, puis dédup par RPPS+cp+commune" },
+      { "code": "FE", "txt": "RppsAutocomplete : limite remontée de 10 → 50, messages d'erreur affichés dans le dropdown (au lieu de just résultats vides). Si l'API ANS répond mais 0 résultat → message clair. Si l'API échoue → l'erreur s'affiche" },
+      { "code": "FE", "txt": "Page /partenaires-rpps refondue : remplacement complet de RppsSearch (avec bouton 'Rechercher' bloquant) par RppsAutocomplete (live au fur et à mesure de la frappe). Astuce affichée dans la modale : 'tape un nom OU une ville'. Le bouton Rechercher est SUPPRIMÉ" },
+      { "code": "FE", "txt": "Carte RPPS : reverse géocodage BAN INSEE pour trouver le nom de la ville au centre de la carte → utilisé comme critère 'ville' dans l'appel /api/rpps. Cache par tile (lat.toFixed(2) + lng.toFixed(2)) en localStorage" },
+      { "code": "FE", "txt": "Carte RPPS : limite remontée de 30 → 100 par profession. Console logs détaillés pour debug : '[Carte RPPS] Médecin → 47 résultats', '[Carte RPPS] résultats finaux 23 / total fetchés 94' (utile pour comprendre pourquoi 0 sur la carte)" },
+      { "code": "AI", "txt": "+15 tests Vitest : détection capitale (2), limites (1), dédup par RPPS+adresse (1), messages erreur 403/timeout (2), min 2 chars autocomplete (3), carte RPPS (3), page /partenaires-rpps utilise autocomplete (1), headers UA (1), parallel Promise.all (1). Total 1388 tests verts (vs 1373)" }
+    ],
+    "themes": ["users", "fixes", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.45.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.44",
     "kind": "hotfix",
     "titre": "🩹 Fix SQL 'column rpps does not exist' · Colonne rpps + adeli + profession + specialite ajoutées sur etablissements_partenaires AVANT les index",
