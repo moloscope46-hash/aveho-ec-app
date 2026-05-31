@@ -50,6 +50,9 @@ export default function ChangelogPage() {
   const [hoverPreview, setHoverPreview] = useState(null); // {noteFile, x, y, html} ou null
   const noteCacheRef = useRef({}); // cache des HTML chargés
   const hoverTimeoutRef = useRef(null);
+  // 0.55.14 : télécharger toutes les notes en ZIP
+  const [zipBusy, setZipBusy] = useState(false);
+  const [zipProgress, setZipProgress] = useState("");
 
   // Stats sur les thèmes filtrés (dynamique)
   const themeCounts = useMemo(() => {
@@ -108,28 +111,42 @@ export default function ChangelogPage() {
   const hasActiveFilters = filter !== "all" || search.trim() || selectedThemes.length > 0;
 
   // 0.55.11 — Hover preview de la note HTML
-  // Charge le HTML, extrait le <body> + styles, et affiche en popup
+  // 0.55.14 — Cache miss retry + meilleur fallback
   async function fetchNoteHtml(noteFile) {
     if (noteCacheRef.current[noteFile]) return noteCacheRef.current[noteFile];
     try {
-      const res = await fetch(`/changelog-notes/${noteFile}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetch(`/changelog-notes/${noteFile}`, { cache: "force-cache" });
+      if (!res.ok) {
+        // Retry sans force-cache (au cas où le SW serve un 503 cacheable)
+        const res2 = await fetch(`/changelog-notes/${noteFile}`, { cache: "no-cache" });
+        if (!res2.ok) throw new Error(`HTTP ${res2.status}`);
+        const fullHtml = await res2.text();
+        const scoped = scopeHtml(fullHtml);
+        noteCacheRef.current[noteFile] = scoped;
+        return scoped;
+      }
       const fullHtml = await res.text();
-      // Extraire body et styles
-      const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-      const styleMatch = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-      const body = bodyMatch ? bodyMatch[1] : fullHtml;
-      const styles = styleMatch ? styleMatch[1] : "";
-      // Compose un fragment scopé
-      const scoped = `<style>${styles.replace(/body\s*{/g, '.hover-note-scope {')}</style><div class="hover-note-scope">${body}</div>`;
+      const scoped = scopeHtml(fullHtml);
       noteCacheRef.current[noteFile] = scoped;
       return scoped;
     } catch (e) {
       console.warn("[Changelog] preview load fail:", noteFile, e);
-      const fallback = `<p style="padding:14px;color:#c0392b;font-family:sans-serif">Impossible de charger ${noteFile}</p>`;
-      noteCacheRef.current[noteFile] = fallback;
-      return fallback;
+      // Fallback élégant — pas cacheé pour qu'on retente la fois suivante
+      return `<div style="padding:24px;font-family:sans-serif;color:#7a4f15;background:#fff8ec">
+        <p style="margin:0 0 8px"><b>⏳ Aperçu indisponible</b></p>
+        <p style="margin:0;font-size:12px;color:#8a98a8">${noteFile}</p>
+        <p style="margin:8px 0 0;font-size:12px">Réessaie le hover dans quelques secondes ou télécharge directement la note.</p>
+      </div>`;
     }
+  }
+
+  // Helper : scope les styles du body de la note pour qu'ils ne fuient pas
+  function scopeHtml(fullHtml) {
+    const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const styleMatch = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+    const body = bodyMatch ? bodyMatch[1] : fullHtml;
+    const styles = styleMatch ? styleMatch[1] : "";
+    return `<style>${styles.replace(/body\s*{/g, '.hover-note-scope {')}</style><div class="hover-note-scope">${body}</div>`;
   }
 
   function handleMouseEnter(e, noteFile) {
@@ -152,6 +169,109 @@ export default function ChangelogPage() {
   function handleMouseLeave() {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setHoverPreview(null);
+  }
+
+  // 0.55.14 — Télécharger toutes les notes HTML en un seul .zip
+  async function downloadAllNotesZip() {
+    if (zipBusy) return;
+    setZipBusy(true);
+    setZipProgress("Préparation…");
+    try {
+      // Dynamic import jszip (économise ~100KB initial)
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+
+      const allNotes = ALL_VERSIONS.filter(v => v.noteFile);
+      let count = 0;
+      const total = allNotes.length;
+
+      for (const v of allNotes) {
+        setZipProgress(`${count}/${total}…`);
+        try {
+          const res = await fetch(`/changelog-notes/${v.noteFile}`);
+          if (res.ok) {
+            const txt = await res.text();
+            zip.file(v.noteFile, txt);
+            count++;
+          } else {
+            console.warn(`[Zip] ${v.noteFile} → HTTP ${res.status}`);
+          }
+        } catch (e) {
+          console.warn(`[Zip] ${v.noteFile} fail:`, e);
+        }
+      }
+
+      // Ajouter un INDEX.html qui liste toutes les notes
+      const indexHtml = makeIndexHtml(allNotes);
+      zip.file("INDEX.html", indexHtml);
+
+      setZipProgress("Compression…");
+      const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+
+      // Download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const today = new Date().toISOString().slice(0, 10);
+      a.download = `aveho-changelog-notes-${today}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      setZipProgress(`✓ ${count} notes`);
+      setTimeout(() => setZipProgress(""), 2000);
+    } catch (e) {
+      console.error("[Zip] erreur :", e);
+      alert("Erreur lors de la création du zip : " + e.message);
+      setZipProgress("");
+    } finally {
+      setZipBusy(false);
+    }
+  }
+
+  // Helper : génère un index.html pour le zip
+  function makeIndexHtml(notes) {
+    const rows = notes.map(v => {
+      const kindClass = v.kind === "hotfix" ? "hotfix" : "version";
+      return `<tr class="${kindClass}">
+        <td><a href="${v.noteFile}">v${v.v}</a></td>
+        <td>${v.kind === "hotfix" ? "Hotfix" : "Version"}</td>
+        <td>${v.date || "—"}</td>
+        <td>${(v.titre || "").replace(/</g, "&lt;")}</td>
+      </tr>`;
+    }).join("\n");
+
+    return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — Index des notes</title>
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#f4f7fa;color:#2a3a48;margin:0;padding:0}
+.wrap{max-width:1000px;margin:0 auto;padding:32px 24px}
+header{background:linear-gradient(135deg,#142131,#185FA5);color:#fff;padding:32px 28px;border-radius:14px;margin-bottom:20px}
+header h1{margin:0;font-size:22px}
+header p{margin:6px 0 0;font-size:14px;opacity:.85}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+th{text-align:left;background:#f4f7fa;padding:10px 12px;font-size:12px;color:#142131;border-bottom:2px solid #e3e9ee}
+td{padding:10px 12px;border-bottom:1px solid #e3e9ee;font-size:13px}
+td a{color:#185FA5;font-weight:700;font-family:'Consolas',monospace;text-decoration:none}
+td a:hover{text-decoration:underline}
+tr.hotfix td:nth-child(2){color:#7a4f15;font-weight:600}
+tr.version td:nth-child(2){color:#185FA5;font-weight:600}
+footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
+</style></head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Aveho EC — Notes de version</h1>
+    <p>Index des ${notes.length} notes publiées · Export du ${new Date().toLocaleDateString("fr-FR")}</p>
+  </header>
+  <table>
+    <thead><tr><th>Version</th><th>Type</th><th>Date</th><th>Titre</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <footer>Cliquez sur une version pour ouvrir la note HTML correspondante.</footer>
+</div>
+</body></html>`;
   }
 
   return (
@@ -216,6 +336,33 @@ export default function ChangelogPage() {
                 <i className="ti ti-x" /> Réinitialiser
               </button>
             )}
+            {/* 0.55.14 : Télécharger toutes les notes en ZIP */}
+            <button
+              onClick={downloadAllNotesZip}
+              disabled={zipBusy}
+              title="Télécharger toutes les notes HTML en un seul .zip"
+              style={{
+                background: zipBusy ? "#8a98a8" : "linear-gradient(135deg, #142131, #185FA5)",
+                color: "#fff",
+                border: "none",
+                padding: "5px 12px",
+                borderRadius: 14,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: zipBusy ? "wait" : "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                marginLeft: "auto",
+              }}
+            >
+              {zipBusy ? (
+                <><i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> {zipProgress}</>
+              ) : (
+                <><i className="ti ti-file-zip" /> Télécharger toutes les notes ({ALL_VERSIONS.filter(v => v.noteFile).length})</>
+              )}
+            </button>
           </div>
 
           {/* Thèmes (multi-select) */}

@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.55.13";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.55.14";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -72,6 +72,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheFirst(req, STATIC_CACHE));
     return;
   }
+  // Alpha 0.55.14 : notes changelog en cacheFirst (jamais modifiées une fois publiées)
+  // Fix le 503 sur le tooltip hover qui faisait fetch sur /changelog-notes/*.html
+  if (url.pathname.startsWith("/changelog-notes/")) {
+    event.respondWith(cacheFirst(req, STATIC_CACHE));
+    return;
+  }
   if (url.hostname.endsWith(".supabase.co") && (url.pathname.includes("/rest/") || url.pathname.includes("/rpc/"))) {
     event.respondWith(staleWhileRevalidate(req, DATA_CACHE));
     return;
@@ -92,8 +98,16 @@ async function cacheFirst(req, cacheName) {
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch (e) {
+    // 0.55.14 : pour les notes changelog, renvoyer une vraie 503 lisible
+    // (au lieu de Response.error() qui rend le fetch côté JS un network error)
+    const url = new URL(req.url);
+    if (url.pathname.startsWith("/changelog-notes/")) {
+      return new Response(
+        `<p style="padding:14px;color:#c0392b;font-family:sans-serif">Note non disponible hors-ligne. Reconnectez-vous pour la charger.</p>`,
+        { status: 503, statusText: "Offline", headers: { "Content-Type": "text/html" } }
+      );
+    }
     // Alpha 0.52.7 : pas de bruit en console pour les chunks manquants
-    // (le navigateur retentera automatiquement à la prochaine navigation)
     return Response.error();
   }
 }

@@ -119,6 +119,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.14",
+    "kind": "hotfix",
+    "titre": "Fix 503 sur tooltip hover changelog + bouton 'Télécharger toutes les notes' en ZIP",
+    "chantiers": [
+      { "code": "FIX", "txt": "Service Worker : route /changelog-notes/* en cacheFirst (au lieu de networkFirst qui renvoyait 503 quand offline ou SW intercepte mal). Cache les notes au 1er hover, instant ensuite." },
+      { "code": "FIX", "txt": "fetchNoteHtml côté changelog : retry sans force-cache si 1er fetch échoue, fallback élégant '⏳ Aperçu indisponible' au lieu d'erreur rouge." },
+      { "code": "AI", "txt": "Bouton 'Télécharger toutes les notes' sur /changelog : zip contenant tous les .html + un INDEX.html cliquable. Utilise JSZip via dynamic import (~100KB économisés à l'init)." },
+      { "code": "UX", "txt": "Indicateur de progression pendant la création du zip (1/22, 2/22... puis Compression... puis ✓ X notes)" }
+    ],
+    "themes": ["fixes", "ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.14.html"
+  },
+  {
     "v": "0.55.13",
     "kind": "version",
     "titre": "Refonte gestion utilisateurs (partie B) : connexion par empreinte digitale (WebAuthn) sur mobile",
