@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.15 — Bouton SQL sur changelog</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — REQUÊTE SQL DANS CHANGELOG</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.15 — Bouton "Requête SQL" sur chaque note du changelog
+      <small>36 fichiers SQL copiés dans /public · bouton SQL navy+teal sur chaque carte version · popup d'affichage avec copier / télécharger</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.15-alpha</code></span>
+      <span><b>Tests :</b> 944 verts</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Quand on parcourt le changelog, on tombe régulièrement sur des versions qui nécessitent l'exécution d'un patch SQL dans Supabase pour fonctionner. Avant cette version, il fallait fouiller le dossier <code>/supabase/</code> du repo pour les retrouver.</p>
+    <p>Maintenant, sur chaque carte de version qui a un SQL associé, un nouveau bouton <b>SQL</b> (navy + teal) apparaît à côté du bouton "HTML". Au clic, une popup s'ouvre avec :</p>
+    <ul>
+      <li>Header gradient indiquant la version et le nom du fichier</li>
+      <li>Encart instructions Supabase (jaune)</li>
+      <li>Le contenu SQL complet en mode syntax-highlighted (fond navy, texte gris clair)</li>
+      <li>Bouton <b>Copier</b> dans le presse-papier (feedback vert "Copié !" 2s)</li>
+      <li>Bouton <b>Télécharger</b> le .sql direct</li>
+      <li>Footer avec nombre de lignes et taille du fichier</li>
+      <li>Fermeture par X, Escape, ou clic en dehors</li>
+    </ul>
+  </div>
+
+  <h2>📦 Couverture</h2>
+  <div class="panel hi">
+    <p><b>36 versions équipées</b> avec un patch SQL associé :</p>
+    <ul>
+      <li>Anciennes : 0.15, 0.16, 0.16.1, 0.17.1, 0.20, 0.20.1, 0.21-0.24, 0.29-0.34, 0.37, 0.40-0.44</li>
+      <li>Récentes : 0.46-0.47, 0.50-0.54, 0.55.3, 0.55.6</li>
+      <li>Tout récentes : 0.55.12 (refonte users A), 0.55.13 (WebAuthn empreinte)</li>
+    </ul>
+    <p>Les versions sans SQL (hotfix UI, fix de SW, refacto JS pur, etc.) n'affichent pas le bouton SQL — uniquement le bouton HTML.</p>
+  </div>
+
+  <h2>🔧 Architecture</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Fichiers SQL servis statiquement</h3>
+    <p>Tous les SQL de <code>supabase/aveho-PATCH-vers-*.sql</code> sont maintenant aussi présents dans <code>public/changelog-sql/</code>. Vercel les sert directement avec l'URL <code>/changelog-sql/aveho-PATCH-vers-X.Y.Z.sql</code>.</p>
+
+    <h3>Référence dans versions-data.js</h3>
+    <p>Chaque entrée de version concernée gagne un champ <code>sqlFile</code> :</p>
+    <pre><code>{
+  "v": "0.55.13",
+  "kind": "version",
+  "titre": "...",
+  "noteFile": "NOTE-VERSION-Alpha-0.55.13.html",
+  "sqlFile": "aveho-PATCH-vers-0.55.13.sql"
+}</code></pre>
+
+    <h3>État de la modale</h3>
+    <p>Le state <code>sqlModal</code> contient <code>{ version, file, content }</code>. Le contenu est fetché lazy au 1er ouverture, puis caché dans un <code>sqlCacheRef</code> pour éviter de refetch si l'user rouvre la même modale.</p>
+
+    <h3>Comportements</h3>
+    <ul>
+      <li>Pendant le chargement : spinner teal "Chargement…"</li>
+      <li>Sur erreur : <code>-- Erreur de chargement\n-- HTTP 404</code> affiché dans la zone SQL</li>
+      <li>Copier : <code>navigator.clipboard.writeText()</code> avec fallback alert si refusé</li>
+      <li>Télécharger : lien direct vers <code>/changelog-sql/{file}</code> avec attribut <code>download</code></li>
+      <li>Échap, clic backdrop, X → ferme</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>public/changelog-sql/</code> : <b>NOUVEAU dossier</b> avec 36 fichiers .sql</li>
+    <li><code>app/changelog/page.js</code> : bouton SQL + modale + helpers (~180 lignes ajoutées)</li>
+    <li><code>app/changelog/versions-data.js</code> : champ sqlFile ajouté sur 36 entrées</li>
+    <li><code>app/changelog/versions-data.js</code> : nouvelle entrée 0.55.15 en tête</li>
+    <li><code>package.json</code> : 0.55.14 → 0.55.15</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <p>Pas de SQL pour cette version. Juste :</p>
+    <pre><code>cd C:\aveho-ec-app
+# Décompresser le zip par-dessus
+
+# ⚠ Important : le dossier public/changelog-sql/ contient maintenant
+# 36 fichiers .sql qui doivent être push aussi
+git add -A
+git commit -m "Alpha 0.55.15 - Bouton SQL sur changelog (36 fichiers + modale)"
+git push origin main</code></pre>
+    <p>Vercel build auto (~2 min). F12 → Clear site data → reload <code>/changelog</code>.</p>
+  </div>
+
+  <h2>Tests</h2>
+  <div class="panel">
+    <ol>
+      <li>Ouvre <code>/changelog</code></li>
+      <li>Repère une version avec un encart SQL connu (par ex. 0.55.13 — WebAuthn). Tu dois voir 2 boutons : <b>HTML</b> + <b>SQL</b></li>
+      <li>Clic sur <b>SQL</b> → popup s'ouvre, spinner brièvement, puis contenu SQL affiché</li>
+      <li>Clic sur <b>Copier</b> → "Copié !" vert pendant 2s · colle dans Supabase pour vérifier</li>
+      <li>Clic sur <b>Télécharger</b> → fichier .sql téléchargé</li>
+      <li>Échap → ferme la modale</li>
+      <li>Une version SANS SQL (ex: 0.55.10 hotfix) → seul le bouton HTML est présent</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 25ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.14 → <b>0.55.15</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.15 · 31 mai 2026</p>
+    <p>36 SQL exposés · 1 modale · 1 cache · 944 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

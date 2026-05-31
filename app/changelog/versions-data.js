@@ -119,6 +119,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.15",
+    "kind": "version",
+    "titre": "Bouton 'Requête SQL' sur chaque version du changelog : popup avec contenu, copier, télécharger",
+    "chantiers": [
+      { "code": "AI", "txt": "Sur chaque carte de version du changelog, nouveau bouton 'SQL' (navy + teal) à côté du bouton 'HTML'. Visible uniquement sur les versions qui ont un patch SQL associé." },
+      { "code": "UX", "txt": "Popup d'affichage du SQL : header gradient avec nom du fichier, instructions Supabase, contenu syntax-highlighted sur fond navy, footer avec nb lignes + taille." },
+      { "code": "UX", "txt": "3 actions dans la popup : bouton 'Copier' (clipboard, feedback vert 'Copié !'), bouton 'Télécharger' (.sql direct), bouton 'X' fermer + Escape" },
+      { "code": "AI", "txt": "36 fichiers SQL copiés dans public/changelog-sql/ (de 0.15 à 0.55.13). Cache côté client après 1er chargement." },
+      { "code": "•", "txt": "Champ 'sqlFile' ajouté dans versions-data.js sur les 36 versions concernées" }
+    ],
+    "themes": ["ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.15.html"
+  },
+  {
     "v": "0.55.14",
     "kind": "hotfix",
     "titre": "Fix 503 sur tooltip hover changelog + bouton 'Télécharger toutes les notes' en ZIP",
@@ -147,7 +162,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["rls_securite", "ux"],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.55.13.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.55.13.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.13.sql"
   },
   {
     "v": "0.55.12",
@@ -165,7 +181,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["rls_securite", "ux", "fixes"],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.55.12.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.55.12.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.12.sql"
   },
   {
     "v": "0.55.11",
@@ -252,7 +269,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["ux", "documentation", "stats_dashboard"],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.55.6.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.55.6.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.6.sql"
   },
   {
     "v": "0.55.5",
@@ -294,7 +312,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["ux", "fixes", "rls_securite"],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-HOTFIX-Alpha-0.55.3.html"
+    "noteFile": "NOTE-HOTFIX-Alpha-0.55.3.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.3.sql"
   },
   {
     "v": "0.55.2",
@@ -333,7 +352,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["ux", "documentation", "stats_dashboard"],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.54.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.54.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.54.sql"
   },
   {
     "v": "0.53.0",
@@ -375,7 +395,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.53.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.53.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.53.sql"
   },
   {
     "v": "0.52.8",
@@ -436,7 +457,8 @@ export const ALL_VERSIONS = [
       "notifications"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.52.5.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.52.5.html",
+    "sqlFile": "aveho-PATCH-vers-0.52.5.sql"
   },
   {
     "v": "0.52.4",
@@ -555,7 +577,8 @@ export const ALL_VERSIONS = [
       "recherche"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.52.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.52.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.52.sql"
   },
   {
     "v": "0.51.0",
@@ -590,7 +613,8 @@ export const ALL_VERSIONS = [
       "recherche"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.51.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.51.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.51.sql"
   },
   {
     "v": "0.50.0",
@@ -621,7 +645,8 @@ export const ALL_VERSIONS = [
       "documentation"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.50.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.50.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.50.sql"
   },
   {
     "v": "0.49.6",
@@ -786,7 +811,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.47.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.47.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.47.sql"
   },
   {
     "v": "0.46.0",
@@ -832,7 +858,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.46.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.46.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.46.sql"
   },
   {
     "v": "0.46.0",
@@ -848,7 +875,8 @@ export const ALL_VERSIONS = [
       "divers"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-HOTFIX-Alpha-0.46.0.html"
+    "noteFile": "NOTE-HOTFIX-Alpha-0.46.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.46.sql"
   },
   {
     "v": "0.45.0",
@@ -926,7 +954,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.44.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.44.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.44.sql"
   },
   {
     "v": "0.43.0",
@@ -969,7 +998,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.43.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.43.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.43.sql"
   },
   {
     "v": "0.43.0",
@@ -987,7 +1017,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-HOTFIX-Alpha-0.43.0.html"
+    "noteFile": "NOTE-HOTFIX-Alpha-0.43.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.43.sql"
   },
   {
     "v": "0.42.0",
@@ -1023,7 +1054,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.42.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.42.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.42.sql"
   },
   {
     "v": "0.41.0",
@@ -1063,7 +1095,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.41.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.41.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.41.sql"
   },
   {
     "v": "0.41.0",
@@ -1080,7 +1113,8 @@ export const ALL_VERSIONS = [
       "infrastructure"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-HOTFIX-Alpha-0.41.0.html"
+    "noteFile": "NOTE-HOTFIX-Alpha-0.41.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.41.sql"
   },
   {
     "v": "0.40.0",
@@ -1117,7 +1151,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.40.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.40.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.40.sql"
   },
   {
     "v": "0.39.0",
@@ -1233,7 +1268,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.37.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.37.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.37.sql"
   },
   {
     "v": "0.36.0",
@@ -1349,7 +1385,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.34.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.34.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.34.sql"
   },
   {
     "v": "0.33.0",
@@ -1382,7 +1419,8 @@ export const ALL_VERSIONS = [
       "templates"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.33.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.33.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.33.sql"
   },
   {
     "v": "0.32.0",
@@ -1406,7 +1444,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.32.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.32.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.32.sql"
   },
   {
     "v": "0.31.0",
@@ -1442,7 +1481,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.31.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.31.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.31.sql"
   },
   {
     "v": "0.30.0",
@@ -1480,7 +1520,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.30.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.30.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.30.sql"
   },
   {
     "v": "0.29.1",
@@ -1545,7 +1586,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.29.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.29.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.29.sql"
   },
   {
     "v": "0.28.0",
@@ -1709,7 +1751,8 @@ export const ALL_VERSIONS = [
       "notifications"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.24.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.24.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.24.sql"
   },
   {
     "v": "0.23.0",
@@ -1742,7 +1785,8 @@ export const ALL_VERSIONS = [
       "notifications"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.23.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.23.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.23.sql"
   },
   {
     "v": "0.22.0",
@@ -1778,7 +1822,8 @@ export const ALL_VERSIONS = [
       "divers"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.22.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.22.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.22.sql"
   },
   {
     "v": "0.21.0",
@@ -1815,7 +1860,8 @@ export const ALL_VERSIONS = [
       "infrastructure"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.21.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.21.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.21.sql"
   },
   {
     "v": "0.20.0",
@@ -1851,7 +1897,8 @@ export const ALL_VERSIONS = [
       "recherche"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.20.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.20.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.20.sql"
   },
   {
     "v": "0.19.0",
@@ -1953,7 +2000,8 @@ export const ALL_VERSIONS = [
       "notifications"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.17.1.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.17.1.html",
+    "sqlFile": "aveho-PATCH-vers-0.17.1.sql"
   },
   {
     "v": "0.17.0",
@@ -2027,7 +2075,8 @@ export const ALL_VERSIONS = [
       "transferts"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.16.1.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.16.1.html",
+    "sqlFile": "aveho-PATCH-vers-0.16.1.sql"
   },
   {
     "v": "0.16.0",
@@ -2065,7 +2114,8 @@ export const ALL_VERSIONS = [
       "stats_dashboard"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.16.0.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.16.0.html",
+    "sqlFile": "aveho-PATCH-vers-0.16.sql"
   },
   {
     "v": "0.15.6",
@@ -2189,7 +2239,8 @@ export const ALL_VERSIONS = [
       "recherche"
     ],
     "date": "31 mai 2026",
-    "noteFile": "NOTE-VERSION-Alpha-0.15.html"
+    "noteFile": "NOTE-VERSION-Alpha-0.15.html",
+    "sqlFile": "aveho-PATCH-vers-0.15.sql"
   },
   {
     "v": "0.14",

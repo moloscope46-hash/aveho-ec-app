@@ -53,6 +53,10 @@ export default function ChangelogPage() {
   // 0.55.14 : télécharger toutes les notes en ZIP
   const [zipBusy, setZipBusy] = useState(false);
   const [zipProgress, setZipProgress] = useState("");
+  // 0.55.15 : modale d'affichage du SQL
+  const [sqlModal, setSqlModal] = useState(null); // { version, file, content }
+  const [sqlCopied, setSqlCopied] = useState(false);
+  const sqlCacheRef = useRef({});
 
   // Stats sur les thèmes filtrés (dynamique)
   const themeCounts = useMemo(() => {
@@ -170,6 +174,48 @@ export default function ChangelogPage() {
     if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     setHoverPreview(null);
   }
+
+  // 0.55.15 — fetch du contenu SQL quand on ouvre la modale
+  useEffect(() => {
+    if (!sqlModal || sqlModal.content) return;
+    const { file } = sqlModal;
+    if (sqlCacheRef.current[file]) {
+      setSqlModal((m) => m ? { ...m, content: sqlCacheRef.current[file] } : null);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await fetch(`/changelog-sql/${file}`, { cache: "force-cache" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const txt = await res.text();
+        sqlCacheRef.current[file] = txt;
+        setSqlModal((m) => m && m.file === file ? { ...m, content: txt } : m);
+      } catch (e) {
+        setSqlModal((m) => m && m.file === file ? { ...m, content: `-- Erreur de chargement\n-- ${e.message}` } : m);
+      }
+    })();
+  }, [sqlModal?.file]);
+
+  async function copySqlToClipboard() {
+    if (!sqlModal?.content) return;
+    try {
+      await navigator.clipboard.writeText(sqlModal.content);
+      setSqlCopied(true);
+      setTimeout(() => setSqlCopied(false), 2000);
+    } catch (e) {
+      alert("Copie clipboard refusée. Utilisez Ctrl+A puis Ctrl+C dans la fenêtre.");
+    }
+  }
+
+  // 0.55.15 — Escape pour fermer la modale SQL
+  useEffect(() => {
+    if (!sqlModal) return;
+    function handleKey(e) {
+      if (e.key === "Escape") setSqlModal(null);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [sqlModal]);
 
   // 0.55.14 — Télécharger toutes les notes HTML en un seul .zip
   async function downloadAllNotesZip() {
@@ -469,6 +515,22 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                           <i className="ti ti-download" /> HTML
                         </a>
                       )}
+                      {/* 0.55.15 : bouton Requête SQL */}
+                      {v.sqlFile && (
+                        <button
+                          onClick={() => setSqlModal({ version: v.v, file: v.sqlFile, content: null })}
+                          title={`Voir la requête SQL ${v.v}`}
+                          style={{ 
+                            display: "inline-flex", alignItems: "center", gap: 3,
+                            background: "#142131", border: "1px solid #142131",
+                            color: "#7CC8C8", padding: "3px 8px", borderRadius: 12,
+                            fontSize: 11, fontWeight: 600, cursor: "pointer",
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          <i className="ti ti-database" /> SQL
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -591,6 +653,186 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
             }}
             dangerouslySetInnerHTML={{ __html: hoverPreview.html }} 
           />
+        </div>
+      )}
+
+      {/* 0.55.15 — Modale d'affichage du SQL d'une version */}
+      {sqlModal && (
+        <div
+          onClick={(e) => e.target === e.currentTarget && setSqlModal(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(20,33,49,.7)",
+            zIndex: 9991,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px 14px",
+            animation: "fadeIn .15s",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: 14,
+              width: "100%",
+              maxWidth: 920,
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: "0 30px 80px rgba(0,0,0,.45)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              background: "linear-gradient(135deg, #142131 0%, #185FA5 100%)",
+              color: "#fff",
+              padding: "14px 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}>
+              <i className="ti ti-database" style={{ fontSize: 22, color: "#7CC8C8" }} />
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#cfe4f5", fontWeight: 700 }}>
+                  REQUÊTE SQL — VERSION {sqlModal.version}
+                </div>
+                <div style={{ fontSize: 13, fontFamily: "Consolas, monospace", marginTop: 2 }}>
+                  {sqlModal.file}
+                </div>
+              </div>
+              <button
+                onClick={copySqlToClipboard}
+                disabled={!sqlModal.content}
+                title="Copier dans le presse-papier"
+                style={{
+                  background: sqlCopied ? "#5aa05a" : "#fff",
+                  color: sqlCopied ? "#fff" : "#142131",
+                  border: "none",
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  cursor: sqlModal.content ? "pointer" : "wait",
+                  fontFamily: "inherit",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  minHeight: 36,
+                }}
+              >
+                <i className={`ti ${sqlCopied ? "ti-check" : "ti-copy"}`} />
+                {sqlCopied ? "Copié !" : "Copier"}
+              </button>
+              <a
+                href={sqlModal.content ? `/changelog-sql/${sqlModal.file}` : "#"}
+                download={sqlModal.file}
+                title="Télécharger le fichier .sql"
+                style={{
+                  background: "#7CC8C8",
+                  color: "#142131",
+                  border: "none",
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  minHeight: 36,
+                }}
+              >
+                <i className="ti ti-download" /> Télécharger
+              </a>
+              <button
+                onClick={() => setSqlModal(null)}
+                title="Fermer"
+                style={{
+                  background: "transparent",
+                  color: "#fff",
+                  border: "none",
+                  padding: 6,
+                  cursor: "pointer",
+                  fontSize: 22,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {/* Instructions */}
+            <div style={{
+              background: "#fff8ec",
+              borderBottom: "1px solid #f0d59f",
+              padding: "8px 18px",
+              fontSize: 11.5,
+              color: "#7a4f15",
+              lineHeight: 1.5,
+            }}>
+              <i className="ti ti-info-circle" /> Coller dans <b>Supabase Dashboard → SQL Editor → Run</b>. Le patch est idempotent (peut être exécuté plusieurs fois sans risque).
+            </div>
+
+            {/* Contenu SQL */}
+            <div style={{
+              flex: 1,
+              overflow: "auto",
+              background: "#142131",
+              padding: 0,
+            }}>
+              {!sqlModal.content ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 200,
+                  color: "#7CC8C8",
+                }}>
+                  <i className="ti ti-loader-2" style={{ fontSize: 24, animation: "spin 1s linear infinite" }} />
+                  <span style={{ marginLeft: 10, fontSize: 13 }}>Chargement…</span>
+                </div>
+              ) : (
+                <pre style={{
+                  margin: 0,
+                  padding: "16px 20px",
+                  color: "#e8edf2",
+                  fontFamily: "Consolas, 'Menlo', monospace",
+                  fontSize: 12.5,
+                  lineHeight: 1.55,
+                  whiteSpace: "pre",
+                  overflow: "auto",
+                }}>
+                  <code>{sqlModal.content}</code>
+                </pre>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              background: "#f4f7fa",
+              borderTop: "1px solid #e3e9ee",
+              padding: "8px 18px",
+              fontSize: 11,
+              color: "#8a98a8",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+            }}>
+              <span>
+                <i className="ti ti-file-text" /> {sqlModal.content ? `${sqlModal.content.split("\n").length} lignes · ${(sqlModal.content.length / 1024).toFixed(1)} Ko` : "—"}
+              </span>
+              <span>Échap pour fermer</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
