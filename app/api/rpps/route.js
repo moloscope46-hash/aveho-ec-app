@@ -106,14 +106,16 @@ export async function GET(req) {
   const q = (searchParams.get("q") || "").trim();
   const profession = (searchParams.get("profession") || "").trim();
   const cp = (searchParams.get("cp") || "").trim();
+  const ville = (searchParams.get("ville") || "").trim();
+  const mode = (searchParams.get("mode") || "").trim();
   const rppsExact = (searchParams.get("rpps") || "").trim();
-  const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 50);
+  const limit = Math.min(parseInt(searchParams.get("limit") || "20", 10), 100);
   const includeRoles = searchParams.get("withRoles") !== "false";
 
-  if (!q && !rppsExact && !profession && !cp) {
+  if (!q && !rppsExact && !profession && !cp && !ville) {
     return Response.json({
       ok: false,
-      error: "Au moins un critère requis (q, rpps, profession, cp)",
+      error: "Au moins un critère requis (q, rpps, profession, cp, ville)",
     }, { status: 400 });
   }
 
@@ -146,8 +148,8 @@ export async function GET(req) {
     const practitioners = (json.entry || []).map((e) => e.resource);
 
     // Pour chaque practitioner, récupérer ses rôles (profession + adresse)
-    // Limite à 10 pour ne pas exploser le temps de réponse
-    const limited = practitioners.slice(0, 10);
+    // Limite à 20 pour ne pas exploser le temps de réponse
+    const limited = practitioners.slice(0, Math.min(limit, 20));
     let normalized;
     if (includeRoles && limited.length > 0) {
       const roleResults = await Promise.all(
@@ -158,7 +160,7 @@ export async function GET(req) {
       normalized = limited.map((p) => normalizePractitioner(p, []));
     }
 
-    // Filtre client côté serveur pour profession et CP (FHIR ne filtre pas dessus directement)
+    // Filtre client côté serveur (FHIR ne filtre pas dessus directement)
     let filtered = normalized;
     if (profession) {
       const pl = profession.toLowerCase();
@@ -166,6 +168,14 @@ export async function GET(req) {
     }
     if (cp) {
       filtered = filtered.filter((e) => (e.cp || "").startsWith(cp));
+    }
+    if (ville) {
+      const vl = ville.toLowerCase();
+      filtered = filtered.filter((e) => (e.commune || "").toLowerCase().includes(vl));
+    }
+    if (mode) {
+      const ml = mode.toLowerCase();
+      filtered = filtered.filter((e) => (e.mode_exercice || "").toLowerCase().includes(ml));
     }
 
     return Response.json({

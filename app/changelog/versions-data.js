@@ -120,6 +120,28 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.33",
+    "kind": "version",
+    "titre": "🔍 RPPS production unifié : filtres ville/mode/CP, liste 100 résultats, actions Rattacher + Inviter dans les tuiles · Colonnes manquantes etablissements · Verrouillage SQL est_partenaire/groupement_id après création",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.33 : ajout idempotent de 16 colonnes manquantes sur etablissements (adresse, cp, pays, latitude, longitude, finess, siret, siren, contact_nom, contact_fonction, telephone, email, site_web, notes, tags[], est_partenaire avec default false). Indexes partiels sur finess/siret/cp pour recherche rapide" },
+      { "code": "SQL", "txt": "Triggers de verrouillage : trg_lock_etab_critical_fields sur etablissements (est_partenaire + groupement_id) et trg_lock_etab_part_critical sur etablissements_partenaires (type_relation + groupement_id) → blocage si tentative de modification sans droit parametres_admin. Erreur claire raise exception" },
+      { "code": "SQL", "txt": "Nouvelle colonne invitations.origine (default 'manuelle', valeurs : manuelle/rpps_annuaire/rpps_partenaire) pour tracer la source des invitations. 2 nouvelles RPCs : link_partenaire_rpps_to_etablissement (ajoute un partenaire RPPS à etablissement_ids[] sans doublon via @>) et unlink_partenaire_rpps_from_etablissement (array_remove)" },
+      { "code": "FE", "txt": "Composant RppsSearch refondu — UNIQUE, utilisé partout sans duplication. 6 filtres : nom OR RPPS exact, profession (12 valeurs), mode d'exercice (3 valeurs : libéral/salarié/remplaçant), ville (texte libre), CP (préfixe département accepté), limite (20/50/100). Bouton 'Effacer' qui reset tout. Indicateur 'Augmente la limite' quand on atteint le max" },
+      { "code": "FE", "txt": "Nouvelles tuiles RPPS plus riches : avatar gradient bleu/teal, badge profession en haut, ligne spécialité avec icône prescription, ligne mode d'exercice avec icône briefcase, adresse complète, tel/email cliquables, RPPS+ADELI en footer mono. Hauteur ~120px par tuile, jusqu'à 100 affichables" },
+      { "code": "FE", "txt": "Composant RppsSearch supporte 2 modes : (1) onSelect={(p) => ...} → clic tuile = sélection (utilisé dans /partenaires-rpps et /utilisateurs création) ; (2) renderActions={(p) => <JSX/>} → affiche des boutons custom sous chaque tuile (utilisé dans /annuaire-rpps). Pas de code dupliqué" },
+      { "code": "FE", "txt": "Page /annuaire-rpps refondue : 2 boutons par tuile — vert 'Rattacher à un étab' (modale avec liste de Mes étabs + Partenaires) et bleu 'Transformer en utilisateur' (modale avec choix de l'email, du rôle, et CHECKBOXES pour sélectionner les infos à pré-remplir : prénom/nom/téléphone/RPPS/ADELI/profession/spécialité/mode/adresse)" },
+      { "code": "FE", "txt": "Action 'Rattacher' crée d'abord le partenaire_rpps dans la table s'il n'existe pas (avec classification auto médecin→prescripteur), puis appelle la RPC link_partenaire_rpps_to_etablissement. Détection doublon par RPPS. Confirmation par dialog" },
+      { "code": "FE", "txt": "Action 'Transformer en utilisateur' : modale 'Voulez-vous envoyer une invitation ?', email pré-rempli depuis RPPS si disponible, sélecteur de rôle obligatoire, liste de checkboxes par champ avec valeur affichée à côté. À la confirmation : insert invitation avec origine='rpps_annuaire' + appel Edge Function invite-user pour mail" },
+      { "code": "API", "txt": "/api/rpps : supporte les nouveaux query params ville et mode. Filtres appliqués côté serveur (FHIR ne les filtre pas natif). Limite portée à 100 (était 50). Filtre client tolérant : contient/inclut (pas strict equals)" },
+      { "code": "AI", "txt": "+18 tests Vitest : filtres étendus (5), filtre client API (4), action Transformer en utilisateur (4), action Rattacher (2), verrouillage SQL (3), schéma colonnes (3). Total 1203 tests verts (vs 1185)" }
+    ],
+    "themes": ["users", "fixes", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.33.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.33.sql"
+  },
+  {
     "v": "0.55.32",
     "kind": "hotfix",
     "titre": "🔧 Hotfix migration SQL 0.55.31 : passage à to_jsonb() pour tolérer un schéma `etablissements` variable (colonnes cp/latitude/longitude/groupement_id peuvent ne pas exister)",

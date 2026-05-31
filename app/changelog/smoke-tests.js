@@ -27,6 +27,54 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.33 — Colonnes manquantes + verrouillage + actions RPPS ==============
+  "0.55.33": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Colonnes etablissements (cp, finess, siret) présentes", async () => {
+      const { error } = await supabase.from("etablissements").select("cp, finess, siret, latitude, longitude").limit(1);
+      if (error?.message?.match(/does not exist|column/)) {
+        return { ok: false, msg: "Colonnes absentes — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Toutes colonnes OK" };
+    }));
+
+    results.push(await runTest("Colonne invitations.origine présente", async () => {
+      const { error } = await supabase.from("invitations").select("origine").limit(1);
+      if (error?.message?.match(/does not exist|column/)) {
+        return { ok: false, msg: "Colonne origine absente" };
+      }
+      return { ok: !error, msg: "Origine OK" };
+    }));
+
+    results.push(await runTest("RPC link_partenaire_rpps_to_etablissement", async () => {
+      const { error } = await supabase.rpc("link_partenaire_rpps_to_etablissement", {
+        p_partenaire_rpps_id: "00000000-0000-0000-0000-000000000000",
+        p_etablissement_id: "00000000-0000-0000-0000-000000000000",
+      });
+      if (error?.message?.includes("does not exist")) return { ok: false, msg: "RPC absente" };
+      return { ok: true, msg: "RPC déclarée" };
+    }));
+
+    results.push(await runTest("API /api/rpps?ville=Paris répond", async () => {
+      try {
+        const res = await fetch("/api/rpps?ville=Paris&limit=5");
+        const data = await res.json();
+        return { ok: !!data, msg: data.ok ? `${data.count} résultats` : data.error };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /annuaire-rpps chargeable", async () => {
+      const mod = await import("../annuaire-rpps/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.32 — Hotfix migration SQL robuste ==============
   "0.55.32": async () => {
     const supabase = createClient();

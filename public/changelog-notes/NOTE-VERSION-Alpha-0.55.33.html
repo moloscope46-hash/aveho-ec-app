@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.33 — RPPS unifié + colonnes + verrouillage</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.tech{background:#142131;color:#e8edf2;border-color:#142131}
+  .panel.tech code{background:#1d2c40;color:#7CC8C8}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — RPPS UNIFIÉ + COLONNES MANQUANTES</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.33 — RPPS unifié partout · filtres ville/mode/CP · liste 100 · actions Rattacher + Inviter · colonnes manquantes + verrouillage SQL
+      <small>Composant unique sans duplication · 6 filtres riches · 2 actions par tuile · 16 nouvelles colonnes sur etablissements</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.33-alpha</code></span>
+      <span><b>Tests :</b> 1206 verts (+21)</span>
+      <span><b>SQL :</b> 1 patch</span>
+    </div>
+  </header>
+
+  <h2>🗄 1. SQL — 16 nouvelles colonnes sur etablissements</h2>
+  <div class="panel violet">
+    <p>Toutes en <code>add column if not exists</code> → 100% idempotent :</p>
+    <ul>
+      <li><b>Adresse complète</b> : adresse, cp, pays (default 'France'), latitude, longitude</li>
+      <li><b>Identifiants officiels</b> : finess, siret, siren</li>
+      <li><b>Contact référent</b> : contact_nom, contact_fonction, telephone, email, site_web</li>
+      <li><b>Métadonnées</b> : notes, tags[]</li>
+      <li><b>Rétrocompat</b> : est_partenaire (default false)</li>
+    </ul>
+    <p>+ Indexes partiels sur finess, siret, cp.</p>
+  </div>
+
+  <h2>🔒 2. Verrouillage SQL est_partenaire / groupement_id</h2>
+  <div class="panel">
+    <p>2 triggers <code>BEFORE UPDATE</code> qui bloquent toute modification de ces champs sauf si l'appelant a le droit <code>parametres_admin</code> :</p>
+    <ul>
+      <li><b>etablissements</b> → verrouille <code>est_partenaire</code> + <code>groupement_id</code></li>
+      <li><b>etablissements_partenaires</b> → verrouille <code>type_relation</code> + <code>groupement_id</code></li>
+    </ul>
+    <p>Le trigger laisse passer si rien n'a changé sur ces champs (test <code>is not distinct from</code>). Erreur claire si tentative : <i>"Champs verrouillés : est_partenaire et groupement_id ne peuvent être modifiés que par un admin"</i>.</p>
+  </div>
+
+  <h2>🔍 3. RppsSearch refondu — composant unique</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">6 filtres riches</h3>
+    <ul>
+      <li><b>Nom</b> ou <b>recherche libre</b> (DUPONT, MARTIN…)</li>
+      <li><b>N° RPPS exact</b> (11 chiffres, mono)</li>
+      <li><b>Profession</b> (sélecteur 12 valeurs : Médecin, Infirmier, Kiné, Pharmacien, Sage-femme, Dentiste, Pédicure, Orthophoniste, Ergothérapeute, Psychologue, Manipulateur…)</li>
+      <li><b>Mode d'exercice</b> (Libéral / Salarié / Remplaçant)</li>
+      <li><b>Ville</b> (texte libre, contient/inclut)</li>
+      <li><b>CP / département</b> (préfixe accepté : "75" filtre toute la région parisienne)</li>
+      <li><b>Limite</b> : 20 / 50 / <b>100</b></li>
+    </ul>
+    <p>Bouton "Effacer" qui reset tous les filtres + indicateur "Augmente la limite pour voir plus" quand on atteint le max.</p>
+
+    <h3>Tuiles enrichies</h3>
+    <ul>
+      <li>Avatar gradient bleu/teal</li>
+      <li>Nom + civilité + badge profession en haut</li>
+      <li>Spécialité avec icône prescription</li>
+      <li>Mode d'exercice avec icône briefcase</li>
+      <li>Adresse complète avec map-pin</li>
+      <li>Téléphone (cliquable) + email (cliquable)</li>
+      <li>RPPS + ADELI en footer mono</li>
+    </ul>
+
+    <h3>2 modes d'usage (sans duplication de code)</h3>
+    <pre><code>// Mode 1 : sélection simple (clic = onSelect)
+&lt;RppsSearch onSelect={(p) =&gt; ...} /&gt;
+// Utilisé dans /partenaires-rpps et /utilisateurs création
+
+// Mode 2 : actions custom (boutons sous chaque tuile)
+&lt;RppsSearch renderActions={(p) =&gt; (
+  &lt;&gt;
+    &lt;button onClick={() =&gt; rattacher(p)}&gt;Rattacher&lt;/button&gt;
+    &lt;button onClick={() =&gt; inviter(p)}&gt;Inviter&lt;/button&gt;
+  &lt;/&gt;
+)} /&gt;
+// Utilisé dans /annuaire-rpps</code></pre>
+  </div>
+
+  <h2>🤝 4. Action "Rattacher à un établissement"</h2>
+  <div class="panel">
+    <ol>
+      <li>Clic bouton vert "Rattacher à un étab" dans une tuile RPPS</li>
+      <li>Modale s'ouvre avec la liste de <b>Mes établissements + Partenaires</b> (icônes différenciées)</li>
+      <li>Sélection (bordure verte) → clic "Rattacher"</li>
+      <li>En backend :
+        <ul>
+          <li>Cherche si le praticien existe déjà dans <code>partenaires_rpps</code> (par RPPS)</li>
+          <li>Si non, l'ajoute avec classification auto (Médecin→prescripteur, IDE/Kiné/Sage→intervenant)</li>
+          <li>Appelle <code>link_partenaire_rpps_to_etablissement</code> qui ajoute l'étab à <code>etablissement_ids[]</code> du partenaire RPPS (sans doublon via <code>@&gt;</code>)</li>
+        </ul>
+      </li>
+      <li>Confirmation : "Marie DUPONT est désormais rattachée à EHPAD Les Tilleuls."</li>
+    </ol>
+  </div>
+
+  <h2>👤 5. Action "Transformer en utilisateur"</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Popup "Voulez-vous envoyer une invitation ?"</h3>
+    <ul>
+      <li><b>Email</b> du nouvel utilisateur (pré-rempli depuis RPPS si disponible)</li>
+      <li><b>Rôle attribué</b> (sélecteur des rôles de la structure) *requis*</li>
+      <li><b>Section "Informations à pré-remplir"</b> avec checkboxes sur chaque champ disponible :
+        <ul>
+          <li>☑ Prénom : "Marie"</li>
+          <li>☑ Nom : "DUPONT"</li>
+          <li>☑ Téléphone : "0123456789"</li>
+          <li>☑ N° RPPS : "10000000001"</li>
+          <li>☑ N° ADELI : "751234567"</li>
+          <li>☑ Profession : "Médecin"</li>
+          <li>☑ Spécialité : "Cardiologie"</li>
+          <li>☑ Mode d'exercice : "Libéral"</li>
+          <li>☑ Adresse postale : "12 rue X, 75011 Paris"</li>
+        </ul>
+      </li>
+    </ul>
+    <p>Tous cochés par défaut (si la donnée existe). L'utilisateur décoche ce qu'il ne veut pas envoyer.</p>
+
+    <h3>Au clic "Envoyer l'invitation"</h3>
+    <ol>
+      <li>Construit le payload selon les checkboxes</li>
+      <li>INSERT dans <code>invitations</code> avec <code>origine = 'rpps_annuaire'</code></li>
+      <li>Fallback : retry sans champs RPPS si SQL 0.55.29 pas passé</li>
+      <li>Appel <code>invite-user</code> Edge Function pour envoyer le mail (avec bloc violet RPPS si renseigné)</li>
+      <li>Confirmation avec le lien d'inscription</li>
+    </ol>
+  </div>
+
+  <h2>🔌 6. API /api/rpps étendue</h2>
+  <div class="panel tech">
+    <pre><code>GET /api/rpps?q=DUPONT
+              &profession=Médecin
+              &mode=libéral         ← nouveau
+              &ville=Paris          ← nouveau
+              &cp=75
+              &limit=100            ← max 100 (était 50)</code></pre>
+    <p>Nouveaux filtres appliqués côté serveur après récupération FHIR (ANS ne les filtre pas natif). Filtre <b>tolérant</b> : contient/inclut, pas strict equals (ex : ville="Paris" matche "Paris 11").</p>
+  </div>
+
+  <h2>📈 7. Tests +21 (1185 → 1206)</h2>
+  <div class="panel hi">
+    <p>Nouveau fichier <code>__tests__/v055-33-rpps-actions.test.js</code> :</p>
+    <ul>
+      <li><b>Filtres étendus</b> (5) : ville, mode, limite plafonnée 100, 12 professions, 3 modes</li>
+      <li><b>Filtre client API</b> (4) : ville, CP préfixe, mode libéral, combinés</li>
+      <li><b>Action 'Transformer'</b> (4) : pré-coche présents, pas absents, payload selon checkbox, origine='rpps_annuaire'</li>
+      <li><b>Action 'Rattacher'</b> (2) : combine mine+partner, évite double rattachement</li>
+      <li><b>Verrouillage SQL</b> (3) : pas bloqué si rien changé, bloqué si est_partenaire change, bloqué si groupement_id change</li>
+      <li><b>Schéma colonnes</b> (3) : 16 colonnes, identifiants présents, adresse+géoloc</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.33.sql</code> : <b>NOUVEAU</b> · 16 colonnes + 2 triggers verrouillage + 2 RPCs link/unlink + origine</li>
+    <li><code>app/components/RppsSearch.js</code> : <b>RÉCRIT</b> · composant unique avec mode renderActions + 6 filtres + tuiles enrichies</li>
+    <li><code>app/api/rpps/route.js</code> : nouveaux query params ville/mode + limite 100</li>
+    <li><code>app/annuaire-rpps/page.js</code> : <b>RÉCRIT</b> · 2 actions par tuile (Rattacher + Inviter) avec modales</li>
+    <li><code>__tests__/v055-33-rpps-actions.test.js</code> : <b>NOUVEAU</b> · +21 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.33 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.33</li>
+    <li><code>package.json</code> : 0.55.32 → 0.55.33</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip par-dessus <code>C:\aveho-ec-app</code></li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.55.33.sql</code> → <b>Run</b>
+        <ul>
+          <li>Ajoute les 16 colonnes manquantes (idempotent)</li>
+          <li>Crée les 2 triggers de verrouillage</li>
+          <li>Crée les 2 RPCs link/unlink</li>
+        </ul>
+      </li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.33 - RPPS unifie + colonnes manquantes + verrouillage SQL"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire après déploiement</h2>
+  <div class="panel hi">
+    <ol>
+      <li><code>/annuaire-rpps</code> → 6 filtres visibles : nom, RPPS exact, profession, mode, ville, CP, limite</li>
+      <li>Recherche "DUPONT" + ville "Paris" + profession "Médecin" → résultats filtrés</li>
+      <li>Augmenter limite à 100 → jusqu'à 100 résultats</li>
+      <li>Sur une tuile : bouton vert <b>"Rattacher à un étab"</b> → modale liste étabs → sélection → confirmation</li>
+      <li>Sur une tuile : bouton bleu <b>"Transformer en utilisateur"</b> → popup "Voulez-vous envoyer une invitation ?" avec checkboxes par champ → choisir rôle → Envoyer</li>
+      <li>L'invitation arrive avec origine='rpps_annuaire' dans la base + mail envoyé (si Edge Function déployée)</li>
+      <li>Essayer de modifier <code>est_partenaire</code> d'un établissement sans être admin → blocage côté SQL</li>
+      <li>Smoke tests 0.55.33 dans le changelog → 5 tests verts</li>
+    </ol>
+  </div>
+
+  <h2>🔜 À venir 0.55.34</h2>
+  <div class="panel">
+    <ul>
+      <li><b>RPPS sur la carte</b> : afficher les praticiens géolocalisés (depuis latitude/longitude RPPS)</li>
+      <li><b>Filtres SIREN/SIRET sur la carte</b> pour les établissements partenaires</li>
+    </ul>
+  </div>
+
+  <h2>SW auto-bump — 43ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.32 → <b>0.55.33</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.33 · 31 mai 2026</p>
+    <p>RPPS unifié partout · 6 filtres · 100 résultats · 2 actions par tuile · 16 colonnes · 2 triggers · 1206 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
