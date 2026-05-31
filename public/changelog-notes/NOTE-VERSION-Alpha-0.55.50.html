@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.50 — OCR bulletin de situation via Claude Vision</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+  .step{display:flex;align-items:center;gap:10px;padding:10px;background:#f4f7fa;border-radius:8px;margin:6px 0}
+  .step .n{background:#5aa05a;color:#fff;width:28px;height:28px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — OCR BULLETIN DE SITUATION (IA)</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.50 — OCR bulletin de situation via Claude Vision
+      <small>40+ champs extraits en 10 secondes · auto-link caisse + mutuelle · patient créé en 1 photo</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.50-alpha</code></span>
+      <span><b>Tests :</b> 1512 verts (+35)</span>
+      <span><b>SQL :</b> aucun</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le but</h2>
+  <div class="panel">
+    <p>Avant : créer un patient = saisir manuellement 40+ champs depuis le bulletin de situation. <b>5-10 minutes</b> par patient, erreurs fréquentes.</p>
+    <p>Maintenant : <b>1 photo du bulletin → patient créé en 15 secondes</b>. L'IA lit tout, identifie automatiquement la caisse et la mutuelle dans nos référentiels, et tu valides en 2 clics.</p>
+  </div>
+
+  <h2>📸 Workflow 4 étapes</h2>
+  <div class="panel hi">
+    <div class="step"><div class="n">1</div><div><b>Upload</b> · drag&drop ou clic, ou photo directe sur mobile (l'appareil photo s'ouvre automatiquement)</div></div>
+    <div class="step"><div class="n">2</div><div><b>OCR IA</b> · Claude Sonnet 4 Vision lit le document (5-15 secondes)</div></div>
+    <div class="step"><div class="n">3</div><div><b>Vérification</b> · les 40+ champs apparaissent éditables à côté de l'image, badge confiance affiché</div></div>
+    <div class="step"><div class="n">4</div><div><b>Création</b> · patient créé, caisse/mutuelle auto-liées si dans nos référentiels → bouton "Compléter la fiche"</div></div>
+  </div>
+
+  <h2>🤖 Architecture technique</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Route /api/ocr/bulletin-situation</h3>
+    <ul>
+      <li>Reçoit image base64 + media_type (jpg/png/webp/pdf, max 8 Mo)</li>
+      <li>Appelle <code>https://api.anthropic.com/v1/messages</code></li>
+      <li>Modèle : <code>claude-sonnet-4-20250514</code></li>
+      <li>max_tokens : 4096 (pour la réponse JSON large)</li>
+      <li>maxDuration Vercel : 60s (OCR + extraction)</li>
+    </ul>
+
+    <h3>Prompt structuré (190 lignes)</h3>
+    <p>Demande à Claude d'extraire <b>40+ champs en JSON strict</b> :</p>
+    <ul>
+      <li><b>Identité</b> : nom, prenom, nom_naissance, sexe, date naissance, lieu naissance ville/code_insee/pays, nationalité</li>
+      <li><b>Sécu</b> : numero_secu (NIR 13 ou 15 chiffres), cle_nir, code_organisme, nom_caisse, centre_paiement, regime, qualite_assure, rang_naissance, dates droits, ALD/CMU/C2S/AME</li>
+      <li><b>Mutuelle</b> : mutuelle_nom, mutuelle_numero_amc, mutuelle_numero_adherent</li>
+      <li><b>Adresse</b> : adresse complète, complement, cp, ville, pays</li>
+      <li><b>Contact</b> : téléphones, email</li>
+      <li><b>Médecin</b> : nom, prenom, RPPS</li>
+      <li><b>Hospit</b> : etablissement, date_emission, date_entree, date_sortie, service</li>
+      <li><b>Audit</b> : ocr_text_brut (tout le texte visible), confiance (haute/moyenne/faible)</li>
+    </ul>
+
+    <h3>Anti-hallucination</h3>
+    <p>Prompt explicite : <i>"Ne devine PAS, mets null si pas sûr"</i>. Cleanup automatique des <code>```json ... ```</code> au cas où. Si l'image n'est pas un BS, Claude retourne <code>{erreur, ocr_text_brut}</code>.</p>
+
+    <h3>Réponse enrichie</h3>
+    <pre><code>{
+  "ok": true,
+  "data": { /* 40+ champs */ },
+  "ocr_text": "texte brut pour audit",
+  "confiance": "haute",
+  "model": "claude-sonnet-4-20250514",
+  "duration_ms": 8430,
+  "tokens": { "input": 1850, "output": 620 }
+}</code></pre>
+  </div>
+
+  <h2>🔗 Auto-link caisse + mutuelle</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Route /api/patients/from-ocr</h3>
+    <p><b>Caisse</b> : recherche par code_organisme (3 premiers chiffres) puis fallback <code>ilike</code> sur nom_caisse.</p>
+    <p><b>Mutuelle</b> : recherche par numero_amc exact puis fallback <code>ilike</code> sur raison_sociale.</p>
+    <p>Exemple : si l'OCR sort <code>code_organisme: "751010101"</code> → match exact CPAM Paris (code court "751").</p>
+    <p>Si <code>mutuelle_nom: "MGEN"</code> → fallback ilike → trouve MGEN (27977927).</p>
+  </div>
+
+  <h2>📋 Configuration requise</h2>
+  <div class="panel danger">
+    <h3 style="margin-top:0">⚠️ Variable d'environnement Vercel</h3>
+    <p>Pour que l'OCR fonctionne en prod, il faut ajouter dans <b>Vercel → Settings → Environment Variables</b> :</p>
+    <pre><code>ANTHROPIC_API_KEY = sk-ant-...</code></pre>
+    <p>Si pas configurée, la route retourne 500 avec message explicite.</p>
+    <p>Clés API → <a href="https://console.anthropic.com/settings/keys">console.anthropic.com</a>. Coût ~0,01 € par OCR (1800 tokens IN + 600 OUT).</p>
+  </div>
+
+  <h2>🎨 UI page /scan/bulletin-situation</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Stepper visuel</h3>
+    <p>4 badges en haut : Upload (bleu actif), OCR IA, Vérification, Création. Vert (done) avec ✓ après validation.</p>
+
+    <h3>Upload zone drag&drop</h3>
+    <ul>
+      <li>Drop d'une image OU clic pour ouvrir le picker</li>
+      <li>Sur mobile, <code>capture="environment"</code> ouvre direct l'appareil photo arrière</li>
+      <li>Aperçu image avant lancement</li>
+      <li>Format PDF supporté (affiche emoji 📄)</li>
+    </ul>
+
+    <h3>Étape Review (split 40/60)</h3>
+    <ul>
+      <li><b>Gauche</b> : image source agrandie pour relire en cas de doute</li>
+      <li><b>Droite</b> : formulaire avec sections Identité/Sécu/Mutuelle/Adresse/Médecin, champs éditables</li>
+      <li>Badge confiance coloré en haut</li>
+      <li>Tokens IN/OUT affichés pour audit coût</li>
+      <li>Texte OCR brut dépliable (pre dark) pour debug</li>
+      <li>Bouton vert "Créer le patient" (désactivé si nom vide)</li>
+    </ul>
+
+    <h3>Étape Done</h3>
+    <p>Confirmation ✅ + 2 boutons : "Compléter la fiche" (vers /patient/[id]/edit) + "Scanner un autre".</p>
+  </div>
+
+  <h2>📈 Tests +35 (1477 → 1512)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Route OCR</b> (13) : env var, Claude Sonnet 4, max_tokens, endpoint, header version, types acceptés, prompt JSON strict, champs NIR/AMC/ALD, ocr brut+confiance, cleanup ```, tokens IN/OUT, maxDuration</li>
+      <li><b>Route from-ocr</b> (7) : auto-link caisse code/nom, mutuelle amc/nom, structure_id, source ocr_bs, bs brut+date, concat NIR</li>
+      <li><b>Page 4 étapes</b> (12) : workflow, drag&drop+camera, limite 8Mo, calls APIs+token, édition, aperçu, badge confiance, tokens, brut dépliable, redirect /edit, stats</li>
+      <li><b>Prompt</b> (3) : 30+ champs, anti-hallucination, ISO date</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés</h2>
+  <ul>
+    <li><code>app/api/ocr/bulletin-situation/route.js</code> : <b>NOUVEAU</b> · proxy Claude Vision</li>
+    <li><code>app/api/patients/from-ocr/route.js</code> : <b>NOUVEAU</b> · création patient + auto-link</li>
+    <li><code>app/scan/bulletin-situation/page.js</code> : <b>REFONDU</b> · workflow 4 étapes</li>
+    <li><code>__tests__/v055-50-ocr-bulletin-situation.test.js</code> : <b>NOUVEAU</b> · +35 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.50 (3 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.50</li>
+    <li><code>package.json</code> : 0.55.49 → 0.55.50</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL)</li>
+      <li><b>CRITIQUE</b> : ajouter <code>ANTHROPIC_API_KEY = sk-ant-...</code> dans Vercel Environment Variables (Production + Preview)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.50 - OCR bulletin de situation via Claude Vision"
+git push origin main</code></pre>
+      </li>
+      <li>Attendre redéploiement Vercel</li>
+      <li>Menu <b>Outils scan → Créer patient depuis bulletin</b></li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Trouver une photo de bulletin de situation (anonymisée si possible)</li>
+      <li>Aller sur <code>/scan/bulletin-situation</code></li>
+      <li>Glisser l'image OU cliquer pour parcourir</li>
+      <li>Cliquer <b>"Lancer l'OCR IA"</b></li>
+      <li>Attendre 5-15s</li>
+      <li>Vérifier les champs extraits (badge confiance visible)</li>
+      <li>Corriger si besoin, puis <b>"Créer le patient"</b></li>
+      <li>Cliquer <b>"Compléter la fiche"</b> → arriver sur /patient/[id]/edit avec tout pré-rempli</li>
+    </ol>
+  </div>
+
+  <h2>🔜 Pour la suite (0.55.51+)</h2>
+  <ul>
+    <li>Pages /scan/qr (QR code Vitale, RFID matériel…), /scan/codebarre (GS1/UDI), /scan/ocr générique</li>
+    <li>Storage Supabase pour archiver l'image scannée du bulletin (bs_file_url)</li>
+    <li>Plan B RPPS : import dump open data data.gouv.fr (1,7M praticiens locaux)</li>
+  </ul>
+
+  <h2>SW auto-bump — 60ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.49 → <b>0.55.50</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.50 · 31 mai 2026</p>
+    <p>OCR Claude Vision · 40+ champs · auto-link caisse/mutuelle · 1512 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

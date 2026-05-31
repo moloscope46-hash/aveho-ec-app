@@ -27,6 +27,37 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.50 — OCR bulletin de situation via Claude Vision ==============
+  "0.55.50": async () => {
+    const results = [];
+
+    results.push(await runTest("Endpoint /api/ocr/bulletin-situation existe", async () => {
+      try {
+        // GET sur cette route POST → 405 attendu, c'est OK
+        const res = await fetch("/api/ocr/bulletin-situation", { method: "GET" });
+        return { ok: res.status === 405 || res.status === 400, msg: `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Endpoint /api/patients/from-ocr existe", async () => {
+      try {
+        const res = await fetch("/api/patients/from-ocr", { method: "GET" });
+        return { ok: res.status === 405 || res.status === 400, msg: `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /scan/bulletin-situation chargée", async () => {
+      const mod = await import("../scan/bulletin-situation/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.49 — Page édition patient + fix carte recherche libre ==============
   "0.55.49": async () => {
     const results = [];

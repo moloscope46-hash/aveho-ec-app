@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.50",
+    "kind": "version",
+    "titre": "🤖 OCR bulletin de situation via Claude Vision · 40+ champs extraits automatiquement · Auto-link caisse + mutuelle · Patient créé en 1 photo",
+    "chantiers": [
+      { "code": "BE", "txt": "Nouvelle route /api/ocr/bulletin-situation : reçoit une image (jpg/png/webp/pdf en base64) et l'envoie à Claude Sonnet 4 via l'API Anthropic (/v1/messages, header anthropic-version 2023-06-01, max_tokens 4096, maxDuration Vercel 60s). Nécessite ANTHROPIC_API_KEY dans les env Vercel" },
+      { "code": "BE", "txt": "Prompt structuré (190 lignes) qui demande à Claude d'extraire 40+ champs en JSON strict sans markdown : nom, prenom, nom_naissance, sexe, date_naissance, lieu_naissance ville/code_insee/pays, nationalite, numero_secu (NIR 13 ou 15 chiffres), cle_nir, code_organisme_rattachement, nom_caisse, centre_paiement, regime_secu, qualite_assure, rang_naissance, date_debut/fin_droits, ALD avec commentaire, CMU_C, C2S, AME, mutuelle_nom, mutuelle_numero_amc, mutuelle_numero_adherent, adresse complète, telephones, email, medecin_traitant nom/prenom/RPPS, etablissement_emetteur, date_emission, date_entree/sortie hospit, service, ocr_text_brut (audit), confiance (haute/moyenne/faible)" },
+      { "code": "BE", "txt": "Anti-hallucination : prompt explicite 'Ne devine PAS, mets null si pas sûr'. Cleanup automatique des ```json ... ``` au cas où Claude oublie. Si Claude détecte une image illisible/pas un BS → retourne {erreur, ocr_text_brut}. Retour enrichi : tokens IN/OUT pour audit coût, durée ms, modèle utilisé" },
+      { "code": "BE", "txt": "Nouvelle route /api/patients/from-ocr : crée le patient à partir des données OCR. Auto-link intelligent : caisse via code_organisme exact (3 premiers chiffres) puis fallback ilike sur nom_caisse, mutuelle via numero_amc exact puis fallback ilike sur raison_sociale. source_creation='ocr_bs', bs_ocr_brut et bs_ocr_date stockés pour audit. Concaténation NIR + clé si séparées" },
+      { "code": "FE", "txt": "Page /scan/bulletin-situation REFONDUE — workflow 4 étapes avec stepper visuel : (1) Upload drag&drop + camera mobile (capture='environment' pour ouvrir l'appareil photo direct sur smartphone), formats jpg/png/webp/pdf max 8 Mo, aperçu image avant lancement. (2) Loader 'OCR en cours' avec animation spinner pendant 5-15s d'analyse. (3) Vérification : aperçu image à gauche + formulaire éditable à droite avec sections Identité/Sécu/Mutuelle/Adresse/Médecin, badge confiance coloré (vert/ambre), tokens affichés, OCR brut dépliable. (4) Done : confirmation + bouton 'Compléter la fiche' (redirige vers /patient/[id]/edit) + 'Scanner un autre'" },
+      { "code": "FE", "txt": "Champs éditables avant création : si l'OCR a mal lu un caractère, le user corrige avant de valider. Stats référentiels en bas (X caisses, Y mutuelles) pour montrer ce qui est disponible pour auto-liaison" },
+      { "code": "AI", "txt": "+35 tests Vitest : route OCR (13 : exists, env var, Claude Sonnet 4, max_tokens, endpoint, header version, types acceptés, prompt JSON strict, champs critiques NIR/AMC/ALD, ocr brut + confiance, cleanup ```, tokens IN/OUT, maxDuration), route from-ocr (7 : auto-link caisse code/nom, mutuelle amc/nom, structure_id, source ocr_bs, bs brut+date, concat NIR), page 4 étapes (12 : workflow, drag&drop+camera, limite, calls APIs+token, édition, aperçu, badge confiance, tokens, brut dépliable, redirect, stats), prompt (3 : 30+ champs, anti-hallucination, ISO date). Total 1512 tests verts (vs 1477)" }
+    ],
+    "themes": ["patient", "ai", "ui_ux"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.50.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.55.49",
     "kind": "version",
     "titre": "👤 Nouvelle page édition fiche patient avec 6 onglets · Intégration CaisseSearch + MutuelleSearch · Gestion 1-N adresses livraison · Fix carte recherche libre (affichage 100%)",
