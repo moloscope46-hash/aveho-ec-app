@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Version 0.55.25 — Invitation enrichie + fiche user RH</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.tech{background:#f4f7fa;border-color:#d3d9e0}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;margin:6px 0;font-size:13px}
+  table th{text-align:left;background:#f4f7fa;color:var(--navy);font-weight:700;padding:8px 9px;border-bottom:2px solid #e3e9ee}
+  table td{padding:7px 9px;border-bottom:1px solid #e3e9ee;vertical-align:top}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — INVITATION + FICHE USER ENRICHIES</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.25 — Invitation multi-établissements (lockable) + fiche user RH étendue
+      <small>Rattachement explicite des établissements à la création · lock pour empêcher modification à l'inscription · 8 nouveaux champs RH · bouton réinitialiser mdp</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.25-alpha</code></span>
+      <span><b>Tests :</b> 1087 verts</span>
+      <span><b>SQL :</b> 1 patch</span>
+    </div>
+  </header>
+
+  <h2>🗄 Patch SQL 0.55.25</h2>
+  <div class="panel tech">
+    <h3 style="margin-top:0">Colonnes ajoutées sur <code>invitations</code></h3>
+    <pre><code>alter table invitations
+  add column if not exists etablissement_ids uuid[] default '{}'::uuid[],
+  add column if not exists groupement_id uuid,
+  add column if not exists lock_assignment boolean not null default true,
+  add column if not exists matricule text,
+  add column if not exists date_arrivee date,
+  add column if not exists notes_admin text;</code></pre>
+
+    <h3>Colonnes ajoutées sur <code>membres_structure</code></h3>
+    <pre><code>alter table membres_structure
+  add column if not exists matricule text,
+  add column if not exists date_naissance date,
+  add column if not exists contact_urgence_nom text,
+  add column if not exists contact_urgence_tel text,
+  add column if not exists adresse text,
+  add column if not exists specialite text,
+  add column if not exists diplome text,
+  add column if not exists date_fin_contrat date,
+  add column if not exists locked_fields jsonb not null default '{}'::jsonb;</code></pre>
+
+    <h3>Vue v_user_complete</h3>
+    <p>Combine <code>membres_structure</code> + compteurs webauthn (<code>bio_devices_count</code>, <code>has_empreinte</code>, <code>has_face</code>) pour faciliter les requêtes admin.</p>
+
+    <h3>RPC reset_user_password</h3>
+    <p>Vérification admin via <code>droits.parametres_admin</code>, journalisation dans <code>app_logs</code>, retourne l'email pour qu'on puisse l'envoyer via Edge Function ou Supabase Dashboard.</p>
+
+    <h3>RPC get_invitation_full</h3>
+    <p>Version étendue de <code>get_invitation_preview</code> qui ramène en plus <code>etablissement_ids</code>, <code>lock_assignment</code>, <code>matricule</code>, <code>date_arrivee</code>. Fallback automatique côté JS sur l'ancienne RPC si SQL pas passé.</p>
+  </div>
+
+  <h2>📨 UI invitation enrichie</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Bloc "Rattachement aux établissements"</h3>
+    <p>Dans la modale "Inviter un utilisateur", après le rôle, un nouveau bloc apparaît avec :</p>
+    <ul>
+      <li><b>Pills cliquables</b> pour chaque établissement de la structure — clic pour sélectionner/désélectionner, fond bleu si sélectionné</li>
+      <li><b>Checkbox "Verrouiller le rattachement"</b> (cochée par défaut) avec sous-texte explicatif : "L'utilisateur verra les établissements mais ne pourra pas les modifier"</li>
+    </ul>
+
+    <h3>Bloc "Informations RH"</h3>
+    <ul>
+      <li>Champ <b>Matricule</b> (ex. 0042) pour les structures qui en utilisent un</li>
+      <li>Champ <b>Date d'arrivée</b> (date picker) pour pré-remplir la date d'embauche</li>
+      <li>Champ <b>Notes internes</b> textarea visible uniquement par les admins</li>
+    </ul>
+  </div>
+
+  <h2>📝 Page d'inscription : champs lockés visibles</h2>
+  <div class="panel hi">
+    <p>Quand le user reçoit son lien et arrive sur <code>/inscription/[token]</code>, il voit maintenant :</p>
+    <ul>
+      <li>Email + rôle (déjà avant) + <b>matricule</b> + <b>date d'arrivée</b> si pré-remplis</li>
+      <li>Si <code>etablissement_ids</code> non vide → <b>nouveau bloc</b> "Rattachement aux établissements" :
+        <ul>
+          <li>Badge bleu <b>VERROUILLÉ</b> avec icône cadenas si <code>lock_assignment=true</code></li>
+          <li>Liste des établissements en pills (lecture seule, icône check vert)</li>
+          <li>Message explicatif : "Ces rattachements ont été définis par l'administrateur et ne peuvent pas être modifiés"</li>
+          <li>Si <code>lock_assignment=false</code> → message alternatif : "Vous pourrez ajuster ces rattachements depuis votre profil"</li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+
+  <h2>👤 Fiche utilisateur enrichie</h2>
+  <div class="panel">
+    <p>Dans la modale d'info user (page /utilisateurs → clic sur un user), 2 nouvelles sections dépliables (<code>&lt;details&gt;</code>) :</p>
+
+    <h3>📇 Informations RH étendues</h3>
+    <ul>
+      <li><b>Matricule interne</b> + <b>Date de naissance</b></li>
+      <li><b>Spécialité</b> (ex. Cardiologie) + <b>Diplôme</b> (ex. IDE Bac+3)</li>
+      <li><b>Adresse postale</b> sur une ligne</li>
+      <li><b>Contact d'urgence (nom)</b> + <b>(tél)</b></li>
+      <li><b>Date de fin de contrat</b> (CDD, intérim, etc.)</li>
+    </ul>
+
+    <h3>🛠 Actions administrateur</h3>
+    <p>Bloc dépliable jaune avec :</p>
+    <ul>
+      <li><b>Bouton rouge "Réinitialiser mot de passe"</b> — déclenche la RPC <code>reset_user_password</code>, vérifie les droits admin et journalise dans <code>app_logs</code></li>
+      <li><b>Bouton bleu "Envoyer un email"</b> — ouvre <code>mailto:{email}</code></li>
+    </ul>
+
+    <h3>Compatibilité douce</h3>
+    <div class="panel warn" style="margin-top: 12px">
+      <p>Si tu ouvres l'app avant d'avoir passé le SQL, les nouveaux champs apparaissent quand même mais leur sauvegarde retombe en silence sur les colonnes de base. Aucune erreur côté UI. Une fois le SQL passé, tout fonctionne.</p>
+    </div>
+  </div>
+
+  <h2>Fichiers</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.25.sql</code> : <b>NOUVEAU</b> · colonnes + vue + 2 RPCs</li>
+    <li><code>app/utilisateurs/page.js</code> : modale invitation enrichie + openUserInfo/saveUserInfo + resetUserPassword + modale fiche user enrichie avec 2 details</li>
+    <li><code>app/inscription/[token]/page.js</code> : appel get_invitation_full (fallback preview) + bloc rattachement avec badge VERROUILLÉ</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + entrée 0.55.25 (5 tests : colonnes, vue, RPCs)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.25</li>
+    <li><code>package.json</code> : 0.55.24 → 0.55.25</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip par-dessus</li>
+      <li><b>SQL</b> : Dashboard Supabase → SQL Editor → <code>aveho-PATCH-vers-0.55.25.sql</code> → Run</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.25 - Invitation enrichie + fiche user RH + reset mdp"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sur /utilisateurs → "Inviter un utilisateur" → la modale a maintenant 2 nouveaux blocs (Rattachement + Infos RH)</li>
+      <li>Sélectionne 2 établissements (pills bleues) + coche "Verrouiller" + remplis matricule "0042" + date d'arrivée</li>
+      <li>Envoie l'invitation → copie le lien</li>
+      <li>Ouvre le lien dans un autre navigateur/incognito → tu vois :
+        <ul>
+          <li>Email + matricule "0042" + date arrivée affichés</li>
+          <li>Nouveau bloc bleu "Rattachement aux établissements" avec badge VERROUILLÉ</li>
+          <li>Les 2 établissements en lecture seule</li>
+        </ul>
+      </li>
+      <li>Reviens sur /utilisateurs → clic sur un user → modale fiche → 2 nouveaux blocs dépliables :
+        <ul>
+          <li>"Informations RH étendues" — remplis matricule, spécialité, contact urgence, etc. → Enregistrer</li>
+          <li>"Actions administrateur" → bouton rouge "Réinitialiser mot de passe" → confirme → message OK</li>
+        </ul>
+      </li>
+      <li>Smoke tests 0.55.25 → 5 tests verts (si SQL passé)</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 35ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.24 → <b>0.55.25</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.25 · 31 mai 2026</p>
+    <p>Invitation enrichie · Lock rattachement · Fiche user étendue · 1 SQL · 1087 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

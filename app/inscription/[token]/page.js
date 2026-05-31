@@ -44,7 +44,19 @@ export default function InscriptionPage() {
     if (!token) return;
     (async () => {
       try {
-        const { data, error } = await supabase.rpc("get_invitation_preview", { p_token: token });
+        // 0.55.25 : on essaie d'abord la nouvelle RPC qui ramène plus d'infos
+        let data, error;
+        try {
+          const r = await supabase.rpc("get_invitation_full", { p_token: token });
+          data = r.data;
+          error = r.error;
+        } catch (e) { error = e; }
+        // Fallback si la RPC v2 n'est pas dispo (SQL pas encore passé)
+        if (error || !data) {
+          const r = await supabase.rpc("get_invitation_preview", { p_token: token });
+          data = r.data;
+          error = r.error;
+        }
         if (error) throw error;
         if (!data?.ok) {
           setErr(data?.error || "Invitation invalide");
@@ -231,7 +243,75 @@ export default function InscriptionPage() {
               <b style={{ color: "#185FA5" }}>{invitation.role_nom}</b>
             </div>
           )}
+          {invitation.matricule && (
+            <div style={{ display: "flex", justifyContent: "space-between", margin: "3px 0" }}>
+              <span style={{ color: "#6c7a89" }}>Matricule</span>
+              <b style={{ color: "#142131" }}>{invitation.matricule}</b>
+            </div>
+          )}
+          {invitation.date_arrivee && (
+            <div style={{ display: "flex", justifyContent: "space-between", margin: "3px 0" }}>
+              <span style={{ color: "#6c7a89" }}>Date d'arrivée</span>
+              <b style={{ color: "#142131" }}>{new Date(invitation.date_arrivee).toLocaleDateString("fr-FR")}</b>
+            </div>
+          )}
         </div>
+
+        {/* 0.55.25 : Rattachement aux établissements (lock si configuré) */}
+        {invitation.etablissement_ids?.length > 0 && (
+          <div style={{
+            background: invitation.lock_assignment ? "#eef5fc" : "#fff",
+            border: `1px solid ${invitation.lock_assignment ? "#bfd6f0" : "#e3e9ee"}`,
+            borderRadius: 10,
+            padding: "12px 14px",
+            marginBottom: 16,
+            fontSize: 13,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <i className="ti ti-building-hospital" style={{ color: "#185FA5", fontSize: 16 }} />
+              <b style={{ color: "#142131" }}>
+                Rattachement aux établissements
+              </b>
+              {invitation.lock_assignment && (
+                <span style={{
+                  background: "#185FA5",
+                  color: "#fff",
+                  padding: "1px 8px",
+                  borderRadius: 8,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: 0.3,
+                  marginLeft: "auto",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 3,
+                }}>
+                  <i className="ti ti-lock" /> VERROUILLÉ
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 11.5, color: "#6c7a89", margin: "0 0 8px", lineHeight: 1.4 }}>
+              {invitation.lock_assignment
+                ? "Ces rattachements ont été définis par l'administrateur et ne peuvent pas être modifiés."
+                : "Vous pourrez ajuster ces rattachements depuis votre profil après inscription."}
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {invitation.etablissement_ids.map((id) => (
+                <span key={id} style={{
+                  background: "#fff",
+                  border: "1px solid #d3d9e0",
+                  padding: "3px 8px",
+                  borderRadius: 12,
+                  fontSize: 11.5,
+                  color: "#142131",
+                  fontWeight: 600,
+                }}>
+                  <i className="ti ti-check" style={{ color: "#5aa05a" }} /> {id.slice(0, 8)}…
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {err && (
           <div style={{ background: "#fce5e0", color: "#7a1f15", padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 14, border: "1px solid #f0c4be" }}>

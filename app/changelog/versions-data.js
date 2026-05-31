@@ -119,6 +119,25 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.55.25",
+    "kind": "version",
+    "titre": "Invitation enrichie : rattachement multi-établissements + lock + RH · Fiche utilisateur étendue (matricule, contact urgence, spécialité…) · Réinitialiser mot de passe (admin)",
+    "chantiers": [
+      { "code": "SQL", "txt": "Patch 0.55.25 : invitations.etablissement_ids (uuid[]) + lock_assignment + matricule + date_arrivee + notes_admin. membres_structure étendu : matricule, date_naissance, contact_urgence_{nom,tel}, adresse, specialite, diplome, date_fin_contrat, locked_fields" },
+      { "code": "SQL", "txt": "Vue v_user_complete combine membres_structure + bio_devices_count + has_empreinte/face pour faciliter les requêtes admin. RPC reset_user_password (admin only) journalise une demande de réinit. RPC get_invitation_full retourne tous les champs incluant etablissement_ids et lock_assignment" },
+      { "code": "FE", "txt": "Modale 'Inviter un utilisateur' : nouveau bloc 'Rattachement aux établissements' avec sélection multi-pills (clic pour ajouter/retirer). Checkbox 'Verrouiller le rattachement' (cochée par défaut)" },
+      { "code": "FE", "txt": "Modale invitation : nouveau bloc 'Informations RH' avec matricule, date d'arrivée et notes admin (visible uniquement par les admins)" },
+      { "code": "FE", "txt": "Page /inscription/[token] : affichage des établissements rattachés avec badge VERROUILLÉ si lock_assignment=true. Matricule et date d'arrivée affichés en lecture seule s'ils ont été pré-remplis par l'admin" },
+      { "code": "FE", "txt": "Fiche utilisateur (modale info) : nouveau bloc dépliable 'Informations RH étendues' avec matricule, date de naissance, spécialité, diplôme, adresse, contact d'urgence (nom + tél), date de fin de contrat" },
+      { "code": "FE", "txt": "Fiche utilisateur : nouveau bloc dépliable 'Actions administrateur' avec bouton rouge 'Réinitialiser mot de passe' (déclenche la RPC + log applicatif) et bouton bleu 'Envoyer un email' (mailto:)" },
+      { "code": "•", "txt": "Compatibilité douce : si le SQL n'a pas encore été passé, la sauvegarde fiche user retombe automatiquement sur les colonnes de base sans erreur" }
+    ],
+    "themes": ["users", "rls_securite"],
+    "date": "31 mai 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.55.25.html",
+    "sqlFile": "aveho-PATCH-vers-0.55.25.sql"
+  },
+  {
     "v": "0.55.24",
     "kind": "version",
     "titre": "Smoke tests sur TOUTES les versions du changelog (fallback générique) + bouton 'Tester toutes les versions' avec rapport global",

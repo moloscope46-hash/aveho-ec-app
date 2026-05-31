@@ -48,6 +48,12 @@ export default function Utilisateurs() {
     telephone: "",
     mobile: "",
     fonction_detail: "",
+    // 0.55.25 : rattachement multi-établissements + lock
+    etablissement_ids: [],   // array d'UUID établissements
+    lock_assignment: true,    // l'invité ne peut pas modifier
+    matricule: "",            // numéro interne
+    date_arrivee: "",
+    notes_admin: "",
   });
   // 0.55.12 : URL de l'invitation après création (pour la copier/montrer)
   const [createdInviteLink, setCreatedInviteLink] = useState(null);
@@ -57,7 +63,12 @@ export default function Utilisateurs() {
   // Alpha 0.20.0 : recherche dans la liste des membres
   const [searchMembres, setSearchMembres] = useState("");
   const [userInfoModal, setUserInfoModal] = useState(null);
-  const [userInfoForm, setUserInfoForm] = useState({ nom_affiche: "", telephone: "", poste: "", notes: "", date_arrivee: "" });
+  const [userInfoForm, setUserInfoForm] = useState({
+    nom_affiche: "", telephone: "", poste: "", notes: "", date_arrivee: "",
+    // 0.55.25 : nouveaux champs RH
+    matricule: "", date_naissance: "", contact_urgence_nom: "", contact_urgence_tel: "",
+    adresse: "", specialite: "", diplome: "", date_fin_contrat: "",
+  });
   const [userActivity, setUserActivity] = useState(null); // {nb_actions, derniere_activite, ...}
   const [err, setErr] = useState("");
   // 0.55.17 : méthodes biométriques par user (empreinte/face)
@@ -173,6 +184,15 @@ export default function Utilisateurs() {
       poste: m.poste || "",
       notes: m.notes || "",
       date_arrivee: m.date_arrivee || "",
+      // 0.55.25 : nouveaux champs RH
+      matricule: m.matricule || "",
+      date_naissance: m.date_naissance || "",
+      contact_urgence_nom: m.contact_urgence_nom || "",
+      contact_urgence_tel: m.contact_urgence_tel || "",
+      adresse: m.adresse || "",
+      specialite: m.specialite || "",
+      diplome: m.diplome || "",
+      date_fin_contrat: m.date_fin_contrat || "",
     });
     setUserActivity(null);
     // Charger l'activité depuis audit_log
@@ -194,18 +214,71 @@ export default function Utilisateurs() {
   }
   async function saveUserInfo() {
     if (!userInfoModal) return;
-    await supabase.from("membres_structure")
-      .update({
+    const updates = {
+      nom_affiche: userInfoForm.nom_affiche || null,
+      telephone: userInfoForm.telephone || null,
+      poste: userInfoForm.poste || null,
+      notes: userInfoForm.notes || null,
+      date_arrivee: userInfoForm.date_arrivee || null,
+    };
+    // 0.55.25 : tenter d'ajouter les nouveaux champs (peut échouer si SQL pas passé → fallback)
+    try {
+      Object.assign(updates, {
+        matricule: userInfoForm.matricule || null,
+        date_naissance: userInfoForm.date_naissance || null,
+        contact_urgence_nom: userInfoForm.contact_urgence_nom || null,
+        contact_urgence_tel: userInfoForm.contact_urgence_tel || null,
+        adresse: userInfoForm.adresse || null,
+        specialite: userInfoForm.specialite || null,
+        diplome: userInfoForm.diplome || null,
+        date_fin_contrat: userInfoForm.date_fin_contrat || null,
+      });
+    } catch {}
+    const { error } = await supabase.from("membres_structure")
+      .update(updates)
+      .eq("user_id", userInfoModal.user_id)
+      .eq("structure_id", auth.structureId);
+    if (error) {
+      // Si la colonne n'existe pas, on retire les champs étendus et on réessaie
+      console.warn("[saveUserInfo] colonnes étendues absentes, retry sans:", error.message);
+      const basicUpdates = {
         nom_affiche: userInfoForm.nom_affiche || null,
         telephone: userInfoForm.telephone || null,
         poste: userInfoForm.poste || null,
         notes: userInfoForm.notes || null,
         date_arrivee: userInfoForm.date_arrivee || null,
-      })
-      .eq("user_id", userInfoModal.user_id)
-      .eq("structure_id", auth.structureId);
+      };
+      await supabase.from("membres_structure")
+        .update(basicUpdates)
+        .eq("user_id", userInfoModal.user_id)
+        .eq("structure_id", auth.structureId);
+    }
     setUserInfoModal(null);
     await loadAll();
+  }
+
+  // 0.55.25 — Réinitialiser le mot de passe d'un user (action admin)
+  async function resetUserPassword(m) {
+    if (!await dialogs.confirm({
+      title: `Réinitialiser le mot de passe de ${m.nom_affiche || m.user_id.slice(0,8)} ?`,
+      message: "L'utilisateur recevra un email pour définir un nouveau mot de passe.",
+      variant: "danger",
+    })) return;
+    try {
+      const { data, error } = await supabase.rpc("reset_user_password", { p_user_id: m.user_id });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Échec");
+      await dialogs.alert({
+        title: "Demande enregistrée",
+        message: `La demande de réinitialisation a été journalisée. Pour envoyer l'email officiel, utilisez le tableau de bord Supabase Auth ou l'Edge Function dédiée.`,
+      });
+    } catch (e) {
+      await dialogs.alert({
+        title: "Erreur",
+        message: e.message || "Erreur lors de la demande",
+        variant: "danger",
+      });
+    }
   }
   // Alpha 0.16.0 : archive / restaure une invitation
   async function toggleInvitArchive(i) {
@@ -244,6 +317,12 @@ export default function Utilisateurs() {
         telephone: inviteForm.telephone || null,
         mobile: inviteForm.mobile || null,
         fonction_detail: inviteForm.fonction_detail || null,
+        // 0.55.25
+        etablissement_ids: inviteForm.etablissement_ids?.length ? inviteForm.etablissement_ids : null,
+        lock_assignment: !!inviteForm.lock_assignment,
+        matricule: inviteForm.matricule || null,
+        date_arrivee: inviteForm.date_arrivee || null,
+        notes_admin: inviteForm.notes_admin || null,
       })
       .select("token")
       .single();
@@ -663,6 +742,91 @@ export default function Utilisateurs() {
                 </div>
               </div>
 
+              {/* 0.55.25 : Rattachement multi-établissements + lock */}
+              <div style={{ marginTop: 16, padding: "12px 14px", background: "#f4f7fa", borderRadius: 8, border: "1px solid #e3e9ee" }}>
+                <h4 style={{ margin: "0 0 10px", fontSize: 13.5, color: "#142131", fontWeight: 700 }}>
+                  <i className="ti ti-building-hospital" /> Rattachement aux établissements
+                </h4>
+                {auth.etablissements?.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {auth.etablissements.map((etab) => {
+                      const selected = inviteForm.etablissement_ids?.includes(etab.id);
+                      return (
+                        <span
+                          key={etab.id}
+                          onClick={() => {
+                            const cur = inviteForm.etablissement_ids || [];
+                            const next = selected ? cur.filter(x => x !== etab.id) : [...cur, etab.id];
+                            setInviteForm({ ...inviteForm, etablissement_ids: next });
+                          }}
+                          style={{
+                            cursor: "pointer", fontSize: 12, padding: "5px 10px", borderRadius: 14,
+                            fontWeight: 600,
+                            background: selected ? "#185FA5" : "#fff",
+                            color: selected ? "#fff" : "#6c7a89",
+                            border: `1px solid ${selected ? "#185FA5" : "#d3d9e0"}`,
+                            display: "inline-flex", alignItems: "center", gap: 4,
+                          }}
+                        >
+                          {selected ? <i className="ti ti-check" /> : <i className="ti ti-plus" />} {etab.nom}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 12, color: "#8a98a8", margin: 0 }}>Aucun établissement disponible</p>
+                )}
+                <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 12.5, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={inviteForm.lock_assignment}
+                    onChange={(e) => setInviteForm({ ...inviteForm, lock_assignment: e.target.checked })}
+                    style={{ width: 16, height: 16 }}
+                  />
+                  <span>
+                    <b>Verrouiller le rattachement</b>
+                    <span style={{ color: "#8a98a8", display: "block", fontSize: 11 }}>
+                      L'utilisateur verra les établissements mais ne pourra pas les modifier
+                    </span>
+                  </span>
+                </label>
+              </div>
+
+              {/* 0.55.25 : Champs RH pré-remplis (optionnels) */}
+              <div style={{ marginTop: 12, padding: "12px 14px", background: "#f4f7fa", borderRadius: 8, border: "1px solid #e3e9ee" }}>
+                <h4 style={{ margin: "0 0 10px", fontSize: 13.5, color: "#142131", fontWeight: 700 }}>
+                  <i className="ti ti-id-badge" /> Informations RH <span style={{ color: "#8a98a8", fontWeight: 400, fontSize: 11 }}>(optionnel)</span>
+                </h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <div className="form-row">
+                    <label>Matricule</label>
+                    <input
+                      value={inviteForm.matricule}
+                      onChange={(e) => setInviteForm({ ...inviteForm, matricule: e.target.value })}
+                      placeholder="ex: 0042"
+                    />
+                  </div>
+                  <div className="form-row">
+                    <label>Date d'arrivée</label>
+                    <input
+                      type="date"
+                      value={inviteForm.date_arrivee}
+                      onChange={(e) => setInviteForm({ ...inviteForm, date_arrivee: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="form-row" style={{ marginTop: 8 }}>
+                  <label>Notes internes (visible uniquement par admin)</label>
+                  <textarea
+                    value={inviteForm.notes_admin}
+                    onChange={(e) => setInviteForm({ ...inviteForm, notes_admin: e.target.value })}
+                    placeholder="Notes RH internes…"
+                    rows={2}
+                    style={{ resize: "vertical", fontFamily: "inherit", fontSize: 13 }}
+                  />
+                </div>
+              </div>
+
               <p style={{ fontSize: 12, color: "#8a98a8", margin: "10px 0 0", lineHeight: 1.5 }}>
                 <i className="ti ti-info-circle" /> L'utilisateur recevra un email avec un lien d'inscription pour choisir son mot de passe et compléter ses informations. Lien valide 7 jours.
               </p>
@@ -785,7 +949,90 @@ export default function Utilisateurs() {
                 <label>Date d'arrivée</label>
                 <input type="date" value={userInfoForm.date_arrivee} onChange={(e)=>setUserInfoForm({...userInfoForm, date_arrivee:e.target.value})} />
               </div>
-              <div className="fld">
+
+              {/* 0.55.25 : Champs RH étendus dans un bloc séparé */}
+              <details style={{ marginTop: 10, background: "#f4f7fa", border: "1px solid #e3e9ee", borderRadius: 8, padding: "8px 12px" }}>
+                <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#142131", padding: "4px 0" }}>
+                  <i className="ti ti-id-badge" /> Informations RH étendues
+                </summary>
+                <div style={{ paddingTop: 10 }}>
+                  <div className="grid-2-mobile-1" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                    <div className="fld">
+                      <label>Matricule interne</label>
+                      <input value={userInfoForm.matricule} onChange={(e)=>setUserInfoForm({...userInfoForm, matricule:e.target.value})} placeholder="ex: 0042" />
+                    </div>
+                    <div className="fld">
+                      <label>Date de naissance</label>
+                      <input type="date" value={userInfoForm.date_naissance} onChange={(e)=>setUserInfoForm({...userInfoForm, date_naissance:e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="grid-2-mobile-1" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop: 10 }}>
+                    <div className="fld">
+                      <label>Spécialité</label>
+                      <input value={userInfoForm.specialite} onChange={(e)=>setUserInfoForm({...userInfoForm, specialite:e.target.value})} placeholder="ex: Cardiologie" />
+                    </div>
+                    <div className="fld">
+                      <label>Diplôme</label>
+                      <input value={userInfoForm.diplome} onChange={(e)=>setUserInfoForm({...userInfoForm, diplome:e.target.value})} placeholder="ex: IDE Bac+3" />
+                    </div>
+                  </div>
+                  <div className="fld" style={{ marginTop: 10 }}>
+                    <label>Adresse postale</label>
+                    <input value={userInfoForm.adresse} onChange={(e)=>setUserInfoForm({...userInfoForm, adresse:e.target.value})} placeholder="12 rue de la République, 75001 Paris" />
+                  </div>
+                  <div className="grid-2-mobile-1" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop: 10 }}>
+                    <div className="fld">
+                      <label>Contact d'urgence (nom)</label>
+                      <input value={userInfoForm.contact_urgence_nom} onChange={(e)=>setUserInfoForm({...userInfoForm, contact_urgence_nom:e.target.value})} placeholder="Marie Dupont (conjoint)" />
+                    </div>
+                    <div className="fld">
+                      <label>Contact d'urgence (tél)</label>
+                      <input value={userInfoForm.contact_urgence_tel} onChange={(e)=>setUserInfoForm({...userInfoForm, contact_urgence_tel:e.target.value})} placeholder="06 12 34 56 78" />
+                    </div>
+                  </div>
+                  <div className="fld" style={{ marginTop: 10 }}>
+                    <label>Date de fin de contrat <span style={{ color: "#8a98a8", fontSize: 11 }}>(optionnel)</span></label>
+                    <input type="date" value={userInfoForm.date_fin_contrat} onChange={(e)=>setUserInfoForm({...userInfoForm, date_fin_contrat:e.target.value})} />
+                  </div>
+                </div>
+              </details>
+
+              {/* 0.55.25 : Actions admin */}
+              <details style={{ marginTop: 8, background: "#fff8ec", border: "1px solid #f0d59f", borderRadius: 8, padding: "8px 12px" }}>
+                <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#7a4f15", padding: "4px 0" }}>
+                  <i className="ti ti-tool" /> Actions administrateur
+                </summary>
+                <div style={{ paddingTop: 10, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => resetUserPassword(userInfoModal)}
+                    style={{
+                      background: "linear-gradient(135deg, #c0392b, #e74c3c)",
+                      color: "#fff", border: "none", padding: "8px 12px", borderRadius: 8,
+                      fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                    }}
+                  >
+                    <i className="ti ti-key" /> Réinitialiser mot de passe
+                  </button>
+                  <a
+                    href={`mailto:${userInfoModal.email || ""}`}
+                    style={{
+                      background: "#185FA5", color: "#fff", border: "none", padding: "8px 12px",
+                      borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                      fontFamily: "inherit", textDecoration: "none",
+                      display: "inline-flex", alignItems: "center", gap: 5,
+                    }}
+                  >
+                    <i className="ti ti-mail" /> Envoyer un email
+                  </a>
+                </div>
+                <p style={{ fontSize: 11, color: "#7a4f15", marginTop: 8, margin: "8px 0 0", lineHeight: 1.4 }}>
+                  <i className="ti ti-info-circle" /> La réinitialisation déclenche un email Supabase à l'utilisateur pour redéfinir son mot de passe.
+                </p>
+              </details>
+
+              <div className="fld" style={{ marginTop: 10 }}>
                 <label>Notes internes</label>
                 <textarea value={userInfoForm.notes} onChange={(e)=>setUserInfoForm({...userInfoForm, notes:e.target.value})} rows={3} style={{ width:"100%", padding:9, border:"1px solid #e1e6eb", borderRadius:8, fontFamily:"inherit", fontSize:13, resize:"vertical" }} placeholder="Compétences, disponibilités, infos pratiques…" />
               </div>

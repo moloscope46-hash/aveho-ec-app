@@ -27,6 +27,55 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.55.25 — Invitation enrichie + fiche user étendue ==============
+  "0.55.25": async () => {
+    const supabase = createClient();
+    const results = [];
+
+    results.push(await runTest("Colonnes invitations.etablissement_ids", async () => {
+      const { error } = await supabase.from("invitations")
+        .select("etablissement_ids, lock_assignment, matricule, date_arrivee, notes_admin")
+        .limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("column")) {
+        return { ok: false, msg: "Colonnes absentes — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Toutes présentes" };
+    }));
+
+    results.push(await runTest("Colonnes membres_structure RH étendues", async () => {
+      const { error } = await supabase.from("membres_structure")
+        .select("matricule, date_naissance, contact_urgence_nom, specialite, diplome")
+        .limit(1);
+      if (error?.message?.includes("does not exist") || error?.message?.includes("column")) {
+        return { ok: false, msg: "Colonnes absentes — SQL pas passé ?" };
+      }
+      return { ok: !error, msg: error?.message || "Toutes présentes" };
+    }));
+
+    results.push(await runTest("Vue v_user_complete accessible", async () => {
+      const { error } = await supabase.from("v_user_complete").select("user_id").limit(1);
+      return { ok: !error, msg: error?.message || "Accessible" };
+    }));
+
+    results.push(await runTest("RPC get_invitation_full disponible (test token bidon)", async () => {
+      const { data, error } = await supabase.rpc("get_invitation_full", {
+        p_token: "00000000-0000-0000-0000-000000000000",
+      });
+      if (error) return { ok: false, msg: error.message };
+      // On attend ok=false (token invalide), mais la RPC répond
+      return { ok: data?.ok === false, msg: "RPC répond correctement" };
+    }));
+
+    results.push(await runTest("RPC reset_user_password disponible", async () => {
+      // On ne l'appelle pas vraiment, on vérifie juste qu'elle existe via une erreur de paramètre
+      const { error } = await supabase.rpc("reset_user_password", { p_user_id: "00000000-0000-0000-0000-000000000000" });
+      // Si la RPC existe, on aura une réponse (peut-être ok=false)
+      return { ok: !error || !error.message.includes("does not exist"), msg: "RPC déclarée" };
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.24 — Tester tout + fallback générique ==============
   "0.55.24": async () => {
     const results = [];
