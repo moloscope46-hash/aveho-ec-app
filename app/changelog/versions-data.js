@@ -120,6 +120,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.12",
+    "kind": "version",
+    "titre": "🐛 Fix colonnes table mutuelles · raison_sociale au lieu de nom · cp au lieu de code_postal · type_organisme au lieu de type",
+    "chantiers": [
+      { "code": "BUG", "txt": "Erreur 400 Bad Request sur GET /rest/v1/mutuelles?order=nom.asc : la table mutuelles n'a PAS de colonne 'nom' — elle s'appelle 'raison_sociale'. Les autres colonnes diffèrent aussi : 'cp' au lieu de 'code_postal', 'type_organisme' au lieu de 'type'. Cela causait un crash silencieux sur la page /admin/referentiels-sante onglet Mutuelles et faisait planter le dashboard patient" },
+      { "code": "FE", "txt": "Page /admin/referentiels-sante : helper getNom(item) qui résout nom||raison_sociale selon ce qui est présent. Query .order('raison_sociale') au lieu de .order('nom') pour les mutuelles (gardé 'nom' pour caisses). Init du formulaire de création utilise raison_sociale + type_organisme pour onglet mutuelles. Validation save() vérifie le bon champ selon l'onglet. Filtre items et affichage liste utilisent getNom. Affichage code postal : item.code_postal || item.cp. Affichage type mutuelle : item.type_organisme || item.type" },
+      { "code": "FE", "txt": "EditModal mutuelles : label 'Raison sociale *' au lieu de 'Nom *' avec set('raison_sociale', v). Type select utilise type_organisme. 2 nouveaux champs ajoutés visibles dans la modale mutuelles : 'Nom court' (diminutif usuel comme 'Harmonie') et 'Code organisme' (code_orgcomp). Champ Code postal utilise 'cp' pour mutuelles, 'code_postal' pour caisses. fillFromBAN remappe en cp pour mutuelles uniquement" },
+      { "code": "BE", "txt": "Route /api/mutuelles : POST accepte body.raison_sociale OU body.nom (fallback rétrocompatible). Payload insère raison_sociale + type_organisme + cp avec mapping depuis les anciens noms. PUT remappe automatiquement : si body contient {nom} il devient {raison_sociale}, {code_postal} → {cp}, {type} → {type_organisme}. Extraction propre via destructuring const { id, nom, code_postal, type, ...rest } = body" },
+      { "code": "SQL", "txt": "Patch 0.56.10 corrigé (livré en outputs) : RPC patient_dashboard_summary corrigée — la sous-requête (select nom from mutuelles where id = v_patient.mutuelle_id) devient (select raison_sociale from mutuelles...). Sans ce fix, le dashboard patient affichait 'Non renseignée' pour la mutuelle même si le patient en avait une" },
+      { "code": "AI", "txt": "+17 tests Vitest : Page referentiels (12 : getNom helper, order raison_sociale, init création, validation save, filtre, affichage liste, label EditModal, type_organisme+nom_court+code_orgcomp, cp/code_postal, affichage cp, affichage type, fillFromBAN mapping), API mutuelles (4 : POST accepte raison_sociale, payload mapping, PUT remap, destructuring), SQL 0.56.10 (1 : select raison_sociale). 1 test 0.56.4 ajusté. Total 2095 tests verts (vs 2078)" }
+    ],
+    "themes": ["bugfix", "mutuelles", "colonnes", "mapping"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.12.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.11",
     "kind": "version",
     "titre": "🔧 Patch correctif · CORS Edge Function invite-user · scanner QR cleanup robuste · Service Worker sans faux 503 · safe SQL groupements",

@@ -30,6 +30,11 @@ export default function ReferentielsSantePage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
 
+  // 0.56.12 : la table mutuelles utilise raison_sociale au lieu de nom.
+  // Helper qui résout le bon champ selon l'onglet.
+  const nomField = tab === "caisses" ? "nom" : "raison_sociale";
+  const getNom = (item) => item?.nom || item?.raison_sociale || "";
+
   useEffect(() => {
     if (!auth.ready) return;
     loadAll();
@@ -39,7 +44,7 @@ export default function ReferentielsSantePage() {
     setLoading(true);
     const [c, m] = await Promise.all([
       supabase.from("caisses_assurance_maladie").select("*").order("nom").limit(500),
-      supabase.from("mutuelles").select("*").order("nom").limit(500),
+      supabase.from("mutuelles").select("*").order("raison_sociale").limit(500),
     ]);
     setCaisses(c.data || []);
     setMutuelles(m.data || []);
@@ -50,7 +55,7 @@ export default function ReferentielsSantePage() {
     setCreating(true);
     setEditing(tab === "caisses"
       ? { nom: "", code_organisme: "", type: "CPAM", regime: "general" }
-      : { nom: "", type: "mutuelle" }
+      : { raison_sociale: "", type_organisme: "mutuelle" }
     );
   }
 
@@ -66,7 +71,8 @@ export default function ReferentielsSantePage() {
 
   async function save() {
     if (!editing) return;
-    if (!editing.nom) { setMsg({ type: "error", text: "Le nom est obligatoire" }); return; }
+    const nomVal = tab === "caisses" ? editing.nom : editing.raison_sociale;
+    if (!nomVal) { setMsg({ type: "error", text: "Le nom est obligatoire" }); return; }
     if (tab === "caisses" && !editing.code_organisme) {
       setMsg({ type: "error", text: "Le code organisme est obligatoire" });
       return;
@@ -101,7 +107,7 @@ export default function ReferentielsSantePage() {
   }
 
   async function del(item) {
-    if (!confirm(`Supprimer ${item.nom} ? Cette action est irréversible.`)) return;
+    if (!confirm(`Supprimer ${getNom(item)} ? Cette action est irréversible.`)) return;
     const token = (await supabase.auth.getSession()).data?.session?.access_token;
     const endpoint = tab === "caisses" ? "/api/caisses" : "/api/mutuelles";
     try {
@@ -125,7 +131,7 @@ export default function ReferentielsSantePage() {
   const filtered = filter
     ? items.filter(x => {
         const f = filter.toLowerCase();
-        return (x.nom || "").toLowerCase().includes(f)
+        return (getNom(x)).toLowerCase().includes(f)
           || (x.code_organisme || "").toLowerCase().includes(f)
           || (x.numero_amc || "").toLowerCase().includes(f)
           || (x.ville || "").toLowerCase().includes(f)
@@ -203,7 +209,7 @@ export default function ReferentielsSantePage() {
               }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: "#142131" }}>
-                    {item.nom}
+                    {getNom(item)}
                   </div>
                   <div style={{ fontSize: 11, color: "#6c7a89", marginTop: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     {tab === "caisses" && (
@@ -216,10 +222,10 @@ export default function ReferentielsSantePage() {
                     {tab === "mutuelles" && (
                       <>
                         {item.numero_amc && <span><i className="ti ti-hash" /> AMC <code style={{ fontFamily: "Consolas, monospace" }}>{item.numero_amc}</code></span>}
-                        {item.type && <span style={{ background: "#f3effa", color: "#5a4a90", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>{item.type}</span>}
+                        {(item.type_organisme || item.type) && <span style={{ background: "#f3effa", color: "#5a4a90", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>{item.type_organisme || item.type}</span>}
                       </>
                     )}
-                    {item.ville && <span><i className="ti ti-map-pin" /> {item.ville}{item.code_postal && ` (${item.code_postal})`}</span>}
+                    {item.ville && <span><i className="ti ti-map-pin" /> {item.ville}{(item.code_postal || item.cp) && ` (${item.code_postal || item.cp})`}</span>}
                   </div>
                   <div style={{ marginTop: 6 }}>
                     <ContactActions entity={item} size="sm" />
@@ -295,14 +301,26 @@ function TabBtn({ label, icon, color, count, active, onClick }) {
 function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating }) {
   function set(k, v) { setEntity({ ...entity, [k]: v }); }
   function fillFromBAN(a) {
-    setEntity({
-      ...entity,
-      adresse: a.adresse,
-      code_postal: a.code_postal,
-      ville: a.ville,
-      latitude: a.latitude,
-      longitude: a.longitude,
-    });
+    // 0.56.12 : mapping vers le bon champ selon la table cible
+    if (tab === "mutuelles") {
+      setEntity({
+        ...entity,
+        adresse: a.adresse,
+        cp: a.code_postal,
+        ville: a.ville,
+        latitude: a.latitude,
+        longitude: a.longitude,
+      });
+    } else {
+      setEntity({
+        ...entity,
+        adresse: a.adresse,
+        code_postal: a.code_postal,
+        ville: a.ville,
+        latitude: a.latitude,
+        longitude: a.longitude,
+      });
+    }
   }
 
   return (
@@ -318,14 +336,18 @@ function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating 
         <div style={{ display: "flex", alignItems: "center", marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 16, flex: 1 }}>
             <i className={tab === "caisses" ? "ti ti-shield-check" : "ti ti-heart-handshake"} style={{ marginRight: 6, color: tab === "caisses" ? "#185FA5" : "#7a6fb0" }} />
-            {creating ? `Nouvelle ${tab === "caisses" ? "caisse" : "mutuelle"}` : `Modifier : ${entity.nom}`}
+            {creating ? `Nouvelle ${tab === "caisses" ? "caisse" : "mutuelle"}` : `Modifier : ${entity.nom || entity.raison_sociale || ""}`}
           </h3>
           <button onClick={onCancel} style={{ background: "transparent", border: "none", fontSize: 24, color: "#a0aeb9", cursor: "pointer" }}>×</button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <FieldCol span={2}>
-            <Field label="Nom *" value={entity.nom || ""} onChange={(v) => set("nom", v)} />
+            {tab === "caisses" ? (
+              <Field label="Nom *" value={entity.nom || ""} onChange={(v) => set("nom", v)} />
+            ) : (
+              <Field label="Raison sociale *" value={entity.raison_sociale || ""} onChange={(v) => set("raison_sociale", v)} />
+            )}
           </FieldCol>
           {tab === "caisses" && (
             <>
@@ -357,12 +379,14 @@ function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating 
           {tab === "mutuelles" && (
             <>
               <Field label="N° AMC" mono value={entity.numero_amc || ""} onChange={(v) => set("numero_amc", v)} placeholder="25992142" />
-              <FieldSelect label="Type" value={entity.type || "mutuelle"} onChange={(v) => set("type", v)} options={[
+              <FieldSelect label="Type" value={entity.type_organisme || entity.type || "mutuelle"} onChange={(v) => set("type_organisme", v)} options={[
                 { v: "mutuelle", lbl: "Mutuelle" },
                 { v: "assurance", lbl: "Assurance" },
                 { v: "prevoyance", lbl: "Prévoyance" },
                 { v: "autre", lbl: "Autre" },
               ]} />
+              <Field label="Nom court" value={entity.nom_court || ""} onChange={(v) => set("nom_court", v)} placeholder="Diminutif usuel" />
+              <Field label="Code organisme" mono value={entity.code_orgcomp || ""} onChange={(v) => set("code_orgcomp", v)} placeholder="Code de gestion" />
             </>
           )}
         </div>
@@ -382,7 +406,11 @@ function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating 
           />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
-          <Field label="Code postal" mono value={entity.code_postal || ""} onChange={(v) => set("code_postal", v)} />
+          {tab === "caisses" ? (
+            <Field label="Code postal" mono value={entity.code_postal || ""} onChange={(v) => set("code_postal", v)} />
+          ) : (
+            <Field label="Code postal" mono value={entity.cp || entity.code_postal || ""} onChange={(v) => set("cp", v)} />
+          )}
           <Field label="Ville" value={entity.ville || ""} onChange={(v) => set("ville", v)} />
         </div>
 

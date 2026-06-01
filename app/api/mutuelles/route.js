@@ -62,19 +62,22 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
-  if (!body.nom) return Response.json({ ok: false, error: "nom requis" }, { status: 400 });
+  if (!body.raison_sociale && !body.nom) {
+    return Response.json({ ok: false, error: "raison_sociale requise" }, { status: 400 });
+  }
 
   const authHeader = req.headers.get("authorization") || "";
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
     global: { headers: { Authorization: authHeader } },
   });
 
+  // 0.56.12 : mapping vers le bon nom de colonne (la table a 'raison_sociale')
   const payload = {
-    nom: body.nom,
+    raison_sociale: body.raison_sociale || body.nom,
     numero_amc: body.numero_amc || null,
-    type: body.type || "mutuelle",
+    type_organisme: body.type_organisme || body.type || "mutuelle",
     adresse: body.adresse || null,
-    code_postal: body.code_postal || null,
+    cp: body.cp || body.code_postal || null,
     ville: body.ville || null,
     telephone: body.telephone || null,
     email: body.email || null,
@@ -116,7 +119,14 @@ export async function PUT(req) {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { id, ...updates } = body;
+  const { id, nom, code_postal, type, ...rest } = body;
+
+  // 0.56.12 : remapper nom → raison_sociale, code_postal → cp, type → type_organisme
+  const updates = { ...rest };
+  if (nom !== undefined) updates.raison_sociale = nom;
+  if (code_postal !== undefined) updates.cp = code_postal;
+  if (type !== undefined) updates.type_organisme = type;
+
   const { data, error } = await supabase
     .from("mutuelles")
     .update(updates)

@@ -62,7 +62,7 @@ describe("0.56.4 - API /api/mutuelles CRUD", () => {
 
   it("POST avec validation nom requis", () => {
     expect(src).toContain("export async function POST");
-    expect(src).toContain("nom requis");
+    expect(src).toMatch(/nom requis|raison_sociale requise/);
   });
 
   it("PUT existe", () => {
