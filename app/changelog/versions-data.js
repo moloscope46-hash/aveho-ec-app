@@ -120,6 +120,25 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.16",
+    "kind": "version",
+    "titre": "✨ Barre d'actions flottante en bas (mobile + desktop) — Scan / Mon étab / Commande",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouveau composant FloatingActionBar (app/FloatingActionBar.js ~370 lignes) : barre d'actions flottante centrée en bas de l'écran avec 3 bulles principales — Scan/OCR (violet #5a4a90, ouvre popup 4 options), Mon étab (bleu #185FA5, raccourci direct vers /etablissement/fiche), Commande (orange #EF9F27, ouvre popup 3 options). Design glassmorphism avec backdrop-filter blur(14px), border-radius 999px (capsule), ombres douces multi-couches, animation d'entrée pop-in cubic-bezier(0.34, 1.56, 0.64, 1) — apparition spring-style à l'arrivée sur la page" },
+      { "code": "FE", "txt": "Popup central avec backdrop semi-transparent + blur léger, slide-in depuis le bas avec animation spring. Header coloré avec gradient et bouton X. Liste d'actions cliquables avec hover background gris, icône colorée dans un carré arrondi (color22 background), label + sous-titre descriptif, chevron à droite. Fermeture par : clic backdrop, touche ESC, navigation, ou bouton X" },
+      { "code": "FE", "txt": "Bulle Scan ouvre 4 actions : Créer un patient (bulletin OCR vert), Lire ordonnance (prescription OCR violet), Scanner code-barre (bleu), Scanner QR code (violet clair). Bulle Commande ouvre 3 actions : Voir mon panier (rouge), Mes commandes (teal), Achats (orange). Chaque action a une icône, un label court, et un sous-titre descriptif explicatif" },
+      { "code": "FE", "txt": "Responsive et accessible : safe-area-inset-bottom pour iPhones avec encoche (env(safe-area-inset-bottom)), gap+padding réduits sur écrans < 640px, role='navigation' + aria-label sur la barre, role='dialog' + aria-label sur les popups, bouton fermer avec aria-label='Fermer', support clavier (ESC ferme la popup), title attribut sur les bulles pour tooltip hover. Tap effect mousedown→scale 0.92 puis retour normal. État actif (popup ouverte) avec translateY(-3px) scale(1.05) + ombre élargie de la couleur de la bulle" },
+      { "code": "FE", "txt": "Masquée intelligemment sur /login, /inscription, /presentation (pas de pollution sur les pages où elle n'a pas de sens). useEffect qui ferme automatiquement la popup au changement de route (usePathname). Z-index 998 pour le backdrop, 999 pour la barre et les popups, donc toujours au-dessus du contenu sans recouvrir les modales critiques" },
+      { "code": "FE", "txt": "CSS globals.css ajusté : .wrap desktop padding-bottom passe de 60px à 110px, mobile de 90px à 130px pour laisser la place à la FAB sans recouvrir le contenu en bas de page (notamment les boutons d'action en bas de formulaires longs)" },
+      { "code": "FE", "txt": "Layout principal (app/layout.js) : import + mount <FloatingActionBar /> après BiometricOptInModal. Composant client (useState/useEffect/useRouter/usePathname) qui s'hydrate après les autres helpers globaux (DialogsHost, AlertToast, etc.)" },
+      { "code": "AI", "txt": "+21 tests Vitest : composant FloatingActionBar (16 : exports, 3 bulles, 4 actions Scan, 3 actions Commande, routes correctes, masquage HIDDEN_PATHS, ESC ferme, backdrop blur, animations, safe-area, glassmorphism, responsive 640px, état actif, accessibilité role+aria), Layout intégration (2 : import, mount), CSS padding (3 : desktop 110px, mobile 130px). Total 2178 tests verts (vs 2157)" }
+    ],
+    "themes": ["feature", "ui_ux", "mobile", "accessibility", "navigation"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.16.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.15",
     "kind": "version",
     "titre": "🎯 Module Équipes + TopBar workflow métier 6 sections",

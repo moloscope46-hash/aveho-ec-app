@@ -48,7 +48,7 @@ export default function EquipeDetailPage() {
       supabase.rpc("equipe_detail", { p_equipe_id: params.id }),
       supabase.from("equipes_services").select("service_id, services(id, nom, etage_id, etages(nom, batiment_id))").eq("equipe_id", params.id),
       supabase.from("services").select("id, nom, etage_id, etages(nom, batiment_id, batiments(nom))").order("nom"),
-      supabase.from("membres_structure").select("user_id, nom_affiche, email, fonction_detail").eq("structure_id", auth.structureId).order("nom_affiche"),
+      supabase.from("membres_structure").select("user_id, nom_affiche, fonction_detail").eq("structure_id", auth.structureId).order("nom_affiche"),
     ]);
     setMembres(m || []);
     setServicesAttaches((es || []).map(x => x.services).filter(Boolean));
@@ -216,7 +216,7 @@ export default function EquipeDetailPage() {
                       background: "#fff", border: "1px solid #d3d9e0", borderRadius: 6, padding: "6px 10px",
                       cursor: "pointer", fontFamily: "inherit", textAlign: "left", fontSize: 12,
                     }}>
-                      <b>{u.nom_affiche || u.email}</b>
+                      <b>{u.nom_affiche || "Utilisateur"}</b>
                       {u.fonction_detail && <span style={{ color: "#6c7a89", marginLeft: 6 }}>· {u.fonction_detail}</span>}
                     </button>
                   ))}

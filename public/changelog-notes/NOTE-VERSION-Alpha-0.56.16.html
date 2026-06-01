@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.16 — Barre d'actions flottante</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--violet:#5a4a90;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#5a4a90 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#e0d8f5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#e0d8f5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#e0d8f5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.hi{background:#eef9ef;border-color:#bfe2bf}.panel.tip{background:#f3effa;border-color:#d6c9ec}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#5a4a90;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.demo-bar{display:flex;gap:14px;justify-content:center;padding:14px;background:#f4f7fa;border-radius:999px;margin:14px auto;width:fit-content;box-shadow:0 8px 24px rgba(20,33,49,.12);border:1px solid #fff}
+.demo-bubble{width:64px;height:64px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff;font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;box-shadow:0 6px 14px rgba(0,0,0,.2)}
+.b-scan{background:linear-gradient(135deg,#7a6fb0,#5a4a90)}
+.b-etab{background:linear-gradient(135deg,#2a7ed1,#185FA5)}
+.b-cmd{background:linear-gradient(135deg,#f5b144,#EF9F27)}
+.demo-icon{font-size:22px}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — BARRE D'ACTIONS FLOTTANTE</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.16 — FloatingActionBar mobile + desktop<small>3 bulles en bas d'écran · Scan · Mon étab · Commande</small></h1>
+<div class="meta"><span><b>Date :</b> 1er juin 2026</span><span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.16-alpha</code></span><span><b>Tests :</b> 2178 verts (+21)</span></div>
+</header>
+
+<h2>✨ La barre d'actions flottante</h2>
+<div class="panel tip">
+<p>Une barre flottante en bas de l'écran avec 3 bulles principales accessibles à tout moment sur n'importe quelle page (sauf login/inscription/présentations). Design glassmorphism moderne, ombres douces, animations fluides, responsive et accessible.</p>
+
+<h3>Aperçu</h3>
+<div class="demo-bar">
+<div class="demo-bubble b-scan"><span class="demo-icon">🔍</span><span>Scan</span></div>
+<div class="demo-bubble b-etab"><span class="demo-icon">🏥</span><span>Mon étab</span></div>
+<div class="demo-bubble b-cmd"><span class="demo-icon">🛒</span><span>Commande</span></div>
+</div>
+</div>
+
+<h2>🔍 Bulle Scan (violet)</h2>
+<div class="panel">
+<p>Au tap, ouvre un popup central avec 4 actions :</p>
+<ul>
+<li><b>Créer un patient</b> (vert) — Depuis un bulletin de situation → <code>/scan/bulletin-situation</code></li>
+<li><b>Lire ordonnance</b> (violet) — OCR + parsing prescriptions → <code>/scan/prescription</code></li>
+<li><b>Scanner code-barre</b> (bleu) — Matériel, médicament, BL → <code>/scan/codebarre</code></li>
+<li><b>Scanner QR code</b> (violet clair) — Carte Vitale, étiquettes → <code>/scan/qr</code></li>
+</ul>
+</div>
+
+<h2>🏥 Bulle Mon étab (bleu)</h2>
+<div class="panel">
+<p>Raccourci direct au tap : navigation immédiate vers <code>/etablissement/fiche</code> (pas de popup intermédiaire pour la rapidité).</p>
+</div>
+
+<h2>🛒 Bulle Commande (orange)</h2>
+<div class="panel">
+<p>Au tap, ouvre un popup central avec 3 actions :</p>
+<ul>
+<li><b>Voir mon panier</b> (rouge) — Articles en attente de validation → <code>/panier</code></li>
+<li><b>Mes commandes</b> (teal) — Historique et suivi de livraison → <code>/commandes</code></li>
+<li><b>Achats</b> (orange) — Demandes & validations → <code>/achats</code></li>
+</ul>
+</div>
+
+<h2>🎨 Design technique</h2>
+<div class="panel">
+<h3>Glassmorphism</h3>
+<ul>
+<li>Background <code>rgba(255,255,255,0.88)</code> + <code>backdrop-filter: blur(14px)</code></li>
+<li>Border 1px white semi-transparent + ombre douce multi-couches</li>
+<li>Bulles circulaires (64×64px) avec gradients par catégorie</li>
+</ul>
+
+<h3>Animations</h3>
+<ul>
+<li>Entrée de la barre : <code>fab-bubble-pop</code> avec cubic-bezier spring (0.45s)</li>
+<li>Popup : slide-in depuis le bas avec spring</li>
+<li>Tap effect : mousedown → <code>scale(0.92)</code> puis retour normal</li>
+<li>État actif : <code>translateY(-3px) scale(1.05)</code> + ombre élargie de la couleur</li>
+</ul>
+
+<h3>Responsive</h3>
+<ul>
+<li><code>safe-area-inset-bottom</code> pour iPhones avec encoche (Dynamic Island, Face ID)</li>
+<li>Gap et padding réduits sur écrans &lt; 640px</li>
+<li>Largeur popup : <code>min(420px, calc(100vw - 32px))</code></li>
+<li>Padding-bottom de <code>.wrap</code> augmenté (110px desktop / 130px mobile) pour pas recouvrir le contenu</li>
+</ul>
+
+<h3>Accessibilité</h3>
+<ul>
+<li><code>role="navigation"</code> + <code>aria-label="Actions rapides"</code> sur la barre</li>
+<li><code>role="dialog"</code> + <code>aria-label</code> sur chaque popup</li>
+<li>Bouton fermer avec <code>aria-label="Fermer"</code></li>
+<li>Support ESC pour fermer</li>
+<li>Tooltip natif via <code>title=</code> sur chaque bulle</li>
+</ul>
+
+<h3>Comportement</h3>
+<ul>
+<li>Masquée sur <code>/login</code>, <code>/inscription</code>, <code>/presentation</code></li>
+<li>Fermeture automatique au changement de route (usePathname)</li>
+<li>Clic backdrop ferme la popup</li>
+<li>Z-index 998 backdrop, 999 barre+popup</li>
+</ul>
+</div>
+
+<h2>📈 +21 tests (2157 → 2178)</h2>
+<div class="panel">
+<ul>
+<li><b>Composant</b> (16) : 3 bulles, 4 actions Scan, 3 actions Commande, routes correctes, masquage HIDDEN_PATHS, ESC, backdrop blur, animations, safe-area, glassmorphism, responsive 640px, état actif, role+aria</li>
+<li><b>Layout</b> (2) : import + mount</li>
+<li><b>CSS</b> (3) : padding desktop 110px, padding mobile 130px</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés / créés</h2>
+<ul>
+<li><code>app/FloatingActionBar.js</code> : <b>NOUVEAU</b> ~370 lignes</li>
+<li><code>app/layout.js</code> : import + mount du composant</li>
+<li><code>app/globals.css</code> : padding-bottom <code>.wrap</code> ajusté</li>
+<li><code>__tests__/v056-16-floating-action-bar.test.js</code> : <b>NOUVEAU</b> 21 tests</li>
+</ul>
+
+<h2>SW auto-bump — 83ème consécutif</h2>
+<p>0.52.1 → ... → 0.56.15 → <b>0.56.16</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.16 · 1er juin 2026 · 2178 tests verts</footer>
+</div></body></html>

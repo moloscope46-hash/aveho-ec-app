@@ -13,6 +13,7 @@ import GlobalErrorCapture from "./GlobalErrorCapture";
 import FocusMode from "./FocusMode";
 import GeolocPrompt from "./GeolocPrompt";
 import BiometricOptInModal from "./BiometricOptInModal";
+import FloatingActionBar from "./FloatingActionBar";
 
 export const metadata = {
   title: "Aveho — Espace Collectivité",
@@ -84,6 +85,8 @@ export default function RootLayout({ children }) {
         <GeolocPrompt />
         {/* Alpha 0.55.13 : proposition activation empreinte après login (mobile) */}
         <BiometricOptInModal />
+        {/* Alpha 0.56.16 : barre d'actions flottante en bas (mobile + desktop) */}
+        <FloatingActionBar />
       </body>
     </html>
   );

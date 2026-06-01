@@ -1,20 +1,22 @@
 -- ============================================================
---  AVEHO EC — Patch 0.56.15
+--  AVEHO EC — Patch 0.56.15 (v2 corrigée)
 --  Module équipes : rattachement bâtiment + services + users.
 --  Création automatique d'une équipe par défaut à la création
 --  d'un bâtiment via trigger.
+--
+--  Correction v2 (par rapport à v1) : membres_structure n'a PAS
+--  de colonne 'email' — on récupère l'email depuis auth.users
 -- ============================================================
 
--- 1) Table équipes : 1 équipe peut être rattachée à 1 bâtiment
---    (recommandé) ou être transversale (batiment_id null).
+-- 1) Table équipes
 create table if not exists equipes (
   id uuid primary key default gen_random_uuid(),
   structure_id uuid not null references structures(id) on delete cascade,
   batiment_id uuid references batiments(id) on delete cascade,
   nom text not null,
   description text,
-  couleur text default '#185FA5',     -- pour affichage UI (badge coloré)
-  est_par_defaut boolean default false, -- créée auto à la création du bâtiment
+  couleur text default '#185FA5',
+  est_par_defaut boolean default false,
   archive boolean default false,
   created_at timestamptz default now(),
   created_by uuid,
@@ -42,10 +44,10 @@ drop policy if exists "equipes_delete" on equipes;
 create policy "equipes_delete" on equipes for delete to authenticated
   using (structure_id in (select structure_id from membres_structure where user_id = auth.uid()));
 
--- 2) Table de liaison équipe ↔ users (N à N)
+-- 2) Table de liaison équipe ↔ users
 create table if not exists equipes_membres (
   equipe_id uuid not null references equipes(id) on delete cascade,
-  user_id uuid not null,           -- pas de FK vers auth.users pour éviter problèmes RLS
+  user_id uuid not null,
   role_dans_equipe text default 'membre' check (role_dans_equipe in ('responsable', 'membre')),
   added_at timestamptz default now(),
   added_by uuid,
@@ -77,7 +79,7 @@ create policy "equipes_membres_delete" on equipes_membres for delete to authenti
     where structure_id in (select structure_id from membres_structure where user_id = auth.uid())
   ));
 
--- 3) Table de liaison équipe ↔ services (N à N)
+-- 3) Table de liaison équipe ↔ services
 create table if not exists equipes_services (
   equipe_id uuid not null references equipes(id) on delete cascade,
   service_id uuid not null references services(id) on delete cascade,
@@ -110,11 +112,7 @@ create policy "equipes_services_delete" on equipes_services for delete to authen
     where structure_id in (select structure_id from membres_structure where user_id = auth.uid())
   ));
 
--- ============================================================
--- 4) Trigger : création automatique d'une équipe "Équipe principale"
---    à chaque création d'un bâtiment
--- ============================================================
-
+-- 4) Trigger : équipe auto à la création d'un bâtiment
 create or replace function trigger_create_default_team()
 returns trigger
 language plpgsql
@@ -139,10 +137,7 @@ create trigger trg_create_default_team
   after insert on batiments
   for each row execute function trigger_create_default_team();
 
--- ============================================================
--- 5) RPC : équipes avec stats (nb_membres, nb_services, batiment_nom)
--- ============================================================
-
+-- 5) RPC équipes avec stats
 create or replace function equipes_avec_stats(p_batiment_id uuid default null)
 returns table (
   id uuid,
@@ -192,8 +187,7 @@ $$;
 grant execute on function equipes_avec_stats to authenticated;
 
 -- ============================================================
--- 6) RPC : équipe détail avec membres (jointure avec membres_structure
---    pour avoir les noms d'affichage)
+-- 6) RPC équipe détail (v2 : email depuis auth.users)
 -- ============================================================
 
 create or replace function equipe_detail(p_equipe_id uuid)
@@ -212,12 +206,13 @@ as $$
   select
     em.user_id,
     ms.nom_affiche,
-    ms.email,
+    au.email::text,
     em.role_dans_equipe,
     em.added_at,
     ms.fonction_detail
   from equipes_membres em
   left join membres_structure ms on ms.user_id = em.user_id
+  left join auth.users au on au.id = em.user_id
   where em.equipe_id = p_equipe_id
     and em.equipe_id in (
       select id from equipes
@@ -228,10 +223,7 @@ $$;
 
 grant execute on function equipe_detail to authenticated;
 
--- ============================================================
--- 7) RPC : équipes d'un user (pour la fiche profil)
--- ============================================================
-
+-- 7) RPC mes équipes
 create or replace function mes_equipes()
 returns table (
   equipe_id uuid,
@@ -261,4 +253,4 @@ $$;
 
 grant execute on function mes_equipes to authenticated;
 
--- Fin du patch 0.56.15
+-- Fin du patch 0.56.15 v2
