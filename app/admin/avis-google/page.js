@@ -74,7 +74,12 @@ export default function AvisGooglePage() {
         });
         await loadAll();
       } else {
-        setSyncMsg({ type: "error", text: data.error || "Erreur sync" });
+        // 0.56.14 : afficher le hint si dispo (diagnostic enrichi)
+        setSyncMsg({
+          type: "error",
+          text: data.error || "Erreur sync",
+          hint: data.hint,
+        });
       }
     } catch (e) {
       setSyncMsg({ type: "error", text: e.message });
@@ -152,7 +157,12 @@ export default function AvisGooglePage() {
               color: syncMsg.type === "success" ? "#2e6f33" : "#7a2d23",
               fontSize: 12,
             }}>
-              <i className={`ti ${syncMsg.type === "success" ? "ti-check" : "ti-alert-circle"}`} /> {syncMsg.text}
+              <div><i className={`ti ${syncMsg.type === "success" ? "ti-check" : "ti-alert-circle"}`} /> {syncMsg.text}</div>
+              {syncMsg.hint && (
+                <div style={{ marginTop: 6, padding: 8, background: "rgba(255,255,255,.6)", borderRadius: 4, fontSize: 11, fontStyle: "italic" }}>
+                  <i className="ti ti-bulb" /> {syncMsg.hint}
+                </div>
+              )}
             </div>
           )}
         </Panel>

@@ -38,6 +38,7 @@ export async function POST(req) {
     // Si erreur edge, lire le body pour debug clair
     if (error) {
       let detail = error.message || "Edge function error";
+      let detailRaw = null;
       try {
         if (error.context?.body) {
           const reader = error.context.body.getReader();
@@ -48,14 +49,41 @@ export async function POST(req) {
             if (done) break;
             chunks.push(decoder.decode(value, { stream: true }));
           }
-          detail = chunks.join("");
+          detailRaw = chunks.join("");
+          // 0.56.14 : essayer de parser le JSON pour un message clair
+          try {
+            const parsed = JSON.parse(detailRaw);
+            detail = parsed.error || parsed.message || detailRaw;
+          } catch {
+            detail = detailRaw;
+          }
         }
       } catch (_) { /* ignore */ }
-      return Response.json({ ok: false, error: detail }, { status: 502 });
+
+      // 0.56.14 : diagnostic enrichi avec hints sur les causes courantes
+      let hint = null;
+      if (/google_places_api_key|api.key|missing key/i.test(detail)) {
+        hint = "Variable GOOGLE_PLACES_API_KEY non configurée côté Edge Function. Va dans Supabase → Settings → Edge Functions → Secrets et ajoute-la.";
+      } else if (/not.found|404/i.test(detail)) {
+        hint = "L'Edge Function sync-google-reviews n'est peut-être pas déployée. Lance : supabase functions deploy sync-google-reviews";
+      } else if (/timeout/i.test(detail)) {
+        hint = "Timeout — beaucoup d'établissements à synchroniser ? Lance avec etablissement_id spécifique pour tester.";
+      }
+
+      return Response.json({
+        ok: false,
+        error: detail,
+        hint,
+        raw: detailRaw,
+      }, { status: 502 });
     }
 
     return Response.json({ ok: true, ...data });
   } catch (e) {
-    return Response.json({ ok: false, error: e.message }, { status: 500 });
+    return Response.json({
+      ok: false,
+      error: e.message,
+      hint: "Erreur côté Next route. Vérifie les logs Vercel.",
+    }, { status: 500 });
   }
 }

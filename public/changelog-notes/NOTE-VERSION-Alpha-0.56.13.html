@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.13 — Fix renvoyer invitation + caisses</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--red:#c0392b;--amber:#EF9F27;--green:#5aa05a}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 60%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dfeaf5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#dfeaf5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#dfeaf5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.hi{background:#eef9ef;border-color:#bfe2bf}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.bug{background:#fce5e0;border-left:3px solid #c0392b;padding:10px 14px;border-radius:6px;margin:8px 0;font-size:12.5px;color:#7a2d23}
+.bug b{color:#c0392b}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — RENVOI INVITATION + COLONNES CAISSES</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.13 — Fix renvoyer invitation + colonnes caisses<small>inviteLink reconstruit · type_caisse + cp au lieu de type + code_postal</small></h1>
+<div class="meta"><span><b>Date :</b> 1er juin 2026</span><span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.13-alpha</code></span><span><b>Tests :</b> 2109 verts (+14)</span></div>
+</header>
+
+<h2>🐛 Bug 1 — Renvoyer invitation 400</h2>
+<div class="bug">
+<b>Erreur observée :</b><br>
+<code>{ "ok": false, "error": "inviteLink manquant (doit être fourni par l'app appelante)", "diagnostic": "missing_invite_link" }</code>
+</div>
+<div class="panel">
+<p>La fonction <code>relancerInvitation</code> dans <code>app/utilisateurs/page.js</code> appelait <code>supabase.functions.invoke("invite-user")</code> sans inclure le lien d'inscription dans le body, alors que l'Edge Function le rend obligatoire.</p>
+<h3>Fix appliqué</h3>
+<pre><code>// 0.56.13 : reconstruction de l'inviteLink depuis i.token
+const siteUrl = window.location.origin;
+const inviteLink = `${siteUrl}/inscription/${i.token}`;
+
+await supabase.functions.invoke("invite-user", {
+  body: { email, nom, collectivite, role, etablissements, inviteLink }
+});</code></pre>
+<p>Bonus : gestion propre du retour error/data avec lecture du <code>context.body</code> pour afficher le détail Resend si erreur.</p>
+</div>
+
+<h2>🐛 Bug 2 — Colonnes caisses mal nommées</h2>
+<div class="bug">
+<b>Erreurs identifiées via SQL audit :</b><br>
+La table <code>caisses_assurance_maladie</code> utilise <code>type_caisse</code> (pas <code>type</code>) et <code>cp</code> (pas <code>code_postal</code>). Même problème que pour mutuelles (cf 0.56.12).
+</div>
+<div class="panel">
+<h3>Fix appliqué</h3>
+<ul>
+<li><b>Page referentiels-sante</b> : affichage caisses utilise <code>item.type_caisse || item.type</code>. Init création utilise <code>type_caisse: "CPAM"</code>. Form select écrit dans <code>entity.type_caisse</code>. Field code postal utilise <code>cp</code></li>
+<li><b>API /api/caisses</b> : POST insère <code>type_caisse + cp</code> avec mapping depuis les anciens noms. PUT remappe automatiquement</li>
+<li><b>SQL 0.56.10</b> : <code>(select type_caisse from caisses_assurance_maladie...)</code> au lieu de <code>(select type ...)</code></li>
+<li><b>fillFromBAN</b> simplifié : un seul set avec <code>cp</code> pour les 2 tables (les 2 utilisent <code>cp</code> en réalité)</li>
+</ul>
+</div>
+
+<h2>📈 +14 tests (2095 → 2109)</h2>
+<div class="panel">
+<ul>
+<li><b>relancerInvitation</b> (4) : inviteLink construit, passé dans body, gestion détail erreur, commentaire</li>
+<li><b>Page caisses</b> (5) : init type_caisse, affichage, set type_caisse, set cp, fillFromBAN unifié</li>
+<li><b>API caisses</b> (4) : POST type_caisse+cp, PUT remap, destructuring</li>
+<li><b>SQL</b> (1) : select type_caisse</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<ul>
+<li><code>app/utilisateurs/page.js</code> : relancerInvitation avec inviteLink</li>
+<li><code>app/admin/referentiels-sante/page.js</code> : type_caisse + cp + fillFromBAN unifié</li>
+<li><code>app/api/caisses/route.js</code> : POST/PUT mapping type_caisse/cp</li>
+<li><code>supabase/aveho-PATCH-vers-0.56.10.sql</code> : type_caisse</li>
+<li><code>__tests__/v056-13-fix-caisses-invite.test.js</code> : NOUVEAU</li>
+</ul>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.13 · 1er juin 2026 · 2109 tests verts</footer>
+</div></body></html>

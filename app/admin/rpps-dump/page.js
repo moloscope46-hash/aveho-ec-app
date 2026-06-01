@@ -308,6 +308,45 @@ export default function RppsDumpAdminPage() {
           <p style={{ fontSize: 12.5, color: "#6c7a89", margin: "0 0 10px" }}>
             Télécharge le fichier CSV RPPS open data depuis <a href="https://annuaire.sante.fr/web/site-pro/extractions-publiques" target="_blank" rel="noopener" style={{ color: "#185FA5" }}>annuaire.sante.fr</a> (≈ 500 Mo, mise à jour mensuelle), puis charge-le ici. Les données seront upsertées par batchs de 5 000 lignes.
           </p>
+
+          {/* 0.56.14 : raccourcis direct vers les pages de téléchargement ANS */}
+          <div style={{ background: "#dbe7f5", border: "1px solid #bdd2eb", borderRadius: 8, padding: "10px 12px", marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: "#185FA5", fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>
+              <i className="ti ti-cloud-download" /> Liens directs ANS (annuaire.sante.fr)
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <a
+                href="https://annuaire.sante.fr/web/site-pro/extractions-publiques"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#185FA5", color: "#fff", border: "none",
+                  padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  textDecoration: "none", fontFamily: "inherit",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <i className="ti ti-external-link" /> Ouvrir la page d'extractions ANS
+              </a>
+              <a
+                href="https://annuaire.sante.fr/web/site-pro/extractions-publiques?p_p_id=abonnementportlet_WAR_annuairesantefrportlet&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_resource_id=telechargerCNOM&p_p_cacheability=cacheLevelPage"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  background: "#5aa05a", color: "#fff", border: "none",
+                  padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700,
+                  textDecoration: "none", fontFamily: "inherit",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <i className="ti ti-download" /> Télécharger PS_LibreAcces (CSV ZIP)
+              </a>
+            </div>
+            <p style={{ fontSize: 10.5, color: "#185FA5", margin: "8px 0 0", fontStyle: "italic" }}>
+              Le 2ème lien lance directement le téléchargement du fichier ZIP (~150 Mo compressé). Décompresse-le pour obtenir un CSV ≈ 500 Mo à charger ci-dessous.
+            </p>
+          </div>
+
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input
               ref={fileInputRef}

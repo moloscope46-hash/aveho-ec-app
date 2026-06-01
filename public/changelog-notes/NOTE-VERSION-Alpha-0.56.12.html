@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.12 — Fix colonnes mutuelles</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--red:#c0392b;--amber:#EF9F27;--green:#5aa05a}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#7a4f15 60%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fff8ec;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#fff8ec;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fff8ec}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--amber)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.hi{background:#fff8ec;border-color:#f0d59f}.panel.danger{background:#fce5e0;border-color:#f0c4be}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.bug{background:#fce5e0;border-left:3px solid #c0392b;padding:10px 14px;border-radius:6px;margin:8px 0;font-size:12.5px;color:#7a2d23}
+.bug b{color:#c0392b}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — FIX COLONNES MUTUELLES</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.12 — Fix colonnes mutuelles<small>raison_sociale au lieu de nom · cp au lieu de code_postal · type_organisme au lieu de type</small></h1>
+<div class="meta"><span><b>Date :</b> 1er juin 2026</span><span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.12-alpha</code></span><span><b>Tests :</b> 2095 verts (+17)</span></div>
+</header>
+
+<h2>🐛 Le bug</h2>
+<div class="bug">
+<b>Erreur observée :</b><br>
+<code>GET /rest/v1/mutuelles?select=*&order=nom.asc 400 (Bad Request)</code><br>
+<code>ERROR: 42703: column "nom" does not exist</code>
+</div>
+<div class="panel">
+<p>Suite à un audit des colonnes effectives en base via <code>information_schema.columns</code>, on découvre que la table <code>mutuelles</code> n'a PAS les colonnes que mon code 0.56.4 attendait. Les vrais noms :</p>
+<ul>
+<li><code>nom</code> → en réalité <b><code>raison_sociale</code></b></li>
+<li><code>code_postal</code> → en réalité <b><code>cp</code></b></li>
+<li><code>type</code> → en réalité <b><code>type_organisme</code></b></li>
+</ul>
+<p>2 nouvelles colonnes utilisables aussi : <code>nom_court</code> (diminutif) et <code>code_orgcomp</code>.</p>
+</div>
+
+<h2>Fix appliqué</h2>
+<div class="panel">
+<h3>Page /admin/referentiels-sante</h3>
+<ul>
+<li>Helper <code>getNom(item)</code> qui résout <code>nom||raison_sociale</code></li>
+<li>Query <code>.order("raison_sociale")</code> pour mutuelles (gardé <code>nom</code> pour caisses)</li>
+<li>EditModal : label "Raison sociale *" + champs <code>nom_court</code> + <code>code_orgcomp</code></li>
+<li>fillFromBAN remappe <code>cp</code> pour mutuelles, <code>code_postal</code> pour caisses</li>
+</ul>
+
+<h3>API /api/mutuelles</h3>
+<ul>
+<li>POST accepte <code>body.raison_sociale</code> OU <code>body.nom</code> (fallback rétrocompat)</li>
+<li>PUT remappe automatiquement {nom} → {raison_sociale}, {code_postal} → {cp}, {type} → {type_organisme}</li>
+</ul>
+
+<h3>SQL 0.56.10 patch corrigé</h3>
+<pre><code>(select raison_sociale from mutuelles where id = v_patient.mutuelle_id)
+   as mutuelle_nom;</code></pre>
+<p>Sans ce fix, le dashboard patient affichait "Non renseignée" pour la mutuelle même si le patient en avait une.</p>
+</div>
+
+<h2>📈 +17 tests (2078 → 2095)</h2>
+<div class="panel">
+<ul>
+<li>Page referentiels (12) : helper getNom, order raison_sociale, init création, validation save, filtre, affichage, label EditModal, type_organisme+nom_court+code_orgcomp, cp/code_postal, affichages, fillFromBAN</li>
+<li>API mutuelles (4) : POST accepte raison_sociale, payload mapping, PUT remap, destructuring</li>
+<li>SQL 0.56.10 (1) : select raison_sociale</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<ul>
+<li><code>app/admin/referentiels-sante/page.js</code> : helper getNom + remappings</li>
+<li><code>app/api/mutuelles/route.js</code> : POST/PUT remappent</li>
+<li><code>supabase/aveho-PATCH-vers-0.56.10.sql</code> : select raison_sociale</li>
+<li><code>__tests__/v056-12-fix-mutuelles-cols.test.js</code> : NOUVEAU</li>
+</ul>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.12 · 1er juin 2026 · 2095 tests verts</footer>
+</div></body></html>

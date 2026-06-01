@@ -120,6 +120,40 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.15",
+    "kind": "version",
+    "titre": "🎯 Module Équipes + TopBar workflow métier 6 sections",
+    "chantiers": [
+      { "code": "SQL", "txt": "Module équipes COMPLET (supabase/aveho-PATCH-vers-0.56.15.sql) : 3 tables — (1) equipes(id, structure_id, batiment_id nullable, nom, description, couleur, est_par_defaut, archive, audit) avec 4 RLS policies multi-tenant + 2 index, (2) equipes_membres(equipe_id, user_id, role_dans_equipe IN responsable|membre, added_at, added_by) avec PK composite + 4 RLS, (3) equipes_services(equipe_id, service_id) avec PK composite + 4 RLS. Trigger trg_create_default_team qui crée auto 'Équipe {batiment.nom}' à chaque INSERT batiments. 3 RPC SECURITY DEFINER : equipes_avec_stats(p_batiment_id), equipe_detail(p_equipe_id), mes_equipes()" },
+      { "code": "FE", "txt": "Nouvelle page /equipes ~250 lignes : liste filtrable par bâtiment + recherche texte, groupée par bâtiment avec compteur, modale de création avec input couleur picker (input type='color'), badge 'PAR DÉFAUT' avec icône étoile pour les équipes auto-créées, affichage stats (nb_membres + nb_services + 3 premiers noms services). Archivage soft (update archive=true)" },
+      { "code": "FE", "txt": "Nouvelle page /equipe/[id] ~330 lignes : header gradient à la couleur de l'équipe avec icône users-group, gestion membres avec liste candidats (exclus de l'équipe), toggle responsable ↔ membre via bouton crown EF9F27, suppression avec confirmation, gestion services rattachés (avec hiérarchie bâtiment > étage affichée pour aider le choix), composants ContactActions pour les actions mail" },
+      { "code": "FE", "txt": "TopBar réorganisée en 6 sections workflow métier dans l'ordre : Mon espace → Collectivité → Scan → Commande → Livraison → Administratif → Administration. Anciennes sections Établissement/Stock/Groupement fusionnées dans Collectivité (toute la hiérarchie : groupement → étabs → équipes → patients → matériel → stock → RPPS). Achats déplacé dans Commande (cohérence workflow). Maintenance/Calendrier/TV regroupés dans Livraison avec Interventions/Transferts. Section Administratif regroupe TOUT le quotidien admin (RGPD, stats, signalements, paramètres) tandis qu'Administration est réservé au tech (utilisateurs, audit, logs, performances, admin RPPS/référentiels)" },
+      { "code": "FE", "txt": "Entrée /equipes ajoutée dans Collectivité avec icône ti-users-group couleur violet #5a4a90 (cohérente avec la palette Aveho)" },
+      { "code": "AI", "txt": "+34 tests Vitest sur __tests__/v056-15-equipes-topbar.test.js : SQL module équipes (10), Page /equipes (7), Page /equipe/[id] (7), TopBar refonte (10). 1 test 0.55.46 ajusté pour le renommage 'Outils scan' → 'Scan'. Total 2157 tests verts (vs 2123)" }
+    ],
+    "themes": ["feature", "equipes", "topbar", "workflow", "ui_ux"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.15.html",
+    "sqlFile": "aveho-PATCH-vers-0.56.15.sql"
+  },
+  {
+    "v": "0.56.14",
+    "kind": "version",
+    "titre": "🎨 Login bio toujours visible · Dump RPPS lien direct · Google Reviews diagnostic enrichi",
+    "chantiers": [
+      { "code": "FE", "txt": "Page /login refonte des boutons biométriques : les 2 boutons (Détection faciale + Empreinte) sont DÉSORMAIS TOUJOURS visibles si WebAuthn est supporté, avec état grisé + tooltip explicatif si non utilisable. 3 raisons possibles de désactivation : (1) navigateur ne supporte pas, (2) email pas encore renseigné, (3) méthode pas activée pour cet email — connecte-toi d'abord avec mot de passe puis active dans ton profil. Couleur grise #d3d9e0, cursor not-allowed, message d'info en petit sous le label, attribut title= pour tooltip natif. Le bouton garde son icône (ti-face-id violet / ti-fingerprint bleu)" },
+      { "code": "FE", "txt": "Nouveau composant BioButton réutilisable (dans app/login/page.js) avec props method/icon/label/busy/bioAvailable/enabled/email/onClick/color qui gère tout l'état (chevron > visible si actif, info-circle visible si grisé). Plus lisible pour le user qui voit clairement les 2 options même s'il les a pas activées" },
+      { "code": "FE", "txt": "Page /admin/rpps-dump : ajout d'un panneau bleu 'Liens directs ANS' avec 2 boutons cliquables. Bouton 1 : 'Ouvrir la page d'extractions ANS' (bleu) → ouvre annuaire.sante.fr/web/site-pro/extractions-publiques dans un nouvel onglet. Bouton 2 : 'Télécharger PS_LibreAcces (CSV ZIP)' (vert) → lance directement le téléchargement du fichier ZIP via l'URL portlet ANS (telechargerCNOM). Note explicative en italique : ZIP ~150 Mo compressé, CSV ~500 Mo décompressé" },
+      { "code": "BE", "txt": "Route /api/google-reviews/sync : diagnostic d'erreur enrichi. Parse le JSON du body d'erreur (au lieu de juste afficher la string brute). Ajoute un champ 'hint' avec un message d'aide contextuel : (1) si erreur mentionne API_KEY → 'Variable GOOGLE_PLACES_API_KEY non configurée côté Edge Function. Va dans Supabase → Settings → Edge Functions → Secrets et ajoute-la', (2) si 404/not_found → 'L'Edge Function n'est peut-être pas déployée. Lance : supabase functions deploy sync-google-reviews', (3) si timeout → 'Lance avec etablissement_id spécifique pour tester'. Retour structuré { ok: false, error, hint, raw } pour debug" },
+      { "code": "FE", "txt": "Page /admin/avis-google : affichage du hint en sous-bloc italique avec icône ti-bulb sous le message d'erreur. Permet à l'utilisateur de comprendre immédiatement quoi faire pour corriger (au lieu de devoir interpréter un message technique brut)" },
+      { "code": "AI", "txt": "+14 tests Vitest : Login BioButton (4 : composant défini, méthode face+empreinte toujours rendues, 3 raisons grisé, état disabled visuels), Dump RPPS (3 : panel liens, lien extractions, lien CSV ZIP), Google Reviews diagnostic (5 : parse JSON, hints API_KEY/deploy/timeout, retour structuré), Affichage hint (2). Total 2123 tests verts (vs 2109)" }
+    ],
+    "themes": ["ui_ux", "bugfix", "biometric", "rpps", "google"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.14.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.13",
     "kind": "version",
     "titre": "🐛 Fix renvoyer invitation (inviteLink manquant) + colonnes caisses (type_caisse + cp)",

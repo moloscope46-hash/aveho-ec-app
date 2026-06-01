@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.15 — Équipes + Refonte TopBar</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--violet:#5a4a90;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#5a4a90 60%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#e0d8f5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#e0d8f5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#e0d8f5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.hi{background:#eef9ef;border-color:#bfe2bf}
+.panel.tip{background:#f3effa;border-color:#d6c9ec}
+.panel.warn{background:#fff8ec;border-color:#f0d59f}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#5a4a90;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.section-flow{background:#f3effa;border-radius:8px;padding:14px;margin:12px 0;font-size:13px}
+.section-flow b{color:#5a4a90}
+.section-flow .arrow{color:#7a6fb0;margin:0 8px;font-weight:700}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — ÉQUIPES + REFONTE TOPBAR</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.15 — Module équipes + TopBar workflow métier<small>3 nouvelles tables · création auto · TopBar 6 sections logiques</small></h1>
+<div class="meta"><span><b>Date :</b> 1er juin 2026</span><span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.15-alpha</code></span><span><b>Tests :</b> 2157 verts (+34)</span><span><b>SQL :</b> <code style="background:rgba(255,255,255,.15);color:#fff">aveho-PATCH-vers-0.56.15.sql</code></span></div>
+</header>
+
+<h2>🎯 Nouveau : module Équipes</h2>
+<div class="panel tip">
+<p>Une équipe regroupe plusieurs utilisateurs travaillant ensemble. Elle est rattachable à <b>1 bâtiment</b> (ou transversale) et à <b>N services</b>. Création automatique d'une équipe par défaut à chaque nouveau bâtiment via trigger SQL.</p>
+
+<h3>Modèle de données</h3>
+<pre><code>equipes (
+  id uuid, structure_id, batiment_id (nullable),
+  nom, description, couleur, est_par_defaut, archive
+)
+
+equipes_membres (
+  equipe_id, user_id, role_dans_equipe (responsable|membre)
+)
+
+equipes_services (equipe_id, service_id)</code></pre>
+
+<h3>Trigger create_default_team</h3>
+<p>À chaque INSERT dans la table <code>batiments</code>, le trigger crée automatiquement une équipe nommée <code>Équipe {batiment.nom}</code> avec <code>est_par_defaut=true</code>.</p>
+
+<h3>3 RPC</h3>
+<ul>
+<li><code>equipes_avec_stats(p_batiment_id)</code> : liste équipes filtrable par bâtiment, avec compteurs (nb_membres, nb_services, services_noms[])</li>
+<li><code>equipe_detail(p_equipe_id)</code> : détails d'une équipe avec membres (jointure membres_structure pour les noms d'affichage)</li>
+<li><code>mes_equipes()</code> : équipes du user connecté (pour fiche profil)</li>
+</ul>
+
+<h3>2 nouvelles pages</h3>
+<ul>
+<li><code>/equipes</code> : liste filtrable par bâtiment, recherche texte, groupée par bâtiment avec compteur, création avec couleur picker, archivage soft</li>
+<li><code>/equipe/[id]</code> : détail avec header gradient à la couleur de l'équipe, gestion membres (ajout/retrait, toggle responsable ↔ membre via icône crown), gestion services rattachés</li>
+</ul>
+
+<h3>RLS sécurisée</h3>
+<p>4 policies sur chaque table (select/insert/update/delete) qui filtrent sur <code>structure_id in (membres_structure where user_id = auth.uid())</code>. Sécurité multi-tenant garantie.</p>
+</div>
+
+<h2>📐 TopBar réorganisée en 6 sections workflow métier</h2>
+<div class="panel">
+<p>Anciennement le menu avait 7 sections en ordre arbitraire (Mon espace, Outils scan, Établissement, Stock, Commandes, Groupement, Administration). Maintenant l'ordre suit le <b>workflow métier réel</b> :</p>
+
+<div class="section-flow">
+<b>Mon espace</b><span class="arrow">→</span><b>Collectivité</b><span class="arrow">→</span><b>Scan</b><span class="arrow">→</span><b>Commande</b><span class="arrow">→</span><b>Livraison</b><span class="arrow">→</span><b>Administratif</b><span class="arrow">→</span><b>Administration</b>
+</div>
+
+<h3>Contenu de chaque section</h3>
+<ul>
+<li><b>Mon espace</b> : Accueil, Vue globale, Profil, Magasins Aveho, Promotions</li>
+<li><b>Collectivité</b> : <i>Toute la pyramide</i> — Fiche groupement, Dashboard direction, Annuaire étabs, Mon étab, Édition hiérarchie, <b>Équipes</b>, Étabs partenaires, Carte logistique, Patients, Matériel, Articles catalogue, Dépôts, Stock, Annuaire RPPS, Mes partenaires RPPS</li>
+<li><b>Scan</b> : Bulletin situation, OCR Ordonnance, Scan QR, Scan code-barre, OCR générique</li>
+<li><b>Commande</b> : Panier, Mes commandes, Achats <i>(déplacé ici pour cohérence workflow)</i></li>
+<li><b>Livraison</b> : Interventions/DI, Transferts, Maintenance, Calendrier DI, Mode TV de service</li>
+<li><b>Administratif</b> : Statistiques (3 onglets), Journal, Signalements, Templates signalements, Consentements RGPD, Audit vérif RGPD, Modèles consentement, Stats RGPD, Digests dashboard, Annonces, Étiquettes, Tags matériel, Paramètres, Intégrations API, Mentions légales</li>
+<li><b>Administration</b> (admin tech) : Utilisateurs, Historique, Audit log, Statut système, Logs applicatifs, Performance SQL, Webhooks, <i>+ admin santé</i> : Diagnostic RPPS, Dump RPPS, Bulletins archivés, Caisses & Mutuelles, Médecins prescripteurs, Avis Google, Doublons forces, Prescriptions archive, Diagnostic mail</li>
+</ul>
+</div>
+
+<h2>📋 Action requise après déploiement</h2>
+<div class="panel warn">
+<p><b>1. Jouer le SQL dans Supabase Dashboard → SQL Editor :</b></p>
+<pre><code>-- Contenu du fichier supabase/aveho-PATCH-vers-0.56.15.sql
+-- Crée tables equipes + equipes_membres + equipes_services
+-- + 4 RLS chacune + trigger trg_create_default_team + 3 RPC</code></pre>
+
+<p><b>2. Push GitHub + Vercel redeploy :</b></p>
+<pre><code>git add -A
+git commit -m "Alpha 0.56.15 - Module équipes + TopBar workflow métier 6 sections"
+git push origin main</code></pre>
+
+<p><b>3. Pour bénéficier de la création auto :</b> à la prochaine création d'un bâtiment via <code>/etablissement/edition</code>, une équipe par défaut sera créée automatiquement et visible sur <code>/equipes</code>.</p>
+
+<p><b>4. Pour les bâtiments existants :</b> tu peux créer manuellement les équipes via le bouton "Nouvelle équipe" sur <code>/equipes</code>, ou jouer ce SQL one-shot :</p>
+<pre><code>-- Création rétroactive des équipes par défaut pour les bâtiments existants
+insert into equipes (structure_id, batiment_id, nom, est_par_defaut, couleur)
+select structure_id, id, 'Équipe ' || nom, true, '#185FA5'
+from batiments
+where not exists (
+  select 1 from equipes where batiment_id = batiments.id and est_par_defaut = true
+);</code></pre>
+</div>
+
+<h2>📈 +34 tests (2123 → 2157)</h2>
+<div class="panel">
+<ul>
+<li><b>SQL équipes</b> (10) : 3 tables avec colonnes/RLS, trigger create_default_team, 3 RPC avec leurs signatures</li>
+<li><b>Page /equipes</b> (7) : RPC equipes_avec_stats, filtres, couleur picker, groupement par bâtiment, badge PAR DÉFAUT, stats, archivage soft</li>
+<li><b>Page /equipe/[id]</b> (7) : header gradient couleur, RPC equipe_detail, ajout membre, toggle role responsable/membre, gestion services, icône crown, exclusion déjà-membres</li>
+<li><b>TopBar refonte</b> (10) : 6 sections présentes, /equipes ajoutée, anciennes sections supprimées, contenu correct par section</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés / créés</h2>
+<ul>
+<li><code>supabase/aveho-PATCH-vers-0.56.15.sql</code> : <b>NOUVEAU</b> SQL équipes complet</li>
+<li><code>app/equipes/page.js</code> : <b>NOUVEAU</b> liste équipes ~250 lignes</li>
+<li><code>app/equipe/[id]/page.js</code> : <b>NOUVEAU</b> détail équipe ~330 lignes</li>
+<li><code>app/TopBar.js</code> : <b>MODIFIÉ</b> réorganisation 6 sections métier</li>
+<li><code>__tests__/v056-15-equipes-topbar.test.js</code> : <b>NOUVEAU</b> 34 tests</li>
+</ul>
+
+<h2>SW auto-bump — 82ème consécutif</h2>
+<p>0.52.1 → ... → 0.56.14 → <b>0.56.15</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.15 · 1er juin 2026 · 2157 tests verts</footer>
+</div></body></html>

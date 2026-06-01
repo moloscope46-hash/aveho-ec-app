@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.14 — Login bio + Dump RPPS + Diagnostic</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--violet:#7a6fb0;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 60%,#bfa9e0 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#e9deff;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#e9deff;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#e9deff}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.hi{background:#eef9ef;border-color:#bfe2bf}
+.panel.tip{background:#f3effa;border-color:#d6c9ec}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#5a4a90;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.btn-demo{display:inline-block;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;margin-right:6px}
+.btn-active{background:linear-gradient(135deg,#7a6fb0,#bfa9e0);color:#fff}
+.btn-disabled{background:#d3d9e0;color:#8a98a8;cursor:not-allowed}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — UI/UX BIO + DUMP RPPS + DIAGNOSTIC</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.14 — Login bio + Dump RPPS + Google Reviews<small>Boutons biométriques toujours visibles · Liens directs ANS · Hints d'erreur enrichis</small></h1>
+<div class="meta"><span><b>Date :</b> 1er juin 2026</span><span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.14-alpha</code></span><span><b>Tests :</b> 2123 verts (+14)</span></div>
+</header>
+
+<h2>🎨 Login : boutons biométriques toujours visibles</h2>
+<div class="panel">
+<p>Avant la 0.56.14, les boutons "Détection faciale" et "Empreinte" n'apparaissaient que si la méthode était déjà activée pour cet email. Confusion garantie pour les nouveaux utilisateurs qui ne savaient pas que la biométrie existait.</p>
+
+<h3>Maintenant : 2 boutons TOUJOURS affichés (si WebAuthn supporté)</h3>
+<p>Avec état grisé + tooltip explicatif si non utilisable :</p>
+<p>
+<span class="btn-demo btn-active">🔒 Détection faciale ›</span> <i>actif</i>
+</p>
+<p>
+<span class="btn-demo btn-disabled">🔒 Détection faciale ⓘ</span> <i>grisé avec raison</i>
+</p>
+<p>3 raisons possibles de désactivation :</p>
+<ol>
+<li>"Ton appareil ne supporte pas la biométrie (ou refusée)"</li>
+<li>"Renseigne d'abord ton email"</li>
+<li>"Pas encore activée pour cet email — connecte-toi avec mot de passe puis active dans ton profil"</li>
+</ol>
+<p>Nouveau composant <code>BioButton</code> réutilisable avec props <code>method/icon/label/busy/bioAvailable/enabled/email/onClick/color</code>. Le bouton garde son icône (ti-face-id violet / ti-fingerprint bleu) avec chevron › si actif, info-circle ⓘ si grisé.</p>
+</div>
+
+<h2>📥 Dump RPPS : liens directs ANS</h2>
+<div class="panel">
+<p>Sur la page <code>/admin/rpps-dump</code>, ajout d'un panneau bleu avec 2 boutons :</p>
+<ul>
+<li><b>🔵 Ouvrir la page d'extractions ANS</b> → ouvre <code>annuaire.sante.fr/web/site-pro/extractions-publiques</code></li>
+<li><b>🟢 Télécharger PS_LibreAcces (CSV ZIP)</b> → lance directement le download via l'URL portlet ANS (<code>telechargerCNOM</code>)</li>
+</ul>
+<p>Note : ZIP ~150 Mo compressé, CSV ~500 Mo décompressé.</p>
+</div>
+
+<h2>🛠 Google Reviews sync : diagnostic enrichi</h2>
+<div class="panel">
+<p>Route <code>/api/google-reviews/sync</code> : parse le JSON du body d'erreur et renvoie un champ <code>hint</code> avec un message d'aide contextuel.</p>
+
+<h3>Hints supportés</h3>
+<ul>
+<li><b>API_KEY manquante</b> → "Variable GOOGLE_PLACES_API_KEY non configurée côté Edge Function. Va dans Supabase → Settings → Edge Functions → Secrets et ajoute-la."</li>
+<li><b>404 / not_found</b> → "L'Edge Function n'est peut-être pas déployée. Lance : supabase functions deploy sync-google-reviews"</li>
+<li><b>Timeout</b> → "Lance avec etablissement_id spécifique pour tester"</li>
+</ul>
+
+<p>Le hint est affiché en sous-bloc italique avec icône 💡 dans la page Admin → Avis Google sous le message d'erreur.</p>
+</div>
+
+<h2>📈 +14 tests (2109 → 2123)</h2>
+<div class="panel">
+<ul>
+<li>Login BioButton (4) : composant défini, méthodes face+empreinte toujours rendues, 3 raisons grisé, état disabled visuels</li>
+<li>Dump RPPS (3) : panel liens, lien extractions, lien CSV ZIP</li>
+<li>Google Reviews diagnostic (5) : parse JSON, hints API_KEY/deploy/timeout, retour structuré</li>
+<li>Affichage hint (2)</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<ul>
+<li><code>app/login/page.js</code> : composant BioButton + boutons toujours visibles</li>
+<li><code>app/admin/rpps-dump/page.js</code> : panneau "Liens directs ANS"</li>
+<li><code>app/api/google-reviews/sync/route.js</code> : diagnostic enrichi avec hints</li>
+<li><code>app/admin/avis-google/page.js</code> : affichage hint avec ti-bulb</li>
+<li><code>__tests__/v056-14-fixes.test.js</code> : NOUVEAU</li>
+</ul>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.14 · 1er juin 2026 · 2123 tests verts</footer>
+</div></body></html>

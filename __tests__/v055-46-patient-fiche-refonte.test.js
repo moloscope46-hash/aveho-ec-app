@@ -174,7 +174,8 @@ describe("0.55.46 - Menu Outils scan ajouté", () => {
       path.resolve(process.cwd(), "app/TopBar.js"),
       "utf-8"
     );
-    expect(topbar).toContain('section: "Outils scan"');
+    // 0.56.15 : section renommée "Scan"
+    expect(topbar).toMatch(/section: "(Outils )?Scan"/);
     expect(topbar).toContain("/scan/bulletin-situation");
     expect(topbar).toContain("/scan/qr");
     expect(topbar).toContain("/scan/codebarre");

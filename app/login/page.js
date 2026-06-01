@@ -137,50 +137,32 @@ export default function Login() {
           <label>Email professionnel</label>
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cedric@hop01.fr" autoComplete="email" />
 
-          {/* 0.55.13/17 : boutons biométriques (1 par méthode activée pour cet email) */}
-          {bioMethodsForEmail.length > 0 && mode === "signin" && (
+          {/* 0.56.14 : TOUJOURS afficher les 2 boutons bio, avec état grisé si non dispo */}
+          {mode === "signin" && isWebAuthnSupported() && (
             <>
               <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
-                {bioMethodsForEmail.includes("face") && (
-                  <button
-                    className="btn-primary"
-                    onClick={() => biometricLogin("face")}
-                    disabled={busy}
-                    style={{
-                      background: "linear-gradient(135deg, #7a6fb0, #bfa9e0)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 10,
-                      fontSize: 15,
-                      minHeight: 48,
-                      margin: 0,
-                    }}
-                  >
-                    <i className="ti ti-face-id" style={{ fontSize: 24 }} />
-                    {busy ? "Authentification…" : "Se connecter avec la détection faciale"}
-                  </button>
-                )}
-                {bioMethodsForEmail.includes("empreinte") && (
-                  <button
-                    className="btn-primary"
-                    onClick={() => biometricLogin("empreinte")}
-                    disabled={busy}
-                    style={{
-                      background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 10,
-                      fontSize: 15,
-                      minHeight: 48,
-                      margin: 0,
-                    }}
-                  >
-                    <i className="ti ti-fingerprint" style={{ fontSize: 22 }} />
-                    {busy ? "Authentification…" : "Se connecter avec mon empreinte"}
-                  </button>
-                )}
+                <BioButton
+                  method="face"
+                  icon="ti-face-id"
+                  label="Détection faciale"
+                  busy={busy}
+                  bioAvailable={bioAvailable}
+                  enabled={bioMethodsForEmail.includes("face")}
+                  email={email}
+                  onClick={() => biometricLogin("face")}
+                  color="linear-gradient(135deg, #7a6fb0, #bfa9e0)"
+                />
+                <BioButton
+                  method="empreinte"
+                  icon="ti-fingerprint"
+                  label="Empreinte digitale"
+                  busy={busy}
+                  bioAvailable={bioAvailable}
+                  enabled={bioMethodsForEmail.includes("empreinte")}
+                  email={email}
+                  onClick={() => biometricLogin("empreinte")}
+                  color="linear-gradient(135deg, #185FA5, #7CC8C8)"
+                />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 6px" }}>
                 <span style={{ flex: 1, height: 1, background: "#e1e6eb" }} />
@@ -191,7 +173,7 @@ export default function Login() {
           )}
 
           {/* 0.55.39 : info biométrie si pas encore enregistrée pour cet email */}
-          {bioMethodsForEmail.length === 0 && mode === "signin" && email && isWebAuthnSupported() && (
+          {bioMethodsForEmail.length === 0 && bioAvailable && email && mode === "signin" && (
             <div style={{
               background: "linear-gradient(135deg, #eef5fc, #fff)",
               border: "1px solid #c7dcef",
@@ -232,5 +214,55 @@ export default function Login() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 0.56.14 : bouton biométrique avec état grisé si non dispo
+function BioButton({ method, icon, label, busy, bioAvailable, enabled, email, onClick, color }) {
+  // Raison du grisé (priorité de raison)
+  let disabledReason = null;
+  if (!bioAvailable) {
+    disabledReason = "Ton appareil ne supporte pas la biométrie (ou refusée)";
+  } else if (!email) {
+    disabledReason = "Renseigne d'abord ton email";
+  } else if (!enabled) {
+    disabledReason = method === "face"
+      ? "Détection faciale pas encore activée pour cet email — connecte-toi avec ton mot de passe puis active-la dans ton profil"
+      : "Empreinte pas encore activée pour cet email — connecte-toi avec ton mot de passe puis active-la dans ton profil";
+  }
+
+  const isDisabled = !!disabledReason || busy;
+
+  return (
+    <button
+      className="btn-primary"
+      onClick={isDisabled ? null : onClick}
+      disabled={isDisabled}
+      title={disabledReason || ""}
+      style={{
+        background: isDisabled ? "#d3d9e0" : color,
+        color: isDisabled ? "#8a98a8" : "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        fontSize: 14,
+        minHeight: 48,
+        margin: 0,
+        cursor: isDisabled ? "not-allowed" : "pointer",
+        position: "relative",
+      }}
+    >
+      <i className={`ti ${icon}`} style={{ fontSize: 22 }} />
+      <span style={{ flex: 1, textAlign: "left", marginLeft: 4 }}>
+        <div>{busy ? "Authentification…" : `Se connecter avec ${method === "face" ? "la détection faciale" : "mon empreinte"}`}</div>
+        {disabledReason && (
+          <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.75, marginTop: 2 }}>
+            <i className="ti ti-info-circle" /> {disabledReason}
+          </div>
+        )}
+      </span>
+      {!isDisabled && <i className="ti ti-chevron-right" style={{ fontSize: 16, opacity: 0.7 }} />}
+    </button>
   );
 }

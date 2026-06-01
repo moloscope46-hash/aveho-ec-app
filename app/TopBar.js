@@ -19,56 +19,91 @@ import UserMenu from "./UserMenu";
 import StatusIcons from "./StatusIcons";
 import Modal from "./components/Modal";
 
+// 0.56.15 : réorganisation par 5 sections métier dans l'ordre du workflow :
+// 1. COLLECTIVITÉ (vue globale, hiérarchie, équipes, patients, matériel)
+// 2. SCAN (tous les outils scan)
+// 3. COMMANDE (panier, commandes, achats)
+// 4. LIVRAISON (interventions, transferts, maintenance, calendrier, mode TV)
+// 5. ADMINISTRATIF (RGPD, statistiques, journal, signalements, paramètres)
+// 6. ADMIN (admin tech : utilisateurs, audit, logs, référentiels santé)
 const MENU = [
   { section: "Mon espace", items: [
     { p: "/accueil", ic: "ti-home", lbl: "Accueil", col: "#7CC8C8" },
-    { p: "/magasins", ic: "ti-building-store", lbl: "Magasins", col: "#5a8f8f" },
+    { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
+    { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
+    { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
     { p: "/promotions", ic: "ti-discount-2", lbl: "Promotions", col: "#e35d5b" },
   ] },
-  // 0.55.46 : nouvelle catégorie Outils scan en haut
-  { section: "Outils scan", items: [
+  // 1. COLLECTIVITÉ — toute la hiérarchie : groupement → étabs → bâtiments → équipes → patients → matériel
+  { section: "Collectivité", items: [
+    { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
+    { p: "/direction", ic: "ti-building-skyscraper", lbl: "Dashboard direction", col: "#7a6fb0" },
+    { p: "/etablissements", ic: "ti-buildings", lbl: "Annuaire étabs", col: "#185FA5" },
+    { p: "/etablissement", ic: "ti-building-hospital", lbl: "Mon établissement", col: "#185FA5" },
+    { p: "/etablissement/fiche", ic: "ti-id-badge-2", lbl: "Fiche étab.", col: "#1c5454" },
+    { p: "/etablissement/edition", ic: "ti-edit", lbl: "Édition hiérarchie", col: "#7a6fb0" },
+    { p: "/equipes", ic: "ti-users-group", lbl: "Équipes", col: "#5a4a90" },
+    { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Étabs partenaires", col: "#7a6fb0" },
+    { p: "/carte", ic: "ti-map", lbl: "Carte logistique", col: "#5aa05a" },
+    { p: "/patients", ic: "ti-users", lbl: "Patients", col: "#7a6fb0" },
+    { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
+    { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
+    { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
+    { p: "/stock", ic: "ti-stack-2", lbl: "Stock", col: "#c97a2a" },
+    { p: "/annuaire-rpps", ic: "ti-stethoscope", lbl: "Annuaire RPPS", col: "#7a6fb0" },
+    { p: "/partenaires-rpps", ic: "ti-user-circle", lbl: "Mes partenaires RPPS", col: "#7a6fb0" },
+  ] },
+  // 2. SCAN
+  { section: "Scan", items: [
     { p: "/scan/bulletin-situation", ic: "ti-file-scan", lbl: "Créer patient depuis bulletin", col: "#5aa05a" },
     { p: "/scan/prescription", ic: "ti-prescription", lbl: "OCR Ordonnance", col: "#5a4a90" },
     { p: "/scan/qr", ic: "ti-qrcode", lbl: "Scan QR code", col: "#185FA5" },
     { p: "/scan/codebarre", ic: "ti-barcode", lbl: "Scan code-barre", col: "#7a6fb0" },
     { p: "/scan/ocr", ic: "ti-text-recognition", lbl: "OCR générique", col: "#EF9F27" },
   ] },
-  { section: "Établissement", items: [
-    { p: "/etablissements", ic: "ti-buildings", lbl: "Annuaire étabs", col: "#185FA5" },
-    { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Étabs partenaires", col: "#7a6fb0" },
-    { p: "/annuaire-rpps", ic: "ti-stethoscope", lbl: "Annuaire RPPS (libéraux)", col: "#7a6fb0" },
-    { p: "/partenaires-rpps", ic: "ti-user-circle", lbl: "Mes partenaires RPPS", col: "#7a6fb0" },
-    { p: "/carte", ic: "ti-map", lbl: "Carte logistique", col: "#5aa05a" },
-    { p: "/etablissement", ic: "ti-building-hospital", lbl: "Mon établissement", col: "#185FA5" },
-    { p: "/etablissement/fiche", ic: "ti-id-badge-2", lbl: "Fiche étab.", col: "#1c5454" },
-    { p: "/etablissement/edition", ic: "ti-edit", lbl: "Édition hiérarchie", col: "#7a6fb0" },
-    { p: "/patients", ic: "ti-users", lbl: "Patients", col: "#7a6fb0" },
-    { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
-    { p: "/articles", ic: "ti-package", lbl: "Articles", col: "#5aa05a" },
-    { p: "/interventions", ic: "ti-tools", lbl: "Interventions", col: "#c0392b" },
-  ] },
-  { section: "Stock", items: [
-    { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
-    { p: "/stock", ic: "ti-stack-2", lbl: "Stock", col: "#c97a2a" },
-    { p: "/transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
-  ] },
-  { section: "Commandes", items: [
+  // 3. COMMANDE
+  { section: "Commande", items: [
     { p: "/panier", ic: "ti-shopping-cart", lbl: "Panier", col: "#e35d5b", count: "cart" },
     { p: "/commandes", ic: "ti-truck-delivery", lbl: "Mes commandes", col: "#5a8f8f" },
+    { p: "/achats", ic: "ti-cash", lbl: "Achats", col: "#EF9F27" },
   ] },
-  { section: "Groupement", items: [
-    { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
-    { p: "/statistiques", ic: "ti-chart-bar", lbl: "Statistiques", col: "#7a6fb0" },
-    { p: "/calendrier", ic: "ti-calendar", lbl: "Calendrier DI", col: "#EF9F27" },
+  // 4. LIVRAISON (= interventions / DI / transferts / planning)
+  { section: "Livraison", items: [
+    { p: "/interventions", ic: "ti-tools", lbl: "Interventions / DI", col: "#c0392b" },
+    { p: "/transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
     { p: "/maintenance", ic: "ti-tool", lbl: "Maintenance", col: "#5a8f8f" },
+    { p: "/calendrier", ic: "ti-calendar", lbl: "Calendrier DI", col: "#EF9F27" },
     { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV de service", col: "#7CC8C8" },
-    { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#5a8f8f" },
   ] },
+  // 5. ADMINISTRATIF (RGPD, statistiques métier, signalements, paramètres usuels)
+  { section: "Administratif", items: [
+    { p: "/statistiques", ic: "ti-chart-bar", lbl: "Statistiques", col: "#7a6fb0" },
+    { p: "/statistiques-activite", ic: "ti-users-group", lbl: "Statistiques activité", col: "#185FA5" },
+    { p: "/statistiques-interventions", ic: "ti-tools", lbl: "Statistiques DI", col: "#e35d5b" },
+    { p: "/journal", ic: "ti-timeline-event", lbl: "Journal", col: "#185FA5" },
+    { p: "/signalements", ic: "ti-message", lbl: "Signalements", col: "#7CC8C8" },
+    { p: "/templates-signalements", ic: "ti-template", lbl: "Templates signalements", col: "#7a6fb0" },
+    { p: "/consentements", ic: "ti-shield-lock", lbl: "Consentements RGPD", col: "#185FA5" },
+    { p: "/consent-verifications", ic: "ti-shield-search", lbl: "Audit vérif RGPD", col: "#5aa05a" },
+    { p: "/parametres-rgpd", ic: "ti-shield-cog", lbl: "Modèles consentement", col: "#8c2a23" },
+    { p: "/statistiques-rgpd", ic: "ti-chart-pie", lbl: "Statistiques RGPD", col: "#7a6fb0" },
+    { p: "/digest-dashboard", ic: "ti-mail-bolt", lbl: "Digests dashboard", col: "#7a6fb0" },
+    { p: "/annonces", ic: "ti-speakerphone", lbl: "Annonces", col: "#EF9F27" },
+    { p: "/etiquettes", ic: "ti-tags", lbl: "Étiquettes", col: "#C9867F" },
+    { p: "/tags-materiel", ic: "ti-tag", lbl: "Tags matériel", col: "#5a8f8f" },
+    { p: "/parametres", ic: "ti-settings", lbl: "Paramètres", col: "#5a8f8f" },
+    { p: "/parametres/integrations", ic: "ti-plug", lbl: "Intégrations API", col: "#4285F4" },
+    { p: "/mentions-legales", ic: "ti-license", lbl: "Mentions légales", col: "#8a98a8" },
+  ] },
+  // 6. ADMIN (tech)
   { section: "Administration", items: [
     { p: "/utilisateurs", ic: "ti-users-group", lbl: "Utilisateurs", col: "#185FA5" },
     { p: "/historique", ic: "ti-history", lbl: "Historique", col: "#7a6fb0" },
     { p: "/audit", ic: "ti-list-search", lbl: "Audit log", col: "#5e4a8c" },
+    { p: "/statut", ic: "ti-activity-heartbeat", lbl: "Statut système", col: "#5aa05a" },
+    { p: "/app-logs", ic: "ti-bug", lbl: "Logs applicatifs", col: "#c0392b" },
     { p: "/admin-perf", ic: "ti-bolt", lbl: "Performance SQL", col: "#EF9F27" },
+    { p: "/webhooks", ic: "ti-webhook", lbl: "Webhooks", col: "#5a8f8f" },
     { p: "/admin/rpps-diagnostic", ic: "ti-stethoscope", lbl: "Diagnostic API RPPS", col: "#7a6fb0" },
     { p: "/admin/rpps-dump", ic: "ti-database-import", lbl: "Dump RPPS (Plan B)", col: "#5aa05a" },
     { p: "/admin/bulletins-archive", ic: "ti-archive", lbl: "Bulletins archivés", col: "#185FA5" },
@@ -78,28 +113,6 @@ const MENU = [
     { p: "/admin/doublons-forces", ic: "ti-copy", lbl: "Doublons forces", col: "#c0392b" },
     { p: "/admin/prescriptions-archive", ic: "ti-archive", lbl: "Prescriptions archive", col: "#5a4a90" },
     { p: "/admin/mail-diagnostic", ic: "ti-mail-cog", lbl: "Diagnostic envoi mail", col: "#e35d5b" },
-    { p: "/statut", ic: "ti-activity-heartbeat", lbl: "Statut système", col: "#5aa05a" },
-    { p: "/app-logs", ic: "ti-bug", lbl: "Logs applicatifs", col: "#c0392b" },
-    { p: "/digest-dashboard", ic: "ti-mail-bolt", lbl: "Digests dashboard", col: "#7a6fb0" },
-    { p: "/direction", ic: "ti-building-skyscraper", lbl: "Dashboard direction", col: "#7a6fb0" },
-    { p: "/webhooks", ic: "ti-webhook", lbl: "Webhooks", col: "#5a8f8f" },
-    { p: "/annonces", ic: "ti-speakerphone", lbl: "Annonces", col: "#EF9F27" },
-    { p: "/journal", ic: "ti-timeline-event", lbl: "Journal", col: "#185FA5" },
-    { p: "/achats", ic: "ti-shopping-cart", lbl: "Achats", col: "#EF9F27" },
-    { p: "/signalements", ic: "ti-message", lbl: "Signalements", col: "#7CC8C8" },
-    { p: "/templates-signalements", ic: "ti-template", lbl: "Templates signalements", col: "#7a6fb0" },
-    { p: "/consentements", ic: "ti-shield-lock", lbl: "Consentements RGPD", col: "#185FA5" },
-    { p: "/consent-verifications", ic: "ti-shield-search", lbl: "Audit vérifications RGPD", col: "#5aa05a" },
-    { p: "/parametres-rgpd", ic: "ti-shield-cog", lbl: "Modèles consentement", col: "#8c2a23" },
-    { p: "/statistiques-rgpd", ic: "ti-chart-pie", lbl: "Statistiques RGPD", col: "#7a6fb0" },
-    { p: "/statistiques-activite", ic: "ti-users-group", lbl: "Statistiques activité", col: "#185FA5" },
-    { p: "/statistiques-interventions", ic: "ti-tools", lbl: "Statistiques DI", col: "#e35d5b" },
-    { p: "/etiquettes", ic: "ti-tags", lbl: "Étiquettes", col: "#C9867F" },
-    { p: "/tags-materiel", ic: "ti-tag", lbl: "Tags matériel", col: "#5a8f8f" },
-    { p: "/parametres", ic: "ti-settings", lbl: "Paramètres", col: "#5a8f8f" },
-    { p: "/parametres/integrations", ic: "ti-plug", lbl: "Intégrations API", col: "#4285F4" },
-    { p: "/mentions-legales", ic: "ti-license", lbl: "Mentions légales", col: "#8a98a8" },
-    { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
   ] },
 ];
 
