@@ -120,15 +120,82 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.19",
+    "kind": "version",
+    "titre": "👁️ Bouton </> sur chaque chantier — voir le code modifié directement dans le changelog",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouveau composant CodeViewer (app/changelog/CodeViewer.js ~230 lignes) : popup full-screen qui affiche un snippet de code modifié/ajouté pour un chantier de version. Fond sombre #1e2a3a IDE-like, header avec nom du fichier + badge langage coloré (JS orange, SQL violet, CSS teal, TS bleu), onglets Avant/Après si comparaison disponible, bouton Copier avec feedback ✓ Copié 1.8s, bouton 'Voir sur GitHub' qui ouvre https://github.com/moloscope46-hash/aveho-ec-app/blob/main/<file>, ESC pour fermer",
+        "code_snippet": {
+          "file": "app/changelog/CodeViewer.js",
+          "note": "Composant CodeViewer (extrait)",
+          "lang": "js",
+          "after": "export default function CodeViewer({ snippet, onClose }) {\n  const [copied, setCopied] = useState(false);\n  const [tab, setTab] = useState(\"after\");\n\n  useEffect(() => {\n    function onEsc(e) { if (e.key === \"Escape\") onClose(); }\n    window.addEventListener(\"keydown\", onEsc);\n    return () => window.removeEventListener(\"keydown\", onEsc);\n  }, [onClose]);\n\n  if (!snippet) return null;\n\n  const lang = snippet.lang || guessLang(snippet.file);\n  const hasBefore = !!snippet.before;\n  const code = tab === \"before\" ? snippet.before : snippet.after;\n\n  return (\n    <div onClick={onClose} style={{ position: \"fixed\", inset: 0, zIndex: 10000, background: \"rgba(20,33,49,.7)\", backdropFilter: \"blur(4px)\" }}>\n      <div onClick={(e) => e.stopPropagation()} style={{ background: \"#1e2a3a\", color: \"#e8edf2\" }}>\n        {/* Header avec fichier + langage */}\n        {/* Onglets Avant/Après */}\n        {/* Code avec coloration syntaxique */}\n        <pre><code dangerouslySetInnerHTML={{ __html: highlightCode(code, lang) }} /></pre>\n        {/* Footer : Copier + GitHub + ESC */}\n      </div>\n    </div>\n  );\n}"
+        }
+      },
+      { "code": "FE", "txt": "Coloration syntaxique simple en regex pour JS/TS/SQL/CSS — mots-clés colorés teal #7CC8C8 (const, let, function, return, async, await pour JS / select, from, where, insert, create, function pour SQL), strings violet clair #bfa9e0, nombres orange #EF9F27, commentaires gris italique. Pas de dépendance externe (prism/highlight.js) — léger et rapide",
+        "code_snippet": {
+          "file": "app/changelog/CodeViewer.js",
+          "note": "Coloration syntaxique en regex",
+          "lang": "js",
+          "after": "function highlightCode(code, lang) {\n  let html = escapeHtml(code);\n\n  // Commentaires\n  if (lang === \"sql\") {\n    html = html.replace(/(--[^\\n]*)/g,\n      '<span style=\"color:#7a8a9a;font-style:italic\">$1</span>');\n  } else {\n    html = html.replace(/(\\/\\/[^\\n]*)/g,\n      '<span style=\"color:#7a8a9a;font-style:italic\">$1</span>');\n  }\n\n  // Strings\n  html = html.replace(/(['\"`])((?:\\\\.|(?!\\1).)*)\\1/g,\n    (m) => `<span style=\"color:#bfa9e0\">${m}</span>`);\n\n  // Mots-clés selon langage\n  const keywords = lang === \"sql\"\n    ? [\"select\", \"from\", \"where\", \"create\", \"function\", ...]\n    : [\"const\", \"let\", \"function\", \"return\", \"async\", \"await\", ...];\n  const kwRegex = new RegExp(`\\\\b(${keywords.join(\"|\")})\\\\b`, \"g\");\n  html = html.replace(kwRegex,\n    '<span style=\"color:#7CC8C8;font-weight:600\">$1</span>');\n\n  // Nombres\n  html = html.replace(/\\b(\\d+(\\.\\d+)?)\\b/g,\n    '<span style=\"color:#EF9F27\">$1</span>');\n\n  return html;\n}"
+        }
+      },
+      { "code": "FE", "txt": "Bouton </> intégré sur chaque chantier dans app/changelog/page.js — petit, monospace, fond sombre #1a2434 / texte teal #7CC8C8, hover scale(1.05). Visible UNIQUEMENT pour les chantiers qui ont un champ code_snippet (sinon caché). Le clic sur le bouton arrête la propagation pour ne pas déclencher l'ouverture de la note. Le clic sur le texte du chantier garde son comportement actuel (ouvre la note HTML)",
+        "code_snippet": {
+          "file": "app/changelog/page.js",
+          "note": "Bouton </> avec stopPropagation + ouverture popup",
+          "lang": "js",
+          "after": "{hasCode && (\n  <button\n    onClick={(e) => {\n      e.stopPropagation();\n      setCodeSnippet(c.code_snippet);\n    }}\n    title=\"Voir le code modifié\"\n    style={{\n      background: \"#1a2434\",\n      color: \"#7CC8C8\",\n      border: \"none\",\n      padding: \"2px 7px\",\n      borderRadius: 4,\n      cursor: \"pointer\",\n      fontFamily: \"Consolas, monospace\",\n      fontSize: 10.5,\n      fontWeight: 700,\n      transition: \"all .15s\",\n    }}\n    onMouseEnter={(e) => {\n      e.currentTarget.style.background = \"#2a3a4e\";\n      e.currentTarget.style.transform = \"scale(1.05)\";\n    }}\n    onMouseLeave={(e) => {\n      e.currentTarget.style.background = \"#1a2434\";\n      e.currentTarget.style.transform = \"scale(1)\";\n    }}\n  >\n    <i className=\"ti ti-code\" /> {\"</>\"}\n  </button>\n)}"
+        }
+      },
+      { "code": "FE", "txt": "Structure des chantiers étendue : chaque chantier peut désormais avoir un champ optionnel code_snippet = { file: 'chemin', note: 'description courte', lang: 'js|sql|css|ts', before: 'code avant (optionnel)', after: 'code après / ajouté' }. Si only after → la popup montre directement le code ajouté. Si before+after → onglets Avant/Après dans la popup. Format rétrocompatible (le champ est optionnel, les anciennes versions sans code_snippet n'affichent juste pas de bouton </>)" },
+      { "code": "FE", "txt": "Versions 0.56.17 et 0.56.18 enrichies rétroactivement avec leurs code_snippet sur les chantiers principaux. 0.56.17 : fix hydration mounted state + retrait template_libelle. 0.56.18 : CoordonneesPanel, IdRow+copyToClipboard, chargement caisse+mutuelle parallèle, fix ContactActions cp" },
+      { "code": "AI", "txt": "+12 tests Vitest : CodeViewer (8 : composant exporté, ESC ferme, onglets before/after, copy avec feedback, lien GitHub construit, coloration syntaxique JS/SQL, badge langage), Intégration changelog (4 : import, état codeSnippet, bouton </> conditionnel sur hasCode, stopPropagation au clic). Total 2216 tests verts (vs 2204)" }
+    ],
+    "themes": ["feature", "ui_ux", "developer", "changelog"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.19.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.18",
     "kind": "version",
     "titre": "📞 Coordonnées & contacts complets sur la fiche patient — boutons GPS/Tel/Mail partout",
     "chantiers": [
-      { "code": "FE", "txt": "Nouvelle Panel 'Coordonnées & contacts' sur /patient/[id] (entre le header et les KPIs) regroupant TOUTES les coordonnées du patient et de ses contacts avec boutons d'action (tel/mail/GPS/web) via le composant ContactActions existant. 6 sections en grille auto-fit (280px min) : (1) Patient — téléphone portable + fixe + email + adresse, (2) Contact d'urgence — nom complet + lien de parenté + téléphone, (3) Personne de confiance — nom + téléphone, (4) Médecin traitant — nom + RPPS + téléphone, (5) Caisse — nom + type + code organisme + adresse, (6) Mutuelle — raison sociale + type + AMC + adresse" },
-      { "code": "FE", "txt": "Sous-section 'Identifiants administratifs' avec 4 lignes (dossier, IPP, N° Sécurité Sociale, N° Adhérent mutuelle). Chaque identifiant a un bouton 'Copier' qui utilise navigator.clipboard et affiche un feedback visuel transitoire (changement texte 'Copié !' 1.5s). Le N° SS et le N° adhérent sont affichés en police monospace pour lisibilité" },
+      { "code": "FE", "txt": "Nouvelle Panel 'Coordonnées & contacts' sur /patient/[id] (entre le header et les KPIs) regroupant TOUTES les coordonnées du patient et de ses contacts avec boutons d'action (tel/mail/GPS/web) via le composant ContactActions existant. 6 sections en grille auto-fit (280px min) : (1) Patient — téléphone portable + fixe + email + adresse, (2) Contact d'urgence — nom complet + lien de parenté + téléphone, (3) Personne de confiance — nom + téléphone, (4) Médecin traitant — nom + RPPS + téléphone, (5) Caisse — nom + type + code organisme + adresse, (6) Mutuelle — raison sociale + type + AMC + adresse",
+        "code_snippet": {
+          "file": "app/patient/[id]/page.js",
+          "note": "Composant CoordonneesPanel (extrait)",
+          "lang": "js",
+          "after": "function CoordonneesPanel({ pat, caisseInfo, mutuelleInfo }) {\n  if (!pat) return null;\n\n  // Entité patient construite à partir des colonnes \"patients\"\n  const patientEntity = {\n    telephone: pat.telephone_portable || pat.telephone_fixe,\n    email: pat.email,\n    adresse: pat.adresse,\n    code_postal: pat.code_postal,\n    ville: pat.ville,\n  };\n\n  return (\n    <div style={{ background: \"#fff\", border: \"1px solid #e3e9ee\", borderRadius: 12, padding: \"16px 18px\", marginTop: 14 }}>\n      <h2><i className=\"ti ti-address-book\" /> Coordonnées & contacts</h2>\n\n      <div style={{ display: \"grid\", gridTemplateColumns: \"repeat(auto-fit, minmax(280px, 1fr))\", gap: 12 }}>\n        {/* Patient */}\n        <CoordRow icon=\"ti-user\" color=\"#185FA5\" label=\"Patient\" entity={patientEntity} />\n        {/* Urgence */}\n        {pat.contact_urgence_telephone && (\n          <CoordRow icon=\"ti-alert-triangle\" color=\"#c0392b\"\n            label={`Urgence : ${pat.contact_urgence_nom}`}\n            entity={{ telephone: pat.contact_urgence_telephone }} />\n        )}\n        {/* Caisse */}\n        {caisseInfo && (\n          <CoordRow icon=\"ti-shield-check\" color=\"#185FA5\"\n            label={`Caisse : ${caisseInfo.nom}`}\n            entity={caisseInfo} />\n        )}\n        {/* Mutuelle */}\n        {mutuelleInfo && (\n          <CoordRow icon=\"ti-heart-handshake\" color=\"#7a6fb0\"\n            label={`Mutuelle : ${mutuelleInfo.raison_sociale}`}\n            entity={mutuelleInfo} />\n        )}\n      </div>\n    </div>\n  );\n}"
+        }
+      },
+      { "code": "FE", "txt": "Sous-section 'Identifiants administratifs' avec 4 lignes (dossier, IPP, N° Sécurité Sociale, N° Adhérent mutuelle). Chaque identifiant a un bouton 'Copier' qui utilise navigator.clipboard et affiche un feedback visuel transitoire (changement texte 'Copié !' 1.5s). Le N° SS et le N° adhérent sont affichés en police monospace pour lisibilité",
+        "code_snippet": {
+          "file": "app/patient/[id]/page.js",
+          "note": "Composant IdRow + copyToClipboard",
+          "lang": "js",
+          "after": "function copyToClipboard(text, label) {\n  if (!text) return;\n  try {\n    navigator.clipboard?.writeText(text);\n    // Feedback visuel sur le bouton (change 1.5s puis revient)\n    const btn = document.activeElement;\n    if (btn?.tagName === \"BUTTON\") {\n      const old = btn.innerHTML;\n      btn.innerHTML = '<i class=\"ti ti-check\"></i> Copié !';\n      setTimeout(() => { btn.innerHTML = old; }, 1500);\n    }\n  } catch {}\n}\n\nfunction IdRow({ icon, label, value, onCopy, mono }) {\n  return (\n    <div style={{ display: \"flex\", alignItems: \"center\", gap: 8 }}>\n      <i className={`ti ${icon}`} />\n      <div style={{ flex: 1 }}>\n        <div>{label}</div>\n        <div style={{ fontFamily: mono ? \"'Consolas', monospace\" : \"inherit\" }}>{value}</div>\n      </div>\n      <button onClick={onCopy} title=\"Copier\">\n        <i className=\"ti ti-copy\" /> Copier\n      </button>\n    </div>\n  );\n}"
+        }
+      },
       { "code": "FE", "txt": "Composants internes CoordRow (ligne coordonnée avec borderLeft coloré + ContactActions size='sm') et IdRow (identifiant administratif avec bouton Copier). Affichage conditionnel intelligent : la Panel n'apparaît pas s'il n'y a rien à afficher, et chaque section n'apparaît que si elle a au moins une donnée à montrer" },
-      { "code": "FE", "txt": "Chargement caisse + mutuelle en parallèle après le chargement du patient (Promise.all) — quand p.caisse_id ou p.mutuelle_id présent, on fetch la table correspondante avec select * pour avoir toutes les coordonnées. Pas de RPC nécessaire (lecture directe), donc résistant aux bugs RPC. Ajout de useState pour caisseInfo + mutuelleInfo" },
-      { "code": "BUG", "txt": "Composant ContactActions : ajout fallback entity.cp || entity.code_postal pour l'affichage de l'adresse. Les tables mutuelles et caisses_assurance_maladie utilisent toutes les deux 'cp' (pas 'code_postal'), donc le bouton GPS qui construit l'adresse depuis adresse+code_postal+ville fonctionne maintenant correctement avec ces 2 référentiels santé" },
+      { "code": "FE", "txt": "Chargement caisse + mutuelle en parallèle après le chargement du patient (Promise.all) — quand p.caisse_id ou p.mutuelle_id présent, on fetch la table correspondante avec select * pour avoir toutes les coordonnées. Pas de RPC nécessaire (lecture directe), donc résistant aux bugs RPC. Ajout de useState pour caisseInfo + mutuelleInfo",
+        "code_snippet": {
+          "file": "app/patient/[id]/page.js",
+          "note": "Chargement parallèle caisse + mutuelle",
+          "lang": "js",
+          "after": "// 0.56.18 : charger en parallèle caisse + mutuelle si le patient en a une\nconst promises = [];\nif (p?.caisse_id) {\n  promises.push(\n    supabase.from(\"caisses_assurance_maladie\").select(\"*\")\n      .eq(\"id\", p.caisse_id).single()\n      .then(r => setCaisseInfo(r.data || null))\n  );\n}\nif (p?.mutuelle_id) {\n  promises.push(\n    supabase.from(\"mutuelles\").select(\"*\")\n      .eq(\"id\", p.mutuelle_id).single()\n      .then(r => setMutuelleInfo(r.data || null))\n  );\n}\nawait Promise.all(promises);\nsetLoading(false);"
+        }
+      },
+      { "code": "BUG", "txt": "Composant ContactActions : ajout fallback entity.cp || entity.code_postal pour l'affichage de l'adresse. Les tables mutuelles et caisses_assurance_maladie utilisent toutes les deux 'cp' (pas 'code_postal'), donc le bouton GPS qui construit l'adresse depuis adresse+code_postal+ville fonctionne maintenant correctement avec ces 2 référentiels santé",
+        "code_snippet": {
+          "file": "app/ContactActions.js",
+          "note": "Fallback cp ↔ code_postal pour le GPS",
+          "lang": "js",
+          "before": "const adresse = [entity.adresse, entity.code_postal, entity.ville].filter(Boolean).join(\", \");",
+          "after": "// 0.56.18 : fallback cp ↔ code_postal\n// (mutuelles utilisent cp, caisses utilisent cp aussi)\nconst cp = entity.cp || entity.code_postal;\nconst adresse = [entity.adresse, cp, entity.ville].filter(Boolean).join(\", \");"
+        }
+      },
       { "code": "BUG", "txt": "Retrait définitif de c.template_libelle du rendu des consentements RGPD (déjà retiré du select en 0.56.17 mais l'affichage restait, ce qui ne causait pas d'erreur car undefined mais polluait). Faudra une jointure vers consentements_templates dans une future version pour avoir le libellé" },
       { "code": "AI", "txt": "+18 tests Vitest : panel CoordonneesPanel (15 : import ContactActions, état caisseInfo+mutuelleInfo, chargement parallèle, composant intégré, sections patient/urgence/confiance/médecin/caisse/mutuelle, identifiants admin avec IdRow+ti-copy, copyToClipboard, CoordRow borderLeft, template_libelle retiré), ContactActions cp fallback (2 : entity.cp||entity.code_postal, commentaire). Total 2204 tests verts (vs 2186)" }
     ],
@@ -143,8 +210,24 @@ export const ALL_VERSIONS = [
     "titre": "🐛 Fix hydration React #418/#423 sur FAB + colonne template_libelle inexistante",
     "chantiers": [
       { "code": "BUG", "txt": "Erreurs React #418 et #423 (hydration mismatch) sur toutes les pages depuis l'introduction de FloatingActionBar en 0.56.16. Cause : le composant utilisait <style jsx> qui génère des classes hash différentes entre le rendu SSR et CSR — quand le composant est rendu via un layout serveur Next.js, les styles streamés ne matchent pas ceux du client. Crash hydration → React doit recover en re-rendant tout (#423) après le mismatch (#418)" },
-      { "code": "FE", "txt": "FloatingActionBar (app/FloatingActionBar.js) : suppression complète du bloc <style jsx>, déplacement de tous les @keyframes et de la classe .fab-bar vers app/globals.css. Ajout d'un état React mounted (useState false → useEffect setMounted(true)) avec early return null si !mounted. Cette double protection (CSS globale + render différé) garantit qu'aucune divergence SSR/CSR n'apparaît à l'hydratation" },
-      { "code": "BUG", "txt": "Erreur 400 sur /rest/v1/consentements_rgpd?select=...,template_libelle — la colonne template_libelle n'existe pas dans la table consentements_rgpd. Fix : retrait de template_libelle du select dans app/patient/[id]/page.js. La table doit avoir une jointure vers consentements_templates pour récupérer le libellé, à implémenter dans une future version si nécessaire" },
+      { "code": "FE", "txt": "FloatingActionBar (app/FloatingActionBar.js) : suppression complète du bloc <style jsx>, déplacement de tous les @keyframes et de la classe .fab-bar vers app/globals.css. Ajout d'un état React mounted (useState false → useEffect setMounted(true)) avec early return null si !mounted. Cette double protection (CSS globale + render différé) garantit qu'aucune divergence SSR/CSR n'apparaît à l'hydratation",
+        "code_snippet": {
+          "file": "app/FloatingActionBar.js",
+          "note": "État mounted pour éviter hydration mismatch SSR/CSR",
+          "lang": "js",
+          "before": "export default function FloatingActionBar() {\n  const router = useRouter();\n  const pathname = usePathname();\n  const [openMenu, setOpenMenu] = useState(null);\n\n  if (isHidden) return null;\n\n  return (\n    <>\n      <style jsx>{`\n        .fab-bar { ... }\n      `}</style>\n      ...\n    </>\n  );\n}",
+          "after": "export default function FloatingActionBar() {\n  const router = useRouter();\n  const pathname = usePathname();\n  const [openMenu, setOpenMenu] = useState(null);\n  const [mounted, setMounted] = useState(false);\n\n  // 0.56.17 : éviter les hydration mismatch SSR/CSR\n  // — on attend le mount côté client avant de rendre la barre\n  // (sinon erreurs React #418/#423)\n  useEffect(() => {\n    setMounted(true);\n  }, []);\n\n  if (isHidden || !mounted) return null;\n\n  // Plus de <style jsx> — CSS déplacé dans globals.css\n  return (\n    <>\n      <div className=\"fab-bar\">...</div>\n    </>\n  );\n}"
+        }
+      },
+      { "code": "BUG", "txt": "Erreur 400 sur /rest/v1/consentements_rgpd?select=...,template_libelle — la colonne template_libelle n'existe pas dans la table consentements_rgpd. Fix : retrait de template_libelle du select dans app/patient/[id]/page.js. La table doit avoir une jointure vers consentements_templates pour récupérer le libellé, à implémenter dans une future version si nécessaire",
+        "code_snippet": {
+          "file": "app/patient/[id]/page.js",
+          "note": "Retrait colonne inexistante template_libelle",
+          "lang": "js",
+          "before": "supabase.from(\"consentements_rgpd\")\n  .select(\"id, date_signature, a_consenti, date_expiration, template_libelle\")\n  .eq(\"patient_id\", patId)\n  .order(\"date_signature\", { ascending: false }),",
+          "after": "// 0.56.17 : template_libelle n'existe pas en base (colonne fantôme)\nsupabase.from(\"consentements_rgpd\")\n  .select(\"id, date_signature, a_consenti, date_expiration\")\n  .eq(\"patient_id\", patId)\n  .order(\"date_signature\", { ascending: false }),"
+        }
+      },
       { "code": "AI", "txt": "+8 tests Vitest : FloatingActionBar (3 : pas de style jsx, mounted state, commentaire 0.56.17), CSS globals (3 : keyframes, .fab-bar avec safe-area, media queries 640/768), consentements fix (2 : select sans template_libelle, colonnes utiles gardées). 3 tests 0.56.16 ajustés pour la nouvelle organisation CSS. Total 2186 tests verts (vs 2178)" }
     ],
     "themes": ["bugfix", "hydration", "ssr", "react"],

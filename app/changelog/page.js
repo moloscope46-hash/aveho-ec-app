@@ -13,6 +13,7 @@ import pkg from "../../package.json";
 import { ALL_VERSIONS, THEME_LABELS } from "./versions-data";
 import { VERSION_TESTS, runTestsForVersion, runAllTests } from "./smoke-tests";
 import { logger } from "../../lib/logger";
+import CodeViewer from "./CodeViewer";
 
 const ICONS_BY_CODE = {
   Fix: { color: "#c0392b", label: "FIX" },
@@ -56,6 +57,8 @@ export default function ChangelogPage() {
   const noteContentRef = useRef(null); // ref vers le div scrollable du contenu
   // 0.55.14 : télécharger toutes les notes en ZIP
   const [zipBusy, setZipBusy] = useState(false);
+  // 0.56.19 : snippet de code à afficher dans une popup
+  const [codeSnippet, setCodeSnippet] = useState(null);
   const [zipProgress, setZipProgress] = useState("");
   // 0.55.15 : modale d'affichage du SQL
   const [sqlModal, setSqlModal] = useState(null); // { version, file, content }
@@ -782,17 +785,39 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                     <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none" }}>
                       {(isExpanded ? v.chantiers : v.chantiers.slice(0, 5)).map((c, j) => {
                         const meta = getCodeMeta(c.code);
+                        const hasCode = !!c.code_snippet;
                         return (
                           <li 
                             key={j} 
-                            onClick={() => v.noteFile && openNote(v, v.kind, color, c.txt)}
-                            title={v.noteFile ? "Cliquer pour voir cette évolution dans la note" : ""}
-                            style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45, cursor: v.noteFile ? "pointer" : "default", padding: "3px 6px", borderRadius: 4, transition: "background .15s" }}
+                            title={v.noteFile ? "Cliquer sur le texte pour voir la note · </> pour le code" : ""}
+                            style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 12.5, color: "#2a3a48", margin: "3px 0", lineHeight: 1.45, padding: "3px 6px", borderRadius: 4, transition: "background .15s" }}
                             onMouseOver={(e) => { if (v.noteFile) e.currentTarget.style.background = "#fef9ed"; }}
                             onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
                           >
                             <span style={{ display: "inline-block", minWidth: 32, background: meta.color + "22", color: meta.color, fontSize: 10, fontWeight: 700, fontFamily: "Consolas, monospace", padding: "2px 6px", borderRadius: 4, textAlign: "center", flexShrink: 0 }}>{meta.label}</span>
-                            <span>{c.txt}</span>
+                            <span 
+                              onClick={() => v.noteFile && openNote(v, v.kind, color, c.txt)}
+                              style={{ flex: 1, cursor: v.noteFile ? "pointer" : "default" }}
+                            >{c.txt}</span>
+                            {hasCode && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setCodeSnippet(c.code_snippet); }}
+                                title="Voir le code modifié"
+                                style={{
+                                  background: "#1a2434", color: "#7CC8C8",
+                                  border: "none", padding: "2px 7px", borderRadius: 4,
+                                  cursor: "pointer", fontFamily: "Consolas, monospace",
+                                  fontSize: 10.5, fontWeight: 700, flexShrink: 0,
+                                  display: "inline-flex", alignItems: "center", gap: 3,
+                                  transition: "all .15s",
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = "#2a3a4e"; e.currentTarget.style.transform = "scale(1.05)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = "#1a2434"; e.currentTarget.style.transform = "scale(1)"; }}
+                              >
+                                <i className="ti ti-code" style={{ fontSize: 11 }} />
+                                {"</>"}
+                              </button>
+                            )}
                           </li>
                         );
                       })}
@@ -1567,6 +1592,11 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
             </div>
           </div>
         </div>
+      )}
+
+      {/* 0.56.19 : popup snippet de code */}
+      {codeSnippet && (
+        <CodeViewer snippet={codeSnippet} onClose={() => setCodeSnippet(null)} />
       )}
     </div>
   );
