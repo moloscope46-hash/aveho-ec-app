@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.2 — Scan QR fonctionnel</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5a4a90 45%,#185FA5 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left;vertical-align:top}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+  .badge{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px;margin-right:4px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — SCAN QR FONCTIONNEL</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.2 — Scan QR/code-barre opérationnel
+      <small>Caméra arrière html5-qrcode + parser intelligent 8 types + actions contextuelles</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.2-alpha</code></span>
+      <span><b>Tests :</b> 1714 verts (+32)</span>
+      <span><b>Dépendance :</b> html5-qrcode 2.3.8</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Avant : page <code>/scan/qr</code> était un placeholder vide ("à venir"). Maintenant : <b>scanner fonctionnel</b> qui ouvre la caméra arrière du téléphone, décode QR codes et codes-barres, et identifie automatiquement le type de contenu pour proposer la bonne action.</p>
+    <p>Couvre 4 cas d'usage Aveho : <b>carte Vitale</b> (NIR), <b>matériel médical</b> (GS1/UDI), <b>liens internes Aveho</b> (étiquettes patient/matériel), <b>codes EAN</b> (produits consommables).</p>
+  </div>
+
+  <h2>📷 Composant QrScanner.js</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Techniquement</h3>
+    <ul>
+      <li><b>Dynamic import</b> de html5-qrcode dans <code>useEffect</code> — la lib (~150 Ko) n'est chargée qu'à la demande, pas au démarrage de l'app</li>
+      <li><b>Caméra arrière prioritaire</b> sur mobile : regex <code>/back|arrière|rear|environment/i</code> sur le label</li>
+      <li><b>Sélecteur de caméra</b> si plusieurs disponibles</li>
+      <li><b>qrbox responsive</b> : 70% du min(viewport width, height) — s'adapte mobile / desktop</li>
+      <li><b>Fallback scan depuis fichier</b> : upload d'une image (PNG, JPG) si la caméra n'est pas accessible</li>
+      <li><b>Cleanup</b> : stop + clear automatiques au unmount</li>
+      <li><b>autoStop</b> par défaut : arrête après le 1er scan</li>
+    </ul>
+    <p><b>Props</b> : <code>{ onResult, onError, active, autoStop }</code> — réutilisable dans d'autres pages plus tard (ex : scan code-barre sur fiche matériel).</p>
+  </div>
+
+  <h2>🧠 Parser /lib/qrParser.js</h2>
+  <div class="panel violet">
+    <p>Détecte automatiquement le type du contenu et extrait les données pertinentes :</p>
+    <table>
+      <tr><th>Type</th><th>Détection</th><th>Extrait</th></tr>
+      <tr><td><span class="badge" style="background:#dff5e0;color:#2e6f33">VITALE</span></td><td>Regex NIR français (13+2 chiffres)</td><td>NIR, sexe (1=M, 2=F), année et mois naissance</td></tr>
+      <tr><td><span class="badge" style="background:#dbe7f5;color:#185FA5">GS1/UDI</span></td><td>Application Identifiers (parenthèses)</td><td>GTIN (01), Lot (10), Péremption (17), Serial (21)…</td></tr>
+      <tr><td><span class="badge" style="background:#f3effa;color:#5a4a90">EAN</span></td><td>8 ou 13 chiffres uniquement</td><td>Code EAN-8 / EAN-13</td></tr>
+      <tr><td><span class="badge" style="background:#dff5e0;color:#2e6f33">AVEHO</span></td><td>URL interne Aveho (aveho-ec.vercel.app)</td><td>Redirection auto vers le path</td></tr>
+      <tr><td><span class="badge" style="background:#dbe7f5;color:#185FA5">URL</span></td><td>http(s)://...</td><td>URL externe (bouton ouvrir)</td></tr>
+      <tr><td><span class="badge" style="background:#fff8ec;color:#7a4f15">VCARD</span></td><td>BEGIN:VCARD</td><td>Nom, téléphone, email</td></tr>
+      <tr><td><span class="badge" style="background:#fff8ec;color:#7a4f15">WIFI</span></td><td>WIFI:T:...;S:...;</td><td>SSID, type d'auth</td></tr>
+      <tr><td><span class="badge" style="background:#f4f7fa;color:#6c7a89">TEXTE</span></td><td>Fallback</td><td>Texte libre (bouton copier)</td></tr>
+    </table>
+  </div>
+
+  <h2>⚡ Actions contextuelles</h2>
+  <div class="panel">
+    <p>Chaque type déclenche des actions différentes :</p>
+
+    <h3>Vitale (NIR détecté)</h3>
+    <ul>
+      <li>Bouton <b>"Chercher ce patient"</b> → <code>/patients?q=NIR</code></li>
+      <li>Bouton <b>"Nouveau patient avec ce NIR"</b> → <code>/patients?new=1&nir=...</code></li>
+      <li>⚠️ Avertissement <i>"Le NIR seul ne suffit pas à identifier formellement le patient"</i></li>
+    </ul>
+
+    <h3>GS1/UDI (matériel)</h3>
+    <ul>
+      <li>Tableau des Application Identifiers avec libellés (GTIN, Lot, Péremption…)</li>
+      <li>Bouton <b>"Chercher dans le matériel"</b> → <code>/materiels?gtin=...</code></li>
+    </ul>
+
+    <h3>EAN</h3>
+    <ul>
+      <li>Bouton <b>"Chercher matériel par EAN"</b> → <code>/materiels?ean=...</code></li>
+    </ul>
+
+    <h3>URL Aveho interne</h3>
+    <ul>
+      <li>Redirection automatique vers le path interne (800ms de délai)</li>
+      <li>Utile pour les étiquettes physiques sur matériel/dossiers patients</li>
+    </ul>
+  </div>
+
+  <h2>📜 Historique de session</h2>
+  <div class="panel">
+    <p>Les <b>10 derniers scans</b> de la session sont conservés et cliquables pour revoir un résultat. Stocké en state React (rafraîchissement = perte). Pour persistance, à voir avec localStorage en 0.56.X+.</p>
+  </div>
+
+  <h2>📈 Tests +32 (1682 → 1714)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Parser qrParser</b> (10) : empty, url, url_aveho, vcard, wifi, vitale M, vitale F, GS1 4 AIs, EAN-13 et EAN-8, texte fallback</li>
+      <li><b>Composant QrScanner</b> (8) : exists, dynamic import (pas top-level), caméra arrière prefer, multiple cameras, scan from file, cleanup stop+clear, props onResult/onError/active/autoStop, qrbox responsive 70%</li>
+      <li><b>Page /scan/qr</b> (12) : imports, state, auto-navigate Aveho, rescan, affichage Vitale/GS1/EAN/vCard/WiFi, historique 10, pédagogie, avertissement NIR</li>
+      <li><b>package.json</b> (2) : html5-qrcode dépendance, version 0.56.2-alpha</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/QrScanner.js</code> : <b>NOUVEAU</b> · ~150 lignes · composant scanner réutilisable</li>
+    <li><code>lib/qrParser.js</code> : <b>NOUVEAU</b> · ~110 lignes · parser 8 types</li>
+    <li><code>app/scan/qr/page.js</code> : refonte complète (49 → 348 lignes)</li>
+    <li><code>__tests__/v056-2-scan-qr.test.js</code> : <b>NOUVEAU</b> · +32 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.2 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.2</li>
+    <li><code>package.json</code> : + html5-qrcode@^2.3.8, version 0.56.2-alpha</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL — version sans schéma)</li>
+      <li><code>npm install</code> dans le dossier (pour installer html5-qrcode)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.2 - Scan QR fonctionnel html5-qrcode + parser intelligent"
+git push origin main</code></pre>
+      </li>
+      <li>Vercel installe automatiquement la nouvelle dépendance et redéploie</li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Sur mobile (HTTPS obligatoire pour la caméra) : ouvre <code>/scan/qr</code></li>
+      <li>Accepte la demande d'accès caméra</li>
+      <li>Pointe vers un QR code (carte Vitale, étiquette, packaging avec EAN/GS1)</li>
+      <li>Vérifier que le type est bien détecté + l'action contextuelle apparaît</li>
+      <li>Tester le fallback : bouton "Scanner depuis image" + upload PNG d'un QR</li>
+      <li>Smoke tests 0.56.2 → 5 verts (html5-qrcode, page, composant, parser, getUserMedia)</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>HTTPS obligatoire</b> pour accéder à la caméra (navigator.mediaDevices). En local <code>http://localhost</code> marche aussi, mais pas en HTTP sur LAN.</li>
+      <li><b>Permission caméra</b> : si l'user la refuse au navigateur, le fallback fichier reste utilisable.</li>
+      <li><b>Vrai format Vitale</b> (DGE-MSS, TLV cryptographique) non décodé — on détecte juste la présence d'un NIR dans le contenu. Pour décoder une vraie carte Vitale il faudrait un lecteur PC/SC physique.</li>
+      <li><b>Historique</b> en state React seul — perdu au rafraîchissement (peut être étendu en localStorage si demandé).</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.3 — Scan code-barre dédié sur fiche matériel (ZXing pour DataMatrix + UDI complet)</li>
+    <li>0.56.4 — OCR prescriptions (même archi archivage que 0.56.1)</li>
+    <li>0.56.5 — Sync Google reviews cron</li>
+    <li>0.56.6 — Page audit /admin/doublons-forces</li>
+  </ul>
+
+  <h2>SW auto-bump — 69ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.1 → <b>0.56.2</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.2 · 1er juin 2026</p>
+    <p>Scan QR fonctionnel · 8 types détectés · actions contextuelles · 1714 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

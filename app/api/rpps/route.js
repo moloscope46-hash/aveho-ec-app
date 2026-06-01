@@ -18,6 +18,77 @@
 
 const FHIR_BASE = "https://gateway.api.esante.gouv.fr/fhir/v2";
 
+// 0.55.56 : maxDuration + dynamic pour éviter les 502 Vercel
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
+// 0.55.56 : fallback automatique sur le dump local si ANS KO/vide.
+// Importé tardivement pour ne pas alourdir le démarrage de la route.
+async function fallbackToLocalDump({ q, rppsExact, profession, cp, ville, limit, reason }) {
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+    const t0 = Date.now();
+    const { data, error } = await supabase.rpc("search_rpps_local", {
+      p_query: rppsExact || q || null,
+      p_profession: profession || null,
+      p_code_postal: cp || null,
+      p_ville: ville || null,
+      p_limit: limit || 50,
+    });
+    if (error) {
+      return {
+        ok: false,
+        results: [],
+        error: `Fallback dump local KO : ${error.message}`,
+        source: "dump_local_failed",
+        duration_ms: Date.now() - t0,
+      };
+    }
+    // Normaliser le format pour matcher celui de l'API ANS
+    const normalized = (data || []).map(r => ({
+      rpps: r.rpps,
+      adeli: null,
+      nom: r.nom,
+      prenom: r.prenom,
+      civilite: r.civilite || "",
+      profession: r.profession_libelle,
+      profession_code: null,
+      specialite: r.specialite_libelle,
+      specialite_code: null,
+      raison_sociale: r.raison_sociale_lieu,
+      finess: r.finess,
+      adresse: r.adresse,
+      cp: r.code_postal,
+      commune: r.ville,
+      ville: r.ville,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      telephone: r.telephone,
+      email: r.email,
+      source_record: "dump_local",
+    }));
+    return {
+      ok: true,
+      count: normalized.length,
+      results: normalized,
+      source: "dump_local",
+      fallback_reason: reason,
+      duration_ms: Date.now() - t0,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      results: [],
+      error: `Fallback dump local exception : ${e.message}`,
+      source: "dump_local_failed",
+    };
+  }
+}
+
 /** Normalise une ressource FHIR Practitioner vers notre format */
 function normalizePractitioner(practitioner, roles = []) {
   const ids = practitioner.identifier || [];
@@ -140,16 +211,26 @@ export async function GET(req) {
     const url = `${FHIR_BASE}/Practitioner?identifier=${encodeURIComponent(rppsExact)}&_count=1`;
     const r = await fetchFhir(url, "exact");
     if (!r.ok) {
+      // 0.55.56 : fallback dump local si ANS KO
+      const fb = await fallbackToLocalDump({
+        rppsExact, limit,
+        reason: r.status === 403 ? "ANS bloquée (403 IP)" : `ANS HTTP ${r.status}`,
+      });
       return Response.json({
-        ok: false,
-        results: [],
-        error: r.status === 403 ? "API ANS bloquée (403)" : `API ANS HTTP ${r.status}`,
+        ...fb,
         api_status: r.status,
-        duration_ms: r.duration,
+        duration_ms: (r.duration || 0) + (fb.duration_ms || 0),
       });
     }
     const entries = r.data?.entry || [];
     const pracs = entries.map(e => e.resource).filter(x => x.resourceType === "Practitioner");
+
+    // 0.55.56 : si l'API a répondu OK mais 0 résultat, on tente quand même le fallback
+    if (pracs.length === 0) {
+      const fb = await fallbackToLocalDump({ rppsExact, limit, reason: "ANS OK mais 0 résultat" });
+      if (fb.ok && fb.count > 0) return Response.json({ ...fb, source: "dump_local (ANS vide)" });
+    }
+
     // Récupérer les rôles pour avoir profession/adresse
     let roles = [];
     if (pracs.length) {
@@ -227,14 +308,17 @@ export async function GET(req) {
   // Si toutes les requêtes ont échoué
   if (successes.length === 0) {
     const first = errors[0] || {};
+    // 0.55.56 : fallback dump local
+    const fb = await fallbackToLocalDump({
+      q, profession, cp, ville, limit,
+      reason: first.status === 403
+        ? "ANS bloquée (403 IP)"
+        : `ANS indisponible (HTTP ${first.status || "timeout"})`,
+    });
     return Response.json({
-      ok: false,
-      results: [],
-      error: first.status === 403
-        ? "API ANS bloquée (403 Forbidden) — vérifier IP en production"
-        : `API ANS indisponible (HTTP ${first.status || "timeout"})`,
+      ...fb,
       api_status: first.status,
-      duration_ms: Date.now() - t0,
+      duration_ms: (Date.now() - t0) + (fb.duration_ms || 0),
       debug_url_count: queries.length,
     }, { status: 200 });
   }
@@ -295,6 +379,22 @@ export async function GET(req) {
     seen.add(key);
     return true;
   }).slice(0, limit);
+
+  // 0.55.56 : si ANS OK mais 0 résultat utile, on tente le dump local
+  // (utile si les filtres ANS sont trop stricts ou si l'API renvoie du vide pour certains profils)
+  if (dedup.length === 0) {
+    const fb = await fallbackToLocalDump({
+      q, profession, cp, ville, limit,
+      reason: "ANS OK mais 0 résultat après filtrage",
+    });
+    if (fb.ok && fb.count > 0) {
+      return Response.json({
+        ...fb,
+        source: "dump_local (ANS vide)",
+        duration_ms: (Date.now() - t0) + (fb.duration_ms || 0),
+      });
+    }
+  }
 
   return Response.json({
     ok: true,

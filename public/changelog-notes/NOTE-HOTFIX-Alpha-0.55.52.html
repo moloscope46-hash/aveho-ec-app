@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.55.52 — SW chrome-extension</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:840px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde0db;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fde0db;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fde0db}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">HOTFIX — SERVICE WORKER</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.55.52 — Fix SW chrome-extension TypeError
+      <small>Early return + helper safeCachePut · plus de bruit dans la console</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.52-alpha</code></span>
+      <span><b>Tests :</b> 1548 verts (+9)</span>
+    </div>
+  </header>
+
+  <h2>❌ Le bug</h2>
+  <div class="panel danger">
+    <pre><code>sw.js:137 Uncaught (in promise) TypeError:
+Failed to execute 'put' on 'Cache':
+Request scheme 'chrome-extension' is unsupported
+    at networkFirst (sw.js:137:13)</code></pre>
+
+    <h3>La cause</h3>
+    <p>Les extensions navigateur (LastPass, Dashlane, Grammarly, MetaMask, Honey, Bitwarden, etc.) injectent leurs propres <code>content scripts</code> dans toutes les pages que tu visites. Ces scripts font parfois des requêtes <code>fetch()</code> vers leurs propres ressources <code>chrome-extension://abc123.../resource.js</code>.</p>
+    <p>Ces requêtes passent par le Service Worker de la page (le nôtre), mais <code>cache.put()</code> refuse strictement les schémas autres que http/https → throw immédiatement.</p>
+  </div>
+
+  <h2>✅ La correction (ceinture + bretelle)</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">1) Early return dans le handler fetch</h3>
+    <pre><code>self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  // 0.55.52 : bypass complet des schémas non-cachables
+  if (!req.url.startsWith("http://") && !req.url.startsWith("https://")) {
+    return;  // → le navigateur fait son fetch normal sans le SW
+  }
+  ...
+});</code></pre>
+    <p>Couvre : <code>chrome-extension://</code>, <code>moz-extension://</code>, <code>safari-extension://</code>, <code>data:</code>, <code>blob:</code>, <code>file://</code>, <code>ws://</code>, <code>wss://</code>.</p>
+
+    <h3>2) Helper safeCachePut</h3>
+    <pre><code>async function safeCachePut(cache, req, res) {
+  try {
+    const url = (typeof req === "string" ? req : req.url) || "";
+    if (!url.startsWith("http://") && !url.startsWith("https://")) return;
+    if (res.type === "opaque" || res.type === "opaqueredirect") return;
+    await cache.put(req, res);
+  } catch (_) {
+    // Silent fail — pas de noise dans la console
+  }
+}</code></pre>
+    <p>Tous les appels <code>cache.put()</code> dans <code>cacheFirst</code>, <code>networkFirst</code> (success + retry), <code>staleWhileRevalidate</code> passent par ce wrapper.</p>
+    <p>Vérifie aussi :</p>
+    <ul>
+      <li>Schéma de l'URL avant put</li>
+      <li>Type de response (skip <code>opaque</code> et <code>opaqueredirect</code> qu'on ne peut pas servir correctement)</li>
+      <li>Catch silencieux — aucun <code>console.error</code> pour ne pas polluer la console</li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +9 (1539 → 1548)</h2>
+  <div class="panel hi">
+    <ul>
+      <li>Early return schémas non-http</li>
+      <li>safeCachePut existe + filtre schémas + ignore opaques + silent fail</li>
+      <li>Utilisé dans cacheFirst, networkFirst, staleWhileRevalidate</li>
+      <li>Commentaire chrome-extension présent</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>public/sw.js</code> : early return schémas non-http + helper safeCachePut + remplacement de tous les cache.put()</li>
+    <li><code>__tests__/v055-52-sw-chrome-extension-fix.test.js</code> : <b>NOUVEAU</b> · +9 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.52 (2 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.52</li>
+    <li><code>package.json</code> : 0.55.51 → 0.55.52</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.52 - Hotfix SW chrome-extension scheme + safeCachePut"
+git push origin main</code></pre>
+      </li>
+      <li>Attendre redéploiement Vercel</li>
+      <li>Recharger l'app — le SW va se mettre à jour tout seul (61 bumps successifs)</li>
+      <li>Console F12 → plus de "Request scheme chrome-extension is unsupported"</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 62ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.51 → <b>0.55.52</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.55.52 · 31 mai 2026</p>
+    <p>SW silent fail · plus de bruit console · 1548 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

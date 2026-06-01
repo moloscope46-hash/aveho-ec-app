@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.3 — OCR Ordonnances</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#5a4a90;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5a4a90 45%,#7a6fb0 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left;vertical-align:top}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+  .step-flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:12px 0}
+  .step-flow .step{background:#f4f7fa;padding:10px;border-radius:8px;border-left:3px solid var(--violet);font-size:12px}
+  .step-flow .step b{display:block;color:var(--violet);font-size:13px;margin-bottom:3px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — OCR ORDONNANCES MÉDICALES</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.3 — OCR Ordonnances avec Claude Vision
+      <small>Photo d'ordonnance → prescripteur + médicaments structurés en quelques secondes</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.3-alpha</code></span>
+      <span><b>Tests :</b> 1762 verts (+48)</span>
+      <span><b>SQL :</b> 1 patch (2 tables + bucket + 12 RLS + RPC)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Tu prends en photo une ordonnance médicale → Claude Vision lit l'écriture (même manuscrite) et extrait <b>automatiquement</b> :</p>
+    <ul>
+      <li><b>Prescripteur</b> : nom, prénom, RPPS, spécialité, adresse, téléphone, FINESS</li>
+      <li><b>Métadonnées</b> : date, type (ordonnance / bizone ALD / médicaments d'exception / sécurisée / hospitalière), durée du traitement, renouvellements</li>
+      <li><b>Médicaments structurés</b> : nom commercial, DCI déduite, forme, dosage, voie, posologie complète, prises/jour, durée en jours, quantité à délivrer, commentaire ALD/à jeun/etc.</li>
+    </ul>
+    <p>Tu vérifies, tu sélectionnes le patient, tu valides → prescription créée en base avec ses médicaments + ordonnance archivée dans Storage privé.</p>
+  </div>
+
+  <h2>📋 Workflow</h2>
+  <div class="panel">
+    <div class="step-flow">
+      <div class="step"><b>1. Upload</b>Image (JPG, PNG, WebP, HEIC) ou PDF</div>
+      <div class="step"><b>2. OCR IA</b>Claude Vision extrait le JSON structuré</div>
+      <div class="step"><b>3. Vérification</b>Édition prescripteur + médicaments</div>
+      <div class="step"><b>4. Patient & création</b>Sélection patient + insertion BDD + archivage</div>
+    </div>
+  </div>
+
+  <h2>🗄 Architecture base de données</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">Table <code>prescriptions</code> (en-tête)</h3>
+    <p>1 prescription = 1 ordonnance. Contient le prescripteur, les méta-données, l'archivage du fichier source, et l'audit OCR (tokens, confiance, texte brut conservé).</p>
+
+    <h3>Table <code>prescriptions_lignes</code> (N médicaments)</h3>
+    <p>1 ligne = 1 médicament prescrit. Champs : nom commercial, DCI, forme, dosage, voie, posologie libre ET structurée (qte_par_prise + unite_prise + prises_par_jour + duree_jours), quantité à délivrer, renouvelable, commentaire (ALD, à jeun, contexte).</p>
+
+    <h3>Bucket <code>prescriptions-scannees</code></h3>
+    <p>Privé, 10 Mo max, MIME image/* + PDF. Convention de path à 3 niveaux : <code>{structure_id}/{patient_id}/{prescription_id}/{ts}-{filename}</code>. Permet de ranger naturellement plusieurs ordonnances par patient.</p>
+
+    <h3>12 policies RLS</h3>
+    <p>4 sur prescriptions + 4 sur prescriptions_lignes (via FK) + 4 sur storage.objects. Toutes isolent par <code>structure_id</code> via membres_structure → user_id = auth.uid().</p>
+  </div>
+
+  <h2>🤖 Prompt Claude Vision</h2>
+  <div class="panel">
+    <p>Le prompt force un retour JSON pur (pas de markdown) avec règles précises :</p>
+    <ul>
+      <li><b>Conversion auto durée</b> : "1 mois" → 30 jours, "3 mois" → 90, "1 semaine" → 7</li>
+      <li><b>Conversion posologie</b> : "matin midi soir" → 3 prises/jour, "x3" → 3, "un demi" → 0.5</li>
+      <li><b>Auto-détection type</b> : bizone (2 zones), securisee (papier vert filigrané), medicaments_exception (mention explicite), hospitaliere, sinon ordonnance simple</li>
+      <li><b>ALD/non-ALD</b> : si bizone, chaque médicament reçoit le commentaire "ALD" ou "non-ALD"</li>
+      <li><b>Pas d'invention</b> : préférer <code>null</code> à une valeur incertaine</li>
+      <li><b>Confiance globale</b> retournée par Claude lui-même : <code>haute</code>, <code>moyenne</code>, <code>faible</code></li>
+    </ul>
+  </div>
+
+  <h2>📑 Onglet "Prescriptions" sur la fiche patient</h2>
+  <div class="panel hi">
+    <p>7ème onglet sur <code>/patient/[id]/edit</code> (icône <code>ti-prescription</code> violet) :</p>
+    <ul>
+      <li>Liste des prescriptions tri date desc</li>
+      <li>Badges <b>statut</b> (active/archivée/annulée), <b>type</b> (bizone/securisee/etc.), <b>source</b> (badge OCR violet)</li>
+      <li>Expand/collapse au clic pour voir les médicaments (chargement lazy = 1 requête par expand, économe en bandwidth)</li>
+      <li>Affichage médicament : nom + dosage en mono + forme + posologie italique + commentaire ALD ambré</li>
+      <li>Lien <b>'Voir l'ordonnance scannée originale'</b> qui génère une URL signée 1h à la demande</li>
+      <li>Bouton <b>'Scanner une ordonnance'</b> qui redirige vers <code>/scan/prescription?patient_id=...</code> (patient pré-sélectionné)</li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +48 (1714 → 1762)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL</b> (12) : table prescriptions + colonnes prescripteur/méta/archivage/audit, table lignes + médicament + posologie, bucket privé MIME, 12 RLS, isolation structure, indexes, RPC stats</li>
+      <li><b>Helper storage</b> (4) : BUCKET, buildPath 3 niveaux, uploadPrescription, getSignedUrl</li>
+      <li><b>Route OCR</b> (8) : exists, maxDuration+dynamic, Sonnet 4, ANTHROPIC_API_KEY, prompt FR, AbortController 55s, support PDF, retour {ok, data, tokens, duration_ms}</li>
+      <li><b>Route from-ocr</b> (5) : exists, validation params, insert+batch, Bearer RLS, source='ocr'</li>
+      <li><b>Page /scan/prescription</b> (10) : exists, Suspense useSearchParams, 4 étapes, appels API, édition meds (add/remove/update), sélecteur patient, pré-sélection query, archivage, warning non bloquant, posologie structurée</li>
+      <li><b>Onglet patient</b> (7) : tab ajouté, composant rendu, tri+statut, lazy load lignes, redirection scan, signed URL, badge OCR</li>
+      <li><b>Menu</b> (1), <b>Version</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.3.sql</code> : <b>NOUVEAU</b> · 2 tables + bucket + 12 RLS + RPC stats (~270 lignes)</li>
+    <li><code>lib/prescriptionsStorage.js</code> : <b>NOUVEAU</b> · helper Storage prescriptions</li>
+    <li><code>app/api/ocr/prescription/route.js</code> : <b>NOUVEAU</b> · OCR Claude Vision ordonnances (~180 lignes)</li>
+    <li><code>app/api/prescriptions/from-ocr/route.js</code> : <b>NOUVEAU</b> · insert prescription + lignes</li>
+    <li><code>app/scan/prescription/page.js</code> : <b>NOUVEAU</b> · workflow 4 étapes (~650 lignes)</li>
+    <li><code>app/patient/[id]/edit/page.js</code> : ajout tab Prescriptions + composant TabPrescriptions + PrescriptionFileLink</li>
+    <li><code>app/TopBar.js</code> : entrée menu Outils scan 'OCR Ordonnance'</li>
+    <li><code>__tests__/v056-3-ocr-prescriptions.test.js</code> : <b>NOUVEAU</b> · +48 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.3 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.3</li>
+    <li><code>package.json</code> : 0.56.2 → 0.56.3</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.3.sql</code> → Run (crée les 2 tables + bucket + 12 RLS + RPC)</li>
+      <li>Vérifier dans Supabase → Storage que le bucket <code>prescriptions-scannees</code> apparaît</li>
+      <li>Vérifier que <code>ANTHROPIC_API_KEY</code> est bien en variable d'environnement Vercel (déjà là si OCR bulletins marchait)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.3 - OCR Ordonnances Claude Vision + tables prescriptions + onglet patient"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Outils scan → <b>OCR Ordonnance</b></li>
+      <li>Upload photo ou PDF d'ordonnance → Lancer OCR Claude Vision</li>
+      <li>Attendre 5-15s → vérifier l'extraction (prescripteur + médicaments)</li>
+      <li>Éditer si besoin (ajouter/supprimer médicaments, corriger posologie)</li>
+      <li>Sélectionner un patient → Créer la prescription</li>
+      <li>Vérifier l'étape done → badge "Ordonnance archivée"</li>
+      <li>Voir la fiche patient → onglet <b>Prescriptions</b> → l'ordonnance apparaît, expand → médicaments visibles</li>
+      <li>Cliquer "Voir l'ordonnance scannée originale" → preview signée 1h</li>
+      <li>Smoke tests 0.56.3 → 5 verts (tables, bucket, RPC, page)</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Écriture manuscrite illisible</b> : Claude est très bon mais pas magique — confiance "faible" retournée si l'image est de très mauvaise qualité, alors vérifier manuellement</li>
+      <li><b>DCI</b> : Claude essaie de déduire la DCI à partir du nom commercial (DOLIPRANE → PARACETAMOL), mais pas toujours fiable — on stocke null si pas sûr</li>
+      <li><b>Bizone</b> : tous les médicaments sont mis dans le même tableau, distingués par le commentaire "ALD"/"non-ALD" — pour une vraie séparation visuelle il faudrait scinder en deux sections (peut être ajouté en 0.56.X+)</li>
+      <li><b>Pas d'auto-link RPPS</b> : le RPPS du prescripteur n'est pas automatiquement vérifié contre l'annuaire ANS (à ajouter dans une version future si besoin)</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.4 — Auto-link RPPS prescripteur via /api/rpps + détection doublons médicaments</li>
+    <li>0.56.5 — Sync Google reviews cron 6h</li>
+    <li>0.56.6 — Page audit /admin/doublons-forces</li>
+    <li>0.56.7 — Page admin /admin/prescriptions-archive (stats + recherche)</li>
+  </ul>
+
+  <h2>SW auto-bump — 70ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.2 → <b>0.56.3</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.3 · 1er juin 2026</p>
+    <p>OCR Ordonnances · Claude Vision · prescriptions structurées · 1762 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

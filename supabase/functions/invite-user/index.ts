@@ -1,30 +1,54 @@
 // Edge Function Supabase — Invitation utilisateur (mail avec lien custom)
 // Déploiement : supabase functions deploy invite-user
-// Secrets requis : RESEND_API_KEY, SITE_URL
+// Secrets requis : RESEND_API_KEY (+ optionnel : RESEND_FROM)
 //
 // Alpha 0.55.12 : utilise le token custom de la table invitations
-//   (au lieu de admin.auth.admin.inviteUserByEmail qui créait un user
-//   incomplet directement dans auth.users). Le user n'est créé qu'à
-//   la finalisation de l'inscription via /inscription/[token].
+// Alpha 0.55.53 : diagnostic complet (retour détaillé Resend) + détection mode test
 //
 // Body attendu :
-//   { email, nom, collectivite, role, etablissements, inviteLink }
+//   { email, nom, collectivite, role, etablissements, inviteLink,
+//     rpps_profession?, rpps_specialite?, rpps?, lock_assignment? }
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
 
   try {
-    const { email, nom, collectivite, role, etablissements, inviteLink, rpps_profession, rpps_specialite, rpps, lock_assignment } = await req.json();
+    const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
+    if (!RESEND_KEY) {
+      // 0.55.53 : message clair si la clé Resend n'est pas configurée
+      return new Response(JSON.stringify({
+        ok: false,
+        error: "RESEND_API_KEY non configurée côté Edge Function. Va dans Supabase → Settings → Edge Functions → Secrets et ajoute RESEND_API_KEY (ta clé sur resend.com/api-keys).",
+        diagnostic: "missing_resend_key",
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const { email, nom, collectivite, role, etablissements, inviteLink,
+            rpps_profession, rpps_specialite, rpps, lock_assignment } = await req.json();
 
     if (!inviteLink) {
-      throw new Error("inviteLink manquant (doit être fourni par l'app appelante)");
+      return new Response(JSON.stringify({
+        ok: false, error: "inviteLink manquant (doit être fourni par l'app appelante)",
+        diagnostic: "missing_invite_link",
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
+    }
+
+    if (!email) {
+      return new Response(JSON.stringify({
+        ok: false, error: "email destinataire manquant",
+        diagnostic: "missing_email",
+      }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     const etabHtml = (etablissements || [])
       .map((e: string) => `<div style="display:inline-block;background:#eef6f6;color:#2a5a5a;border:1px solid #cfe6e6;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;margin:3px 4px 3px 0">🏥 ${e}</div>`)
       .join("");
 
-    // 0.55.30 : bloc RPPS si renseigné
     const rppsHtml = rpps ? `
       <div style="background:#f3effa;border:1px solid #d6c9ec;border-radius:10px;padding:14px 18px;margin:16px 0">
         <div style="font-size:11px;color:#5a4a90;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">
@@ -51,14 +75,20 @@ Deno.serve(async (req) => {
       lockHtml,
     });
 
+    // 0.55.53 : adresse expéditeur configurable via secret RESEND_FROM
+    // Par défaut : onboarding@resend.dev (uniquement vers le mail propriétaire de la clé Resend en mode test)
+    // Recommandé : configurer un domaine vérifié sur resend.com puis RESEND_FROM="Aveho EC <noreply@tondomaine.fr>"
+    const fromAddress = Deno.env.get("RESEND_FROM") || "Aveho EC <onboarding@resend.dev>";
+
+    const t0 = Date.now();
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+        "Authorization": `Bearer ${RESEND_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Aveho EC <onboarding@resend.dev>",
+        from: fromAddress,
         to: [email],
         subject: rpps_profession
           ? `Invitation Aveho EC — ${rpps_profession}`
@@ -67,17 +97,62 @@ Deno.serve(async (req) => {
       }),
     });
 
+    const duration_ms = Date.now() - t0;
+
     if (!r.ok) {
       const txt = await r.text();
-      throw new Error("Envoi email échoué: " + txt);
+      let parsed: any = null;
+      try { parsed = JSON.parse(txt); } catch {}
+
+      // 0.55.53 : décodage des erreurs Resend courantes
+      let humanError = `Resend HTTP ${r.status}`;
+      let diagnostic = "resend_http_error";
+
+      if (parsed?.name === "validation_error" && parsed?.message?.includes("testing emails")) {
+        humanError = "Resend mode test : tu ne peux envoyer qu'à l'email propriétaire du compte Resend. Pour envoyer à n'importe qui, vérifie un domaine sur resend.com/domains puis configure le secret RESEND_FROM avec une adresse de ce domaine.";
+        diagnostic = "resend_test_mode_restricted";
+      } else if (r.status === 401 || r.status === 403) {
+        humanError = "Clé Resend invalide ou expirée. Régénère-la sur resend.com/api-keys et remets-la dans Supabase → Settings → Edge Functions → Secrets.";
+        diagnostic = "resend_invalid_key";
+      } else if (r.status === 429) {
+        humanError = "Quota Resend dépassé (3000 mails/mois sur le plan gratuit). Attends ou upgrade.";
+        diagnostic = "resend_rate_limit";
+      } else if (parsed?.message) {
+        humanError = `Resend : ${parsed.message}`;
+      }
+
+      return new Response(JSON.stringify({
+        ok: false,
+        error: humanError,
+        diagnostic,
+        resend_status: r.status,
+        resend_body: parsed || txt.slice(0, 500),
+        from_address: fromAddress,
+        to: email,
+        duration_ms,
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({ ok: true }), {
+    const resendData = await r.json();
+    return new Response(JSON.stringify({
+      ok: true,
+      resend_id: resendData?.id,
+      from_address: fromAddress,
+      to: email,
+      duration_ms,
+    }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), {
-      status: 400,
+    return new Response(JSON.stringify({
+      ok: false,
+      error: String(e?.message || e),
+      diagnostic: "exception",
+    }), {
+      status: 500,
       headers: { "Content-Type": "application/json" },
     });
   }

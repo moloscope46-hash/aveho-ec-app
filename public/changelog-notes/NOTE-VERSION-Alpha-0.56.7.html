@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.7 — Détection doublons forces</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#5a4a90;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffe1dc;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#ffe1dc;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffe1dc}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700}
+  .score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0}
+  .score-grid .item{padding:10px;border-radius:8px;text-align:center}
+  .score-grid .item b{display:block;font-size:18px;margin-bottom:4px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — DÉTECTION DOUBLONS FORCES</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.7 — Audit qualité des doublons potentiels
+      <small>3 cibles · similarité fuzzy pg_trgm · slider seuil ajustable · marquage non-doublon persistant</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.7-alpha</code></span>
+      <span><b>Tests :</b> 1933 verts (+44)</span>
+      <span><b>SQL :</b> 1 patch (pg_trgm + table + 5 RPC)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Au fil du temps, plusieurs personnes saisissent des établissements/groupements/médecins avec des variantes de nom (« CH de Toulouse » vs « Centre Hospitalier Toulouse » vs « C.H. Toulouse »). Sans détection automatique, ces doublons s'accumulent et faussent les stats, les prescriptions, et la lisibilité.</p>
+    <p>Cette page lance une <b>analyse fuzzy</b> sur tes 3 référentiels principaux et te liste les paires suspectes <b>triées par score de similarité décroissant</b>, avec actions claires pour traiter chaque cas.</p>
+  </div>
+
+  <h2>🔍 Stratégie de détection</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Cible</th><th>Score 100% (certain)</th><th>Score 95%</th><th>Score variable</th></tr>
+      <tr>
+        <td><b>Établissements</b></td>
+        <td>SIRET identique</td>
+        <td>FINESS identique</td>
+        <td>Similarité nom + bonus si même CP</td>
+      </tr>
+      <tr>
+        <td><b>Groupements</b></td>
+        <td>—</td>
+        <td>—</td>
+        <td>Similarité du nom</td>
+      </tr>
+      <tr>
+        <td><b>Médecins</b></td>
+        <td>RPPS identique</td>
+        <td>—</td>
+        <td>Similarité nom + prénom concaténés</td>
+      </tr>
+    </table>
+    <p>La <b>similarité fuzzy</b> est calculée par l'extension PostgreSQL <code>pg_trgm</code> (trigrammes) — extrêmement rapide grâce à l'index GIN qu'on crée sur chaque colonne nom. Pas besoin de Levenshtein côté JS, tout se fait en SQL.</p>
+  </div>
+
+  <h2>📊 Paliers visuels</h2>
+  <div class="panel">
+    <div class="score-grid">
+      <div class="item" style="background:#fce5e0;color:#7a2d23;border:1px solid #f0c4be">
+        <b>≥ 95%</b>
+        Quasi-certain
+        <div style="font-size:10.5px;margin-top:4px">SIRET/FINESS/RPPS identique</div>
+      </div>
+      <div class="item" style="background:#fff5dc;color:#7a4f15;border:1px solid #f0d59f">
+        <b>80-94%</b>
+        Forte similarité
+        <div style="font-size:10.5px;margin-top:4px">À examiner en priorité</div>
+      </div>
+      <div class="item" style="background:#f3effa;color:#5a4a90;border:1px solid #d6c9ec">
+        <b>&lt; 80%</b>
+        Suggestion
+        <div style="font-size:10.5px;margin-top:4px">Probables faux positifs</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>🎛 Slider de seuil ajustable</h2>
+  <div class="panel warn">
+    <p>Tu peux régler le <b>seuil de similarité</b> entre 30% et 95% via un slider. Le seuil par défaut est différent selon la cible :</p>
+    <ul>
+      <li><b>Établissements</b> : 55% (plus permissif car les noms peuvent varier beaucoup)</li>
+      <li><b>Groupements</b> : 60%</li>
+      <li><b>Médecins</b> : 60%</li>
+    </ul>
+    <p>Baisser le seuil = plus de paires détectées mais plus de faux positifs. Monter le seuil = paires plus sûres mais on peut rater des doublons écrits différemment.</p>
+  </div>
+
+  <h2>🙈 Marquage "non-doublon"</h2>
+  <div class="panel hi">
+    <p>Quand 2 entités se ressemblent mais sont réellement distinctes (ex : « EHPAD Les Tilleuls Marseille » vs « EHPAD Les Tilleuls Toulouse »), tu cliques <b>« Marquer non-doublon »</b> :</p>
+    <ul>
+      <li>Saisis une raison (optionnelle) via prompt</li>
+      <li>La paire est stockée dans la table <code>doublons_ignores</code></li>
+      <li>Elle <b>ne réapparaîtra plus</b> dans les détections futures (filtre via NOT EXISTS dans les RPC)</li>
+      <li>La structure_id, la cible et qui a ignoré (auth.uid()) sont tracés</li>
+    </ul>
+    <p>Astuce : si tu te trompes et que tu veux qu'une paire réapparaisse, fais un <code>DELETE FROM doublons_ignores WHERE ...</code> en SQL.</p>
+  </div>
+
+  <h2>🗄 Schéma SQL</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Extension activée</h3>
+    <p><code>create extension if not exists pg_trgm</code> — fournit la fonction <code>similarity(a, b)</code> (0 à 1) et l'opérateur <code>%</code> de comparaison floue.</p>
+
+    <h3>3 index GIN trigramme</h3>
+    <ul>
+      <li><code>idx_etablissements_nom_trgm</code> sur <code>etablissements.nom</code></li>
+      <li><code>idx_groupements_nom_trgm</code> sur <code>groupements.nom</code></li>
+      <li><code>idx_medecins_nom_trgm</code> sur <code>medecins_prescripteurs.nom</code></li>
+    </ul>
+    <p>Sans ces indexes, la jointure self-join sur N×N paires serait extrêmement lente. Avec, c'est quasi-instantané même sur des milliers d'entités.</p>
+
+    <h3>Table doublons_ignores</h3>
+    <p>Contraintes intelligentes : <code>check (entity_id_1 &lt; entity_id_2)</code> garantit qu'on ne stocke jamais (A,B) et (B,A) séparément + <code>unique (struct, cible, id_1, id_2)</code>.</p>
+
+    <h3>5 RPC security definer</h3>
+    <ul>
+      <li><code>detecter_doublons_etablissements(seuil, max)</code></li>
+      <li><code>detecter_doublons_groupements(seuil, max)</code></li>
+      <li><code>detecter_doublons_medecins(seuil, max)</code></li>
+      <li><code>ignorer_doublon(cible, id_1, id_2, raison)</code></li>
+      <li><code>doublons_stats(seuil_etab, seuil_grp, seuil_med)</code></li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +44 (1889 → 1933)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL pg_trgm + index</b> (2) : extension + 3 index GIN</li>
+      <li><b>Table doublons_ignores</b> (3) : structure, contraintes order+unique, RLS</li>
+      <li><b>RPC étabs</b> (7) : params, SIRET 1.0, FINESS 0.95, similarity, e1.id&lt;e2.id, filtre ignorés, motifs</li>
+      <li><b>RPC groupements</b> (3) : exists, nb_etabs, archive false</li>
+      <li><b>RPC médecins</b> (5) : exists, RPPS 1.0, similarity nom+prénom, champs, motifs</li>
+      <li><b>RPC ignorer</b> (5) : params, structure cohérence, least/greatest, ON CONFLICT, auth.uid()</li>
+      <li><b>RPC stats</b> (2) : params, retour agrégat</li>
+      <li><b>Page admin</b> (15) : 3 onglets, RPC stats, 3 RPCs détection, slider 30-95%, seuils par défaut, ignorer prompt, ScoreBadge 3 paliers, 3 cards spécifiques, SIRET/FINESS/RPPS/nb_etabs, empty state, 5 KPI, pédagogie</li>
+      <li><b>Menu</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.7.sql</code> : <b>NOUVEAU</b> · ~280 lignes · pg_trgm + table + 5 RPC</li>
+    <li><code>app/admin/doublons-forces/page.js</code> : <b>NOUVEAU</b> · ~450 lignes · 3 onglets + slider + 3 cards</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration 'Doublons forces' (rouge)</li>
+    <li><code>__tests__/v056-7-doublons-forces.test.js</code> : <b>NOUVEAU</b> · +44 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.7 (6 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.7</li>
+    <li><code>package.json</code> : 0.56.6 → 0.56.7</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel warn">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.7.sql</code> → Run (active <code>pg_trgm</code>, crée la table + 5 RPC)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.7 - Détection doublons forces (étabs + groupements + médecins) via pg_trgm"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Administration → <b>Doublons forces</b></li>
+      <li>Vérifier les 5 KPI en haut (Total + 3 cibles + Ignorés)</li>
+      <li>Onglet Établissements → vérifier la liste avec scores colorés</li>
+      <li>Bouger le slider à 70% → cliquer "Relancer" → moins de résultats</li>
+      <li>Sur une vraie paire de doublons : décider laquelle garder (fusion à faire manuellement pour l'instant)</li>
+      <li>Sur une fausse paire : cliquer "Marquer non-doublon" → renseigner raison → vérifier qu'elle disparaît</li>
+      <li>Onglet Médecins → tester avec un RPPS identique → score 100%</li>
+      <li>Onglet Groupements → vérifier l'affichage du nb_etabs (utile pour identifier le groupement vide à supprimer)</li>
+      <li>Smoke tests 0.56.7 → 6 verts</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel danger">
+    <ul>
+      <li><b>Fusion manuelle</b> : la page détecte mais ne fusionne pas automatiquement. Pour fusionner, il faut faire manuellement : <code>UPDATE prescriptions SET etablissement_id = X WHERE etablissement_id = Y; DELETE FROM etablissements WHERE id = Y;</code> (ou via une fonctionnalité de fusion dédiée dans une version future)</li>
+      <li><b>Performance</b> : sur très gros volumes (10k+ entités), la jointure self-join peut devenir lente. Les index GIN aident mais limite à ~50k entités confortablement</li>
+      <li><b>Faux positifs inévitables</b> : certains noms se ressemblent vraiment (ex: « EHPAD Saint-Joseph » est présent dans plein de villes). C'est pour ça qu'on a le bouton "Marquer non-doublon"</li>
+      <li><b>pg_trgm est anglo-saxon</b> : il fonctionne par trigrammes (3 caractères glissants), ce qui marche bien en français mais peut donner des scores plus bas sur des mots accentués différemment</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.8 — Page admin /admin/prescriptions-archive (stats + recherche multi-critères)</li>
+    <li>0.56.9 — Fonction de fusion automatique pour les doublons confirmés (RPC + UI)</li>
+  </ul>
+
+  <h2>SW auto-bump — 74ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.6 → <b>0.56.7</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.7 · 1er juin 2026</p>
+    <p>Audit doublons forces · 3 cibles · pg_trgm fuzzy · 1933 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

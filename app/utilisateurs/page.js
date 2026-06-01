@@ -385,10 +385,10 @@ export default function Utilisateurs() {
     const inviteLink = `${siteUrl}/inscription/${invData.token}`;
 
     // 3) tenter l'envoi du mail de bienvenue (Edge Function invite-user)
+    // 0.55.53 : vraie capture d'erreur + affichage du détail à l'user
+    let mailWarning = null;
     try {
       const roleNom = roles.find((r) => r.id === inviteForm.role_id)?.nom || "Utilisateur";
-      // 0.55.30 : si l'invité est rattaché à des établissements spécifiques, on utilise CEUX-LÀ
-      // sinon fallback sur les établissements de l'inviteur
       let etabNoms;
       if (inviteForm.etablissement_ids?.length) {
         etabNoms = auth.etablissements
@@ -397,23 +397,42 @@ export default function Utilisateurs() {
       } else {
         etabNoms = auth.etablissements.map((e) => e.nom);
       }
-      await supabase.functions.invoke("invite-user", {
+      const { data: invokeData, error: invokeErr } = await supabase.functions.invoke("invite-user", {
         body: {
           email: inviteForm.email,
           nom: nom_affiche_fallback,
           collectivite: auth.structureNom,
           role: roleNom,
           etablissements: etabNoms,
-          inviteLink,  // 0.55.12 : passe le lien custom au mail
-          // 0.55.30 : champs RPPS pour personnalisation du mail
+          inviteLink,
           rpps_profession: inviteForm.rpps_profession || null,
           rpps_specialite: inviteForm.rpps_specialite || null,
           rpps: inviteForm.rpps || null,
           lock_assignment: !!inviteForm.lock_assignment,
         },
       });
+      // invoke() retourne {data, error} — error peut être un FunctionsHttpError
+      // qui contient un body JSON {ok:false, error:"..."} renvoyé par l'Edge Function
+      if (invokeErr) {
+        // Essai de lire le body de l'erreur (Resend détail)
+        let detail = invokeErr.message || "Erreur inconnue";
+        try {
+          if (invokeErr.context?.body) {
+            const reader = invokeErr.context.body.getReader();
+            const { value } = await reader.read();
+            const text = new TextDecoder().decode(value);
+            const json = JSON.parse(text);
+            if (json.error) detail = json.error;
+          }
+        } catch {}
+        mailWarning = `Mail NON envoyé : ${detail}`;
+        logger.warn("Edge Function invite-user a échoué", invokeErr, invokeData);
+      } else if (invokeData && invokeData.ok === false) {
+        mailWarning = `Mail NON envoyé : ${invokeData.error || "raison inconnue"}`;
+      }
     } catch (e) {
-      logger.warn("Email non envoyé (Edge Function invite-user non déployée ?)", e);
+      mailWarning = `Mail NON envoyé : Edge Function injoignable (${e.message})`;
+      logger.warn("Edge Function invite-user injoignable", e);
     }
 
     // 4) trace audit + notif
@@ -428,6 +447,7 @@ export default function Utilisateurs() {
 
     // 5) Afficher le lien (au cas où l'email n'est pas configuré)
     // 0.55.30 : on stocke aussi un récap complet pour l'afficher dans la popup
+    // 0.55.53 : si le mail a échoué, on l'indique clairement dans la popup
     setCreatedInviteLink({
       link: inviteLink,
       email: inviteForm.email,
@@ -441,6 +461,7 @@ export default function Utilisateurs() {
         : [],
       lock_assignment: inviteForm.lock_assignment,
       matricule: inviteForm.matricule,
+      mailWarning,  // 0.55.53 : warning si Resend a échoué
     });
     setInviteForm({
       email: "", role_id: "", nom_affiche: "", prenom: "", nom: "", telephone: "", mobile: "", fonction_detail: "",
@@ -988,14 +1009,34 @@ export default function Utilisateurs() {
       {createdInviteLink && (
         <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setCreatedInviteLink(null)}>
           <div className="modal" style={{ maxWidth: 580, maxHeight: "92vh", overflow: "auto" }}>
-            <div className="modal-head" style={{ background: "linear-gradient(135deg, #5aa05a, #2e6f33)", color: "#fff" }}>
-              <i className="ti ti-circle-check" /> Invitation créée
+            <div className="modal-head" style={{
+              background: createdInviteLink.mailWarning
+                ? "linear-gradient(135deg, #EF9F27, #c97a2a)"
+                : "linear-gradient(135deg, #5aa05a, #2e6f33)",
+              color: "#fff"
+            }}>
+              <i className={`ti ${createdInviteLink.mailWarning ? "ti-alert-triangle" : "ti-circle-check"}`} />
+              {createdInviteLink.mailWarning ? "Invitation créée — mail NON envoyé" : "Invitation créée"}
               <i className="ti ti-x" style={{ cursor: "pointer", color: "#fff" }} onClick={() => { setCreatedInviteLink(null); setInviteModal(false); }} />
             </div>
             <div className="modal-body">
-              <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.5 }}>
-                ✓ L'invitation a été créée et un email a été envoyé à <b>{createdInviteLink.email}</b>.
-              </p>
+              {createdInviteLink.mailWarning ? (
+                <div style={{ background: "#fce5e0", border: "1px solid #f0c4be", borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7a2d23", marginBottom: 4 }}>
+                    <i className="ti ti-mail-x" /> Mail d'invitation pas parti
+                  </div>
+                  <div style={{ fontSize: 12, color: "#7a2d23", lineHeight: 1.5 }}>
+                    {createdInviteLink.mailWarning}
+                  </div>
+                  <div style={{ marginTop: 8, padding: "6px 10px", background: "#fff", borderRadius: 6, fontSize: 11.5, color: "#142131" }}>
+                    <b>💡 Solution</b> : copie le lien d'invitation ci-dessous et envoie-le manuellement à <b>{createdInviteLink.email}</b> (SMS, WhatsApp, mail perso, etc.). L'invitation Aveho est bien créée en base, seul l'email automatique a échoué.
+                  </div>
+                </div>
+              ) : (
+                <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.5 }}>
+                  ✓ L'invitation a été créée et un email a été envoyé à <b>{createdInviteLink.email}</b>.
+                </p>
+              )}
 
               {/* 0.55.30 : Récap de ce qui a été envoyé */}
               <div style={{ background: "#f4f7fa", border: "1px solid #e3e9ee", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 13 }}>

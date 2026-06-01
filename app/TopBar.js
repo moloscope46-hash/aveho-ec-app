@@ -28,6 +28,7 @@ const MENU = [
   // 0.55.46 : nouvelle catégorie Outils scan en haut
   { section: "Outils scan", items: [
     { p: "/scan/bulletin-situation", ic: "ti-file-scan", lbl: "Créer patient depuis bulletin", col: "#5aa05a" },
+    { p: "/scan/prescription", ic: "ti-prescription", lbl: "OCR Ordonnance", col: "#5a4a90" },
     { p: "/scan/qr", ic: "ti-qrcode", lbl: "Scan QR code", col: "#185FA5" },
     { p: "/scan/codebarre", ic: "ti-barcode", lbl: "Scan code-barre", col: "#7a6fb0" },
     { p: "/scan/ocr", ic: "ti-text-recognition", lbl: "OCR générique", col: "#EF9F27" },
@@ -69,6 +70,14 @@ const MENU = [
     { p: "/audit", ic: "ti-list-search", lbl: "Audit log", col: "#5e4a8c" },
     { p: "/admin-perf", ic: "ti-bolt", lbl: "Performance SQL", col: "#EF9F27" },
     { p: "/admin/rpps-diagnostic", ic: "ti-stethoscope", lbl: "Diagnostic API RPPS", col: "#7a6fb0" },
+    { p: "/admin/rpps-dump", ic: "ti-database-import", lbl: "Dump RPPS (Plan B)", col: "#5aa05a" },
+    { p: "/admin/bulletins-archive", ic: "ti-archive", lbl: "Bulletins archivés", col: "#185FA5" },
+    { p: "/admin/referentiels-sante", ic: "ti-shield-check", lbl: "Caisses & Mutuelles", col: "#7a6fb0" },
+    { p: "/admin/medecins-prescripteurs", ic: "ti-stethoscope", lbl: "Médecins prescripteurs", col: "#5a4a90" },
+    { p: "/admin/avis-google", ic: "ti-star", lbl: "Avis Google", col: "#EF9F27" },
+    { p: "/admin/doublons-forces", ic: "ti-copy", lbl: "Doublons forces", col: "#c0392b" },
+    { p: "/admin/prescriptions-archive", ic: "ti-archive", lbl: "Prescriptions archive", col: "#5a4a90" },
+    { p: "/admin/mail-diagnostic", ic: "ti-mail-cog", lbl: "Diagnostic envoi mail", col: "#e35d5b" },
     { p: "/statut", ic: "ti-activity-heartbeat", lbl: "Statut système", col: "#5aa05a" },
     { p: "/app-logs", ic: "ti-bug", lbl: "Logs applicatifs", col: "#c0392b" },
     { p: "/digest-dashboard", ic: "ti-mail-bolt", lbl: "Digests dashboard", col: "#7a6fb0" },

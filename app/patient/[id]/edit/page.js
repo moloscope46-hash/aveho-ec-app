@@ -25,6 +25,8 @@ import { safeUpdate, safeInsert, safeDelete } from "../../../../lib/safeWrite";
 import { logEvent } from "../../../../lib/events";
 import CaisseSearch from "../../../CaisseSearch";
 import MutuelleSearch from "../../../MutuelleSearch";
+import AdresseAutocomplete from "../../../AdresseAutocomplete";
+import ContactActions from "../../../ContactActions";
 
 const TABS = [
   { id: "identite", lbl: "Identité", icon: "ti-user-circle", color: "#185FA5" },
@@ -32,6 +34,7 @@ const TABS = [
   { id: "adresses", lbl: "Adresses livraison", icon: "ti-map-pin", color: "#5aa05a" },
   { id: "contacts", lbl: "Contacts urgence", icon: "ti-phone", color: "#EF9F27" },
   { id: "medecin", lbl: "Médecin traitant", icon: "ti-stethoscope", color: "#c0392b" },
+  { id: "prescriptions", lbl: "Prescriptions", icon: "ti-prescription", color: "#5a4a90" },
   { id: "audit", lbl: "OCR & audit", icon: "ti-file-scan", color: "#5a8f8f" },
 ];
 
@@ -220,6 +223,18 @@ export default function FichePatientEdit() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
+        {/* 0.55.54 : fil d'Ariane retour vers la liste et la fiche 360° */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#6c7a89", marginBottom: 8, marginTop: 6 }}>
+          <button onClick={() => router.push("/patients")} style={{ background: "transparent", border: "none", color: "#185FA5", cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600 }}>
+            <i className="ti ti-arrow-left" /> Tous les patients
+          </button>
+          <span style={{ color: "#d3d9e0" }}>/</span>
+          <button onClick={() => router.push(`/patient/${patId}`)} style={{ background: "transparent", border: "none", color: "#185FA5", cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600 }}>
+            Fiche {pat.prenom} {pat.nom}
+          </button>
+          <span style={{ color: "#d3d9e0" }}>/</span>
+          <b style={{ color: "#142131" }}>Édition</b>
+        </div>
         <PageHead
           eyebrow="PATIENT · ÉDITION"
           icon="ti-user-edit"
@@ -280,6 +295,7 @@ export default function FichePatientEdit() {
         )}
         {tab === "contacts" && <TabContacts pat={pat} set={set} />}
         {tab === "medecin" && <TabMedecin pat={pat} set={set} />}
+        {tab === "prescriptions" && <TabPrescriptions pat={pat} />}
         {tab === "audit" && <TabAudit pat={pat} />}
 
         {/* Footer save */}
@@ -339,11 +355,27 @@ function TabIdentite({ pat, set }) {
           { v: "", lbl: "—" }, { v: "M", lbl: "Masculin" }, { v: "F", lbl: "Féminin" }, { v: "X", lbl: "Non précisé" },
         ]} />
         <Field label="Date de naissance" type="date" value={pat.date_naissance} onChange={v => set("date_naissance", v)} />
-        <Field label="Lieu de naissance (ville)" value={pat.lieu_naissance_ville} onChange={v => set("lieu_naissance_ville", v)} />
-        <Field label="Code INSEE commune naissance" value={pat.lieu_naissance_code_insee} onChange={v => set("lieu_naissance_code_insee", v)} />
         <Field label="Pays de naissance" value={pat.lieu_naissance_pays || "France"} onChange={v => set("lieu_naissance_pays", v)} />
         <Field label="Nationalité" value={pat.nationalite || "Française"} onChange={v => set("nationalite", v)} />
         <Field label="N° dossier interne" value={pat.numero_dossier} onChange={v => set("numero_dossier", v)} />
+      </div>
+      {/* 0.55.55 : lieu de naissance — autocomplete commune BAN INSEE */}
+      <div style={{ marginTop: 12 }}>
+        <div style={{ fontSize: 10.5, color: "#6c7a89", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700, marginBottom: 4 }}>
+          Lieu de naissance (commune INSEE)
+        </div>
+        <AdresseAutocomplete
+          value={pat.lieu_naissance_ville || ""}
+          onChange={v => set("lieu_naissance_ville", v)}
+          onSelect={(a) => {
+            set("lieu_naissance_ville", a.ville || a.label?.split(" ")[0]);
+            if (a.code_insee) set("lieu_naissance_code_insee", a.code_insee);
+          }}
+          placeholder="Tape une ville (ex Paris, Lyon, Toulouse…)"
+        />
+        <div style={{ marginTop: 6 }}>
+          <Field label="Code INSEE commune (5 chiffres — rempli auto)" value={pat.lieu_naissance_code_insee} onChange={v => set("lieu_naissance_code_insee", v)} mono />
+        </div>
       </div>
     </Panel>
   );
@@ -375,16 +407,22 @@ function TabSecu({ pat, set, caisseInfo, onCaisseSelect, mutuelleInfo, onMutuell
         <div style={{ marginBottom: 10 }}>
           <Lbl>Caisse d'affiliation</Lbl>
           {caisseInfo ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "#dbe7f5", borderRadius: 6, marginBottom: 4 }}>
-              <i className="ti ti-shield-check" style={{ color: "#185FA5" }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{caisseInfo.nom}</div>
-                <div style={{ fontSize: 11, color: "#6c7a89" }}>
-                  Code {caisseInfo.code_organisme} · {caisseInfo.type_caisse}
-                  {caisseInfo.departement ? ` · Dept ${caisseInfo.departement}` : ""}
+            <div style={{ padding: 8, background: "#dbe7f5", borderRadius: 6, marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-shield-check" style={{ color: "#185FA5" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{caisseInfo.nom}</div>
+                  <div style={{ fontSize: 11, color: "#6c7a89" }}>
+                    Code {caisseInfo.code_organisme} · {caisseInfo.type_caisse || caisseInfo.type}
+                    {caisseInfo.departement ? ` · Dept ${caisseInfo.departement}` : ""}
+                  </div>
                 </div>
+                <button onClick={() => onCaisseSelect(null)} style={{ background: "transparent", border: "none", color: "#c0392b", fontSize: 18, cursor: "pointer" }}>×</button>
               </div>
-              <button onClick={() => onCaisseSelect(null)} style={{ background: "transparent", border: "none", color: "#c0392b", fontSize: 18, cursor: "pointer" }}>×</button>
+              {/* 0.56.4 : actions contact tel/mail/GPS/web */}
+              <div style={{ marginTop: 6 }}>
+                <ContactActions entity={caisseInfo} size="sm" />
+              </div>
             </div>
           ) : (
             <CaisseSearch onSelect={onCaisseSelect} />
@@ -417,16 +455,22 @@ function TabSecu({ pat, set, caisseInfo, onCaisseSelect, mutuelleInfo, onMutuell
         <div style={{ marginBottom: 10 }}>
           <Lbl>Organisme complémentaire (mutuelle / assurance)</Lbl>
           {mutuelleInfo ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "#e9defc", borderRadius: 6, marginBottom: 4 }}>
-              <i className="ti ti-heart-handshake" style={{ color: "#7a6fb0" }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{mutuelleInfo.raison_sociale}</div>
-                <div style={{ fontSize: 11, color: "#6c7a89" }}>
-                  AMC {mutuelleInfo.numero_amc} · {mutuelleInfo.type_organisme}
-                  {mutuelleInfo.gere_c2s ? " · Gère C2S" : ""}
+            <div style={{ padding: 8, background: "#e9defc", borderRadius: 6, marginBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-heart-handshake" style={{ color: "#7a6fb0" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{mutuelleInfo.raison_sociale || mutuelleInfo.nom}</div>
+                  <div style={{ fontSize: 11, color: "#6c7a89" }}>
+                    AMC {mutuelleInfo.numero_amc} · {mutuelleInfo.type_organisme || mutuelleInfo.type}
+                    {mutuelleInfo.gere_c2s ? " · Gère C2S" : ""}
+                  </div>
                 </div>
+                <button onClick={() => onMutuelleSelect(null)} style={{ background: "transparent", border: "none", color: "#c0392b", fontSize: 18, cursor: "pointer" }}>×</button>
               </div>
-              <button onClick={() => onMutuelleSelect(null)} style={{ background: "transparent", border: "none", color: "#c0392b", fontSize: 18, cursor: "pointer" }}>×</button>
+              {/* 0.56.4 : actions contact tel/mail/GPS/web */}
+              <div style={{ marginTop: 6 }}>
+                <ContactActions entity={mutuelleInfo} size="sm" />
+              </div>
             </div>
           ) : (
             <MutuelleSearch onSelect={onMutuelleSelect} />
@@ -449,19 +493,38 @@ function TabSecu({ pat, set, caisseInfo, onCaisseSelect, mutuelleInfo, onMutuell
 }
 
 function TabAdresses({ pat, set, adresses, onAdd, onUpdate, onSave, onRemove }) {
+  // 0.55.55 : appliquer les champs renvoyés par AdresseAutocomplete BAN
+  function fillFromBAN(a) {
+    set("adresse", a.adresse);
+    set("code_postal", a.code_postal);
+    set("ville", a.ville);
+    if (a.code_insee) set("code_insee_residence", a.code_insee);
+    if (a.latitude) set("latitude", a.latitude);
+    if (a.longitude) set("longitude", a.longitude);
+  }
   return (
     <>
       <Panel style={{ marginBottom: 12 }}>
         <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
           <i className="ti ti-home" style={{ color: "#185FA5", marginRight: 6 }} /> Adresse principale (sociale)
         </h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-          <div style={{ gridColumn: "1 / -1" }}>
-            <Field label="Adresse" value={pat.adresse} onChange={v => set("adresse", v)} placeholder="N° et nom de la voie" />
+        {/* 0.55.55 : autocomplete BAN INSEE — la rue/cp/ville/insee se remplissent ensemble */}
+        <div style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 10.5, color: "#6c7a89", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700, marginBottom: 4 }}>
+            Recherche d'adresse (BAN INSEE)
           </div>
+          <AdresseAutocomplete
+            value={pat.adresse || ""}
+            onChange={v => set("adresse", v)}
+            onSelect={fillFromBAN}
+            placeholder="Tape une adresse — sélectionne pour remplir auto cp + ville + INSEE"
+          />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
           <Field label="Complément (résidence, étage)" value={pat.complement_adresse} onChange={v => set("complement_adresse", v)} />
           <Field label="Code postal" value={pat.code_postal} onChange={v => set("code_postal", v)} mono />
           <Field label="Ville" value={pat.ville} onChange={v => set("ville", v)} />
+          <Field label="Code INSEE résidence" value={pat.code_insee_residence} onChange={v => set("code_insee_residence", v)} mono placeholder="(rempli auto)" />
           <Field label="Pays" value={pat.pays || "France"} onChange={v => set("pays", v)} />
         </div>
       </Panel>
@@ -508,8 +571,22 @@ function TabAdresses({ pat, set, adresses, onAdd, onUpdate, onSave, onRemove }) 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
               <Field label="Destinataire (si différent)" value={a.destinataire} onChange={v => onUpdate(a.id, "destinataire", v)} placeholder="Mme Dupont (sa fille)" compact />
               <Field label="Téléphone contact" value={a.telephone_contact} onChange={v => onUpdate(a.id, "telephone_contact", v)} compact />
+              {/* 0.55.55 : autocomplete BAN INSEE sur livraison aussi */}
               <div style={{ gridColumn: "1 / -1" }}>
-                <Field label="Adresse" value={a.adresse} onChange={v => onUpdate(a.id, "adresse", v)} compact />
+                <div style={{ fontSize: 10, color: "#6c7a89", textTransform: "uppercase", letterSpacing: 0.3, fontWeight: 700, marginBottom: 2 }}>
+                  Adresse (BAN)
+                </div>
+                <AdresseAutocomplete
+                  value={a.adresse || ""}
+                  onChange={v => onUpdate(a.id, "adresse", v)}
+                  onSelect={(adr) => {
+                    onUpdate(a.id, "adresse", adr.adresse);
+                    onUpdate(a.id, "cp", adr.code_postal);
+                    onUpdate(a.id, "ville", adr.ville);
+                  }}
+                  compact
+                  placeholder="Tape une adresse — auto cp + ville"
+                />
               </div>
               <Field label="Complément" value={a.complement} onChange={v => onUpdate(a.id, "complement", v)} compact />
               <Field label="Code postal" value={a.cp} onChange={v => onUpdate(a.id, "cp", v)} mono compact />
@@ -589,7 +666,211 @@ function TabMedecin({ pat, set }) {
   );
 }
 
+function TabPrescriptions({ pat }) {
+  const supabase = createClient();
+  const router = useRouter();
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [lignesById, setLignesById] = useState({});
+
+  useEffect(() => {
+    if (!pat.id) return;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("prescriptions")
+        .select("*")
+        .eq("patient_id", pat.id)
+        .order("date_prescription", { ascending: false, nullsLast: true });
+      setPrescriptions(data || []);
+      setLoading(false);
+    })();
+  }, [pat.id]);
+
+  async function loadLignes(prescriptionId) {
+    if (lignesById[prescriptionId]) return;
+    const { data } = await supabase
+      .from("prescriptions_lignes")
+      .select("*")
+      .eq("prescription_id", prescriptionId)
+      .order("ordre");
+    setLignesById(prev => ({ ...prev, [prescriptionId]: data || [] }));
+  }
+
+  function toggleExpand(id) {
+    if (expandedId === id) {
+      setExpandedId(null);
+    } else {
+      setExpandedId(id);
+      loadLignes(id);
+    }
+  }
+
+  return (
+    <>
+      <Panel style={{ marginBottom: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>
+            <i className="ti ti-prescription" style={{ color: "#5a4a90", marginRight: 6 }} /> Prescriptions
+            <span style={{ marginLeft: 8, fontSize: 11, color: "#5a4a90", fontWeight: 700, background: "#f3effa", padding: "2px 8px", borderRadius: 8 }}>
+              {prescriptions.length}
+            </span>
+          </h3>
+          <button
+            onClick={() => router.push(`/scan/prescription?patient_id=${pat.id}`)}
+            style={{ background: "#5a4a90", color: "#fff", border: "none", padding: "7px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+          >
+            <i className="ti ti-camera" /> Scanner une ordonnance
+          </button>
+        </div>
+      </Panel>
+
+      {loading && (
+        <Panel><p style={{ fontSize: 12, color: "#6c7a89" }}><i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Chargement…</p></Panel>
+      )}
+
+      {!loading && prescriptions.length === 0 && (
+        <Panel style={{ textAlign: "center", padding: 30 }}>
+          <i className="ti ti-prescription" style={{ fontSize: 40, color: "#a0aeb9" }} />
+          <p style={{ marginTop: 10, color: "#6c7a89", fontSize: 13 }}>
+            Aucune prescription enregistrée.<br />
+            <button onClick={() => router.push(`/scan/prescription?patient_id=${pat.id}`)} style={{ marginTop: 10, background: "#5a4a90", color: "#fff", border: "none", padding: "8px 16px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              <i className="ti ti-camera" /> Scanner une ordonnance
+            </button>
+          </p>
+        </Panel>
+      )}
+
+      {!loading && prescriptions.map(p => {
+        const isOpen = expandedId === p.id;
+        const lignes = lignesById[p.id] || [];
+        return (
+          <Panel key={p.id} style={{ marginBottom: 8, borderLeft: `4px solid ${p.statut === "active" ? "#5aa05a" : "#a0aeb9"}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", cursor: "pointer" }} onClick={() => toggleExpand(p.id)}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <b style={{ fontSize: 13 }}>
+                    {p.date_prescription ? new Date(p.date_prescription).toLocaleDateString() : "Date inconnue"}
+                  </b>
+                  {p.prescripteur_nom && (
+                    <span style={{ fontSize: 12, color: "#6c7a89" }}>
+                      Dr {p.prescripteur_nom} {p.prescripteur_prenom}
+                      {p.prescripteur_specialite && <span style={{ marginLeft: 4 }}>· {p.prescripteur_specialite}</span>}
+                    </span>
+                  )}
+                  <span style={{ background: p.statut === "active" ? "#dff5e0" : "#f4f7fa", color: p.statut === "active" ? "#2e6f33" : "#6c7a89", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>
+                    {p.statut}
+                  </span>
+                  {p.type_prescription && p.type_prescription !== "ordonnance" && (
+                    <span style={{ background: "#f3effa", color: "#5a4a90", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>
+                      {p.type_prescription}
+                    </span>
+                  )}
+                  {p.source_creation === "ocr" && (
+                    <span style={{ background: "#dbe7f5", color: "#185FA5", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>
+                      <i className="ti ti-wand" /> OCR
+                    </span>
+                  )}
+                </div>
+                {p.duree_traitement && (
+                  <div style={{ fontSize: 11, color: "#6c7a89", marginTop: 3 }}>
+                    Durée : {p.duree_traitement}{p.est_renouvelable && ` · renouvelable ${p.nb_renouvellements || 0}×`}
+                  </div>
+                )}
+              </div>
+              <i className={`ti ${isOpen ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ color: "#a0aeb9", fontSize: 18 }} />
+            </div>
+
+            {isOpen && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #e3e9ee" }}>
+                {lignes.length === 0 ? (
+                  <p style={{ fontSize: 11, color: "#a0aeb9" }}>Aucun médicament enregistré sur cette prescription.</p>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 11, color: "#6c7a89", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700, marginBottom: 6 }}>
+                      <i className="ti ti-pill" /> {lignes.length} médicament(s)
+                    </div>
+                    {lignes.map((m, i) => (
+                      <div key={m.id} style={{ background: "#f4f7fa", padding: 10, borderRadius: 6, marginBottom: 6, fontSize: 12 }}>
+                        <b>{m.medicament_nom}</b>
+                        {m.dosage && <span style={{ marginLeft: 6, fontFamily: "Consolas, monospace", color: "#5a4a90" }}>{m.dosage}</span>}
+                        {m.forme && <span style={{ marginLeft: 6, color: "#6c7a89" }}>· {m.forme}</span>}
+                        {m.posologie_libre && (
+                          <div style={{ marginTop: 4, fontSize: 11, color: "#445566", fontStyle: "italic" }}>
+                            <i className="ti ti-info-circle" /> {m.posologie_libre}
+                          </div>
+                        )}
+                        {m.commentaire && (
+                          <div style={{ marginTop: 4, fontSize: 11, color: "#7a4f15", background: "#fff8ec", padding: "3px 6px", borderRadius: 4, display: "inline-block" }}>
+                            {m.commentaire}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {p.fichier_path && (
+                  <div style={{ marginTop: 10, fontSize: 11 }}>
+                    <PrescriptionFileLink path={p.fichier_path} mime={p.fichier_mime} />
+                  </div>
+                )}
+              </div>
+            )}
+          </Panel>
+        );
+      })}
+    </>
+  );
+}
+
+function PrescriptionFileLink({ path, mime }) {
+  const supabase = createClient();
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { getSignedUrl } = await import("../../../../lib/prescriptionsStorage");
+        const u = await getSignedUrl(supabase, path, 3600);
+        setUrl(u);
+      } catch (e) { /* silent */ }
+    })();
+  }, [path]);
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "#185FA5", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <i className="ti ti-archive" /> Voir l'ordonnance scannée originale
+    </a>
+  );
+}
+
 function TabAudit({ pat }) {
+  // 0.56.1 : génère une URL signée du bulletin archivé en Storage
+  const [signedUrl, setSignedUrl] = useState(null);
+  const [signedErr, setSignedErr] = useState(null);
+  const [signing, setSigning] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    if (!pat.bs_file_path) return;
+    setSigning(true);
+    (async () => {
+      try {
+        const { getSignedUrl } = await import("../../../../lib/bulletinsStorage");
+        const url = await getSignedUrl(supabase, pat.bs_file_path, 3600);
+        if (url) setSignedUrl(url);
+        else setSignedErr("Lien signé impossible (fichier inaccessible ?)");
+      } catch (e) {
+        setSignedErr(e.message);
+      } finally {
+        setSigning(false);
+      }
+    })();
+  }, [pat.bs_file_path]);
+
+  const isImage = pat.bs_file_mime && pat.bs_file_mime.startsWith("image/");
+  const isPdf = pat.bs_file_mime === "application/pdf";
+
   return (
     <>
       <Panel style={{ marginBottom: 12 }}>
@@ -604,29 +885,96 @@ function TabAudit({ pat }) {
           } />
           <KvBlock label="Créé le" value={pat.created_at ? new Date(pat.created_at).toLocaleString() : "—"} />
           <KvBlock label="Mis à jour" value={pat.updated_at ? new Date(pat.updated_at).toLocaleString() : "—"} />
+          {pat.bs_ocr_confiance && (
+            <KvBlock label="Confiance OCR" value={
+              pat.bs_ocr_confiance === "haute" ? "✓ Haute"
+              : pat.bs_ocr_confiance === "moyenne" ? "⚠ Moyenne"
+              : "✗ Faible"
+            } />
+          )}
+          {(pat.bs_ocr_tokens_in || pat.bs_ocr_tokens_out) && (
+            <KvBlock label="Tokens Claude (IN/OUT)" value={`${pat.bs_ocr_tokens_in || 0} / ${pat.bs_ocr_tokens_out || 0}`} />
+          )}
         </div>
       </Panel>
 
-      {pat.bs_file_url ? (
+      {/* 0.56.1 : bulletin archivé en Storage avec preview signée */}
+      {pat.bs_file_path ? (
+        <Panel style={{ marginBottom: 12 }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 15, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <i className="ti ti-archive" style={{ color: "#185FA5" }} /> Bulletin scanné archivé
+            <span style={{ background: "#dbe7f5", color: "#185FA5", fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 8 }}>
+              <i className="ti ti-shield-check" /> Privé · accès RLS
+            </span>
+          </h3>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 8, marginBottom: 12, fontSize: 11.5 }}>
+            <KvBlock label="Type" value={pat.bs_file_mime || "?"} />
+            <KvBlock label="Taille" value={pat.bs_file_size_kb ? `${pat.bs_file_size_kb} Ko` : "?"} />
+            <KvBlock label="OCR effectué" value={pat.bs_ocr_date ? new Date(pat.bs_ocr_date).toLocaleString() : "—"} />
+          </div>
+
+          {signing && (
+            <div style={{ background: "#f4f7fa", padding: 10, borderRadius: 6, fontSize: 12, color: "#6c7a89" }}>
+              <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} /> Génération du lien sécurisé…
+            </div>
+          )}
+
+          {signedErr && (
+            <div style={{ background: "#fce5e0", border: "1px solid #f0c4be", padding: 10, borderRadius: 6, fontSize: 12, color: "#7a2d23" }}>
+              <i className="ti ti-alert-circle" /> {signedErr}
+            </div>
+          )}
+
+          {signedUrl && (
+            <div>
+              {/* Preview image si possible */}
+              {isImage && (
+                <a href={signedUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+                  <img
+                    src={signedUrl}
+                    alt="Bulletin scanné"
+                    style={{ maxWidth: "100%", maxHeight: 400, borderRadius: 8, border: "1px solid #e3e9ee", boxShadow: "0 2px 8px rgba(20,33,49,.08)", cursor: "zoom-in" }}
+                  />
+                </a>
+              )}
+              {isPdf && (
+                <div style={{ background: "#dbe7f5", padding: 14, borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 48, marginBottom: 8 }}>📄</div>
+                  <a href={signedUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", background: "#185FA5", color: "#fff", padding: "8px 18px", borderRadius: 6, textDecoration: "none", fontWeight: 700, fontSize: 12 }}>
+                    <i className="ti ti-file-text" /> Ouvrir le PDF
+                  </a>
+                </div>
+              )}
+              {!isImage && !isPdf && (
+                <div style={{ background: "#f4f7fa", padding: 10, borderRadius: 6, fontSize: 12 }}>
+                  <a href={signedUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#185FA5", fontWeight: 700 }}>
+                    <i className="ti ti-external-link" /> Ouvrir le fichier
+                  </a>
+                </div>
+              )}
+              <div style={{ fontSize: 10, color: "#a0aeb9", marginTop: 6, fontStyle: "italic" }}>
+                <i className="ti ti-clock" /> Lien valide 1h, régénéré à chaque chargement de la page
+              </div>
+            </div>
+          )}
+        </Panel>
+      ) : pat.bs_file_url ? (
+        // Compat : ancien format avec URL directe (avant 0.56.1)
         <Panel style={{ marginBottom: 12 }}>
           <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
-            <i className="ti ti-file" style={{ color: "#185FA5", marginRight: 6 }} /> Bulletin de situation scanné
+            <i className="ti ti-file" style={{ color: "#185FA5", marginRight: 6 }} /> Bulletin de situation (ancien format)
           </h3>
           <div style={{ background: "#dbe7f5", padding: 10, borderRadius: 6 }}>
             <a href={pat.bs_file_url} target="_blank" rel="noopener noreferrer" style={{ color: "#185FA5", fontWeight: 700, textDecoration: "none" }}>
-              <i className="ti ti-external-link" /> Ouvrir le document scanné
+              <i className="ti ti-external-link" /> Ouvrir le document
             </a>
-            {pat.bs_ocr_date && (
-              <div style={{ fontSize: 11, color: "#6c7a89", marginTop: 4 }}>
-                OCR effectué le {new Date(pat.bs_ocr_date).toLocaleString()}
-              </div>
-            )}
           </div>
         </Panel>
       ) : (
         <Panel style={{ marginBottom: 12, background: "#f4f7fa" }}>
           <p style={{ fontSize: 12.5, color: "#6c7a89", margin: 0 }}>
-            <i className="ti ti-info-circle" /> Pas de bulletin scanné. Pour créer un patient depuis un bulletin de situation, utilise le menu <b>Outils scan → Créer patient depuis bulletin</b>.
+            <i className="ti ti-info-circle" /> Pas de bulletin archivé. Pour créer un patient depuis un bulletin et l'archiver automatiquement, utilise <b>Outils scan → Créer patient depuis bulletin</b>.
           </p>
         </Panel>
       )}

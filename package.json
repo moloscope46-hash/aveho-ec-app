@@ -1,6 +1,6 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.55.51-alpha",
+  "version": "0.56.10-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -22,7 +22,8 @@
     "leaflet": "^1.9.4",
     "@tabler/icons-webfont": "^2.47.0",
     "xlsx": "^0.18.5",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "html5-qrcode": "^2.3.8"
   },
   "devDependencies": {
     "vitest": "^1.6.0",

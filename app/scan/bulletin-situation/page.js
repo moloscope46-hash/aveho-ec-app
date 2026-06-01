@@ -31,6 +31,7 @@ export default function ScanBulletinSituationPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [createdPatientId, setCreatedPatientId] = useState(null);
+  const [archiveWarning, setArchiveWarning] = useState(null);
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -94,16 +95,57 @@ export default function ScanBulletinSituationPage() {
     setLoading(true); setError(null);
     try {
       const token = (await supabase.auth.getSession()).data?.session?.access_token;
+      // 0.56.1 : on transmet les méta-données du fichier source pour audit
       const res = await fetch("/api/patients/from-ocr", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ data: editedData, ocr_text_brut: ocrResult?.ocr_text }),
+        body: JSON.stringify({
+          data: editedData,
+          ocr_text_brut: ocrResult?.ocr_text,
+          ocr_confiance: ocrResult?.confiance,
+          ocr_tokens_in: ocrResult?.tokens?.input,
+          ocr_tokens_out: ocrResult?.tokens?.output,
+        }),
       });
       const data = await res.json();
-      if (!data.ok) setError(data.error || "Erreur création");
-      else { setCreatedPatientId(data.patient.id); setStep("done"); }
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
+      if (!data.ok) {
+        setError(data.error || "Erreur création");
+        return;
+      }
+
+      const patientId = data.patient.id;
+      setCreatedPatientId(patientId);
+
+      // 0.56.1 : archivage du bulletin original dans Storage
+      if (file && auth.structureId) {
+        try {
+          const { uploadBulletin } = await import("../../../lib/bulletinsStorage");
+          const up = await uploadBulletin(supabase, file, {
+            structureId: auth.structureId,
+            patientId,
+          });
+          if (up.error) {
+            // Patient créé OK, juste l'archivage qui foire — on log mais on continue
+            setArchiveWarning(`Patient créé, mais archivage du bulletin échoué : ${up.error}`);
+          } else {
+            // Update patient avec le path + métadonnées du fichier
+            await supabase.from("patients").update({
+              bs_file_path: up.path,
+              bs_file_mime: up.mime,
+              bs_file_size_kb: up.size_kb,
+            }).eq("id", patientId);
+          }
+        } catch (e) {
+          setArchiveWarning(`Archivage échoué (non bloquant) : ${e.message}`);
+        }
+      }
+
+      setStep("done");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function reset() {
@@ -288,10 +330,21 @@ export default function ScanBulletinSituationPage() {
           <Panel style={{ background: "linear-gradient(135deg, #eef9ef, #fff)", borderColor: "#bfe2bf", textAlign: "center", padding: 28 }}>
             <div style={{ fontSize: 60, marginBottom: 8 }}>✅</div>
             <h2 style={{ margin: "0 0 8px", fontSize: 22, color: "#2e6f33" }}>Patient créé !</h2>
-            <p style={{ fontSize: 13, color: "#6c7a89", margin: "0 0 16px" }}>
+            <p style={{ fontSize: 13, color: "#6c7a89", margin: "0 0 8px" }}>
               <b>{editedData.prenom} {editedData.nom}</b> ajouté à la base.<br />
               Caisse et mutuelle ont été automatiquement liées si trouvées.
             </p>
+            {/* 0.56.1 : info archivage Storage */}
+            {!archiveWarning && file && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#dbe7f5", color: "#185FA5", padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, marginBottom: 14 }}>
+                <i className="ti ti-archive" /> Bulletin archivé dans Storage (visible dans l'onglet Audit de la fiche)
+              </div>
+            )}
+            {archiveWarning && (
+              <div style={{ background: "#fff8ec", border: "1px solid #f0d59f", color: "#7a4f15", padding: "8px 12px", borderRadius: 8, fontSize: 12, marginBottom: 14, textAlign: "left" }}>
+                <i className="ti ti-alert-triangle" /> <b>Archivage non bloqué :</b> {archiveWarning}
+              </div>
+            )}
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
               <button onClick={() => router.push(`/patient/${createdPatientId}/edit`)} style={{ background: "#185FA5", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 8, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                 <i className="ti ti-arrow-right" /> Compléter la fiche

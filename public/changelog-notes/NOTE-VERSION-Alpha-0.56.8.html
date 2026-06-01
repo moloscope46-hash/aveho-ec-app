@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.8 — Prescriptions archive</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#5a4a90;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5a4a90 45%,#7a6fb0 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700}
+  .tabs-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0}
+  .tabs-demo .tab{padding:10px;border-radius:8px;text-align:center;border:1.5px solid;font-weight:700;font-size:13px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — PRESCRIPTIONS ARCHIVE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.8 — Archive complète des prescriptions
+      <small>Recherche multi-critères · 8 KPI dashboard · top médicaments/prescripteurs · histogramme 12 mois · export CSV</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.8-alpha</code></span>
+      <span><b>Tests :</b> 1985 verts (+52)</span>
+      <span><b>SQL :</b> 1 patch (6 index + 4 RPC)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Tu as enregistré X prescriptions depuis 0.56.3. Mais sans page dédiée pour les explorer, c'est juste un tas de lignes. Cette version te donne :</p>
+    <ul>
+      <li>Une <b>vue d'ensemble immédiate</b> de toute l'activité prescriptive (8 KPI : total, lignes, DCI uniques, prescripteurs, patients, OCR, RPPS vérifiés, tokens IA)</li>
+      <li>Une <b>recherche multi-critères puissante</b> (9 filtres combinables : nom prescripteur, RPPS, médicament, DCI, type, source, statut, dates)</li>
+      <li>Des <b>top 15</b> médicaments et prescripteurs avec stats croisées (patients uniques, dates)</li>
+      <li>Un <b>histogramme mensuel</b> sur 12 mois avec graphique en barres</li>
+      <li>Un <b>export CSV</b> Excel-compatible (BOM UTF-8, séparateur ;) avec option médicaments concaténés</li>
+    </ul>
+  </div>
+
+  <h2>📑 4 onglets</h2>
+  <div class="panel">
+    <div class="tabs-demo">
+      <div class="tab" style="color:#5a4a90;border-color:#5a4a90;background:#5a4a9011"><i class="ti ti-search"></i><br>Recherche</div>
+      <div class="tab" style="color:#185FA5;border-color:#185FA5;background:#185FA511"><i class="ti ti-pill"></i><br>Top médicaments</div>
+      <div class="tab" style="color:#7a6fb0;border-color:#7a6fb0;background:#7a6fb011"><i class="ti ti-stethoscope"></i><br>Top prescripteurs</div>
+      <div class="tab" style="color:#5aa05a;border-color:#5aa05a;background:#5aa05a11"><i class="ti ti-chart-line"></i><br>Tendances par mois</div>
+    </div>
+  </div>
+
+  <h2>🔍 Recherche multi-critères</h2>
+  <div class="panel violet">
+    <p>9 filtres combinables, tous optionnels :</p>
+    <table>
+      <tr><th>Filtre</th><th>Type</th><th>Exemple</th></tr>
+      <tr><td>Prescripteur (nom)</td><td>ILIKE fuzzy</td><td>"Dupont" matche "DUPONT", "dupont", "Dupont-Martin"</td></tr>
+      <tr><td>RPPS</td><td>exact</td><td>10100123456</td></tr>
+      <tr><td>Médicament</td><td>ILIKE fuzzy (via lignes)</td><td>"DOLIPRANE" matche "DOLIPRANE 1000 mg", "doliprane"</td></tr>
+      <tr><td>DCI</td><td>ILIKE fuzzy (via lignes)</td><td>"PARACETAMOL"</td></tr>
+      <tr><td>Type</td><td>exact</td><td>bizone / hospitalière / sécurisée / etc.</td></tr>
+      <tr><td>Source</td><td>exact</td><td>ocr / manuelle / import</td></tr>
+      <tr><td>Statut</td><td>exact</td><td>active / archivée / annulée</td></tr>
+      <tr><td>Date début</td><td>≥</td><td>2025-01-01</td></tr>
+      <tr><td>Date fin</td><td>≤</td><td>2025-12-31</td></tr>
+    </table>
+    <p>Les recherches sur médicament/DCI passent d'abord par <code>prescriptions_lignes</code> (avec ilike + set deduplication des IDs) puis filtrent les prescriptions correspondantes. C'est rapide grâce aux index GIN trigramme créés sur les noms.</p>
+  </div>
+
+  <h2>📊 8 KPI dashboard</h2>
+  <div class="panel">
+    <ul>
+      <li><b>Total prescriptions</b> (mis en évidence violet)</li>
+      <li><b>Lignes (méds)</b> — somme des médicaments prescrits, tous patients confondus</li>
+      <li><b>DCI uniques</b> — molécules distinctes (avec fallback nom commercial si DCI null)</li>
+      <li><b>Prescripteurs uniques</b> — préférence RPPS, fallback nom case-insensitive</li>
+      <li><b>Patients</b> — patients distincts ayant reçu au moins 1 prescription</li>
+      <li><b>Via OCR</b> — prescriptions créées par scan d'ordonnance</li>
+      <li><b>RPPS vérifiés</b> — prescriptions dont le RPPS du prescripteur a été validé contre l'annuaire ANS</li>
+      <li><b>Tokens IA</b> — tokens IN + OUT consommés au total pour les OCR</li>
+    </ul>
+    <p>Période couverte affichée : première date → dernière date.</p>
+  </div>
+
+  <h2>🏆 Top médicaments + prescripteurs</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Top médicaments (15)</h3>
+    <p>Classement par nb_prescriptions. Préfère la DCI (UPPER-case) pour regrouper toutes les variantes commerciales (DOLIPRANE 1000, DOLIPRANE 500, etc. → tous comptés comme PARACETAMOL). Badge vert "DCI" si DCI fournie, sinon nom commercial. Barre de progression proportionnelle au #1.</p>
+
+    <h3>Top prescripteurs (15)</h3>
+    <p>Classement par nb_prescriptions. Groupe par nom case-insensitive. Affiche RPPS + spécialité + nb patients uniques + nb lignes + dernière date d'activité. Badge vert "Vérifié" si au moins une prescription a un RPPS validé ANS (agrégation via <code>bool_or</code>).</p>
+  </div>
+
+  <h2>📈 Tendances 12 mois</h2>
+  <div class="panel">
+    <p>Histogramme en barres avec gradient violet sur 12 mois (utilise <code>generate_series</code> + LEFT JOIN pour inclure les mois vides à 0, évitant les trous dans le graphique). Sous le graphique, tableau détaillé avec nb_prescriptions + nb_lignes + nb_patients_uniques + nb_ocr par mois.</p>
+  </div>
+
+  <h2>💾 Export CSV</h2>
+  <div class="panel warn">
+    <p>2 boutons d'export qui apparaissent uniquement quand il y a des résultats :</p>
+    <ul>
+      <li><b>Export CSV</b> — 19 colonnes (date, patient nom+prénom+dossier, étab, prescripteur+RPPS+spé, vérif RPPS+source, type, durée, renouvelable+nb, source, statut, notes, date création)</li>
+      <li><b>Export + médicaments</b> — ajoute 2 colonnes : "Médicaments (liste)" avec concat nom + dosage + posologie en pipe (<code>|</code>), et "Nb lignes"</li>
+    </ul>
+    <p>Le CSV est généré avec :</p>
+    <ul>
+      <li><b>BOM UTF-8</b> en tête (Excel l'utilise pour détecter l'encodage et afficher les caractères accentués correctement)</li>
+      <li><b>Séparateur</b> <code>;</code> (Excel France attend ça par défaut)</li>
+      <li><b>CRLF</b> entre lignes (compatible Excel Windows)</li>
+      <li><b>Échappement</b> des quotes (doubles "" comme la norme RFC 4180), retour-ligne, et séparateur</li>
+      <li><b>Limite 5000 lignes</b> par export (sécurité mémoire)</li>
+    </ul>
+    <p>Téléchargement automatique côté front : appel API → blob → <code>URL.createObjectURL</code> → lien temporaire simulé → <code>URL.revokeObjectURL</code>. Le fichier porte un nom daté : <code>prescriptions-archive-YYYY-MM-DD.csv</code>.</p>
+  </div>
+
+  <h2>🗄 4 RPC SQL</h2>
+  <div class="panel">
+    <table>
+      <tr><th>RPC</th><th>Params</th><th>Usage</th></tr>
+      <tr><td><code>prescriptions_archive_stats</code></td><td>date_debut, date_fin</td><td>16 agrégats KPI</td></tr>
+      <tr><td><code>prescriptions_top_medicaments</code></td><td>limit, dates</td><td>Top N par DCI/nom</td></tr>
+      <tr><td><code>prescriptions_top_prescripteurs</code></td><td>limit, dates</td><td>Top N prescripteurs</td></tr>
+      <tr><td><code>prescriptions_par_mois</code></td><td>mois_count (12)</td><td>Histogramme mensuel</td></tr>
+    </table>
+    <p>Toutes <code>SECURITY DEFINER</code> avec isolation par <code>structure_id</code> via <code>membres_structure</code>.</p>
+  </div>
+
+  <h2>📈 Tests +52 (1933 → 1985)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL index</b> (3) : struct+date partiel, type/source, 3 GIN trigramme</li>
+      <li><b>RPC stats</b> (4) : security definer, 16 champs, DCI fallback, prescripteurs distinct</li>
+      <li><b>RPC top médicaments</b> (5) : params, DCI fallback, flag est_dci, distincts, tri desc</li>
+      <li><b>RPC top prescripteurs</b> (4) : exists, group lower, bool_or, dates</li>
+      <li><b>RPC par mois</b> (4) : params, generate_series, left join, filter OCR</li>
+      <li><b>API search</b> (7) : exists, POST, médicament via lignes, ilike, dates, range, join, cap 500</li>
+      <li><b>API export-csv</b> (9) : exists, maxDuration, csvEscape, BOM+;, CRLF, headers, include_lignes, limit 5000, header complet</li>
+      <li><b>Page admin</b> (15) : 4 onglets, 4 RPC, 8 KPI, 9 filtres, Bearer, 2 exports, Blob, reset, top meds proportions, top presc vérifié, MonthBarChart, table mois, lien fiche</li>
+      <li><b>Menu</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.8.sql</code> : <b>NOUVEAU</b> · ~250 lignes · 6 index + 4 RPC</li>
+    <li><code>app/api/prescriptions/search/route.js</code> : <b>NOUVEAU</b> · ~110 lignes · recherche multi-critères</li>
+    <li><code>app/api/prescriptions/export-csv/route.js</code> : <b>NOUVEAU</b> · ~130 lignes · export Excel-compatible</li>
+    <li><code>app/admin/prescriptions-archive/page.js</code> : <b>NOUVEAU</b> · ~500 lignes · 4 onglets</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration 'Prescriptions archive'</li>
+    <li><code>__tests__/v056-8-prescriptions-archive.test.js</code> : <b>NOUVEAU</b> · +52 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.8 (6 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.8</li>
+    <li><code>package.json</code> : 0.56.7 → 0.56.8</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.8.sql</code> → Run (crée 6 index + 4 RPC). Nécessite pg_trgm déjà activé (depuis 0.56.7)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.8 - Prescriptions archive + recherche multi-critères + top + tendances + export CSV"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Administration → <b>Prescriptions archive</b></li>
+      <li>Vérifier les 8 KPI en haut + période couverte</li>
+      <li>Onglet <b>Recherche</b> → tester filtre par médicament "DOLIPRANE" → résultats</li>
+      <li>Cliquer <b>Export CSV</b> → ouvrir dans Excel → vérifier que les accents s'affichent + colonnes séparées</li>
+      <li>Cliquer <b>Export + médicaments</b> → vérifier la colonne supplémentaire</li>
+      <li>Onglet <b>Top médicaments</b> → vérifier badges DCI + proportions visuelles</li>
+      <li>Onglet <b>Top prescripteurs</b> → vérifier badge Vérifié si RPPS validé</li>
+      <li>Onglet <b>Tendances</b> → vérifier le graphique 12 mois + tableau détaillé</li>
+      <li>Smoke tests 0.56.8 → 6 verts</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Export limité à 5000 lignes</b> : si tu as plus, affine les filtres (par date par exemple) avant d'exporter</li>
+      <li><b>Recherche médicament/DCI</b> : utilise ilike donc pas de scoring de pertinence comme la similarité fuzzy. "DOLIPRANE" matchera tous les médicaments contenant cette sous-chaîne</li>
+      <li><b>Top groupements absent</b> : pour l'instant pas de RPC top groupements (peu pertinent dans le contexte prescriptions)</li>
+      <li><b>Histogramme 12 mois fixe</b> : non paramétrable côté UI (mais le RPC accepte un nombre de mois variable)</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.9 — Fonction de fusion automatique des doublons confirmés (RPC + UI sur 0.56.7)</li>
+    <li>0.56.10 — Stats Espace Pro côté patient (mes ordonnances, mes médecins, ALD, etc.)</li>
+  </ul>
+
+  <h2>SW auto-bump — 75ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.7 → <b>0.56.8</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.8 · 1er juin 2026</p>
+    <p>Prescriptions archive · recherche multi-critères · stats + export CSV · 1985 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

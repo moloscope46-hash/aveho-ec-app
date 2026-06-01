@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.10 — Dashboard patient santé</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#5a4a90;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#5a4a90 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700}
+  .alert-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:10px 0}
+  .alert-demo .item{padding:10px;border-radius:8px;font-size:11.5px;border:1px solid}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — DASHBOARD SANTÉ PATIENT</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.10 — Vue consolidée santé par patient
+      <small>Prescriptions actives · médecins · droits sécu/mutuelle · alertes contextuelles · 4 RPC agrégées</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.10-alpha</code></span>
+      <span><b>Tests :</b> 2062 verts (+40)</span>
+      <span><b>SQL :</b> 1 patch (4 RPC agrégées)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Jusqu'à maintenant, pour avoir une vue d'ensemble santé d'un patient il fallait jongler entre plusieurs onglets de sa fiche d'édition (Sécu, Prescriptions, Médecin). La 0.56.10 introduit une <b>page dashboard dédiée</b> à <code>/patient/[id]/dashboard</code> qui consolide tout en une seule vue :</p>
+    <ul>
+      <li>Header carte patient avec avatar initiales + âge calculé + ID administratif</li>
+      <li><b>Alertes contextuelles</b> en haut (droits expirent, ALD sans commentaire, pas de caisse, prescriptions à renouveler...)</li>
+      <li>5 KPI synthétiques (prescriptions, médicaments, médecins, renouvelables, dernière ordonnance)</li>
+      <li>Section <b>Statut administratif</b> (caisse rattachée, mutuelle, ALD/C2S/AME) avec badges expiration colorés</li>
+      <li>Liste des <b>médicaments actuellement prescrits</b> (statut active, dédupliqués par DCI)</li>
+      <li>Liste des <b>médecins prescripteurs</b> avec ContactActions tel/mail/GPS</li>
+    </ul>
+  </div>
+
+  <h2>🚨 Alertes contextuelles automatiques</h2>
+  <div class="panel">
+    <p>5 types d'alertes générés automatiquement par la RPC <code>patient_dashboard_alertes</code> avec 3 niveaux de sévérité :</p>
+    <div class="alert-demo">
+      <div class="item" style="background:#fce5e0;border-color:#f0c4be;color:#7a2d23"><b>CRITIQUE</b><br>Droits sécu expirés depuis X jours</div>
+      <div class="item" style="background:#fff8ec;border-color:#f0d59f;color:#7a4f15"><b>WARNING</b><br>Droits expirent dans &lt;= 30 jours</div>
+      <div class="item" style="background:#fff8ec;border-color:#f0d59f;color:#7a4f15"><b>WARNING</b><br>Aucune caisse renseignée</div>
+      <div class="item" style="background:#dbe7f5;border-color:#bdd2eb;color:#185FA5"><b>INFO</b><br>ALD sans commentaire renseigné</div>
+      <div class="item" style="background:#dbe7f5;border-color:#bdd2eb;color:#185FA5"><b>INFO</b><br>Prescription renouvelable &gt; 60 jours</div>
+    </div>
+  </div>
+
+  <h2>📊 4 RPC SQL agrégées</h2>
+  <div class="panel violet">
+    <table>
+      <tr><th>RPC</th><th>Retour</th></tr>
+      <tr>
+        <td><code>patient_dashboard_summary</code></td>
+        <td>17 champs : compteurs prescriptions, médicaments, médecins, flags ALD/C2S/AME, droits + jours_avant_fin calculés, noms caisse/mutuelle</td>
+      </tr>
+      <tr>
+        <td><code>patient_dashboard_medicaments_actifs</code></td>
+        <td>Liste dédupliquée par DCI (préférée) ou nom commercial via <code>row_number() over partition</code>, avec dernier dosage + posologie + nb_prescriptions (window count)</td>
+      </tr>
+      <tr>
+        <td><code>patient_dashboard_medecins</code></td>
+        <td>Médecins groupés par nom case-insensitive, avec ville/tel/email récupérés depuis <code>medecins_prescripteurs</code> si lié (0.56.5), badge vérifié agrégé via <code>bool_or</code></td>
+      </tr>
+      <tr>
+        <td><code>patient_dashboard_alertes</code></td>
+        <td>0 à 10 alertes contextuelles (sécu, mutuelle, ALD, caisse, renouvellement)</td>
+      </tr>
+    </table>
+    <p>Toutes les RPC sont <code>SECURITY DEFINER</code> avec vérification d'accès via <code>membres_structure</code>. Chargées en parallèle depuis la page front pour temps de chargement minimal.</p>
+  </div>
+
+  <h2>📐 Layout de la page</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">1. Header patient (gradient bleu marine)</h3>
+    <p>Avatar circulaire 56px avec initiales (prénom[0] + nom[0]) + nom complet + âge calculé (365.25j) + métadonnées (n° dossier, date naissance, sexe, n° sécu en mono). Boutons "Éditer la fiche" et "Vue matériel" pour navigation rapide.</p>
+
+    <h3>2. Alertes (si > 0)</h3>
+    <p>Panneau ambré en haut avec composant <code>AlerteRow</code> par alerte. 3 niveaux visuels distincts (rouge critique / ambré warning / bleu info) + icône appropriée + badge sévérité en pill.</p>
+
+    <h3>3. KPI dashboard (grid 5 cards)</h3>
+    <p>Prescriptions (mis en évidence violet big) + Médicaments uniques + Médecins distincts + Renouvelables + Dernière ordonnance date. Chaque card affiche valeur principale + sub-label.</p>
+
+    <h3>4. Statut administratif (3 StatutCards)</h3>
+    <p><b>Caisse</b> : nom + type + droits sécu jusqu'au + jours restants colorés. Badge MANQUANT rouge si null.<br>
+    <b>Mutuelle</b> : nom + tiers payant actif + droits mutuelle.<br>
+    <b>Régimes spéciaux</b> : Pills ALD rouge / C2S ambré / AME violet ou message vide italique + commentaire ALD si renseigné.</p>
+
+    <h3>5. Médicaments actuellement prescrits</h3>
+    <p>Bouton "Scanner une ordonnance" en haut. Liste avec dosage en code mono violet + badges DCI vert + Renouvelable vert + ×N si plusieurs prescriptions + posologie italique + commentaire ambré ALD.</p>
+
+    <h3>6. Médecins prescripteurs</h3>
+    <p>Liste avec badge Vérifié vert (si RPPS validé via ANS) + spécialité pill violet + ville + ContactActions intégrés (tel/mail/GPS depuis lib ContactActions de 0.56.4).</p>
+  </div>
+
+  <h2>🔗 Intégration</h2>
+  <div class="panel">
+    <p>Bouton <b>"Dashboard santé"</b> (icône <code>ti-clipboard-heart</code>) ajouté sur la fiche patient existante <code>/patient/[id]/page.js</code> juste avant "Édition complète". Permet d'accéder rapidement à la vue consolidée santé depuis la vue 360° matériel existante, sans casser le workflow existant.</p>
+    <p>Le dashboard reste accessible aussi directement via URL <code>/patient/{uuid}/dashboard</code> — pratique pour ajouter ce lien dans d'autres parties de l'app (notification, recherche globale, etc.).</p>
+  </div>
+
+  <h2>🎨 Composants réutilisables ajoutés</h2>
+  <div class="panel">
+    <ul>
+      <li><b>Kpi</b> : card KPI avec label uppercase + value gros + sub optionnel, prop <code>big</code> pour mise en évidence</li>
+      <li><b>Pill</b> : badge arrondi coloré pour ALD/C2S/AME</li>
+      <li><b>StatutCard</b> : card statut administratif avec badge expiration auto-coloré</li>
+      <li><b>AlerteRow</b> : ligne d'alerte 3 niveaux (critique/warning/info) avec icônes appropriées</li>
+      <li><b>MedicamentRow</b> : ligne médicament riche avec dosage mono + badges + posologie italique</li>
+      <li><b>MedecinRow</b> : ligne médecin avec badge Vérifié + ContactActions intégrés</li>
+    </ul>
+    <p>Ces composants sont locaux à la page dashboard pour l'instant. S'ils sont réutilisés ailleurs (ex: dashboard structure, vue famille), ils pourront être extraits dans un module <code>app/dashboards/components.js</code> en 0.56.11+.</p>
+  </div>
+
+  <h2>📈 Tests +40 (2022 → 2062)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL summary</b> (8) : security definer, accès, compteurs, flags admin, calcul jours, sous-requêtes caisse/mutuelle, DCI fallback, renouvelables</li>
+      <li><b>SQL medicaments_actifs</b> (6) : row_number dedupe, filtre active, group DCI/nom upper, dernier dosage/posologie/date, window count, flag est_dci</li>
+      <li><b>SQL medecins</b> (5) : group lower, bool_or, sous-requêtes ville/tel/email, tri desc nulls last</li>
+      <li><b>SQL alertes</b> (6) : 5 types, 3 sévérités, sécu expiré/warning 30j, ALD vide, no_caisse, renouvelable > 60j</li>
+      <li><b>Page dashboard</b> (14) : exists, 4 RPC parallèles, header avatar+âge, 2 boutons retour, alertes conditionnelles, 5 KPI, StatutCard 3 sections, badge expiration coloré, AlerteRow 3 niveaux, MedicamentRow DCI+dosage+renouvelable, MedecinRow ContactActions, scan pré-rempli, voir prescriptions tab, ALD commentaire</li>
+      <li><b>Bouton fiche patient</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.10.sql</code> : <b>NOUVEAU</b> · ~280 lignes · 4 RPC agrégées</li>
+    <li><code>app/patient/[id]/dashboard/page.js</code> : <b>NOUVEAU</b> · ~430 lignes · dashboard complet</li>
+    <li><code>app/patient/[id]/page.js</code> : + bouton 'Dashboard santé'</li>
+    <li><code>__tests__/v056-10-dashboard-patient.test.js</code> : <b>NOUVEAU</b> · +40 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.10 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.10</li>
+    <li><code>package.json</code> : 0.56.9 → 0.56.10</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.10.sql</code> → Run (crée 4 RPC, pas de nouvelle table). Nécessite 0.56.3 (prescriptions) + 0.56.5 (medecins_prescripteurs) + 0.55.46 (patients avec caisse_id, mutuelle_id, etc.) déjà appliqués</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.10 - Dashboard santé patient + 4 RPC agrégées + alertes contextuelles"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Ouvre une fiche patient existante</li>
+      <li>Clique le nouveau bouton <b>'Dashboard santé'</b></li>
+      <li>Vérifie l'affichage du header avec avatar + âge + n° dossier</li>
+      <li>Si le patient a des droits qui expirent bientôt : vérifie l'apparition d'une alerte ambrée en haut</li>
+      <li>Vérifie les 5 KPI : prescriptions, médicaments, médecins, renouvelables, dernière ordonnance</li>
+      <li>Vérifie la section Statut administratif (caisse + mutuelle + régimes spéciaux)</li>
+      <li>Si le patient a des ordonnances : vérifie la liste des médicaments actifs avec dosages</li>
+      <li>Vérifie la liste des médecins avec badges Vérifié et boutons ContactActions</li>
+      <li>Clique "Scanner une ordonnance" → vérifie que la page /scan/prescription s'ouvre avec patient pré-rempli</li>
+      <li>Smoke tests 0.56.10 → 5 verts</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel warn">
+    <ul>
+      <li><b>Dashboard non-éditable</b> : la page est en lecture seule. Pour modifier les infos, l'utilisateur doit retourner sur la fiche d'édition (un bouton est prévu en haut)</li>
+      <li><b>5 alertes max</b> dans la catégorie "renouvellement" (limite codée en dur dans la RPC pour ne pas surcharger l'UI si beaucoup de prescriptions anciennes)</li>
+      <li><b>Pas de personnalisation des seuils</b> : 30 jours pour les alertes droits sécu/mutuelle, 60 jours pour renouvellement. Configurables en 0.56.X+ si demande</li>
+      <li><b>Médecins sans medecin_prescripteur_id</b> : si une prescription a été créée avant la 0.56.5 (sans lien vers la table medecins_prescripteurs), les champs ville/tel/email seront vides dans le dashboard. La RPC fallback retourne les infos disponibles mais sans ContactActions complets</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.11 — Dashboard structure (vue d'ensemble multi-patients : top alertes, échéances à venir, taux ALD, prescriptions du mois)</li>
+    <li>0.56.12 — Fusion par lot pour les doublons "score 100%" (SIRET/FINESS/RPPS identiques) en cascade automatique</li>
+  </ul>
+
+  <h2>SW auto-bump — 77ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.9 → <b>0.56.10</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.10 · 1er juin 2026</p>
+    <p>Dashboard santé patient · 4 RPC agrégées · alertes contextuelles · 2062 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

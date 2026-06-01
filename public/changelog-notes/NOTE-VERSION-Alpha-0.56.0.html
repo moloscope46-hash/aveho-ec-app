@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.0 MILESTONE — Cycle 0.55 terminé</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 40%,#5aa05a 100%);color:#fff;border-radius:18px;padding:38px 36px;margin-bottom:30px;box-shadow:0 16px 38px rgba(20,33,49,.32);position:relative;overflow:hidden}
+  header.cover::after{content:"";position:absolute;top:-50%;right:-20%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(124,200,200,.25) 0%,transparent 70%)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:32px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  .vbadge{display:inline-block;font-size:22px;color:var(--teal);margin-left:10px;background:rgba(124,200,200,.2);padding:4px 14px;border-radius:10px;letter-spacing:1px}
+  h1{font-size:24px;font-weight:700;margin:14px 0 6px}
+  h1 small{font-size:14px;font-weight:500;color:#cfe4f5;display:block;margin-top:6px;max-width:600px}
+  .meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:12.5px;color:#cfe4f5;position:relative;z-index:1}
+  .meta b{color:#fff;font-size:16px}
+  h2{font-size:19px;color:var(--navy);margin:34px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  td,th{padding:9px 12px;border-bottom:1px solid #e3e9ee;text-align:left;vertical-align:top}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+  .pilier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0}
+  .pilier{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px 16px;border-left:4px solid var(--blue)}
+  .pilier h4{margin:0 0 8px;font-size:13.5px;color:var(--navy);display:flex;align-items:center;gap:6px}
+  .pilier ul{font-size:12px;line-height:1.6;color:#445566;padding-left:16px;margin:6px 0 0}
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:10px 0}
+  .stat{background:#f4f7fa;border-radius:8px;padding:10px;text-align:center}
+  .stat b{display:block;font-size:22px;color:var(--blue);font-family:'Consolas',monospace}
+  .stat small{font-size:10px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  footer{margin-top:40px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">MILESTONE — VERSION MAJEURE</div>
+    <div class="logo">a<span class="v">v</span>eho EC<span class="vbadge">0.56</span></div>
+    <h1>Cycle 0.55 terminé — 56 versions de stabilisation et features
+      <small>L'app est passée d'un MVP à une plateforme SaaS PSAD prête pour les vrais utilisateurs : OCR Claude Vision, géolocalisation BAN, référentiels santé, fallback RPPS, anti-doublon, fiche patient 6 onglets…</small>
+    </h1>
+    <div class="meta">
+      <span><b>56</b><br/>versions cycle 0.55</span>
+      <span><b>1642</b><br/>tests Vitest verts</span>
+      <span><b>66</b><br/>bumps SW consécutifs</span>
+      <span><b>0</b><br/>erreur de build</span>
+      <span><b>105+44</b><br/>caisses + mutuelles seedées</span>
+    </div>
+  </header>
+
+  <h2>🎯 Pourquoi 0.56 ?</h2>
+  <div class="panel">
+    <p>Le cycle 0.55 a duré ~2 semaines mais il était trop long et fragmenté pour rester en patches. <b>56 versions consécutives</b> sans cassure de build, sans régression majeure, avec un SW bumpé à chaque release : c'est suffisant pour mériter un saut majeur de version.</p>
+    <p>Le bump 0.55.56 → 0.56.0 marque la fin du cycle de stabilisation et le démarrage du cycle "scan & flux temps réel". Tout ce qui suit (0.56.X) se concentrera sur les <b>flux opérationnels</b> : scan QR Vitale, scan code-barre matériel GS1/UDI, OCR prescriptions, storage Supabase pour archivage documents.</p>
+  </div>
+
+  <h2>🏛 Les 8 piliers atteints</h2>
+
+  <div class="pilier-grid">
+    <div class="pilier" style="border-color:#142131">
+      <h4>🪑 Gestion matériel & patients</h4>
+      <ul>
+        <li>Catalogue + parc par établissement</li>
+        <li>Affectation matériel ↔ patient avec historique</li>
+        <li>Étiquettes personnalisables</li>
+        <li>DI avec workflow complet</li>
+        <li>PPC, perfusion, VPH, nutrition</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#7a6fb0">
+      <h4>📋 Fiche patient niveau bulletin</h4>
+      <ul>
+        <li>60+ champs (sécu, mutuelle, ALD/C2S/AME)</li>
+        <li>6 onglets d'édition</li>
+        <li>1-N adresses de livraison</li>
+        <li>Personne de confiance + urgence</li>
+        <li>Audit complet (OCR brut conservé)</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#5aa05a">
+      <h4>🤖 OCR & IA Claude Vision</h4>
+      <ul>
+        <li>Création patient depuis photo (40+ champs/10s)</li>
+        <li>Auto-link caisse via code_organisme</li>
+        <li>Auto-link mutuelle via numero_amc</li>
+        <li>OCR générique tout document</li>
+        <li>Architecture prête QR + GS1</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#185FA5">
+      <h4>📍 Géolocalisation BAN INSEE</h4>
+      <ul>
+        <li>Autocomplete adresse data.gouv.fr</li>
+        <li>Auto-fill cp + ville + INSEE + lat/lng</li>
+        <li>3 emplacements intégrés</li>
+        <li>Lieu de naissance INSEE commune</li>
+        <li>Carte multi-couches RPPS + FINESS + SIRENE</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#EF9F27">
+      <h4>🗃 Référentiels santé intégrés</h4>
+      <ul>
+        <li>105 caisses CPAM/CGSS/régimes</li>
+        <li>44 mutuelles avec n° AMC</li>
+        <li>Recherche RPPS API ANS officielle</li>
+        <li><b>Plan B : dump local fallback auto</b></li>
+        <li>FINESS, SIRENE, recherche libre</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#c0392b">
+      <h4>🛡 Administration & diagnostic</h4>
+      <ul>
+        <li>Invitations + diagnostic Resend</li>
+        <li>Diagnostic API RPPS (4 tests parallèles)</li>
+        <li>Gestion users + rôles + permissions</li>
+        <li>Audit log actions sensibles</li>
+        <li>Anti-doublon étabs + groupements</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#7CC8C8">
+      <h4>⚡ Robustesse & performance</h4>
+      <ul>
+        <li>SW offline-ready (66 bumps)</li>
+        <li>maxDuration + AbortController partout</li>
+        <li>Plus jamais de 502 (format {ok,...})</li>
+        <li>RLS Supabase sur tables sensibles</li>
+        <li>SafeWrite : mode offline avec queue</li>
+      </ul>
+    </div>
+
+    <div class="pilier" style="border-color:#5a8f8f">
+      <h4>🧪 Tests & qualité</h4>
+      <ul>
+        <li>1642 tests Vitest verts</li>
+        <li>Build Next.js sans warnings</li>
+        <li>Smoke tests intégrés au changelog</li>
+        <li>0 console.warn/log/info résiduels</li>
+        <li>SQL 100% idempotent partout</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>📈 Chiffres clés du cycle 0.55</h2>
+  <div class="panel hi">
+    <div class="stat-row">
+      <div class="stat"><b>56</b><small>Versions</small></div>
+      <div class="stat"><b>~14</b><small>Jours dev</small></div>
+      <div class="stat"><b>1642</b><small>Tests verts</small></div>
+      <div class="stat"><b>74</b><small>Fichiers tests</small></div>
+      <div class="stat"><b>66</b><small>Bumps SW</small></div>
+      <div class="stat"><b>0</b><small>Régressions</small></div>
+    </div>
+  </div>
+
+  <h2>🚀 La nouvelle page /v056</h2>
+  <div class="panel violet">
+    <p>Accessible depuis la tuile <b>"Aveho EC 0.56"</b> sur l'accueil (badge NEW vert) ou via <code>/v056</code> :</p>
+    <ul>
+      <li><b>Header milestone</b> coloré (gradient bleu marine → bleu → vert) avec compteurs (56 versions, 1642 tests, 66 bumps SW, 0 erreurs)</li>
+      <li><b>KPI live</b> de la base : caisses, mutuelles, patients, établissements</li>
+      <li><b>8 piliers</b> en grille avec icônes colorées, titre et liste de capacités</li>
+      <li><b>4 parcours de découverte</b> vers les pages clés (scan bulletin, patients, carte, changelog) avec animation hover</li>
+      <li><b>Roadmap 0.56.X</b> annoncée en bas (panneau ambré)</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Roadmap 0.56.X</h2>
+  <div class="panel warn">
+    <p>Ce que va apporter le cycle 0.56 :</p>
+    <ul>
+      <li><b>0.56.1 — Storage Supabase</b> pour archiver les images de bulletins scannés (<code>bs_file_url</code>) — utile pour audit et re-OCR</li>
+      <li><b>0.56.2 — Scan QR Vitale</b> via html5-qrcode (lecture des cartes Vitale, attestations tiers payant, étiquettes patient/matériel)</li>
+      <li><b>0.56.3 — Scan code-barre GS1/UDI</b> via ZXing + parser Application Identifiers (n° série, lot, péremption pour matériel médical)</li>
+      <li><b>0.56.4 — OCR prescriptions</b> : extraction médicaments + posologie + création prescription patient</li>
+      <li><b>0.56.5 — Sync Google reviews</b> Edge Function cron 6h pour les avis établissements</li>
+      <li><b>0.56.6 — Page audit doublons</b> /admin/doublons-forces avec vue v_doublons_forces</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/v056/page.js</code> : <b>NOUVEAU</b> · page récap milestone (8 piliers, KPI live, parcours)</li>
+    <li><code>app/accueil/page.js</code> : nouvelle tuile "Aveho EC 0.56" avec badge NEW vert</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.0 kind "milestone"</li>
+    <li><code>app/changelog/smoke-tests.js</code> : bloc 0.56.0 (2 tests)</li>
+    <li><code>__tests__/v056-0-milestone.test.js</code> : <b>NOUVEAU</b> · +14 tests</li>
+    <li><code>package.json</code> : 0.55.56 → <b>0.56.0-alpha</b></li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL — version sans schéma)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "MILESTONE 0.56.0 - Cycle 0.55 terminé, page recap + bump majeur"
+git push origin main</code></pre>
+      </li>
+      <li>Aller sur la page d'accueil → cliquer la tuile <b>"Aveho EC 0.56"</b> (badge NEW vert)</li>
+      <li>Explorer les 8 piliers et le parcours de découverte</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 67ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.56 → <b>0.56.0</b> ✓</p>
+  <p>67 bumps successifs sans régression du Service Worker. L'app reste installable, offline-ready, et tous les caches sont propres.</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.0 · 1er juin 2026</p>
+    <p>Milestone · cycle 0.55 terminé · 1642 tests verts · plateforme PSAD prête pour la prod</p>
+  </footer>
+
+</div>
+</body>
+</html>

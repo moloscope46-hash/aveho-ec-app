@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.55.51";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.56.10";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -72,7 +72,23 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
+
+  // Alpha 0.55.52 : bypass complet des schémas non-cachables.
+  // chrome-extension://, moz-extension://, safari-extension://, data:, blob:, file:, ws(s):
+  // → cache.put() throw "Request scheme '...' is unsupported"
+  // Les extensions navigateur (LastPass, Dashlane, Grammarly, MetaMask, etc.) injectent
+  // souvent des requêtes vers leurs propres ressources qui passent par le SW de la page.
+  // On les laisse au navigateur sans intercepter.
+  if (!req.url.startsWith("http://") && !req.url.startsWith("https://")) {
+    return;
+  }
+
   const url = new URL(req.url);
+
+  // 0.55.52 : aussi ignorer les requêtes cross-origin qu'on ne contrôle pas
+  // (sauf Supabase qu'on cache exprès plus bas)
+  // Note : on garde fetch normal pour les CDN d'icônes etc., mais on ne tente pas de les cacher
+  // si elles ne sont pas dans notre stratégie.
 
   // Alpha 0.52.7 : en mode dev (localhost), bypass complet du SW pour Next chunks
   // Évite les 503 quand HMR rebuild un chunk
@@ -106,13 +122,27 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkFirst(req, DATA_CACHE));
 });
 
+// 0.55.52 : wrapper safe pour cache.put — silent fail sur schémas non supportés
+// (chrome-extension, moz-extension, data:, blob:, ws://, etc.) qui throw normalement.
+// Évite "Failed to execute 'put' on 'Cache': Request scheme '...' is unsupported"
+async function safeCachePut(cache, req, res) {
+  try {
+    const url = (typeof req === "string" ? req : req.url) || "";
+    if (!url.startsWith("http://") && !url.startsWith("https://")) return;
+    if (res.type === "opaque" || res.type === "opaqueredirect") return;
+    await cache.put(req, res);
+  } catch (_) {
+    // Silent fail — pas de noise dans la console
+  }
+}
+
 async function cacheFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(req);
   if (cached) return cached;
   try {
     const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
+    if (res.ok) await safeCachePut(cache, req, res.clone());
     return res;
   } catch (e) {
     // 0.55.14 : pour les notes changelog, renvoyer une vraie 503 lisible
@@ -134,7 +164,7 @@ async function networkFirst(req, cacheName) {
   try {
     const res = await fetch(req);
     if (res.ok) {
-      cache.put(req, res.clone());
+      await safeCachePut(cache, req, res.clone());
       // 0.55.26 : éviter croissance infinie
       const limit = cacheName.endsWith("-pages") ? MAX_PAGE_CACHE_ENTRIES : MAX_DATA_CACHE_ENTRIES;
       trimCache(cacheName, limit);
@@ -146,7 +176,7 @@ async function networkFirst(req, cacheName) {
       await new Promise(r => setTimeout(r, 100));
       const res2 = await fetch(req);
       if (res2.ok) {
-        cache.put(req, res2.clone());
+        await safeCachePut(cache, req, res2.clone());
         return res2;
       }
     } catch (_) {}
@@ -180,7 +210,7 @@ async function staleWhileRevalidate(req, cacheName) {
   const fetchPromise = fetch(req)
     .then((res) => {
       if (res.ok) {
-        cache.put(req, res.clone());
+        safeCachePut(cache, req, res.clone());
         // 0.55.26 : trim cache après ajout
         trimCache(cacheName, MAX_DATA_CACHE_ENTRIES);
       }

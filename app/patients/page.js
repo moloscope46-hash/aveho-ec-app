@@ -24,6 +24,7 @@ import StaleDataBanner from "../StaleDataBanner";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";
 import { useStickyState } from "../../lib/useStickyState";
+import AdresseAutocomplete from "../AdresseAutocomplete";
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
@@ -212,6 +213,13 @@ export default function Patients() {
         medecin_traitant: form.medecin_traitant || null,
         etat: form.etat || "Présent",
         notes: form.notes || null,
+        // 0.55.55 : adresse via BAN INSEE (colonnes 0.55.46)
+        adresse: form.adresse || null,
+        code_postal: form.code_postal || null,
+        ville: form.ville || null,
+        code_insee_residence: form.code_insee_residence || null,
+        latitude: form.latitude || null,
+        longitude: form.longitude || null,
       };
       let patientId = modal.id;
       let isNouveau = false;
@@ -616,6 +624,31 @@ export default function Patients() {
                 </div>
               </div>
               <div className="fld"><label>Médecin traitant</label><input value={form.medecin_traitant || ""} onChange={(e) => setForm({ ...form, medecin_traitant: e.target.value })} placeholder="Dr Lambert" /></div>
+              {/* 0.55.55 : adresse du patient avec autocomplete BAN INSEE */}
+              <div className="fld">
+                <label>Adresse (recherche BAN)</label>
+                <AdresseAutocomplete
+                  value={form.adresse || ""}
+                  onChange={(v) => setForm({ ...form, adresse: v })}
+                  onSelect={(a) => setForm({
+                    ...form,
+                    adresse: a.adresse,
+                    code_postal: a.code_postal,
+                    ville: a.ville,
+                    code_insee_residence: a.code_insee,
+                    latitude: a.latitude,
+                    longitude: a.longitude,
+                  })}
+                  placeholder="Tape une adresse — auto cp + ville + INSEE"
+                />
+                <small style={{ color: "#8a98a8", fontSize: 12 }}>
+                  <i className="ti ti-info-circle" /> Pour l'adresse complète + adresses de livraison, va dans <b>Édition complète</b> de la fiche.
+                </small>
+              </div>
+              <div className="row-2" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
+                <div className="fld"><label>Code postal</label><input value={form.code_postal || ""} onChange={(e) => setForm({ ...form, code_postal: e.target.value })} placeholder="75011" style={{ fontFamily: "Consolas, monospace" }} /></div>
+                <div className="fld"><label>Ville</label><input value={form.ville || ""} onChange={(e) => setForm({ ...form, ville: e.target.value })} placeholder="Paris" /></div>
+              </div>
               <div className="fld">
                 <label>Chambre / Lit</label>
                 <select value={form.lit_id || ""} onChange={(e) => setForm({ ...form, lit_id: e.target.value })}>

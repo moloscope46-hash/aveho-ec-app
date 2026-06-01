@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.6 — Sync Google Reviews</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 35%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fff5dc;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fff5dc;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fff5dc}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--amber)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.amber{background:#fff5dc;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin:12px 0}
+  .flow .step{background:#fff5dc;padding:10px;border-radius:8px;border-left:3px solid var(--amber);font-size:12px}
+  .flow .step b{display:block;color:#7a4f15;font-size:13px;margin-bottom:3px}
+  .stars{color:#EF9F27;font-size:14px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — SYNC GOOGLE REVIEWS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.6 — Synchronisation automatique des avis Google
+      <small>Edge Function Supabase + cron toutes les 6h · stockage avis · page admin de pilotage</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.6-alpha</code></span>
+      <span><b>Tests :</b> 1889 verts (+41)</span>
+      <span><b>SQL :</b> 1 patch (5 col + 2 tables + 2 RPC + pg_cron)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Tu mets le <code>google_place_id</code> sur tes établissements (récupérable via <code>/api/place</code> ou directement depuis le résultat de Google Maps "Partager → Intégrer une carte"), et l'app :</p>
+    <ul>
+      <li>Synchronise <b>automatiquement toutes les 6h</b> les avis Google de chaque établissement</li>
+      <li>Stocke jusqu'à 5 avis par établissement (limite Google) avec auteur, photo, note, contenu, réponse</li>
+      <li>Met à jour la <b>note moyenne</b> + <b>nombre total d'avis</b> sur chaque fiche</li>
+      <li>Te permet de voir tous les avis dans une <b>page admin centralisée</b> avec filtres et alertes critiques</li>
+      <li>Trace chaque run dans une table d'<b>audit</b> (qui a déclenché, combien d'étabs OK, durée, etc.)</li>
+    </ul>
+  </div>
+
+  <h2>📋 Architecture</h2>
+  <div class="panel">
+    <div class="flow">
+      <div class="step"><b>1. Cron pg_cron</b>Toutes les 6h (0h/6h/12h/18h)</div>
+      <div class="step"><b>2. Edge Function</b>sync-google-reviews (Deno)</div>
+      <div class="step"><b>3. Google API</b>Places Details (max 5 avis par étab)</div>
+      <div class="step"><b>4. Upsert SQL</b>Déduplication par (étab, auteur, date)</div>
+    </div>
+    <p>Toutes les étapes sont monitorées :</p>
+    <ul>
+      <li>Status par établissement (<code>ok</code> / <code>api_error</code> / <code>rate_limited</code> / <code>jamais sync</code>)</li>
+      <li>Logs dans <code>google_sync_logs</code> avec details JSONB (per_etab array complet)</li>
+      <li>Rate limit Google respecté (200ms entre 2 appels + arrêt si <code>OVER_QUERY_LIMIT</code>)</li>
+    </ul>
+  </div>
+
+  <h2>🗄 Schéma SQL</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Colonnes ajoutées à <code>etablissements</code></h3>
+    <table>
+      <tr><th>Colonne</th><th>Type</th><th>Usage</th></tr>
+      <tr><td><code>google_place_id</code></td><td>text</td><td>ChIJ... (clé Google Places)</td></tr>
+      <tr><td><code>google_rating</code></td><td>numeric(2,1)</td><td>4.7</td></tr>
+      <tr><td><code>google_ratings_count</code></td><td>int</td><td>nb total d'avis</td></tr>
+      <tr><td><code>google_last_sync_at</code></td><td>timestamptz</td><td>dernière sync</td></tr>
+      <tr><td><code>google_sync_status</code></td><td>text</td><td>ok / api_error / rate_limited</td></tr>
+    </table>
+
+    <h3>Table <code>etablissements_avis_google</code> (14 colonnes)</h3>
+    <p>1 ligne = 1 avis Google. Champs : auteur (nom + URL + photo profil), langue, rating 1-5, relative_time_description ("il y a 2 mois"), publish_time absolue, text_content, traduction, reply_text + reply_publish_time (réponse établissement si présente), raw_payload jsonb pour debug.</p>
+    <p>Contrainte unique <code>NULLS NOT DISTINCT (etablissement_id, author_name, publish_time)</code> pour déduplication propre lors des re-syncs.</p>
+
+    <h3>Table <code>google_sync_logs</code> (audit)</h3>
+    <p>1 ligne = 1 run cron ou manuel. Champs : trigger_source, etablissements_total/ok/errors, nouveaux_avis, duration_ms, details jsonb avec per_etab array.</p>
+  </div>
+
+  <h2>🤖 Edge Function</h2>
+  <div class="panel amber">
+    <p>Fichier <code>supabase/functions/sync-google-reviews/index.ts</code> :</p>
+    <ul>
+      <li>Client Supabase <b>service_role</b> (bypass RLS pour pouvoir lire et écrire tous les établissements de toutes les structures)</li>
+      <li>Itère sur les établissements avec <code>google_place_id</code> non null</li>
+      <li>Pour chacun, appelle l'API Google <code>places/details</code> avec <code>fields=name,rating,user_ratings_total,reviews&language=fr</code></li>
+      <li>Update statut + rating + nb avis sur l'établissement</li>
+      <li>Upsert batch des avis via la RPC <code>upsert_avis_google_batch</code></li>
+      <li>Délai 200ms entre 2 établissements pour respecter le quota Google</li>
+      <li>Si <code>OVER_QUERY_LIMIT</code> détecté → arrêt immédiat de la boucle</li>
+      <li>Support <code>body.etablissement_id</code> pour synchroniser un seul établissement à la demande</li>
+      <li>Logs détaillés dans <code>google_sync_logs</code></li>
+    </ul>
+  </div>
+
+  <h2>⏰ Cron Supabase 6h</h2>
+  <div class="panel">
+    <p>Le SQL crée un job <code>pg_cron</code> :</p>
+    <pre><code>cron.schedule(
+  'sync-google-reviews-cron',
+  '0 */6 * * *',  -- 0h / 6h / 12h / 18h
+  $$
+    select net.http_post(
+      url := current_setting('app.settings.sync_google_reviews_url'),
+      headers := jsonb_build_object(
+        'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')
+      ),
+      body := jsonb_build_object('trigger_source', 'cron')
+    );
+  $$
+);</code></pre>
+    <p>L'URL de l'Edge Function et la <code>service_role_key</code> doivent être configurées <b>une seule fois</b> via <code>ALTER DATABASE</code> ou via le Vault Supabase. Voir la procédure ci-dessous.</p>
+  </div>
+
+  <h2>📊 Page /admin/avis-google</h2>
+  <div class="panel hi">
+    <p>Tableau de bord complet :</p>
+    <ul>
+      <li><b>6 KPI stats</b> : étabs avec Place ID, total avis, rating moyen (★), 5 étoiles, critiques 1-2 ★, dernière sync</li>
+      <li><b>Carte sync manuelle</b> : bouton "Lancer la sync" qui appelle l'Edge Function et affiche le résultat</li>
+      <li><b>Liste des établissements</b> avec badge statut coloré + Place ID + rating + bouton Sync par ligne</li>
+      <li><b>100 derniers avis</b> avec photo auteur, étoiles, contenu, réponse établissement si présente</li>
+      <li><b>Mise en évidence</b> : bordure rouge pour les critiques 1-2★, bordure verte pour les 4-5★</li>
+      <li><b>2 filtres</b> combinables : par note (avec option spécifique "Critiques 1-2") et par établissement</li>
+      <li><b>Historique 10 derniers runs</b> avec badges cron (violet) / manual (vert), métriques par run</li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +41 (1848 → 1889)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL</b> (12) : 5 colonnes etabs, index partiel, table avis 14 col, raw_payload jsonb, unique nulls not distinct, 4 RLS, table logs audit, RPC upsert batch jsonb_to_recordset, RPC stats par note, pg_cron 6h, net.http_post</li>
+      <li><b>Edge Function</b> (13) : exists, Deno.serve, env vars, service_role bypass RLS, filtre place_id not null, Google Places URL, gestion OVER_QUERY_LIMIT, update statut/rating, RPC upsert, délai 200ms, log run, support 1 étab</li>
+      <li><b>Route /api/google-reviews/sync</b> (5) : exists, maxDuration 60s, functions.invoke, getReader body erreur, single etab</li>
+      <li><b>Page admin</b> (10) : exists, RPC stats + tables, 6 KPI, triggerSync global+par étab, badges colorés, filtres notes+étabs, mise en évidence critiques, Stars component, reply, historique, pédagogie</li>
+      <li><b>Menu</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.6.sql</code> : <b>NOUVEAU</b> · 5 col + 2 tables + 2 RPC + pg_cron</li>
+    <li><code>supabase/functions/sync-google-reviews/index.ts</code> : <b>NOUVEAU</b> · Edge Function Deno</li>
+    <li><code>app/api/google-reviews/sync/route.js</code> : <b>NOUVEAU</b> · trigger manuel Edge Function</li>
+    <li><code>app/admin/avis-google/page.js</code> : <b>NOUVEAU</b> · stats + sync + liste avis + logs</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration 'Avis Google'</li>
+    <li><code>__tests__/v056-6-google-reviews-sync.test.js</code> : <b>NOUVEAU</b> · +41 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.6 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.6</li>
+    <li><code>package.json</code> : 0.56.5 → 0.56.6</li>
+  </ul>
+
+  <h2>⚙️ Procédure complète</h2>
+  <div class="panel warn">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.6.sql</code> → Run</li>
+      <li><b>Activer pg_cron et pg_net</b> : Database → Extensions → activer <code>pg_cron</code> et <code>pg_net</code> si pas déjà fait</li>
+      <li><b>Configurer secrets Edge Function</b> : Edge Functions → Manage Secrets → ajouter <code>GOOGLE_PLACES_API_KEY</code> (ta clé AIzaSy...). Les autres (<code>SUPABASE_URL</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code>) sont déjà injectées automatiquement par Supabase</li>
+      <li><b>Déployer l'Edge Function</b> :
+        <pre><code>supabase functions deploy sync-google-reviews</code></pre>
+      </li>
+      <li><b>Configurer les variables du cron</b> dans Supabase SQL Editor :
+        <pre><code>alter database postgres set app.settings.sync_google_reviews_url = 'https://YOUR-PROJECT-ID.supabase.co/functions/v1/sync-google-reviews';
+alter database postgres set app.settings.service_role_key = 'YOUR-SERVICE-ROLE-KEY';</code></pre>
+      </li>
+      <li><b>Renseigner les Place ID</b> sur tes établissements via Supabase Table Editor ou via une recherche /api/place</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.6 - Sync Google Reviews + Edge Function + cron 6h + page admin"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Administration → <b>Avis Google</b></li>
+      <li>Vérifier que les KPI s'affichent (probablement 0 avis au début si rien n'a tourné)</li>
+      <li>Ajouter un <code>google_place_id</code> à un établissement (table Supabase ou interface)</li>
+      <li>Cliquer "<b>Lancer la sync</b>" → attendre quelques secondes</li>
+      <li>Vérifier que les avis remontent + le rating moyen + le statut "ok" sur l'établissement</li>
+      <li>Tester le filtre par note → "Critiques 1-2" → bordures rouges visibles</li>
+      <li>Vérifier l'historique des runs en bas → ligne avec source "manual"</li>
+      <li>Smoke tests 0.56.6 → 5 verts</li>
+      <li>Attendre la prochaine échéance cron (0h/6h/12h/18h) → vérifier qu'une nouvelle ligne "cron" apparaît dans l'historique</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel danger">
+    <ul>
+      <li><b>5 avis max par établissement</b> : limite imposée par l'API Google Places Details (pas contournable)</li>
+      <li><b>Pas d'historique des avis supprimés</b> : si un avis disparaît de Google, il reste en base mais ne sera plus mis à jour</li>
+      <li><b>Quota Google</b> : 100k requêtes/mois en gratuit, au-delà payant. Avec 50 étabs sync 4×/jour = 6000 req/mois (large marge)</li>
+      <li><b>Réponses établissement</b> : actuellement <code>reply_text</code> est null car l'API Places Details ne renvoie pas les réponses propriétaires. Pour ça il faudrait l'API Business Profile (OAuth requis, plus complexe)</li>
+      <li><b>Coût clé Google</b> : nécessite une clé Google Places API activée avec facturation configurée (gratuit jusqu'à 100k req/mois). Pense à <b>restreindre la clé</b> par IP/domaine dans la Google Cloud Console</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.7 — Page audit /admin/doublons-forces (établissements + groupements + médecins similarité fuzzy)</li>
+    <li>0.56.8 — Page admin /admin/prescriptions-archive (stats + recherche multi-critères)</li>
+  </ul>
+
+  <h2>SW auto-bump — 73ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.5 → <b>0.56.6</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.6 · 1er juin 2026</p>
+    <p>Sync Google Reviews · Edge Function + cron 6h · page admin · 1889 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

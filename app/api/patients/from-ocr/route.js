@@ -21,7 +21,8 @@ export async function POST(req) {
   try { body = await req.json(); } catch {
     return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 });
   }
-  const { data: ocr, etablissement_id, ocr_text_brut, bs_file_url } = body;
+  const { data: ocr, etablissement_id, ocr_text_brut, bs_file_url,
+          ocr_confiance, ocr_tokens_in, ocr_tokens_out } = body;
   if (!ocr || !ocr.nom) {
     return Response.json({ ok: false, error: "Données OCR insuffisantes (nom manquant)" }, { status: 400 });
   }
@@ -122,6 +123,10 @@ export async function POST(req) {
     bs_file_url: bs_file_url || null,
     bs_ocr_brut: ocr_text_brut || ocr.ocr_text_brut || null,
     bs_ocr_date: new Date().toISOString(),
+    // 0.56.1 : méta-données OCR pour audit (coût + confiance)
+    bs_ocr_confiance: ocr_confiance || ocr.confiance || null,
+    bs_ocr_tokens_in: ocr_tokens_in || null,
+    bs_ocr_tokens_out: ocr_tokens_out || null,
     etat: "Présent",
   };
 

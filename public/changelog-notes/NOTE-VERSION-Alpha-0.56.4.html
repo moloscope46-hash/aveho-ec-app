@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.4 — Référentiels Caisses + Mutuelles</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 40%,#7a6fb0 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700}
+  .actions-demo{display:inline-flex;gap:4px;background:#f4f7fa;padding:6px;border-radius:6px;margin:6px 0}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — RÉFÉRENTIELS CAISSES + MUTUELLES</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.4 — Gestion complète des caisses et mutuelles
+      <small>2 onglets admin · CRUD complet · actions tel/mail/GPS/web partout (fiche patient incluse)</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.4-alpha</code></span>
+      <span><b>Tests :</b> 1799 verts (+37)</span>
+      <span><b>SQL :</b> 1 patch (3 colonnes + 2 index)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Tu as déjà 105 caisses + 44 mutuelles seedées (depuis 0.55.46). Mais il manquait : une <b>vraie interface admin</b> pour les ajouter/modifier/supprimer, et des <b>actions rapides</b> pour les contacter (téléphone, mail, GPS, site web) depuis n'importe où dans l'app.</p>
+    <p>Maintenant : page <code>/admin/referentiels-sante</code> à 2 onglets + pastilles d'actions partout où une caisse ou mutuelle est affichée (admin + fiches patient).</p>
+  </div>
+
+  <h2>🔘 Pastilles ContactActions</h2>
+  <div class="panel">
+    <p>Le nouveau composant <code>ContactActions</code> affiche uniquement les actions disponibles selon les données renseignées :</p>
+
+    <div class="actions-demo">
+      <span class="pill" style="background:#dff5e0;color:#5aa05a;border-color:#5aa05a">📞 Appeler</span>
+      <span class="pill" style="background:#dbe7f5;color:#185FA5;border-color:#185FA5">✉ Email</span>
+      <span class="pill" style="background:#fce5e0;color:#c0392b;border-color:#c0392b">📍 GPS</span>
+      <span class="pill" style="background:#f3effa;color:#7a6fb0;border-color:#7a6fb0">🌐 Web</span>
+    </div>
+
+    <ul>
+      <li><b>Tel</b> → ouvre l'app téléphone (<code>tel:01234...</code>) sur mobile/desktop</li>
+      <li><b>Email</b> → ouvre l'app mail par défaut (<code>mailto:...</code>)</li>
+      <li><b>GPS</b> → Google Maps directions avec <b>coords lat/lng</b> si dispo (précis), sinon adresse texte URL-encodée (fallback)</li>
+      <li><b>Web</b> → ajoute automatiquement <code>https://</code> si manquant, ouvre en nouvel onglet</li>
+      <li>Si aucune coordonnée n'est renseignée : message <i>"Pas de coordonnées"</i></li>
+      <li>3 tailles disponibles : <code>sm</code> (icône seule), <code>md</code> (icône+texte), <code>lg</code> (gros)</li>
+    </ul>
+  </div>
+
+  <h2>📋 Page /admin/referentiels-sante</h2>
+  <div class="panel violet">
+    <h3 style="margin-top:0">2 onglets</h3>
+    <ul>
+      <li><b>Caisses</b> (bleu, ti-shield-check) — 105 entrées seedées + tes ajouts</li>
+      <li><b>Mutuelles</b> (violet, ti-heart-handshake) — 44 entrées seedées + tes ajouts</li>
+    </ul>
+    <p>Compteur sur chaque onglet, filtre live multi-champs (nom, code, n° AMC, ville, département).</p>
+
+    <h3>CRUD complet</h3>
+    <ul>
+      <li><b>Lister</b> : ordre alphabétique, jusqu'à 500 résultats</li>
+      <li><b>Créer</b> : modale 640px avec sections Identification / Coordonnées / Contact + AdresseAutocomplete BAN qui remplit auto cp + ville + lat/lng</li>
+      <li><b>Modifier</b> : même modale, pré-remplie</li>
+      <li><b>Supprimer</b> : confirm() obligatoire, message clair si bloqué par contrainte FK (patient rattaché)</li>
+    </ul>
+
+    <h3>Selecteurs typés</h3>
+    <p><b>Caisses</b> : CPAM, CGSS, CSSM, MSA, CNMSS, LMG, CAMIEG, CAVIMAC, MNH, autre.</p>
+    <p><b>Régimes</b> : général, agricole, militaire, fonctionnaire, spécial, DROM.</p>
+    <p><b>Mutuelles</b> : mutuelle, assurance, prévoyance, autre.</p>
+  </div>
+
+  <h2>🩺 Intégration dans la fiche patient</h2>
+  <div class="panel hi">
+    <p>Sur <code>/patient/[id]/edit</code>, onglet <b>Sécu & Mutuelle</b> :</p>
+    <ul>
+      <li>Sous le bloc <b>Caisse d'affiliation</b> rattachée → pastilles ContactActions (tel/mail/GPS/web de cette caisse)</li>
+      <li>Sous le bloc <b>Complémentaire santé (AMC)</b> rattachée → pastilles ContactActions (tel/mail/GPS/web de cette mutuelle)</li>
+    </ul>
+    <p>L'utilisateur peut maintenant appeler/mailer/router vers le bon organisme directement depuis la fiche patient, sans aller chercher les coordonnées ailleurs.</p>
+  </div>
+
+  <h2>🗄 Schéma SQL</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Table</th><th>Colonne ajoutée</th><th>Type</th></tr>
+      <tr><td><code>caisses_assurance_maladie</code></td><td><code>latitude</code></td><td>numeric(10,7)</td></tr>
+      <tr><td><code>caisses_assurance_maladie</code></td><td><code>longitude</code></td><td>numeric(10,7)</td></tr>
+      <tr><td><code>mutuelles</code></td><td><code>email</code></td><td>text</td></tr>
+      <tr><td><code>mutuelles</code></td><td><code>latitude</code></td><td>numeric(10,7)</td></tr>
+      <tr><td><code>mutuelles</code></td><td><code>longitude</code></td><td>numeric(10,7)</td></tr>
+    </table>
+    <p>+ 2 index partiels <code>where lat/lng not null</code> pour requêtes futures par proximité géographique.</p>
+  </div>
+
+  <h2>🔌 API étendues</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">/api/caisses + /api/mutuelles</h3>
+    <p>Les routes existantes ont été étendues avec <b>POST + PUT + DELETE</b> en plus du GET déjà présent.</p>
+
+    <table>
+      <tr><th>Méthode</th><th>Usage</th><th>Body</th></tr>
+      <tr><td><code>GET</code></td><td>Recherche</td><td>—</td></tr>
+      <tr><td><code>POST</code></td><td>Création</td><td>nom, code_organisme (caisse), tel/mail/web/lat/lng…</td></tr>
+      <tr><td><code>PUT</code></td><td>Mise à jour</td><td>id + champs modifiés</td></tr>
+      <tr><td><code>DELETE</code></td><td>Suppression</td><td><code>?id=...</code></td></tr>
+    </table>
+
+    <p>Toutes les méthodes utilisent le <code>Authorization: Bearer {token}</code> pour respecter les RLS Supabase. POST détecte les doublons via le code PostgreSQL <code>23505</code> et retourne <code>duplicate: true</code> pour message UI clair.</p>
+  </div>
+
+  <h2>📈 Tests +37 (1762 → 1799)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL</b> (3) : lat/lng caisses, email+coords mutuelles, index partiels</li>
+      <li><b>API caisses CRUD</b> (5) : POST validation, PUT id, DELETE query, duplicate 23505, RLS Bearer toutes méthodes</li>
+      <li><b>API mutuelles CRUD</b> (4) : POST nom, PUT, DELETE, payload complet</li>
+      <li><b>ContactActions</b> (9) : exists, tel:, mailto:, Google Maps coords/adresse, https auto, 3 tailles, stopPropagation, message vide</li>
+      <li><b>Page admin</b> (12) : 2 onglets, filtre multi-champs, openCreate, modale unifiée, POST/PUT switch, confirm suppression, ContactActions liste, BAN autocomplete, géocodage display, compteurs, duplicate flag</li>
+      <li><b>Fiche patient</b> (3) : import, ContactActions caisse, ContactActions mutuelle</li>
+      <li><b>Menu</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.4.sql</code> : <b>NOUVEAU</b> · 3 colonnes + 2 index</li>
+    <li><code>app/ContactActions.js</code> : <b>NOUVEAU</b> · ~110 lignes · composant réutilisable</li>
+    <li><code>app/admin/referentiels-sante/page.js</code> : <b>NOUVEAU</b> · ~380 lignes · 2 onglets CRUD complet</li>
+    <li><code>app/api/caisses/route.js</code> : + POST + PUT + DELETE (passe de 56 à 165 lignes)</li>
+    <li><code>app/api/mutuelles/route.js</code> : + POST + PUT + DELETE</li>
+    <li><code>app/patient/[id]/edit/page.js</code> : import + ContactActions dans TabSecu (caisse + mutuelle)</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration 'Caisses & Mutuelles'</li>
+    <li><code>__tests__/v056-4-referentiels-sante.test.js</code> : <b>NOUVEAU</b> · +37 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.4 (5 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.4</li>
+    <li><code>package.json</code> : 0.56.3 → 0.56.4</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.4.sql</code> → Run</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.4 - Gestion caisses+mutuelles CRUD + ContactActions partout"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Administration → <b>Caisses & Mutuelles</b></li>
+      <li>Onglet Caisses → voir les 105 entrées seedées</li>
+      <li>Filtrer "Lot" → voir CPAM du Lot</li>
+      <li>Cliquer "Modifier" → ajouter tel + email + adresse (l'autocomplete BAN remplit cp/ville/coords)</li>
+      <li>Enregistrer → voir les pastilles 📞 ✉ 📍 🌐 apparaître dans la liste</li>
+      <li>Tester un clic sur 📍 → ouvre Google Maps</li>
+      <li>Onglet Mutuelles → vérifier 44 entrées</li>
+      <li>Bouton "Nouvelle mutuelle" → créer "MNT" ou autre</li>
+      <li>Aller sur une fiche patient → onglet Sécu & Mutuelle → vérifier que les pastilles apparaissent sous la caisse + mutuelle rattachées</li>
+      <li>Smoke tests 0.56.4 → 5 verts</li>
+    </ol>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.5 — Auto-link RPPS prescripteur via API ANS + dump local lors de l'OCR ordonnance</li>
+    <li>0.56.6 — Sync Google reviews Edge Function cron 6h</li>
+    <li>0.56.7 — Page audit /admin/doublons-forces</li>
+    <li>0.56.8 — Page admin /admin/prescriptions-archive</li>
+  </ul>
+
+  <h2>SW auto-bump — 71ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.3 → <b>0.56.4</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.4 · 1er juin 2026</p>
+    <p>Référentiels caisses + mutuelles · CRUD complet · ContactActions partout · 1799 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

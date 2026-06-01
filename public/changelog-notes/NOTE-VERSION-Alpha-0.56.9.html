@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.9 — Fusion doublons</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#5a4a90;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 35%,#5a4a90 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffe1dc;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#ffe1dc;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffe1dc}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700}
+  .flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0}
+  .flow .step{background:#fce5e0;padding:10px;border-radius:8px;border-left:3px solid #c0392b;font-size:11.5px}
+  .flow .step b{display:block;color:#c0392b;font-size:12px;margin-bottom:3px}
+  .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — FUSION AUTOMATIQUE DES DOUBLONS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.9 — Fusion automatique des doublons confirmés
+      <small>Découverte FK dynamique · merge léger des champs vides · snapshot + rollback · trace complète</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.9-alpha</code></span>
+      <span><b>Tests :</b> 2022 verts (+37) 🎉</span>
+      <span><b>SQL :</b> 1 patch (1 table + 3 RPC)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>La 0.56.7 détectait les doublons. La 0.56.9 te permet enfin de les <b>fusionner en un clic</b> :</p>
+    <ul>
+      <li>Choix du gagnant et du perdant (auto-suggestion intelligente)</li>
+      <li>Découverte automatique de toutes les <b>FK qui pointent vers le perdant</b> (via <code>information_schema</code>)</li>
+      <li>Migration de toutes ces FK vers le gagnant (UPDATE par batch)</li>
+      <li>Merge léger des <b>champs vides du gagnant</b> avec ceux du perdant (sans écraser)</li>
+      <li>Suppression du perdant</li>
+      <li>Snapshot complet conservé pour <b>rollback</b> éventuel</li>
+      <li>Trace audit complète (qui, quand, pourquoi, combien de lignes migrées)</li>
+    </ul>
+  </div>
+
+  <h2>🔄 Workflow</h2>
+  <div class="panel">
+    <div class="flow">
+      <div class="step"><b>1. Détection</b>RPC similarity → paires suspectes</div>
+      <div class="step"><b>2. Choix gagnant</b>Modale + auto-suggestion</div>
+      <div class="step"><b>3. Preview FK</b>Tableau des migrations à venir</div>
+      <div class="step"><b>4. Confirmation</b>Bouton rouge irréversible</div>
+      <div class="step"><b>5. Migration FK</b>Découverte dynamique + UPDATE</div>
+      <div class="step"><b>6. Merge champs</b>Coalesce champs vides</div>
+      <div class="step"><b>7. DELETE perdant</b>+ snapshot conservé</div>
+      <div class="step"><b>8. Trace audit</b>doublons_fusions</div>
+    </div>
+  </div>
+
+  <h2>🧠 Découverte FK dynamique</h2>
+  <div class="panel violet">
+    <p>Au lieu de maintenir une liste figée des tables qui référencent <code>etablissements</code>, on interroge <b>information_schema</b> au runtime :</p>
+    <pre><code>select tc.table_name as src_table, kcu.column_name as src_column
+from information_schema.referential_constraints rc
+join information_schema.table_constraints tc on ...
+join information_schema.key_column_usage kcu on ...
+where rc.unique_constraint_name in (
+  select tc2.constraint_name
+  from information_schema.table_constraints tc2
+  where tc2.table_name = 'etablissements'
+    and tc2.constraint_type = 'PRIMARY KEY'
+)</code></pre>
+    <p>Avantages :</p>
+    <ul>
+      <li><b>Aucune maintenance</b> : si tu ajoutes une nouvelle table avec une FK vers <code>etablissements</code>, la fusion la migrera automatiquement</li>
+      <li><b>Transparence</b> : la RPC <code>preview_fusion_doublon</code> renvoie la liste exacte avant la fusion</li>
+      <li><b>Sécurité</b> : si une migration échoue (contrainte unique violée par exemple sur une table pivot), on capture l'exception et on supprime les rows en conflit au lieu de planter</li>
+    </ul>
+  </div>
+
+  <h2>🎨 Modale de fusion</h2>
+  <div class="panel hi">
+    <p>Interface en 4 sections :</p>
+    <ol>
+      <li><b>Choix gagnant</b> : 2 ChoixCards cliquables, l'auto-sélection préfère celui avec le plus de FK (= entité la plus utilisée). Badge "GARDÉ" coloré sur la sélection</li>
+      <li><b>Preview migrations</b> : tableau <code>table_name | column_name | nb_rows | on_delete_action</code> chargé en live via <code>preview_fusion_doublon</code></li>
+      <li><b>Raison libre</b> : champ texte encouragé pour l'audit ("Doublon CSV import + saisie manuelle")</li>
+      <li><b>Warning + bouton rouge</b> : confirmation explicite de l'irréversibilité immédiate, avec mention du snapshot conservé</li>
+    </ol>
+  </div>
+
+  <h2>🔁 Merge léger des champs vides</h2>
+  <div class="panel">
+    <p>Si tu actives <code>p_merge_champs=true</code> (par défaut), le gagnant récupère les valeurs <b>non-nulles du perdant pour ses champs vides</b> :</p>
+    <table>
+      <tr><th>Cible</th><th>Champs fusionnés</th></tr>
+      <tr><td><b>Établissements</b></td><td>siret, finess, adresse, cp, ville, telephone, email, capacite</td></tr>
+      <tr><td><b>Médecins</b></td><td>rpps, prenom, civilite, profession, specialite, raison_sociale, finess, adresse, cp, ville, telephone, email, latitude, longitude, est_verifie (OR), source_verification</td></tr>
+      <tr><td><b>Groupements</b></td><td>—</td></tr>
+    </table>
+    <p>Exemple : si le gagnant a <code>siret=null</code> et le perdant <code>siret='12345678901234'</code>, le SIRET passe sur le gagnant. Si les deux ont un SIRET différent, on garde celui du gagnant (préférence explicite).</p>
+  </div>
+
+  <h2>↩️ Rollback</h2>
+  <div class="panel warn">
+    <p>Chaque fusion conserve un <b>snapshot complet du perdant en jsonb</b>. Si tu te trompes, bouton "Annuler cette fusion" :</p>
+    <ul>
+      <li>Le perdant est <b>recréé exactement</b> comme il était (toutes ses colonnes, même son UUID original)</li>
+      <li>La fusion est marquée <code>est_rollbacke=true</code> avec <code>rollback_at + rollback_par + rollback_raison</code></li>
+      <li>Affichage UI : opacité réduite + badge ambré <span class="badge" style="background:#fff8ec;color:#7a4f15">ROLLBACKÉE</span></li>
+    </ul>
+    <p><b>⚠ Limite</b> : les FK déjà migrées vers le gagnant <b>restent là</b>. Le rollback recrée le perdant à vide. Si des prescriptions ont été ajoutées sur le gagnant après la fusion, on ne peut pas les démêler du perdant. C'est du <b>best effort</b>.</p>
+  </div>
+
+  <h2>📜 Historique des fusions</h2>
+  <div class="panel">
+    <p>Sous la liste des doublons, un panneau "Historique des fusions" (toggle replier/voir) affiche les 20 dernières fusions avec :</p>
+    <ul>
+      <li>Badge cible coloré (bleu/vert/violet)</li>
+      <li>"Gagnant ← Perdant" (perdant strikethrough)</li>
+      <li>Badge "X migrée(s)" avec le nb de lignes migrées</li>
+      <li>Date + raison italique</li>
+      <li>Si pas encore rollbackée : bouton "Annuler cette fusion"</li>
+      <li>Si déjà rollbackée : opacité 0.55 + badge ROLLBACKÉE</li>
+    </ul>
+    <p>Reload automatique après chaque fusion ou rollback (UI cohérente).</p>
+  </div>
+
+  <h2>🗄 Schéma SQL</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Table doublons_fusions (14 colonnes)</h3>
+    <table>
+      <tr><th>Colonne</th><th>Usage</th></tr>
+      <tr><td><code>structure_id</code></td><td>Isolation RLS</td></tr>
+      <tr><td><code>cible</code></td><td>etablissement/groupement/medecin</td></tr>
+      <tr><td><code>gagnant_id + label</code></td><td>Entité conservée</td></tr>
+      <tr><td><code>perdant_id + label</code></td><td>Entité supprimée</td></tr>
+      <tr><td><code>perdant_snapshot</code></td><td>jsonb complet pour rollback</td></tr>
+      <tr><td><code>fk_migrees</code></td><td>jsonb détaillé {table.col: nb}</td></tr>
+      <tr><td><code>nb_rows_migrees</code></td><td>int total</td></tr>
+      <tr><td><code>fusionne_par + raison</code></td><td>Audit user</td></tr>
+      <tr><td><code>rollback_at + par + raison</code></td><td>Si rollbackée</td></tr>
+      <tr><td><code>est_rollbacke</code></td><td>bool</td></tr>
+    </table>
+
+    <h3>3 RPC SECURITY DEFINER</h3>
+    <ul>
+      <li><code>preview_fusion_doublon(cible, gagnant_id, perdant_id)</code> → liste des FK à migrer</li>
+      <li><code>fusionner_doublon(cible, gagnant_id, perdant_id, raison, merge_champs)</code> → exécute la fusion + trace</li>
+      <li><code>rollback_fusion(fusion_id, raison)</code> → recrée le perdant depuis snapshot</li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +37 (1985 → 2022) 🎉 cap des 2000 franchi !</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL table fusions</b> (5) : structure+contraintes, snapshot jsonb, audit fields, fk_migrees jsonb, 3 RLS</li>
+      <li><b>RPC preview</b> (5) : params, information_schema discovery, 3 cibles, retour 4 champs, filtre count>0</li>
+      <li><b>RPC fusion</b> (10) : params, gagnant≠perdant, même struct, accès user, snapshot, FK discovery, unique_violation, merge coalesce, DELETE perdant, INSERT trace, cleanup ignores</li>
+      <li><b>RPC rollback</b> (3) : exists+est_rollbacke, jsonb_populate_record, marqueurs rollback</li>
+      <li><b>UI</b> (13) : state, openFusion, loadHistorique, bouton Fusionner ×3, FusionModal, auto-suggestion, ChoixCard GARDÉ, executeMerge, warning, HistoriqueRow, ROLLBACKÉE, preview tableau, btnMerge rouge</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.9.sql</code> : <b>NOUVEAU</b> · ~280 lignes · table fusions + 3 RPC</li>
+    <li><code>app/admin/doublons-forces/page.js</code> : + bouton Fusionner ×3 cards + FusionModal + ChoixCard + HistoriqueRow + state fusionModal/historique</li>
+    <li><code>__tests__/v056-9-fusion-doublons.test.js</code> : <b>NOUVEAU</b> · +37 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.9 (4 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.9</li>
+    <li><code>package.json</code> : 0.56.8 → 0.56.9</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.9.sql</code> → Run (crée la table + 3 RPC). Nécessite 0.56.7 déjà appliqué (doublons_ignores existe)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.9 - Fusion automatique doublons + découverte FK dynamique + rollback snapshot"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Administration → <b>Doublons forces</b></li>
+      <li>Identifie une vraie paire de doublons (étabs, groupements ou médecins)</li>
+      <li>Clique <b>Fusionner</b> → modale s'ouvre</li>
+      <li>Choisis le gagnant (auto-suggestion intelligente)</li>
+      <li>Vérifie le tableau preview des migrations FK</li>
+      <li>Renseigne une raison + confirme</li>
+      <li>Vérifie que :
+        <ul>
+          <li>Le perdant a disparu de la liste</li>
+          <li>Le gagnant a récupéré les références (ouvre une fiche patient qui pointait vers le perdant : doit pointer vers le gagnant)</li>
+          <li>L'historique en bas affiche la nouvelle ligne</li>
+        </ul>
+      </li>
+      <li>Teste un rollback → clique "Annuler cette fusion" → le perdant réapparaît</li>
+      <li>Smoke tests 0.56.9 → 4 verts</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Limites connues</h2>
+  <div class="panel danger">
+    <ul>
+      <li><b>Rollback partiel</b> : les FK déjà migrées restent sur le gagnant après rollback. Le perdant est recréé mais "à vide" — c'est le compromis raisonnable</li>
+      <li><b>Tables avec contrainte unique</b> sur la FK : en cas de violation, on supprime les rows en conflit (typique des tables pivot où perdant et gagnant sont déjà liés au même tiers). C'est tracé dans fk_migrees avec la mention "supprimées car conflits unique"</li>
+      <li><b>Pas de fusion par lot</b> : 1 fusion à la fois pour rester maître du processus. Si tu as 100 doublons certains (SIRET identique), il faut cliquer 100 fois (peut être ajouté en 0.56.10 si besoin)</li>
+      <li><b>Pas de undo après rollback</b> : si tu rollback puis tu réalises que la fusion était bonne, tu dois refusionner manuellement</li>
+    </ul>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.10 — Stats Espace Pro côté patient (mes ordonnances, mes médecins, ALD, etc.)</li>
+    <li>0.56.11 — Fusion par lot pour les doublons "score 100%" (SIRET/FINESS/RPPS identiques)</li>
+  </ul>
+
+  <h2>SW auto-bump — 76ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.8 → <b>0.56.9</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.9 · 1er juin 2026</p>
+    <p>Fusion auto doublons · découverte FK dynamique · snapshot + rollback · 2022 tests verts 🎉</p>
+  </footer>
+
+</div>
+</body>
+</html>

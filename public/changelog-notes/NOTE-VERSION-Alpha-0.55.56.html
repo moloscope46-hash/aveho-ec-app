@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.56 — Plan B RPPS dump local</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left;vertical-align:top}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+  .flow{display:flex;gap:12px;margin:10px 0;flex-wrap:wrap}
+  .step{flex:1;min-width:200px;padding:10px 12px;border-radius:8px;background:#f4f7fa;border-left:3px solid #185FA5;font-size:12.5px}
+  .step b{display:block;font-size:13px;color:#142131;margin-bottom:4px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — PLAN B RPPS FALLBACK</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.56 — Plan B RPPS : fallback automatique sur dump local
+      <small>Si l'API ANS plante (403, timeout, vide) → bascule transparente sur la copie locale du référentiel</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.56-alpha</code></span>
+      <span><b>Tests :</b> 1628 verts (+29)</span>
+      <span><b>SQL :</b> 2 patches</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le problème</h2>
+  <div class="panel danger">
+    <p>L'API ANS officielle (gateway.api.esante.gouv.fr) <b>bloque les IP Vercel</b> en production avec un 403 Forbidden. Résultat sur la carte et la recherche praticien : "API ANS bloquée" partout, expérience cassée.</p>
+    <p>Demander à l'ANS de whitelister l'IP Vercel prendrait des semaines. Solution : avoir une copie locale du dump open data + fallback automatique transparent.</p>
+  </div>
+
+  <h2>🔄 Comment ça marche</h2>
+  <div class="panel hi">
+    <div class="flow">
+      <div class="step">
+        <b>1. Requête /api/rpps</b>
+        L'app fait sa recherche normale comme avant (q=DUPONT, profession=Médecin…)
+      </div>
+      <div class="step" style="border-color:#7a6fb0">
+        <b>2. Tentative ANS</b>
+        La route appelle l'API ANS officielle (FHIR). Si OK → résultats avec <code>source: "ANS FHIR"</code>
+      </div>
+      <div class="step" style="border-color:#EF9F27">
+        <b>3. Détection KO</b>
+        Si l'ANS répond 403/timeout/5xx <b>OU</b> répond OK mais 0 résultat utile…
+      </div>
+      <div class="step" style="border-color:#5aa05a">
+        <b>4. Fallback dump local</b>
+        Appel RPC <code>search_rpps_local()</code> sur la table <code>rpps_dump</code> Supabase. Résultats avec <code>source: "dump_local"</code> + <code>fallback_reason</code>
+      </div>
+    </div>
+    <p>Côté UI rien ne change : les résultats arrivent normalement, juste le badge "source" indique d'où ils viennent. Transparence totale pour l'utilisateur.</p>
+  </div>
+
+  <h2>🗄 Architecture</h2>
+  <div class="panel">
+    <h3 style="margin-top:0">Table <code>rpps_dump</code></h3>
+    <p>23 colonnes : RPPS (PK), nom, prénom, civilité, profession, spécialité, mode d'exercice, lieu (raison sociale, FINESS, adresse complète, INSEE commune, coords GPS), date d'extrait du dump source.</p>
+
+    <h3>Indices</h3>
+    <ul>
+      <li>Full-text français (GIN to_tsvector) sur nom + prénom</li>
+      <li>Par profession, spécialité, CP, ville (lower), INSEE, coords</li>
+      <li>Index partiels <code>where not null</code> pour économiser l'espace</li>
+    </ul>
+
+    <h3>Fonctions RPC</h3>
+    <table>
+      <tr><th>RPC</th><th>Rôle</th></tr>
+      <tr><td><code>search_rpps_local(q, profession, cp, ville, limit)</code></td><td>Recherche fallback côté serveur</td></tr>
+      <tr><td><code>rpps_dump_status()</code></td><td>Statut : nb records, date extrait, dernier seed, âge en jours</td></tr>
+      <tr><td><code>upsert_rpps_dump_batch(rows jsonb)</code></td><td>Insère 5 000 lignes en 1 appel (ON CONFLICT DO UPDATE)</td></tr>
+      <tr><td><code>rpps_dump_truncate()</code></td><td>Vide la table avant un seed complet</td></tr>
+      <tr><td><code>rpps_dump_meta_update()</code></td><td>Marque le statut idle/seeding/completed/failed</td></tr>
+    </table>
+  </div>
+
+  <h2>🛠 Pilotage : /admin/rpps-dump</h2>
+  <div class="panel violet">
+    <p>Nouvelle page admin avec 4 sections :</p>
+    <ol>
+      <li><b>État du dump</b> : KPI colorés (vert si frais &lt; 60 jours, ambre si vieux, rouge si vide). Records, date d'extrait, dernier seed, âge en jours, statut, message</li>
+      <li><b>Upload + seed CSV</b> :
+        <ul>
+          <li>Téléchargement du dump depuis <a href="https://annuaire.sante.fr/web/site-pro/extractions-publiques">annuaire.sante.fr</a> (~500 Mo mensuel)</li>
+          <li>Upload du fichier (parseur côté navigateur, supporte ;/,/\t auto-détection)</li>
+          <li>Mapping flexible des colonnes : trouve automatiquement RPPS, nom, prénom, profession, etc. dans les en-têtes</li>
+          <li>Truncate de la table avant seed pour repartir propre</li>
+          <li>Insertion par batchs de 5 000 lignes via RPC <code>upsert_rpps_dump_batch</code></li>
+          <li>Progress bar live + log dépliable</li>
+        </ul>
+      </li>
+      <li><b>Test du fallback</b> : tape une query, vois si la réponse a <code>source: "ANS FHIR"</code> ou <code>"dump_local"</code> + raison du fallback</li>
+      <li><b>Pédagogie workflow</b> : récap de comment ça marche</li>
+    </ol>
+    <p>Accès : menu <b>Administration → Dump RPPS (Plan B)</b> (ti-database-import vert).</p>
+  </div>
+
+  <h2>📋 Procédure de seed (1ère fois)</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip, jouer les 2 patches SQL :
+        <pre><code>aveho-PATCH-vers-0.55.56.sql           -- table + indices + RPC search/status
+aveho-PATCH-vers-0.55.56-rpc.sql       -- RPC upsert batch + truncate + meta update</code></pre>
+      </li>
+      <li>Push GitHub + redéploiement Vercel</li>
+      <li>Aller sur <a href="https://annuaire.sante.fr/web/site-pro/extractions-publiques">annuaire.sante.fr/web/site-pro/extractions-publiques</a> → télécharger le dump RPPS complet (CSV ~500 Mo)</li>
+      <li>Aller dans l'app sur <code>/admin/rpps-dump</code></li>
+      <li>Cliquer "Parcourir" → sélectionner le CSV → "Lancer le seed"</li>
+      <li>Attendre 3 à 10 minutes selon la taille (progress bar live)</li>
+      <li>Test fallback : recherche "DUPONT" → vérifier que <code>source: "dump_local"</code> apparaît (ou ANS si débloqué)</li>
+    </ol>
+    <p><b>Note</b> : à refaire mensuellement (1× / mois suffit). Le ON CONFLICT DO UPDATE upserte propre — pas de doublons.</p>
+  </div>
+
+  <h2>📈 Tests +29 (1599 → 1628)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL</b> (8) : table+PK, colonnes, méta single-row, indices full-text+partial, search_rpps_local security definer, dump_status, RLS, RPC upsert+truncate+meta_update</li>
+      <li><b>Route /api/rpps fallback</b> (6) : maxDuration, fonction fallback existe, appelée 3× minimum, source dump_local, fallback_reason, normalisation format ANS</li>
+      <li><b>Route /api/rpps/dump-status</b> (3) : exists, RPC, is_fresh+empty</li>
+      <li><b>Page admin /admin/rpps-dump</b> (10) : exists, statut, upload CSV, séparateur auto, mapping colonnes flexible, batch 5000 + RPC, truncate, progress+log, test fallback, meta_update</li>
+      <li><b>Menu</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.55.56.sql</code> : <b>NOUVEAU</b> · table + indices + RPC search/status + RLS</li>
+    <li><code>supabase/aveho-PATCH-vers-0.55.56-rpc.sql</code> : <b>NOUVEAU</b> · RPC upsert batch + truncate + meta_update</li>
+    <li><code>app/api/rpps/route.js</code> : maxDuration + fonction fallbackToLocalDump appelée à 3 endroits</li>
+    <li><code>app/api/rpps/dump-status/route.js</code> : <b>NOUVEAU</b> · statut du dump</li>
+    <li><code>app/admin/rpps-dump/page.js</code> : <b>NOUVEAU</b> · ~360 lignes · pilotage complet</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration</li>
+    <li><code>__tests__/v055-56-rpps-dump-fallback.test.js</code> : <b>NOUVEAU</b> · +29 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.56 (3 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.56</li>
+    <li><code>package.json</code> : 0.55.55 → 0.55.56</li>
+  </ul>
+
+  <h2>SW auto-bump — 66ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.55 → <b>0.55.56</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.56 · 31 mai 2026</p>
+    <p>Plan B RPPS · fallback automatique · dump local upserté par batchs · 1628 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

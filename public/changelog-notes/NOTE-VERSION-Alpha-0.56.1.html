@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.1 — Storage bulletins archivés</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left;vertical-align:top}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — STORAGE ARCHIVAGE BULLETINS</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.1 — Storage Supabase pour bulletins scannés
+      <small>Archivage automatique + URL signées + page admin avec stats coûts Claude</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.1-alpha</code></span>
+      <span><b>Tests :</b> 1682 verts (+40)</span>
+      <span><b>SQL :</b> 1 patch (bucket + RLS + 6 col)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le problème résolu</h2>
+  <div class="panel">
+    <p>Jusqu'ici, quand tu scannais un bulletin de situation pour créer un patient, l'image originale était <b>oubliée</b>. L'OCR était fait, le texte brut conservé, mais pas le document source.</p>
+    <p>Or pour <b>l'audit</b>, la <b>relecture en cas de doute</b>, ou un <b>re-OCR ultérieur</b> (modèle plus récent), il faut garder le fichier original. C'est ce que résout cette version.</p>
+  </div>
+
+  <h2>📦 Architecture Storage Supabase</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Bucket privé <code>bulletins-scannes</code></h3>
+    <ul>
+      <li><b>Privé</b> (pas d'URL publique)</li>
+      <li><b>10 Mo</b> max par fichier</li>
+      <li><b>MIME autorisés</b> : image/jpeg, image/png, image/webp, image/heic, application/pdf</li>
+      <li><b>4 policies RLS</b> (SELECT/INSERT/UPDATE/DELETE) qui isolent par <code>structure_id</code></li>
+    </ul>
+
+    <h3>Convention de chemin</h3>
+    <pre><code>{structure_id}/{patient_id}/{timestamp}-{filename_safe}</code></pre>
+    <p>La RLS lit le premier segment du path pour vérifier que le user appartient bien à la structure propriétaire du fichier.</p>
+
+    <h3>Workflow d'archivage</h3>
+    <ol>
+      <li>User scanne un bulletin → OCR Claude Vision → patient créé</li>
+      <li>L'app upload <b>automatiquement</b> le fichier original dans le bucket</li>
+      <li>Le patient est mis à jour avec <code>bs_file_path</code>, <code>bs_file_mime</code>, <code>bs_file_size_kb</code></li>
+      <li>Si l'archivage échoue (rare), <b>le patient reste créé</b> avec juste un warning ambré</li>
+      <li>L'onglet Audit de la fiche affiche un preview signé (lien 1h)</li>
+    </ol>
+  </div>
+
+  <h2>🗄 Nouvelles colonnes patient</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Colonne</th><th>Type</th><th>Usage</th></tr>
+      <tr><td><code>bs_file_path</code></td><td>text</td><td>Chemin Storage relatif (clé pour signed URL)</td></tr>
+      <tr><td><code>bs_file_mime</code></td><td>text</td><td>Type MIME (pour détecter image/PDF/autre)</td></tr>
+      <tr><td><code>bs_file_size_kb</code></td><td>int</td><td>Taille en Ko (audit)</td></tr>
+      <tr><td><code>bs_ocr_tokens_in</code></td><td>int</td><td>Tokens input Claude (coût)</td></tr>
+      <tr><td><code>bs_ocr_tokens_out</code></td><td>int</td><td>Tokens output Claude (coût)</td></tr>
+      <tr><td><code>bs_ocr_confiance</code></td><td>text</td><td>haute / moyenne / faible (qualité OCR)</td></tr>
+    </table>
+  </div>
+
+  <h2>🔒 Confidentialité & sécurité</h2>
+  <div class="panel danger">
+    <ul>
+      <li><b>Bucket privé</b> — aucun lien public accessible sur le web</li>
+      <li><b>RLS Supabase</b> — un user d'une autre structure ne peut <b>ni voir ni lister</b> les fichiers de la tienne</li>
+      <li><b>URL signées</b> avec <code>createSignedUrl()</code> — validité 1h, régénérée à chaque chargement de la page Audit</li>
+      <li>Pas de cache côté client (impossible de redonner un lien expiré)</li>
+      <li>Suppression : possible depuis la fiche patient (action admin, irréversible)</li>
+    </ul>
+  </div>
+
+  <h2>📊 Page /admin/bulletins-archive</h2>
+  <div class="panel">
+    <p>Nouvelle page admin pour voir d'un coup d'œil tous les bulletins archivés de ta structure :</p>
+    <ul>
+      <li><b>6 KPI</b> : nb bulletins archivés, espace utilisé Ko/Mo, premier archive, dernier archive, tokens IN total, tokens OUT total</li>
+      <li><b>Estimation coût Claude Sonnet 4</b> : calculée à partir des tokens (3$/M input + 15$/M output × 0.92 EUR/USD)</li>
+      <li><b>Liste des 200 derniers</b> avec filtre live nom/prénom/dossier</li>
+      <li><b>Badges confiance OCR</b> colorés (vert haute / ambre moyenne / rouge faible)</li>
+      <li><b>Bouton 'Voir'</b> qui redirige vers <code>/patient/[id]/edit?tab=audit</code></li>
+      <li>Panneau pédagogie RLS + URL signées en bas</li>
+    </ul>
+    <p>Accès : menu <b>Administration → Bulletins archivés</b> (ti-archive bleu).</p>
+  </div>
+
+  <h2>🖼 Onglet Audit refondu</h2>
+  <div class="panel hi">
+    <p>L'onglet <b>📄 OCR & audit</b> de <code>/patient/[id]/edit</code> a été enrichi :</p>
+    <ul>
+      <li>Source de création + dates créé/modifié</li>
+      <li><b>Badge confiance OCR</b> (haute/moyenne/faible)</li>
+      <li><b>Tokens IN/OUT</b> Claude pour audit coût</li>
+      <li><b>Preview image</b> si MIME image/* (click pour zoom)</li>
+      <li><b>Bouton 'Ouvrir le PDF'</b> si MIME pdf</li>
+      <li>Lien externe si autre format</li>
+      <li>Type, taille Ko, date OCR affichés</li>
+      <li>Mention <i>"Lien valide 1h, régénéré à chaque chargement"</i></li>
+      <li>Compat ancien format <code>bs_file_url</code> conservée</li>
+    </ul>
+  </div>
+
+  <h2>📈 Tests +40 (1642 → 1682)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>SQL</b> (10) : bucket idempotent, privé, MIME, 10Mo, 4 RLS, filtrage path, 6 colonnes, audit IA, index, RPC stats</li>
+      <li><b>Helper bulletinsStorage</b> (6) : constante BUCKET, buildPath, sanitize, uploadBulletin retour, getSignedUrl, deleteBulletin</li>
+      <li><b>Workflow scan</b> (5) : transmet confiance+tokens, uploadBulletin appelé, update patient, warning archivage, badge done</li>
+      <li><b>API from-ocr</b> (2) : accepte méta OCR, payload patient enrichi</li>
+      <li><b>TabAudit signed URL</b> (7) : useEffect URL, détection MIME, tokens+confiance, preview image, bouton PDF, mention 1h, compat ancien</li>
+      <li><b>Page admin archive</b> (9) : existe, RPC stats, filter, KPI, coût Claude, badge confiance, lien fiche, pédagogie</li>
+      <li><b>Menu</b> (1)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/aveho-PATCH-vers-0.56.1.sql</code> : <b>NOUVEAU</b> · bucket + RLS + 6 colonnes + RPC stats</li>
+    <li><code>lib/bulletinsStorage.js</code> : <b>NOUVEAU</b> · upload + getSignedUrl + delete</li>
+    <li><code>app/scan/bulletin-situation/page.js</code> : intégration archivage + warning + badge done</li>
+    <li><code>app/api/patients/from-ocr/route.js</code> : accepte confiance + tokens IN/OUT</li>
+    <li><code>app/patient/[id]/edit/page.js</code> : TabAudit refondu (preview signée + tokens + confiance)</li>
+    <li><code>app/admin/bulletins-archive/page.js</code> : <b>NOUVEAU</b> · ~220 lignes (stats + liste filtrable)</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration</li>
+    <li><code>__tests__/v056-1-storage-bulletins.test.js</code> : <b>NOUVEAU</b> · +40 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.56.1 (4 tests)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.1</li>
+    <li><code>package.json</code> : 0.56.0 → 0.56.1</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.56.1.sql</code> → Run (crée le bucket + RLS + colonnes)</li>
+      <li>Vérifie dans Supabase → Storage que le bucket <code>bulletins-scannes</code> apparaît</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.1 - Storage Supabase pour archivage bulletins scannés"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Menu Outils scan → Créer patient depuis bulletin</li>
+      <li>Upload une photo de bulletin → OCR → Créer le patient</li>
+      <li>Étape done : tu dois voir le badge bleu <i>"Bulletin archivé dans Storage"</i></li>
+      <li>Compléter la fiche → onglet <b>OCR & audit</b> → preview image directe + tokens + confiance</li>
+      <li>Menu Administration → <b>Bulletins archivés</b> → voir les stats + liste + coût Claude estimé</li>
+      <li>Smoke tests 0.56.1 → 4 verts</li>
+    </ol>
+  </div>
+
+  <h2>🔜 Suite cycle 0.56.X</h2>
+  <ul>
+    <li>0.56.2 — Scan QR Vitale fonctionnel (html5-qrcode)</li>
+    <li>0.56.3 — Scan code-barre GS1/UDI matériel (ZXing)</li>
+    <li>0.56.4 — OCR prescriptions → création prescription auto (même architecture archivage que 0.56.1)</li>
+    <li>0.56.5 — Sync Google reviews Edge Function cron 6h</li>
+    <li>0.56.6 — Page audit /admin/doublons-forces</li>
+  </ul>
+
+  <h2>SW auto-bump — 68ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.0 → <b>0.56.1</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.1 · 1er juin 2026</p>
+    <p>Storage bulletins · RLS privé · preview signée · 1682 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -207,6 +207,8 @@ export default function Accueil() {
     { lbl: "Matériel", ic: "ti-armchair-2", col: "#142131", to: "/materiels" },
     { lbl: "Stock", ic: "ti-boxes", col: "#5aa05a", to: "/stock" },
     { lbl: "DI / Interventions", ic: "ti-tools", col: "#e35d5b", to: "/interventions" },
+    // 0.56.0 : tuile de découverte vers le récap de version majeure
+    { lbl: "Aveho EC 0.56", ic: "ti-stars", col: "#185FA5", to: "/v056", isNew: true },
   ];
 
   return (
@@ -284,12 +286,21 @@ export default function Accueil() {
                         border: "1px solid #e3e9ee", borderRadius: 12, background: "#fff",
                         cursor: "pointer", fontFamily: "inherit", fontSize: 13.5, fontWeight: 600,
                         color: "#142131", transition: "background .15s",
+                        position: "relative",
                       }} onMouseOver={(e) => e.currentTarget.style.background = "#f4f7fa"}
                          onMouseOut={(e) => e.currentTarget.style.background = "#fff"}>
                         <span style={{ background: r.col + "22", color: r.col, width: 32, height: 32, borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 17 }}>
                           <i className={`ti ${r.ic}`} />
                         </span>
                         {r.lbl}
+                        {r.isNew && (
+                          <span style={{
+                            position: "absolute", top: 6, right: 6,
+                            background: "linear-gradient(135deg,#5aa05a,#2e6f33)", color: "#fff",
+                            fontSize: 9, fontWeight: 700, letterSpacing: 0.5,
+                            padding: "1px 5px", borderRadius: 4,
+                          }}>NEW</span>
+                        )}
                       </button>
                     ))}
                   </div>

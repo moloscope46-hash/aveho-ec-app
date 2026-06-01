@@ -113,6 +113,20 @@ export default function FichePatient() {
 
         {/* Entête fiche */}
         <Panel style={{ marginTop: 12 }}>
+          {/* 0.55.54 : fil d'Ariane pour clarifier qu'on est dans la fiche d'UN patient (pas une liste) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#6c7a89", marginBottom: 8 }}>
+            <button
+              onClick={() => router.push("/patients")}
+              style={{ background: "transparent", border: "none", color: "#185FA5", cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: 11.5, fontWeight: 600, textDecoration: "none" }}
+              onMouseEnter={e => e.target.style.textDecoration = "underline"}
+              onMouseLeave={e => e.target.style.textDecoration = "none"}
+            >
+              <i className="ti ti-arrow-left" /> Tous les patients
+            </button>
+            <span style={{ color: "#d3d9e0" }}>/</span>
+            <span>Fiche de</span>
+            <b style={{ color: "#142131" }}>{pat.nom} {pat.prenom || ""}</b>
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
             <div style={{ flex: 1 }}>
               <span style={{ fontSize: 11, letterSpacing: 2, color: "#7CC8C8", fontWeight: 700 }}><i className="ti ti-user" /> FICHE PATIENT</span>
@@ -178,6 +192,7 @@ export default function FichePatient() {
                   const { imprimerFichePatient } = await import("../../../lib/ficheToPdf");
                   imprimerFichePatient({ patient: pat, etiquettes, materiels, interventions });
                 }}>Imprimer</Btn>
+                <Btn variant="ghost" icon="ti-clipboard-heart" onClick={() => router.push(`/patient/${patId}/dashboard`)}>Dashboard santé</Btn>
                 <Btn variant="ghost" icon="ti-edit" onClick={() => router.push(`/patient/${patId}/edit`)}>Édition complète</Btn>
               </div>
             )}

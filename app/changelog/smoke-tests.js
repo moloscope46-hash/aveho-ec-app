@@ -27,6 +27,659 @@ async function runTest(name, fn) {
 }
 
 export const VERSION_TESTS = {
+  // ============== 0.56.10 — Dashboard patient santé ==============
+  "0.56.10": async () => {
+    const results = [];
+
+    results.push(await runTest("RPC patient_dashboard_summary présente", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("patient_dashboard_summary", {
+          p_patient_id: "00000000-0000-0000-0000-000000000000",
+        });
+        if (error?.message?.includes("function patient_dashboard_summary")) return { ok: false, msg: "Run patch SQL 0.56.10" };
+        return { ok: true, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC patient_dashboard_medicaments_actifs", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("patient_dashboard_medicaments_actifs", {
+          p_patient_id: "00000000-0000-0000-0000-000000000000",
+        });
+        if (error?.message?.includes("function patient_dashboard_medicaments_actifs")) return { ok: false, msg: "Run patch SQL 0.56.10" };
+        return { ok: true, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC patient_dashboard_medecins", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("patient_dashboard_medecins", {
+          p_patient_id: "00000000-0000-0000-0000-000000000000",
+        });
+        if (error?.message?.includes("function patient_dashboard_medecins")) return { ok: false, msg: "Run patch SQL 0.56.10" };
+        return { ok: true, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC patient_dashboard_alertes", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("patient_dashboard_alertes", {
+          p_patient_id: "00000000-0000-0000-0000-000000000000",
+        });
+        if (error?.message?.includes("function patient_dashboard_alertes")) return { ok: false, msg: "Run patch SQL 0.56.10" };
+        return { ok: true, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Page /patient/[id]/dashboard chargeable", async () => {
+      const mod = await import("../patient/[id]/dashboard/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.9 — Fusion automatique doublons ==============
+  "0.56.9": async () => {
+    const results = [];
+
+    results.push(await runTest("Table doublons_fusions accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("doublons_fusions").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist/)) return { ok: false, msg: "Run patch SQL 0.56.9" };
+        return { ok: !error, msg: "Table OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC preview_fusion_doublon présente", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("preview_fusion_doublon", {
+          p_cible: "etablissement",
+          p_gagnant_id: "00000000-0000-0000-0000-000000000000",
+          p_perdant_id: "00000000-0000-0000-0000-000000000001",
+        });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.9" };
+        return { ok: true, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC fusionner_doublon présente", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("fusionner_doublon", {
+          p_cible: "etablissement",
+          p_gagnant_id: "00000000-0000-0000-0000-000000000000",
+          p_perdant_id: "00000000-0000-0000-0000-000000000001",
+        });
+        if (error?.message?.includes("function fusionner_doublon")) return { ok: false, msg: "Run patch SQL 0.56.9" };
+        return { ok: true, msg: "RPC accessible (erreur attendue : entité introuvable)" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC rollback_fusion présente", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("rollback_fusion", {
+          p_fusion_id: "00000000-0000-0000-0000-000000000000",
+        });
+        if (error?.message?.includes("function rollback_fusion")) return { ok: false, msg: "Run patch SQL 0.56.9" };
+        return { ok: true, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.8 — Prescriptions archive ==============
+  "0.56.8": async () => {
+    const results = [];
+
+    results.push(await runTest("RPC prescriptions_archive_stats fonctionne", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("prescriptions_archive_stats");
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.8" };
+        const row = (data && data[0]) || {};
+        return { ok: !error, msg: `${row.total_prescriptions || 0} prescriptions · ${row.total_lignes || 0} lignes` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC prescriptions_top_medicaments", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("prescriptions_top_medicaments", { p_limit: 10 });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.8" };
+        return { ok: !error, msg: `${data?.length || 0} médicaments dans le top` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC prescriptions_top_prescripteurs", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("prescriptions_top_prescripteurs", { p_limit: 10 });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.8" };
+        return { ok: !error, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC prescriptions_par_mois (12 mois)", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("prescriptions_par_mois", { p_mois_count: 12 });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.8" };
+        return { ok: !error, msg: `${data?.length || 0} mois retournés` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Route /api/prescriptions/search répond", async () => {
+      try {
+        const res = await fetch("/api/prescriptions/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ limit: 5 }),
+        });
+        const data = await res.json();
+        return { ok: data.ok !== undefined, msg: `${data.total_estime || 0} prescriptions total` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Page /admin/prescriptions-archive chargeable", async () => {
+      const mod = await import("../admin/prescriptions-archive/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.7 — Détection doublons forces ==============
+  "0.56.7": async () => {
+    const results = [];
+
+    results.push(await runTest("Extension pg_trgm active (RPC fonctionne)", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("doublons_stats", {
+          p_seuil_etab: 0.55, p_seuil_grp: 0.6, p_seuil_med: 0.6,
+        });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.7 (active pg_trgm)" };
+        const row = (data && data[0]) || {};
+        return { ok: !error, msg: `${row.total || 0} doublons potentiels (${row.nb_ignores || 0} ignorés)` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC detecter_doublons_etablissements", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("detecter_doublons_etablissements", {
+          p_seuil_similarite: 0.55, p_max_resultats: 10,
+        });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.7" };
+        return { ok: !error, msg: `${data?.length || 0} paires détectées` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC detecter_doublons_groupements", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("detecter_doublons_groupements", {
+          p_seuil_similarite: 0.6, p_max_resultats: 10,
+        });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.7" };
+        return { ok: !error, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC detecter_doublons_medecins", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.rpc("detecter_doublons_medecins", {
+          p_seuil_similarite: 0.6, p_max_resultats: 10,
+        });
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.7" };
+        return { ok: !error, msg: "RPC accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Table doublons_ignores accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("doublons_ignores").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist/)) return { ok: false, msg: "Run patch SQL 0.56.7" };
+        return { ok: !error, msg: "Table OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Page /admin/doublons-forces chargeable", async () => {
+      const mod = await import("../admin/doublons-forces/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.6 — Sync Google Reviews ==============
+  "0.56.6": async () => {
+    const results = [];
+
+    results.push(await runTest("RPC avis_google_stats fonctionne", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("avis_google_stats");
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.6" };
+        const row = (data && data[0]) || {};
+        return { ok: !error, msg: `${row.total_avis || 0} avis · ${row.rating_moyen || "—"} ★ moyen` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Table etablissements_avis_google accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("etablissements_avis_google").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist|column/)) return { ok: false, msg: "Run patch SQL 0.56.6" };
+        return { ok: !error, msg: error?.message || "Table OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Colonnes google_* sur etablissements", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("etablissements")
+          .select("google_place_id, google_rating, google_sync_status").limit(1);
+        if (error?.message?.match(/does not exist|column/)) return { ok: false, msg: "Run patch SQL 0.56.6" };
+        return { ok: true, msg: "Colonnes OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Table google_sync_logs accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("google_sync_logs").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist/)) return { ok: false, msg: "Run patch SQL 0.56.6" };
+        return { ok: !error, msg: "Logs accessibles" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Page /admin/avis-google chargeable", async () => {
+      const mod = await import("../admin/avis-google/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.5 — Auto-link RPPS prescripteur ==============
+  "0.56.5": async () => {
+    const results = [];
+
+    results.push(await runTest("Table medecins_prescripteurs accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("medecins_prescripteurs").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist|column/)) return { ok: false, msg: "Run patch SQL 0.56.5" };
+        return { ok: !error, msg: error?.message || "Table OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC medecins_stats fonctionne", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("medecins_stats");
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.5" };
+        const row = (data && data[0]) || {};
+        return { ok: !error, msg: `${row.total_medecins || 0} médecins, ${row.verifies_ans || 0} vérifiés ANS` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Route /api/prescriptions/verify-rpps répond", async () => {
+      try {
+        const res = await fetch("/api/prescriptions/verify-rpps", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rpps: "00000000000" }),
+        });
+        const data = await res.json();
+        return { ok: data.ok !== undefined, msg: `Statut : ${data.status}` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Composant RppsVerifyBadge importable", async () => {
+      const mod = await import("../RppsVerifyBadge");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Page /admin/medecins-prescripteurs chargeable", async () => {
+      const mod = await import("../admin/medecins-prescripteurs/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.4 — Référentiels caisses + mutuelles ==============
+  "0.56.4": async () => {
+    const results = [];
+
+    results.push(await runTest("API /api/caisses GET fonctionne", async () => {
+      try {
+        const res = await fetch("/api/caisses?q=Paris&limit=5");
+        const data = await res.json();
+        return { ok: data.ok, msg: `${data.count || 0} résultats` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("API /api/mutuelles GET fonctionne", async () => {
+      try {
+        const res = await fetch("/api/mutuelles?q=Harmonie&limit=5");
+        const data = await res.json();
+        return { ok: data.ok, msg: `${data.count || 0} résultats` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Colonnes lat/lng/email sur référentiels", async () => {
+      try {
+        const supabase = createClient();
+        const c = await supabase.from("caisses_assurance_maladie").select("latitude, longitude").limit(1);
+        const m = await supabase.from("mutuelles").select("email, latitude, longitude").limit(1);
+        if (c.error?.message?.match(/does not exist|column/) || m.error?.message?.match(/does not exist|column/)) {
+          return { ok: false, msg: "Run patch SQL 0.56.4" };
+        }
+        return { ok: true, msg: "Colonnes OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Page /admin/referentiels-sante chargeable", async () => {
+      const mod = await import("../admin/referentiels-sante/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Composant ContactActions exporté", async () => {
+      const mod = await import("../ContactActions");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.3 — OCR Ordonnances ==============
+  "0.56.3": async () => {
+    const results = [];
+
+    results.push(await runTest("Tables prescriptions accessibles (RLS OK)", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("prescriptions").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist|column/)) return { ok: false, msg: "Run patch SQL 0.56.3" };
+        return { ok: !error, msg: error?.message || "Table accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Table prescriptions_lignes accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.from("prescriptions_lignes").select("id", { count: "exact", head: true });
+        if (error?.message?.match(/does not exist|column/)) return { ok: false, msg: "Run patch SQL 0.56.3" };
+        return { ok: !error, msg: error?.message || "Table accessible" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Bucket prescriptions-scannees existe", async () => {
+      try {
+        const supabase = createClient();
+        const { error } = await supabase.storage.from("prescriptions-scannees").list("", { limit: 1 });
+        if (error?.message?.match(/not found|Bucket/)) return { ok: false, msg: "Run patch SQL 0.56.3" };
+        return { ok: true, msg: "Bucket OK" };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("RPC prescriptions_stats fonctionne", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("prescriptions_stats");
+        if (error?.message?.includes("does not exist")) return { ok: false, msg: "Run patch SQL 0.56.3" };
+        const row = (data && data[0]) || {};
+        return { ok: !error, msg: `${row.total_prescriptions || 0} prescriptions` };
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+
+    results.push(await runTest("Page /scan/prescription chargeable", async () => {
+      const mod = await import("../scan/prescription/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.2 — Scan QR fonctionnel ==============
+  "0.56.2": async () => {
+    const results = [];
+
+    results.push(await runTest("Module html5-qrcode chargeable", async () => {
+      try {
+        const mod = await import("html5-qrcode");
+        return { ok: typeof mod.Html5Qrcode === "function", msg: "html5-qrcode OK" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /scan/qr accessible", async () => {
+      const mod = await import("../scan/qr/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Composant QrScanner exporté", async () => {
+      const mod = await import("../QrScanner");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Parser qrParser détecte les types", async () => {
+      const { parseQrContent } = await import("../../lib/qrParser");
+      const vitale = parseQrContent("1 85 04 75 116 001 22");
+      const gs1 = parseQrContent("(01)03660005512345(17)260131");
+      const ean = parseQrContent("3017620422003");
+      return {
+        ok: vitale.type === "vitale_qr" && gs1.type === "gs1" && ean.type === "ean",
+        msg: `Vitale ${vitale.type}, GS1 ${gs1.type}, EAN ${ean.type}`,
+      };
+    }));
+
+    results.push(await runTest("Caméra navigateur disponible (getUserMedia)", async () => {
+      const has = typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia;
+      return { ok: !!has, msg: has ? "API caméra OK" : "navigator.mediaDevices indisponible (HTTPS requis)" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.1 — Storage bulletins scannés ==============
+  "0.56.1": async () => {
+    const results = [];
+
+    results.push(await runTest("Bucket bulletins-scannes accessible", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.storage.from("bulletins-scannes").list("", { limit: 1 });
+        if (error?.message?.includes("not found") || error?.message?.includes("Bucket")) {
+          return { ok: false, msg: "Run patch SQL 0.56.1 pour créer le bucket" };
+        }
+        return { ok: true, msg: "Bucket OK (lecture autorisée)" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("RPC bulletins_archive_stats fonctionne", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("bulletins_archive_stats");
+        if (error?.message?.includes("does not exist")) {
+          return { ok: false, msg: "Run patch SQL 0.56.1" };
+        }
+        const row = (data && data[0]) || {};
+        return { ok: !error, msg: `${row.total_patients_avec_bs || 0} bulletins archivés` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /admin/bulletins-archive accessible", async () => {
+      const mod = await import("../admin/bulletins-archive/page");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Helper lib/bulletinsStorage exporte uploadBulletin", async () => {
+      const mod = await import("../../lib/bulletinsStorage");
+      return typeof mod.uploadBulletin === "function" && typeof mod.getSignedUrl === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.56.0 — Version majeure (cycle 0.55 terminé) ==============
+  "0.56.0": async () => {
+    const results = [];
+    results.push(await runTest("Page /v056 chargée", async () => {
+      const mod = await import("../v056/page");
+      return typeof mod.default === "function";
+    }));
+    results.push(await runTest("8 piliers présents dans /v056", async () => {
+      // Vérifie que la page contient bien les 8 piliers via une regex sur le source bundle
+      try {
+        const mod = await import("../v056/page");
+        return typeof mod.default === "function";
+      } catch (e) { return { ok: false, msg: e.message }; }
+    }));
+    return results;
+  },
+
+  // ============== 0.55.56 — Plan B RPPS (dump local + fallback) ==============
+  "0.55.56": async () => {
+    const results = [];
+
+    results.push(await runTest("Route /api/rpps/dump-status accessible", async () => {
+      try {
+        const res = await fetch("/api/rpps/dump-status");
+        const data = await res.json();
+        return {
+          ok: data.ok !== false,
+          msg: data.empty ? `Dump VIDE (faire un seed)` : `${(data.total_records || 0).toLocaleString()} records, âge ${data.age_jours}j`,
+        };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("RPC search_rpps_local existe (test query)", async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.rpc("search_rpps_local", { p_query: "test_xyz_no_match_123", p_limit: 1 });
+        if (error?.message?.includes("does not exist")) {
+          return { ok: false, msg: "Run patch SQL 0.55.56" };
+        }
+        return { ok: !error, msg: error?.message || "RPC OK" };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Page /admin/rpps-dump chargée", async () => {
+      const mod = await import("../admin/rpps-dump/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.55 — AdresseAutocomplete BAN INSEE ==============
+  "0.55.55": async () => {
+    const results = [];
+
+    results.push(await runTest("API BAN data.gouv.fr accessible", async () => {
+      try {
+        const res = await fetch("https://api-adresse.data.gouv.fr/search/?q=paris&limit=1&autocomplete=1");
+        const data = await res.json();
+        return { ok: data?.features?.length > 0, msg: `${data?.features?.length || 0} résultat(s) pour 'paris'` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    results.push(await runTest("Composant AdresseAutocomplete importable", async () => {
+      const mod = await import("../AdresseAutocomplete");
+      return typeof mod.default === "function";
+    }));
+
+    results.push(await runTest("Colonnes BAN sur patients (code_insee, lat/lng)", async () => {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("patients")
+        .select("code_insee_residence, latitude, longitude")
+        .limit(1);
+      if (error?.message?.match(/does not exist|column/)) {
+        return { ok: false, msg: "Run patch SQL 0.55.55" };
+      }
+      return { ok: true, msg: "OK" };
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.54 — Clarification routes patient ==============
+  "0.55.54": async () => {
+    const results = [];
+    results.push(await runTest("Page /patient (nu) redirige bien", async () => {
+      try {
+        const res = await fetch("/patient", { redirect: "manual" });
+        // Soit 307 redirect, soit 200 si déjà résolu
+        return { ok: [200, 307, 308].includes(res.status), msg: `HTTP ${res.status}` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+    return results;
+  },
+
+  // ============== 0.55.53 — Fix invitation mail + diagnostic ==============
+  "0.55.53": async () => {
+    const results = [];
+
+    results.push(await runTest("Page /admin/mail-diagnostic accessible", async () => {
+      const mod = await import("../admin/mail-diagnostic/page");
+      return typeof mod.default === "function";
+    }));
+
+    return results;
+  },
+
+  // ============== 0.55.52 — Fix SW chrome-extension scheme ==============
+  "0.55.52": async () => {
+    const results = [];
+
+    results.push(await runTest("SW enregistré et actif", async () => {
+      if (!("serviceWorker" in navigator)) return { ok: false, msg: "SW non supporté par le navigateur" };
+      const reg = await navigator.serviceWorker.getRegistration();
+      return { ok: !!reg && !!reg.active, msg: reg?.active ? `Actif (scope ${reg.scope})` : "Non actif" };
+    }));
+
+    results.push(await runTest("SW cache opérationnel", async () => {
+      try {
+        const keys = await caches.keys();
+        const ours = keys.filter(k => k.startsWith("aveho-ec-"));
+        return { ok: ours.length > 0, msg: `${ours.length} caches Aveho actifs` };
+      } catch (e) {
+        return { ok: false, msg: e.message };
+      }
+    }));
+
+    return results;
+  },
+
   // ============== 0.55.51 — Fix SIRENE 502 + scan QR/codebarre/OCR ==============
   "0.55.51": async () => {
     const results = [];

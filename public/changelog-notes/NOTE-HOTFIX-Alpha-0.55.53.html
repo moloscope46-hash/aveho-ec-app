@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — Hotfix 0.55.53 — Fix invitation mail + diagnostic</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--red:#c0392b;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#fde0db;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#fde0db;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#fde0db}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:6px 8px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">HOTFIX — INVITATIONS MAIL</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Hotfix 0.55.53 — Fix critique invitations + diagnostic Resend
+      <small>Capture vraie erreur · bandeau rouge si mail KO · page /admin/mail-diagnostic</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.53-alpha</code></span>
+      <span><b>Tests :</b> 1568 verts (+20)</span>
+    </div>
+  </header>
+
+  <h2>❌ Le bug critique</h2>
+  <div class="panel danger">
+    <p>Les invitations <b>ne partent plus</b> mais l'app annonçait <b>"Invitation envoyée"</b> sans warning. Tu te demandais pourquoi tes invités ne recevaient rien.</p>
+
+    <h3>Cause technique</h3>
+    <p><code>supabase.functions.invoke()</code> ne throw <b>PAS</b> en cas d'erreur côté Edge Function. Il retourne <code>{data, error}</code> et l'ancien code attrapait seulement les exceptions JS via try/catch — donc les erreurs Resend étaient silencieuses.</p>
+    <pre><code>// AVANT (silencieux si Resend KO)
+try {
+  await supabase.functions.invoke("invite-user", {...});
+  // ✓ Toujours considéré "ok" même si Resend a refusé
+} catch (e) {
+  logger.warn("Email non envoyé", e);  // jamais atteint
+}</code></pre>
+  </div>
+
+  <h2>✅ La correction</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">1) Capture {data, error} côté app</h3>
+    <pre><code>const { data: invokeData, error: invokeErr } = await supabase.functions.invoke(...);
+if (invokeErr) {
+  // FunctionsHttpError contient un readableStream qu'on doit lire
+  const reader = invokeErr.context.body.getReader();
+  const text = new TextDecoder().decode((await reader.read()).value);
+  const json = JSON.parse(text);
+  mailWarning = `Mail NON envoyé : ${json.error}`;
+}</code></pre>
+
+    <h3>2) Popup invitation : bandeau rouge si KO</h3>
+    <p>Si <code>mailWarning</code> présent dans <code>createdInviteLink</code> :</p>
+    <ul>
+      <li>Header passe de <b>vert ✓</b> à <b>ambre ⚠</b> "Invitation créée — mail NON envoyé"</li>
+      <li>Bandeau rouge avec la raison Resend exacte</li>
+      <li>Conseil : "Copie le lien ci-dessous et envoie-le manuellement (SMS, WhatsApp, mail perso). L'invitation Aveho est bien créée en base, seul l'email automatique a échoué"</li>
+    </ul>
+
+    <h3>3) Edge Function v2 — diagnostic complet</h3>
+    <p>Décode les erreurs Resend courantes en messages humains :</p>
+    <table>
+      <tr><th>Code diagnostic</th><th>Cause</th><th>Solution</th></tr>
+      <tr><td><code>missing_resend_key</code></td><td>RESEND_API_KEY absent</td><td>Supabase → Settings → Edge Functions → Secrets</td></tr>
+      <tr><td><code>resend_test_mode_restricted</code></td><td>Mode test : seul l'email proprio</td><td>Vérifier domaine sur resend.com/domains + secret RESEND_FROM</td></tr>
+      <tr><td><code>resend_invalid_key</code></td><td>Clé révoquée/expirée</td><td>Régénérer sur resend.com/api-keys</td></tr>
+      <tr><td><code>resend_rate_limit</code></td><td>Quota 3000/mois dépassé</td><td>Attendre ou upgrade plan</td></tr>
+    </table>
+
+    <p>Retour enrichi <code>{ok, diagnostic, error, resend_status, resend_body, from_address, to, duration_ms, resend_id?}</code>.</p>
+
+    <h3>4) Nouveau secret RESEND_FROM</h3>
+    <p>Configurable dans Supabase Secrets. Par défaut <code>"Aveho EC &lt;onboarding@resend.dev&gt;"</code> (limité au compte test). Recommandé : <code>"Aveho EC &lt;noreply@tondomaine.fr&gt;"</code> après vérification du domaine.</p>
+  </div>
+
+  <h2>🔬 Nouvelle page /admin/mail-diagnostic</h2>
+  <div class="panel">
+    <p>Test l'envoi d'invitation à un email donné et affiche tout le détail :</p>
+    <ul>
+      <li>Résultat OK/KO coloré (vert/rouge)</li>
+      <li>Code diagnostic en mono</li>
+      <li>HTTP status Resend</li>
+      <li>From / To utilisés</li>
+      <li>Durée envoi</li>
+      <li>Resend ID si succès (pour suivi dans dashboard Resend)</li>
+      <li>Body brut Resend dépliable</li>
+      <li><b>Panneau pédagogique</b> en bas : 5 causes courantes + solution exacte + liens vers resend.com/api-keys et resend.com/domains</li>
+    </ul>
+    <p>Accès : menu <b>Administration → Diagnostic envoi mail</b> (rouge mail-cog).</p>
+  </div>
+
+  <h2>🛠 Comment résoudre maintenant</h2>
+  <div class="panel warn">
+    <ol>
+      <li>Décompresser le zip, push GitHub (cf. procédure)</li>
+      <li><b>Redéployer l'Edge Function</b> :
+        <pre><code>cd C:\aveho-ec-app
+supabase functions deploy invite-user</code></pre>
+      </li>
+      <li>Aller sur <code>/admin/mail-diagnostic</code></li>
+      <li>Tester avec <b>ton propre email</b> → voir le diagnostic exact</li>
+      <li>Selon le code retourné :
+        <ul>
+          <li><code>missing_resend_key</code> → ajoute le secret dans Supabase</li>
+          <li><code>resend_test_mode_restricted</code> → vérifie un domaine + ajoute <code>RESEND_FROM</code> dans Supabase secrets</li>
+          <li><code>resend_invalid_key</code> → régénère la clé Resend</li>
+          <li>OK mais pas reçu → vérifie SPAM puis dashboard Resend</li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+
+  <h2>📈 Tests +20 (1548 → 1568)</h2>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>supabase/functions/invite-user/index.ts</code> : <b>REFONDU v2</b> · diagnostic complet</li>
+    <li><code>app/utilisateurs/page.js</code> : capture invoke {data, error} · mailWarning · popup ambré</li>
+    <li><code>app/admin/mail-diagnostic/page.js</code> : <b>NOUVEAU</b> · UI test envoi</li>
+    <li><code>app/TopBar.js</code> : entrée menu Administration</li>
+    <li><code>__tests__/v055-53-invite-mail-diagnostic.test.js</code> : <b>NOUVEAU</b> · +20 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + bloc 0.55.53</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.53</li>
+    <li><code>package.json</code> : 0.55.52 → 0.55.53</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip (pas de SQL)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.53 - Fix invitation mail + diagnostic Resend"
+git push origin main</code></pre>
+      </li>
+      <li><b>Redéployer l'Edge Function</b> (CRITIQUE) :
+        <pre><code>supabase functions deploy invite-user</code></pre>
+      </li>
+      <li>Tester sur <code>/admin/mail-diagnostic</code></li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 63ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.52 → <b>0.55.53</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Hotfix Alpha 0.55.53 · 31 mai 2026</p>
+    <p>Invitations diagnostiquées · plus de mail silencieusement perdu · 1568 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

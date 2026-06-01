@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.55.55 — AdresseAutocomplete BAN INSEE</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--green:#5aa05a;--amber:#EF9F27}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#cfe4f5;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#cfe4f5;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#cfe4f5}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.violet{background:#f3effa;border-color:#d6c9ec}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px;line-height:1.55}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+  td,th{padding:8px 10px;border-bottom:1px solid #e3e9ee;text-align:left}
+  th{background:#f4f7fa;font-weight:700;color:#142131}
+  .badge{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px;margin-right:4px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — ADRESSE AUTOCOMPLETE BAN INSEE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.55.55 — Autocomplete d'adresse via la Base Adresse Nationale
+      <small>Tape "12 rue du Lac Paris" → cp + ville + code INSEE + lat/lng remplis en 1 clic</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 31 mai 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.55.55-alpha</code></span>
+      <span><b>Tests :</b> 1599 verts (+22)</span>
+      <span><b>SQL :</b> 1 patch (3 colonnes)</span>
+    </div>
+  </header>
+
+  <h2>🎯 Le concept</h2>
+  <div class="panel">
+    <p>Saisir une adresse à la main, c'est lent et source d'erreurs. Maintenant tu tapes <code>"12 rue du Lac Paris"</code> → suggestions live → tu cliques → <b>tous les champs se remplissent automatiquement</b> (rue, code postal, ville, code INSEE commune, latitude, longitude).</p>
+    <p>Source : <b>Base Adresse Nationale</b> officielle (api-adresse.data.gouv.fr), gratuite, illimitée, sans clé API. Mise à jour quotidienne.</p>
+  </div>
+
+  <h2>📍 Composant AdresseAutocomplete</h2>
+  <div class="panel hi">
+    <h3 style="margin-top:0">Techniquement</h3>
+    <ul>
+      <li>Debounce <b>300ms</b> avant requête</li>
+      <li>Min <b>3 caractères</b> avant search</li>
+      <li>Max <b>8 suggestions</b> affichées</li>
+      <li>Param <code>autocomplete=1</code> + restriction <code>postcode</code> si fourni</li>
+      <li>Click outside ferme le dropdown</li>
+      <li>Loader spinning pendant fetch</li>
+    </ul>
+
+    <h3>Badges colorés par type</h3>
+    <p>
+      <span class="badge" style="background:#dff5e0;color:#2e6f33">Numéro</span>
+      <span class="badge" style="background:#dbe7f5;color:#185FA5">Rue</span>
+      <span class="badge" style="background:#f3effa;color:#5a4a90">Lieu-dit</span>
+      <span class="badge" style="background:#fff8ec;color:#7a4f15">Commune</span>
+    </p>
+
+    <h3>onSelect retourne un objet complet</h3>
+    <pre><code>{
+  adresse: "12 Rue du Lac",
+  code_postal: "75011",
+  ville: "Paris",
+  code_insee: "75111",       // 5 chiffres INSEE commune
+  latitude: 48.8566,
+  longitude: 2.3522,
+  label: "12 Rue du Lac 75011 Paris",
+  context: "75, Paris, Île-de-France",
+  type: "housenumber"
+}</code></pre>
+  </div>
+
+  <h2>🚀 3 emplacements intégrés</h2>
+
+  <div class="panel">
+    <h3 style="margin-top:0">1️⃣ /patients — Modale création/édition rapide</h3>
+    <p>Nouveau bloc <b>"Adresse (recherche BAN)"</b> dans la modale. Si tu sélectionnes une suggestion → tous les champs (cp + ville + code_insee + lat/lng) se remplissent. Les champs séparés cp/ville restent visibles juste après pour ajustement manuel si besoin.</p>
+    <p>Aide affichée : <i>"Pour l'adresse complète + livraisons, va dans Édition complète"</i>.</p>
+  </div>
+
+  <div class="panel violet">
+    <h3 style="margin-top:0">2️⃣ /patient/[id]/edit — Onglet Identité</h3>
+    <p>Champ <b>lieu de naissance</b> avec autocomplete commune INSEE.</p>
+    <p>Tape "Paris" → choisis dans la liste → <code>lieu_naissance_ville="Paris"</code> + <code>lieu_naissance_code_insee="75056"</code> remplis automatiquement.</p>
+    <p>Utile pour les bulletins de situation où le code INSEE de la commune de naissance est demandé par certains organismes.</p>
+  </div>
+
+  <div class="panel hi">
+    <h3 style="margin-top:0">3️⃣ /patient/[id]/edit — Onglet Adresses</h3>
+    <ul>
+      <li><b>Adresse principale</b> : autocomplete BAN principal — remplit adresse + cp + ville + code_insee_residence + lat/lng en 1 clic. Champ <code>code_insee_residence</code> visible (rempli auto, modifiable)</li>
+      <li><b>Adresses de livraison (1-N)</b> : chaque livraison a son propre autocomplete compact qui remplit son cp + sa ville</li>
+    </ul>
+  </div>
+
+  <h2>🗄 Patch SQL (3 colonnes idempotentes)</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Colonne</th><th>Type</th><th>Usage</th></tr>
+      <tr><td><code>code_insee_residence</code></td><td>text (5 chiffres)</td><td>Code INSEE commune de résidence (pour filtres géographiques)</td></tr>
+      <tr><td><code>latitude</code></td><td>numeric(10,7)</td><td>Coordonnée géocodée par BAN</td></tr>
+      <tr><td><code>longitude</code></td><td>numeric(10,7)</td><td>Coordonnée géocodée par BAN</td></tr>
+    </table>
+    <p>Plus 2 index partiels pour les recherches géo : <code>idx_patients_code_insee</code> et <code>idx_patients_coords</code> (where not null).</p>
+    <p><b>100% idempotent</b> : tu peux rejouer le patch sans risque.</p>
+  </div>
+
+  <h2>📈 Tests +22 (1577 → 1599)</h2>
+  <div class="panel hi">
+    <ul>
+      <li><b>Composant BAN</b> (10) : exists, API gouv, debounce 300ms, min 3 chars, params autocomplete/limit, postcode regex, code_insee/lat/lng retournés, badges 4 types, source data.gouv mentionnée</li>
+      <li><b>Intégration /patients</b> (4) : import, champ, save payload complet, aide</li>
+      <li><b>Intégration /patient/edit</b> (4) : import, onglet Identité, onglet Adresses principale, onglet Adresses livraison 1-N</li>
+      <li><b>SQL</b> (4) : code_insee_residence, latitude/longitude, index partiels, idempotent (5× IF NOT EXISTS)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers ajoutés/modifiés</h2>
+  <ul>
+    <li><code>app/AdresseAutocomplete.js</code> : <b>NOUVEAU</b> · composant réutilisable BAN INSEE</li>
+    <li><code>app/patients/page.js</code> : import + champ adresse + cp/ville + payload save</li>
+    <li><code>app/patient/[id]/edit/page.js</code> : import + 3 emplacements (Identité, Adresses principale, Adresses livraison)</li>
+    <li><code>supabase/aveho-PATCH-vers-0.55.55.sql</code> : <b>NOUVEAU</b> · 3 colonnes + 2 index</li>
+    <li><code>__tests__/v055-55-adresse-autocomplete-ban.test.js</code> : <b>NOUVEAU</b> · +22 tests</li>
+    <li><code>app/changelog/smoke-tests.js</code> : + blocs 0.55.55 (3 tests) et 0.55.54 (1 test)</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.55.55</li>
+    <li><code>package.json</code> : 0.55.54 → 0.55.55</li>
+  </ul>
+
+  <h2>Procédure</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>SQL OBLIGATOIRE</b> : Supabase Dashboard → SQL Editor → <code>aveho-PATCH-vers-0.55.55.sql</code> → Run (3 colonnes + 2 index, idempotent)</li>
+      <li>Push GitHub :
+        <pre><code>git add -A
+git commit -m "Alpha 0.55.55 - AdresseAutocomplete BAN INSEE patients + fiche edit"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>Tests à faire</h2>
+  <div class="panel hi">
+    <ol>
+      <li><code>/patients</code> → "Nouveau patient" → champ adresse → tape "12 rue du lac" → choisis une suggestion → cp/ville se remplissent auto</li>
+      <li>Enregistrer → patient créé avec adresse complète + INSEE + coords</li>
+      <li>Ouvrir la fiche → "Édition complète"</li>
+      <li>Onglet <b>Identité</b> → champ lieu de naissance → tape "Paris" → INSEE 75056 rempli</li>
+      <li>Onglet <b>Adresses</b> → adresse principale → autocomplete BAN</li>
+      <li>Adresse de livraison → "+ Ajouter" → adresse → autocomplete aussi</li>
+      <li>Smoke tests 0.55.55 → 3 verts (API BAN, composant, colonnes)</li>
+    </ol>
+  </div>
+
+  <h2>SW auto-bump — 65ème consécutif</h2>
+  <p>0.52.1 → ... → 0.55.54 → <b>0.55.55</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.55.55 · 31 mai 2026</p>
+    <p>AdresseAutocomplete BAN · 3 emplacements · auto-fill INSEE + lat/lng · 1599 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>
