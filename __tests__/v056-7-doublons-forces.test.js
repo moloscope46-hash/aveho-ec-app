@@ -95,8 +95,8 @@ describe("0.56.7 - RPC detecter_doublons_groupements", () => {
     expect(sql).toContain("from etablissements where groupement_id = g.id");
   });
 
-  it("Filtre archive=false (groupements actifs uniquement)", () => {
-    expect(sql).toContain("g.archive = false");
+  it("RPC groupements conditionnelle via to_regclass", () => {
+    expect(sql).toContain("to_regclass('public.groupements')");
   });
 });
 

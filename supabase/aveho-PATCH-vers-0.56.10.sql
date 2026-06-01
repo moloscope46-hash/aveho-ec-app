@@ -201,24 +201,67 @@ begin
     with mes_p as (
       select * from prescriptions
       where patient_id = p_patient_id and prescripteur_nom is not null
+    ),
+    -- Agrégation : groupe par nom case-insensitive, prend les valeurs
+    -- les plus récentes (via subquery par date_prescription desc)
+    agreg as (
+      select
+        lower(prescripteur_nom) as nom_key,
+        prescripteur_nom as nom_orig,
+        count(*) as nb_p,
+        min(date_prescription) as date_min,
+        max(date_prescription) as date_max,
+        bool_or(rpps_verifie) as verifie
+      from mes_p
+      group by lower(prescripteur_nom), prescripteur_nom
     )
   select
-    max(medecin_prescripteur_id) as medecin_id,
-    prescripteur_nom as nom,
-    max(prescripteur_prenom) as prenom,
-    max(prescripteur_rpps) as rpps,
-    max(prescripteur_specialite) as specialite,
-    -- Récupérer ville/tel/email depuis medecins_prescripteurs si lié
-    (select m.ville from medecins_prescripteurs m where m.id = max(medecin_prescripteur_id) limit 1) as ville,
-    (select m.telephone from medecins_prescripteurs m where m.id = max(medecin_prescripteur_id) limit 1) as telephone,
-    (select m.email from medecins_prescripteurs m where m.id = max(medecin_prescripteur_id) limit 1) as email,
-    bool_or(rpps_verifie) as est_verifie,
-    count(*) as nb_prescriptions,
-    min(date_prescription) as premiere_date,
-    max(date_prescription) as derniere_date
-  from mes_p
-  group by lower(prescripteur_nom), prescripteur_nom
-  order by max(date_prescription) desc nulls last, prescripteur_nom;
+    -- Récupère l'UUID le plus récent via DISTINCT ON par date desc
+    (select medecin_prescripteur_id from mes_p mp
+      where lower(mp.prescripteur_nom) = a.nom_key
+        and mp.medecin_prescripteur_id is not null
+      order by mp.date_prescription desc nulls last limit 1) as medecin_id,
+    a.nom_orig as nom,
+    (select prescripteur_prenom from mes_p mp
+      where lower(mp.prescripteur_nom) = a.nom_key
+        and prescripteur_prenom is not null
+      order by date_prescription desc nulls last limit 1) as prenom,
+    (select prescripteur_rpps from mes_p mp
+      where lower(mp.prescripteur_nom) = a.nom_key
+        and prescripteur_rpps is not null
+      order by date_prescription desc nulls last limit 1) as rpps,
+    (select prescripteur_specialite from mes_p mp
+      where lower(mp.prescripteur_nom) = a.nom_key
+        and prescripteur_specialite is not null
+      order by date_prescription desc nulls last limit 1) as specialite,
+    -- Ville/tel/email depuis medecins_prescripteurs si lié
+    (select m.ville from medecins_prescripteurs m
+      where m.id = (
+        select medecin_prescripteur_id from mes_p mp2
+        where lower(mp2.prescripteur_nom) = a.nom_key
+          and mp2.medecin_prescripteur_id is not null
+        order by mp2.date_prescription desc nulls last limit 1
+      ) limit 1) as ville,
+    (select m.telephone from medecins_prescripteurs m
+      where m.id = (
+        select medecin_prescripteur_id from mes_p mp2
+        where lower(mp2.prescripteur_nom) = a.nom_key
+          and mp2.medecin_prescripteur_id is not null
+        order by mp2.date_prescription desc nulls last limit 1
+      ) limit 1) as telephone,
+    (select m.email from medecins_prescripteurs m
+      where m.id = (
+        select medecin_prescripteur_id from mes_p mp2
+        where lower(mp2.prescripteur_nom) = a.nom_key
+          and mp2.medecin_prescripteur_id is not null
+        order by mp2.date_prescription desc nulls last limit 1
+      ) limit 1) as email,
+    a.verifie as est_verifie,
+    a.nb_p as nb_prescriptions,
+    a.date_min as premiere_date,
+    a.date_max as derniere_date
+  from agreg a
+  order by a.date_max desc nulls last, a.nom_orig;
 end;
 $$;
 

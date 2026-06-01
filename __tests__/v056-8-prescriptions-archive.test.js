@@ -103,8 +103,8 @@ describe("0.56.8 - RPC prescriptions_top_prescripteurs", () => {
   });
 
   it("Dates première + dernière prescription", () => {
-    expect(sql).toContain("min(date_prescription) as premiere_date");
-    expect(sql).toContain("max(date_prescription) as derniere_date");
+    expect(sql).toContain("min(date_prescription)");
+    expect(sql).toContain("max(date_prescription)");
   });
 });
 

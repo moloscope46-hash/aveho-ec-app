@@ -166,23 +166,43 @@ as $$
       and (p_date_debut is null or date_prescription >= p_date_debut)
       and (p_date_fin is null or date_prescription <= p_date_fin)
       and prescripteur_nom is not null
+  ),
+  agreg as (
+    select
+      lower(prescripteur_nom) as nom_key,
+      prescripteur_nom as nom_orig,
+      count(*) as nb_p,
+      count(distinct patient_id) as nb_pat,
+      coalesce(sum((select count(*) from prescriptions_lignes l where l.prescription_id = mes_prescriptions.id)), 0)::bigint as nb_l,
+      bool_or(rpps_verifie) as verifie,
+      min(date_prescription) as date_min,
+      max(date_prescription) as date_max
+    from mes_prescriptions
+    group by lower(prescripteur_nom), prescripteur_nom
   )
   select
-    prescripteur_nom,
-    -- Prénom : prendre le premier non null si plusieurs
-    max(prescripteur_prenom) as prescripteur_prenom,
-    max(prescripteur_rpps) as prescripteur_rpps,
-    max(prescripteur_specialite) as prescripteur_specialite,
-    max(medecin_prescripteur_id) as medecin_id,
-    bool_or(rpps_verifie) as rpps_verifie,
-    count(*) as nb_prescriptions,
-    count(distinct patient_id) as nb_patients_uniques,
-    coalesce(sum((select count(*) from prescriptions_lignes l where l.prescription_id = mes_prescriptions.id)), 0)::bigint as nb_lignes,
-    min(date_prescription) as premiere_date,
-    max(date_prescription) as derniere_date
-  from mes_prescriptions
-  group by lower(prescripteur_nom), prescripteur_nom
-  order by nb_prescriptions desc
+    a.nom_orig as prescripteur_nom,
+    -- Prendre prénom/rpps/spé/medecin_id depuis la prescription la plus récente
+    (select prescripteur_prenom from mes_prescriptions
+      where lower(prescripteur_nom) = a.nom_key and prescripteur_prenom is not null
+      order by date_prescription desc nulls last limit 1) as prescripteur_prenom,
+    (select prescripteur_rpps from mes_prescriptions
+      where lower(prescripteur_nom) = a.nom_key and prescripteur_rpps is not null
+      order by date_prescription desc nulls last limit 1) as prescripteur_rpps,
+    (select prescripteur_specialite from mes_prescriptions
+      where lower(prescripteur_nom) = a.nom_key and prescripteur_specialite is not null
+      order by date_prescription desc nulls last limit 1) as prescripteur_specialite,
+    (select medecin_prescripteur_id from mes_prescriptions
+      where lower(prescripteur_nom) = a.nom_key and medecin_prescripteur_id is not null
+      order by date_prescription desc nulls last limit 1) as medecin_id,
+    a.verifie as rpps_verifie,
+    a.nb_p as nb_prescriptions,
+    a.nb_pat as nb_patients_uniques,
+    a.nb_l as nb_lignes,
+    a.date_min as premiere_date,
+    a.date_max as derniere_date
+  from agreg a
+  order by a.nb_p desc
   limit p_limit;
 $$;
 

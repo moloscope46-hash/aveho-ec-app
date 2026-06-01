@@ -4,14 +4,33 @@
 //
 // Alpha 0.55.12 : utilise le token custom de la table invitations
 // Alpha 0.55.53 : diagnostic complet (retour détaillé Resend) + détection mode test
+// Alpha 0.56.11 : CORS preflight + headers sur toutes les réponses
 //
 // Body attendu :
 //   { email, nom, collectivite, role, etablissements, inviteLink,
 //     rpps_profession?, rpps_specialite?, rpps?, lock_assignment? }
 
+// Headers CORS appliqués sur TOUTES les réponses (preflight OPTIONS + réponses POST)
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Max-Age": "86400",
+};
+
+const JSON_HEADERS = {
+  "Content-Type": "application/json",
+  ...CORS_HEADERS,
+};
+
 Deno.serve(async (req) => {
+  // 0.56.11 : preflight CORS (le navigateur envoie OPTIONS avant POST cross-origin)
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+
   if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+    return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
   }
 
   try {
@@ -24,7 +43,7 @@ Deno.serve(async (req) => {
         diagnostic: "missing_resend_key",
       }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: JSON_HEADERS,
       });
     }
 
@@ -35,14 +54,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({
         ok: false, error: "inviteLink manquant (doit être fourni par l'app appelante)",
         diagnostic: "missing_invite_link",
-      }), { status: 400, headers: { "Content-Type": "application/json" } });
+      }), { status: 400, headers: JSON_HEADERS });
     }
 
     if (!email) {
       return new Response(JSON.stringify({
         ok: false, error: "email destinataire manquant",
         diagnostic: "missing_email",
-      }), { status: 400, headers: { "Content-Type": "application/json" } });
+      }), { status: 400, headers: JSON_HEADERS });
     }
 
     const etabHtml = (etablissements || [])
@@ -132,7 +151,7 @@ Deno.serve(async (req) => {
         duration_ms,
       }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: JSON_HEADERS,
       });
     }
 
@@ -144,7 +163,7 @@ Deno.serve(async (req) => {
       to: email,
       duration_ms,
     }), {
-      headers: { "Content-Type": "application/json" },
+      headers: JSON_HEADERS,
     });
   } catch (e) {
     return new Response(JSON.stringify({
@@ -153,7 +172,7 @@ Deno.serve(async (req) => {
       diagnostic: "exception",
     }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: JSON_HEADERS,
     });
   }
 });

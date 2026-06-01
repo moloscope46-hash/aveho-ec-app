@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.56.10";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.56.11";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -169,14 +169,18 @@ async function networkFirst(req, cacheName) {
       const limit = cacheName.endsWith("-pages") ? MAX_PAGE_CACHE_ENTRIES : MAX_DATA_CACHE_ENTRIES;
       trimCache(cacheName, limit);
     }
+    // 0.56.11 : même si statut non-ok (404/500/etc.), on renvoie la réponse réseau
+    // au lieu de fallback offline — ça évite le faux 503 sur les pages dynamiques
+    // qui ont juste un statut inhabituel
     return res;
   } catch (e) {
     // 0.55.21 : retry 1x avec petit délai (transient network errors)
     try {
       await new Promise(r => setTimeout(r, 100));
       const res2 = await fetch(req);
-      if (res2.ok) {
-        await safeCachePut(cache, req, res2.clone());
+      // 0.56.11 : retourner même les non-ok (cf. ci-dessus)
+      if (res2) {
+        if (res2.ok) await safeCachePut(cache, req, res2.clone());
         return res2;
       }
     } catch (_) {}

@@ -120,6 +120,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.11",
+    "kind": "version",
+    "titre": "🔧 Patch correctif · CORS Edge Function invite-user · scanner QR cleanup robuste · Service Worker sans faux 503 · safe SQL groupements",
+    "chantiers": [
+      { "code": "BE", "txt": "Edge Function invite-user (supabase/functions/invite-user/index.ts) : ajout complet du support CORS. Constantes CORS_HEADERS (Access-Control-Allow-Origin: *, Methods POST+OPTIONS, Headers authorization+apikey+content-type+x-client-info, Max-Age 86400). Handler OPTIONS preflight retourne 204 + CORS. JSON_HEADERS combine Content-Type + CORS_HEADERS et est appliqué sur les 6+ réponses client (RESEND_KEY manquant, inviteLink manquant, email manquant, erreur Resend, succès, exception 500). Status 405 Method not allowed retourne aussi CORS_HEADERS. Sans ce fix, l'app Vercel ne pouvait plus inviter d'utilisateurs (preflight refusé)" },
+      { "code": "FE", "txt": "Composant QrScanner (app/QrScanner.js) : cleanup useEffect robuste pour html5-qrcode. Le bug 'NotFoundError: removeChild' + 'Cannot clear while scan is ongoing' + 'AbortError: play() interrupted' venait du fait que le cleanup tentait stop().then(clear()) alors que html5-qrcode était dans un état intermédiaire (STATE_STARTING par exemple). Désormais : on appelle scanner.getState?.() avant d'agir, on stoppe uniquement si STATE_SCANNING (2) ou STATE_PAUSED (3), sinon clear direct (idempotent). 3 endroits corrigés : cleanup useEffect + callback autoStop dans onResult + switchCamera" },
+      { "code": "FE", "txt": "Service Worker (public/sw.js) networkFirst : ne retourne plus 503 si le serveur répond avec un statut inhabituel mais cohérent (404, 500, etc.). Avant : on attendait res.ok pour retourner res, sinon fallback offline. Désormais : on retourne res quelle que soit son ok (le navigateur saura quoi faire d'un 404 par exemple). Le fallback offline n'arrive qu'en cas de vraie panne réseau (throw). Cela évite les 'qr:1 503 Offline' qui apparaissaient quand le SW interceptait des transitions Next" },
+      { "code": "SQL", "txt": "Patch 0.56.7 mis à jour en version SAFE (livré en outputs) : détection conditionnelle de la table groupements via to_regclass('public.groupements'). Si la table existe, RPC complète. Sinon, RPC créée en stub vide qui retourne 0 résultat (la page admin affichera l'onglet Groupements vide mais sans erreur). Index GIN trigramme aussi conditionnel. RPC ignorer_doublon avec execute dynamique + raise si table absente quand cible='groupement'. Permet de jouer le patch même sur les schémas où la hiérarchie groupements n'est pas implémentée" },
+      { "code": "SQL", "txt": "Patches 0.56.8 et 0.56.10 corrigés (livrés en outputs) : remplacement de max(uuid) qui n'existe pas en PostgreSQL. Pour récupérer le medecin_prescripteur_id / prescripteur_prenom / prescripteur_rpps / prescripteur_specialite associé à un groupe, on utilise désormais une sous-requête (select ... from prescriptions where lower(prescripteur_nom)=key and X is not null order by date_prescription desc nulls last limit 1) qui récupère la valeur de la prescription la plus récente. Plus propre et cohérent que max() qui était choisi au hasard" },
+      { "code": "AI", "txt": "+16 tests Vitest : Edge Function CORS (7 : constantes, OPTIONS 204, headers preflight, methods, JSON_HEADERS combine, 6+ usages, 405 with CORS), QrScanner cleanup (6 : getState check, states 2/3, stop.then.clear, autoStop protégé, switchCamera protégé, commentaire 0.56.11), SW networkFirst (3). 4 tests des versions précédentes ajustés (max remplacé par sous-requête, archive conditionnel). Total 2078 tests verts (vs 2062)" }
+    ],
+    "themes": ["bugfix", "cors", "edge_function", "scanner_qr", "service_worker"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.11.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.10",
     "kind": "version",
     "titre": "🩺 Dashboard santé patient · vue consolidée prescriptions + médecins + droits sécu/mutuelle + alertes contextuelles · 4 RPC agrégées",

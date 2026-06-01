@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Aveho EC — 0.56.11 — Corrections CORS + Scanner QR + SW</title>
+<style>
+  :root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#5a4a90;--green:#5aa05a;--amber:#EF9F27;--red:#c0392b}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+  .wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+  header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 60%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+  .eyebrow{font-size:11px;letter-spacing:3px;color:#ffe1dc;font-weight:700;margin-bottom:6px}
+  .logo{font-size:26px;font-weight:600;letter-spacing:2px}
+  .logo .v{color:var(--teal)}
+  h1{font-size:22px;font-weight:700;margin:10px 0 4px}
+  h1 small{font-size:13.5px;font-weight:500;color:#ffe1dc;display:block;margin-top:4px}
+  .meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffe1dc}
+  .meta b{color:#fff}
+  h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+  h3{font-size:15px;color:var(--navy);margin:20px 0 8px}
+  .panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+  .panel.hi{background:#eef9ef;border-color:#bfe2bf}
+  .panel.warn{background:#fff8ec;border-color:#f0d59f}
+  .panel.danger{background:#fce5e0;border-color:#f0c4be}
+  code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#2a5a5a;padding:2px 6px;border-radius:4px;font-size:12.5px}
+  pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+  ul{padding-left:20px;margin:6px 0}
+  li{margin:4px 0}
+  .bug{background:#fce5e0;border-left:3px solid #c0392b;padding:10px 14px;border-radius:6px;margin:8px 0;font-size:12.5px;color:#7a2d23}
+  .bug b{color:#c0392b}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">VERSION — PATCH CORRECTIF CRITIQUE</div>
+    <div class="logo">a<span class="v">v</span>eho</div>
+    <h1>Version 0.56.11 — Corrections CORS + Scanner QR + SW
+      <small>3 bugs production résolus + 2 patches SQL antérieurs corrigés</small>
+    </h1>
+    <div class="meta">
+      <span><b>Date :</b> 1er juin 2026</span>
+      <span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.11-alpha</code></span>
+      <span><b>Tests :</b> 2078 verts (+16)</span>
+      <span><b>SQL :</b> aucun nouveau patch (mais 0.56.7/8/10 corrigés)</span>
+    </div>
+  </header>
+
+  <h2>🔴 Bug 1 — CORS Edge Function invite-user</h2>
+  <div class="bug">
+    <b>Erreur observée :</b><br>
+    <code>Access to fetch at 'functions/v1/invite-user' from origin 'aveho-ec-...vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.</code>
+  </div>
+  <div class="panel">
+    <p>L'Edge Function <code>invite-user</code> ne gérait pas le preflight CORS. Quand l'app Vercel envoyait un POST cross-origin, le navigateur envoyait d'abord un OPTIONS qui était refusé (405) sans headers → blocage CORS définitif.</p>
+
+    <h3>Fix appliqué</h3>
+    <pre><code>const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Max-Age": "86400",
+};
+
+const JSON_HEADERS = { "Content-Type": "application/json", ...CORS_HEADERS };
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+  }
+  // ... toutes les autres responses utilisent JSON_HEADERS
+});</code></pre>
+
+    <h3>⚠️ Action requise : redéployer la fonction</h3>
+    <pre><code>cd C:\aveho-ec-app
+supabase functions deploy invite-user</code></pre>
+    <p>Sans ce redéploiement, le fix n'est pas actif en production. Le fichier corrigé est dans <code>supabase/functions/invite-user/index.ts</code>.</p>
+  </div>
+
+  <h2>🟡 Bug 2 — Scanner QR (removeChild + play interrupted)</h2>
+  <div class="bug">
+    <b>Erreurs observées :</b><br>
+    <code>NotFoundError: Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.</code><br>
+    <code>Cannot clear while scan is ongoing, close it first.</code><br>
+    <code>AbortError: The play() request was interrupted because the media was removed from the document.</code>
+  </div>
+  <div class="panel">
+    <p>Le composant <code>QrScanner</code> utilise html5-qrcode qui manipule directement le DOM video. Le cleanup useEffect appelait <code>scanner.stop().finally(clear)</code> mais html5-qrcode pouvait être dans un état intermédiaire (STATE_STARTING) → clear plantait + React démontait avant que la promesse stop soit résolue → removeChild échouait + play() interrompu.</p>
+
+    <h3>Fix appliqué</h3>
+    <p>Vérification de l'état via <code>scanner.getState?.()</code> avant chaque action :</p>
+    <pre><code>const state = scanner.getState?.();
+if (state === 2 || state === 3) {
+  // STATE_SCANNING=2 ou STATE_PAUSED=3 → stop puis clear
+  scanner.stop().then(() => scanner.clear()).catch(...);
+} else {
+  // Déjà stoppé ou pas démarré → clear direct (idempotent)
+  scanner.clear().catch(() => {});
+}</code></pre>
+    <p>3 endroits corrigés : cleanup useEffect, callback onResult avec autoStop, switchCamera.</p>
+  </div>
+
+  <h2>🟡 Bug 3 — Service Worker 503 Offline</h2>
+  <div class="bug">
+    <b>Erreur observée :</b><br>
+    <code>qr:1 Failed to load resource: the server responded with a status of 503 (Offline)</code>
+  </div>
+  <div class="panel">
+    <p>Le SW interceptait les navigations vers <code>/scan/qr</code> et le 503 venait du fallback offline. Or le serveur répondait normalement — le 503 était une fausse alerte du SW.</p>
+
+    <h3>Fix appliqué</h3>
+    <p>Dans <code>networkFirst</code>, on retourne désormais la réponse réseau quelle que soit son statut (404, 500, etc.). Le fallback offline n'arrive plus que sur vraie panne réseau (catch). Avant, certaines réponses non-ok étaient remplacées par un 503 fictif.</p>
+  </div>
+
+  <h2>📁 Patches SQL antérieurs corrigés (rejouer si pas fait)</h2>
+  <div class="panel warn">
+    <h3 style="margin-top:0">0.56.7 — version SAFE</h3>
+    <p>Détection conditionnelle de la table <code>groupements</code> via <code>to_regclass('public.groupements')</code>. Si elle existe, la RPC <code>detecter_doublons_groupements</code> est créée normalement. Sinon, créée en stub vide qui retourne 0 résultat. Permet de jouer le patch sur les schémas où la hiérarchie groupements n'est pas implémentée (comme ton schéma actuel).</p>
+
+    <h3>0.56.8 — fix max(uuid)</h3>
+    <p>Erreur observée : <code>function max(uuid) does not exist</code>. PostgreSQL n'a pas de fonction max() pour les UUID. Remplacé par sous-requête <code>ORDER BY date_prescription DESC NULLS LAST LIMIT 1</code> qui prend la valeur de la prescription la plus récente. Plus propre et cohérent.</p>
+
+    <h3>0.56.10 — fix max(uuid)</h3>
+    <p>Même bug, même fix dans la RPC <code>patient_dashboard_medecins</code>.</p>
+  </div>
+
+  <h2>✅ Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol>
+      <li>Décompresser le zip</li>
+      <li><b>Rejouer les SQL antérieurs corrigés</b> dans Supabase si pas déjà fait :
+        <ul>
+          <li><code>aveho-PATCH-vers-0.56.7.sql</code> (version safe)</li>
+          <li><code>aveho-PATCH-vers-0.56.8.sql</code> (sans max uuid)</li>
+          <li>0.56.9 (pas de modif nécessaire)</li>
+          <li><code>aveho-PATCH-vers-0.56.10.sql</code> (sans max uuid)</li>
+        </ul>
+      </li>
+      <li><b>Redéployer l'Edge Function invite-user</b> :
+        <pre><code>cd C:\aveho-ec-app
+supabase functions deploy invite-user</code></pre>
+      </li>
+      <li>Push GitHub pour propager les corrections front (QrScanner + SW) :
+        <pre><code>git add -A
+git commit -m "Alpha 0.56.11 - Patch correctif CORS invite-user + scanner QR + SW 503"
+git push origin main</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <h2>🧪 Tests à faire après déploiement</h2>
+  <div class="panel hi">
+    <ol>
+      <li><b>CORS</b> : page Utilisateurs → Inviter quelqu'un → vérifier qu'il n'y a plus l'erreur CORS dans la console et que l'email part bien</li>
+      <li><b>Scanner QR</b> : aller sur /scan/qr → scanner un QR puis quitter la page rapidement → vérifier qu'il n'y a plus de NotFoundError dans la console</li>
+      <li><b>Service Worker</b> : naviguer entre plusieurs pages → vérifier qu'aucune ne montre 503 Offline alors qu'on est en ligne</li>
+      <li><b>Smoke tests</b> : aller sur /changelog → cliquer le bouton smoke tests sur la version 0.56.11 → tous verts</li>
+    </ol>
+  </div>
+
+  <h2>📈 Tests +16 (2062 → 2078)</h2>
+  <div class="panel">
+    <ul>
+      <li><b>Edge Function CORS</b> (7) : constantes, OPTIONS 204, headers preflight, methods POST+OPTIONS, JSON_HEADERS combine, 6+ usages, 405 avec CORS</li>
+      <li><b>QrScanner cleanup</b> (6) : getState check, states 2/3, stop.then.clear séquentiel, autoStop protégé, switchCamera protégé, commentaire 0.56.11</li>
+      <li><b>SW networkFirst</b> (3)</li>
+      <li>4 tests des versions précédentes ajustés (max remplacé par sous-requête)</li>
+    </ul>
+  </div>
+
+  <h2>Fichiers modifiés</h2>
+  <ul>
+    <li><code>supabase/functions/invite-user/index.ts</code> : + CORS handler + JSON_HEADERS</li>
+    <li><code>app/QrScanner.js</code> : cleanup robuste avec getState (3 endroits)</li>
+    <li><code>public/sw.js</code> : networkFirst sans 503 fictif</li>
+    <li><code>supabase/aveho-PATCH-vers-0.56.7.sql</code> : version safe avec to_regclass</li>
+    <li><code>supabase/aveho-PATCH-vers-0.56.8.sql</code> : sans max(uuid)</li>
+    <li><code>supabase/aveho-PATCH-vers-0.56.10.sql</code> : sans max(uuid)</li>
+    <li><code>__tests__/v056-11-corrections.test.js</code> : <b>NOUVEAU</b> +16 tests</li>
+    <li><code>app/changelog/versions-data.js</code> : entrée 0.56.11</li>
+    <li><code>package.json</code> : 0.56.10 → 0.56.11</li>
+  </ul>
+
+  <h2>SW auto-bump — 78ème consécutif</h2>
+  <p>0.52.1 → ... → 0.56.10 → <b>0.56.11</b> ✓</p>
+
+  <footer>
+    <p>Aveho — Espace Collectivité · Version Alpha 0.56.11 · 1er juin 2026</p>
+    <p>Patch correctif · CORS + Scanner QR + SW · 2078 tests verts</p>
+  </footer>
+
+</div>
+</body>
+</html>

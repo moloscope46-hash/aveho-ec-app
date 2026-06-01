@@ -72,7 +72,13 @@ export default function QrScanner({ onResult, onError, active = true, autoStop =
               source: "camera",
             });
             if (autoStop) {
-              scanner.stop().catch(() => {});
+              // 0.56.11 : vérifier l'état avant stop pour éviter les races
+              try {
+                const state = scanner.getState?.();
+                if (state === 2 || state === 3) {
+                  scanner.stop().catch(() => {});
+                }
+              } catch (_) {}
               setStatus("stopped");
             }
           },
@@ -91,10 +97,28 @@ export default function QrScanner({ onResult, onError, active = true, autoStop =
 
     return () => {
       cancelled = true;
+      // 0.56.11 : cleanup robuste — vérifier l'état avant stop/clear pour éviter
+      // les erreurs "Cannot clear while scan is ongoing" et "removeChild" qui
+      // surviennent quand React démonte avant que html5-qrcode ait fini.
       if (scanner) {
-        scanner.stop().catch(() => {}).finally(() => {
-          scanner.clear().catch(() => {});
-        });
+        try {
+          // STATE_SCANNING = 2, STATE_PAUSED = 3 (html5-qrcode constants)
+          const state = scanner.getState?.();
+          if (state === 2 || state === 3) {
+            // Encore en train de scanner → stop d'abord puis clear
+            scanner.stop()
+              .then(() => scanner.clear().catch(() => {}))
+              .catch(() => {
+                // stop a échoué — tenter clear quand même (utile au remount)
+                try { scanner.clear(); } catch (_) {}
+              });
+          } else {
+            // Déjà stoppé → clear direct (idempotent)
+            scanner.clear().catch(() => {});
+          }
+        } catch (_) {
+          // getState peut throw si l'instance est en mauvais état — on ignore
+        }
       }
     };
   }, [active]);
@@ -103,11 +127,18 @@ export default function QrScanner({ onResult, onError, active = true, autoStop =
   async function switchCamera(camId) {
     if (!scannerRef.current) return;
     try {
-      await scannerRef.current.stop();
+      // 0.56.11 : check state avant stop
+      const state = scannerRef.current.getState?.();
+      if (state === 2 || state === 3) {
+        await scannerRef.current.stop();
+      }
       setSelectedCamera(camId);
       await scannerRef.current.start(camId, { fps: 10, qrbox: 250 }, (text, res) => {
         onResult?.({ text, format: res?.result?.format?.formatName || "?", source: "camera" });
-        if (autoStop) scannerRef.current.stop().catch(() => {});
+        if (autoStop) {
+          const st = scannerRef.current?.getState?.();
+          if (st === 2 || st === 3) scannerRef.current.stop().catch(() => {});
+        }
       }, () => {});
       setStatus("scanning");
     } catch (e) {

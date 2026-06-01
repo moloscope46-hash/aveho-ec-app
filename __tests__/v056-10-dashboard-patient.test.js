@@ -105,11 +105,12 @@ describe("0.56.10 - SQL RPC patient_dashboard_medecins", () => {
   });
 
   it("Récupère ville/téléphone/email depuis medecins_prescripteurs si lié", () => {
-    expect(sql).toContain("from medecins_prescripteurs m where m.id = max(medecin_prescripteur_id)");
+    expect(sql).toContain("from medecins_prescripteurs m");
+    expect(sql).toContain("medecin_prescripteur_id");
   });
 
   it("Tri par dernière date desc nulls last", () => {
-    expect(sql).toContain("order by max(date_prescription) desc nulls last");
+    expect(sql).toContain("order by a.date_max desc nulls last");
   });
 });
 
