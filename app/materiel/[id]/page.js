@@ -9,6 +9,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../../ui";
 import { fmtDate } from "../../../lib/format";
+import { logger } from "../../../lib/logger";
 import Tooltip from "../../Tooltip";
 
 const COULEUR_DI = { "Nouvelle": "#e35d5b", "En cours": "#EF9F27", "Résolue": "#5aa05a", "Annulée": "#8a98a8" };
@@ -38,23 +39,29 @@ export default function FicheMateriel() {
   useEffect(() => {
     if (!auth.ready || !matId) return;
     (async () => {
-      // Charger le matériel + ses relations
-      const [{ data: m }, { data: tg }, { data: links }, { data: mnt }, { data: di }, { data: trf }] = await Promise.all([
-        supabase.from("materiels").select("*, articles(libelle, reference), patients(nom, prenom, chambre), depots(nom), zones(nom)").eq("id", matId).single(),
-        supabase.from("tags_materiel").select("*"),
-        supabase.from("materiel_tags").select("tag_id").eq("materiel_id", matId),
-        supabase.from("maintenances").select("*").eq("materiel_id", matId).order("date_prevue", { ascending: false }),
-        supabase.from("interventions").select("*").eq("materiel_id", matId).order("created_at", { ascending: false }),
-        supabase.from("transferts").select("*, depots_source:depot_id_source(nom), depots_dest:depot_id_dest(nom)").eq("materiel_id", matId).order("created_at", { ascending: false }).limit(20),
-      ]);
-      setMat(m || null);
-      // Filtrer les tags pour ne garder que ceux liés au matériel
-      const tagIds = (links || []).map((l) => l.tag_id);
-      setTags((tg || []).filter((t) => tagIds.includes(t.id)));
-      setMaintenances(mnt || []);
-      setInterventions(di || []);
-      setTransferts(trf || []);
-      setLoading(false);
+      try {
+        // Charger le matériel + ses relations
+        const [{ data: m }, { data: tg }, { data: links }, { data: mnt }, { data: di }, { data: trf }] = await Promise.all([
+          supabase.from("materiels").select("*, articles(libelle, reference), patients(nom, prenom, chambre), depots(nom), zones(nom)").eq("id", matId).single(),
+          supabase.from("tags_materiel").select("*"),
+          supabase.from("materiel_tags").select("tag_id").eq("materiel_id", matId),
+          supabase.from("maintenances").select("*").eq("materiel_id", matId).order("date_prevue", { ascending: false }),
+          supabase.from("interventions").select("*").eq("materiel_id", matId).order("created_at", { ascending: false }),
+          supabase.from("transferts").select("*, depots_source:depot_id_source(nom), depots_dest:depot_id_dest(nom)").eq("materiel_id", matId).order("created_at", { ascending: false }).limit(20),
+        ]);
+        setMat(m || null);
+        // Filtrer les tags pour ne garder que ceux liés au matériel
+        const tagIds = (links || []).map((l) => l.tag_id);
+        setTags((tg || []).filter((t) => tagIds.includes(t.id)));
+        setMaintenances(mnt || []);
+        setInterventions(di || []);
+        setTransferts(trf || []);
+      } catch (e) {
+        // 0.56.22 : try/catch pour pas planter la page
+        logger.error("[Materiel] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready, matId]);
 

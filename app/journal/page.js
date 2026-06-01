@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { logger } from "../../lib/logger";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
@@ -37,29 +38,35 @@ export default function AuditLogPage() {
 
   async function load() {
     if (!auth.structureId) { setLoading(false); return; }
-    const sinceDate = new Date(Date.now() - parseInt(fPeriode) * 86400000).toISOString();
-    // Alpha 0.15.1 : table audit_log (et non evenements)
-    let q = supabase.from("audit_log")
-      .select("*")
-      .eq("structure_id", auth.structureId)
-      .gte("created_at", sinceDate)
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (fEntite) q = q.eq("entite", fEntite);
-    if (fUser) q = q.eq("user_id", fUser);
-    const { data } = await q;
-    setRows(data || []);
-    // Charger les noms d'utilisateurs depuis membres_structure
-    // Alpha 0.15.1 : colonne nom_affiche (et non prenom/nom/email séparés)
-    const { data: ms } = await supabase.from("membres_structure")
-      .select("user_id, nom_affiche")
-      .eq("structure_id", auth.structureId);
-    const map = {};
-    (ms || []).forEach((m) => {
-      map[m.user_id] = m.nom_affiche || "Utilisateur";
-    });
-    setUsers(map);
-    setLoading(false);
+    try {
+      const sinceDate = new Date(Date.now() - parseInt(fPeriode) * 86400000).toISOString();
+      // Alpha 0.15.1 : table audit_log (et non evenements)
+      let q = supabase.from("audit_log")
+        .select("*")
+        .eq("structure_id", auth.structureId)
+        .gte("created_at", sinceDate)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (fEntite) q = q.eq("entite", fEntite);
+      if (fUser) q = q.eq("user_id", fUser);
+      const { data } = await q;
+      setRows(data || []);
+      // Charger les noms d'utilisateurs depuis membres_structure
+      // Alpha 0.15.1 : colonne nom_affiche (et non prenom/nom/email séparés)
+      const { data: ms } = await supabase.from("membres_structure")
+        .select("user_id, nom_affiche")
+        .eq("structure_id", auth.structureId);
+      const map = {};
+      (ms || []).forEach((m) => {
+        map[m.user_id] = m.nom_affiche || "Utilisateur";
+      });
+      setUsers(map);
+    } catch (e) {
+      // 0.56.22 : try/catch pour pas planter la page
+      logger.error("[Journal] load failed:", e);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.structureId, fEntite, fUser, fPeriode]);
 

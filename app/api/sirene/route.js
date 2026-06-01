@@ -27,8 +27,18 @@ const NAF_FILTERS = {
   fab_pharma: { codes: ["21.20Z"] },
 };
 
+// 0.56.21 : auth + rate limit (proxy API SIRENE)
+import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
+
 export async function GET(request) {
   const t0 = Date.now();
+
+  const authCheck = await requireAuth(request);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   const { searchParams } = new URL(request.url);
   const q = (searchParams.get("q") || "").trim();
   const siret = searchParams.get("siret");

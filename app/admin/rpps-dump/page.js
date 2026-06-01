@@ -9,6 +9,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "../../../lib/supabase";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
@@ -33,7 +34,7 @@ export default function RppsDumpAdminPage() {
   async function loadStatus() {
     setLoadingStatus(true);
     try {
-      const res = await fetch("/api/rpps/dump-status");
+      const res = await fetchWithAuth("/api/rpps/dump-status");
       const data = await res.json();
       setStatus(data);
     } catch (e) {
@@ -233,7 +234,7 @@ export default function RppsDumpAdminPage() {
     if (!testQuery) return;
     setTestResult({ loading: true });
     try {
-      const res = await fetch(`/api/rpps?q=${encodeURIComponent(testQuery)}&limit=10`);
+      const res = await fetchWithAuth(`/api/rpps?q=${encodeURIComponent(testQuery)}&limit=10`);
       const data = await res.json();
       setTestResult(data);
     } catch (e) {

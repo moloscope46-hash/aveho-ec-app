@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+import { logger } from "../../../lib/logger";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
@@ -28,19 +29,25 @@ export default function BulletinsArchivePage() {
     if (!auth.ready) return;
     (async () => {
       setLoading(true);
-      // Stats globales
-      const { data: statsData } = await supabase.rpc("bulletins_archive_stats");
-      setStats((statsData && statsData[0]) || null);
+      try {
+        // Stats globales
+        const { data: statsData } = await supabase.rpc("bulletins_archive_stats");
+        setStats((statsData && statsData[0]) || null);
 
-      // Liste des patients avec bulletin archivé
-      const { data: pats } = await supabase
-        .from("patients")
-        .select("id, nom, prenom, numero_dossier, bs_file_path, bs_file_mime, bs_file_size_kb, bs_ocr_date, bs_ocr_confiance, bs_ocr_tokens_in, bs_ocr_tokens_out")
-        .not("bs_file_path", "is", null)
-        .order("bs_ocr_date", { ascending: false })
-        .limit(200);
-      setPatients(pats || []);
-      setLoading(false);
+        // Liste des patients avec bulletin archivé
+        const { data: pats } = await supabase
+          .from("patients")
+          .select("id, nom, prenom, numero_dossier, bs_file_path, bs_file_mime, bs_file_size_kb, bs_ocr_date, bs_ocr_confiance, bs_ocr_tokens_in, bs_ocr_tokens_out")
+          .not("bs_file_path", "is", null)
+          .order("bs_ocr_date", { ascending: false })
+          .limit(200);
+        setPatients(pats || []);
+      } catch (e) {
+        // 0.56.22 : try/catch pour pas planter la page si Supabase répond mal
+        logger.error("[BulletinsArchive] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready]);
 

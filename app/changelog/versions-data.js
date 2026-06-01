@@ -120,6 +120,70 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.22",
+    "kind": "version",
+    "titre": "🧹 Hardening 3/3 : qualité code — console.log → logger · try/catch · vitest 4",
+    "chantiers": [
+      { "code": "FE", "txt": "Migration de 20 occurrences de console.log/warn/error vers lib/logger sur 7 fichiers : app/carte/page.js (11), app/changelog/page.js (2), app/api/rpps/route.js (2), app/api/finess/route.js (1), app/lib/checkEtabDoublon.js (2), app/NotificationOptIn.js (1), lib/exportExcel.js (1). Le logger redacte automatiquement les valeurs sensibles (password/token/refresh_token/credential_id) et se tait en production (sauf si flag debug activé). Plus aucun risque d'exposer des infos sensibles dans la console des utilisateurs finaux lors d'une session de support ou de screen sharing",
+        "code_snippet": {
+          "file": "app/carte/page.js",
+          "note": "Migration console → logger (extrait)",
+          "lang": "js",
+          "before": "console.error(\"[Carte] Erreur init Leaflet :\", e);\nconsole.warn(`[Carte RPPS] HTTP`, res.status);\nconsole.log(\"[Carte RPPS]\", prof, data.results.length, \"résultats\");",
+          "after": "import { logger } from \"../../lib/logger\";\n\n// Tous les console.* sont remplacés :\nlogger.error(\"[Carte] Erreur init Leaflet :\", e);\nlogger.warn(`[Carte RPPS] HTTP`, res.status);\nlogger.info(\"[Carte RPPS]\", prof, data.results.length, \"résultats\");\n\n// Avantages :\n// - redaction automatique des secrets (password, token, etc.)\n// - silencieux en prod (sauf flag debug)\n// - centralisé : possibilité d'ajouter Sentry/Datadog plus tard"
+        }
+      },
+      { "code": "FE", "txt": "Ajout try/catch sur 5 pages identifiées par l'audit comme sans gestion d'erreur sur leurs appels Supabase : app/admin/bulletins-archive/page.js (RPC stats + select patients), app/journal/page.js (audit_log + membres_structure), app/materiel/[id]/page.js (6 appels Promise.all : materiels + tags + materiel_tags + maintenances + interventions + transferts), app/tags-materiel/page.js (select tags_materiel), app/page.js (auth.getSession au démarrage avec .catch chaîné + fallback vers /login). En cas d'erreur réseau ou Supabase, la page n'affiche plus un écran blanc — le user reste sur un état contrôlé avec loading désactivé et log envoyé au logger",
+        "code_snippet": {
+          "file": "app/materiel/[id]/page.js",
+          "note": "try/catch sur Promise.all des 6 fetches",
+          "lang": "js",
+          "before": "useEffect(() => {\n  if (!auth.ready || !matId) return;\n  (async () => {\n    const [...] = await Promise.all([\n      supabase.from(\"materiels\").select(...).single(),\n      supabase.from(\"tags_materiel\").select(\"*\"),\n      supabase.from(\"materiel_tags\")...,\n      // ... 3 autres\n    ]);\n    setMat(m || null);\n    // ... setters\n    setLoading(false);\n  })();\n}, [auth.ready, matId]);",
+          "after": "useEffect(() => {\n  if (!auth.ready || !matId) return;\n  (async () => {\n    try {\n      const [...] = await Promise.all([\n        supabase.from(\"materiels\").select(...).single(),\n        // ... idem\n      ]);\n      setMat(m || null);\n      // ... setters\n    } catch (e) {\n      // 0.56.22 : try/catch pour pas planter la page\n      logger.error(\"[Materiel] load failed:\", e);\n    } finally {\n      setLoading(false);\n    }\n  })();\n}, [auth.ready, matId]);"
+        }
+      },
+      { "code": "SEC", "txt": "Upgrade vitest 1.6 → 4.1.8 : règle la vulnérabilité CRITICAL identifiée (GHSA-5xrq-8626-4rwp : Vitest UI server arbitrary file read) + 4 vulnérabilités MODERATE (esbuild dev server, vite, vite-node). npm audit passe de 2 CRITICAL + 1 HIGH + 4 MODERATE à 0 CRITICAL + 2 HIGH + 1 MODERATE (les 2 HIGH sont les vulns Next persistantes qui nécessitent Next 16, et 1 MODERATE est xlsx prototype pollution). Tous les 2298 tests passent avec vitest 4 sans modification" },
+      { "code": "AI", "txt": "+29 tests Vitest : upgrade vitest 4 (1 : version >= 4.1), migration console → logger (14 = 7 fichiers × 2 checks : import présent + plus de console.* résiduel), try/catch sur 5 pages (10 = 5 × 2 : try+catch ou .catch chaîné + import logger), logger.error dans le catch (4 = 4 pages × 1, page racine exclue car .catch chaîné). Total 2298 tests verts (vs 2269)" },
+      { "code": "DOC", "txt": "Hardening 3/3 terminé. Récap de la trilogie : (0.56.20) auth + rate limit OCR + mot de passe retiré tests + patch SQL grants/search_path. (0.56.21) Next.js 14.2.5 → 14.2.35 (fix 2 CVE CRITICAL) + auth sur RPPS/FINESS/SIRENE + helper fetchWithAuth. (0.56.22) qualité code + vitest 4. Prochaine étape (optionnelle) : 0.57.0 = saut Next 16.x + React 19 pour régler les 7 vulns Next persistantes — à planifier comme une version dédiée avec recette complète" }
+    ],
+    "themes": ["security", "quality", "logging", "dependencies"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.22.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.56.21",
+    "kind": "version",
+    "titre": "🔒 Hardening 2/3 : Next.js 14.2.35 (fix 2 CVE CRITICAL) + auth sur RPPS/FINESS/SIRENE",
+    "chantiers": [
+      { "code": "SEC", "txt": "Upgrade Next.js 14.2.5 → 14.2.35 : règle les 2 vulnérabilités CRITICAL identifiées dans l'audit 0.56.20 — (1) GHSA-gp8f-8m3g-qvj9 Cache Poisoning via Image Optimization, (2) GHSA-7gfc-8cq8-jh5f Authorization Bypass + plusieurs HIGH (SSRF middleware, Content Injection, Race Condition Cache Poisoning, etc.). 7 vulnérabilités Next moderate/high persistent mais nécessitent un saut à Next 16.x (breaking change, à planifier séparément)" },
+      { "code": "BE", "txt": "Nouveau helper lib/fetchWithAuth.js (~40 lignes) qui wrap fetch() et injecte automatiquement le header Authorization: Bearer <token> via supabase.auth.getSession(). Cache du client supabase pour éviter de le recréer à chaque appel. Si pas de session (user déconnecté ou erreur), le fetch est fait sans Authorization — la route renvoie alors 401 si protégée. Pas d'override si Authorization déjà fixé manuellement par l'appelant",
+        "code_snippet": {
+          "file": "lib/fetchWithAuth.js",
+          "note": "Helper fetch + Bearer auto",
+          "lang": "js",
+          "after": "export async function fetchWithAuth(url, options = {}) {\n  let token = null;\n  try {\n    const supabase = getClient();\n    const { data } = await supabase.auth.getSession();\n    token = data?.session?.access_token || null;\n  } catch {\n    // Pas grave : on tente le fetch sans Authorization\n  }\n\n  const headers = new Headers(options.headers || {});\n  if (token && !headers.has(\"Authorization\")) {\n    headers.set(\"Authorization\", `Bearer ${token}`);\n  }\n\n  return fetch(url, { ...options, headers });\n}"
+        }
+      },
+      { "code": "SEC", "txt": "5 routes API supplémentaires protégées par requireAuth + rate limit : /api/rpps (60 req/min, recherche RPPS via API FHIR ANS), /api/rpps/diagnostic (10/min, expose info diagnostic interne), /api/rpps/dump-status (30/min, statut dump RPPS local), /api/finess (60/min, proxy data.gouv FINESS), /api/sirene (60/min, proxy API SIRENE). Ces routes proxy des API gouvernementales et peuvent être abusées pour épuiser ton quota Vercel ou faire du scraping",
+        "code_snippet": {
+          "file": "app/api/rpps/route.js",
+          "note": "Pattern auth + rate limit appliqué",
+          "lang": "js",
+          "after": "import { requireAuth, checkRateLimit } from \"../../../lib/apiAuth\";\n\nexport async function GET(req) {\n  const t0 = Date.now();\n\n  // 0.56.21 : auth obligatoire (proxy API gouv)\n  const authCheck = await requireAuth(req);\n  if (!authCheck.ok) return authCheck.response;\n  const { user } = authCheck;\n  const rate = checkRateLimit(user.id, {\n    maxRequests: 60, windowMs: 60_000\n  });\n  if (!rate.ok) return rate.response;\n\n  // ... reste de la logique\n}"
+        }
+      },
+      { "code": "FE", "txt": "4 pages front migrent vers fetchWithAuth pour ne pas casser après l'ajout d'auth : app/components/RppsSearch.js (composant unique de recherche RPPS, utilisé sur /annuaire-rpps + /partenaires-rpps + /utilisateurs), app/RppsAutocomplete.js (autocomplete dans formulaires), app/admin/rpps-dump/page.js (2 appels : dump-status + test recherche), app/carte/page.js (6 appels : 3 sur la carte search + 3 sur les détails)" },
+      { "code": "BE", "txt": "2 routes server-side qui appellent /api/rpps en interne (verify-rpps + prescriptions/from-ocr) propagent déjà le header Authorization reçu — aucun changement nécessaire, elles fonctionneront automatiquement avec le nouveau check" },
+      { "code": "SEC", "txt": "Routes /api/version et /api/health restent volontairement PUBLIQUES (sans auth) : ce sont les endpoints de monitoring utilisés par Vercel + uptime checkers. Ne renvoient que des infos non-sensibles (version, statut services). À surveiller mais pas un risque de quota" },
+      { "code": "AI", "txt": "+30 tests Vitest : Next upgrade (1 : version >= 14.2.35), fetchWithAuth helper (5 : export, getSession, Bearer header, pas d'override, catch erreurs), routes protégées RPPS+FINESS+SIRENE (15 = 5 routes × 3 checks : import helper, appel requireAuth, rate limit), pages front fetchWithAuth (8 = 4 callers × 2 checks : import + remplacement effectif), changelog (1). Total 2269 tests verts (vs 2239)" }
+    ],
+    "themes": ["security", "hardening", "dependencies", "api"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.21.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.20",
     "kind": "version",
     "titre": "🛡️ Audit sécurité + fixes critiques : auth obligatoire sur OCR · rate limit · SQL hardening",

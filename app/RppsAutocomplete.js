@@ -17,6 +17,7 @@
 // =============================================================
 
 import { useState, useEffect, useRef } from "react";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 import ContactActions from "./components/ContactActions";
 
 const PROFESSIONS = [
@@ -89,7 +90,7 @@ export default function RppsAutocomplete({
         // 0.55.45 : limite remontée à 50 (était 10) pour ne pas brider la recherche
         params.set("limit", "50");
 
-        const res = await fetch(`/api/rpps?${params}`);
+        const res = await fetchWithAuth(`/api/rpps?${params}`);
         const data = await res.json();
         if (!data.ok) {
           // 0.55.45 : message d'erreur clair pour debug

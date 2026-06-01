@@ -175,20 +175,32 @@ async function fetchFhir(url, label = "") {
     clearTimeout(timeout);
     const dur = Date.now() - t0;
     if (!res.ok) {
-      console.warn(`[RPPS ${label}] HTTP ${res.status} in ${dur}ms — ${url}`);
+      logger.warn(`[RPPS ${label}] HTTP ${res.status} in ${dur}ms — ${url}`);
       return { ok: false, status: res.status, duration: dur };
     }
     const json = await res.json();
     return { ok: true, status: 200, data: json, duration: dur };
   } catch (e) {
     const dur = Date.now() - t0;
-    console.warn(`[RPPS ${label}] error in ${dur}ms : ${e.message}`);
+    logger.warn(`[RPPS ${label}] error in ${dur}ms : ${e.message}`);
     return { ok: false, status: 0, error: e.message, duration: dur };
   }
 }
 
+// 0.56.21 : auth + rate limit (proxy API gouv → 60/min, raisonnable pour autocomplete)
+import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
+import { logger } from "../../../lib/logger";
+
 export async function GET(req) {
   const t0 = Date.now();
+
+  // 0.56.21 : auth obligatoire (proxy API gouv, peut être abusé)
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").trim();
   const profession = (searchParams.get("profession") || "").trim();

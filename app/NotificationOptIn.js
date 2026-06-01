@@ -84,7 +84,7 @@ export default function NotificationOptIn({ auth }) {
       if (e && e.code !== "23505") throw e;
       setState("subscribed");
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       setError(err.message || "Échec de l'inscription aux notifications");
       setState("idle");
     }

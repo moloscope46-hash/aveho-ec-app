@@ -1,55 +1,18 @@
 -- ============================================================
---  AVEHO EC — Patch 0.56.20 — Hardening sécurité
---  Grants manquants sur 21 fonctions (sinon 403 au runtime)
---  + set search_path sur fonctions SECURITY DEFINER vulnérables
+--  AVEHO EC — Patch 0.56.20 v2 (tolérant aux fonctions absentes)
+--  Grants manquants + search_path sur SECURITY DEFINER
+--
+--  v2 : tout passe par des boucles DO qui ignorent les erreurs
+--       (pour pas planter si une fonction n'existe pas)
 -- ============================================================
 
--- 1) Grant execute sur les fonctions oubliées
-grant execute on function auto_rattach_admin_etabs() to authenticated;
-grant execute on function auto_rattach_admins_to_new_etab() to authenticated;
-grant execute on function ensure_single_active_template() to authenticated;
-grant execute on function get_consent_validity_days() to authenticated;
-grant execute on function mes_etablissements() to authenticated;
-grant execute on function mes_structures() to authenticated;
-grant execute on function patients_set_updated_at() to authenticated;
-grant execute on function refresh_medecin_stats() to authenticated;
-grant execute on function search_materiels(text) to authenticated;
-grant execute on function search_patients(text) to authenticated;
-
--- Quelques autres potentiellement utiles si les signatures matchent :
+-- 1) Grant execute sur toutes les fonctions de public où
+--    authenticated n'a pas déjà l'execute
 do $$
 declare
   fn record;
-begin
-  for fn in
-    select
-      n.nspname || '.' || p.proname ||
-      '(' || pg_catalog.pg_get_function_identity_arguments(p.oid) || ')' as full_name
-    from pg_proc p
-    join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public'
-      and p.prosecdef = false  -- pas SECURITY DEFINER
-      and not exists (
-        select 1 from pg_proc_acl pa
-        join pg_authid r on r.oid = any(pa.aclitem::aclitem[]::oid[])
-        where pa.objid = p.oid and r.rolname = 'authenticated'
-      )
-    limit 50
-  loop
-    begin
-      execute format('grant execute on function %s to authenticated', fn.full_name);
-      raise notice 'GRANT OK: %', fn.full_name;
-    exception when others then
-      raise notice 'GRANT FAILED: % (%)', fn.full_name, sqlerrm;
-    end;
-  end loop;
-end $$;
-
--- 2) set search_path sur les fonctions SECURITY DEFINER qui n'en ont pas
--- (protection contre search path injection)
-do $$
-declare
-  fn record;
+  granted_count int := 0;
+  failed_count int := 0;
 begin
   for fn in
     select
@@ -59,7 +22,35 @@ begin
     from pg_proc p
     join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
-      and p.prosecdef = true   -- SECURITY DEFINER uniquement
+      and not has_function_privilege('authenticated', p.oid, 'execute')
+  loop
+    begin
+      execute format('grant execute on function %s to authenticated', fn.full_name);
+      granted_count := granted_count + 1;
+    exception when others then
+      failed_count := failed_count + 1;
+      raise notice 'GRANT FAILED: % (%)', fn.proname, sqlerrm;
+    end;
+  end loop;
+  raise notice '=== GRANTS : % réussis, % échoués ===', granted_count, failed_count;
+end $$;
+
+-- 2) ALTER FUNCTION ... SET search_path sur les SECURITY DEFINER vulnérables
+do $$
+declare
+  fn record;
+  altered_count int := 0;
+  failed_count int := 0;
+begin
+  for fn in
+    select
+      n.nspname || '.' || p.proname ||
+      '(' || pg_catalog.pg_get_function_identity_arguments(p.oid) || ')' as full_name,
+      p.proname
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prosecdef = true
       and not exists (
         select 1 from unnest(coalesce(p.proconfig, array[]::text[])) cfg
         where cfg like 'search_path=%'
@@ -67,22 +58,21 @@ begin
   loop
     begin
       execute format('alter function %s set search_path = public, pg_temp', fn.full_name);
-      raise notice 'SEARCH_PATH SET: %', fn.full_name;
+      altered_count := altered_count + 1;
     exception when others then
-      raise notice 'SEARCH_PATH FAILED: % (%)', fn.full_name, sqlerrm;
+      failed_count := failed_count + 1;
+      raise notice 'ALTER FAILED: % (%)', fn.proname, sqlerrm;
     end;
   end loop;
+  raise notice '=== SEARCH_PATH : % définis, % échoués ===', altered_count, failed_count;
 end $$;
 
--- 3) Vérifier le résultat
+-- 3) Vérification finale
 select
-  'fonctions definer sans search_path' as check_name,
-  count(*) as remaining
-from pg_proc p
-join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public'
-  and p.prosecdef = true
-  and not exists (
-    select 1 from unnest(coalesce(p.proconfig, array[]::text[])) cfg
-    where cfg like 'search_path=%'
-  );
+  (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and not has_function_privilege('authenticated', p.oid, 'execute'))
+  as fonctions_sans_grant,
+  (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public' and p.prosecdef = true
+     and not exists (select 1 from unnest(coalesce(p.proconfig, array[]::text[])) cfg where cfg like 'search_path=%'))
+  as definer_sans_search_path;

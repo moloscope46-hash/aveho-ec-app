@@ -6,6 +6,8 @@
 //  un format normalisé. Utilisable depuis n'importe quelle page.
 // =============================================================
 
+import { logger } from "../../lib/logger";
+
 export async function checkEtabDoublon(supabase, params) {
   const {
     finess = null,
@@ -31,12 +33,12 @@ export async function checkEtabDoublon(supabase, params) {
       p_exclude_id: excludeId,
     });
     if (error) {
-      console.error("[checkEtabDoublon] RPC error:", error);
+      logger.error("[checkEtabDoublon] RPC error:", error);
       return { ok: false, error: error.message, found: false, count: 0, matches: [] };
     }
     return data || { ok: true, found: false, count: 0, matches: [] };
   } catch (e) {
-    console.error("[checkEtabDoublon] exception:", e);
+    logger.error("[checkEtabDoublon] exception:", e);
     return { ok: false, error: e.message, found: false, count: 0, matches: [] };
   }
 }

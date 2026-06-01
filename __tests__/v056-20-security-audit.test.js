@@ -120,11 +120,10 @@ describe("0.56.20 - Mot de passe retiré des tests publics", () => {
 describe("0.56.20 - SQL patch sécurité", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "supabase/aveho-PATCH-vers-0.56.20.sql"), "utf-8");
 
-  it("Grant execute sur fonctions oubliées", () => {
-    expect(src).toContain("grant execute on function mes_etablissements()");
-    expect(src).toContain("grant execute on function mes_structures()");
-    expect(src).toContain("grant execute on function search_patients(text)");
-    expect(src).toContain("grant execute on function search_materiels(text)");
+  it("Boucle DO qui grant toutes les fonctions sans grant existant", () => {
+    expect(src).toContain("has_function_privilege");
+    expect(src).toContain("grant execute on function");
+    expect(src).toContain("authenticated");
   });
 
   it("Boucle alter function set search_path sur SECURITY DEFINER vulnérables", () => {
@@ -132,7 +131,8 @@ describe("0.56.20 - SQL patch sécurité", () => {
     expect(src).toContain("prosecdef = true");
   });
 
-  it("Check final remaining count", () => {
-    expect(src).toContain("fonctions definer sans search_path");
+  it("Vérification finale fonctions_sans_grant + definer_sans_search_path", () => {
+    expect(src).toContain("fonctions_sans_grant");
+    expect(src).toContain("definer_sans_search_path");
   });
 });

@@ -6,11 +6,19 @@
 // =============================================================
 
 import { createClient } from "@supabase/supabase-js";
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
 
-export async function GET() {
+export async function GET(req) {
+  // 0.56.21 : auth + rate limit (30 req/min/user)
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 30, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,

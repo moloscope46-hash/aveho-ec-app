@@ -10,6 +10,7 @@ import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 
 import { dialogs } from "../dialogs";
 import { safeUpdate, safeInsert, safeDelete } from "../../lib/safeWrite";
+import { logger } from "../../lib/logger";
 const PALETTE = ["#7CC8C8", "#7a6fb0", "#5aa05a", "#e35d5b", "#EF9F27", "#C9867F", "#185FA5", "#2a5a5a", "#142131"];
 
 export default function TagsMaterielPage() {
@@ -24,9 +25,15 @@ export default function TagsMaterielPage() {
 
   async function load() {
     if (!auth.structureId) return;
-    const { data } = await supabase.from("tags_materiel").select("*").order("libelle");
-    setRows(data || []);
-    setLoading(false);
+    try {
+      const { data } = await supabase.from("tags_materiel").select("*").order("libelle");
+      setRows(data || []);
+    } catch (e) {
+      // 0.56.22 : try/catch pour pas planter la page
+      logger.error("[TagsMateriel] load failed:", e);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { if (auth.ready) load(); }, [auth.ready]);
 

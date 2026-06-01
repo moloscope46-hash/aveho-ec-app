@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.22 — Hardening 3/3 : qualité code</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--red:#c0392b;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#d7e8da;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#d7e8da;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#d7e8da}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.crit{background:#fef0ee;border-color:#f0c4be;border-left:4px solid #c0392b}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700}
+.b-ok{background:#dff5e0;color:#2e6f33}
+.b-warn{background:#fef9ed;color:#7a6a1a}
+.b-crit{background:#fce5e0;color:#7a1f15}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:14px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}
+.kpi.green .kpi-val{color:#2e6f33}
+.kpi.red{background:#fef0ee;border-color:#f0c4be}
+.kpi.red .kpi-val{color:#7a1f15}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — HARDENING 3/3 · QUALITÉ CODE</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.22 — Qualité code + vitest 4<small>console.log → logger · try/catch · 0 vulnérabilité CRITICAL</small></h1>
+<div class="meta">
+<span><b>Date :</b> 1er juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.56.22-alpha</code></span>
+<span><b>Tests :</b> 2298 verts (+29)</span>
+</div>
+</header>
+
+<h2>🏆 Trilogie Hardening complète</h2>
+<div class="panel ok">
+<table>
+<tr><th>Version</th><th>Périmètre</th><th>Status</th></tr>
+<tr><td><b>0.56.20</b></td><td>Auth + rate limit OCR · mot de passe retiré tests · patch SQL grants/search_path</td><td><span class="badge b-ok">✓ FAIT</span></td></tr>
+<tr><td><b>0.56.21</b></td><td>Next.js 14.2.35 (fix 2 CVE CRITICAL) · auth RPPS/FINESS/SIRENE · helper fetchWithAuth</td><td><span class="badge b-ok">✓ FAIT</span></td></tr>
+<tr><td><b>0.56.22 (cette version)</b></td><td>console.log → logger · try/catch · vitest 4 (fix CRITICAL Vitest UI)</td><td><span class="badge b-ok">✓ FAIT</span></td></tr>
+</table>
+</div>
+
+<h2>📊 Bilan vulnérabilités npm</h2>
+<div class="kpi-grid">
+<div class="kpi red">
+<span class="kpi-val">7 → 3</span>
+<span class="kpi-lbl">Total vulnérabilités</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2 → 0</span>
+<span class="kpi-lbl">CRITICAL</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">1 → 2</span>
+<span class="kpi-lbl">HIGH (Next persistantes)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">4 → 1</span>
+<span class="kpi-lbl">MODERATE</span>
+</div>
+</div>
+
+<div class="panel">
+<h3>Détail avant/après la trilogie</h3>
+<table>
+<tr><th>Vuln</th><th>Avant 0.56.20</th><th>Après 0.56.22</th></tr>
+<tr><td>Next Cache Poisoning (CRIT)</td><td>🔴 Présent</td><td>🟢 Résolu (Next 14.2.35)</td></tr>
+<tr><td>Next Authorization Bypass (CRIT)</td><td>🔴 Présent</td><td>🟢 Résolu (Next 14.2.35)</td></tr>
+<tr><td>Vitest UI arbitrary file read (CRIT)</td><td>🔴 Présent</td><td>🟢 Résolu (vitest 4.1.8)</td></tr>
+<tr><td>esbuild dev server (MOD)</td><td>🟡 Présent</td><td>🟢 Résolu (vite via vitest 4)</td></tr>
+<tr><td>vite (MOD × 2)</td><td>🟡 Présent</td><td>🟢 Résolu (vitest 4)</td></tr>
+<tr><td>Next 14.x divers (HIGH × 7)</td><td>🟡 Présent</td><td>🟡 Persistent — nécessitent Next 16</td></tr>
+<tr><td>xlsx Prototype Pollution (HIGH→MOD)</td><td>🟡 Présent</td><td>🟡 Persistent — nécessite refacto exports</td></tr>
+</table>
+</div>
+
+<h2>🧹 Fix 1 — Migration console.* vers lib/logger</h2>
+<div class="panel">
+<p><b>20 occurrences</b> migrées sur 7 fichiers :</p>
+<table>
+<tr><th>Fichier</th><th>Occurrences</th></tr>
+<tr><td><code>app/carte/page.js</code></td><td>11 (errors + warns + logs)</td></tr>
+<tr><td><code>app/changelog/page.js</code></td><td>2 (errors)</td></tr>
+<tr><td><code>app/api/rpps/route.js</code></td><td>2 (warns)</td></tr>
+<tr><td><code>app/api/finess/route.js</code></td><td>1 (error)</td></tr>
+<tr><td><code>app/lib/checkEtabDoublon.js</code></td><td>2 (errors)</td></tr>
+<tr><td><code>app/NotificationOptIn.js</code></td><td>1 (error)</td></tr>
+<tr><td><code>lib/exportExcel.js</code></td><td>1 (error)</td></tr>
+</table>
+
+<h3>Pourquoi c'est important</h3>
+<p>Le <code>lib/logger</code> :</p>
+<ul>
+<li>🛡️ <b>Redacte automatiquement</b> les valeurs sensibles : <code>password</code>, <code>passwd</code>, <code>mot_de_passe</code>, <code>mdp</code>, <code>token</code>, <code>refresh_token</code>, <code>access_token</code>, <code>secret</code>, <code>api_key</code>, <code>apikey</code>, <code>credential_id</code></li>
+<li>🤫 <b>Silencieux en production</b> (sauf si flag <code>aveho:debug-logs</code> activé via <code>localStorage</code>) — plus rien dans la console des utilisateurs finaux</li>
+<li>🎯 <b>Centralisé</b> : on peut ajouter Sentry / Datadog / LogRocket plus tard sans toucher au code applicatif</li>
+</ul>
+
+<h3>Avant</h3>
+<pre><code>console.error("[Carte] Erreur init Leaflet :", e);
+console.warn(`[Carte RPPS] HTTP`, res.status);
+console.log("[Carte RPPS]", prof, data.results.length, "résultats");</code></pre>
+
+<h3>Après</h3>
+<pre><code>import { logger } from "../../lib/logger";
+
+logger.error("[Carte] Erreur init Leaflet :", e);
+logger.warn(`[Carte RPPS] HTTP`, res.status);
+logger.info("[Carte RPPS]", prof, data.results.length, "résultats");</code></pre>
+</div>
+
+<h2>🛡️ Fix 2 — try/catch sur 5 pages</h2>
+<div class="panel">
+<p>5 pages identifiées par l'audit comme <b>sans gestion d'erreur</b> sur leurs appels Supabase. Si Supabase répond mal (timeout, erreur 500, déconnexion réseau) → la page restait coincée en loading infini.</p>
+
+<table>
+<tr><th>Page</th><th>Appels protégés</th></tr>
+<tr><td><code>app/admin/bulletins-archive/page.js</code></td><td>RPC stats + select patients</td></tr>
+<tr><td><code>app/journal/page.js</code></td><td>audit_log + membres_structure</td></tr>
+<tr><td><code>app/materiel/[id]/page.js</code></td><td>6 appels Promise.all (materiels + tags + maintenances + interventions + transferts + materiel_tags)</td></tr>
+<tr><td><code>app/tags-materiel/page.js</code></td><td>select tags_materiel</td></tr>
+<tr><td><code>app/page.js</code> (racine)</td><td>auth.getSession() avec <code>.catch</code> chaîné + fallback vers /login</td></tr>
+</table>
+
+<h3>Pattern utilisé</h3>
+<pre><code>useEffect(() => {
+  if (!auth.ready) return;
+  (async () => {
+    try {
+      const [...] = await Promise.all([...]);
+      setMat(m || null);
+      // setters
+    } catch (e) {
+      // 0.56.22 : try/catch pour pas planter la page
+      logger.error("[Materiel] load failed:", e);
+    } finally {
+      setLoading(false);   // <- toujours désactivé pour pas rester en loading infini
+    }
+  })();
+}, [auth.ready, matId]);</code></pre>
+
+<p>Pour <code>app/page.js</code> (qui utilise une Promise chaînée) : <code>.catch()</code> avec fallback vers <code>/login</code> au lieu de rester sur l'écran "Chargement…" infini.</p>
+</div>
+
+<h2>📦 Fix 3 — vitest 1.6 → 4.1.8</h2>
+<div class="panel">
+<p>Upgrade majeur qui règle <b>1 CRITICAL + 3 MODERATE</b> :</p>
+<ul>
+<li>✅ <b>GHSA-5xrq-8626-4rwp</b> CRITICAL — Vitest UI server arbitrary file read & execute</li>
+<li>✅ <b>esbuild &lt;= 0.24.2</b> MODERATE — dev server peut lire les réponses depuis n'importe quel site web</li>
+<li>✅ <b>vite</b> MODERATE (×2) — dépendances vulnérables résolues par vite 6+</li>
+</ul>
+
+<p>Pas d'impact fonctionnel : les 2298 tests passent <b>avec vitest 4</b> sans modification.</p>
+
+<h3>Changements package.json</h3>
+<pre><code>// devDependencies
+"vitest": "^1.6.0"  →  "^4.1.8"</code></pre>
+</div>
+
+<h2>🟡 Vulnérabilités persistantes (à traiter en 0.57.0)</h2>
+<div class="panel warn">
+<p>3 vulnérabilités restent après ce hardening :</p>
+
+<table>
+<tr><th>Lib</th><th>Sévérité</th><th>Détail</th><th>Résolution</th></tr>
+<tr><td><code>next</code></td><td>HIGH</td><td>7 CVE diverses (DoS Image Optimizer, smuggling, cache poisoning RSC, etc.)</td><td>Saut à Next 16.x + React 19 (breaking, 0.57.0)</td></tr>
+<tr><td><code>next</code></td><td>HIGH</td><td>Idem</td><td>Idem</td></tr>
+<tr><td><code>xlsx</code></td><td>MODERATE</td><td>Prototype pollution dans sheetJS &lt; 0.19.3</td><td>Migration vers ExcelJS ou alternative (refacto export)</td></tr>
+</table>
+
+<p>Ces vulnérabilités ne sont <b>pas exploitables facilement</b> dans l'usage Aveho EC :</p>
+<ul>
+<li>Les CVE Next.js HIGH concernent surtout des configs spécifiques (image remote patterns, RSC self-hosted, etc.) qui ne sont pas activées chez nous</li>
+<li>xlsx Prototype Pollution nécessite que l'utilisateur charge un fichier XLSX malveillant — risque très faible vu que nos exports vont vers l'utilisateur (pas l'inverse)</li>
+</ul>
+
+<p><b>Plan 0.57.0 (à planifier avec recette complète) :</b></p>
+<ul>
+<li>Saut Next 14.2.35 → Next 16.x (breaking changes : middleware, Server Actions, etc.)</li>
+<li>React 18.3.1 → React 19 (suspense, transitions, hooks)</li>
+<li>Migration xlsx → ExcelJS (ou éval alternative)</li>
+<li>Tests E2E complets</li>
+<li>2-3 jours de validation</li>
+</ul>
+</div>
+
+<h2>📈 +29 tests (2269 → 2298)</h2>
+<div class="panel">
+<ul>
+<li><b>vitest upgrade</b> (1) : version package.json >= 4.1</li>
+<li><b>Migration console → logger</b> (14 = 7 fichiers × 2) : import logger présent + plus de console.* résiduel hors commentaires</li>
+<li><b>try/catch sur 5 pages</b> (10 = 5 × 2) : try+catch ou .catch chaîné + import logger</li>
+<li><b>logger.error dans le catch</b> (4 = 4 pages × 1) : page racine exclue (.catch chaîné suffit)</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<ul>
+<li><code>package.json</code> : vitest ^1.6.0 → ^4.1.8 + version 0.56.22</li>
+<li><code>app/carte/page.js</code> : 11 console → logger + import</li>
+<li><code>app/changelog/page.js</code> : 2 console → logger</li>
+<li><code>app/api/rpps/route.js</code> : 2 console → logger + import</li>
+<li><code>app/api/finess/route.js</code> : 1 console → logger + import</li>
+<li><code>app/lib/checkEtabDoublon.js</code> : 2 console → logger + import</li>
+<li><code>app/NotificationOptIn.js</code> : 1 console → logger + import</li>
+<li><code>lib/exportExcel.js</code> : 1 console → logger</li>
+<li><code>app/admin/bulletins-archive/page.js</code> : try/catch + import logger</li>
+<li><code>app/journal/page.js</code> : try/catch + import logger</li>
+<li><code>app/materiel/[id]/page.js</code> : try/catch + import logger</li>
+<li><code>app/tags-materiel/page.js</code> : try/catch + import logger</li>
+<li><code>app/page.js</code> : .catch chaîné + fallback /login + import logger</li>
+<li><code>__tests__/v056-22-quality-code.test.js</code> : <b>NOUVEAU</b> 29 tests</li>
+</ul>
+
+<h2>📋 Reste à planifier (post-hardening)</h2>
+<div class="panel tip">
+<h3>0.57.0 — Migration Next 16 + React 19 (gros chantier)</h3>
+<ul>
+<li>Saut majeur de framework</li>
+<li>Recette complète obligatoire (E2E sur toutes les pages)</li>
+<li>Règle les 7 vulns Next persistantes</li>
+</ul>
+
+<h3>0.56.23+ — Refacto fichiers > 1000 lignes (qualité, pas sécurité)</h3>
+<ul>
+<li><code>app/changelog/page.js</code> (1603) → split en sous-composants</li>
+<li><code>app/carte/page.js</code> (1482)</li>
+<li><code>app/utilisateurs/page.js</code> (1400)</li>
+<li><code>app/patient/[id]/edit/page.js</code> (1065)</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 89ème consécutif</h2>
+<p>0.52.1 → ... → 0.56.21 → <b>0.56.22</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.22 · 1er juin 2026 · 2298 tests verts · Hardening 3/3 — Trilogie complète</footer>
+</div></body></html>

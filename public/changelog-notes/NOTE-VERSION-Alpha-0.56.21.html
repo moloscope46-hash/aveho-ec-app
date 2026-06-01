@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.21 — Hardening 2/3 : Next.js + auth RPPS/FINESS/SIRENE</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--red:#c0392b;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dfeaf5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#dfeaf5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#dfeaf5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.crit{background:#fef0ee;border-color:#f0c4be;border-left:4px solid #c0392b}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700}
+.b-ok{background:#dff5e0;color:#2e6f33}
+.b-warn{background:#fef9ed;color:#7a6a1a}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — HARDENING 2/3</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.21 — Next.js 14.2.35 + auth sur 5 routes API gouv<small>Fix 2 CVE CRITICAL · helper fetchWithAuth · RPPS/FINESS/SIRENE protégés</small></h1>
+<div class="meta">
+<span><b>Date :</b> 1er juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.56.21-alpha</code></span>
+<span><b>Tests :</b> 2269 verts (+30)</span>
+</div>
+</header>
+
+<h2>🛡️ Récapitulatif du hardening (3 étapes)</h2>
+<div class="panel">
+<table>
+<tr><th>Version</th><th>Périmètre</th><th>Status</th></tr>
+<tr><td><b>0.56.20</b></td><td>Auth OCR + rate limit + mot de passe retiré tests + patch SQL grants/search_path</td><td><span class="badge b-ok">✓ FAIT</span></td></tr>
+<tr><td><b>0.56.21 (cette version)</b></td><td>Upgrade Next.js 14.2.35 + auth sur RPPS/FINESS/SIRENE</td><td><span class="badge b-ok">✓ FAIT</span></td></tr>
+<tr><td><b>0.56.22</b></td><td>Qualité code : console.log → logger, try/catch, refacto fichiers, vitest upgrade</td><td><span class="badge b-warn">📅 À venir</span></td></tr>
+</table>
+</div>
+
+<h2>🔴 Fix 1 — Upgrade Next.js 14.2.5 → 14.2.35</h2>
+<div class="panel ok">
+<p><b>Règle les 2 CVE CRITICAL identifiées par l'audit :</b></p>
+<ul>
+<li>✅ <b>GHSA-gp8f-8m3g-qvj9</b> — Next.js Cache Poisoning via Image Optimization API (CRITICAL)</li>
+<li>✅ <b>GHSA-7gfc-8cq8-jh5f</b> — Next.js Authorization Bypass (CRITICAL)</li>
+<li>✅ Plusieurs HIGH (SSRF middleware, Content Injection, Race Condition Cache Poisoning, DoS Image Optimizer, etc.)</li>
+</ul>
+
+<p><b>Pas d'impact fonctionnel :</b> 14.2.x est entièrement rétrocompatible (pas de breaking change). Le build a été validé sans modification de code applicatif.</p>
+
+<div class="panel warn" style="margin-top:14px">
+<p>⚠️ <b>Vulnérabilités persistantes</b> : npm audit signale encore 7 vulnérabilités Next "moderate→high" datant d'après 14.2.35. Elles nécessitent un saut à <b>Next 16.x</b> qui implique :</p>
+<ul>
+<li>Migration du routeur App (mineure)</li>
+<li>React 19 obligatoire (refacto des Server Actions)</li>
+<li>Validation complète de l'app (risque de régression)</li>
+</ul>
+<p>→ À planifier comme une version dédiée (0.57.0 ?) avec recette complète.</p>
+</div>
+</div>
+
+<h2>🔒 Fix 2 — Auth sur 5 routes API gouvernementales</h2>
+<div class="panel">
+<p>5 routes proxy d'API gouvernementales étaient ouvertes publiquement. Elles sont maintenant protégées par <code>requireAuth</code> + rate limit.</p>
+
+<table>
+<tr><th>Route</th><th>Type</th><th>Rate limit</th></tr>
+<tr><td><code>/api/rpps</code></td><td>Recherche RPPS via API FHIR ANS</td><td>60 req/min/user</td></tr>
+<tr><td><code>/api/rpps/diagnostic</code></td><td>Diagnostic API (info interne)</td><td>10 req/min/user</td></tr>
+<tr><td><code>/api/rpps/dump-status</code></td><td>Statut dump RPPS local</td><td>30 req/min/user</td></tr>
+<tr><td><code>/api/finess</code></td><td>Proxy data.gouv FINESS</td><td>60 req/min/user</td></tr>
+<tr><td><code>/api/sirene</code></td><td>Proxy API SIRENE</td><td>60 req/min/user</td></tr>
+</table>
+
+<h3>Pattern appliqué (identique sur toutes)</h3>
+<pre><code>import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
+
+export async function GET(req) {
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
+  // ... reste de la logique
+}</code></pre>
+</div>
+
+<h2>⚙️ Fix 3 — Helper fetchWithAuth pour les pages front</h2>
+<div class="panel tip">
+<p>Plutôt que d'ajouter 14 lignes <code>const token = (await supabase.auth.getSession())...</code> à chaque appel <code>fetch</code> côté front, un helper centralisé :</p>
+
+<pre><code>// lib/fetchWithAuth.js
+import { createClient } from "./supabase";
+
+let cachedClient = null;
+function getClient() {
+  if (!cachedClient) cachedClient = createClient();
+  return cachedClient;
+}
+
+export async function fetchWithAuth(url, options = {}) {
+  let token = null;
+  try {
+    const { data } = await getClient().auth.getSession();
+    token = data?.session?.access_token || null;
+  } catch {}
+
+  const headers = new Headers(options.headers || {});
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return fetch(url, { ...options, headers });
+}</code></pre>
+
+<h3>Usage</h3>
+<pre><code>// Avant
+const res = await fetch(`/api/rpps?q=DUPONT`);
+
+// Après
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
+const res = await fetchWithAuth(`/api/rpps?q=DUPONT`);
+// → le Bearer token est ajouté automatiquement</code></pre>
+
+<h3>Pages migrées</h3>
+<ul>
+<li><code>app/components/RppsSearch.js</code> — composant unique utilisé sur /annuaire-rpps + /partenaires-rpps + /utilisateurs</li>
+<li><code>app/RppsAutocomplete.js</code> — autocomplete dans formulaires</li>
+<li><code>app/admin/rpps-dump/page.js</code> — 2 appels (dump-status + test recherche)</li>
+<li><code>app/carte/page.js</code> — 6 appels (3 carte search + 3 détails)</li>
+</ul>
+</div>
+
+<h2>🟢 Routes laissées publiques (intentionnel)</h2>
+<div class="panel ok">
+<ul>
+<li><code>/api/version</code> — utilisé par Vercel + monitoring uptime. Ne renvoie que le numéro de version + buildId. Pas de risque.</li>
+<li><code>/api/health</code> — endpoint de health check. Ne renvoie que le statut des services (Supabase, etc.). Pas de risque.</li>
+</ul>
+<p>Ces 2 routes sont des endpoints de monitoring standard. Les protéger casserait les outils externes de surveillance.</p>
+</div>
+
+<h2>📈 +30 tests (2239 → 2269)</h2>
+<div class="panel">
+<ul>
+<li><b>Next upgrade</b> (1) : version package.json >= 14.2.35</li>
+<li><b>fetchWithAuth helper</b> (5) : export, getSession, Bearer header, pas d'override si déjà set, catch erreurs</li>
+<li><b>5 routes protégées</b> (15 = 5 × 3) : import helper, appel requireAuth, rate limit appliqué</li>
+<li><b>4 pages migrent</b> (8 = 4 × 2) : import fetchWithAuth, plus aucun fetch /api/rpps|finess|sirene sans wrapper</li>
+<li><b>Changelog</b> (1) : 0.56.21 présent</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés / créés</h2>
+<ul>
+<li><code>package.json</code> : next ^14.2.5 → ^14.2.35</li>
+<li><code>lib/fetchWithAuth.js</code> : <b>NOUVEAU</b> ~40 lignes</li>
+<li><code>app/api/rpps/route.js</code> : auth + rate limit (60/min)</li>
+<li><code>app/api/rpps/diagnostic/route.js</code> : auth + rate limit (10/min)</li>
+<li><code>app/api/rpps/dump-status/route.js</code> : auth + rate limit (30/min)</li>
+<li><code>app/api/finess/route.js</code> : auth + rate limit (60/min)</li>
+<li><code>app/api/sirene/route.js</code> : auth + rate limit (60/min)</li>
+<li><code>app/components/RppsSearch.js</code> : fetchWithAuth</li>
+<li><code>app/RppsAutocomplete.js</code> : fetchWithAuth</li>
+<li><code>app/admin/rpps-dump/page.js</code> : fetchWithAuth (2 appels)</li>
+<li><code>app/carte/page.js</code> : fetchWithAuth (6 appels)</li>
+<li><code>__tests__/v056-21-next-upgrade-auth.test.js</code> : <b>NOUVEAU</b> 30 tests</li>
+</ul>
+
+<h2>📋 Plan d'action restant</h2>
+<div class="panel tip">
+<h3>0.56.22 — Qualité code (à venir)</h3>
+<ul>
+<li>Migration 23 console.log → lib/logger (avec niveaux debug/info/warn/error)</li>
+<li>try/catch sur les 5 pages sans gestion d'erreur (/journal, /materiel/[id], /tags-materiel, /admin/bulletins-archive, /)</li>
+<li>Refacto des 4 plus gros fichiers (> 1000 lignes : changelog/page.js, carte, utilisateurs, patient/edit) — split en sous-composants</li>
+<li>Upgrade vitest 1.x → 4.x (règle les 4 vulnérabilités MODERATE en dépendances dev)</li>
+</ul>
+
+<h3>0.57.0 — Migration Next 16 (plus tard)</h3>
+<ul>
+<li>Saut Next 14.2.35 → Next 16.x</li>
+<li>React 18.3 → React 19</li>
+<li>Refacto Server Actions (breaking)</li>
+<li>Recette complète + tests E2E</li>
+<li>Règle les 7 vulnérabilités Next moderate/high persistantes</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 88ème consécutif</h2>
+<p>0.52.1 → ... → 0.56.20 → <b>0.56.21</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.21 · 1er juin 2026 · 2269 tests verts · Hardening 2/3</footer>
+</div></body></html>

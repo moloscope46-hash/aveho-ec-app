@@ -18,6 +18,7 @@
 
 import { useEffect, useState } from "react";
 import { logger } from "../../lib/logger";
+import { fetchWithAuth } from "../../lib/fetchWithAuth";
 import ContactActions from "./ContactActions";
 
 const PROFESSIONS = [
@@ -84,7 +85,7 @@ export default function RppsSearch({
       if (modeExercice) params.set("mode", modeExercice);
       params.set("limit", String(Math.min(limit, 100)));
 
-      const res = await fetch(`/api/rpps?${params.toString()}`);
+      const res = await fetchWithAuth(`/api/rpps?${params.toString()}`);
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
         throw new Error(errJson.error || `HTTP ${res.status}`);

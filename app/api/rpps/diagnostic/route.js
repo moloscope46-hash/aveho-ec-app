@@ -74,8 +74,18 @@ async function testEndpoint(url, label, extraHeaders = {}) {
   }
 }
 
+// 0.56.21 : auth (expose info interne de diagnostic API)
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+
 export async function GET(req) {
   const tStart = Date.now();
+
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   const { searchParams } = new URL(req.url);
   const customQuery = (searchParams.get("q") || "").trim();
 

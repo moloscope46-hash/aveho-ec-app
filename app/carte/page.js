@@ -14,6 +14,7 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { getStoredPosition, getGeolocChoice } from "../GeolocPrompt";
 import { logger } from "../../lib/logger";
+import { fetchWithAuth } from "../../lib/fetchWithAuth";
 
 // 12 camions de démonstration — trajets simulés sur la France métropolitaine
 // Chaque camion a un trajet départ → destination + une vitesse, et boucle.
@@ -165,7 +166,7 @@ export default function CartePage() {
         }
         if (cancelled) return;
         if (!mapRef.current) {
-          console.error("[Carte] mapRef.current toujours null après 3s, abandon");
+          logger.error("[Carte] mapRef.current toujours null après 3s, abandon");
           return;
         }
         if (mapInstanceRef.current) return;  // déjà initialisé (HMR ou re-render)
@@ -197,7 +198,7 @@ export default function CartePage() {
         // 5. Marquer prêt → déclenche le rendu des étabs/camions
         setLeafletReady(true);
       } catch (e) {
-        console.error("[Carte] Erreur init Leaflet :", e);
+        logger.error("[Carte] Erreur init Leaflet :", e);
       }
     })();
 
@@ -398,7 +399,7 @@ export default function CartePage() {
     const cats = finessFilters.join(",");
     setFinessLoading(true);
     try {
-      const res = await fetch(`/api/finess?bbox=${encodeURIComponent(bbox)}&categories=${encodeURIComponent(cats)}&limit=200`);
+      const res = await fetchWithAuth(`/api/finess?bbox=${encodeURIComponent(bbox)}&categories=${encodeURIComponent(cats)}&limit=200`);
       const data = await res.json();
       if (res.ok && Array.isArray(data.results)) {
         drawFinessOverlay(data.results);
@@ -408,7 +409,7 @@ export default function CartePage() {
         setFinessCount(0);
       }
     } catch (e) {
-      console.error("[Carte] fetchFiness error:", e);
+      logger.error("[Carte] fetchFiness error:", e);
       setFinessCount(0);
     } finally {
       setFinessLoading(false);
@@ -509,17 +510,17 @@ export default function CartePage() {
         const params = new URLSearchParams({ profession: prof, limit: "100" });
         // 0.55.45 : si on a la ville au centre, l'utiliser comme critère
         if (villeAuCentre) params.set("ville", villeAuCentre);
-        const res = await fetch(`/api/rpps?${params}`);
+        const res = await fetchWithAuth(`/api/rpps?${params}`);
         if (!res.ok) {
-          console.warn("[Carte RPPS]", prof, "HTTP", res.status);
+          logger.warn("[Carte RPPS]", prof, "HTTP", res.status);
           continue;
         }
         const data = await res.json();
         if (data.ok && Array.isArray(data.results)) {
-          console.log("[Carte RPPS]", prof, "→", data.results.length, "résultats");
+          logger.info("[Carte RPPS]", prof, "→", data.results.length, "résultats");
           allResults.push(...data.results.filter(p => p.adresse || p.commune || p.cp));
         } else if (!data.ok) {
-          console.warn("[Carte RPPS]", prof, "API error:", data.error);
+          logger.warn("[Carte RPPS]", prof, "API error:", data.error);
         }
       }
       // Géocoder via BAN les adresses sans coords
@@ -529,11 +530,11 @@ export default function CartePage() {
         p.latitude >= bounds.getSouth() && p.latitude <= bounds.getNorth() &&
         p.longitude >= bounds.getWest() && p.longitude <= bounds.getEast()
       );
-      console.log("[Carte RPPS] résultats finaux", inBbox.length, "/ total fetchés", allResults.length);
+      logger.info("[Carte RPPS] résultats finaux", inBbox.length, "/ total fetchés", allResults.length);
       drawRppsOverlay(inBbox);
       setRppsCount(inBbox.length);
     } catch (e) {
-      console.error("[Carte] fetchRpps error:", e);
+      logger.error("[Carte] fetchRpps error:", e);
       setRppsCount(0);
     } finally {
       setRppsLoading(false);
@@ -576,11 +577,11 @@ export default function CartePage() {
 
       // 3 appels en parallèle
       const [rppsRes, sireneRes, finessRes] = await Promise.allSettled([
-        fetch(`/api/rpps?q=${encodeURIComponent(query)}${villeAuCentre ? `&ville=${encodeURIComponent(villeAuCentre)}` : ""}&limit=60`)
+        fetchWithAuth(`/api/rpps?q=${encodeURIComponent(query)}${villeAuCentre ? `&ville=${encodeURIComponent(villeAuCentre)}` : ""}&limit=60`)
           .then(r => r.json()).catch(() => null),
-        fetch(`/api/sirene?q=${encodeURIComponent(query)}${villeAuCentre ? `&commune=${encodeURIComponent(villeAuCentre)}` : ""}&limit=40`)
+        fetchWithAuth(`/api/sirene?q=${encodeURIComponent(query)}${villeAuCentre ? `&commune=${encodeURIComponent(villeAuCentre)}` : ""}&limit=40`)
           .then(r => r.json()).catch(() => null),
-        fetch(`/api/finess?q=${encodeURIComponent(query)}&limit=40`)
+        fetchWithAuth(`/api/finess?q=${encodeURIComponent(query)}&limit=40`)
           .then(r => r.json()).catch(() => null),
       ]);
 
@@ -666,7 +667,7 @@ export default function CartePage() {
       const allWithCoords = all.filter(x => x.latitude && x.longitude);
       const visible = allWithCoords;
 
-      console.log("[Recherche libre]", query,
+      logger.info("[Recherche libre]", query,
         "→ RPPS", rpps?.count || 0,
         "/ SIRENE", sirene?.count || 0,
         "/ FINESS", finess?.count || 0,
@@ -684,7 +685,7 @@ export default function CartePage() {
         }
       }
     } catch (e) {
-      console.error("[Recherche libre]", e);
+      logger.error("[Recherche libre]", e);
       setFreeSearchResults([]);
     } finally {
       setFreeSearchLoading(false);
@@ -865,7 +866,7 @@ export default function CartePage() {
           lat: center.lat.toFixed(4),
           lng: center.lng.toFixed(4),
         });
-        const res = await fetch(`/api/sirene?${params}`);
+        const res = await fetchWithAuth(`/api/sirene?${params}`);
         if (!res.ok) continue;
         const data = await res.json();
         if (Array.isArray(data.results)) {
@@ -887,7 +888,7 @@ export default function CartePage() {
       drawSireneOverlay(inBbox);
       setSireneCount(inBbox.length);
     } catch (e) {
-      console.error("[Carte] fetchSirene error:", e);
+      logger.error("[Carte] fetchSirene error:", e);
       setSireneCount(0);
     } finally {
       setSireneLoading(false);

@@ -269,7 +269,7 @@ export default function ChangelogPage() {
         loading: false,
       } : m);
     } catch (e) {
-      console.error("[Changelog] openNote fail:", e);
+      logger.error("[Changelog] openNote fail:", e);
     }
   }
 
@@ -448,7 +448,7 @@ export default function ChangelogPage() {
       setZipProgress(`✓ ${count} notes`);
       setTimeout(() => setZipProgress(""), 2000);
     } catch (e) {
-      console.error("[Zip] erreur :", e);
+      logger.error("[Zip] erreur :", e);
       alert("Erreur lors de la création du zip : " + e.message);
       setZipProgress("");
     } finally {
