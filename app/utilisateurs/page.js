@@ -317,9 +317,39 @@ export default function Utilisateurs() {
     try {
       const roleNom = roles.find((r) => r.id === i.role_id)?.nom || "Utilisateur";
       const etabNoms = auth.etablissements.map((e) => e.nom);
-      await supabase.functions.invoke("invite-user", {
-        body: { email: i.email, nom: i.nom_affiche, collectivite: auth.structureNom, role: roleNom, etablissements: etabNoms },
+
+      // 0.56.13 : reconstruire l'inviteLink depuis le token stocké (sinon l'Edge Function rejette en 400)
+      const siteUrl = (typeof window !== "undefined" ? window.location.origin : "");
+      const inviteLink = `${siteUrl}/inscription/${i.token}`;
+
+      const { data, error } = await supabase.functions.invoke("invite-user", {
+        body: {
+          email: i.email,
+          nom: i.nom_affiche,
+          collectivite: auth.structureNom,
+          role: roleNom,
+          etablissements: etabNoms,
+          inviteLink,
+        },
       });
+      if (error) {
+        let detail = error.message || "Erreur inconnue";
+        try {
+          if (error.context?.body) {
+            const reader = error.context.body.getReader();
+            const { value } = await reader.read();
+            const text = new TextDecoder().decode(value);
+            const json = JSON.parse(text);
+            if (json.error) detail = json.error;
+          }
+        } catch {}
+        alert(`Échec : ${detail}`);
+        return;
+      }
+      if (data && data.ok === false) {
+        alert(`Échec : ${data.error || "raison inconnue"}`);
+        return;
+      }
       alert("Invitation renvoyée.");
     } catch (e) {
       alert("Échec : la fonction d'envoi d'email n'est pas configurée.\n" + (e?.message || ""));

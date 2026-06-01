@@ -61,9 +61,8 @@ describe("0.56.12 - Page referentiels-sante : colonnes mutuelles", () => {
     expect(src).toContain("item.type_organisme || item.type");
   });
 
-  it("fillFromBAN map cp pour mutuelles, code_postal pour caisses", () => {
-    expect(src).toMatch(/tab === "mutuelles"[\s\S]*?cp: a\.code_postal/);
-    expect(src).toMatch(/else[\s\S]*?code_postal: a\.code_postal/);
+  it("fillFromBAN utilise cp (0.56.13 unifie pour les 2 tables)", () => {
+    expect(src).toContain("cp: a.code_postal");
   });
 });
 

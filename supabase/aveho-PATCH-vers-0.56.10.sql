@@ -80,7 +80,7 @@ begin
       then (v_patient.mutuelle_date_fin_droits - current_date)::int
       else null end as jours_avant_fin_mutuelle,
     (select nom from caisses_assurance_maladie where id = v_patient.caisse_id) as caisse_nom,
-    (select type from caisses_assurance_maladie where id = v_patient.caisse_id) as caisse_type,
+    (select type_caisse from caisses_assurance_maladie where id = v_patient.caisse_id) as caisse_type,
     (select raison_sociale from mutuelles where id = v_patient.mutuelle_id) as mutuelle_nom;
 end;
 $$;

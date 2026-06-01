@@ -54,7 +54,7 @@ export default function ReferentielsSantePage() {
   function openCreate() {
     setCreating(true);
     setEditing(tab === "caisses"
-      ? { nom: "", code_organisme: "", type: "CPAM", regime: "general" }
+      ? { nom: "", code_organisme: "", type_caisse: "CPAM", regime: "general" }
       : { raison_sociale: "", type_organisme: "mutuelle" }
     );
   }
@@ -215,7 +215,7 @@ export default function ReferentielsSantePage() {
                     {tab === "caisses" && (
                       <>
                         {item.code_organisme && <span><i className="ti ti-hash" /> <code style={{ fontFamily: "Consolas, monospace" }}>{item.code_organisme}</code></span>}
-                        {item.type && <span style={{ background: "#dbe7f5", color: "#185FA5", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>{item.type}</span>}
+                        {(item.type_caisse || item.type) && <span style={{ background: "#dbe7f5", color: "#185FA5", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>{item.type_caisse || item.type}</span>}
                         {item.departement && <span>Dept {item.departement}</span>}
                       </>
                     )}
@@ -301,26 +301,15 @@ function TabBtn({ label, icon, color, count, active, onClick }) {
 function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating }) {
   function set(k, v) { setEntity({ ...entity, [k]: v }); }
   function fillFromBAN(a) {
-    // 0.56.12 : mapping vers le bon champ selon la table cible
-    if (tab === "mutuelles") {
-      setEntity({
-        ...entity,
-        adresse: a.adresse,
-        cp: a.code_postal,
-        ville: a.ville,
-        latitude: a.latitude,
-        longitude: a.longitude,
-      });
-    } else {
-      setEntity({
-        ...entity,
-        adresse: a.adresse,
-        code_postal: a.code_postal,
-        ville: a.ville,
-        latitude: a.latitude,
-        longitude: a.longitude,
-      });
-    }
+    // 0.56.13 : les 2 tables utilisent 'cp' au lieu de 'code_postal'
+    setEntity({
+      ...entity,
+      adresse: a.adresse,
+      cp: a.code_postal,
+      ville: a.ville,
+      latitude: a.latitude,
+      longitude: a.longitude,
+    });
   }
 
   return (
@@ -352,7 +341,7 @@ function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating 
           {tab === "caisses" && (
             <>
               <Field label="Code organisme *" mono value={entity.code_organisme || ""} onChange={(v) => set("code_organisme", v)} placeholder="751010101" />
-              <FieldSelect label="Type" value={entity.type || "CPAM"} onChange={(v) => set("type", v)} options={[
+              <FieldSelect label="Type" value={entity.type_caisse || entity.type || "CPAM"} onChange={(v) => set("type_caisse", v)} options={[
                 { v: "CPAM", lbl: "CPAM" },
                 { v: "CGSS", lbl: "CGSS (DROM)" },
                 { v: "CSSM", lbl: "CSSM (Mayotte)" },
@@ -407,7 +396,7 @@ function EditModal({ tab, entity, setEntity, onSave, onCancel, saving, creating 
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
           {tab === "caisses" ? (
-            <Field label="Code postal" mono value={entity.code_postal || ""} onChange={(v) => set("code_postal", v)} />
+            <Field label="Code postal" mono value={entity.cp || entity.code_postal || ""} onChange={(v) => set("cp", v)} />
           ) : (
             <Field label="Code postal" mono value={entity.cp || entity.code_postal || ""} onChange={(v) => set("cp", v)} />
           )}

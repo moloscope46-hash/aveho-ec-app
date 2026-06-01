@@ -120,6 +120,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.13",
+    "kind": "version",
+    "titre": "🐛 Fix renvoyer invitation (inviteLink manquant) + colonnes caisses (type_caisse + cp)",
+    "chantiers": [
+      { "code": "BUG", "txt": "Bouton 'Renvoyer' sur la liste des utilisateurs renvoyait 400 (inviteLink manquant). La fonction relancerInvitation appelait supabase.functions.invoke('invite-user') sans inclure le lien d'inscription dans le body, alors que l'Edge Function le valide en obligatoire. Fix : reconstruction de l'inviteLink depuis i.token (déjà chargé par le select * sur invitations) avec window.location.origin + /inscription/{token}" },
+      { "code": "FE", "txt": "relancerInvitation enrichie : gestion propre du retour error/data avec lecture du context.body pour afficher le détail Resend si erreur. Ne crash plus silencieusement en alert générique" },
+      { "code": "BUG", "txt": "Table caisses_assurance_maladie : 2 colonnes mal nommées en 0.56.4 — la colonne s'appelle 'type_caisse' (pas 'type') et 'cp' (pas 'code_postal'). Mêmes types d'erreur que pour mutuelles (cf 0.56.12). Le SELECT * passait mais les INSERT/UPDATE plantaient et la RPC patient_dashboard_summary échouait silencieusement sur le type" },
+      { "code": "FE", "txt": "Page /admin/referentiels-sante : affichage caisses utilise item.type_caisse || item.type (fallback). Init création caisse utilise type_caisse: 'CPAM' au lieu de type. Form select caisse écrit dans entity.type_caisse. Field code postal pour caisses unifié sur cp (les 2 tables utilisent cp en réalité). fillFromBAN simplifié : un seul set avec cp pour les 2 tables" },
+      { "code": "BE", "txt": "Route /api/caisses : POST insère type_caisse + cp avec mapping depuis les anciens noms (rétrocompat). PUT remappe automatiquement {type} → {type_caisse} et {code_postal} → {cp} via destructuring const { id, code_postal, type, ...rest } = body" },
+      { "code": "SQL", "txt": "Patch 0.56.10 re-corrigé (livré en outputs) : RPC patient_dashboard_summary — (select type from caisses_assurance_maladie...) devient (select type_caisse from caisses_assurance_maladie...). Sans ce fix, le dashboard patient affichait NULL pour le type de la caisse" },
+      { "code": "AI", "txt": "+14 tests Vitest : relancerInvitation (4 : inviteLink construit, passé dans body, gestion détail erreur, commentaire), Page caisses (5 : init type_caisse, affichage, set type_caisse, set cp, fillFromBAN unifié), API caisses (4 : POST type_caisse+cp, PUT remap, destructuring), SQL (1). Total 2109 tests verts (vs 2095)" }
+    ],
+    "themes": ["bugfix", "edge_function", "caisses", "colonnes"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.13.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.12",
     "kind": "version",
     "titre": "🐛 Fix colonnes table mutuelles · raison_sociale au lieu de nom · cp au lieu de code_postal · type_organisme au lieu de type",

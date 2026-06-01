@@ -76,15 +76,16 @@ export async function POST(req) {
     global: { headers: { Authorization: authHeader } },
   });
 
+  // 0.56.13 : mapping vers les bons noms de colonnes (type_caisse, cp)
   const payload = {
     nom: body.nom,
     code_organisme: body.code_organisme,
-    type: body.type || "CPAM",
+    type_caisse: body.type_caisse || body.type || "CPAM",
     regime: body.regime || "general",
     departement: body.departement || null,
     region: body.region || null,
     adresse: body.adresse || null,
-    code_postal: body.code_postal || null,
+    cp: body.cp || body.code_postal || null,
     ville: body.ville || null,
     telephone: body.telephone || null,
     email: body.email || null,
@@ -126,7 +127,12 @@ export async function PUT(req) {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { id, ...updates } = body;
+  // 0.56.13 : remap les anciens noms vers les bons (rétrocompat)
+  const { id, code_postal, type, ...rest } = body;
+  const updates = { ...rest };
+  if (code_postal !== undefined) updates.cp = code_postal;
+  if (type !== undefined) updates.type_caisse = type;
+
   const { data, error } = await supabase
     .from("caisses_assurance_maladie")
     .update(updates)
