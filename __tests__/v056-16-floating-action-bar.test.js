@@ -63,8 +63,8 @@ describe("0.56.16 - FloatingActionBar component", () => {
   });
 
   it("Animations fluides (entrée pop-in + popup slide)", () => {
-    expect(src).toContain("fab-bubble-pop");
-    expect(src).toContain("fab-popup-slide");
+    // 0.56.17 : déplacé dans globals.css mais classe utilisée dans le JSX
+    expect(src).toContain('className="fab-bar"');
     expect(src).toContain("cubic-bezier");
   });
 
@@ -72,13 +72,15 @@ describe("0.56.16 - FloatingActionBar component", () => {
     expect(src).toContain("safe-area-inset-bottom");
   });
 
-  it("Glassmorphism : background semi-transparent + blur", () => {
-    expect(src).toContain("backdrop-filter: blur");
-    expect(src).toContain("rgba(255, 255, 255, 0.88)");
+  it("Glassmorphism : background semi-transparent + blur (dans globals.css)", () => {
+    const css = fs.readFileSync(path.resolve(process.cwd(), "app/globals.css"), "utf-8");
+    expect(css).toContain("backdrop-filter: blur");
+    expect(css).toContain("rgba(255, 255, 255, 0.88)");
   });
 
-  it("Responsive mobile : gap et padding réduits sur < 640px", () => {
-    expect(src).toContain("@media (max-width: 640px)");
+  it("Responsive mobile : gap et padding réduits sur < 640px (dans globals.css)", () => {
+    const css = fs.readFileSync(path.resolve(process.cwd(), "app/globals.css"), "utf-8");
+    expect(css).toContain("@media (max-width: 640px)");
   });
 
   it("État actif visible (transform scale + ombre élargie)", () => {

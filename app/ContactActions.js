@@ -15,7 +15,9 @@ export default function ContactActions({ entity, size = "md" }) {
   const web = entity.site_web;
   const lat = entity.latitude;
   const lng = entity.longitude;
-  const adresse = [entity.adresse, entity.code_postal, entity.ville].filter(Boolean).join(", ");
+  // 0.56.18 : fallback cp ↔ code_postal (mutuelles utilisent cp, caisses utilisent cp aussi)
+  const cp = entity.cp || entity.code_postal;
+  const adresse = [entity.adresse, cp, entity.ville].filter(Boolean).join(", ");
 
   const actions = [];
 

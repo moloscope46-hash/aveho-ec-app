@@ -16,6 +16,13 @@ export default function FloatingActionBar() {
   const router = useRouter();
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState(null); // null | "scan" | "commande"
+  const [mounted, setMounted] = useState(false);
+
+  // 0.56.17 : éviter les hydration mismatch SSR/CSR — on attend le mount
+  // côté client avant de rendre la barre (sinon erreurs React #418/#423)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Pages où la barre est masquée
   const HIDDEN_PATHS = ["/login", "/inscription", "/presentation"];
@@ -37,7 +44,7 @@ export default function FloatingActionBar() {
     }
   }, [openMenu]);
 
-  if (isHidden) return null;
+  if (isHidden || !mounted) return null;
 
   function navigate(url) {
     setOpenMenu(null);
@@ -162,57 +169,6 @@ export default function FloatingActionBar() {
           active={openMenu === "commande"}
         />
       </div>
-
-      <style jsx>{`
-        @keyframes fab-fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes fab-bubble-pop {
-          0% { transform: translateY(40px) scale(0.6); opacity: 0; }
-          60% { transform: translateY(-4px) scale(1.05); opacity: 1; }
-          100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        @keyframes fab-popup-slide {
-          from { transform: translate(-50%, 100%); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
-        }
-
-        .fab-bar {
-          position: fixed;
-          bottom: max(16px, env(safe-area-inset-bottom, 16px));
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 999;
-          display: flex;
-          gap: 14px;
-          padding: 10px 18px;
-          background: rgba(255, 255, 255, 0.88);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-radius: 999px;
-          box-shadow:
-            0 10px 28px rgba(20, 33, 49, 0.18),
-            0 2px 6px rgba(20, 33, 49, 0.08),
-            inset 0 1px 0 rgba(255, 255, 255, 0.5);
-          border: 1px solid rgba(255, 255, 255, 0.6);
-          animation: fab-bubble-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @media (max-width: 640px) {
-          .fab-bar {
-            gap: 10px;
-            padding: 8px 12px;
-          }
-        }
-
-        /* En dessous : safe area pour les écrans avec encoche bas (iPhone) */
-        @media (max-width: 768px) {
-          .fab-bar {
-            bottom: max(12px, env(safe-area-inset-bottom, 12px));
-          }
-        }
-      `}</style>
     </>
   );
 }

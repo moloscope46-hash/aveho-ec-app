@@ -120,6 +120,39 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.18",
+    "kind": "version",
+    "titre": "📞 Coordonnées & contacts complets sur la fiche patient — boutons GPS/Tel/Mail partout",
+    "chantiers": [
+      { "code": "FE", "txt": "Nouvelle Panel 'Coordonnées & contacts' sur /patient/[id] (entre le header et les KPIs) regroupant TOUTES les coordonnées du patient et de ses contacts avec boutons d'action (tel/mail/GPS/web) via le composant ContactActions existant. 6 sections en grille auto-fit (280px min) : (1) Patient — téléphone portable + fixe + email + adresse, (2) Contact d'urgence — nom complet + lien de parenté + téléphone, (3) Personne de confiance — nom + téléphone, (4) Médecin traitant — nom + RPPS + téléphone, (5) Caisse — nom + type + code organisme + adresse, (6) Mutuelle — raison sociale + type + AMC + adresse" },
+      { "code": "FE", "txt": "Sous-section 'Identifiants administratifs' avec 4 lignes (dossier, IPP, N° Sécurité Sociale, N° Adhérent mutuelle). Chaque identifiant a un bouton 'Copier' qui utilise navigator.clipboard et affiche un feedback visuel transitoire (changement texte 'Copié !' 1.5s). Le N° SS et le N° adhérent sont affichés en police monospace pour lisibilité" },
+      { "code": "FE", "txt": "Composants internes CoordRow (ligne coordonnée avec borderLeft coloré + ContactActions size='sm') et IdRow (identifiant administratif avec bouton Copier). Affichage conditionnel intelligent : la Panel n'apparaît pas s'il n'y a rien à afficher, et chaque section n'apparaît que si elle a au moins une donnée à montrer" },
+      { "code": "FE", "txt": "Chargement caisse + mutuelle en parallèle après le chargement du patient (Promise.all) — quand p.caisse_id ou p.mutuelle_id présent, on fetch la table correspondante avec select * pour avoir toutes les coordonnées. Pas de RPC nécessaire (lecture directe), donc résistant aux bugs RPC. Ajout de useState pour caisseInfo + mutuelleInfo" },
+      { "code": "BUG", "txt": "Composant ContactActions : ajout fallback entity.cp || entity.code_postal pour l'affichage de l'adresse. Les tables mutuelles et caisses_assurance_maladie utilisent toutes les deux 'cp' (pas 'code_postal'), donc le bouton GPS qui construit l'adresse depuis adresse+code_postal+ville fonctionne maintenant correctement avec ces 2 référentiels santé" },
+      { "code": "BUG", "txt": "Retrait définitif de c.template_libelle du rendu des consentements RGPD (déjà retiré du select en 0.56.17 mais l'affichage restait, ce qui ne causait pas d'erreur car undefined mais polluait). Faudra une jointure vers consentements_templates dans une future version pour avoir le libellé" },
+      { "code": "AI", "txt": "+18 tests Vitest : panel CoordonneesPanel (15 : import ContactActions, état caisseInfo+mutuelleInfo, chargement parallèle, composant intégré, sections patient/urgence/confiance/médecin/caisse/mutuelle, identifiants admin avec IdRow+ti-copy, copyToClipboard, CoordRow borderLeft, template_libelle retiré), ContactActions cp fallback (2 : entity.cp||entity.code_postal, commentaire). Total 2204 tests verts (vs 2186)" }
+    ],
+    "themes": ["feature", "ui_ux", "patient", "contacts", "accessibility"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.18.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.56.17",
+    "kind": "version",
+    "titre": "🐛 Fix hydration React #418/#423 sur FAB + colonne template_libelle inexistante",
+    "chantiers": [
+      { "code": "BUG", "txt": "Erreurs React #418 et #423 (hydration mismatch) sur toutes les pages depuis l'introduction de FloatingActionBar en 0.56.16. Cause : le composant utilisait <style jsx> qui génère des classes hash différentes entre le rendu SSR et CSR — quand le composant est rendu via un layout serveur Next.js, les styles streamés ne matchent pas ceux du client. Crash hydration → React doit recover en re-rendant tout (#423) après le mismatch (#418)" },
+      { "code": "FE", "txt": "FloatingActionBar (app/FloatingActionBar.js) : suppression complète du bloc <style jsx>, déplacement de tous les @keyframes et de la classe .fab-bar vers app/globals.css. Ajout d'un état React mounted (useState false → useEffect setMounted(true)) avec early return null si !mounted. Cette double protection (CSS globale + render différé) garantit qu'aucune divergence SSR/CSR n'apparaît à l'hydratation" },
+      { "code": "BUG", "txt": "Erreur 400 sur /rest/v1/consentements_rgpd?select=...,template_libelle — la colonne template_libelle n'existe pas dans la table consentements_rgpd. Fix : retrait de template_libelle du select dans app/patient/[id]/page.js. La table doit avoir une jointure vers consentements_templates pour récupérer le libellé, à implémenter dans une future version si nécessaire" },
+      { "code": "AI", "txt": "+8 tests Vitest : FloatingActionBar (3 : pas de style jsx, mounted state, commentaire 0.56.17), CSS globals (3 : keyframes, .fab-bar avec safe-area, media queries 640/768), consentements fix (2 : select sans template_libelle, colonnes utiles gardées). 3 tests 0.56.16 ajustés pour la nouvelle organisation CSS. Total 2186 tests verts (vs 2178)" }
+    ],
+    "themes": ["bugfix", "hydration", "ssr", "react"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.17.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.16",
     "kind": "version",
     "titre": "✨ Barre d'actions flottante en bas (mobile + desktop) — Scan / Mon étab / Commande",

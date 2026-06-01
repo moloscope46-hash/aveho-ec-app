@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.18 — Coordonnées & contacts patient</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--violet:#7a6fb0;--red:#c0392b;--amber:#EF9F27;--green:#5aa05a}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dfeaf5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#dfeaf5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#dfeaf5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.hi{background:#eef9ef;border-color:#bfe2bf}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.demo-section{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.demo-row{background:#f4f7fa;padding:8px 10px;border-radius:6px;font-size:12px}
+.demo-row b{color:#142131}
+.bl-blue{border-left:3px solid #185FA5}.bl-red{border-left:3px solid #c0392b}.bl-violet{border-left:3px solid #7a6fb0}.bl-green{border-left:3px solid #5aa05a}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — COORDONNÉES & CONTACTS PATIENT</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.18 — Coordonnées complètes sur la fiche patient<small>Boutons Tel/Mail/GPS/Web sur tous les numéros · Identifiants avec bouton Copier</small></h1>
+<div class="meta"><span><b>Date :</b> 1er juin 2026</span><span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff">v0.56.18-alpha</code></span><span><b>Tests :</b> 2204 verts (+18)</span></div>
+</header>
+
+<h2>📞 La nouvelle Panel "Coordonnées & contacts"</h2>
+<div class="panel">
+<p>Sur la fiche patient (<code>/patient/[id]</code>), entre le header et les KPIs : une nouvelle section qui regroupe <b>toutes les coordonnées</b> du patient et de ses contacts, avec des boutons d'action cliquables (téléphone, email, itinéraire GPS, site web).</p>
+
+<h3>6 sections en grille responsive</h3>
+<div class="demo-section">
+<div class="demo-row bl-blue"><b>📱 Patient</b><br>Portable + fixe + email + adresse</div>
+<div class="demo-row bl-red"><b>⚠️ Urgence</b><br>Nom + lien parenté + téléphone</div>
+<div class="demo-row bl-violet"><b>💝 Personne de confiance</b><br>Nom + téléphone</div>
+<div class="demo-row bl-green"><b>🩺 Médecin traitant</b><br>Nom + RPPS + téléphone</div>
+<div class="demo-row bl-blue"><b>🛡 Caisse</b><br>Nom + type + code org + adresse</div>
+<div class="demo-row bl-violet"><b>🤝 Mutuelle</b><br>Raison sociale + AMC + adresse</div>
+</div>
+
+<p style="margin-top:14px"><b>Boutons d'action sur chaque section :</b></p>
+<ul>
+<li>📞 <b>Appeler</b> → <code>tel:</code> au tap, ouvre l'app téléphone</li>
+<li>✉️ <b>Email</b> → <code>mailto:</code>, ouvre client mail</li>
+<li>🗺 <b>Itinéraire GPS</b> → Google Maps avec destination latitude/longitude (ou adresse texte si pas de coords)</li>
+<li>🌐 <b>Site web</b> → ouvre le site dans un nouvel onglet</li>
+</ul>
+<p>Les boutons n'apparaissent que pour les actions disponibles selon les données (pas de bouton mail si pas d'email).</p>
+</div>
+
+<h2>🔑 Identifiants administratifs avec bouton Copier</h2>
+<div class="panel">
+<p>Sous la grille, une sous-section avec les 4 identifiants administratifs principaux, chacun avec un bouton <b>📋 Copier</b> :</p>
+<ul>
+<li><b>Dossier</b> — Numéro de dossier interne</li>
+<li><b>IPP</b> — Identifiant Permanent du Patient</li>
+<li><b>N° Sécurité Sociale</b> — affiché en police monospace</li>
+<li><b>N° Adhérent mutuelle</b> — affiché en police monospace</li>
+</ul>
+<p>Au clic, le bouton change momentanément en <i>"Copié !"</i> avec une coche verte (feedback visuel 1.5s) puis revient à son état initial. Utilise <code>navigator.clipboard.writeText()</code>.</p>
+</div>
+
+<h2>🛠 Détails techniques</h2>
+<div class="panel">
+<h3>Chargement intelligent</h3>
+<p>Après le chargement principal du patient, deux requêtes parallèles sont lancées <b>uniquement si nécessaire</b> :</p>
+<ul>
+<li>Si <code>p.caisse_id</code> existe → fetch <code>caisses_assurance_maladie</code></li>
+<li>Si <code>p.mutuelle_id</code> existe → fetch <code>mutuelles</code></li>
+</ul>
+<p><b>Pas de RPC</b> — lecture directe, donc résistant aux bugs RPC.</p>
+
+<h3>Composants internes</h3>
+<ul>
+<li><code>CoordonneesPanel</code> — composant principal, masqué si rien à afficher</li>
+<li><code>CoordRow</code> — ligne avec icône colorée, borderLeft coloré, label, sub, valeur, ContactActions size='sm'</li>
+<li><code>IdRow</code> — identifiant avec icône, label uppercase, valeur (mono optionnel), bouton Copier</li>
+</ul>
+
+<h3>Fix ContactActions cp ↔ code_postal</h3>
+<p>Le composant <code>ContactActions</code> utilise désormais <code>entity.cp || entity.code_postal</code> pour construire l'adresse passée à Google Maps. Les 2 tables mutuelles et caisses_assurance_maladie utilisent en réalité <code>cp</code> (et pas <code>code_postal</code> comme je supposais initialement). Ce fix garantit que le bouton GPS fonctionne maintenant correctement pour ces 2 référentiels santé.</p>
+
+<h3>Bonus : template_libelle retiré du rendu</h3>
+<p>Sur la liste des consentements RGPD, l'affichage de <code>c.template_libelle</code> est retiré (déjà retiré du select en 0.56.17, mais le span d'affichage subsistait). Pas d'erreur visible, juste un span undefined. Faudra une jointure vers <code>consentements_templates</code> dans une future version pour avoir le libellé du template.</p>
+</div>
+
+<h2>📈 +18 tests (2186 → 2204)</h2>
+<div class="panel">
+<ul>
+<li><b>Panel CoordonneesPanel</b> (15) : import ContactActions, états caisseInfo+mutuelleInfo, chargement parallèle, composant intégré, sections patient/urgence/confiance/médecin/caisse/mutuelle, identifiants admin avec IdRow+ti-copy, copyToClipboard, CoordRow borderLeft, template_libelle retiré</li>
+<li><b>ContactActions cp fallback</b> (2) : entity.cp||entity.code_postal, commentaire 0.56.18</li>
+<li><b>+1 commun</b></li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<ul>
+<li><code>app/patient/[id]/page.js</code> : +200 lignes (state caisse+mutuelle, chargement parallèle, &lt;CoordonneesPanel&gt;, composants internes CoordRow + IdRow)</li>
+<li><code>app/ContactActions.js</code> : ajout fallback cp ↔ code_postal</li>
+<li><code>__tests__/v056-18-fiche-patient-coords.test.js</code> : NOUVEAU 18 tests</li>
+</ul>
+
+<h2>SW auto-bump — 85ème consécutif</h2>
+<p>0.52.1 → ... → 0.56.17 → <b>0.56.18</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.18 · 1er juin 2026 · 2204 tests verts</footer>
+</div></body></html>

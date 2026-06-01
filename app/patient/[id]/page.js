@@ -7,6 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
+import ContactActions from "../../ContactActions";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg, Btn, Modal } from "../../ui";
 import { fmtDate } from "../../../lib/format";
@@ -33,6 +34,9 @@ export default function FichePatient() {
   const [consents, setConsents] = useState([]);
   // Alpha 0.42.0 : filtre par type matériel sur la timeline DI
   const [filtreMatDI, setFiltreMatDI] = useState("");
+  // Alpha 0.56.18 : infos caisse + mutuelle pour boutons GPS/tel
+  const [caisseInfo, setCaisseInfo] = useState(null);
+  const [mutuelleInfo, setMutuelleInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const patId = params?.id;
 
@@ -48,7 +52,7 @@ export default function FichePatient() {
         supabase.from("materiels").select("id, libelle, num_serie, num_parc, num_lot, etat, articles(libelle)").eq("patient_id", patId),
         supabase.from("interventions").select("*, materiels(id,libelle,num_serie,num_parc)").eq("patient_id", patId).order("created_at", { ascending: false }),
         supabase.from("audit_log").select("*").or(`details->>patient_id.eq.${patId}`).order("created_at", { ascending: false }).limit(20),
-        supabase.from("consentements_rgpd").select("id, date_signature, a_consenti, date_expiration, template_libelle").eq("patient_id", patId).order("date_signature", { ascending: false }),
+        supabase.from("consentements_rgpd").select("id, date_signature, a_consenti, date_expiration").eq("patient_id", patId).order("date_signature", { ascending: false }),
       ]);
       setPat(p || null);
       const etqIds = (links || []).map((l) => l.etiquette_id);
@@ -58,6 +62,22 @@ export default function FichePatient() {
       setInterventions(di || []);
       setHistorique(ev || []);
       setConsents(cs || []);
+
+      // 0.56.18 : charger en parallèle caisse + mutuelle si le patient en a une
+      const promises = [];
+      if (p?.caisse_id) {
+        promises.push(
+          supabase.from("caisses_assurance_maladie").select("*").eq("id", p.caisse_id).single()
+            .then(r => setCaisseInfo(r.data || null))
+        );
+      }
+      if (p?.mutuelle_id) {
+        promises.push(
+          supabase.from("mutuelles").select("*").eq("id", p.mutuelle_id).single()
+            .then(r => setMutuelleInfo(r.data || null))
+        );
+      }
+      await Promise.all(promises);
       setLoading(false);
     })();
   }, [auth.ready, patId]);
@@ -199,6 +219,13 @@ export default function FichePatient() {
           </div>
         </Panel>
 
+        {/* 0.56.18 : Coordonnées & contacts (téléphones patient/urgence/confiance, dossier, caisse, mutuelle) */}
+        <CoordonneesPanel
+          pat={pat}
+          caisseInfo={caisseInfo}
+          mutuelleInfo={mutuelleInfo}
+        />
+
         {/* KPIs */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 12, marginTop: 14 }}>
           <div className="kpi-tile">
@@ -252,7 +279,6 @@ export default function FichePatient() {
                   <span style={{ fontWeight: 600, color: c.a_consenti ? "#2e6f33" : "#7a1f15" }}>
                     <i className={`ti ${c.a_consenti ? "ti-circle-check" : "ti-circle-x"}`} /> {c.a_consenti ? "Consenti" : "Refusé"}
                   </span>
-                  {c.template_libelle && <span style={{ marginLeft: 8, fontSize: 12.5, color: "#6c7a89" }}>· {c.template_libelle}</span>}
                 </div>
                 <div style={{ fontSize: 11.5, color: "#8a98a8" }}>
                   Signé le {fmtDate(c.date_signature)}
@@ -433,6 +459,212 @@ export default function FichePatient() {
           </>
         )}
       </Modal>
+    </div>
+  );
+}
+
+// =============================================================
+//  0.56.18 — Panel coordonnées & contacts
+//  Affiche tous les numéros + entités contactables du patient
+//  avec boutons GPS / Tel / Mail / Web via <ContactActions />
+// =============================================================
+function CoordonneesPanel({ pat, caisseInfo, mutuelleInfo }) {
+  if (!pat) return null;
+
+  // Helper : copie du n° dossier dans le presse-papier
+  function copyToClipboard(text, label) {
+    if (!text) return;
+    try {
+      navigator.clipboard?.writeText(text);
+      // Simple feedback visuel (peut être amélioré avec un toast global)
+      const btn = document.activeElement;
+      if (btn?.tagName === "BUTTON") {
+        const old = btn.innerHTML;
+        btn.innerHTML = '<i class="ti ti-check"></i> Copié !';
+        setTimeout(() => { btn.innerHTML = old; }, 1500);
+      }
+    } catch {}
+  }
+
+  // Entité patient construite à partir des colonnes "patients"
+  const patientEntity = {
+    telephone: pat.telephone_portable || pat.telephone_fixe,
+    email: pat.email,
+    adresse: pat.adresse,
+    code_postal: pat.code_postal,
+    ville: pat.ville,
+  };
+  const hasPatientCoords = !!(patientEntity.telephone || patientEntity.email || patientEntity.adresse);
+
+  const urgenceEntity = pat.contact_urgence_telephone ? {
+    telephone: pat.contact_urgence_telephone,
+  } : null;
+
+  const confianceEntity = pat.personne_confiance_telephone ? {
+    telephone: pat.personne_confiance_telephone,
+  } : null;
+
+  const medecinEntity = pat.medecin_traitant_telephone ? {
+    telephone: pat.medecin_traitant_telephone,
+  } : null;
+
+  // Si rien à afficher, masquer la panel
+  const hasAnything = hasPatientCoords || urgenceEntity || confianceEntity || medecinEntity
+    || pat.numero_dossier || pat.ipp || pat.numero_secu
+    || caisseInfo || mutuelleInfo;
+  if (!hasAnything) return null;
+
+  return (
+    <div style={{
+      background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12,
+      padding: "16px 18px", marginTop: 14,
+    }}>
+      <h2 style={{ margin: "0 0 14px", fontSize: 16, color: "#142131" }}>
+        <i className="ti ti-address-book" style={{ color: "#185FA5" }} /> Coordonnées & contacts
+      </h2>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+
+        {/* Patient */}
+        {hasPatientCoords && (
+          <CoordRow
+            icon="ti-user"
+            color="#185FA5"
+            label="Patient"
+            value={[pat.telephone_portable && `📱 ${pat.telephone_portable}`, pat.telephone_fixe && `☎️ ${pat.telephone_fixe}`, pat.email].filter(Boolean).join(" · ")}
+            entity={patientEntity}
+          />
+        )}
+
+        {/* Contact d'urgence */}
+        {urgenceEntity && (
+          <CoordRow
+            icon="ti-alert-triangle"
+            color="#c0392b"
+            label={`Urgence${pat.contact_urgence_nom ? ` : ${pat.contact_urgence_prenom || ""} ${pat.contact_urgence_nom}`.trim() : ""}`}
+            sub={pat.contact_urgence_lien ? `(${pat.contact_urgence_lien})` : null}
+            value={pat.contact_urgence_telephone}
+            entity={urgenceEntity}
+          />
+        )}
+
+        {/* Personne de confiance */}
+        {confianceEntity && (
+          <CoordRow
+            icon="ti-heart-handshake"
+            color="#7a6fb0"
+            label={`Personne de confiance${pat.personne_confiance_nom ? ` : ${pat.personne_confiance_prenom || ""} ${pat.personne_confiance_nom}`.trim() : ""}`}
+            value={pat.personne_confiance_telephone}
+            entity={confianceEntity}
+          />
+        )}
+
+        {/* Médecin traitant */}
+        {(medecinEntity || pat.medecin_traitant) && (
+          <CoordRow
+            icon="ti-stethoscope"
+            color="#5aa05a"
+            label={`Médecin traitant${pat.medecin_traitant ? ` : ${pat.medecin_traitant_prenom || ""} ${pat.medecin_traitant}`.trim() : ""}`}
+            sub={pat.medecin_traitant_rpps ? `RPPS ${pat.medecin_traitant_rpps}` : null}
+            value={pat.medecin_traitant_telephone || "—"}
+            entity={medecinEntity}
+          />
+        )}
+
+        {/* Caisse */}
+        {caisseInfo && (
+          <CoordRow
+            icon="ti-shield-check"
+            color="#185FA5"
+            label={`Caisse : ${caisseInfo.nom || "—"}`}
+            sub={[caisseInfo.type_caisse, caisseInfo.code_organisme && `Code ${caisseInfo.code_organisme}`].filter(Boolean).join(" · ")}
+            value={[caisseInfo.adresse, caisseInfo.cp, caisseInfo.ville].filter(Boolean).join(", ")}
+            entity={caisseInfo}
+          />
+        )}
+
+        {/* Mutuelle */}
+        {mutuelleInfo && (
+          <CoordRow
+            icon="ti-heart-handshake"
+            color="#7a6fb0"
+            label={`Mutuelle : ${mutuelleInfo.raison_sociale || mutuelleInfo.nom_court || "—"}`}
+            sub={[mutuelleInfo.type_organisme, mutuelleInfo.numero_amc && `AMC ${mutuelleInfo.numero_amc}`].filter(Boolean).join(" · ")}
+            value={[mutuelleInfo.adresse, mutuelleInfo.cp, mutuelleInfo.ville].filter(Boolean).join(", ")}
+            entity={mutuelleInfo}
+          />
+        )}
+
+      </div>
+
+      {/* Identifiants administratifs : dossier, IPP, n° SS, n° adhérent mutuelle */}
+      {(pat.numero_dossier || pat.ipp || pat.numero_secu || pat.mutuelle_numero_adherent) && (
+        <div style={{
+          marginTop: 14, paddingTop: 14, borderTop: "1px dashed #e3e9ee",
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 8,
+        }}>
+          {pat.numero_dossier && (
+            <IdRow icon="ti-file" label="Dossier" value={pat.numero_dossier} onCopy={() => copyToClipboard(pat.numero_dossier, "Numéro de dossier")} />
+          )}
+          {pat.ipp && (
+            <IdRow icon="ti-hash" label="IPP" value={pat.ipp} onCopy={() => copyToClipboard(pat.ipp, "IPP")} />
+          )}
+          {pat.numero_secu && (
+            <IdRow icon="ti-shield" label="N° Sécurité Sociale" value={pat.numero_secu} onCopy={() => copyToClipboard(pat.numero_secu, "N° SS")} mono />
+          )}
+          {pat.mutuelle_numero_adherent && (
+            <IdRow icon="ti-id-badge-2" label="N° Adhérent mutuelle" value={pat.mutuelle_numero_adherent} onCopy={() => copyToClipboard(pat.mutuelle_numero_adherent, "N° adhérent")} mono />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoordRow({ icon, color, label, sub, value, entity }) {
+  return (
+    <div style={{
+      background: "#f4f7fa", borderRadius: 8, padding: "10px 12px",
+      borderLeft: `3px solid ${color}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+        <i className={`ti ${icon}`} style={{ color, fontSize: 16 }} />
+        <b style={{ fontSize: 12.5, color: "#142131" }}>{label}</b>
+      </div>
+      {sub && (
+        <div style={{ fontSize: 11, color: "#6c7a89", marginBottom: 4, marginLeft: 22 }}>{sub}</div>
+      )}
+      {value && (
+        <div style={{ fontSize: 12, color: "#2a3a48", marginBottom: 6, marginLeft: 22, wordBreak: "break-word" }}>
+          {value}
+        </div>
+      )}
+      <div style={{ marginLeft: 22 }}>
+        <ContactActions entity={entity} size="sm" />
+      </div>
+    </div>
+  );
+}
+
+function IdRow({ icon, label, value, onCopy, mono }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <i className={`ti ${icon}`} style={{ color: "#8a98a8", fontSize: 14 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 10.5, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.3 }}>{label}</div>
+        <div style={{
+          fontSize: 12.5, color: "#142131",
+          fontFamily: mono ? "'Consolas', 'Menlo', monospace" : "inherit",
+          fontWeight: 600,
+        }}>{value}</div>
+      </div>
+      <button onClick={onCopy} title="Copier" style={{
+        background: "#dbe7f5", color: "#185FA5",
+        border: "none", padding: "4px 8px", borderRadius: 4,
+        cursor: "pointer", fontFamily: "inherit", fontSize: 11, fontWeight: 700,
+      }}>
+        <i className="ti ti-copy" /> Copier
+      </button>
     </div>
   );
 }
