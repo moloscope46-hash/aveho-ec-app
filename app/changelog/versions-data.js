@@ -120,6 +120,48 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.56.20",
+    "kind": "version",
+    "titre": "🛡️ Audit sécurité + fixes critiques : auth obligatoire sur OCR · rate limit · SQL hardening",
+    "chantiers": [
+      { "code": "SEC", "txt": "AUDIT SÉCURITÉ COMPLET : scan de 223 fichiers JS/TS + 80 SQL + ~57k lignes. Identification de 2 vulnérabilités CRITICAL (Next.js 14.2.5 Cache Poisoning + Authorization bypass) + 1 HIGH (SSRF middleware) + 4 MODERATE (vitest/vite/esbuild dev only). 10 routes API sans check auth identifiées dont 3 OCR qui brûlent quota Anthropic. Clé Google Places exposée dans 4 notes HTML changelog poussées sur GitHub (AIzaSy... à régénérer). 21 fonctions SQL sans grant execute. 16 fonctions SECURITY DEFINER sans set search_path. Mot de passe utilisateur exposé dans 2 tests publics" },
+      { "code": "BE", "txt": "Nouveau helper lib/apiAuth.js centralisé : requireAuth(req) lit le header Authorization Bearer, vérifie le token via supabase.auth.getUser(), retourne { ok: true, user, supabase } si OK ou { ok: false, response: Response 401 } si KO. checkRateLimit(userId, { maxRequests, windowMs }) : rate limiter en mémoire Map par user_id, retourne 429 + header Retry-After si quota dépassé. Pattern simple à appliquer sur toutes les routes API coûteuses",
+        "code_snippet": {
+          "file": "lib/apiAuth.js",
+          "note": "Helper requireAuth + rate limit pour routes API",
+          "lang": "js",
+          "after": "export async function requireAuth(req) {\n  const authHeader = req.headers.get(\"authorization\") || \"\";\n  const token = authHeader.replace(/^Bearer\\s+/i, \"\").trim();\n\n  if (!token) {\n    return {\n      ok: false,\n      response: Response.json(\n        { ok: false, error: \"Non authentifié (Bearer token manquant)\" },\n        { status: 401 }\n      ),\n    };\n  }\n\n  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {\n    global: { headers: { Authorization: `Bearer ${token}` } },\n    auth: { persistSession: false, autoRefreshToken: false },\n  });\n\n  const { data, error } = await supabase.auth.getUser(token);\n\n  if (error || !data?.user) {\n    return {\n      ok: false,\n      response: Response.json(\n        { ok: false, error: \"Token invalide ou expiré\" },\n        { status: 401 }\n      ),\n    };\n  }\n\n  return { ok: true, user: data.user, supabase, token };\n}"
+        }
+      },
+      { "code": "SEC", "txt": "Route /api/ocr/bulletin-situation : ajout requireAuth + rate limit 10 OCR/min/user EN PREMIER dans POST (avant même la check ANTHROPIC_API_KEY). Sans Bearer valide → 401 immédiat. Au 11e appel/min → 429 + Retry-After 60s. Protection essentielle car chaque appel coûte ~$0.01-$0.05 sur le compte Anthropic. Idem pour /api/ocr/prescription et /api/ocr/generic",
+        "code_snippet": {
+          "file": "app/api/ocr/bulletin-situation/route.js",
+          "note": "Auth + rate limit avant tout traitement",
+          "lang": "js",
+          "before": "export async function POST(req) {\n  const t0 = Date.now();\n  const apiKey = process.env.ANTHROPIC_API_KEY;\n  if (!apiKey) {\n    return Response.json({\n      ok: false,\n      error: \"ANTHROPIC_API_KEY non configurée\",\n    }, { status: 500 });\n  }\n  // ... pas de check auth → quota Anthropic brûlable\n}",
+          "after": "import { requireAuth, checkRateLimit } from \"../../../../lib/apiAuth\";\n\nexport async function POST(req) {\n  const t0 = Date.now();\n\n  // 0.56.20 : sans Bearer valide, 401\n  const authCheck = await requireAuth(req);\n  if (!authCheck.ok) return authCheck.response;\n  const { user } = authCheck;\n\n  // 0.56.20 : 10 OCR/min/user pour éviter brûler la quota\n  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });\n  if (!rate.ok) return rate.response;\n\n  const apiKey = process.env.ANTHROPIC_API_KEY;\n  if (!apiKey) { /* ... */ }\n}"
+        }
+      },
+      { "code": "FE", "txt": "Pages /scan/bulletin-situation, /scan/prescription et /scan/ocr (generic) : envoi du token Bearer dans le header Authorization à chaque appel OCR. Le token est récupéré via supabase.auth.getSession() juste avant le fetch. Sans session valide, le token est absent et l'API renvoie 401 → l'utilisateur doit se reconnecter. La page /scan/ocr a aussi reçu l'import createClient (manquant)",
+        "code_snippet": {
+          "file": "app/scan/bulletin-situation/page.js",
+          "note": "Envoi du token Bearer dans fetch",
+          "lang": "js",
+          "before": "const res = await fetch(\"/api/ocr/bulletin-situation\", {\n  method: \"POST\",\n  headers: { \"Content-Type\": \"application/json\" },\n  body: JSON.stringify({ image_base64: base64, media_type: file.type }),\n});",
+          "after": "// 0.56.20 : envoyer le token pour passer requireAuth\nconst token = (await supabase.auth.getSession())\n  .data?.session?.access_token;\n\nconst res = await fetch(\"/api/ocr/bulletin-situation\", {\n  method: \"POST\",\n  headers: {\n    \"Content-Type\": \"application/json\",\n    ...(token ? { Authorization: `Bearer ${token}` } : {}),\n  },\n  body: JSON.stringify({ image_base64: base64, media_type: file.type }),\n});"
+        }
+      },
+      { "code": "SEC", "txt": "Retrait du mot de passe utilisateur réel 'Molotof46!' qui était utilisé comme cas de test dans __tests__/v055-12-password-policy.test.js et __tests__/v055-26-security.test.js. Ces fichiers sont poussés sur GitHub publiquement → n'importe qui pouvait grep le repo et trouver le password. Remplacé par des chaînes neutres (CustomP@ss42!Strong, FakeTestPass123!) qui démontrent le même comportement (validité de la policy + redact du logger) sans exposer un secret réel" },
+      { "code": "SQL", "txt": "Nouveau patch supabase/aveho-PATCH-vers-0.56.20.sql : (1) Grant execute sur 10 fonctions identifiées sans grants (mes_etablissements, mes_structures, search_patients, search_materiels, refresh_medecin_stats, etc.) + boucle DO qui détecte et grant les autres oubliées. (2) Boucle DO qui ALTER FUNCTION ... SET search_path = public, pg_temp sur toutes les fonctions SECURITY DEFINER qui n'ont pas de search_path explicite (protection contre search path injection). (3) Vérification finale : compte des fonctions encore vulnérables après patch (devrait être 0)" },
+      { "code": "AI", "txt": "+19 tests Vitest : lib/apiAuth helper (6 : export requireAuth, header Bearer, 401 pas de token, 401 token invalide, checkRateLimit defaults, 429 + Retry-After), route OCR bulletin (3 : import helper, requireAuth en PREMIER, rate limit 10/min), route OCR prescription (1), route OCR generic (1), pages scan envoient Bearer (3), Molotof retiré des tests (2), patch SQL (3). Total 2239 tests verts (vs 2220)" },
+      { "code": "DOC", "txt": "Plan d'action recommandé pour les versions suivantes : (0.56.21 - hardening) upgrade Next.js 14.2.5 → 14.2.34+ pour règler les 2 CRITICAL CVE + auth check sur les 7 autres routes API non protégées + rel=noopener (vérifié, déjà OK) + refacto fichiers > 1000 lignes (changelog/page.js, carte, utilisateurs, patient/edit). (0.56.22 - qualité) migration 23 console.log vers lib/logger + try/catch sur 5 pages sans gestion d'erreur + upgrade vitest 1→4. Actions immédiates user : régénérer la clé Google Places exposée + changer le mot de passe Supabase" }
+    ],
+    "themes": ["security", "hardening", "audit", "api"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.56.20.html",
+    "sqlFile": "aveho-PATCH-vers-0.56.20.sql"
+  },
+  {
     "v": "0.56.19",
     "kind": "version",
     "titre": "👁️ Bouton </> sur chaque chantier — voir le code modifié directement dans le changelog",

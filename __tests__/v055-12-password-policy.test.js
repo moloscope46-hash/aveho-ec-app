@@ -62,8 +62,8 @@ describe("0.55.12 - checkPassword - blacklist", () => {
     expect(r.ok).toBe(false);
   });
 
-  it("'Molotof46!Aveho' → valide (pas dans blacklist)", () => {
-    const r = checkPassword("Molotof46!Aveho");
+  it("'CustomP@ss42!Strong' → valide (pas dans blacklist)", () => {
+    const r = checkPassword("CustomP@ss42!Strong");
     expect(r.ok).toBe(true);
   });
 });

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.56.20 — Audit sécurité + fixes critiques</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--red:#c0392b;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:30px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(192,57,43,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#ffd8d2;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#ffd8d2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#ffd8d2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.crit{background:#fef0ee;border-color:#f0c4be;border-left:4px solid #c0392b}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#c0392b;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700}
+.b-crit{background:#fce5e0;color:#7a1f15}
+.b-high{background:#fef0e0;color:#7a4f1a}
+.b-med{background:#fef9ed;color:#7a6a1a}
+.b-ok{background:#dff5e0;color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — AUDIT SÉCURITÉ COMPLET</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.56.20 — Audit sécurité + fixes critiques<small>Auth OCR · Rate limit · Hardening SQL · Mot de passe retiré des tests</small></h1>
+<div class="meta">
+<span><b>Date :</b> 1er juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.56.20-alpha</code></span>
+<span><b>Tests :</b> 2239 verts (+19)</span>
+</div>
+</header>
+
+<h2>🛡️ Résumé exécutif</h2>
+<div class="panel">
+<p>Audit complet de 223 fichiers JS/TS + 80 SQL + ~57k lignes. <b>9 problèmes de sécurité identifiés</b> (2 critiques + 1 haute + 6 moyennes). Cette version corrige les <b>3 priorités absolues</b> et liste les autres dans le plan d'action.</p>
+
+<table>
+<tr><th>Sévérité</th><th>Problème</th><th>Status</th></tr>
+<tr><td><span class="badge b-crit">CRIT</span></td><td>Routes OCR sans auth → quota Anthropic brûlable</td><td><span class="badge b-ok">✓ FIX 0.56.20</span></td></tr>
+<tr><td><span class="badge b-crit">CRIT</span></td><td>Mot de passe Molotof46! exposé dans 2 tests publics</td><td><span class="badge b-ok">✓ FIX 0.56.20</span></td></tr>
+<tr><td><span class="badge b-crit">CRIT</span></td><td>Clé Google Places dans 4 notes HTML poussées sur GitHub</td><td><span class="badge b-high">🔑 À régénérer manuellement</span></td></tr>
+<tr><td><span class="badge b-crit">CRIT</span></td><td>Next.js 14.2.5 : 2 CVE CRITICAL (Cache Poisoning, Auth bypass)</td><td><span class="badge b-med">📅 Planifié 0.56.21</span></td></tr>
+<tr><td><span class="badge b-high">HIGH</span></td><td>7 autres routes API sans auth (rpps, finess, etc.)</td><td><span class="badge b-med">📅 Planifié 0.56.21</span></td></tr>
+<tr><td><span class="badge b-high">HIGH</span></td><td>21 fonctions SQL sans grant execute</td><td><span class="badge b-ok">✓ Patch SQL fourni</span></td></tr>
+<tr><td><span class="badge b-high">HIGH</span></td><td>16 fonctions SECURITY DEFINER sans search_path</td><td><span class="badge b-ok">✓ Patch SQL fourni</span></td></tr>
+<tr><td><span class="badge b-med">MED</span></td><td>7 liens target=_blank (analyse refaite : tous OK)</td><td><span class="badge b-ok">✓ Faux positif</span></td></tr>
+<tr><td><span class="badge b-med">MED</span></td><td>Vitest/Vite/esbuild : 4 vulnérabilités (dev only)</td><td><span class="badge b-med">📅 Planifié 0.56.22</span></td></tr>
+</table>
+</div>
+
+<h2>🔴 Fix 1 — Routes OCR : auth + rate limit obligatoires</h2>
+<div class="panel crit">
+<p><b>Le danger :</b> les 3 routes <code>/api/ocr/bulletin-situation</code>, <code>/api/ocr/prescription</code>, <code>/api/ocr/generic</code> n'avaient <b>aucune vérification d'authentification</b>. N'importe qui pouvait spammer ces URLs et brûler ta quota Anthropic (~$0.01-$0.05/appel).</p>
+
+<h3>Solution : helper centralisé lib/apiAuth.js</h3>
+<p>Nouveau fichier qui expose 2 fonctions :</p>
+<ul>
+<li><code>requireAuth(req)</code> — lit le header <code>Authorization: Bearer ...</code>, vérifie le token via <code>supabase.auth.getUser()</code>, retourne 401 si invalide</li>
+<li><code>checkRateLimit(userId, opts)</code> — rate limiter en mémoire Map, défaut <b>10 requêtes/min/user</b>, retourne 429 + header <code>Retry-After</code> si dépassé</li>
+</ul>
+
+<h3>Application sur les 3 routes OCR</h3>
+<pre><code>// 0.56.20 : protection auth — sans Bearer valide, 401
+const authCheck = await requireAuth(req);
+if (!authCheck.ok) return authCheck.response;
+const { user } = authCheck;
+
+// 0.56.20 : rate limit 10 OCR/min/user
+const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+if (!rate.ok) return rate.response;
+
+// Seulement maintenant on continue
+const apiKey = process.env.ANTHROPIC_API_KEY;
+// ...</code></pre>
+
+<h3>Côté front : envoi du token Bearer</h3>
+<p>Les pages <code>/scan/bulletin-situation</code>, <code>/scan/prescription</code> et <code>/scan/ocr</code> récupèrent maintenant le token Supabase et l'envoient dans le header :</p>
+<pre><code>const token = (await supabase.auth.getSession())
+  .data?.session?.access_token;
+
+const res = await fetch("/api/ocr/bulletin-situation", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  },
+  body: JSON.stringify({ image_base64: base64, media_type: file.type }),
+});</code></pre>
+</div>
+
+<h2>🔴 Fix 2 — Mot de passe retiré des tests publics</h2>
+<div class="panel crit">
+<p>Le mot de passe <code>Molotof46!</code> apparaissait dans 2 tests publics sur GitHub :</p>
+<ul>
+<li><code>__tests__/v055-12-password-policy.test.js:65-66</code></li>
+<li><code>__tests__/v055-26-security.test.js:32</code></li>
+</ul>
+<p>Ces tests démontraient la validité de la policy de mot de passe et le redact du logger — mais en utilisant un secret <b>réel</b>. N'importe quel bot scannant GitHub pouvait le trouver et l'utiliser pour se connecter à ton compte Supabase.</p>
+
+<p><b>Fix appliqué :</b> remplacement par des chaînes neutres :</p>
+<pre><code>// Avant
+checkPassword("Molotof46!Aveho");
+redact({ user: "cedric", password: "Molotof46!" });
+
+// Après
+checkPassword("CustomP@ss42!Strong");
+redact({ user: "cedric", password: "FakeTestPass123!" });</code></pre>
+
+<p><b>⚠️ ACTION URGENTE pour toi :</b> change ton mot de passe Supabase MAINTENANT. L'historique Git contient toujours l'ancien mot de passe même si on le retire dans cette version. Considère qu'il est compromis.</p>
+</div>
+
+<h2>🔑 Fix 3 — Clé Google Places exposée</h2>
+<div class="panel crit">
+<p>La clé <code>AIzaSyCZFeYA4ln-3BfkTUmNOc3l11OkcRHM8zU</code> est en clair dans 4 notes HTML publiques (poussées sur GitHub via <code>public/changelog-notes/</code>) :</p>
+<ul>
+<li><code>NOTE-VERSION-Alpha-0.55.38.html</code></li>
+<li><code>NOTE-VERSION-Alpha-0.55.39.html</code></li>
+<li><code>NOTE-VERSION-Alpha-0.55.50.html</code></li>
+<li><code>NOTE-VERSION-Alpha-0.56.6.html</code></li>
+</ul>
+<p>Mais aussi dans <code>.env.local</code> (qui lui est gitignored, donc OK).</p>
+
+<p><b>⚠️ ACTION URGENTE pour toi :</b></p>
+<ol>
+<li>Va sur <a href="https://console.cloud.google.com/google/maps-apis/credentials">console.cloud.google.com → Google Maps APIs</a></li>
+<li>Régénère ta clé (supprime l'ancienne, crée une nouvelle)</li>
+<li>Restreins-la par <b>référent HTTP</b> : <code>*.vercel.app</code>, <code>localhost:*</code></li>
+<li>Mets à jour <code>.env.local</code> + Vercel Environment Variables</li>
+</ol>
+<p>Je ne peux pas réécrire l'historique Git public pour toi — les anciennes notes resteront dans le repo. Mais une fois la clé régénérée, l'ancienne sera inutile.</p>
+</div>
+
+<h2>🛡️ Fix 4 — Patch SQL : grants + search_path</h2>
+<div class="panel warn">
+<p>Patch <code>supabase/aveho-PATCH-vers-0.56.20.sql</code> à exécuter dans Supabase SQL Editor.</p>
+
+<h3>(1) Grant execute sur 21 fonctions oubliées</h3>
+<p>Ces fonctions étaient appelables côté front mais sans <code>grant execute</code> elles renvoient un <code>403 permission denied</code> au runtime :</p>
+<ul>
+<li><code>mes_etablissements</code>, <code>mes_structures</code></li>
+<li><code>search_patients</code>, <code>search_materiels</code></li>
+<li><code>refresh_medecin_stats</code></li>
+<li><code>auto_rattach_admin_etabs</code>, <code>auto_rattach_admins_to_new_etab</code></li>
+<li><code>ensure_single_active_template</code>, <code>get_consent_validity_days</code></li>
+<li><code>patients_set_updated_at</code></li>
+</ul>
+
+<h3>(2) ALTER FUNCTION ... SET search_path</h3>
+<p>16 fonctions <code>SECURITY DEFINER</code> sans <code>set search_path</code> sont vulnérables à une attaque par <b>search path injection</b> : un attaquant qui crée un schéma "public" malveillant peut détourner les calls de fonctions.</p>
+<p>Le patch boucle sur toutes les fonctions DEFINER de <code>public</code> et applique <code>set search_path = public, pg_temp</code> à celles qui n'en ont pas.</p>
+
+<h3>(3) Vérification finale</h3>
+<p>Le patch termine par un SELECT qui compte les fonctions encore vulnérables après hardening — devrait être 0.</p>
+</div>
+
+<h2>📊 Détails de l'audit complet</h2>
+
+<div class="panel ok">
+<h3>✅ Sains / bien faits</h3>
+<ul>
+<li><code>.env.local</code> correctement dans <code>.gitignore</code></li>
+<li>Pas de <code>SERVICE_ROLE_KEY</code> exposé côté front</li>
+<li>Pas de <code>eval()</code> ou <code>new Function()</code> dynamique</li>
+<li>XSS sanitisé : <code>consentementToHtml</code> échappe <code>&amp;&lt;&gt;</code> AVANT toute transformation markdown</li>
+<li><code>lib/logger.js</code> redacte automatiquement password/token/refresh_token/credential_id</li>
+<li>Pas de <code>localStorage.setItem("token", ...)</code> dangereux</li>
+<li>RLS bien posée sur tables critiques (16 policies patients, 14 prescriptions, 14 materiels)</li>
+<li>220 foreign keys déclarées proprement</li>
+<li>Storage Supabase : sanitize filename sur uploads</li>
+<li>Tous les <code>target="_blank"</code> ont bien <code>rel="noopener noreferrer"</code> (faux positif du premier scan)</li>
+</ul>
+</div>
+
+<div class="panel warn">
+<h3>📐 Qualité du code (à refacto plus tard)</h3>
+<ul>
+<li>Fichiers &gt; 1000 lignes : changelog/page.js (1603), carte (1482), utilisateurs (1400), patient/edit (1065), maintenance (1016), statistiques (999), parametres-rgpd (963)</li>
+<li>23 <code>console.log</code> directs (devraient passer par lib/logger)</li>
+<li>133 <code>useEffect</code> sans deps explicites (peut causer des loops)</li>
+<li>5 pages sans try/catch sur appels Supabase (/journal, /materiel/[id], /tags-materiel, /admin/bulletins-archive, /)</li>
+<li>6 imports relatifs ../../../../../ illisibles</li>
+<li>1 TODO en attente</li>
+</ul>
+</div>
+
+<h2>📋 Plan d'action recommandé</h2>
+<div class="panel tip">
+<h3>0.56.20 — Cette version ✓</h3>
+<ul>
+<li>Auth + rate limit sur OCR ✓</li>
+<li>Mot de passe retiré des tests ✓</li>
+<li>Patch SQL grants + search_path fourni ✓</li>
+</ul>
+
+<h3>0.56.21 — Hardening (à venir)</h3>
+<ul>
+<li>Upgrade Next.js 14.2.5 → 14.2.34+ pour les 2 CVE CRITICAL</li>
+<li>Auth check sur les 7 autres routes API non protégées</li>
+</ul>
+
+<h3>0.56.22 — Qualité (à venir)</h3>
+<ul>
+<li>Migration 23 console.log → lib/logger</li>
+<li>try/catch sur les 5 pages sans gestion d'erreur</li>
+<li>Refacto des 4 plus gros fichiers</li>
+<li>Upgrade vitest 1.x → 4.x</li>
+</ul>
+
+<h3>Actions immédiates pour toi 🚨</h3>
+<ol>
+<li><b>Change ton mot de passe Supabase MAINTENANT</b></li>
+<li><b>Régénère ta clé Google Places</b></li>
+<li>Joue le patch SQL <code>aveho-PATCH-vers-0.56.20.sql</code></li>
+<li>Déploie la 0.56.20</li>
+</ol>
+</div>
+
+<h2>📈 +19 tests (2220 → 2239)</h2>
+<div class="panel">
+<ul>
+<li><b>lib/apiAuth</b> (6) : requireAuth export, Bearer header, 401 sans token, 401 token invalide, checkRateLimit defaults 10/60s, 429 + Retry-After</li>
+<li><b>Route OCR bulletin</b> (3) : import helper, requireAuth en PREMIER, rate limit 10/min</li>
+<li><b>Route OCR prescription</b> (1) : import + appel</li>
+<li><b>Route OCR generic</b> (1) : import + appel</li>
+<li><b>Pages scan Bearer</b> (3) : bulletin, prescription, ocr-generic envoient le token</li>
+<li><b>Molotof retiré</b> (2) : v055-12 + v055-26</li>
+<li><b>Patch SQL</b> (3) : grants, ALTER search_path, check final</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés / créés</h2>
+<ul>
+<li><code>lib/apiAuth.js</code> : <b>NOUVEAU</b> ~135 lignes</li>
+<li><code>app/api/ocr/bulletin-situation/route.js</code> : auth + rate limit</li>
+<li><code>app/api/ocr/prescription/route.js</code> : auth + rate limit</li>
+<li><code>app/api/ocr/generic/route.js</code> : auth + rate limit</li>
+<li><code>app/scan/bulletin-situation/page.js</code> : envoi Bearer</li>
+<li><code>app/scan/prescription/page.js</code> : envoi Bearer</li>
+<li><code>app/scan/ocr/page.js</code> : import createClient + envoi Bearer</li>
+<li><code>__tests__/v055-12-password-policy.test.js</code> : Molotof retiré</li>
+<li><code>__tests__/v055-26-security.test.js</code> : Molotof retiré</li>
+<li><code>supabase/aveho-PATCH-vers-0.56.20.sql</code> : <b>NOUVEAU</b> patch grants + search_path</li>
+<li><code>__tests__/v056-20-security-audit.test.js</code> : <b>NOUVEAU</b> 19 tests</li>
+</ul>
+
+<h2>SW auto-bump — 87ème consécutif</h2>
+<p>0.52.1 → ... → 0.56.19 → <b>0.56.20</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.56.20 · 1er juin 2026 · 2239 tests verts · Audit sécurité Anthropic</footer>
+</div></body></html>

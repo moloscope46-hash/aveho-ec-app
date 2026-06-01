@@ -91,8 +91,21 @@ RÈGLES IMPORTANTES :
 - Les dates au format ISO YYYY-MM-DD
 - ocr_text_brut doit contenir TOUT le texte visible (utile pour audit/correction manuelle)`;
 
+// 0.56.20 : auth + rate limit obligatoires
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+
 export async function POST(req) {
   const t0 = Date.now();
+
+  // 0.56.20 : protection auth — sans Bearer valide, 401
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+
+  // 0.56.20 : rate limit 10 OCR/min/user pour éviter brûler la quota Anthropic
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return Response.json({

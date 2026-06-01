@@ -69,9 +69,14 @@ export default function ScanBulletinSituationPage() {
         r.onerror = () => rej(new Error("Lecture fichier impossible"));
         r.readAsDataURL(file);
       });
+      // 0.56.20 : envoyer le token pour passer la check requireAuth côté API
+      const token = (await supabase.auth.getSession()).data?.session?.access_token;
       const res = await fetch("/api/ocr/bulletin-situation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ image_base64: base64, media_type: file.type }),
       });
       const data = await res.json();

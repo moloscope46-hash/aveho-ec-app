@@ -17,8 +17,19 @@ Extrais TOUT le texte visible dans le document fourni, dans l'ordre de lecture (
 
 Réponds UNIQUEMENT avec le texte extrait, sans introduction, sans commentaire, sans markdown. Si l'image n'est pas lisible ou ne contient pas de texte, réponds "(aucun texte détecté)".`;
 
+// 0.56.20 : auth + rate limit
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+
 export async function POST(req) {
   const t0 = Date.now();
+
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return Response.json({ ok: false, error: "ANTHROPIC_API_KEY non configurée" }, { status: 500 });

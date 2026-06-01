@@ -9,6 +9,7 @@
 
 import { useState, useRef } from "react";
 import { useAuth } from "../../../lib/useAuth";
+import { createClient } from "../../../lib/supabase";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
@@ -16,6 +17,7 @@ import { PageHead, Panel, StateMsg } from "../../ui";
 export default function ScanOcrPage() {
   const auth = useAuth();
   const cart = useCart();
+  const supabase = createClient();
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
@@ -46,9 +48,14 @@ export default function ScanOcrPage() {
         r.onerror = () => rej(new Error("Lecture fichier impossible"));
         r.readAsDataURL(file);
       });
+      // 0.56.20 : token Bearer pour passer requireAuth
+      const token = (await supabase.auth.getSession()).data?.session?.access_token;
       const res = await fetch("/api/ocr/generic", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ image_base64: base64, media_type: file.type }),
       });
       const data = await res.json();

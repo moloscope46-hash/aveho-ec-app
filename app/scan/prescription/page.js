@@ -86,9 +86,14 @@ function ScanPrescriptionPage() {
     setStep("ocr");
     try {
       const b64 = await fileToBase64(file);
+      // 0.56.20 : envoyer le token pour passer la check requireAuth côté API
+      const token = (await supabase.auth.getSession()).data?.session?.access_token;
       const res = await fetch("/api/ocr/prescription", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           image_base64: b64,
           media_type: file.type,

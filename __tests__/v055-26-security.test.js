@@ -29,7 +29,7 @@ describe("0.55.26 - logger.redact - masque les valeurs sensibles", () => {
   }
 
   it("masque password", () => {
-    const r = redact({ user: "cedric", password: "Molotof46!" });
+    const r = redact({ user: "cedric", password: "FakeTestPass123!" });
     expect(r.password).toBe("[REDACTED]");
     expect(r.user).toBe("cedric");
   });

@@ -72,8 +72,19 @@ Règles importantes :
 
 Retourne UNIQUEMENT le JSON.`;
 
+// 0.56.20 : auth + rate limit
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+
 export async function POST(req) {
   const t0 = Date.now();
+
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json({ ok: false, error: "ANTHROPIC_API_KEY manquante" }, { status: 500 });
   }
