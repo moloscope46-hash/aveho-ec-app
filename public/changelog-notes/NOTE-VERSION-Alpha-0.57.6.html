@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.6 — Performance</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#EF9F27 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fde8c8;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#fde8c8;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#fde8c8}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--amber)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#dff5e0);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.blue{background:#e8f0f8;border-color:#bfd7ea}.kpi.blue .kpi-val{color:#185FA5}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — PERFORMANCE</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.6 — Lazy load CodeViewer + SqlModal + smoke-tests<small>-11 kB First Load JS · 89 KB économisés sur les visites sans interaction</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.6-alpha</code></span>
+<span><b>Tests :</b> 2460 verts (+21)</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 3 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">304 → 293</span>
+<span class="kpi-lbl">kB First Load /changelog</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">89</span>
+<span class="kpi-lbl">kB économisés (smoke-tests)</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">3</span>
+<span class="kpi-lbl">Chunks lazy ajoutés</span>
+</div>
+</div>
+
+<h2>⚡ Fix 1 — Lazy load CodeViewer + SqlModal (next/dynamic)</h2>
+<div class="panel">
+<p>Les modaux CodeViewer (popup de code snippet) et SqlModal (popup de SQL) étaient importés <b>statiquement</b> dans <code>app/changelog/page.js</code>. Résultat : leur code était inclus dans le bundle initial de /changelog, <b>même si l'utilisateur ne cliquait JAMAIS dessus</b>.</p>
+
+<h3>Avant 0.57.6</h3>
+<pre><code>import CodeViewer from "./CodeViewer";
+import SqlModal from "./SqlModal";
+
+// → ces 2 composants (~10 kB combinés) sont dans le bundle
+//   initial de /changelog dès le premier chargement</code></pre>
+
+<h3>Après 0.57.6</h3>
+<pre><code>import dynamic from "next/dynamic";
+
+// 0.57.6 : lazy-loadés (chargés à la demande)
+const CodeViewer = dynamic(() => import("./CodeViewer"), { ssr: false });
+const SqlModal = dynamic(() => import("./SqlModal"), { ssr: false });
+
+// → ces composants sont dans des chunks séparés que webpack
+//   ne télécharge QUE quand l'utilisateur ouvre une modale</code></pre>
+
+<p>L'option <code>ssr: false</code> est cohérente car ces modaux utilisent <code>useState</code>, <code>useEffect</code>, navigator.clipboard, document.addEventListener (ESC) — du code purement navigateur sans rendu serveur utile.</p>
+</div>
+
+<h2>🚀 Fix 2 — smoke-tests-index : badge léger + lazy load 92 KB</h2>
+<div class="panel">
+<p>Le fichier <code>app/changelog/smoke-tests.js</code> fait <b>92 KB</b> (56 versions avec leurs tests in-browser). Il était importé statiquement juste pour faire <code>VERSION_TESTS[v.v]</code> dans le rendu — un simple "boolean lookup" pour afficher un badge "tests dispo".</p>
+
+<p><b>Solution :</b> nouveau fichier <code>app/changelog/smoke-tests-index.js</code> (~3 KB) :</p>
+<ul>
+<li><b>Export <code>VERSION_TESTS_KEYS</code></b> : un <code>Set</code> JS avec juste les clés de versions. Léger.</li>
+<li><b>Export <code>runTestsForVersionLazy(version)</code></b> : wrapper qui charge smoke-tests.js en <code>await import("./smoke-tests")</code> et exécute les tests. Appelé seulement quand l'utilisateur clique sur "Tester".</li>
+<li><b>Export <code>runAllTestsLazy(onProgress)</code></b> : pareil pour "Tester tout".</li>
+</ul>
+
+<pre><code>// smoke-tests-index.js (3 KB)
+export const VERSION_TESTS_KEYS = new Set([
+  "0.55.18", "0.55.24", ..., "0.57.6",  // 56 clés
+]);
+
+export async function runTestsForVersionLazy(version) {
+  const mod = await import("./smoke-tests");  // 92 KB chunk
+  return mod.runTestsForVersion(version);
+}</code></pre>
+
+<h3>Dans page.js</h3>
+<pre><code>// Avant 0.57.6
+import { VERSION_TESTS, runTestsForVersion, runAllTests } from "./smoke-tests";
+// → 92 KB chargés à chaque visite de /changelog
+// ...
+background: VERSION_TESTS[v.v] ? "#5aa05a" : "#8a98a8",
+const results = await runTestsForVersion(version);
+
+// Après 0.57.6
+import { VERSION_TESTS_KEYS, runTestsForVersionLazy, runAllTestsLazy } from "./smoke-tests-index";
+// → 3 KB pour le badge
+// ...
+background: VERSION_TESTS_KEYS.has(v.v) ? "#5aa05a" : "#8a98a8",
+const results = await runTestsForVersionLazy(version);
+// → 92 KB téléchargés UNIQUEMENT au moment du clic</code></pre>
+
+<p><b>Économie nette : 89 KB sur les visites sans interaction de test.</b></p>
+</div>
+
+<h2>📊 Audit bundle après 0.57.6</h2>
+<div class="panel">
+<h3>Pages les plus lourdes (First Load JS)</h3>
+<table>
+<tr><th>Page</th><th>Page JS</th><th>First Load</th><th>Note</th></tr>
+<tr><td><code>/changelog</code></td><td>105 kB</td><td>293 kB</td><td>Gros à cause de versions-data.js (159 entrées). Voir 0.57.7 pour split.</td></tr>
+<tr><td><code>/patients</code></td><td>17.6 kB</td><td>213 kB</td><td>OK</td></tr>
+<tr><td><code>/etablissements</code></td><td>10.3 kB</td><td>212 kB</td><td>OK</td></tr>
+<tr><td><code>/utilisateurs</code></td><td>13.9 kB</td><td>209 kB</td><td>OK</td></tr>
+<tr><td><code>/profil</code></td><td>14.8 kB</td><td>205 kB</td><td>OK</td></tr>
+<tr><td><code>/patient/[id]/edit</code></td><td>13.9 kB</td><td>207 kB</td><td>OK (déjà split en tabs en 0.57.1)</td></tr>
+<tr><td>Toutes les autres</td><td>1-15 kB</td><td>170-210 kB</td><td>OK</td></tr>
+</table>
+
+<h3>Lazy loads déjà en place ✅</h3>
+<ul>
+<li><code>jszip</code> dans changelog (~100 kB lazy)</li>
+<li><code>leaflet</code> dans carte (~150 kB lazy)</li>
+<li><code>html5-qrcode</code> dans scan/QR (~50 kB lazy)</li>
+<li><code>exportData</code> / <code>exportPdf</code> dans crud (~30 kB lazy chacun)</li>
+<li><b>CodeViewer + SqlModal</b> dans changelog (~10 kB lazy) — NEW 0.57.6</li>
+<li><b>smoke-tests</b> dans changelog (~92 kB lazy) — NEW 0.57.6</li>
+</ul>
+
+<h3>Shared bundle = 104 kB</h3>
+<p>React + Next.js core + lib essentielles. <b>Non optimisable</b> sans changer de framework.</p>
+</div>
+
+<h2>🛠️ Bonus — Script analyze-bundle.sh</h2>
+<div class="panel">
+<p>Nouveau <code>scripts/analyze-bundle.sh</code> qui facilite les audits perf futurs. Utilisation :</p>
+<pre><code>npm run build
+bash scripts/analyze-bundle.sh</code></pre>
+
+<p>Affiche :</p>
+<ul>
+<li><b>Shared chunks</b> (chargés par toutes les pages) — pour vérifier que le tronc commun ne grossit pas</li>
+<li><b>Pages les plus lourdes</b> (chunks app/) — pour repérer les nouvelles pages problématiques</li>
+<li><b>Dynamic chunks</b> (lazy loadés) — pour valider que les optimisations lazy sont actives</li>
+<li>Récap des First Load par page</li>
+</ul>
+</div>
+
+<h2>📈 +21 tests dédiés (v057-6-performance-lazy.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.6+ (1)</li>
+<li>smoke-tests-index : 6 tests (existe, VERSION_TESTS_KEYS Set, runTestsForVersionLazy, runAllTestsLazy, 50+ clés, < 120 lignes)</li>
+<li>changelog/page.js lazy patterns : 9 tests (import next/dynamic, CodeViewer dynamic, SqlModal dynamic, ssr: false, plus d'imports statiques, smoke-tests-index utilisé, VERSION_TESTS_KEYS.has au lieu de bracket access, appels lazy)</li>
+<li>Lazy existants confirmés : 3 tests (jszip, leaflet, exportData/exportPdf)</li>
+<li>Script analyze-bundle : 2 tests (existe + structure)</li>
+<li>+ 2 tests existants v056-19 et v057-2 acceptent désormais les 2 patterns import (statique OU dynamic)</li>
+</ul>
+</div>
+
+<h2>📋 Reste à faire (versions ultérieures)</h2>
+<div class="panel tip">
+<h3>0.57.7 — Split versions-data.js (gros gain estimé)</h3>
+<p>Le fichier <code>versions-data.js</code> fait <b>312 KB</b> avec 159 entrées. Si on split en :</p>
+<ul>
+<li><code>versions-index.js</code> (juste v + kind + titre + date + themes) — ~30 KB</li>
+<li><code>changelog-data/v-X.X.X.json</code> (chantiers détaillés) — chargés en lazy via fetch quand l'utilisateur ouvre une carte</li>
+</ul>
+<p>Gain estimé : <b>/changelog passerait de 293 kB à ~150 kB First Load</b> (-50%). Mais chantier risqué : touche au rendu de la liste principale.</p>
+
+<h3>0.57.8 — Audit Lighthouse réel</h3>
+<p>Mesurer Core Web Vitals (LCP, FID, CLS) en prod sur Vercel — pas possible depuis dev local.</p>
+
+<h3>0.58+ — Refactos qualité + Features métier (au choix)</h3>
+<ul>
+<li>Extraction NoteModal du changelog (208 lignes)</li>
+<li>Refacto carte/page.js (1483) ou utilisateurs/page.js (1400)</li>
+<li>Import auto adresses CNAM/AMC</li>
+<li>Module Formation / HR / CRM</li>
+</ul>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (3)</h3>
+<ul>
+<li><code>app/changelog/smoke-tests-index.js</code> (~3 KB, VERSION_TESTS_KEYS Set + 2 wrappers lazy)</li>
+<li><code>scripts/analyze-bundle.sh</code> (script CLI pour audits perf)</li>
+<li><code>__tests__/v057-6-performance-lazy.test.js</code> (21 tests)</li>
+</ul>
+<h3>Modifiés (3)</h3>
+<ul>
+<li><code>app/changelog/page.js</code> : import dynamic + CodeViewer/SqlModal lazy + smoke-tests-index au lieu de smoke-tests + VERSION_TESTS_KEYS.has + runTestsForVersionLazy / runAllTestsLazy</li>
+<li><code>__tests__/v056-19-changelog-code-button.test.js</code> : test CodeViewer accepte les 2 patterns import</li>
+<li><code>__tests__/v057-2-refacto-changelog.test.js</code> : test SqlModal accepte les 2 patterns import</li>
+</ul>
+
+<h2>SW auto-bump — 96ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.5 → <b>0.57.6</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.6 · 2 juin 2026 · 2460 tests verts · Perf optimization</footer>
+</div></body></html>

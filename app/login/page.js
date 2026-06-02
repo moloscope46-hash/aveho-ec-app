@@ -7,15 +7,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import pkg from "../../package.json";
 import {
-  isWebAuthnSupported,
-  isMobileDevice,
-  getAvailableMethods,
-  authenticateBiometric,
-  isPlatformAuthenticatorAvailable,
-  METHOD_LABEL,
-  METHOD_ICON,
-} from "../../lib/webauthn";
-
+  isWebAuthnSupported, getAvailableMethods, authenticateBiometric, isPlatformAuthenticatorAvailable} from "../../lib/webauthn";
 export default function Login() {
   const supabase = createClient();
   const router = useRouter();

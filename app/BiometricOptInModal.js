@@ -13,17 +13,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
 import { logger } from "../lib/logger";
 import {
-  shouldShowBiometricOptIn,
-  registerBiometric,
-  markOptInSkipped,
-  getDeviceName,
-  getAvailableMethods,
-  METHOD_LABEL,
-  METHOD_ICON,
-  METHOD_COLOR,
-  isLikelyFaceCapable,
-} from "../lib/webauthn";
-
+  shouldShowBiometricOptIn, registerBiometric, markOptInSkipped, getDeviceName, getAvailableMethods, METHOD_LABEL, isLikelyFaceCapable} from "../lib/webauthn";
 export default function BiometricOptInModal({ forceShow = false, onClose }) {
   const supabase = createClient();
   const [open, setOpen] = useState(forceShow);

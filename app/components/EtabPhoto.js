@@ -18,6 +18,7 @@
 // =============================================================
 
 import { useEffect, useState, useRef } from "react";
+import { fetchWithAuth } from "../../lib/fetchWithAuth";
 
 const CACHE_KEY_PREFIX = "aveho:etab-place:";
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -70,7 +71,7 @@ async function fetchGooglePlace(nom, adresseComplete) {
       // Appel via notre proxy serveur (pour cacher la clé API)
       const params = new URLSearchParams({ nom });
       if (adresseComplete) params.set("adresse", adresseComplete);
-      const res = await fetch(`/api/place?${params}`);
+      const res = await fetchWithAuth(`/api/place?${params}`);
       if (!res.ok) return null;
       const data = await res.json();
       if (!data.ok) return null;
@@ -122,6 +123,11 @@ export default function EtabPhoto({
       setCached(cacheKey, final);
       setPlace(final);
       onPlaceLoaded?.(final);
+    }).catch(() => {
+      // 0.57.5 : fetch a échoué (réseau, 4xx, 5xx) — on affiche le fallback
+      if (!mountedRef.current) return;
+      setPlace({});
+      setPhotoError(true);
     });
   }, [nom, ville, adresse]);
 

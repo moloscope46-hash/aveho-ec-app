@@ -303,7 +303,7 @@ export default function Patients() {
               <i className={`ti ${showFilters ? "ti-filter-off" : "ti-filter"}`} /> Filtres avancés
               {(filters.q || filters.service || filters.chambre || filters.etat || filters.etiquette) && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
             </button>
-            {/* 0.55.11 (AI) : Export Excel */}
+            {/* 0.55.11 (AI) : Export CSV */}
             <button
               className="btn-ghost"
               onClick={async () => {
@@ -325,7 +325,7 @@ export default function Patients() {
                   },
                 });
               }}
-              title="Exporter la liste en Excel"
+              title="Exporter la liste en CSV (ouvrable dans Excel/Calc)"
             >
               <i className="ti ti-file-spreadsheet" /> Excel
             </button>

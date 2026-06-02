@@ -1,0 +1,359 @@
+/*!
+ * Tabler Icons SUBSET pour Aveho EC (Alpha 0.57.9)
+ *
+ * Généré automatiquement par scripts/build-tabler-icons-subset.mjs
+ * Source : @tabler/icons-webfont 2.47.0
+ *
+ * Icônes incluses : 322 / 4962 du fichier source
+ * Gain : 230 KB sur le bundle CSS
+ *
+ * ⚠️ À régénérer dès qu'on ajoute une nouvelle icône :
+ *    node scripts/build-tabler-icons-subset.mjs
+ */
+/*!
+ * Tabler Icons 2.47.0 by tabler - https://tabler.io
+ * License - https://github.com/tabler/tabler-icons/blob/master/LICENSE
+ */
+@font-face {
+  font-family: "tabler-icons";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/tabler-icons/tabler-icons.eot?v2.47.0");
+  src: url("/tabler-icons/tabler-icons.eot?#iefix-v2.47.0") format("embedded-opentype"), url("/tabler-icons/tabler-icons.woff2?v2.47.0") format("woff2"), url("/tabler-icons/tabler-icons.woff?") format("woff"), url("/tabler-icons/tabler-icons.ttf?v2.47.0") format("truetype");
+}
+.ti {
+  font-family: "tabler-icons" !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  /* Better Font Rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+.ti-accessible:before { content: "\eba9"; }
+.ti-activity:before { content: "\ed23"; }
+.ti-activity-heartbeat:before { content: "\f0db"; }
+.ti-address-book:before { content: "\f021"; }
+.ti-adjustments:before { content: "\ea03"; }
+.ti-affiliate:before { content: "\edff"; }
+.ti-alert-circle:before { content: "\ea05"; }
+.ti-alert-octagon:before { content: "\ecc6"; }
+.ti-alert-triangle:before { content: "\ea06"; }
+.ti-ambulance:before { content: "\ebf5"; }
+.ti-archive:before { content: "\ea0b"; }
+.ti-archive-off:before { content: "\f0ad"; }
+.ti-armchair-2:before { content: "\efe7"; }
+.ti-arrow-back-up:before { content: "\eb77"; }
+.ti-arrow-big-right:before { content: "\eddc"; }
+.ti-arrow-down-circle:before { content: "\ea11"; }
+.ti-arrow-fork:before { content: "\f04a"; }
+.ti-arrow-left:before { content: "\ea19"; }
+.ti-arrow-right:before { content: "\ea1f"; }
+.ti-arrow-up-circle:before { content: "\ea20"; }
+.ti-arrows-exchange:before { content: "\f1f4"; }
+.ti-arrows-left-right:before { content: "\edb0"; }
+.ti-arrows-sort:before { content: "\eb5a"; }
+.ti-award:before { content: "\ea2c"; }
+.ti-baby-bottle:before { content: "\f5d2"; }
+.ti-ban:before { content: "\ea2e"; }
+.ti-barcode:before { content: "\ebc6"; }
+.ti-bed:before { content: "\eb5c"; }
+.ti-bed-flat:before { content: "\fca1"; }
+.ti-bed-off:before { content: "\f100"; }
+.ti-bell:before { content: "\ea35"; }
+.ti-bell-check:before { content: "\f814"; }
+.ti-bell-cog:before { content: "\f816"; }
+.ti-bell-off:before { content: "\ece9"; }
+.ti-bell-ringing:before { content: "\ed07"; }
+.ti-bell-x:before { content: "\ede5"; }
+.ti-binary-tree:before { content: "\f5d4"; }
+.ti-bolt:before { content: "\ea38"; }
+.ti-book:before { content: "\ea39"; }
+.ti-book-2:before { content: "\efc5"; }
+.ti-bookmark:before { content: "\ea3a"; }
+.ti-brand-android:before { content: "\ec16"; }
+.ti-brand-apple:before { content: "\ec17"; }
+.ti-brand-chrome:before { content: "\ec18"; }
+.ti-brand-edge:before { content: "\ecfc"; }
+.ti-brand-firefox:before { content: "\ecfd"; }
+.ti-brand-github:before { content: "\ec1c"; }
+.ti-brand-google:before { content: "\ec1f"; }
+.ti-brand-google-maps:before { content: "\fa4f"; }
+.ti-brand-safari:before { content: "\ec23"; }
+.ti-brand-slack:before { content: "\ec72"; }
+.ti-brand-teams:before { content: "\fadf"; }
+.ti-brand-waze:before { content: "\f5d8"; }
+.ti-brand-windows:before { content: "\ecd8"; }
+.ti-briefcase:before { content: "\ea46"; }
+.ti-broadcast:before { content: "\f1e9"; }
+.ti-browser:before { content: "\ebb7"; }
+.ti-bug:before { content: "\ea48"; }
+.ti-building:before { content: "\ea4f"; }
+.ti-building-community:before { content: "\ebf6"; }
+.ti-building-hospital:before { content: "\ea4d"; }
+.ti-building-skyscraper:before { content: "\ec39"; }
+.ti-building-store:before { content: "\ea4e"; }
+.ti-building-warehouse:before { content: "\ebe3"; }
+.ti-bulb:before { content: "\ea51"; }
+.ti-cake:before { content: "\f00f"; }
+.ti-calculator:before { content: "\eb80"; }
+.ti-calendar:before { content: "\ea53"; }
+.ti-calendar-event:before { content: "\ea52"; }
+.ti-calendar-month:before { content: "\fd2f"; }
+.ti-calendar-week:before { content: "\fd30"; }
+.ti-camera:before { content: "\ea54"; }
+.ti-camera-off:before { content: "\ecee"; }
+.ti-car:before { content: "\ebbb"; }
+.ti-cash:before { content: "\ea55"; }
+.ti-chart-arcs:before { content: "\ee28"; }
+.ti-chart-arrows:before { content: "\ee2a"; }
+.ti-chart-bar:before { content: "\ea59"; }
+.ti-chart-donut:before { content: "\ea5b"; }
+.ti-chart-line:before { content: "\ea5c"; }
+.ti-chart-pie:before { content: "\ea5d"; }
+.ti-check:before { content: "\ea5e"; }
+.ti-checklist:before { content: "\f074"; }
+.ti-checks:before { content: "\ebaa"; }
+.ti-chevron-down:before { content: "\ea5f"; }
+.ti-chevron-left:before { content: "\ea60"; }
+.ti-chevron-right:before { content: "\ea61"; }
+.ti-chevron-up:before { content: "\ea62"; }
+.ti-circle:before { content: "\ea6b"; }
+.ti-circle-check:before { content: "\ea67"; }
+.ti-circle-check-filled:before { content: "\f704"; }
+.ti-circle-dashed:before { content: "\ed27"; }
+.ti-circle-half-2:before { content: "\eff3"; }
+.ti-circle-x:before { content: "\ea6a"; }
+.ti-click:before { content: "\ebbc"; }
+.ti-clipboard-check:before { content: "\ea6c"; }
+.ti-clipboard-heart:before { content: "\f34e"; }
+.ti-clipboard-text:before { content: "\f089"; }
+.ti-clock:before { content: "\ea70"; }
+.ti-clock-check:before { content: "\f7c1"; }
+.ti-clock-exclamation:before { content: "\f847"; }
+.ti-clock-x:before { content: "\f7cb"; }
+.ti-cloud:before { content: "\ea76"; }
+.ti-cloud-check:before { content: "\f84d"; }
+.ti-cloud-download:before { content: "\ea71"; }
+.ti-cloud-off:before { content: "\ed3e"; }
+.ti-cloud-upload:before { content: "\ea75"; }
+.ti-code:before { content: "\ea77"; }
+.ti-coin:before { content: "\eb82"; }
+.ti-cookie:before { content: "\ef0f"; }
+.ti-copy:before { content: "\ea7a"; }
+.ti-corner-down-right:before { content: "\ea7d"; }
+.ti-cpu:before { content: "\ef8e"; }
+.ti-crown:before { content: "\ed12"; }
+.ti-currency-euro:before { content: "\eb85"; }
+.ti-current-location:before { content: "\ecef"; }
+.ti-database:before { content: "\ea88"; }
+.ti-database-export:before { content: "\ee6e"; }
+.ti-database-import:before { content: "\ee6f"; }
+.ti-database-search:before { content: "\fa18"; }
+.ti-device-desktop:before { content: "\ea89"; }
+.ti-device-floppy:before { content: "\eb62"; }
+.ti-device-mobile:before { content: "\ea8a"; }
+.ti-device-mobile-check:before { content: "\f8af"; }
+.ti-device-tv:before { content: "\ea8d"; }
+.ti-devices:before { content: "\eb87"; }
+.ti-dice:before { content: "\eb66"; }
+.ti-discount-2:before { content: "\ee7c"; }
+.ti-door:before { content: "\ef4e"; }
+.ti-door-enter:before { content: "\ef4c"; }
+.ti-dots-vertical:before { content: "\ea94"; }
+.ti-download:before { content: "\ea96"; }
+.ti-ear:before { content: "\ebce"; }
+.ti-edit:before { content: "\ea98"; }
+.ti-emergency-bed:before { content: "\ef5d"; }
+.ti-equal:before { content: "\ee87"; }
+.ti-eraser:before { content: "\eb8b"; }
+.ti-external-link:before { content: "\ea99"; }
+.ti-eye:before { content: "\ea9a"; }
+.ti-eye-off:before { content: "\ecf0"; }
+.ti-face-id:before { content: "\ea9b"; }
+.ti-file:before { content: "\eaa4"; }
+.ti-file-export:before { content: "\ede9"; }
+.ti-file-import:before { content: "\edea"; }
+.ti-file-invoice:before { content: "\eb67"; }
+.ti-file-pencil:before { content: "\f039"; }
+.ti-file-spreadsheet:before { content: "\f03e"; }
+.ti-file-text:before { content: "\eaa2"; }
+.ti-file-type-pdf:before { content: "\fb10"; }
+.ti-file-zip:before { content: "\ed4e"; }
+.ti-filter:before { content: "\eaa5"; }
+.ti-filter-off:before { content: "\ed2c"; }
+.ti-fingerprint:before { content: "\ebd1"; }
+.ti-flag:before { content: "\eaa6"; }
+.ti-flame:before { content: "\ec2c"; }
+.ti-flask:before { content: "\ebd2"; }
+.ti-folder-open:before { content: "\faf7"; }
+.ti-gavel:before { content: "\ef90"; }
+.ti-git-merge:before { content: "\eab5"; }
+.ti-grid-dots:before { content: "\eaba"; }
+.ti-grid-pattern:before { content: "\efc9"; }
+.ti-hash:before { content: "\eabc"; }
+.ti-heart-filled:before { content: "\f67c"; }
+.ti-heart-handshake:before { content: "\f0f3"; }
+.ti-heartbeat:before { content: "\ef92"; }
+.ti-help-circle:before { content: "\f91d"; }
+.ti-highlight:before { content: "\ef3f"; }
+.ti-history:before { content: "\ebea"; }
+.ti-home:before { content: "\eac1"; }
+.ti-home-check:before { content: "\f337"; }
+.ti-home-heart:before { content: "\f353"; }
+.ti-id:before { content: "\eac3"; }
+.ti-id-badge:before { content: "\eff7"; }
+.ti-id-badge-2:before { content: "\f076"; }
+.ti-info-circle:before { content: "\eac5"; }
+.ti-key:before { content: "\eac7"; }
+.ti-keyboard:before { content: "\ebd6"; }
+.ti-layout-dashboard:before { content: "\f02c"; }
+.ti-layout-grid:before { content: "\edba"; }
+.ti-layout-kanban:before { content: "\ec3f"; }
+.ti-license:before { content: "\ebc0"; }
+.ti-link:before { content: "\eade"; }
+.ti-list:before { content: "\eb6b"; }
+.ti-list-check:before { content: "\eb6a"; }
+.ti-list-details:before { content: "\ef40"; }
+.ti-list-search:before { content: "\eea9"; }
+.ti-loader:before { content: "\eca3"; }
+.ti-loader-2:before { content: "\f226"; }
+.ti-lock:before { content: "\eae2"; }
+.ti-lock-open:before { content: "\eae1"; }
+.ti-login:before { content: "\eba7"; }
+.ti-logout:before { content: "\eba8"; }
+.ti-mail:before { content: "\eae5"; }
+.ti-mail-bolt:before { content: "\f937"; }
+.ti-mail-cog:before { content: "\f93b"; }
+.ti-mail-fast:before { content: "\f069"; }
+.ti-mail-off:before { content: "\f15a"; }
+.ti-mail-x:before { content: "\f949"; }
+.ti-mailbox:before { content: "\eead"; }
+.ti-map:before { content: "\eae9"; }
+.ti-map-2:before { content: "\eae7"; }
+.ti-map-pin:before { content: "\eae8"; }
+.ti-map-pin-check:before { content: "\f94c"; }
+.ti-map-pin-filled:before { content: "\f680"; }
+.ti-map-pin-off:before { content: "\ecf3"; }
+.ti-maximize:before { content: "\eaea"; }
+.ti-medal:before { content: "\ec78"; }
+.ti-medical-cross:before { content: "\ec2f"; }
+.ti-menu-2:before { content: "\ec42"; }
+.ti-message:before { content: "\eaef"; }
+.ti-message-2:before { content: "\eaec"; }
+.ti-message-check:before { content: "\f96f"; }
+.ti-message-circle:before { content: "\eaed"; }
+.ti-message-exclamation:before { content: "\f986"; }
+.ti-message-reply:before { content: "\fd4d"; }
+.ti-microscope:before { content: "\ef64"; }
+.ti-minus:before { content: "\eaf2"; }
+.ti-mood-empty:before { content: "\eeb5"; }
+.ti-mood-search:before { content: "\f7ba"; }
+.ti-moon:before { content: "\eaf8"; }
+.ti-navigation:before { content: "\f2c8"; }
+.ti-network:before { content: "\f09f"; }
+.ti-note:before { content: "\eb6d"; }
+.ti-package:before { content: "\eaff"; }
+.ti-package-import:before { content: "\f07b"; }
+.ti-palette:before { content: "\eb01"; }
+.ti-phone:before { content: "\eb09"; }
+.ti-photo:before { content: "\eb0a"; }
+.ti-pill:before { content: "\ec44"; }
+.ti-pills:before { content: "\ef66"; }
+.ti-pin:before { content: "\ec9c"; }
+.ti-plug:before { content: "\ebd9"; }
+.ti-plus:before { content: "\eb0b"; }
+.ti-prescription:before { content: "\ef99"; }
+.ti-presentation:before { content: "\eb70"; }
+.ti-printer:before { content: "\eb0e"; }
+.ti-progress:before { content: "\fa0d"; }
+.ti-qrcode:before { content: "\eb11"; }
+.ti-refresh:before { content: "\eb13"; }
+.ti-replace:before { content: "\ebc7"; }
+.ti-rocket:before { content: "\ec45"; }
+.ti-route:before { content: "\eb17"; }
+.ti-scan:before { content: "\ebc8"; }
+.ti-school:before { content: "\ecf7"; }
+.ti-search:before { content: "\eb1c"; }
+.ti-search-off:before { content: "\f19c"; }
+.ti-select:before { content: "\ec9e"; }
+.ti-send:before { content: "\eb1e"; }
+.ti-server:before { content: "\eb1f"; }
+.ti-settings:before { content: "\eb20"; }
+.ti-share:before { content: "\eb21"; }
+.ti-share-2:before { content: "\f799"; }
+.ti-shield:before { content: "\eb24"; }
+.ti-shield-check:before { content: "\eb22"; }
+.ti-shield-cog:before { content: "\f9c3"; }
+.ti-shield-half:before { content: "\f358"; }
+.ti-shield-heart:before { content: "\f9c7"; }
+.ti-shield-lock:before { content: "\ed58"; }
+.ti-shield-off:before { content: "\ecf8"; }
+.ti-shield-search:before { content: "\f9cd"; }
+.ti-shield-x:before { content: "\eb23"; }
+.ti-shopping-bag:before { content: "\f5f8"; }
+.ti-shopping-cart:before { content: "\eb25"; }
+.ti-signature:before { content: "\eee0"; }
+.ti-sparkles:before { content: "\f6d7"; }
+.ti-speakerphone:before { content: "\ed61"; }
+.ti-stack:before { content: "\eb2d"; }
+.ti-stack-2:before { content: "\eef7"; }
+.ti-stairs:before { content: "\eca6"; }
+.ti-star:before { content: "\eb2e"; }
+.ti-star-filled:before { content: "\f6a6"; }
+.ti-stars:before { content: "\ed38"; }
+.ti-stethoscope:before { content: "\edbe"; }
+.ti-sum:before { content: "\eb73"; }
+.ti-sun:before { content: "\eb30"; }
+.ti-table:before { content: "\eba1"; }
+.ti-tag:before { content: "\eb34"; }
+.ti-tags:before { content: "\ef86"; }
+.ti-target:before { content: "\eb35"; }
+.ti-template:before { content: "\eb39"; }
+.ti-test-pipe:before { content: "\eb3a"; }
+.ti-text-caption:before { content: "\f4a4"; }
+.ti-text-recognition:before { content: "\f204"; }
+.ti-thumb-up:before { content: "\eb3c"; }
+.ti-thumb-up-filled:before { content: "\f6ab"; }
+.ti-timeline:before { content: "\f031"; }
+.ti-timeline-event:before { content: "\f553"; }
+.ti-toggle-left:before { content: "\eb3e"; }
+.ti-toggle-right:before { content: "\eb3f"; }
+.ti-tool:before { content: "\eb40"; }
+.ti-tools:before { content: "\ebca"; }
+.ti-transfer:before { content: "\fc1f"; }
+.ti-trash:before { content: "\eb41"; }
+.ti-trending-down:before { content: "\eb42"; }
+.ti-trending-up:before { content: "\eb43"; }
+.ti-trophy:before { content: "\eb45"; }
+.ti-truck:before { content: "\ebc4"; }
+.ti-truck-delivery:before { content: "\ec4b"; }
+.ti-truck-loading:before { content: "\f1da"; }
+.ti-upload:before { content: "\eb47"; }
+.ti-usb:before { content: "\f00c"; }
+.ti-user:before { content: "\eb4d"; }
+.ti-user-check:before { content: "\eb49"; }
+.ti-user-circle:before { content: "\ef68"; }
+.ti-user-edit:before { content: "\f7cc"; }
+.ti-user-plus:before { content: "\eb4b"; }
+.ti-user-search:before { content: "\ef89"; }
+.ti-user-shield:before { content: "\f7d0"; }
+.ti-user-x:before { content: "\eb4c"; }
+.ti-users:before { content: "\ebf2"; }
+.ti-users-group:before { content: "\fa21"; }
+.ti-variable:before { content: "\ef05"; }
+.ti-versions:before { content: "\ed52"; }
+.ti-wand:before { content: "\ebcb"; }
+.ti-webhook:before { content: "\f01e"; }
+.ti-wheelchair:before { content: "\f1db"; }
+.ti-wifi:before { content: "\eb52"; }
+.ti-wifi-off:before { content: "\ecfa"; }
+.ti-world:before { content: "\eb54"; }
+.ti-x:before { content: "\eb55"; }
+.ti-zoom-cancel:before { content: "\ec4d"; }
+.ti-zoom-in:before { content: "\eb56"; }

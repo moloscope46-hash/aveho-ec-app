@@ -9,7 +9,7 @@
 //    - les vérifications publiques sont tracées
 //    - les tentatives invalides sont aussi tracées
 // =============================================================
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";

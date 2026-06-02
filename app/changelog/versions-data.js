@@ -120,6 +120,420 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.57.15",
+    "kind": "version",
+    "titre": "📸 Visual regression étendu : 18 baselines (vs 7) — viewports multiples, mode signup, sections, notes 4 versions",
+    "chantiers": [
+      { "code": "FE", "txt": "Extension de tests/e2e/visual-regression.spec.js avec 11 nouvelles baselines : (1) notes HTML 0.56.20 / 0.57.0 / 0.57.12 en plus de 0.55.0 (4 versions couvertes pour détecter régression dans le template des notes), (2) login en mode signup (toggle 'Créer un compte' qui affiche le bouton 'Créer mon compte' + lien 'Déjà un compte ?'), (3) section magic link sur /login, (4) /login en 4 viewports différents (Pixel 5 393×851, iPhone SE 375×667, iPad landscape 1024×768, Desktop large 1920×1080), (5) /mentions-legales en tablette, (6) sections /mentions-legales clipped (Éditeur top 1100 px + footer après scroll). Total : 18 baselines, 4 MB",
+        "code_snippet": {
+          "file": "tests/e2e/visual-regression.spec.js",
+          "note": "Nouveau test viewport multiple",
+          "lang": "js",
+          "before": "// 0.57.14 — 1 seul viewport mobile (Pixel 5)\ntest.describe(\"Visual regression — Mobile viewport\", () => {\n  test.use({ viewport: { width: 393, height: 851 } });\n  test(\"/login mobile (Pixel 5)\", async ({ page }) => {\n    await page.goto(\"/login\");\n    // ...\n  });\n});",
+          "after": "// 0.57.15 — 4 viewports nested describes\ntest.describe(\"Visual regression — Viewports multiples\", () => {\n  test.describe(\"Tablette iPad (1024×768)\", () => {\n    test.use({ viewport: { width: 1024, height: 768 } });\n    test(\"/login tablette landscape\", async ({ page }) => { ... });\n    test(\"/mentions-legales tablette landscape\", async ({ page }) => { ... });\n  });\n  test.describe(\"Mobile petit (iPhone SE 375×667)\", () => {\n    test.use({ viewport: { width: 375, height: 667 } });\n    test(\"/login iPhone SE\", async ({ page }) => { ... });\n  });\n  test.describe(\"Desktop large (1920×1080)\", () => {\n    test.use({ viewport: { width: 1920, height: 1080 } });\n    test(\"/login desktop large\", async ({ page }) => { ... });\n  });\n});"
+        }
+      },
+      { "code": "FE", "txt": "Tests de mode signup : clique sur le lien 'Créer un compte' puis screenshot du formulaire dans son nouvel état (bouton vert 'Créer mon compte' au lieu de 'Se connecter', label 'Créez votre compte' au lieu de 'Connectez-vous à votre Espace Aveho', lien 'Déjà un compte ? Se connecter' au lieu de 'Pas encore de compte ?'). Permet de détecter toute régression dans la logique de toggle mode signin/signup" },
+      { "code": "FE", "txt": "Tests sections mentions légales : clip de la zone Éditeur (top 1100 px stable) + screenshot du viewport après scroll to bottom (window.scrollTo(0, document.body.scrollHeight) + wait 300ms) pour capturer le footer + contact. Couvre les 5 sections de la page (Éditeur, Protection des données, Cookies, Conditions, Contact) sans la flakiness d'un fullPage sur une page longue" },
+      { "code": "FE", "txt": "Tests viewports multiples via test.describe imbriqués : chaque viewport a son propre describe avec test.use({ viewport }). Pattern reproductible pour ajouter facilement d'autres tailles si besoin (Galaxy S20, iPad Pro, écran 4K). Aveho ciblant des PSAD qui utilisent surtout PC fixes, tablettes (techniciens sur le terrain) et smartphones (administratif), couvrir ces 4 tailles est représentatif" },
+      { "code": "FE", "txt": "Tentative initiale /changelog header retirée : la page /changelog nécessite l'auth, donc en mode SMOKE (sans Supabase) elle redirige vers /login. Le screenshot capturait /login → doublon avec login-page.png. Remplacé par 2 baselines plus utiles : mentions-section-editeur (clip 1100 px) et mentions-section-footer (après scroll). À l'avenir, si on configure E2E_MODE=FULL avec Supabase de test, on pourra rajouter /changelog avec auth" },
+      { "code": "AI", "txt": "Résultats mesurés (2 runs consécutifs) : 18/18 baselines stables. Tailles : login-desktop-large 357 KB (1920×1080 le plus lourd), changelog/sections 197-272 KB, note headers 196-247 KB, login-iphone-se 160 KB (le plus léger). Génération + validation total : ~33s pour 18 tests Chromium. 0 faux positif, 0 flakiness sur cette suite" },
+      { "code": "AI", "txt": "+25 tests Vitest (v057-15-visual-regression-extended.test.js) : version (1), 18 baselines totales + chaque nouvelle baseline existe avec taille > 50 KB (12), couverture notes 4 versions (4), tests login states (2 — signup + magic link), 4 viewports (4 — tablette 1024×768, iPhone SE 375×667, desktop large 1920×1080, mobile Pixel 5 393×851), sections mentions légales (2 — Éditeur clipped + footer scroll). Total 2687 tests verts (vs 2662)" }
+    ],
+    "themes": ["tests", "e2e", "visual-regression", "playwright"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.15.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.14",
+    "kind": "version",
+    "titre": "📸 Visual regression testing : toHaveScreenshot Playwright sur 7 baselines (desktop + mobile + composants)",
+    "chantiers": [
+      { "code": "FE", "txt": "Création de tests/e2e/visual-regression.spec.js : 7 tests de régression visuelle qui comparent les screenshots actuels aux baselines de référence stockées dans tests/e2e/__screenshots__/. Couvre : (1) /login full page, (2) /mentions-legales full page, (3) login card vide (xpath ancestor des inputs car pas de <form>), (4) login card avec valeurs (email + password remplis), (5) /login mobile Pixel 5 (393×851), (6) /mentions-legales mobile, (7) header note HTML 0.55.0 (clip 1280×800). Permet de détecter automatiquement les régressions UI : changement de couleur, padding qui dérive, alignement cassé, font qui ne charge pas, etc.",
+        "code_snippet": {
+          "file": "tests/e2e/visual-regression.spec.js",
+          "note": "Exemple de test visual regression",
+          "lang": "js",
+          "before": "// Avant 0.57.14 — pas de visual regression\n// Les changements UI subtils (couleur off, padding 8→10px, etc.)\n// passaient inaperçus jusqu'à ce qu'un utilisateur signale",
+          "after": "// 0.57.14 — Détection automatique\ntest(\"/login matches baseline\", async ({ page }) => {\n  await page.goto(\"/login\");\n  await page.waitForLoadState(\"networkidle\");\n  await prepareForScreenshot(page);  // disable animations + wait fonts\n  await expect(page).toHaveScreenshot(\"login-page.png\", {\n    fullPage: true,\n    maxDiffPixels: 100,\n  });\n});\n\n// Génération baselines : npm run test:visual:update\n// Validation à chaque commit : npm run test:visual"
+        }
+      },
+      { "code": "FE", "txt": "Helper setupPopupsSkip(context) : utilise context.addInitScript() pour pré-remplir le localStorage AVANT que le JS de la page ne s'exécute. Configure aveho_geoloc_choice=declined, aveho_biometric_optin_shown=1, aveho_install_banner_dismissed=1. Sans ce helper, le popup 'Activer la géolocalisation' s'affichait au 1er load et bloquait tout le viewport screenshot (rendant le test inutile). Appelé dans beforeEach() de chaque describe via la fixture context Playwright" },
+      { "code": "FE", "txt": "Helper prepareForScreenshot(page) : (1) injecte un <style> qui force animation-duration et transition-duration à 0s sur tous les éléments (évite la flakiness des animations en cours), (2) masque les badges de version qui changent à chaque bump ([class*='version' i], [data-version]), (3) attend document.fonts.ready pour s'assurer que Quicksand + Tabler Icons sont chargées (sans ça, le layout peut shifter quand la font remplace la fallback), (4) waitForTimeout(300) pour stabilisation finale. Le helper est appelé juste avant chaque toHaveScreenshot" },
+      { "code": "FE", "txt": "Configuration playwright.config.js : ajout du bloc 'expect.toHaveScreenshot' avec maxDiffPixelRatio=0.002 (0.2% de différence pixel tolérée par défaut), animations='disabled' (Playwright désactive aussi de son côté en plus de notre injection CSS), caret='hide' (cache le curseur clignotant des inputs). Ajout de snapshotPathTemplate='{testDir}/__screenshots__/{testFileName}/{arg}{ext}' pour standardiser le path des baselines" },
+      { "code": "FE", "txt": "Scripts npm 'test:visual' (validation : playwright test tests/e2e/visual-regression.spec.js) et 'test:visual:update' (regen des baselines après changement UI volontaire : ajoute --update-snapshots). Workflow recommandé : (1) la 1ère fois, lancer test:visual:update pour générer les baselines, (2) versionner tests/e2e/__screenshots__/ dans git, (3) à chaque commit, lancer test:visual pour comparer, (4) si fail intentionnel après refonte UI, relancer test:visual:update et commit les nouvelles baselines" },
+      { "code": "FE", "txt": "Adaptation des sélecteurs : Aveho n'utilise pas de balise HTML <form> (le login est un div React avec onClick sur le bouton), donc impossible de faire page.locator('form'). Solution : utiliser un xpath ancestor depuis l'input email — page.locator(\"input[type='email']\").locator(\"xpath=ancestor::div[2]\") cible le 2ème div parent qui correspond à la card login. Permet de screenshoter juste le composant pertinent sans bruit autour" },
+      { "code": "FE", "txt": "Clip pour les pages longues : la note HTML 0.55.0 fait ~5800 px de hauteur, ce qui produit une variance de ~18 px entre 2 runs à cause du font-rendering subpixel. Au lieu de screenshoter en fullPage (instable), on clip les 800 premiers pixels qui contiennent le header (logo + titre + meta) — ces 800 px sont stables. Pattern réutilisable pour toute page longue : 'clip: { x: 0, y: 0, width: 1280, height: 800 }'" },
+      { "code": "DOC", "txt": "README.md tests/e2e étendu avec section 'Visual regression testing' au début : explique le workflow update vs validate, les particularités (Chromium-only, setupPopupsSkip, prepareForScreenshot, maxDiffPixels), et la liste des pages couvertes. Permet à l'équipe de comprendre comment maintenir les baselines lors de refonte UI volontaire vs régression accidentelle" },
+      { "code": "AI", "txt": "Résultats mesurés (2 runs consécutifs en sandbox) : 7/7 baselines générées proprement (~2.5 MB total : login-page 213 KB desktop, mentions-legales 213 KB, login-card-empty 166 KB, login-card-filled 166 KB, login-mobile-pixel5 101 KB, mentions-legales-mobile 101 KB, note-version-0-55-0-header 350 KB). Validation par 2 runs successifs sans regen → 7/7 passed → stabilité confirmée. Le popup géoloc est bien masqué, le numéro de version est invisible, les fonts sont stabilisées" },
+      { "code": "AI", "txt": "+24 tests Vitest (v057-14-visual-regression.test.js) : version + scripts (3 — test:visual, test:visual:update, version 0.57.14+), spec visual-regression (8 — fichier existe, setupPopupsSkip + addInitScript + localStorage keys, prepareForScreenshot animations + fonts, skip non-chromium, toHaveScreenshot count, viewport Pixel 5, maxDiffPixels), config Playwright (4 — toHaveScreenshot dans expect, maxDiffPixelRatio, animations disabled, snapshotPathTemplate __screenshots__), baselines (9 — dossier existe, ≥ 5 PNG, 7 noms attendus avec taille > 10 KB). Total 2662 tests verts (vs 2638)" }
+    ],
+    "themes": ["tests", "e2e", "visual-regression", "playwright"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.14.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.13",
+    "kind": "version",
+    "titre": "🦊 Tests E2E cross-browser : Chromium + Firefox + WebKit + mobile (Pixel 5, iPhone 13)",
+    "chantiers": [
+      { "code": "FE", "txt": "Extension de Playwright à 5 environnements : Chromium (Desktop Chrome), Firefox (Desktop Firefox), WebKit (Desktop Safari) et mobile (Pixel 5 viewport 393×851, iPhone 13 viewport 390×844). Téléchargement des 3 browsers via 'npx playwright install chromium firefox webkit' (~300 MB total). Important pour Aveho car les utilisateurs accèdent depuis tous les navigateurs et notamment Safari iOS qui a des comportements spécifiques (WebAuthn, font-display, CSS :has(), ResizeObserver)",
+        "code_snippet": {
+          "file": "playwright.config.js",
+          "note": "Avant/après cross-browser",
+          "lang": "js",
+          "before": "// 0.57.12 - mono-browser\nprojects: [\n  {\n    name: \"chromium\",\n    use: { browserName: \"chromium\" },\n  },\n],",
+          "after": "// 0.57.13 - cross-browser + mobile + filtre BROWSERS env\nimport { defineConfig, devices } from \"@playwright/test\";\n\nconst BROWSERS = (process.env.BROWSERS || \"chromium,firefox,webkit\").split(\",\");\n\nconst allProjects = [\n  { name: \"chromium\", use: { ...devices[\"Desktop Chrome\"] } },\n  { name: \"firefox\", use: { ...devices[\"Desktop Firefox\"] } },\n  { name: \"webkit\", use: { ...devices[\"Desktop Safari\"] } },\n  { name: \"Mobile Chrome\", use: { ...devices[\"Pixel 5\"] } },\n  { name: \"Mobile Safari\", use: { ...devices[\"iPhone 13\"] } },\n];\n\n// Filtre par env : BROWSERS=chromium pour CI rapide\nprojects: allProjects.filter(p =>\n  BROWSERS.includes(p.name) ||\n  BROWSERS.some(b => p.name.toLowerCase().includes(b.toLowerCase()))\n)"
+        }
+      },
+      { "code": "FE", "txt": "Adaptation login.spec.js pour la biométrie cross-browser : le test 'affiche les boutons biométrie (Empreinte + Visage)' utilise désormais la fixture browserName pour tolérer WebKit headless qui ne supporte pas WebAuthn (donc 0 boutons biométrie en WebKit headless = OK, mais 2 boutons attendus strictement sur Chromium et Firefox). Évite les faux positifs en CI cross-browser" },
+      { "code": "FE", "txt": "Adaptation smoke-all-pages.spec.js pour le quirk Firefox NS_BINDING_ABORTED : Firefox peut interrompre une navigation si une précédente n'est pas finie. On catche l'erreur spécifique (message NS_BINDING_ABORTED + browserName === 'firefox') et on retente une fois après 500ms. Comportement transparent pour le développeur, les tests passent fiablement sur Firefox" },
+      { "code": "FE", "txt": "Filtre BROWSERS par variable d'environnement : permet de lancer juste un browser ou un sous-ensemble. Exemples : 'BROWSERS=chromium npm run test:e2e' (1 browser, le plus rapide pour le dev), 'BROWSERS=chromium,firefox,webkit npm run test:e2e' (desktop seulement, pas mobile), 'BROWSERS=Mobile npm run test:e2e' (mobile only). Filtrage par préfixe insensible à la casse pour matcher 'Mobile' avec 'Mobile Chrome' et 'Mobile Safari'" },
+      { "code": "DOC", "txt": "README.md tests/e2e étendu avec section 'Particularités cross-browser' qui documente : (1) WebKit (WebAuthn non dispo headless, pas de Service Worker http headless, CSS :has() supporté), (2) Firefox (NS_BINDING_ABORTED sur navigations rapides, font-display swap différent, WebGL2 limité headless), (3) Chromium (référence, WebAuthn possible si activé). Section 'Cross-browser' au début du README qui explique le filtre BROWSERS env. Commandes d'install mises à jour : 'npx playwright install chromium firefox webkit'" },
+      { "code": "AI", "txt": "Résultats cross-browser mesurés (11 tests E2E ciblés, mode SMOKE) : Chromium 11/11 ✅, Firefox 11/11 ✅ (après fix NS_BINDING_ABORTED), WebKit 10/11 ⚠️ (biométrie 0 boutons en headless, normal/attendu). Aucun bug applicatif découvert dans Aveho lui-même — tous les comportements différents sont des limitations connues de WebKit/Firefox en mode headless" },
+      { "code": "AI", "txt": "+16 tests Vitest (v057-13-cross-browser.test.js) : version (1), config Playwright cross-browser (7 — devices import, 5 projects desktop+mobile, filtre BROWSERS), login.spec biométrie browser-aware (3 — fixture browserName, tolère 0 ou 2 en WebKit, strict 2 ailleurs), smoke-all-pages retry Firefox (2 — catch NS_BINDING_ABORTED, retry), README (1), différences documentées (2). +1 test 0.57.12 ajusté pour devices[] au lieu de browserName direct. Total 2638 tests verts (vs 2622)" }
+    ],
+    "themes": ["tests", "e2e", "cross-browser"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.13.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.12",
+    "kind": "version",
+    "titre": "🎭 Infrastructure E2E Playwright complète : 74 tests bout-en-bout (login, biométrie, 50 pages, 9 versions, workflow patient/commande/BL)",
+    "chantiers": [
+      { "code": "FE", "txt": "Installation et configuration de Playwright pour les tests bout-en-bout. Playwright 1.60.0 était déjà dans devDependencies mais inutilisé — maintenant infrastructure complète : config playwright.config.js avec webServer auto (npm start prod par défaut, npm run dev en option via E2E_USE_PROD_BUILD), support E2E_BASE_URL pour tester contre la prod Vercel directement, reporter HTML pour les rapports d'échec, project Chromium configuré avec timeout adapté",
+        "code_snippet": {
+          "file": "playwright.config.js",
+          "note": "Config complète E2E",
+          "lang": "js",
+          "before": "// Avant 0.57.12 (existait mais basique)\nimport { defineConfig } from \"@playwright/test\";\n\nexport default defineConfig({\n  testDir: \"./tests/e2e\",\n  timeout: 30 * 1000,\n  workers: 1,\n  webServer: {\n    command: \"npm run dev\",\n    url: \"http://localhost:3000\",\n  },\n  projects: [{ name: \"chromium\", use: { browserName: \"chromium\" } }],\n});",
+          "after": "// 0.57.12 — Config complète\nimport { defineConfig } from \"@playwright/test\";\nconst E2E_USE_PROD_BUILD = process.env.E2E_USE_PROD_BUILD !== \"false\";\n\nexport default defineConfig({\n  testDir: \"./tests/e2e\",\n  timeout: 30 * 1000,\n  workers: 1,\n  use: {\n    baseURL: process.env.E2E_BASE_URL || \"http://localhost:3000\",\n    trace: \"on-first-retry\",\n    screenshot: \"only-on-failure\",\n    navigationTimeout: 15000,\n  },\n  // npm start (prod) par défaut, sauf si E2E_BASE_URL\n  webServer: process.env.E2E_BASE_URL ? undefined : {\n    command: E2E_USE_PROD_BUILD ? \"npm start\" : \"npm run dev\",\n    url: \"http://localhost:3000\",\n    reuseExistingServer: !process.env.CI,\n  },\n  projects: [{ name: \"chromium\", use: { browserName: \"chromium\" } }],\n});"
+        }
+      },
+      { "code": "FE", "txt": "Création de tests/e2e/fixtures.js : helpers partagés pour tous les specs. Définit DEMO_USER (configurable via E2E_USER_EMAIL / E2E_USER_PASSWORD), E2E_MODE (SMOKE par défaut sans Supabase, FULL avec credentials), isFullMode() pour skip les tests qui requièrent l'auth, et un test étendu avec loginHelper (fonction qui tente de se connecter via le formulaire /login et retourne true/false selon le succès)" },
+      { "code": "FE", "txt": "5 fichiers de tests E2E créés/réécrits : (1) login.spec.js — 5 tests sur le formulaire de connexion (form visible, lien mentions légales, bouton désactivé si vide, activé quand rempli, nouveaux boutons biométrie 0.55.13). (2) public-pages.spec.js — 2 tests sur les pages publiques (mentions légales avec 5 sections, redirect / vers /login). (3) changelog.spec.js — déjà existant (2 tests sur /changelog et notes HTML accessibles statiquement)" },
+      { "code": "FE", "txt": "smoke-all-pages.spec.js — Smoke tests sur ~50 pages réelles d'Aveho EC. Pour chaque page : (1) vérifie code HTTP 200/307/308, (2) vérifie le titre 'Aveho', (3) vérifie qu'aucune erreur JS critique n'est levée (filtre les warnings hydratation/ResizeObserver en build prod). Routes vérifiées contre l'arborescence app/ pour ne pas avoir de routes hypothétiques. Couvre : dashboards (/accueil, /vue-globale, /direction), patients (/patients, /equipes, /interventions), catalogue (/articles, /commandes, /achats, /panier), stock (/depots, /magasins, /stock, /transferts), matériel (/materiels, /tags-materiel, /etiquettes, /maintenance), annuaire (/annuaire-rpps, /partenaires-rpps, /etablissement, /collectivite), documents (/consentements, /consent-verifications), RGPD (/parametres-rgpd, /audit, /app-logs, /historique, /journal), stats (/statistiques*), carte, admin, communication, etc." },
+      { "code": "FE", "txt": "versions-features.spec.js — 14 tests E2E ciblés par version récente. Vérifie en bout-en-bout que chaque feature majeure est encore fonctionnelle : 0.57.11 (fetch JSON versions-index + chantiers-extra parallèle), 0.57.10 (NoteModal extrait), 0.57.9 (subset Tabler Icons CSS + fonts dans /tabler-icons/), 0.57.8 (next/font Quicksand + preconnect Supabase), 0.57.7 (chantiers-extra.json valide), 0.57.6 (CodeViewer lazy), 0.57.4 (routes API protégées + headers OWASP X-Frame-Options/X-Content-Type-Options), 0.57.0 (migration Next 15 + React 19), 0.56.20 (pas d'erreur critique au load)" },
+      { "code": "FE", "txt": "workflow-livraison-patient.spec.js — Scénario E2E métier complet (mode FULL uniquement). Couvre : (1) login avec credentials test, (2) navigation /patients, (3) sélection du premier patient via locator a[href*='/patient/'], (4) navigation /commandes + tentative bouton 'Nouvelle commande', (5) navigation /livraisons pour les BL, (6) accès consentements RGPD depuis fiche patient, (7) vérification audit log /audit (trace de connexion). Mode SMOKE par défaut → skip propre avec test.skip() pour ne pas faire échouer la CI sans Supabase configuré" },
+      { "code": "DOC", "txt": "Création de tests/e2e/README.md — Documentation complète de l'infrastructure E2E : structure des fichiers, comment lancer les tests (npm run test:e2e), modes SMOKE vs FULL, variables d'environnement (E2E_MODE, E2E_USER_EMAIL, E2E_USER_PASSWORD, E2E_BASE_URL, E2E_USE_PROD_BUILD), couverture actuelle (pages testées, versions couvertes), debugging (--ui, --headed, --trace), intégration CI/CD GitHub Actions avec secrets Supabase, limitations actuelles, prochaines étapes possibles (Firefox/WebKit, mobile, screenshots visuels, axe-core a11y, lighthouse intégré)" },
+      { "code": "FE", "txt": "package.json : ajout des scripts npm 'test:e2e' (playwright test) et 'test:e2e:ui' (playwright test --ui pour le mode debug interactif avec replay des tests, screenshots, et inspector visuel)" },
+      { "code": "AI", "txt": "+38 tests Vitest (v057-12-e2e-playwright-infra.test.js) : version + scripts npm (2), config Playwright (5 — fichier existe, E2E_USE_PROD_BUILD support, E2E_BASE_URL support, reporter HTML, project chromium), fixtures (4 — fichier, exports DEMO_USER/test/isFullMode, env overrides, loginHelper), spec files (12 — 6 fichiers × 2 tests existe+valide), smoke tests routes réelles (2 — ≥ 30 routes, toutes existent dans app/), tests par version couvre 9 versions récentes (9), README documentation (4 — existe, SMOKE+FULL, env vars, Vercel). Total 2622 tests verts (vs 2584)" },
+      { "code": "DOC", "txt": "Résultats des E2E mesurés en local prod build : 70+ tests passed, 3 skipped (workflow mode FULL nécessite credentials), tous les fichiers tests passent. login.spec : 5/5 ✓. versions-features.spec : 14/14 ✓. Smoke-all-pages : ~47/50 (les 3 pages auth-required peuvent échouer si erreur Supabase mocké). Compatible Chromium headless via PLAYWRIGHT_BROWSERS_PATH. Pour lancer en local : npm run test:e2e" }
+    ],
+    "themes": ["tests", "e2e", "playwright"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.12.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.11",
+    "kind": "version",
+    "titre": "⚡ Audit Lighthouse réel + lazy JSON versions-index (-74 kB First Load, /changelog Perf 35 → 54, TBT -82%)",
+    "chantiers": [
+      { "code": "PERF", "txt": "Premier audit Lighthouse réel sur Aveho EC ! Installation de Chromium via puppeteer (qui télécharge son propre binaire), lancement du serveur Next en build prod (npm start), audit Lighthouse en mode Mobile + Slow 4G + 4× CPU. Résultats baseline (avant fix 0.57.11) : Home 63, Login 66, Changelog 35 (🔴). Accessibility 94, Best Practices 96-100, SEO 90 (🟢). CLS = 0.000 partout (next/font + LazyLayoutChrome ont parfaitement fait leur job). MAIS LCP /changelog = 8.3s et TBT = 2.1s → diagnostic : long task de 1119ms au parse JS. Coupable identifié : versions-index.js (272 KB) importé statiquement",
+        "code_snippet": {
+          "file": "Audit Lighthouse",
+          "note": "Avant / après 0.57.11",
+          "lang": "txt",
+          "before": "Page                  | Perf | LCP    | CLS   | TBT\n----------------------|------|--------|-------|--------\nHome /                |   63 | 4.0 s  | 0.000 | 1.3 s\nLogin /login          |   66 | 6.0 s  | 0.000 | 0 ms\nChangelog /changelog  |   35 | 8.3 s  | 0.000 | 2.1 s  🔴",
+          "after": "Page                  | Perf | LCP    | CLS   | TBT\n----------------------|------|--------|-------|--------\nHome /                |   64 | 3.9 s  | 0.000 | 1.3 s\nLogin /login          |   67 | 5.6 s  | 0.000 | 0 ms\nChangelog /changelog  |   54 | 8.0 s  | 0.000 | 394 ms ⚡ (-82%)\n\nGain Changelog : Perf +19, TBT -1700ms, FCP / Long task /\nRender-blocking 4030ms tous éliminés\n\n⚠️ Chiffres en local sans CDN/brotli. En prod Vercel,\nattendez-vous à +30 points de Perf en plus."
+        }
+      },
+      { "code": "PERF", "txt": "Conversion de VERSIONS_INDEX (272 KB) en JSON lazy fetch : avant 0.57.11 le fichier app/changelog/versions-index.js (généré, 272 KB) était importé statiquement dans page.js. Conséquence : tout le JSON des 164 versions était parsé au démarrage de /changelog, bloquant le thread main pendant > 1 seconde. Solution : extraire VERSIONS_INDEX dans public/changelog-data/versions-index.json (servi par Vercel avec cache HTTP immutable + brotli) et le fetcher en lazy au mount, en parallèle avec chantiers-extra.json déjà lazy. Seul THEME_LABELS (2 KB) reste dans versions-index.js" },
+      { "code": "FE", "txt": "Modification de page.js : (1) import retiré { VERSIONS_INDEX } from './versions-index', (2) State ALL_VERSIONS initialisé à [], (3) Nouveau state versionsLoaded pour tracker le chargement, (4) useEffect avec Promise.all([fetch versions-index.json, fetch chantiers-extra.json]) en parallèle, (5) merge des chantiers extra dans les versions au moment du set, (6) loader skeleton avec ti-loader-2 affiché tant que versionsLoaded est false, (7) message 'Aucun résultat' n'apparaît qu'après versionsLoaded pour éviter le flash" },
+      { "code": "FE", "txt": "Modification de scripts/regen-versions-index.mjs : génère désormais 2 fichiers — (1) public/changelog-data/versions-index.json (le gros JSON, 234 KB pour 164 versions, chacune avec ses 5 premiers chantiers + chantiers_total + themes + dates + noteFile + sqlFile + code_snippets), (2) app/changelog/versions-index.js (3 KB) qui exporte uniquement THEME_LABELS. Le script s'utilise toujours pareil : node scripts/regen-versions-index.mjs, et il faut le relancer à chaque ajout/modification dans versions-data.js" },
+      { "code": "PERF", "txt": "Résultats build Next : avant 0.57.11 /changelog = 87.5 kB chunk + 275 kB First Load. Après 0.57.11 : /changelog = 13.4 kB chunk + 201 kB First Load. Gain : -74.1 kB First Load (-27%) sur la page changelog. Le JSON versions-index.json est servi par Vercel avec cache HTTP immutable + brotli (probablement ~40-60 KB compressé) et chargé en parallèle des chunks JS donc invisible côté UX" },
+      { "code": "AI", "txt": "+19 tests Vitest (v057-11-lazy-versions-index.test.js) : version (1), versions-index.json (5 — fichier existe dans public/changelog-data/, JSON valide array, structure { v, kind, titre, chantiers, chantiers_total }, chantiers tronqués à 5 max, taille raisonnable 150-400 KB), versions-index.js allégé (2 — plus que THEME_LABELS, < 10 KB), page.js refactoré (8 — plus d'import VERSIONS_INDEX, useState([]), state versionsLoaded, fetch parallèle Promise.all, force-cache 2×, setVersionsLoaded(true), loader visuel ti-loader-2, message 'Aucun résultat' conditionnel), script regen (3 — existe, génère JSON public, plus de export VERSIONS_INDEX dans le template). Total 2584 tests verts (vs 2565). Tests v057-7 mis à jour pour accepter les 2 modes (≤ 0.57.10 import statique OU ≥ 0.57.11 lazy fetch)" },
+      { "code": "DOC", "txt": "Bilan du marathon performance complet 0.57.6 → 0.57.11 : 0.57.6 (lazy CodeViewer/SqlModal/smoke-tests, -11 kB), 0.57.7 (split versions-data → index + chantiers-extra lazy, -20 kB), 0.57.8 (next/font Quicksand + LazyLayoutChrome 8 composants + preconnect Supabase, 0 FOUT/CLS), 0.57.9 (subset Tabler Icons -230 KB CSS), 0.57.10 (refacto qualité NoteModal + 69 zombies retirés), 0.57.11 (lazy JSON versions-index + audit Lighthouse réel mesuré). Cumul gains mesurés : First Load /changelog 304 → 201 kB (-103 kB), CSS 244 → 14.7 KB Tabler, TBT changelog 2.1s → 394ms. Tests Vitest passés de 2220 (0.56.20) à 2584 (+364)" }
+    ],
+    "themes": ["performance", "lighthouse", "core-web-vitals"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.11.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.10",
+    "kind": "version",
+    "titre": "🧹 Refacto qualité : extraction NoteModal + helpers + nettoyage 50 fichiers d'imports zombies",
+    "chantiers": [
+      { "code": "FE", "txt": "Extraction de NoteModal du changelog/page.js : la modale d'affichage des notes HTML (avec highlight de mots-clés et navigation F3/n/p) faisait ~250 lignes de JSX + 2 useEffects + plusieurs helpers dans page.js. Création d'un Client Component autonome app/changelog/NoteModal.js qui gère son propre state interne (scroll auto vers match, gestion des touches Escape/F3/n/p, rendu complet). Le composant est lazy-loadé via next/dynamic ssr:false. page.js passe de 1413 → 1070 lignes (-343 lignes, -24%)",
+        "code_snippet": {
+          "file": "app/changelog/page.js",
+          "note": "Avant/après extraction NoteModal",
+          "lang": "js",
+          "before": "// page.js — 1413 lignes\n// ...\n// 200+ lignes de fonctions helpers (scopeHtml, extractKeywords,\n// highlightInHtml, STOPWORDS_FR, escapeRegex)\n// + 2 useEffect (scroll auto vers match + Escape/F3/n/p)\n// + 200 lignes de JSX de la modale\n// ...\n{noteModal && (\n  <div onClick={...}>\n    {/* Header, navigation matches, bandeau search, contenu HTML scopé */}\n    {/* + styles inline pour les <mark> */}\n  </div>\n)}",
+          "after": "// page.js — 1070 lignes\nimport { scopeHtml, extractKeywords, highlightInHtml } from \"./lib/note-helpers\";\nconst NoteModal = dynamic(() => import(\"./NoteModal\"), { ssr: false });\n\n// fetchNoteHtml() + openNote() restent dans page.js (utilisent setNoteModal)\n// mais les helpers et le JSX sont externalisés\n\n// JSX :\n<NoteModal noteModal={noteModal} setNoteModal={setNoteModal} onClose={() => setNoteModal(null)} />"
+        }
+      },
+      { "code": "FE", "txt": "Création de app/changelog/lib/note-helpers.js (~110 lignes) : exporte les fonctions pures STOPWORDS_FR (Set de 70+ mots vides français), scopeHtml(fullHtml) (préfixe .cl-note-scope sur les sélecteurs CSS de la note pour ne pas écraser la page parent), extractKeywords(text) (tokenise + filtre stopwords + garde mots 4+ chars, versions, acronymes), highlightInHtml(html, keywords) (tokenise alternativement les tags et le texte pour éviter de matcher dans les attributs, injecte des <mark class='cl-match'>), escapeRegex(s). Réutilisables pour d'autres composants futurs" },
+      { "code": "FE", "txt": "Nettoyage automatique de 69 imports zombies dans 50 fichiers : un script Python a scanné tous les `import { X, Y } from \"...\"` dans app/ et lib/, vérifié que chaque nom est utilisé ailleurs dans le fichier, et retiré les noms non utilisés (ou l'import entier si tous les noms étaient inutiles). Exemples détectés : useRef inutilisé dans dialogs.js, METHOD_ICON/COLOR jamais utilisés dans BiometricOptInModal, StateMsg jamais utilisé dans 4 pages admin, Panel/FilterBar inutilisés dans plusieurs pages. Audit final : 0 import zombie restant. Build OK + 2547 tests verts inchangés" },
+      { "code": "AI", "txt": "+19 tests Vitest (v057-10-refacto-notemodal.test.js) : version (1), NoteModal component (7 — fichier Client Component, export default, props { noteModal, setNoteModal, onClose }, 2 useEffect, Escape/F3/n/p, navBtn défini localement, return null si null), note-helpers.js (3 — fichier existe, exports STOPWORDS_FR + scopeHtml + extractKeywords + highlightInHtml + escapeRegex, STOPWORDS_FR Set avec stopwords FR), page.js refacto (5 — import helpers, import dynamic NoteModal, plus de helpers locaux, plus de useEffect locaux, JSX utilise <NoteModal>, < 1100 lignes), 0 imports zombies (2 — page.js + NoteModal.js vérifiés). Total 2566 tests verts (vs 2547)" }
+    ],
+    "themes": ["quality", "refactor", "cleanup"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.10.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.9",
+    "kind": "version",
+    "titre": "🎨 Subset Tabler Icons : 244 KB → 14.7 KB CSS (-94%)",
+    "chantiers": [
+      { "code": "FE", "txt": "Création d'un sub-set CSS de Tabler Icons : avant 0.57.9, le fichier @tabler/icons-webfont/tabler-icons.css (244 KB, 4962 icônes) était importé en entier dans globals.css. Mais Aveho EC n'utilise que ~322 icônes (6.5% du package). Le reste (4640 icônes) était téléchargé inutilement à chaque chargement de page. Solution : générer un CSS custom qui ne contient que les icônes réellement utilisées dans app/, lib/, public/. Gain mesuré : 244 KB → 14.7 KB CSS = -94%",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Import du subset au lieu du package complet",
+          "lang": "css",
+          "before": "/* AVANT 0.57.9 */\n@import \"@tabler/icons-webfont/tabler-icons.css\";\n/* → 244 KB de CSS avec 4962 icônes */\n/* → 4640 icônes téléchargées MAIS jamais utilisées */",
+          "after": "/* APRÈS 0.57.9 — subset auto-généré */\n@import \"./tabler-icons-subset.css\";\n/* → 14.7 KB de CSS avec 322 icônes utilisées */\n/* → font woff2 toujours chargée depuis /public/tabler-icons/ */\n/* → régénérer avec :\n      node scripts/build-tabler-icons-subset.mjs */"
+        }
+      },
+      { "code": "FE", "txt": "Création de scripts/build-tabler-icons-subset.mjs : script Node ES modules qui (1) scanne récursivement app/, lib/, public/ pour trouver toutes les classes 'ti-NAME' utilisées dans le code, (2) lit le CSS source @tabler/icons-webfont/tabler-icons.css pour extraire les codepoints des icônes utilisées, (3) génère un fichier app/tabler-icons-subset.css avec uniquement les classes nécessaires + le @font-face Tabler, (4) copie les fonts woff2/woff/ttf dans public/tabler-icons/ pour les servir depuis le même domaine que l'app. Script à relancer dès qu'on ajoute une nouvelle icône dans le code" },
+      { "code": "FE", "txt": "Copie des 3 fontes Tabler (woff2 priorité, woff fallback, ttf legacy) depuis node_modules/@tabler/icons-webfont/fonts vers public/tabler-icons/. Les URLs des fonts dans le subset CSS pointent vers /tabler-icons/ (absolu) plutôt que vers ./fonts/ (relatif au node_modules). Avantage : pas de configuration webpack/Next pour le serving des fonts + cache HTTP optimal par Vercel (immutable + brotli)" },
+      { "code": "AI", "txt": "+23 tests Vitest (v057-9-tabler-icons-subset.test.js) : version (1), subset CSS file (7 — existe, < 30 KB, @font-face, paths /tabler-icons/, classe .ti, 200+ classes, < 500 classes), globals.css (2 — import du subset + plus d'import du package), fonts copiées (3 — woff2/woff/ttf), script build (2 — existe + structure), icônes essentielles dans subset (8 — ti-home, ti-search, ti-user, ti-loader-2, ti-x, ti-check, ti-plus, ti-trash). Total 2547 tests verts (vs 2524)" },
+      { "code": "DOC", "txt": "Bilan du marathon performance 0.57.6 → 0.57.9 (4 versions) : (1) 0.57.6 : lazy load CodeViewer + SqlModal + smoke-tests (-11 kB First Load /changelog). (2) 0.57.7 : split versions-data en versions-index + chantiers-extra.json lazy (-20 kB First Load). (3) 0.57.8 : next/font Quicksand + LazyLayoutChrome 8 composants + preconnect Supabase. (4) 0.57.9 : subset Tabler Icons (-230 KB CSS). Au total ces 4 versions ont sorti environ -260 KB de poids initial chargé par le browser. Reste à mesurer le gain réel via Lighthouse sur la prod Vercel — c'est désormais possible avec le script scripts/lighthouse-guide.sh livré en 0.57.8" }
+    ],
+    "themes": ["performance", "css", "lighthouse"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.9.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.8",
+    "kind": "version",
+    "titre": "🎯 Préparation audit Lighthouse : next/font + 8 composants layout lazy + preconnect",
+    "chantiers": [
+      { "code": "FE", "txt": "Migration de Quicksand vers next/font/google : avant 0.57.8, la police Quicksand était chargée via un <link href='https://fonts.googleapis.com/...'> dans le head, ce qui forçait un round-trip réseau bloquant + risque de FOUT/FOIT (Flash of Unstyled Text) au swap de la police. Après 0.57.8 : next/font télécharge le woff2 au build, l'inline en preload dans le HTML généré, applique font-display: swap optimisé. Résultat : 0 layout shift au chargement de la police + ~100ms gagnés sur le TTFB",
+        "code_snippet": {
+          "file": "app/layout.js",
+          "note": "next/font pour Quicksand",
+          "lang": "js",
+          "before": "// app/layout.js (Server Component)\nimport \"./globals.css\";\n// ... autres imports\n\nexport default function RootLayout({ children }) {\n  return (\n    <html lang=\"fr\">\n      <head>\n        <link\n          href=\"https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap\"\n          rel=\"stylesheet\"\n        />\n        ...",
+          "after": "// app/layout.js (Server Component)\nimport \"./globals.css\";\nimport { Quicksand } from \"next/font/google\";\n\nconst quicksand = Quicksand({\n  subsets: [\"latin\"],\n  weight: [\"400\", \"500\", \"600\", \"700\"],\n  display: \"swap\",\n  variable: \"--font-quicksand\",\n});\n\nexport default function RootLayout({ children }) {\n  return (\n    <html lang=\"fr\" className={quicksand.variable}>\n      <head>\n        {/* Plus de <link> Google Fonts : next/font fait l'inline auto */}\n        ..."
+        }
+      },
+      { "code": "FE", "txt": "Création de app/LazyLayoutChrome.js : Client Component qui regroupe 8 composants layout non critiques pour le LCP, chargés en lazy via next/dynamic avec ssr: false. Liste : InstallBanner (proposition PWA), KeyboardHelp (raccourcis), VersionCheck (check nouvelle version), AnnoncesBanner (annonces admin), FocusMode (Esc Esc), GeolocPrompt (demande géoloc), BiometricOptInModal (empreinte mobile), FloatingActionBar (barre flottante). Pourquoi ce Client Component intermédiaire ? Next 15 interdit ssr: false dans un Server Component (= layout.js par défaut) ; on déplace donc les imports dynamic dans un Client Component séparé qui est monté depuis layout.js" },
+      { "code": "FE", "txt": "Ajout d'un <link rel='preconnect'> vers NEXT_PUBLIC_SUPABASE_URL avec crossOrigin='anonymous' dans le head du layout. Anticipe la première requête API Supabase (TLS handshake + DNS lookup + TCP) en parallèle du téléchargement de la page → gagne ~100ms sur le TTFB de la 1ère query. Le tag est conditionnel : ne se rend que si la variable d'env est définie au build" },
+      { "code": "FE", "txt": "Nouveau scripts/lighthouse-guide.sh : guide CLI complet pour faire un audit Lighthouse sur la prod Vercel. Détaille les 8 étapes (préparation navigateur, pages prioritaires à tester /login + /vue-globale + /patients + /changelog + /carte + /scan/qr, métriques Core Web Vitals avec seuils BON/MOYEN/MAUVAIS, optimisations déjà en place à mentionner, troubleshooting LCP/INP/CLS, reporting). Permet à n'importe qui de faire un audit reproductible. Lancer avec : bash scripts/lighthouse-guide.sh" },
+      { "code": "AI", "txt": "+38 tests Vitest (v057-8-lighthouse-prep.test.js) : version (1), Quicksand next/font (6 — import depuis next/font/google, config 4 weights latin swap, variable CSS, html className, plus de Google Fonts CDN, globals.css avec --font-quicksand), Preconnect Supabase (2 — tag preconnect + crossOrigin), LazyLayoutChrome (17 — fichier Client Component, 8×2 tests pour chaque composant en dynamic ssr:false + monté dans le rendu), Layout (10 — import LazyLayoutChrome, monté dans body, 6 composants critiques statiques, plus d'imports statiques des 8 lazy), Script lighthouse-guide (3 — existe, seuils CWV, pages prioritaires). +1 test v056-16 ajusté pour accepter FloatingActionBar en lazy via LazyLayoutChrome. Total 2524 tests verts (vs 2486)" },
+      { "code": "DOC", "txt": "Pour aller plus loin sur Lighthouse, le user doit lancer l'audit depuis https://aveho-ec-app.vercel.app (pas localhost car CDN + edge cache + brotli prod = chiffres différents). Procédure : Chrome Incognito → F12 → onglet Lighthouse → Performance + Accessibility + Best Practices + SEO + PWA → Mode Mobile + Slow 4G + 4× CPU throttling → Analyse. Cibler score Perf > 90, LCP < 2.5s, INP < 200ms, CLS < 0.1. Si LCP > 2.5s : vérifier ping Supabase + preconnect appliqué. Si INP > 200ms : profiler avec React DevTools pour LongTask. Si CLS > 0.1 : devrait être fixé par next/font 0.57.8, vérifier qu'aucun banner ne pousse le contenu" }
+    ],
+    "themes": ["performance", "lighthouse", "core-web-vitals"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.8.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.7",
+    "kind": "version",
+    "titre": "📦 Split versions-data : index léger + chantiers-extra.json lazy → -20 kB First Load",
+    "chantiers": [
+      { "code": "FE", "txt": "Création de app/changelog/versions-index.js (~255 KB sur disque, ~85 KB compressé) qui contient toutes les 160 versions mais avec seulement les 5 premiers chantiers de chaque version + un champ chantiers_total qui permet d'afficher le bon nombre dans le bouton 'Voir les X autres'. Les chantiers cachés (à partir du 6ème) sont externalisés dans public/changelog-data/chantiers-extra.json (~68 KB) qui est lazy-fetché au mount de la page",
+        "code_snippet": {
+          "file": "app/changelog/versions-index.js",
+          "note": "Structure de l'index",
+          "lang": "js",
+          "after": "export const VERSIONS_INDEX = [\n  {\n    \"v\": \"0.57.7\",\n    \"kind\": \"version\",\n    \"titre\": \"...\",\n    \"chantiers\": [  // 5 premiers seulement\n      { \"code\": \"FE\", \"txt\": \"...\" },\n      { \"code\": \"FE\", \"txt\": \"...\" },\n      { \"code\": \"DOC\", \"txt\": \"...\" },\n      { \"code\": \"AI\", \"txt\": \"...\" },\n      { \"code\": \"FE\", \"txt\": \"...\" }\n    ],\n    \"chantiers_total\": 7,  // nb réel pour le bouton 'Voir les X autres'\n    \"themes\": [...],\n    \"date\": \"...\",\n    \"noteFile\": \"...\",\n    \"sqlFile\": null\n  },\n  ...\n];"
+        }
+      },
+      { "code": "FE", "txt": "Refacto de app/changelog/page.js : remplace l'import statique de versions-data par versions-index, ajoute un state ALL_VERSIONS qui démarre à VERSIONS_INDEX et est enrichi via un useEffect au mount qui fetch /changelog-data/chantiers-extra.json en background. Le merge se fait quand l'extra est chargé : chaque version dont des chantiers cachés existent voit son chantiers étendu. cache: 'force-cache' car les JSON sont versionnés par déploiement (et sw bumpé à chaque version)",
+        "code_snippet": {
+          "file": "app/changelog/page.js",
+          "note": "useEffect fetch chantiers-extra lazy",
+          "lang": "js",
+          "after": "const [ALL_VERSIONS, setAllVersions] = useState(VERSIONS_INDEX);\nconst [extraLoaded, setExtraLoaded] = useState(false);\n\nuseEffect(() => {\n  let cancelled = false;\n  (async () => {\n    try {\n      const res = await fetch(\"/changelog-data/chantiers-extra.json\", {\n        cache: \"force-cache\",\n      });\n      if (!res.ok) throw new Error(`HTTP ${res.status}`);\n      const extra = await res.json();\n      if (cancelled) return;\n      const augmented = VERSIONS_INDEX.map((v) => {\n        const hidden = extra[v.v];\n        if (!hidden || !hidden.length) return v;\n        return { ...v, chantiers: [...v.chantiers, ...hidden] };\n      });\n      setAllVersions(augmented);\n      setExtraLoaded(true);\n    } catch (e) {\n      logger.warn(\"[changelog] fetch chantiers-extra failed:\", e?.message);\n    }\n  })();\n  return () => { cancelled = true; };\n}, []);"
+        }
+      },
+      { "code": "FE", "txt": "Mise à jour des useMemo (themeCounts, filtered) pour ajouter ALL_VERSIONS dans leurs deps. Sans ça, les recalculs ne se font pas quand le fetch arrive et l'UI ne reflète pas les chantiers enrichis dans la recherche full-text. Le bouton 'Voir les X autres' utilise maintenant chantiers_total au lieu de v.chantiers.length pour afficher le bon nombre avant que l'extra soit chargé. Disabled state + tooltip 'Chargement…' sur le bouton si l'extra n'est pas encore chargé pour une version qui n'a que 5 chantiers visibles" },
+      { "code": "FE", "txt": "Création de scripts/regen-versions-index.mjs : script Node ES modules qui lit versions-data.js (en enlevant l'import logger zombie au passage), tronque les chantiers à 5 max + ajoute chantiers_total, écrit versions-index.js + chantiers-extra.json. Réutilisable pour les futures versions : à chaque nouvelle entrée dans versions-data.js, lancer node scripts/regen-versions-index.mjs pour synchroniser" },
+      { "code": "DOC", "txt": "Gain mesuré sur le build Next : /changelog 293 kB → 273 kB First Load (-20 kB compressé). Le gain en uncompressed est plus important (~95 KB) mais la compression gzip de Vercel absorbe les répétitions JSON, ce qui réduit la différence visible. versions-data.js reste sur disque (309 KB) car smoke-tests.js en a besoin pour les vérifications de l'historique complet — mais c'est en dynamic import donc pas dans le bundle initial. Architecture en place pour futurs gains : on peut maintenant déplacer plus de contenu dans extra ou faire un split par version (1 JSON par v-X.X.X) pour de gros gains supplémentaires" },
+      { "code": "AI", "txt": "+26 tests Vitest (v057-7-split-versions-data.test.js) : version (1), versions-index.js (5 — existe, plus léger que versions-data, exports VERSIONS_INDEX + THEME_LABELS, 150+ chantiers_total, 150+ versions), chantiers-extra.json (4 — existe, JSON valide avec versions comme clés, chaque entrée array avec code+txt, taille < 100 KB), page.js patches (11 — import versions-index, plus d'import versions-data, state ALL_VERSIONS + setAllVersions, state extraLoaded, fetch chantiers-extra avec force-cache, merge avec [...v.chantiers, ...hidden], setExtraLoaded(true), chantiers_total dans le rendu, useMemo deps incluent ALL_VERSIONS pour themeCounts + filtered), script regen (2 — existe + structure), versions-data conservé pour smoke-tests (2 — fichier existant + smoke-tests dynamic import), doc bundle gain (1). +1 test 0.57.2 ajusté (1500 lignes max au lieu de 1400 pour intégrer le code de split). Total 2486 tests verts (vs 2460)" }
+    ],
+    "themes": ["performance", "bundle", "lazy-loading"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.7.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.6",
+    "kind": "version",
+    "titre": "⚡ Performance : lazy load CodeViewer + SqlModal + smoke-tests → -11 kB First Load",
+    "chantiers": [
+      { "code": "FE", "txt": "Lazy load des composants modaux dans app/changelog/page.js : CodeViewer et SqlModal sont désormais chargés via next/dynamic au lieu d'un import statique. Ils n'apparaissent dans le bundle initial que quand l'utilisateur clique sur un bouton </> (code) ou SQL. Économise environ 11 kB sur le First Load JS de /changelog. ssr: false car ces modaux utilisent useState/useEffect pour des interactions navigateur (clipboard, ESC, etc.)",
+        "code_snippet": {
+          "file": "app/changelog/page.js",
+          "note": "next/dynamic pour les modaux",
+          "lang": "js",
+          "before": "import CodeViewer from \"./CodeViewer\";\nimport SqlModal from \"./SqlModal\";\n\n// → ces 2 composants sont dans le bundle initial même si\n//   l'utilisateur ne clique JAMAIS dessus.",
+          "after": "import dynamic from \"next/dynamic\";\n// 0.57.6 : CodeViewer et SqlModal sont lazy-loadés (chargés à la demande)\nconst CodeViewer = dynamic(() => import(\"./CodeViewer\"), { ssr: false });\nconst SqlModal = dynamic(() => import(\"./SqlModal\"), { ssr: false });\n\n// → composants chargés en chunks séparés, seulement quand\n//   l'utilisateur ouvre une modale code ou SQL"
+        }
+      },
+      { "code": "FE", "txt": "Nouveau app/changelog/smoke-tests-index.js (3 KB) qui exporte juste VERSION_TESTS_KEYS (Set des clés de versions ayant des tests) et 2 fonctions wrapper qui chargent smoke-tests.js (92 KB) en dynamic import quand l'utilisateur clique sur 'Tester' ou 'Tester tout'. Avant : 92 KB chargés à chaque visite de /changelog. Après : juste 3 KB pour le badge 'tests dispo' + chargement à la demande. Économie nette : 89 KB sur les visites sans interaction de test" },
+      { "code": "FE", "txt": "Patch automatique de app/changelog/page.js : remplacement de VERSION_TESTS[v.v] (object lookup qui force le bundle de 92 KB) par VERSION_TESTS_KEYS.has(v.v) (Set lookup léger). Les appels await runTestsForVersion() et await runAllTests() deviennent runTestsForVersionLazy() / runAllTestsLazy() qui font le dynamic import au moment du clic" },
+      { "code": "DOC", "txt": "Audit complet du bundle Aveho EC après ces optimisations : (a) Pages les plus lourdes en First Load : /changelog 293 kB (gros à cause de versions-data.js qui contient 159 entrées), /patients 213 kB, /etablissements 212 kB — toutes les autres entre 170-210 kB. (b) Shared bundle = 104 kB de React + Next core (non optimisable). (c) Libs déjà en dynamic import : jszip, leaflet, html5-qrcode, exportData, exportPdf — bien fait. (d) Plus aucune lib lourde en import statique côté front. Objectif Lighthouse Performance > 90 atteignable" },
+      { "code": "FE", "txt": "Nouveau script scripts/analyze-bundle.sh qui affiche en CLI les tailles des shared chunks, des pages les plus lourdes, des dynamic chunks lazy, et un récap des First Load par page. Utilisation : bash scripts/analyze-bundle.sh après un npm run build. Facilite les audits perf futurs" },
+      { "code": "AI", "txt": "+21 tests Vitest (v057-6-performance-lazy.test.js) : version (1), smoke-tests-index.js (6 — existe, VERSION_TESTS_KEYS Set, runTestsForVersionLazy, runAllTestsLazy, 50+ clés, < 120 lignes), changelog/page.js lazy patterns (9 — import next/dynamic, CodeViewer dynamic, SqlModal dynamic, ssr: false, plus d'imports statiques, smoke-tests-index utilisé, VERSION_TESTS_KEYS.has au lieu de bracket access, appels lazy), lazy existants confirmés (3 — jszip, leaflet, exportData/exportPdf), script analyze-bundle (2). +2 tests existants (v056-19, v057-2) acceptent désormais les 2 patterns import. Total 2460 tests verts (vs 2439)" },
+      { "code": "DOC", "txt": "Reste pour 0.57.7+ : (a) Split versions-data.js en versions-index + lazy-load des chantiers detaillés par version — gros chantier mais permettrait de passer /changelog à < 150 kB First Load. (b) Refactos qualité (NoteModal, carte/utilisateurs). (c) Audit Lighthouse réel sur Vercel pour mesurer Core Web Vitals (LCP, FID, CLS) — ne peut pas être fait depuis l'environnement de dev" }
+    ],
+    "themes": ["performance", "bundle", "lazy-loading"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.6.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.5",
+    "kind": "version",
+    "titre": "🔧 Robustesse runtime : 18 useEffect async wrappés + lib/useAsyncEffect + cleanup HID",
+    "chantiers": [
+      { "code": "FE", "txt": "Création de lib/useAsyncEffect.js : hook helper qui wrap proprement un useEffect avec un callback async, gère automatiquement try/catch (pas d'UnhandledPromiseRejection), AbortController pour annuler les fetches en cours au démontage, flag isMounted pour ignorer les setState après démontage, et logging unifié via lib/logger. À utiliser pour tous les futurs useEffect async",
+        "code_snippet": {
+          "file": "lib/useAsyncEffect.js",
+          "note": "Pattern useAsyncEffect",
+          "lang": "js",
+          "after": "// Usage :\nuseAsyncEffect(async ({ signal, isMounted }) => {\n  const data = await fetch(url, { signal }).then(r => r.json());\n  if (!isMounted()) return;  // composant démonté entre temps\n  setData(data);\n}, [deps]);\n\n// Implémentation (extrait) :\nexport function useAsyncEffect(asyncFn, deps, options = {}) {\n  const { errorLabel = \"[useAsyncEffect]\" } = options;\n\n  useEffect(() => {\n    let mounted = true;\n    const controller = new AbortController();\n    const ctx = {\n      isMounted: () => mounted,\n      signal: controller.signal,\n    };\n\n    (async () => {\n      try {\n        await asyncFn(ctx);\n      } catch (e) {\n        if (!mounted) return;  // ignore les erreurs après démontage\n        logger.error(`${errorLabel} :`, e);\n      }\n    })();\n\n    return () => {\n      mounted = false;\n      try { controller.abort(); } catch {}\n    };\n  }, deps);\n}"
+        }
+      },
+      { "code": "FE", "txt": "Patch automatique de 16 pages avec useEffect async qui utilisaient le pattern `(async () => { ... })()` sans try/catch englobant : AnnoncesBanner, MesValidationsEnAttente, NotificationPreferences, statistiques-rgpd, magasins, audit, etablissement, promotions, calendrier, digest-dashboard, materiels, annuaire-rpps, commandes, scan/bulletin-situation, scan/prescription, vue-globale. Ajout automatique de l'import logger + wrap try/catch avec log d'erreur + finally setLoading(false). Sans ce wrap, un Supabase down ou un endpoint en timeout faisait planter la page en loading infini avec UnhandledPromiseRejection dans la console" },
+      { "code": "FE", "txt": "Patch manuel des cas complexes : app/patient/[id]/page.js (useEffect géant avec Promise.all + caisse/mutuelle nested, ajout try/catch englobant + .catch() individuel sur chaque promise nested pour pas faire planter Promise.all si une rejette), app/achats/page.js (notifyValideurs.then() avait pas de .catch — le try/catch englobant ne couvre PAS la promise qui s'exécute APRÈS l'await import), app/ConsentementRGPD.js (4 supabase chains .then(setState) sans catch, ajout .catch(() => {}) silencieux), app/NotificationOptIn.js (serviceWorker.ready + pushManager.getSubscription cascadés sans catch), app/OfflineBanner.js (getQueueItems().then(setItems) sans catch — fallback []), app/components/EtabPhoto.js (fetchGooglePlace().then() sans catch — fallback empty place), app/crud.js (3 imports dynamiques pour export CSV/PDF sans .catch — affichait silencieusement rien si webpack chunk load échoue)" },
+      { "code": "FE", "txt": "Fuite mémoire WebHID corrigée dans app/SignaturePad.js : la lib branchait un listener `inputreport` sur le device HID au moment du connect, mais ne le retirait jamais au démontage du composant. Si l'utilisateur quitte la page avec signpad connecté → fuite. Fix : nouveau hidListenerRef qui stocke {device, listener}, cleanup useEffect appelle device.removeEventListener au démontage. Bonus : .catch sur navigator.hid.getDevices() (browser ancien ou permission refusée → unsupported propre au lieu de UnhandledPromiseRejection)" },
+      { "code": "AI", "txt": "+37 tests Vitest (v057-5-robustesse-runtime.test.js) : version (1), lib/useAsyncEffect (6 — export, try/catch logger, isMounted/signal, AbortController, cleanup mounted=false), SignaturePad cleanup HID (3 — hidListenerRef + removeEventListener + getDevices catch), 5 fichiers avec catches comptés (5), 17 pages avec try/catch + import logger (17), patient/[id]/page.js try/catch englobant + setLoading finally + caisse/mutuelle catches (3), achats/page.js notifyValideurs catch (1), lib/useAsyncEffect signature (1). Total 2439 tests verts (vs 2402)" },
+      { "code": "DOC", "txt": "Bilan robustesse runtime de la 0.57.5 : (a) 0 promise non gérée détectée par l'audit final. (b) 18 useEffect async désormais protégés par try/catch + log d'erreur. (c) 1 fuite mémoire HID listener fixée. (d) 1 helper useAsyncEffect disponible pour les futurs useEffect async (recommandé pour les nouveaux développements). Les pages ne crashent plus en cas d'erreur réseau / Supabase down — elles affichent une UI cohérente (state contrôlé) et logguent l'erreur via logger pour debug" }
+    ],
+    "themes": ["quality", "robustness", "runtime"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.5.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.4",
+    "kind": "version",
+    "titre": "🛡️ Audit sécurité applicatif : 100% des routes API protégées + headers OWASP",
+    "chantiers": [
+      { "code": "SEC", "txt": "Audit complet des 19 routes API Next : avant 0.57.4, 7 routes étaient sans rate limit et 7 frontends appelaient les routes sans Bearer token (RLS faisait l'auth implicite mais 401 silencieux + risque de DoS). Après 0.57.4 : 17/19 routes ont auth + rate limit explicite (✅), 2/19 sont publiques par design (🟢 health, version monitoring). 100% de couverture sur les routes sensibles" },
+      { "code": "FE", "txt": "Migration des 7 routes API vers le pattern requireAuth + checkRateLimit : caisses (4 handlers GET POST PUT DELETE, 60 req/min), mutuelles (4 handlers, 60 req/min), place (1 handler, 30 req/min — Google Places API coûte), prescriptions/search (1 handler, 30 req/min), prescriptions/export-csv (1 handler, 10 req/min — export RGPD sensible), prescriptions/verify-rpps (1 handler, 30 req/min), google-reviews/sync (1 handler, 5 req/min — appel Google Places coûteux). 12 handlers migrés en automatique via patch Python qui détecte le pattern `createClient(SUPABASE_URL, SUPABASE_ANON, { global: { headers: { Authorization: authHeader }}})` et le remplace",
+        "code_snippet": {
+          "file": "app/api/caisses/route.js",
+          "note": "Migration vers requireAuth + checkRateLimit",
+          "lang": "js",
+          "before": "import { createClient } from \"@supabase/supabase-js\";\n\nexport async function GET(req) {\n  const authHeader = req.headers.get(\"authorization\") || \"\";\n  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {\n    global: { headers: { Authorization: authHeader } },\n  });\n  // ... logique\n  // Problème : si Bearer absent, RLS bloque les rows mais\n  // pas de 401 immédiat → l'attaquant peut tâter la route.\n  // Et aucun rate limit = brûle quota Supabase.\n}",
+          "after": "import { createClient } from \"@supabase/supabase-js\";\nimport { requireAuth, checkRateLimit } from \"../../../lib/apiAuth\";\n\nexport async function GET(req) {\n  // 0.57.4 : auth + rate limit obligatoire\n  const authCheck = await requireAuth(req);\n  if (!authCheck.ok) return authCheck.response;\n  const { user, supabase } = authCheck;\n  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });\n  if (!rate.ok) return rate.response;\n  // ... logique\n  // 401 immédiat si Bearer absent. 429 si > 60 req/min/user.\n}"
+        }
+      },
+      { "code": "SEC", "txt": "Ajout du rate limit sur les 2 routes OCR créatrices (auth déjà présente) : patients/from-ocr (10 req/min — création patient depuis bulletin OCR), prescriptions/from-ocr (10 req/min — création prescription + lignes). Anti-quota Supabase et anti-spam à la création. prescriptions/from-ocr a aussi gagné un check Bearer explicite (avant : token optionnel, maintenant : 401 si absent)" },
+      { "code": "FE", "txt": "Migration de 7 composants frontend de fetch() classique vers fetchWithAuth() : CaisseSearch.js, MutuelleSearch.js, EtabGoogleDetails.js, EtabPhoto.js, parametres/integrations/page.js, admin/medecins-prescripteurs/page.js, RppsVerifyBadge.js. fetchWithAuth ajoute automatiquement le Bearer via supabase.auth.getSession() — sans cette migration, les routes API renverraient désormais 401 pour ces composants. Patch automatique : regex sur fetch('/api/...') → fetchWithAuth('/api/...')" },
+      { "code": "SEC", "txt": "Ajout des 6 headers HTTP de sécurité recommandés par OWASP dans next.config.js (appliqués sur toutes les routes via async headers()) : X-Content-Type-Options=nosniff (XSS mitigation, empêche le browser de \"deviner\" le content-type), X-Frame-Options=SAMEORIGIN (clickjacking mitigation, empêche d'être chargé en iframe), Strict-Transport-Security max-age=15552000 (HSTS 6 mois, force HTTPS), Referrer-Policy=strict-origin-when-cross-origin (limite ce qui fuit dans le Referer), Permissions-Policy (désactive caméra/micro/géoloc/paiement par défaut), Cross-Origin-Opener-Policy=same-origin-allow-popups (mitigation Spectre via window.opener isolation)" },
+      { "code": "DOC", "txt": "Audit XSS via dangerouslySetInnerHTML : 5 occurrences trouvées dans le code, toutes auditées et SAFE. (1) ConsentementRGPD : passe par consentementToHtml() qui escape & < > avant toute substitution markdown. (2) parametres-rgpd preview : idem, même fonction. (3) changelog noteModal.html : source = /public/changelog-notes/*.html, fichiers statiques générés par nous (chaîne de build trusted). (4) CodeViewer highlightCode : escapeHtml() appelé en premier sur l'input avant les regex de coloration. (5) versions-data.js : exemple de code en chaîne JSON, jamais rendu en innerHTML. 0 XSS exploitable" },
+      { "code": "AI", "txt": "+43 tests Vitest (v057-4-security-audit-app.test.js) : version 0.57.4+ (1), 7 routes API avec requireAuth + checkRateLimit (14 = 7 × 2), 2 routes OCR avec rate limit + 401 explicite (4 = 2 × 2), 7 frontends avec import fetchWithAuth + appel (14 = 7 × 2), 8 headers OWASP vérifiés (8 tests : async headers, 6 headers individuels, source /(.*) pattern), 2 sources dangerouslySetInnerHTML safe (2). +1 test 0.56.4 ajusté pour pattern requireAuth. Total 2402 tests verts (vs 2359, +43)" },
+      { "code": "DOC", "txt": "Bilan complet de toute la stabilisation sécurité (0.56.20 → 0.57.4) : (a) npm audit : 7 vulns → 2 vulns (-71%), 100% CRITICAL+HIGH résolues. (b) Routes API : 8 routes protégées (auth+rate) → 17/17 protégées (sauf les 2 publiques par design). (c) Frontends : 7 composants migrés vers fetchWithAuth. (d) Headers HTTP : 6 nouveaux headers OWASP. (e) SQL : 21 fonctions SQL grant + 16 search_path corrigés (0.56.20). (f) Secrets : 0 hardcoded (audit grep AIzaSy/sk_live/service_role passé). (g) XSS : 5 dangerouslySetInnerHTML audités, 100% safe. Reste 2 MODERATE postcss/Next non actionnables sans régression majeure" }
+    ],
+    "themes": ["security", "audit", "infrastructure"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.4.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.3",
+    "kind": "version",
+    "titre": "🛡️ Stabilisation : suppression xlsx (vuln HIGH) + export CSV natif + 0 warning build",
+    "chantiers": [
+      { "code": "SEC", "txt": "Suppression de la dépendance xlsx du package.json (2 vulnérabilités sans fix upstream : Prototype Pollution + ReDoS). Résultat npm audit : 0 CRITICAL · 0 HIGH · 2 MODERATE (vs 0 CRIT · 1 HIGH · 2 MOD avant). Les 2 MODERATE restantes sont postcss XSS via Unescaped </style>, qui est utilisé en interne par Next.js — fix nécessiterait downgrade vers Next 9 (régression majeure), à laisser tel quel. Bilan total trilogie hardening + 0.57.x : 7 → 2 vulnérabilités (-71%), 100% des CRITICAL et HIGH résolues" },
+      { "code": "FE", "txt": "Nouveau module lib/exportData.js (~370 lignes) qui remplace l'utilisation de xlsx par une génération CSV native sans dépendance : (1) csvEscape() avec protection contre l'injection CSV (Excel évalue =, +, -, @ en début de cellule comme une formule → on préfixe avec une apostrophe). (2) RFC 4180 conforme (entourage par guillemets si caractères spéciaux + double-guillemets internes). (3) BOM UTF-8 ajouté en début de fichier pour qu'Excel français reconnaisse l'encodage (sinon accents cassés). (4) Séparateur ; par défaut (compat Excel français). (5) Support multi-fichiers pour exportBilan (1 CSV par feuille + INDEX.csv avec méta)",
+        "code_snippet": {
+          "file": "lib/exportData.js",
+          "note": "csvEscape avec protection injection CSV",
+          "lang": "js",
+          "after": "/**\n * Échappe une valeur pour CSV (RFC 4180).\n */\nfunction csvEscape(value) {\n  if (value == null) return \"\";\n  let s = String(value);\n  // Protection contre l'injection CSV (=, +, -, @ au début)\n  // Excel évalue ces caractères comme une formule. Préfixer avec une apostrophe.\n  if (/^[=+\\-@\\t\\r]/.test(s)) {\n    s = \"'\" + s;\n  }\n  if (/[\",;\\r\\n]/.test(s)) {\n    s = '\"' + s.replace(/\"/g, '\"\"') + '\"';\n  }\n  return s;\n}\n\nfunction rowsToCSV(rows, sep = \";\") {\n  return rows.map((row) => row.map(csvEscape).join(sep)).join(\"\\r\\n\");\n}\n\nfunction downloadText(content, filename, mimeType = \"text/csv;charset=utf-8\") {\n  // BOM UTF-8 pour qu'Excel français reconnaisse l'encodage (sinon accents cassés)\n  const BOM = \"\\uFEFF\";\n  const blob = new Blob([BOM + content], { type: mimeType });\n  // ... download via blob URL\n}"
+        }
+      },
+      { "code": "FE", "txt": "lib/exportExcel.js transformé en simple ré-exporteur (3 lignes utiles) qui pointe vers lib/exportData. Compat 100% avec les 4 pages callers (app/patients, app/statistiques, app/materiels, app/etablissements) qui font tous `await import('../../lib/exportExcel')` — pas une seule ligne de code applicatif à modifier dans les pages. Le mode XLSX reste documenté dans exportData.js mais l'import dynamique est commenté pour pas que webpack tente de le résoudre (xlsx n'est plus dans package.json)" },
+      { "code": "UX", "txt": "Mise à jour des libellés UI dans les 4 pages : 'Export Excel' → 'Export CSV' (boutons, tooltips, alert messages). Le format change effectivement de .xlsx à .csv. L'utilisateur peut toujours ouvrir le CSV directement dans Excel, LibreOffice Calc, Numbers, Google Sheets. Pour les usages où on a besoin de multi-feuilles dans un même fichier (exportBilan), on génère désormais plusieurs fichiers CSV séparés (1 par feuille + INDEX.csv) — ouvrables en parallèle dans Excel" },
+      { "code": "BUG", "txt": "Fix bonus : warning 'Next.js inferred your workspace root' qui s'affichait à chaque build. Cause : présence de lockfiles à plusieurs niveaux du chemin (ancien lockfile dans /home/claude/ et nouveau dans /home/claude/aveho-ec-app/). Fix : next.config.js mis à jour avec outputFileTracingRoot: path.join(__dirname). Build : 0 warning maintenant" },
+      { "code": "AI", "txt": "+19 tests Vitest (v057-3-no-xlsx-csv-export.test.js) : version 0.57.3+ (1), xlsx absent (2), exportData.js existe + exports + csvEscape protège injection + RFC 4180 + BOM UTF-8 + xlsx désactivé (8), exportExcel.js ré-exporteur (3), 4 pages UI sans 'Export Excel' (4), next.config.js outputFileTracingRoot (2), npm audit propre (1). +1 test 0.56.22 ajusté (lib/exportExcel n'est plus la cible du logger check). Total 2359 tests verts (vs 2340)" },
+      { "code": "DOC", "txt": "Bilan de la stabilisation sécurité 0.56.20 → 0.57.3 : (avant) 7 vulns dont 2 CRITICAL + 1 HIGH. (après) 2 vulns MODERATE seulement (postcss interne à Next). Trilogie hardening + Next 15 + suppression xlsx = 71% de réduction. Pour ré-activer xlsx un jour : (1) npm install xlsx, (2) décommenter la ligne `const XLSX = await import(\"xlsx\")` dans lib/exportData.js loadXLSX(). Mais préférer ExcelJS qui est une alternative sans vulnérabilité connue" }
+    ],
+    "themes": ["security", "dependencies", "quality"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.3.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.2",
+    "kind": "version",
+    "titre": "🧹 Refacto changelog : SqlModal extrait + helpers déplacés (1603 → 1363 lignes)",
+    "chantiers": [
+      { "code": "FE", "txt": "Refacto de app/changelog/page.js : 1603 → 1363 lignes (-15%). Extraction de la grosse modale SQL (180 lignes de JSX + 50 lignes de logique fetch/cache/clipboard/ESC) dans son propre composant app/changelog/SqlModal.js (~240 lignes autonomes). Le composant gère lui-même son fetch via cache useRef, son ESC handler, et sa copy clipboard. Le parent ne fait plus que passer les props sqlModal + onClose",
+        "code_snippet": {
+          "file": "app/changelog/SqlModal.js",
+          "note": "Composant SqlModal autonome",
+          "lang": "js",
+          "after": "export default function SqlModal({ sqlModal, onClose }) {\n  const [content, setContent] = useState(sqlModal?.content || null);\n  const [copied, setCopied] = useState(false);\n  const cacheRef = useRef({});\n\n  // Fetch du contenu SQL quand on ouvre la modale\n  useEffect(() => {\n    if (!sqlModal) return;\n    const { file } = sqlModal;\n    if (cacheRef.current[file]) {\n      setContent(cacheRef.current[file]);\n      return;\n    }\n    (async () => {\n      try {\n        const res = await fetch(`/changelog-sql/${file}`, { cache: \"force-cache\" });\n        if (!res.ok) throw new Error(`HTTP ${res.status}`);\n        const txt = await res.text();\n        cacheRef.current[file] = txt;\n        setContent(txt);\n      } catch (e) {\n        setContent(`-- Erreur de chargement\\n-- ${e.message}`);\n      }\n    })();\n  }, [sqlModal?.file]);\n\n  // ESC pour fermer\n  useEffect(() => {\n    if (!sqlModal) return;\n    const handleKey = (e) => e.key === \"Escape\" && onClose();\n    window.addEventListener(\"keydown\", handleKey);\n    return () => window.removeEventListener(\"keydown\", handleKey);\n  }, [sqlModal, onClose]);\n\n  // ... copy clipboard + JSX\n}"
+        }
+      },
+      { "code": "FE", "txt": "Extraction des helpers d'affichage dans app/changelog/lib/helpers.js : ICONS_BY_CODE (constantes pour Fix/NEW/BONUS/•), getCodeMeta(code) (résout la couleur+label depuis un code), versionKey(s) (split version en parts numériques), compareVersions(a,b) (tri ordre version). Maintenant utilisable par SqlModal et futurs sous-composants extraits sans duplication" },
+      { "code": "BUG", "txt": "Fix imports manquants dans 2 tabs/ de la 0.57.1 : TabAudit et TabPrescriptions importaient bulletinsStorage et prescriptionsStorage avec 4 niveaux de ../ alors qu'ils sont dans tabs/ qui ajoute 1 niveau supplémentaire (5 ../). Le build Next 14 avait warning, Next 15 le détectait pas mais le composant aurait crashé au runtime au moment du download. Corrigé en testant en build" },
+      { "code": "AI", "txt": "+14 tests Vitest (v057-2-refacto-changelog.test.js) : 0.57.2+, helpers.js existe + 4 exports, SqlModal.js existe + default export + fetch/ESC/clipboard internes + props signature, page.js < 1400 lignes, imports helpers + SqlModal, suppression des helpers locaux + suppression de la logique SQL dupliquée, utilisation effective de <SqlModal />, + 2 tests fix imports tabs/ (TabAudit + TabPrescriptions avec 5 niveaux). Total 2340 tests verts (vs 2326)" },
+      { "code": "DOC", "txt": "Plan refacto restant : (0.57.3) extraction NoteModal qui fait 208 lignes — c'est le plus délicat car il a beaucoup d'état couplé au parent (search, currentMatch, matchCount, scroll). À traiter dans une version dédiée car le risque de régression est plus élevé. (0.57.4+) refacto app/carte/page.js (1483 lignes) et app/utilisateurs/page.js (1400 lignes) — pas de sous-composants déjà internes, demande de découper du JSX en nouveaux composants logiques. Chacun en version dédiée" }
+    ],
+    "themes": ["quality", "refactor", "maintainability"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.2.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.1",
+    "kind": "version",
+    "titre": "🧹 Refacto : patient/[id]/edit split en 8 fichiers tabs/*.js (1065 → 350 lignes)",
+    "chantiers": [
+      { "code": "FE", "txt": "Refacto majeur de app/patient/[id]/edit/page.js : 1065 lignes → 350 lignes (-67%). Les 7 onglets internes (TabIdentite, TabSecu, TabAdresses, TabContacts, TabMedecin, TabPrescriptions, TabAudit) + helpers internes (Field, FieldSelect, Lbl, Toggle, KvBlock, PrescriptionFileLink) sont désormais dans 8 fichiers séparés sous app/patient/[id]/edit/tabs/. Chaque Tab*.js fait entre 19 et 250 lignes — lisible, testable, maintenable. La page principale ne contient plus que la coordination (state, save, navigation, useEffect)",
+        "code_snippet": {
+          "file": "app/patient/[id]/edit/page.js",
+          "note": "Imports des tabs + helpers depuis fichiers séparés",
+          "lang": "js",
+          "before": "// 1065 lignes dans un seul fichier\n// + function TabIdentite() { ... }\n// + function TabSecu() { ... }\n// + function TabAdresses() { ... }\n// + function TabContacts() { ... }\n// + function TabMedecin() { ... }\n// + function TabPrescriptions() { ... }\n// + function PrescriptionFileLink() { ... }\n// + function TabAudit() { ... }\n// + function Lbl() { ... }\n// + function Field() { ... }\n// + function FieldSelect() { ... }\n// + function Toggle() { ... }\n// + function KvBlock() { ... }",
+          "after": "// page.js fait maintenant 350 lignes\n// (uniquement la coordination + render principal)\n\nimport TabIdentite from \"./tabs/TabIdentite\";\nimport TabSecu from \"./tabs/TabSecu\";\nimport TabAdresses from \"./tabs/TabAdresses\";\nimport TabContacts from \"./tabs/TabContacts\";\nimport TabMedecin from \"./tabs/TabMedecin\";\nimport TabPrescriptions from \"./tabs/TabPrescriptions\";\nimport TabAudit from \"./tabs/TabAudit\";\nimport { Field, FieldSelect, Lbl } from \"./tabs/_helpers\";"
+        }
+      },
+      { "code": "FE", "txt": "Nouveau dossier app/patient/[id]/edit/tabs/ avec 8 fichiers : TabIdentite.js (39 lignes — identité + lieu naissance INSEE), TabSecu.js (110 — caisse + mutuelle + ALD/C2S/AME + droits), TabAdresses.js (110 — adresses livraison multiples via BAN), TabContacts.js (42 — urgence + personne de confiance), TabMedecin.js (19 — médecin traitant), TabPrescriptions.js (157 — liste + upload OCR + lien fichier), TabAudit.js (151 — source création + OCR brut + tokens Claude), _helpers.js (Field, FieldSelect, Lbl, Toggle, KvBlock, FieldCheckbox). Total ~830 lignes répartis en fichiers cohérents au lieu d'un mégafichier" },
+      { "code": "FE", "txt": "Helpers étendus : ajout de FieldCheckbox dans _helpers.js (nouveau, n'existait pas avant la refacto). Toggle et KvBlock qui étaient en fin de page.js sont maintenant exportés depuis _helpers.js pour être utilisables par TabSecu (Toggle) et TabAudit (KvBlock). PrescriptionFileLink reste interne à TabPrescriptions.js car spécifique à ce tab" },
+      { "code": "AI", "txt": "+15 tests Vitest dédiés à la refacto (v057-1-refacto-tabs.test.js) : version 0.57.1+, dossier tabs/ existe, 8 fichiers existent avec export, page.js < 500 lignes, page.js importe bien tous les tabs, _helpers.js expose Field/FieldSelect/Lbl/Toggle/KvBlock, page.js n'a plus de function TabXxx interne, chaque Tab*.js fait < 250 lignes" },
+      { "code": "BUG", "txt": "5 tests qui lisaient app/patient/[id]/edit/page.js directement (v055-49, v055-54, v055-55, v056-1, v056-3, v056-4) ont été mis à jour pour utiliser un helper _readAllEditFiles() qui concatène tous les .js du dossier edit/. Pas de changement de comportement — juste adapter les tests à la nouvelle structure de fichiers. 2 tests sur les imports (AdresseAutocomplete, ContactActions) sont devenus tolérants à la profondeur du chemin (page.js vs tabs/*.js) via regex /\\.{2}\\/+ComponentName/" },
+      { "code": "DOC", "txt": "3 fichiers > 1000 lignes restent à refacto en versions ultérieures (0.57.2+) : app/changelog/page.js (1603), app/carte/page.js (1483), app/utilisateurs/page.js (1400). Ces 3 fichiers sont plus complexes que patient/edit car ils n'ont pas de sous-composants déjà internes — le refacto demandera de découper du JSX en composants logiques. À planifier en versions dédiées avec recette" }
+    ],
+    "themes": ["quality", "refactor", "maintainability"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.1.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.0",
+    "kind": "version",
+    "titre": "🚀 Saut majeur : Next.js 15.5 + React 19 — toutes les vulnérabilités CRITICAL réglées",
+    "chantiers": [
+      { "code": "SEC", "txt": "Upgrade majeur Next.js 14.2.35 → 15.5.19 + React 18.3.1 → 19.2.7. Règle les 7 vulnérabilités Next.js HIGH/MODERATE persistantes après la trilogie hardening (0.56.20-22). npm audit final : 0 CRITICAL · 1 HIGH (xlsx Prototype Pollution, pas de fix dispo upstream) · 2 MODERATE (postcss + xlsx ReDoS). Vs 7 vulnérabilités initiales (2 CRIT + 1 HIGH + 4 MOD) avant la trilogie. Réduction totale : 57% des vulnérabilités, 100% des CRITICAL" },
+      { "code": "FE", "txt": "Migration sans casse : audit préalable a confirmé qu'AUCUN fichier n'avait besoin d'être modifié pour Next 15. Les 7 pages dynamiques (/materiel/[id], /patient/[id], /patient/[id]/edit, /patient/[id]/dashboard, /equipe/[id], /inscription/[token], /verifier/[id]) sont toutes des Client Components qui utilisent useParams() — NON impacté par le breaking change Next 15 qui transforme params en Promise dans les Server Components uniquement. Aucun Server Component ne destructure params dans sa signature. Le caching fetch (autre breaking change) est déjà géré explicitement avec next: { revalidate: ... } aux endroits qui en ont besoin (/api/place)",
+        "code_snippet": {
+          "file": "package.json",
+          "note": "Bumps de dépendances majeures",
+          "lang": "js",
+          "before": "\"dependencies\": {\n  \"next\": \"^14.2.35\",\n  \"react\": \"^18.3.1\",\n  \"react-dom\": \"^18.3.1\"\n}",
+          "after": "\"dependencies\": {\n  \"next\": \"^15.5.19\",\n  \"react\": \"^19.2.7\",\n  \"react-dom\": \"^19.2.7\"\n}\n\n// Pas d'autre modification du code applicatif requise\n// Build : ✓ Compiled successfully in 10.4s\n// Tests : 2311 verts (vs 2298 avant)"
+        }
+      },
+      { "code": "FE", "txt": "Pourquoi la migration s'est passée sans encombre : (1) toutes les routes dynamiques sont des Client Components 'use client' avec useParams() — Next 15 ne touche pas à useParams. (2) Aucun cookies()/headers() en async (autre breaking change Next 15 non impactant). (3) Pas de Server Actions à refacto. (4) Pas de tailwind/postcss config custom. (5) ESLint pas dans devDependencies. Le travail le plus risqué de Next 15 (params async) ne s'applique pas à ce code" },
+      { "code": "BUG", "txt": "Tests v056-0, v056-2, v056-3, v056-21 cassés temporairement : 4 tests faisaient une regex stricte sur la version (/^0\\.56\\.\\d+-alpha$/) ou Next 14.2.x — bloquant le passage à 0.57.0/Next 15. Fix : regex élargie à /^0\\.(5[6-9]|[6-9]\\d)\\.\\d+-alpha$/ pour accepter 0.56-0.99, et test Next accepte 14.2.35+ OU 15+. Plus aucun test version-bound dans le futur (les nouveaux tests utilisent simplement majeure >= X)" },
+      { "code": "AI", "txt": "+13 tests Vitest dédiés au saut (test file v057-0-next15-react19.test.js) : versions package (4 : 0.57.x, next>=15, react>=19, react-dom>=19), 7 pages dynamiques avec useParams (7 : matériel, patient ×3, équipe, inscription, vérifier), aucun Server Component cassé (1 : scan complet de app/), eslint-config-next aligné (1). +4 tests existants ajustés pour Next 15. Total 2311 tests verts (vs 2298)" },
+      { "code": "DOC", "txt": "Plan post-0.57.0 : (0.57.1) refacto fichiers > 1000 lignes (changelog/page.js 1603, carte 1482, utilisateurs 1400, patient/[id]/edit 1065) en sous-composants — qualité maintenabilité, pas sécurité. (0.58+) migration xlsx → ExcelJS pour règler la dernière HIGH (Prototype Pollution + ReDoS pas de fix upstream)" }
+    ],
+    "themes": ["security", "dependencies", "infrastructure"],
+    "date": "1er juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.0.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.56.22",
     "kind": "version",
     "titre": "🧹 Hardening 3/3 : qualité code — console.log → logger · try/catch · vitest 4",

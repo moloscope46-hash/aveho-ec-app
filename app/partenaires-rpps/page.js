@@ -14,7 +14,7 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg, FilterBar } from "../ui";
+import { PageHead, Panel, StateMsg} from "../ui";
 import { KpiRow } from "../kpis";
 import RppsAutocomplete from "../RppsAutocomplete";
 import Modal from "../components/Modal";

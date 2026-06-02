@@ -6,6 +6,23 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
+// 0.57.1 : helper qui concatène tous les fichiers du dossier edit/
+function _readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  const out = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".js") || entry.name.endsWith(".jsx")) {
+        out.push(fs.readFileSync(full, "utf-8"));
+      }
+    }
+  }
+  walk(baseDir);
+  return out.join("\n");
+}
+
 describe("0.55.54 - Redirect /patient → /patients", () => {
   it("Page /patient/page.js existe et redirige", () => {
     const p = path.resolve(process.cwd(), "app/patient/page.js");
@@ -34,7 +51,7 @@ describe("0.55.54 - Fil d'Ariane sur la fiche patient", () => {
 });
 
 describe("0.55.54 - Fil d'Ariane sur l'édition patient", () => {
-  const src = fs.readFileSync(path.resolve(process.cwd(), "app/patient/[id]/edit/page.js"), "utf-8");
+  const src = _readAllEditFiles();
 
   it("Lien retour vers /patients", () => {
     expect(src).toContain('router.push("/patients")');

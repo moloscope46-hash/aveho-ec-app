@@ -14,6 +14,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";
 
 const API_META = {
   google_places: {
@@ -85,7 +86,7 @@ export default function IntegrationsPage() {
 
       // Test si la clé Google Places est configurée côté serveur
       try {
-        const res = await fetch("/api/place?nom=test");
+        const res = await fetchWithAuth("/api/place?nom=test");
         const json = await res.json();
         setGoogleKeyConfigured(!json.note?.includes("non configurée"));
       } catch {

@@ -3,7 +3,9 @@
 //  Alpha 0.55.39
 // =============================================================
 
-import { createClient } from "@supabase/supabase-js";
+// 0.57.10 : imports retirés (createClient non utilisés)
+
+import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
 
 const KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -15,10 +17,17 @@ async function logCall(req, status, httpStatus, errorMessage, durationMs, endpoi
   // Best-effort logging — ne bloque jamais la réponse
   if (!SUPABASE_URL || !SUPABASE_ANON) return;
   try {
-    const authHeader = req.headers.get("authorization") || "";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // 0.57.4 : auth + rate limit obligatoire
+
+    const authCheck = await requireAuth(req);
+
+    if (!authCheck.ok) return authCheck.response;
+
+    const { user, supabase } = authCheck;
+
+    const rate = checkRateLimit(user.id, { maxRequests: 30, windowMs: 60_000 });
+
+    if (!rate.ok) return rate.response;
     await supabase.rpc("log_api_call", {
       p_api_name: "google_places",
       p_endpoint: endpoint,

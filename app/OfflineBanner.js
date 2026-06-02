@@ -26,7 +26,9 @@ export default function OfflineBanner() {
 
   useEffect(() => {
     if (showModal) {
-      getQueueItems().then(setItems);
+      getQueueItems()
+        .then(setItems)
+        .catch(() => setItems([]));  // 0.57.5 : queue IDB inaccessible → liste vide
     }
   }, [showModal, getQueueItems, queueCount]);
 

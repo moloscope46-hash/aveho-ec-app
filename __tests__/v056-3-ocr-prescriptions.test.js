@@ -6,6 +6,23 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
+// 0.57.1 : helper qui concatène tous les fichiers du dossier edit/
+function _readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  const out = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".js") || entry.name.endsWith(".jsx")) {
+        out.push(fs.readFileSync(full, "utf-8"));
+      }
+    }
+  }
+  walk(baseDir);
+  return out.join("\n");
+}
+
 describe("0.56.3 - SQL : tables prescriptions + bucket + RLS", () => {
   const sql = fs.readFileSync(path.resolve(process.cwd(), "supabase/aveho-PATCH-vers-0.56.3.sql"), "utf-8");
 
@@ -246,7 +263,7 @@ describe("0.56.3 - Page /scan/prescription", () => {
 });
 
 describe("0.56.3 - Onglet Prescriptions sur /patient/[id]/edit", () => {
-  const src = fs.readFileSync(path.resolve(process.cwd(), "app/patient/[id]/edit/page.js"), "utf-8");
+  const src = _readAllEditFiles();
 
   it("Tab 'prescriptions' ajouté dans TABS array", () => {
     expect(src).toContain('id: "prescriptions"');
@@ -293,6 +310,6 @@ describe("0.56.3 - Menu Outils scan inclut OCR Ordonnance", () => {
 describe("0.56.3 - Version package", () => {
   it("Version sur lignée 0.56.x", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
-    expect(pkg.version).toMatch(/^0\.56\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.(5[6-9]|[6-9]\d)\.\d+-alpha$/);
   });
 });

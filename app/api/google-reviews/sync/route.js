@@ -5,7 +5,9 @@
 //  Utilisé depuis la page admin /admin/avis-google.
 // =============================================================
 
-import { createClient } from "@supabase/supabase-js";
+// 0.57.10 : imports retirés (createClient non utilisés)
+
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -21,10 +23,17 @@ export async function POST(req) {
   try { body = await req.json(); } catch (_) { /* empty body OK */ }
 
   // Token utilisateur pour appeler l'Edge Function avec ses credentials
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+  const authCheck = await requireAuth(req);
+
+  if (!authCheck.ok) return authCheck.response;
+
+  const { user, supabase } = authCheck;
+
+  const rate = checkRateLimit(user.id, { maxRequests: 5, windowMs: 60_000 });
+
+  if (!rate.ok) return rate.response;
 
   // Appelle l'Edge Function
   try {

@@ -15,7 +15,9 @@
 //  Réponse : { ok, count, results, total_estime }
 // =============================================================
 
-import { createClient } from "@supabase/supabase-js";
+// 0.57.10 : imports retirés (createClient non utilisés)
+
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -31,10 +33,22 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 30, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   const limit = Math.min(parseInt(body.limit) || 50, 500);
   const offset = parseInt(body.offset) || 0;

@@ -14,11 +14,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { logger } from "../lib/logger";
 import {
-  isWebAuthnSupported,
-  isPlatformAuthenticatorAvailable,
-  getAvailableMethods,
-} from "../lib/webauthn";
-
+  isWebAuthnSupported, isPlatformAuthenticatorAvailable, getAvailableMethods} from "../lib/webauthn";
 const COLOR = {
   ok: "#5aa05a",
   ko: "#c0392b",

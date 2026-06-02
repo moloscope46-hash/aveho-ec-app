@@ -1,19 +1,29 @@
 import "./globals.css";
+import { Quicksand } from "next/font/google";
+// 0.57.8 : Composants visibles dès le 1er render ou très petits → import statique
 import InstallPWA from "./InstallPWA";
-import InstallBanner from "./InstallBanner";
-import KeyboardHelp from "./KeyboardHelp";
 import OfflineBanner from "./OfflineBanner";
 import LectureSeuleBadge from "./LectureSeuleBadge";
 import GlobalSearch from "./GlobalSearch";
 import AlertToastContainer from "./components/AlertToast";
 import { DialogsHost } from "./dialogs";
-import VersionCheck from "./VersionCheck";
-import AnnoncesBanner from "./AnnoncesBanner";
 import GlobalErrorCapture from "./GlobalErrorCapture";
-import FocusMode from "./FocusMode";
-import GeolocPrompt from "./GeolocPrompt";
-import BiometricOptInModal from "./BiometricOptInModal";
-import FloatingActionBar from "./FloatingActionBar";
+// 0.57.8 : Composants non critiques pour le LCP regroupés dans un Client
+// Component pour permettre next/dynamic ssr: false (interdit dans les
+// Server Components depuis Next 15). Économise du JS sur le bundle initial.
+import LazyLayoutChrome from "./LazyLayoutChrome";
+
+// 0.57.8 : Quicksand via next/font (self-hosted + préchargée + 0 FOUT/CLS)
+// Avant : link href Google Fonts CDN dans le head — round-trip réseau bloquant
+//          + risque de layout shift au swap.
+// Après : next/font télécharge le woff2 au build, l'inline en preload et
+// applique font-display: swap optimisé pour pas de CLS.
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-quicksand",
+});
 
 export const metadata = {
   title: "Aveho — Espace Collectivité",
@@ -32,9 +42,16 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={quicksand.variable}>
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        {/* 0.57.8 : Quicksand est maintenant chargé via next/font (cf import).
+            On garde quand même un preconnect Google Fonts au cas où d'autres
+            polices seraient ajoutées plus tard. */}
+        {/* 0.57.8 : Preconnect au backend Supabase pour anticiper la première
+            requête API (gagne ~100ms sur le TTFB de la 1ère query). */}
+        {process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
+        )}
         {/* Alpha 0.55.5 : Tabler icons maintenant chargés via globals.css (npm), plus de CDN bloqué par Edge/Brave */}
         {/* Alpha 0.16.1 : tags PWA modernes (le tag apple- legacy reste via appleWebApp metadata) */}
         <meta name="mobile-web-app-capable" content="yes" />
@@ -68,25 +85,15 @@ export default function RootLayout({ children }) {
         <AlertToastContainer />
         {children}
         <InstallPWA />
-        {/* Alpha 0.36.0 : banner contextuel d'installation PWA */}
-        <InstallBanner />
-        <KeyboardHelp />
         {/* Alpha 0.46.0 : host global pour dialogs.confirm() / dialogs.alert() */}
         <DialogsHost />
-        {/* Alpha 0.48.0 : vérification version dispo */}
-        <VersionCheck />
-        {/* Alpha 0.50.0 : annonces broadcast admin */}
-        <AnnoncesBanner />
         {/* Alpha 0.52.0 : capture erreurs JS globales → app_logs */}
         <GlobalErrorCapture />
-        {/* Alpha 0.52.0 : mode focus Esc Esc */}
-        <FocusMode />
-        {/* Alpha 0.55.0 : demande géolocalisation au premier login */}
-        <GeolocPrompt />
-        {/* Alpha 0.55.13 : proposition activation empreinte après login (mobile) */}
-        <BiometricOptInModal />
-        {/* Alpha 0.56.16 : barre d'actions flottante en bas (mobile + desktop) */}
-        <FloatingActionBar />
+        {/* 0.57.8 : composants non critiques pour le LCP (InstallBanner,
+            KeyboardHelp, VersionCheck, AnnoncesBanner, FocusMode, GeolocPrompt,
+            BiometricOptInModal, FloatingActionBar) chargés en lazy via
+            next/dynamic ssr: false. Voir LazyLayoutChrome.js */}
+        <LazyLayoutChrome />
       </body>
     </html>
   );

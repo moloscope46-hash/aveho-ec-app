@@ -12,8 +12,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg } from "../../ui";
-
+import { Panel, StateMsg} from "../../ui";
 export default function EquipeDetailPage() {
   const supabase = createClient();
   const router = useRouter();

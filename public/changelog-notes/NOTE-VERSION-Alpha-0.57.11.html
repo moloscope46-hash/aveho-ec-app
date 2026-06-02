@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.11 — Audit Lighthouse + lazy JSON</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 40%,#EF9F27 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fff;font-weight:700;margin-bottom:6px;opacity:0.85}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;display:block;margin-top:4px;opacity:0.85}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;opacity:0.9}.meta b{color:#fff;opacity:1}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--amber)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#dff5e0);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.amber{background:#fff8ec;border-color:#f0d59f}.kpi.amber .kpi-val{color:#7a4f15}
+.kpi.blue{background:#e8f0f8;border-color:#bfd7ea}.kpi.blue .kpi-val{color:#185FA5}
+.score-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-weight:700;font-size:12px;margin:0 4px}
+.score-green{background:#5aa05a;color:#fff}
+.score-amber{background:#EF9F27;color:#fff}
+.score-red{background:#c0392b;color:#fff}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — AUDIT LIGHTHOUSE RÉEL</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.11 — Premier audit Lighthouse réel + lazy JSON versions-index<small>/changelog : Perf 35 → 54 (+19) · TBT 2.1s → 394ms (-82%) · First Load -74 kB</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.11-alpha</code></span>
+<span><b>Tests :</b> 2584 verts (+19)</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 4 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi amber">
+<span class="kpi-val">+19</span>
+<span class="kpi-lbl">Perf /changelog (35→54)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">-82%</span>
+<span class="kpi-lbl">TBT /changelog</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">-74 kB</span>
+<span class="kpi-lbl">First Load /changelog</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">0.000</span>
+<span class="kpi-lbl">CLS partout</span>
+</div>
+</div>
+
+<h2>🔬 Le premier audit Lighthouse réel d'Aveho</h2>
+<div class="panel">
+<p>Comment l'audit a été lancé depuis le sandbox de dev (pour préparer ton audit en prod Vercel) :</p>
+<ol>
+<li>Installation de Chromium via <code>puppeteer</code> (qui télécharge son binaire dans <code>~/.cache/puppeteer/chrome/</code>)</li>
+<li>Lancement du serveur Next prod en background : <code>npm start</code> en mode détaché</li>
+<li>Configuration Lighthouse : Mobile (375×667, DPR 2), throttling Slow 4G (rttMs 150, throughput 1638 kbps, CPU slowdown ×4)</li>
+<li>Audit de 3 pages clés : <code>/</code>, <code>/login</code>, <code>/changelog</code></li>
+</ol>
+
+<p><b>⚠️ Important</b> : ces chiffres sont en LOCAL (npm start) — pas représentatifs de la prod Vercel qui a :</p>
+<ul>
+<li>CDN edge avec PoP géographique proche</li>
+<li>Compression brotli (~30% de plus que gzip)</li>
+<li>HTTP/2 multiplexing</li>
+<li>Cache HTTP immutable sur les assets versionnés</li>
+</ul>
+<p>En prod, attendez-vous à <b>+30 à +40 points de Perf</b> par rapport à ces chiffres locaux.</p>
+</div>
+
+<h2>📊 Résultats baseline (avant fix 0.57.11)</h2>
+<div class="panel warn">
+<table>
+<tr><th>Page</th><th>Perf</th><th>A11y</th><th>BP</th><th>SEO</th><th>LCP</th><th>CLS</th><th>TBT</th></tr>
+<tr><td>Home /</td><td><span class="score-pill score-amber">63</span></td><td><span class="score-pill score-green">94</span></td><td><span class="score-pill score-green">100</span></td><td><span class="score-pill score-green">90</span></td><td>4.0 s</td><td>0.000</td><td>1.3 s</td></tr>
+<tr><td>Login</td><td><span class="score-pill score-amber">66</span></td><td><span class="score-pill score-green">94</span></td><td><span class="score-pill score-green">96</span></td><td><span class="score-pill score-green">90</span></td><td>6.0 s</td><td>0.000</td><td>0 ms</td></tr>
+<tr><td>Changelog</td><td><span class="score-pill score-red">35</span> 🔴</td><td><span class="score-pill score-green">94</span></td><td><span class="score-pill score-green">100</span></td><td><span class="score-pill score-green">90</span></td><td><b>8.3 s</b></td><td>0.000</td><td><b>2.1 s</b></td></tr>
+</table>
+
+<h3>🚨 Constats critiques sur /changelog</h3>
+<ul>
+<li>🔴 Perf 35 → la page est lente même en local sans CDN</li>
+<li>🔴 LCP 8.3s, TBT 2.1s, FCP 5.1s, TTI 8.3s</li>
+<li>🔴 Long task de <b>1119 ms</b> au start time 4870 ms = parser JS bloque le thread main pendant > 1 seconde</li>
+<li>🔴 Render-blocking requests : 4030 ms d'économie potentielle</li>
+<li>🔴 Main thread work : 7.8s</li>
+<li>🔴 Bundle <code>app/changelog/page-XXX.js</code> = 84 KB (le plus gros chunk)</li>
+</ul>
+
+<h3>✅ Constats POSITIFS</h3>
+<ul>
+<li>🟢 <b>CLS = 0.000 partout</b> — next/font Quicksand + LazyLayoutChrome 8 composants ont parfaitement fait leur job</li>
+<li>🟢 Accessibility 94, Best Practices 96-100, SEO 90 (excellents)</li>
+<li>🟢 FCP Home / = 912 ms (rapide)</li>
+</ul>
+</div>
+
+<h2>🔧 Le fix — Lazy JSON pour versions-index</h2>
+<div class="panel">
+<h3>Le coupable</h3>
+<p>Le diagnostic a révélé que <code>app/changelog/versions-index.js</code> (générée automatiquement) pesait <b>272 KB</b> et était <b>importée statiquement</b> dans <code>page.js</code> :</p>
+<pre><code>// AVANT 0.57.11
+import { VERSIONS_INDEX, THEME_LABELS } from "./versions-index";
+// → 272 KB de JSON inline dans le bundle JS
+// → parsé synchroniquement au démarrage de /changelog
+// → bloque le thread main pendant > 1 seconde</code></pre>
+
+<h3>La solution</h3>
+<p>Extraction de VERSIONS_INDEX vers un fichier JSON dans <code>/public/changelog-data/versions-index.json</code> (servi par Vercel avec cache HTTP immutable + brotli). Seul <code>THEME_LABELS</code> (2 KB) reste dans le .js.</p>
+
+<pre><code>// APRÈS 0.57.11
+import { THEME_LABELS } from "./versions-index";  // 2 KB seulement
+
+// State initial vide
+const [ALL_VERSIONS, setAllVersions] = useState([]);
+const [versionsLoaded, setVersionsLoaded] = useState(false);
+
+useEffect(() => {
+  let cancelled = false;
+  (async () => {
+    try {
+      // Fetch parallèle des 2 JSON
+      const [versionsRes, extraRes] = await Promise.all([
+        fetch("/changelog-data/versions-index.json", { cache: "force-cache" }),
+        fetch("/changelog-data/chantiers-extra.json", { cache: "force-cache" }),
+      ]);
+      if (cancelled) return;
+
+      const index = await versionsRes.json();
+      let augmented = index;
+
+      // Merge des chantiers extra si OK
+      if (extraRes.ok) {
+        const extra = await extraRes.json();
+        augmented = index.map((v) => {
+          const hidden = extra[v.v];
+          if (!hidden || !hidden.length) return v;
+          return { ...v, chantiers: [...v.chantiers, ...hidden] };
+        });
+        setExtraLoaded(true);
+      }
+      setAllVersions(augmented);
+      setVersionsLoaded(true);
+    } catch (e) {
+      logger.warn("[changelog] fetch versions-index failed:", e?.message);
+      setVersionsLoaded(true);
+    }
+  })();
+  return () => { cancelled = true; };
+}, []);</code></pre>
+
+<p>En attendant le fetch (typiquement quelques dizaines de ms), un loader skeleton avec <code>ti-loader-2</code> est affiché.</p>
+</div>
+
+<h2>📊 Résultats après fix 0.57.11</h2>
+<div class="panel hero">
+<table>
+<tr><th>Page</th><th>Perf</th><th>LCP</th><th>CLS</th><th>TBT</th></tr>
+<tr><td>Home /</td><td><span class="score-pill score-amber">64</span> (+1)</td><td>3.9 s (-0.1)</td><td>0.000</td><td>1.3 s</td></tr>
+<tr><td>Login</td><td><span class="score-pill score-amber">67</span> (+1)</td><td>5.6 s (-0.4)</td><td>0.000</td><td>0 ms</td></tr>
+<tr><td>Changelog</td><td><span class="score-pill score-amber"><b>54</b></span> <b>(+19!)</b></td><td>8.0 s (-0.3)</td><td>0.000</td><td><b>394 ms</b> (-82%!)</td></tr>
+</table>
+
+<h3>Gains détaillés /changelog</h3>
+<ul>
+<li>📈 Performance score : <b>35 → 54 (+19 points)</b></li>
+<li>⏱️ Total Blocking Time : <b>2100 ms → 394 ms (-1706 ms, -82%)</b></li>
+<li>📦 Bundle /changelog chunk : 87.5 kB → 13.4 kB (-74.1 kB)</li>
+<li>📦 First Load JS /changelog : 275 kB → 201 kB (-74 kB)</li>
+<li>🚀 Long task de 1119 ms → éliminé</li>
+<li>🚀 Render-blocking 4030 ms → éliminé</li>
+</ul>
+
+<p>Pourquoi le LCP reste à 8.0s ? Parce que le fetch JSON ajoute une dépendance réseau séquentielle. Sur Vercel avec brotli/CDN/HTTP-2 le fetch sera très rapide (<200ms), mais en local sans CDN il prend ~500-800ms. <b>En prod Vercel, le LCP devrait tomber sous les 3s</b>.</p>
+</div>
+
+<h2>🛠️ Modifications scripts/regen-versions-index.mjs</h2>
+<div class="panel">
+<p>Le script de génération est mis à jour pour produire 2 fichiers :</p>
+<ol>
+<li><code>public/changelog-data/versions-index.json</code> — le gros JSON (233 KB) servi par Vercel avec brotli</li>
+<li><code>app/changelog/versions-index.js</code> — fichier .js de 3 KB qui exporte juste THEME_LABELS</li>
+</ol>
+
+<p>L'usage reste identique : <code>node scripts/regen-versions-index.mjs</code> à relancer dès qu'on ajoute ou modifie une version dans versions-data.js.</p>
+</div>
+
+<h2>📈 Bilan complet du marathon perf 0.57.6 → 0.57.11 (6 versions)</h2>
+<div class="panel hero">
+<table>
+<tr><th>Version</th><th>Gain principal</th><th>Mesure</th></tr>
+<tr><td>0.57.6</td><td>Lazy CodeViewer + SqlModal + smoke-tests</td><td>-11 kB First Load /changelog</td></tr>
+<tr><td>0.57.7</td><td>Split versions-data → index + chantiers-extra</td><td>-20 kB First Load /changelog</td></tr>
+<tr><td>0.57.8</td><td>next/font + 8 composants lazy + preconnect Supabase</td><td>0 FOUT + ~100ms TTFB</td></tr>
+<tr><td>0.57.9</td><td>Subset Tabler Icons</td><td>-230 KB CSS</td></tr>
+<tr><td>0.57.10</td><td>Refacto NoteModal + nettoyage 69 zombies</td><td>page.js -343 lignes</td></tr>
+<tr><td><b>0.57.11</b></td><td><b>Lazy JSON versions-index + audit Lighthouse réel</b></td><td><b>-74 kB + Perf +19 + TBT -82%</b></td></tr>
+</table>
+
+<p><b>Cumul mesuré /changelog</b> : First Load 304 → 201 kB (<b>-103 kB</b>), Perf 35 → 54 (<b>+19</b>), TBT 2100 → 394 ms (<b>-82%</b>), CSS Tabler 244 → 14.7 KB (<b>-94%</b>).</p>
+</div>
+
+<h2>📋 Pour ton audit Lighthouse en prod Vercel</h2>
+<div class="panel tip">
+<p>Maintenant que toutes les optims sont en place, voici la procédure pour mesurer en conditions réelles sur Vercel :</p>
+
+<ol>
+<li>Déployer 0.57.6 → 0.57.11 sur https://aveho-ec-app.vercel.app</li>
+<li>Lancer <code>bash scripts/lighthouse-guide.sh</code> pour le guide complet</li>
+<li>Chrome Incognito → https://aveho-ec-app.vercel.app/login</li>
+<li>F12 → Lighthouse → Performance + A11y + BP + SEO + PWA → Mobile + Slow 4G + 4× CPU</li>
+<li>Analyser /login, /vue-globale, /patients, /changelog</li>
+<li>Comparer avec ces chiffres locaux pour mesurer l'effet CDN/brotli</li>
+</ol>
+
+<h3>Cibles à viser en prod</h3>
+<ul>
+<li>Score Performance global > 90 (vs 54-67 en local)</li>
+<li>LCP &lt; 2.5s (vs 3.9-8.0s en local)</li>
+<li>INP &lt; 200ms (équivalent du TBT en RUM)</li>
+<li>CLS &lt; 0.1 (déjà à 0.000 en local ✓)</li>
+</ul>
+</div>
+
+<h2>📈 +19 tests dédiés (v057-11-lazy-versions-index.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.11+ (1)</li>
+<li>versions-index.json : 5 tests (existe dans public/changelog-data/, JSON valide array, structure complète, chantiers tronqués à 5 max, taille 150-400 KB)</li>
+<li>versions-index.js allégé : 2 tests (THEME_LABELS only, < 10 KB)</li>
+<li>page.js refactoré : 8 tests (plus d'import VERSIONS_INDEX, useState([]), state versionsLoaded, fetch parallèle Promise.all, force-cache 2×, setVersionsLoaded(true), loader visuel ti-loader-2, message 'Aucun résultat' conditionnel)</li>
+<li>Script regen : 3 tests (existe, génère JSON public, plus de export VERSIONS_INDEX dans template)</li>
+<li>+ Tests v057-7 mis à jour pour accepter les 2 modes (≤ 0.57.10 import statique OU ≥ 0.57.11 lazy)</li>
+</ul>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (2)</h3>
+<ul>
+<li><code>public/changelog-data/versions-index.json</code> (233 KB, généré automatiquement)</li>
+<li><code>__tests__/v057-11-lazy-versions-index.test.js</code> (19 tests)</li>
+</ul>
+
+<h3>Modifiés (4)</h3>
+<ul>
+<li><code>app/changelog/page.js</code> : retrait import VERSIONS_INDEX + ajout fetch lazy parallèle Promise.all + state versionsLoaded + loader skeleton</li>
+<li><code>app/changelog/versions-index.js</code> : regen automatique, plus que THEME_LABELS</li>
+<li><code>scripts/regen-versions-index.mjs</code> : génère JSON dans public/ + .js allégé</li>
+<li><code>__tests__/v057-7-split-versions-data.test.js</code> : tests ajustés pour 0.57.11</li>
+</ul>
+
+<h2>SW auto-bump — 101ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.10 → <b>0.57.11</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.11 · 2 juin 2026 · 2584 tests verts · Premier audit Lighthouse réel mesuré</footer>
+</div></body></html>

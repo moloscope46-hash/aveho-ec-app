@@ -18,6 +18,7 @@ import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { Heatmap } from "../Charts";
+import { logger } from "../../lib/logger";
 
 const PAGE_SIZE = 50;
 const ACTIONS = ["creer", "modifier", "supprimer", "valider", "refuser", "recevoir", "cloturer", "signer", "envoyer"];
@@ -141,20 +142,25 @@ export default function AuditPage() {
   useEffect(() => {
     if (!auth.structureId || !peutVoir) return;
     (async () => {
-      // Liste users distincts (depuis stats activité si dispo, sinon depuis audit_log direct)
-      const { data: us } = await supabase
-        .from("v_stats_activite_par_user")
-        .select("user_id, user_email")
-        .eq("structure_id", auth.structureId);
-      setUsers(us || []);
-      // Liste entités distinctes (depuis audit_log) — limite pour pas exploser
-      const { data: ents } = await supabase
-        .from("audit_log")
-        .select("entite")
-        .eq("structure_id", auth.structureId)
-        .limit(200);
-      const uniques = [...new Set((ents || []).map(e => e.entite).filter(Boolean))].sort();
-      setEntites(uniques);
+      try {
+        // Liste users distincts (depuis stats activité si dispo, sinon depuis audit_log direct)
+        const { data: us } = await supabase
+          .from("v_stats_activite_par_user")
+          .select("user_id, user_email")
+          .eq("structure_id", auth.structureId);
+        setUsers(us || []);
+        // Liste entités distinctes (depuis audit_log) — limite pour pas exploser
+        const { data: ents } = await supabase
+          .from("audit_log")
+          .select("entite")
+          .eq("structure_id", auth.structureId)
+          .limit(200);
+        const uniques = [...new Set((ents || []).map(e => e.entite).filter(Boolean))].sort();
+        setEntites(uniques);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Audit] load failed:", e);
+      }
     })();
   }, [auth.structureId, peutVoir]);
 

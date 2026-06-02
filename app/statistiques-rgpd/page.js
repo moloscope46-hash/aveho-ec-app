@@ -20,6 +20,7 @@ import { PageHead, Panel, StateMsg, Modal } from "../ui";
 import { KpiRow } from "../kpis";
 import { BarChart, StackedBarChart, DonutChart, Gauge, TrendBadge, Heatmap } from "../Charts";
 import { FINALITES } from "../../lib/rgpd";
+import { logger } from "../../lib/logger";
 
 export default function StatistiquesRgpd() {
   const supabase = createClient();
@@ -78,23 +79,28 @@ export default function StatistiquesRgpd() {
     const debutISO = new Date(year, m, 1).toISOString();
     const finISO = new Date(year, m + 1, 1).toISOString();
     (async () => {
-      const { data } = await supabase
-        .from("consentements_rgpd")
-        .select("date_signature, a_consenti")
-        .eq("structure_id", auth.structureId)
-        .gte("date_signature", debutISO)
-        .lt("date_signature", finISO);
-      // Group by day
-      const map = {};
-      (data || []).forEach((c) => {
-        const day = c.date_signature?.slice(0, 10);
-        if (!day) return;
-        if (!map[day]) map[day] = { total: 0, oui: 0, non: 0 };
-        map[day].total++;
-        if (c.a_consenti) map[day].oui++;
-        else map[day].non++;
-      });
-      setSignaturesParJour(map);
+      try {
+        const { data } = await supabase
+          .from("consentements_rgpd")
+          .select("date_signature, a_consenti")
+          .eq("structure_id", auth.structureId)
+          .gte("date_signature", debutISO)
+          .lt("date_signature", finISO);
+        // Group by day
+        const map = {};
+        (data || []).forEach((c) => {
+          const day = c.date_signature?.slice(0, 10);
+          if (!day) return;
+          if (!map[day]) map[day] = { total: 0, oui: 0, non: 0 };
+          map[day].total++;
+          if (c.a_consenti) map[day].oui++;
+          else map[day].non++;
+        });
+        setSignaturesParJour(map);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[StatistiquesRgpd] load failed:", e);
+      }
     })();
   }, [auth.ready, auth.structureId, moisCal]);
 

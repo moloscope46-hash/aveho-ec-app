@@ -7,9 +7,10 @@ import fs from "fs";
 import path from "path";
 
 describe("0.56.0 - Bump version majeure", () => {
-  it("package.json est sur la lignée 0.56.x", () => {
+  it("package.json est sur la lignée 0.56.x ou supérieur", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
-    expect(pkg.version).toMatch(/^0\.56\.\d+-alpha$/);
+    // 0.57.0 a maintenu la trajectoire (saut Next 15)
+    expect(pkg.version).toMatch(/^0\.(5[6-9]|[6-9]\d)\.\d+-alpha$/);
   });
 });
 

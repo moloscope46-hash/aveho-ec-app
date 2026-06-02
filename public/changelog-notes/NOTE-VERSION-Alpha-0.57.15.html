@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.15 — Visual Regression Étendu</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--pink:#E91E63;--magenta:#9c27b0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#9c27b0 40%,#E91E63 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#f3d4ee;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#f3d4ee;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#f3d4ee}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--magenta)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#f3e5f5,#e1bee7);border-color:#ce93d8;border-left:4px solid #9c27b0}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.magenta{background:#f3e5f5;border-color:#ce93d8}.kpi.magenta .kpi-val{color:#4a148c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — VISUAL REGRESSION ÉTENDU</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.15 — Visual regression étendu<small>De 7 à 18 baselines (+157%) — viewports multiples + signup + sections</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.15-alpha</code></span>
+<span><b>Tests :</b> 2687 Vitest + 18 baselines stables</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 4 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi magenta">
+<span class="kpi-val">7 → 18</span>
+<span class="kpi-lbl">Baselines (+157%)</span>
+</div>
+<div class="kpi magenta">
+<span class="kpi-val">4 MB</span>
+<span class="kpi-lbl">Total baselines</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">18/18</span>
+<span class="kpi-lbl">Stable sur 2 runs ✅</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+25</span>
+<span class="kpi-lbl">Tests Vitest</span>
+</div>
+</div>
+
+<h2>📸 11 nouvelles baselines ajoutées</h2>
+<div class="panel hero">
+<table>
+<tr><th>Nouvelle baseline</th><th>Catégorie</th><th>Pourquoi</th></tr>
+<tr><td><code>note-version-0-56-20-header.png</code></td><td>Notes HTML</td><td>Détection régression template note (hardening)</td></tr>
+<tr><td><code>note-version-0-57-0-header.png</code></td><td>Notes HTML</td><td>Note Next 15 migration (style différent ?)</td></tr>
+<tr><td><code>note-version-0-57-12-header.png</code></td><td>Notes HTML</td><td>Note E2E Playwright</td></tr>
+<tr><td><code>login-signup-mode.png</code></td><td>Login states</td><td>Mode signup (toggle 'Créer un compte')</td></tr>
+<tr><td><code>login-magic-link-section.png</code></td><td>Login states</td><td>Section magic link isolée</td></tr>
+<tr><td><code>login-tablet-landscape.png</code></td><td>Tablette 1024×768</td><td>iPad landscape (techniciens terrain)</td></tr>
+<tr><td><code>mentions-legales-tablet.png</code></td><td>Tablette 1024×768</td><td>iPad version mentions</td></tr>
+<tr><td><code>login-iphone-se.png</code></td><td>Mobile 375×667</td><td>Petit écran (iPhone SE)</td></tr>
+<tr><td><code>login-desktop-large.png</code></td><td>Desktop 1920×1080</td><td>Écran principal admin (le plus lourd 357 KB)</td></tr>
+<tr><td><code>mentions-section-editeur.png</code></td><td>Sections</td><td>Clip 1280×1100 Éditeur</td></tr>
+<tr><td><code>mentions-section-footer.png</code></td><td>Sections</td><td>Footer + contact (après scroll)</td></tr>
+</table>
+</div>
+
+<h2>🌐 4 viewports couverts</h2>
+<div class="panel">
+<table>
+<tr><th>Viewport</th><th>Taille</th><th>Use case</th></tr>
+<tr><td><b>Desktop large</b></td><td>1920×1080</td><td>Écran principal admin/CDC en agence</td></tr>
+<tr><td><b>Desktop standard</b></td><td>1280×720</td><td>Laptop technicien sur le terrain</td></tr>
+<tr><td><b>Tablette iPad</b></td><td>1024×768</td><td>Tablette technicien lors de visites</td></tr>
+<tr><td><b>Mobile Pixel 5</b></td><td>393×851</td><td>Smartphone admin Android</td></tr>
+<tr><td><b>Mobile iPhone SE</b></td><td>375×667</td><td>Smartphone admin iOS (le plus petit)</td></tr>
+</table>
+<p>Couvre la majorité des cas d'usage Aveho (PSAD : CDC en agence sur grand écran, techniciens sur tablette en terrain, administratifs en mobilité).</p>
+</div>
+
+<h2>🎭 Notes HTML : 4 versions couvertes</h2>
+<div class="panel tip">
+<p>Pourquoi tester plusieurs notes HTML ? Parce qu'elles utilisent toutes le <b>même template visuel</b> (header avec dégradé, KPI cards, sections, footer). Si quelqu'un modifie le template sans intention, ça doit fail sur les 4 baselines simultanément.</p>
+
+<ul>
+<li><code>NOTE-VERSION-Alpha-0.55.0.html</code> — Première note avec template moderne</li>
+<li><code>NOTE-VERSION-Alpha-0.56.20.html</code> — Hardening sécurité (style identique attendu)</li>
+<li><code>NOTE-VERSION-Alpha-0.57.0.html</code> — Next 15 migration (dégradé bleu→vert)</li>
+<li><code>NOTE-VERSION-Alpha-0.57.12.html</code> — E2E Playwright (dégradé navy→violet→teal)</li>
+</ul>
+
+<p>Chaque note a un dégradé différent dans son header (couleur unique par version), donc une régression CSS partagée serait détectée si la <b>structure</b> du header change (padding, margin, font-size, alignement) tout en gardant les couleurs personnalisées.</p>
+</div>
+
+<h2>📐 Pattern : test.describe imbriqués pour les viewports</h2>
+<div class="panel">
+<pre><code>test.describe("Visual regression — Viewports multiples", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "...");
+  test.beforeEach(async ({ context }) => {
+    await setupPopupsSkip(context);
+  });
+
+  // Sous-describe avec viewport spécifique
+  test.describe("Tablette iPad (1024×768)", () => {
+    test.use({ viewport: { width: 1024, height: 768 } });
+
+    test("/login tablette landscape", async ({ page }) => {
+      await page.goto("/login");
+      await page.waitForLoadState("networkidle");
+      await prepareForScreenshot(page);
+      await expect(page).toHaveScreenshot("login-tablet-landscape.png", {
+        fullPage: true,
+        maxDiffPixels: 150,
+      });
+    });
+
+    test("/mentions-legales tablette landscape", async ({ page }) => {
+      // Hérite du viewport du describe parent
+      ...
+    });
+  });
+
+  test.describe("Mobile petit (iPhone SE 375×667)", () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+    test("/login iPhone SE", async ({ page }) => { ... });
+  });
+
+  test.describe("Desktop large (1920×1080)", () => {
+    test.use({ viewport: { width: 1920, height: 1080 } });
+    test("/login desktop large", async ({ page }) => { ... });
+  });
+});</code></pre>
+
+<p>Le <code>test.use({ viewport })</code> dans un describe imbriqué s'applique à tous les tests qui suivent dans CE describe. Permet d'éviter la duplication du <code>setupPopupsSkip</code> et du <code>browserName !== "chromium"</code> skip.</p>
+</div>
+
+<h2>📑 Sections clipped pour les pages longues</h2>
+<div class="panel">
+<p>Les screenshots fullPage sur des pages longues (5000+ px) sont instables : font-rendering subpixel produit ~10-30 px de variance entre 2 runs. Solution : <b>clip</b> sur les zones stables.</p>
+
+<h3>Pattern 1 : Clip absolu (zone fixe)</h3>
+<pre><code>// Top de la page : header + 1ère section (stable)
+await expect(page).toHaveScreenshot("mentions-section-editeur.png", {
+  clip: { x: 0, y: 0, width: 1280, height: 1100 },
+  maxDiffPixels: 200,
+});</code></pre>
+
+<h3>Pattern 2 : Scroll + viewport visible</h3>
+<pre><code>// Scroll en bas, puis screenshot du viewport actuel (pas fullPage)
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+await page.waitForTimeout(300);
+await expect(page).toHaveScreenshot("mentions-section-footer.png", {
+  // Pas de clip ni de fullPage : capture le viewport tel quel
+  maxDiffPixels: 200,
+});</code></pre>
+</div>
+
+<h2>📈 +25 tests Vitest (v057-15-visual-regression-extended.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.15+ (1 test)</li>
+<li>18 baselines totales + 11 nouvelles baselines existent avec taille > 50 KB (12 tests)</li>
+<li>Couverture notes : 4 versions présentes dans le spec (4 tests)</li>
+<li>Login states : signup + magic link (2 tests)</li>
+<li>Viewports : 4 tailles présentes dans le spec (4 tests)</li>
+<li>Sections mentions légales : Éditeur clip + footer scroll (2 tests)</li>
+</ul>
+</div>
+
+<h2>📊 Comparaison 0.57.14 → 0.57.15</h2>
+<div class="panel ok">
+<table>
+<tr><th>Métrique</th><th>0.57.14</th><th>0.57.15</th><th>Évolution</th></tr>
+<tr><td>Baselines visuelles</td><td>7</td><td><b>18</b></td><td>+157%</td></tr>
+<tr><td>Taille __screenshots__/</td><td>2.5 MB</td><td><b>4.0 MB</b></td><td>+60%</td></tr>
+<tr><td>Viewports couverts</td><td>2 (desktop + Pixel 5)</td><td><b>5</b> (+ iPad + iPhone SE + 1920×1080)</td><td>+150%</td></tr>
+<tr><td>Notes HTML testées</td><td>1 (0.55.0)</td><td><b>4</b> (+0.56.20 + 0.57.0 + 0.57.12)</td><td>+300%</td></tr>
+<tr><td>Login states testés</td><td>2 (vide + rempli)</td><td><b>4</b> (+ signup + magic link)</td><td>+100%</td></tr>
+<tr><td>Sections clipped</td><td>0</td><td><b>2</b> (Éditeur + footer)</td><td>nouveau</td></tr>
+<tr><td>Stabilité (2 runs)</td><td>7/7 ✅</td><td><b>18/18 ✅</b></td><td>maintenue</td></tr>
+<tr><td>Tests Vitest</td><td>2662</td><td><b>2687</b></td><td>+25</td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>__tests__/v057-15-visual-regression-extended.test.js</code> (25 tests Vitest)</li>
+<li>11 nouvelles baselines PNG dans <code>tests/e2e/__screenshots__/visual-regression.spec.js/</code></li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>tests/e2e/visual-regression.spec.js</code> : +3 describes (Notes HTML étendues, Login states, Viewports multiples) + 1 describe Sections /mentions-legales</li>
+<li><code>tests/e2e/README.md</code> : description mise à jour avec les 18 baselines et 5 viewports</li>
+<li><code>app/changelog/versions-data.js</code> + index regenerés</li>
+</ul>
+
+<h2>📋 Prochaines étapes possibles</h2>
+<div class="panel tip">
+<ul>
+<li><b>C</b> — Tests a11y axe-core (audit accessibilité automatique sur les 5 environnements)</li>
+<li><b>D</b> — Refactos qualité (carte 1483, utilisateurs 1400, parametres-rgpd 963 lignes)</li>
+<li><b>E</b> — Features métier (Module Formation/HR/CRM)</li>
+<li><b>F</b> — Audit RLS Supabase + EXPLAIN ANALYZE sur requêtes lentes</li>
+<li><b>G</b> — Documentation technique pour Corentin/Yassir/Julien/Issam</li>
+<li><b>I</b> — CI/CD GitHub Actions pour lancer tous ces tests en pipeline</li>
+</ul>
+</div>
+
+<h2>⚠️ Actions critiques en attente</h2>
+<div class="panel warn">
+<ol>
+<li>🚨 <b>Déployer 0.57.0 → 0.57.15 sur Vercel</b> (16 versions accumulées !)</li>
+<li>🚨 Lighthouse RÉEL en prod (attendu Perf 85-95+ vs 46-67 local)</li>
+<li>Changer mot de passe Supabase + régénérer clé Google Places</li>
+</ol>
+</div>
+
+<h2>SW auto-bump — 105ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.14 → <b>0.57.15</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.15 · 2 juin 2026 · 2687 Vitest + 18 baselines visuelles stables</footer>
+</div></body></html>

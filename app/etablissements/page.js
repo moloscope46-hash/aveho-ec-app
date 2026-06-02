@@ -20,7 +20,7 @@ import SireneSearch from "../SireneSearch";
 import DoublonAlert from "../components/DoublonAlert";
 import { checkEtabDoublon } from "../lib/checkEtabDoublon";
 import GPSProviderModal from "../GPSProviderModal";
-import { openItinerary, getGPSProvider } from "../../lib/gpsProvider";
+import { openItinerary} from "../../lib/gpsProvider";
 import { logEvent } from "../../lib/events";
 import { safeInsert } from "../../lib/safeWrite";
 import { useRouter } from "next/navigation";
@@ -341,7 +341,7 @@ export default function EtablissementsListPage() {
                 Importer (FINESS/SIRENE)
               </Btn>
             )}
-            {/* 0.55.11 (AI) : Export Excel */}
+            {/* 0.55.11 (AI) : Export CSV */}
             <button
               onClick={async () => {
                 const { exportRows } = await import("../../lib/exportExcel");
@@ -364,7 +364,7 @@ export default function EtablissementsListPage() {
                   },
                 });
               }}
-              title="Exporter la liste filtrée en Excel"
+              title="Exporter la liste filtrée en CSV (ouvrable dans Excel/Calc)"
               style={{
                 background: "#fff", color: "#1c5454",
                 border: "1px solid #1c5454",
@@ -376,7 +376,7 @@ export default function EtablissementsListPage() {
               }}
             >
               <i className="ti ti-file-spreadsheet" /> 
-              <span className="col-hide-xs">Export Excel</span>
+              <span className="col-hide-xs">Export CSV</span>
             </button>
           </div>
         </Panel>

@@ -120,7 +120,10 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
   function bulkExportCSV() {
     const rowsToExport = rows.filter((r) => selected.has(r.id));
     if (!rowsToExport.length) return;
-    import("../lib/export").then((m) => m.exportCSV(`${table}-selection.csv`, rowsToExport, columns.filter((c) => !c.skipExport)));
+    // 0.57.5 : catch pour gérer un échec de chunk load (réseau coupé, etc.)
+    import("../lib/export")
+      .then((m) => m.exportCSV(`${table}-selection.csv`, rowsToExport, columns.filter((c) => !c.skipExport)))
+      .catch((e) => alert("Export CSV impossible : " + (e?.message || "erreur de chargement")));
   }
   function clearSelection() { setSelected(new Set()); }
 
@@ -158,18 +161,24 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
         {rows.length > 0 && (
           <button className="btn-ghost" onClick={() => {
             // Import dynamique pour ne pas charger la lib si pas utilisée
-            import("../lib/export").then((m) => m.exportCSV(`${table}.csv`, rows, columns.filter((c) => !c.skipExport)));
+            // 0.57.5 : .catch en cas d'échec de chunk load
+            import("../lib/export")
+              .then((m) => m.exportCSV(`${table}.csv`, rows, columns.filter((c) => !c.skipExport)))
+              .catch((e) => alert("Export CSV impossible : " + (e?.message || "erreur de chargement")));
           }} title="Exporter en CSV (Excel)">
             <i className="ti ti-file-export" /> Export CSV
           </button>
         )}
         {rows.length > 0 && (
           <button className="btn-ghost" onClick={() => {
-            import("../lib/exportPdf").then((m) => m.exportPDF({
-              titre: title,
-              sousTitre: `Liste exportée le ${new Date().toLocaleString("fr-FR")}`,
-              rows, columns: columns.filter((c) => !c.skipExport && !c.skipPdf),
-            }));
+            // 0.57.5 : .catch idem
+            import("../lib/exportPdf")
+              .then((m) => m.exportPDF({
+                titre: title,
+                sousTitre: `Liste exportée le ${new Date().toLocaleString("fr-FR")}`,
+                rows, columns: columns.filter((c) => !c.skipExport && !c.skipPdf),
+              }))
+              .catch((e) => alert("Export PDF impossible : " + (e?.message || "erreur de chargement")));
           }} title="Exporter en PDF (impression)">
             <i className="ti ti-file-type-pdf" /> Export PDF
           </button>

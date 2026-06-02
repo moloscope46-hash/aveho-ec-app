@@ -6,6 +6,23 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
+// 0.57.1 : helper qui concatène tous les fichiers du dossier edit/
+function _readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  const out = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".js") || entry.name.endsWith(".jsx")) {
+        out.push(fs.readFileSync(full, "utf-8"));
+      }
+    }
+  }
+  walk(baseDir);
+  return out.join("\n");
+}
+
 describe("0.56.1 - SQL bucket + RLS + colonnes", () => {
   const sql = fs.readFileSync(path.resolve(process.cwd(), "supabase/aveho-PATCH-vers-0.56.1.sql"), "utf-8");
 
@@ -148,7 +165,7 @@ describe("0.56.1 - API /api/patients/from-ocr accepte les méta OCR", () => {
 });
 
 describe("0.56.1 - TabAudit avec preview signée", () => {
-  const src = fs.readFileSync(path.resolve(process.cwd(), "app/patient/[id]/edit/page.js"), "utf-8");
+  const src = _readAllEditFiles();
 
   it("useEffect : génération URL signée si bs_file_path", () => {
     expect(src).toContain("pat.bs_file_path");

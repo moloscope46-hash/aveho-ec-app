@@ -11,6 +11,7 @@
 // =============================================================
 
 import { useState, useEffect, useRef } from "react";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 export default function CaisseSearch({
   onSelect,
@@ -54,7 +55,7 @@ export default function CaisseSearch({
         }
         if (dept) params.set("dept", dept);
         params.set("limit", "30");
-        const res = await fetch(`/api/caisses?${params}`);
+        const res = await fetchWithAuth(`/api/caisses?${params}`);
         const data = await res.json();
         setResults(data.results || []);
         setOpen(true);

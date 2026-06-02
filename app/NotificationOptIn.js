@@ -47,8 +47,8 @@ export default function NotificationOptIn({ auth }) {
     navigator.serviceWorker.ready.then((reg) => {
       reg.pushManager.getSubscription().then((sub) => {
         if (sub) setState("subscribed");
-      });
-    });
+      }).catch(() => {});  // 0.57.5 : ignore (browser unsupported, etc.)
+    }).catch(() => {});  // 0.57.5 : idem
   }, []);
 
   async function subscribe() {

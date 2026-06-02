@@ -58,8 +58,12 @@ describe("0.56.19 - CodeViewer composant", () => {
 describe("0.56.19 - Intégration changelog page", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/changelog/page.js"), "utf-8");
 
-  it("Import CodeViewer", () => {
-    expect(src).toContain('import CodeViewer from "./CodeViewer"');
+  it("Import CodeViewer (statique ou dynamic depuis 0.57.6)", () => {
+    // 0.57.6 : CodeViewer est maintenant en dynamic import pour économiser
+    // sur le bundle initial. On accepte les deux patterns.
+    const staticImport = src.includes('import CodeViewer from "./CodeViewer"');
+    const dynamicImport = /const CodeViewer\s*=\s*dynamic\([\s\S]*?["']\.\/CodeViewer["']/.test(src);
+    expect(staticImport || dynamicImport).toBe(true);
   });
 
   it("État codeSnippet pour gérer l'ouverture de la popup", () => {

@@ -13,8 +13,7 @@ import { fetchWithAuth } from "../../../lib/fetchWithAuth";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg } from "../../ui";
-
+import { PageHead, Panel} from "../../ui";
 export default function RppsDumpAdminPage() {
   const supabase = createClient();
   const auth = useAuth();

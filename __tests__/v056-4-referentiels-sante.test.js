@@ -6,6 +6,23 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
+// 0.57.1 : helper qui concatène tous les fichiers du dossier edit/
+function _readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  const out = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".js") || entry.name.endsWith(".jsx")) {
+        out.push(fs.readFileSync(full, "utf-8"));
+      }
+    }
+  }
+  walk(baseDir);
+  return out.join("\n");
+}
+
 describe("0.56.4 - SQL ajout colonnes lat/lng/email", () => {
   const sql = fs.readFileSync(path.resolve(process.cwd(), "supabase/aveho-PATCH-vers-0.56.4.sql"), "utf-8");
 
@@ -51,9 +68,14 @@ describe("0.56.4 - API /api/caisses CRUD", () => {
     expect(src).toContain("duplicate:");
   });
 
-  it("Toutes les méthodes utilisent Authorization Bearer (RLS)", () => {
-    const matches = src.match(/authorization/gi) || [];
-    expect(matches.length).toBeGreaterThanOrEqual(4); // 1 GET + 3 CRUD
+  it("Toutes les méthodes utilisent requireAuth (auth + RLS)", () => {
+    // 0.57.4 : on est passés du pattern authHeader vers requireAuth
+    // requireAuth fait : (a) check Bearer présent, (b) check getUser valide,
+    // (c) crée un supabase client qui propage le Bearer pour RLS.
+    expect(src).toMatch(/import\s*\{\s*requireAuth/);
+    // 4 handlers (GET + POST + PUT + DELETE) appellent requireAuth
+    const matches = src.match(/await\s+requireAuth\(req\)/g) || [];
+    expect(matches.length).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -189,10 +211,11 @@ describe("0.56.4 - Page /admin/referentiels-sante", () => {
 });
 
 describe("0.56.4 - Intégration ContactActions dans fiche patient", () => {
-  const src = fs.readFileSync(path.resolve(process.cwd(), "app/patient/[id]/edit/page.js"), "utf-8");
+  const src = _readAllEditFiles();
 
   it("Import ContactActions", () => {
-    expect(src).toContain('import ContactActions from "../../../ContactActions"');
+    // 0.57.1 : tolérant à la profondeur (page.js vs tabs/*.js)
+    expect(src).toMatch(/import ContactActions from ["'](\.\.\/)+ContactActions["']/);
   });
 
   it("ContactActions sur bloc caisse (TabSecu)", () => {

@@ -15,10 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "../lib/supabase";
 import SignaturePad from "./SignaturePad";
 import { 
-  FINALITES, TEMPLATE_CONSENTEMENT, VERSION_TEMPLATE,
-  renderConsentement, consentementToHtml, hashBlob, detectDeviceType,
-  loadActiveTemplate, loadCustomVariables,
-} from "../lib/rgpd";
+  FINALITES, TEMPLATE_CONSENTEMENT, VERSION_TEMPLATE, renderConsentement, consentementToHtml, hashBlob, detectDeviceType, loadActiveTemplate, loadCustomVariables} from "../lib/rgpd";
 import { safeInsert } from "../lib/safeWrite";
 
 import { dialogs } from "./dialogs";
@@ -55,7 +52,8 @@ export default function ConsentementRGPD({ patient, auth, onClose, onSaved }) {
         .select("nom")
         .eq("id", patient.etablissement_id)
         .single()
-        .then(({ data }) => setEtabNom(data?.nom || ""));
+        .then(({ data }) => setEtabNom(data?.nom || ""))
+        .catch(() => {});  // 0.57.5 : ignore silencieusement
     }
     // Durée de validité
     if (auth.structureId) {
@@ -66,12 +64,17 @@ export default function ConsentementRGPD({ patient, auth, onClose, onSaved }) {
         .then(({ data }) => {
           const j = data?.parametres?.consent_validite_jours;
           if (j && Number.isFinite(j) && j > 0) setValiditeJours(j);
-        });
+        })
+        .catch(() => {});  // 0.57.5 : ignore silencieusement
       // Charger le template actif (fallback hardcode si pas custom)
       // Charger le template actif (priorité etab patient > structure > hardcode — Alpha 0.42.0)
-      loadActiveTemplate(supabase, auth.structureId, patient?.etablissement_id).then(setActiveTemplate);
+      loadActiveTemplate(supabase, auth.structureId, patient?.etablissement_id)
+        .then(setActiveTemplate)
+        .catch(() => {});  // 0.57.5 : ignore silencieusement
       // Alpha 0.40.0 : charger les variables custom
-      loadCustomVariables(supabase, auth.structureId).then(setCustomVars);
+      loadCustomVariables(supabase, auth.structureId)
+        .then(setCustomVars)
+        .catch(() => {});  // 0.57.5 : ignore silencieusement
     }
   }, [auth.etabNom, auth.structureId, patient?.etablissement_id]);
 

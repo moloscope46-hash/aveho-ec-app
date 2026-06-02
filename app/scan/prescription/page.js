@@ -18,6 +18,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import RppsVerifyBadge from "../../RppsVerifyBadge";
 import { PageHead, Panel } from "../../ui";
+import { logger } from "../../../lib/logger";
 
 // 0.56.3 : useSearchParams requiert un Suspense boundary à la racine
 export default function ScanPrescriptionPageWrapper() {
@@ -56,13 +57,18 @@ function ScanPrescriptionPage() {
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
-      const { data } = await supabase
-        .from("patients")
-        .select("id, nom, prenom, numero_dossier, date_naissance")
-        .eq("structure_id", auth.structureId)
-        .order("nom")
-        .limit(500);
-      setPatients(data || []);
+      try {
+        const { data } = await supabase
+          .from("patients")
+          .select("id, nom, prenom, numero_dossier, date_naissance")
+          .eq("structure_id", auth.structureId)
+          .order("nom")
+          .limit(500);
+        setPatients(data || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[ScanPrescription] load failed:", e);
+      }
     })();
   }, [auth.ready, auth.structureId]);
 

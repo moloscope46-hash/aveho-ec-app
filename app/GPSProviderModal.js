@@ -7,8 +7,7 @@
 //  si l'user n'a pas encore choisi. Sinon ouvre direct l'itinéraire.
 // =============================================================
 import { useState } from "react";
-import { GPS_PROVIDERS, getGPSProvider, setGPSProvider, openItinerary } from "../lib/gpsProvider";
-
+import { GPS_PROVIDERS, getGPSProvider, setGPSProvider} from "../lib/gpsProvider";
 export default function GPSProviderModal({ open, onClose, lat, lng, label, mode = "nav", configOnly = false }) {
   const [current, setCurrent] = useState(() => getGPSProvider().id);
 

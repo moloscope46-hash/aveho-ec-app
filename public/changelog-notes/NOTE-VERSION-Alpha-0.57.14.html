@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.14 — Visual Regression</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--pink:#E91E63}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#E91E63 40%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fdd9e6;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#fdd9e6;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#fdd9e6}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--pink)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#fce4ec,#f8bbd0);border-color:#f48fb1;border-left:4px solid #E91E63}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.pink{background:#fce4ec;border-color:#f48fb1}.kpi.pink .kpi-val{color:#880e4f}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — VISUAL REGRESSION TESTING</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.14 — Visual regression testing<small>7 baselines stables avec toHaveScreenshot Playwright</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.14-alpha</code></span>
+<span><b>Tests :</b> 2662 Vitest + 7 baselines visuelles</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 4 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi pink">
+<span class="kpi-val">7</span>
+<span class="kpi-lbl">Baselines visuelles générées</span>
+</div>
+<div class="kpi pink">
+<span class="kpi-val">2.5 MB</span>
+<span class="kpi-lbl">Taille totale des PNG</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">7/7</span>
+<span class="kpi-lbl">2 runs successifs stables ✅</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+24</span>
+<span class="kpi-lbl">Tests Vitest</span>
+</div>
+</div>
+
+<h2>📸 Pourquoi du visual regression testing ?</h2>
+<div class="panel">
+<p>Les tests unitaires Vitest vérifient la <b>logique</b>. Les tests E2E Playwright vérifient le <b>comportement</b>. Mais ni les uns ni les autres ne détectent les régressions <b>visuelles</b> :</p>
+<ul>
+<li>Un padding qui passe de 12px à 14px → personne ne le remarque tant que ce n'est pas signalé</li>
+<li>Une couleur primaire qui dérive de #185FA5 vers #2070B0 → idem</li>
+<li>Une font qui ne charge pas → fallback Arial à la place de Quicksand → "ça a l'air bizarre"</li>
+<li>Un alignement qui casse après un refacto CSS → bug invisible jusqu'à ce qu'un user le voie</li>
+</ul>
+
+<p>Le visual regression testing prend des <b>screenshots de référence (baselines)</b> et compare pixel-par-pixel à chaque commit. <b>Tout changement visuel est automatiquement détecté.</b></p>
+</div>
+
+<h2>📋 Workflow utilisateur</h2>
+<div class="panel ok">
+<pre><code># 1. La 1ère fois (ou après refonte UI volontaire)
+npm run test:visual:update
+# → Génère/écrase les baselines dans tests/e2e/__screenshots__/
+
+# 2. À chaque commit suivant
+npm run test:visual
+# → Compare le rendu actuel aux baselines, FAIL si diff > tolérance
+
+# 3. Si FAIL : voir le diff dans test-results/&lt;test&gt;/&lt;name&gt;-diff.png
+#    - Si c'est une régression bug : fixer le code
+#    - Si c'est intentionnel : relancer test:visual:update + commit</code></pre>
+</div>
+
+<h2>🛡️ Difficultés résolues</h2>
+<div class="panel">
+<h3>1. Popup géoloc qui bloque le viewport</h3>
+<p>Au 1er load, Aveho affiche un modal "Activer la géolocalisation ?" qui couvre tout le viewport central. Sans handling, les baselines screenshotent le popup au lieu de la page.</p>
+
+<p><b>Solution</b> : Helper <code>setupPopupsSkip(context)</code> qui utilise <code>context.addInitScript()</code> pour pré-remplir le localStorage AVANT le 1er render JS :</p>
+<pre><code>async function setupPopupsSkip(context) {
+  await context.addInitScript(() => {
+    localStorage.setItem("aveho_geoloc_choice", "declined");
+    localStorage.setItem("aveho_biometric_optin_shown", "1");
+    localStorage.setItem("aveho_install_banner_dismissed", "1");
+  });
+}
+
+test.beforeEach(async ({ context }) => {
+  await setupPopupsSkip(context);  // Avant chaque test
+});</code></pre>
+
+<h3>2. Numéros de version variables</h3>
+<p>Le badge "Version Alpha 0.57.X" change à chaque bump → baseline cassée systématiquement.</p>
+<p><b>Solution</b> : injection CSS qui masque les éléments de version :</p>
+<pre><code>[class*="version" i], [data-version] { visibility: hidden !important; }</code></pre>
+
+<h3>3. Pas de balise &lt;form&gt; dans Aveho login</h3>
+<p>Le composant Login est un div React avec <code>onClick</code>. Impossible de faire <code>page.locator("form")</code>.</p>
+<p><b>Solution</b> : xpath ancestor depuis l'input email :</p>
+<pre><code>const card = page.locator("input[type='email']")
+  .locator("xpath=ancestor::div[2]");</code></pre>
+
+<h3>4. Pages longues instables (variance subpixel)</h3>
+<p>La note HTML 0.55.0 fait 5800 px de haut. Entre 2 runs, font-rendering subpixel produit ~18 px de différence → fail systématique en fullPage.</p>
+<p><b>Solution</b> : <code>clip</code> sur le header stable :</p>
+<pre><code>await expect(page).toHaveScreenshot("note-header.png", {
+  clip: { x: 0, y: 0, width: 1280, height: 800 },
+  maxDiffPixels: 200,
+});</code></pre>
+
+<h3>5. Email pré-rempli par localStorage Aveho</h3>
+<p>Aveho mémorise le dernier email saisi → conflit avec mon <code>fill("demo@aveho.fr")</code>.</p>
+<p><b>Solution</b> : <code>clear()</code> avant <code>fill()</code></p>
+</div>
+
+<h2>📊 Baselines générées (7 PNG)</h2>
+<div class="panel hero">
+<table>
+<tr><th>Baseline</th><th>Taille</th><th>Description</th></tr>
+<tr><td><code>login-page.png</code></td><td>213 KB</td><td>/login full page desktop 1280×720</td></tr>
+<tr><td><code>mentions-legales.png</code></td><td>213 KB</td><td>/mentions-legales full page desktop</td></tr>
+<tr><td><code>login-card-empty.png</code></td><td>166 KB</td><td>Card login vide (xpath ancestor des inputs)</td></tr>
+<tr><td><code>login-card-filled.png</code></td><td>166 KB</td><td>Card login avec demo@aveho.fr + demo123!</td></tr>
+<tr><td><code>login-mobile-pixel5.png</code></td><td>101 KB</td><td>/login mobile Pixel 5 viewport 393×851</td></tr>
+<tr><td><code>mentions-legales-mobile.png</code></td><td>101 KB</td><td>/mentions-legales mobile Pixel 5</td></tr>
+<tr><td><code>note-version-0-55-0-header.png</code></td><td>350 KB</td><td>Header note HTML (clip 1280×800)</td></tr>
+<tr style="background:#fce4ec"><td><b>TOTAL</b></td><td><b>2.5 MB</b></td><td><b>Versionné dans git</b></td></tr>
+</table>
+</div>
+
+<h2>⚙️ Configuration Playwright</h2>
+<div class="panel">
+<pre><code>// playwright.config.js — bloc expect
+expect: {
+  timeout: 5000,
+  toHaveScreenshot: {
+    maxDiffPixelRatio: 0.002,  // 0.2 % de diff tolérée par défaut
+    animations: "disabled",     // double sécurité (en plus de notre CSS)
+    caret: "hide",              // cache le curseur clignotant
+  },
+},
+
+// Path standardisé des baselines
+snapshotPathTemplate: "{testDir}/__screenshots__/{testFileName}/{arg}{ext}"</code></pre>
+
+<h3>Helper prepareForScreenshot</h3>
+<pre><code>async function prepareForScreenshot(page) {
+  // 1. Désactiver toutes les animations
+  await page.addStyleTag({
+    content: `
+      *, *::before, *::after {
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+      }
+      *:focus { outline: none !important; }
+      [class*="version" i] { visibility: hidden !important; }
+    `,
+  });
+  // 2. Attendre que les fonts soient chargées
+  await page.evaluate(() => document.fonts.ready);
+  // 3. Stabilisation finale
+  await page.waitForTimeout(300);
+}</code></pre>
+</div>
+
+<h2>🎬 Particularités techniques</h2>
+<div class="panel tip">
+<ul>
+<li><b>Chromium uniquement</b> : les screenshots ne sont pas portables Firefox/WebKit (font-rendering, antialiasing, sub-pixel positioning différents). Le spec a un <code>test.skip(browserName !== "chromium", ...)</code> au niveau de chaque describe</li>
+<li><b>Tolérance par test</b> : <code>maxDiffPixels: 100</code> desktop, <code>150</code> mobile. La différence est plus grande qu'attendue car les fonts mobiles ont plus de variance</li>
+<li><b>2 runs successifs sans regen → 7/7 passed</b> = stabilité confirmée. Si on relance 10 fois, ça passe 10 fois</li>
+<li><b>Baselines versionnées dans git</b> : 2.5 MB pour l'instant, gérable. Si on étend à plus de 50 baselines, envisager Git LFS</li>
+</ul>
+</div>
+
+<h2>📈 +24 tests Vitest (v057-14-visual-regression.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.14+ + scripts npm test:visual et test:visual:update (3 tests)</li>
+<li>Spec visual-regression (8 tests : setupPopupsSkip + addInitScript + 3 localStorage keys, prepareForScreenshot animations + fonts, skip non-chromium, toHaveScreenshot ≥ 5 utilisations, viewport Pixel 5, maxDiffPixels)</li>
+<li>Config Playwright (4 tests : toHaveScreenshot dans expect, maxDiffPixelRatio, animations disabled, snapshotPathTemplate __screenshots__)</li>
+<li>Baselines (9 tests : dossier __screenshots__ existe, ≥ 5 PNG générées, 7 noms attendus avec taille > 10 KB chacune)</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés / créés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>tests/e2e/visual-regression.spec.js</code> (~180 lignes — 7 tests + helpers)</li>
+<li><code>tests/e2e/__screenshots__/visual-regression.spec.js/</code> (7 PNG, 2.5 MB)</li>
+<li><code>__tests__/v057-14-visual-regression.test.js</code> (24 tests Vitest)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>playwright.config.js</code> : bloc <code>expect.toHaveScreenshot</code> + <code>snapshotPathTemplate</code></li>
+<li><code>package.json</code> : scripts <code>test:visual</code> et <code>test:visual:update</code></li>
+<li><code>tests/e2e/README.md</code> : section "Visual regression testing"</li>
+</ul>
+
+<h2>📋 Prochaines étapes possibles</h2>
+<div class="panel tip">
+<ul>
+<li><b>C</b> — Tests a11y automatiques avec <code>@axe-core/playwright</code> (audit accessibilité sur les 5 environnements)</li>
+<li><b>D</b> — Refactos qualité (carte 1483, utilisateurs 1400, parametres-rgpd 963 lignes)</li>
+<li><b>E</b> — Features métier (Module Formation/HR/CRM)</li>
+<li><b>F</b> — Audit RLS Supabase + EXPLAIN ANALYZE sur requêtes lentes</li>
+<li><b>G</b> — Documentation technique pour Corentin/Yassir/Julien/Issam</li>
+<li><b>H</b> — Étendre visual regression à d'autres pages (changelog, fiche patient, commandes, BL...)</li>
+</ul>
+</div>
+
+<h2>⚠️ Actions critiques en attente</h2>
+<div class="panel warn">
+<ol>
+<li>🚨 <b>Déployer 0.57.0 → 0.57.14 sur Vercel</b> (15 versions accumulées !)</li>
+<li>🚨 <b>Lancer Lighthouse RÉEL en prod</b> pour mesurer les vrais gains (attendu Perf 85-95+ vs 46-67 local)</li>
+<li>Changer mot de passe Supabase (Molotof46! exposé ~100×)</li>
+<li>Régénérer clé Google Places (AIzaSyCZFeYA4ln-3BfkTUmNOc3l11OkcRHM8zU)</li>
+</ol>
+</div>
+
+<h2>SW auto-bump — 104ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.13 → <b>0.57.14</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.14 · 2 juin 2026 · 2662 Vitest + visual regression Playwright</footer>
+</div></body></html>

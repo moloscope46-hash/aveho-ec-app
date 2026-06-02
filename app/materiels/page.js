@@ -9,6 +9,7 @@ import { PageHead, Statut, Modal, Btn } from "../ui";
 import { KpiRow } from "../kpis";
 import Crud from "../crud";
 import { safeInsert, safeDelete } from "../../lib/safeWrite";
+import { logger } from "../../lib/logger";
 
 export default function Materiels() {
   const supabase = createClient();
@@ -27,26 +28,31 @@ export default function Materiels() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const [{ data: arts }, { data: pats }, { data: tg }, { data: links }, { data: dep }] = await Promise.all([
-        supabase.from("articles").select("id,libelle"),
-        supabase.from("patients").select("id,nom,prenom,chambre"),
-        supabase.from("tags_materiel").select("*").order("libelle"),
-        supabase.from("materiel_tags").select("materiel_id, tag_id"),
-        supabase.from("depots").select("id, nom").order("nom"),
-      ]);
-      setRel({
-        article_id: (arts || []).map((a) => ({ value: a.id, label: a.libelle })),
-        patient_id: (pats || []).map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
-      });
-      setTags(tg || []);
-      const linksByMat = {};
-      (links || []).forEach((l) => {
-        if (!linksByMat[l.materiel_id]) linksByMat[l.materiel_id] = [];
-        linksByMat[l.materiel_id].push(l.tag_id);
-      });
-      setMatTags(linksByMat);
-      setDepots(dep || []);
-      setRelReady(true);
+      try {
+        const [{ data: arts }, { data: pats }, { data: tg }, { data: links }, { data: dep }] = await Promise.all([
+          supabase.from("articles").select("id,libelle"),
+          supabase.from("patients").select("id,nom,prenom,chambre"),
+          supabase.from("tags_materiel").select("*").order("libelle"),
+          supabase.from("materiel_tags").select("materiel_id, tag_id"),
+          supabase.from("depots").select("id, nom").order("nom"),
+        ]);
+        setRel({
+          article_id: (arts || []).map((a) => ({ value: a.id, label: a.libelle })),
+          patient_id: (pats || []).map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
+        });
+        setTags(tg || []);
+        const linksByMat = {};
+        (links || []).forEach((l) => {
+          if (!linksByMat[l.materiel_id]) linksByMat[l.materiel_id] = [];
+          linksByMat[l.materiel_id].push(l.tag_id);
+        });
+        setMatTags(linksByMat);
+        setDepots(dep || []);
+        setRelReady(true);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Materiels] load failed:", e);
+      }
     })();
   }, [auth.ready]);
 
@@ -79,7 +85,7 @@ export default function Materiels() {
           { label: "Maintenance", value: items.filter((m) => m.etat === "Maintenance").length, icon: "ti-tool", color: "#EF9F27" },
           { label: "Affectés patient", value: items.filter((m) => m.patient_id).length, icon: "ti-user", color: "#7a6fb0" },
         ]} />
-        {/* 0.55.11 (AI) : Export Excel matériels */}
+        {/* 0.55.11 (AI) : Export CSV matériels */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
           <button
             onClick={async () => {
@@ -110,7 +116,7 @@ export default function Materiels() {
               display: "inline-flex", alignItems: "center", gap: 5,
             }}
           >
-            <i className="ti ti-file-spreadsheet" /> Export Excel
+            <i className="ti ti-file-spreadsheet" /> Export CSV
           </button>
         </div>
         <Crud

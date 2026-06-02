@@ -12,8 +12,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg } from "../../ui";
-
+import { PageHead, Panel} from "../../ui";
 const CIBLES = [
   { id: "etablissements", lbl: "Établissements", icon: "ti-building-hospital", color: "#185FA5", seuilDefault: 0.55 },
   { id: "groupements", lbl: "Groupements", icon: "ti-network", color: "#5aa05a", seuilDefault: 0.6 },

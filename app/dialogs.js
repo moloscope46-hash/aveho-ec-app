@@ -12,7 +12,7 @@
 //    - dialogs.confirm(), dialogs.alert()  (singleton global)
 //    - <DialogsHost />                   (à mettre une seule fois dans le layout)
 // =============================================================
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState} from "react";
 import { Modal, Btn } from "./ui";
 
 // =============================================================

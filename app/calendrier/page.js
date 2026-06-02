@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
+import { logger } from "../../lib/logger";
 
 const MOIS = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 const JOURS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -38,27 +39,33 @@ export default function CalendrierInterventions() {
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
-      setLoading(true);
-      // On charge les interventions du mois affiché ± 1 mois pour navigation fluide
-      const debut = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1).toISOString();
-      const fin = new Date(cursor.getFullYear(), cursor.getMonth() + 2, 1).toISOString();
-      const debutD = debut.slice(0, 10);
-      const finD = fin.slice(0, 10);
-      // Alpha 0.16.1 : due_date rétabli (ALTER TABLE appliqué côté base)
-      let qDi = supabase.from("interventions")
-        .select("id, numero, type, statut, urgence, created_at, due_date, materiels(libelle), patients(nom, prenom)")
-        .gte("created_at", debut).lte("created_at", fin);
-      let qMnt = supabase.from("maintenances")
-        .select("id, type, statut, date_prevue, materiels(libelle)")
-        .gte("date_prevue", debutD).lte("date_prevue", finD);
-      if (auth.etabId) {
-        qDi = qDi.eq("etablissement_id", auth.etabId);
-        qMnt = qMnt.eq("etablissement_id", auth.etabId);
+      try {
+        setLoading(true);
+        // On charge les interventions du mois affiché ± 1 mois pour navigation fluide
+        const debut = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1).toISOString();
+        const fin = new Date(cursor.getFullYear(), cursor.getMonth() + 2, 1).toISOString();
+        const debutD = debut.slice(0, 10);
+        const finD = fin.slice(0, 10);
+        // Alpha 0.16.1 : due_date rétabli (ALTER TABLE appliqué côté base)
+        let qDi = supabase.from("interventions")
+          .select("id, numero, type, statut, urgence, created_at, due_date, materiels(libelle), patients(nom, prenom)")
+          .gte("created_at", debut).lte("created_at", fin);
+        let qMnt = supabase.from("maintenances")
+          .select("id, type, statut, date_prevue, materiels(libelle)")
+          .gte("date_prevue", debutD).lte("date_prevue", finD);
+        if (auth.etabId) {
+          qDi = qDi.eq("etablissement_id", auth.etabId);
+          qMnt = qMnt.eq("etablissement_id", auth.etabId);
+        }
+        const [{ data: di }, { data: mnt }] = await Promise.all([qDi, qMnt]);
+        setInterventions(di || []);
+        setMaintenances(mnt || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Calendrier] load failed:", e);
+      } finally {
+        setLoading(false);
       }
-      const [{ data: di }, { data: mnt }] = await Promise.all([qDi, qMnt]);
-      setInterventions(di || []);
-      setMaintenances(mnt || []);
-      setLoading(false);
     })();
   }, [auth.ready, auth.structureId, auth.etabId, cursor]);
 

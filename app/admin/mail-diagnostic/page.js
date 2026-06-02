@@ -11,8 +11,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg } from "../../ui";
-
+import { PageHead, Panel} from "../../ui";
 export default function MailDiagnosticPage() {
   const supabase = createClient();
   const auth = useAuth();

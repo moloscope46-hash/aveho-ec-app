@@ -7,6 +7,7 @@
 // =============================================================
 
 import { useState, useEffect, useRef } from "react";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 export default function MutuelleSearch({
   onSelect,
@@ -51,7 +52,7 @@ export default function MutuelleSearch({
           params.set("q", val.trim());
         }
         params.set("limit", "30");
-        const res = await fetch(`/api/mutuelles?${params}`);
+        const res = await fetchWithAuth(`/api/mutuelles?${params}`);
         const data = await res.json();
         setResults(data.results || []);
         setOpen(true);

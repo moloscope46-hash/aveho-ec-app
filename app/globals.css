@@ -1,10 +1,13 @@
-@import "@tabler/icons-webfont/tabler-icons.css";
+/* 0.57.9 : sub-set Tabler Icons (321 icônes utilisées au lieu des 4962 du package)
+   244 KB → 14.7 KB CSS (-94%). Régénérer avec :
+   node scripts/build-tabler-icons-subset.mjs */
+@import "./tabler-icons-subset.css";
 
 :root{
   --navy:#142131; --teal:#7CC8C8; --tealdk:#2a5a5a; --terra:#C9867F;
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;font-family:'Quicksand',sans-serif;color:#142131;background:#0f1b28}
+html,body{margin:0;padding:0;font-family:var(--font-quicksand),'Quicksand',sans-serif;color:#142131;background:#0f1b28}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
 

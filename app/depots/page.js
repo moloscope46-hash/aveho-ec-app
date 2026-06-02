@@ -5,7 +5,7 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg } from "../ui";
+import { PageHead} from "../ui";
 import Crud from "../crud";
 
 export default function Depots() {

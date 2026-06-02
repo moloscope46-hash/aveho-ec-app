@@ -7,7 +7,9 @@
 //  GET /api/caisses?code=751      → recherche par code organisme
 // =============================================================
 
-import { createClient } from "@supabase/supabase-js";
+// 0.57.10 : imports retirés (createClient non utilisés)
+
+import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +27,17 @@ export async function GET(req) {
   }
 
   try {
-    const authHeader = req.headers.get("authorization") || "";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // 0.57.4 : auth + rate limit obligatoire
+
+    const authCheck = await requireAuth(req);
+
+    if (!authCheck.ok) return authCheck.response;
+
+    const { user, supabase } = authCheck;
+
+    const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+    if (!rate.ok) return rate.response;
 
     // Si code exact, lookup direct
     if (code) {
@@ -71,10 +80,22 @@ export async function POST(req) {
     return Response.json({ ok: false, error: "nom et code_organisme requis" }, { status: 400 });
   }
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   // 0.56.13 : mapping vers les bons noms de colonnes (type_caisse, cp)
   const payload = {
@@ -122,10 +143,22 @@ export async function PUT(req) {
 
   if (!body.id) return Response.json({ ok: false, error: "id requis" }, { status: 400 });
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   // 0.56.13 : remap les anciens noms vers les bons (rétrocompat)
   const { id, code_postal, type, ...rest } = body;
@@ -152,10 +185,22 @@ export async function DELETE(req) {
   const id = searchParams.get("id");
   if (!id) return Response.json({ ok: false, error: "id requis" }, { status: 400 });
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   const { error } = await supabase
     .from("caisses_assurance_maladie")

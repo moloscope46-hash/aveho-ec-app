@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.2 — Refacto changelog</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:32px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dfeaf5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#dfeaf5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#dfeaf5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — REFACTO CHANGELOG</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.2 — Extraction SqlModal + helpers<small>1603 → 1363 lignes · composant SqlModal autonome</small></h1>
+<div class="meta">
+<span><b>Date :</b> 1er juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.2-alpha</code></span>
+<span><b>Tests :</b> 2340 verts (+14)</span>
+</div>
+</header>
+
+<h2>📊 Le résultat</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">1603 → 1363</span>
+<span class="kpi-lbl">Lignes page.js (-15%)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2</span>
+<span class="kpi-lbl">Fichiers extraits</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2340 ✓</span>
+<span class="kpi-lbl">Tests verts</span>
+</div>
+</div>
+
+<h2>📁 Structure après refacto</h2>
+<div class="panel">
+<pre><code>app/changelog/
+├── page.js                  (1363 lignes — coordination + render principal)
+├── versions-data.js         (data des versions, inchangé)
+├── smoke-tests.js           (tests in-browser, inchangé)
+├── CodeViewer.js            (popup snippet, inchangé)
+├── SqlModal.js              (NOUVEAU — 240 lignes — modale SQL autonome)
+└── lib/
+    └── helpers.js           (NOUVEAU — ICONS_BY_CODE, getCodeMeta, versionKey, compareVersions)</code></pre>
+</div>
+
+<h2>🎯 Le composant SqlModal</h2>
+<div class="panel">
+<p>La modale d'affichage du SQL d'une version était <b>180 lignes de JSX + 50 lignes de logique</b> directement dans <code>page.js</code>. Elle est désormais dans son propre fichier <code>SqlModal.js</code> qui gère <b>tout seul</b> :</p>
+
+<ul>
+<li>Le <b>fetch</b> du fichier SQL depuis <code>/public/changelog-sql/...</code></li>
+<li>Le <b>cache</b> via <code>useRef({})</code> pour ne pas refetch à chaque ouverture</li>
+<li>Le handler <b>ESC</b> pour fermer</li>
+<li>La <b>copie clipboard</b> avec feedback "Copié !" 2s</li>
+<li>L'affichage du nombre de lignes / Ko en footer</li>
+<li>Le lien <b>Télécharger</b></li>
+</ul>
+
+<p>Le parent ne fait plus que passer les props :</p>
+<pre><code>// 0.57.2 : 180 lignes de JSX → une seule ligne dans page.js
+&lt;SqlModal sqlModal={sqlModal} onClose={() =&gt; setSqlModal(null)} /&gt;</code></pre>
+
+<h3>Bénéfices</h3>
+<ul>
+<li>page.js plus court et plus lisible (1603 → 1363, -15%)</li>
+<li>SqlModal testable isolément</li>
+<li>SqlModal réutilisable ailleurs si besoin</li>
+<li>Le cache fetch + ESC sont encapsulés (pas de pollution du parent)</li>
+</ul>
+</div>
+
+<h2>📦 Le module lib/helpers.js</h2>
+<div class="panel">
+<p>4 helpers utilitaires sortis de <code>page.js</code> et déplacés dans <code>app/changelog/lib/helpers.js</code> :</p>
+<ul>
+<li><code>ICONS_BY_CODE</code> — constantes pour Fix (rouge), NEW (vert), BONUS (violet), • (gris)</li>
+<li><code>getCodeMeta(code)</code> — résout {color, label} depuis un code de chantier</li>
+<li><code>versionKey(s)</code> — split "0.57.2" en [0, 57, 2]</li>
+<li><code>compareVersions(a, b)</code> — tri ordre version</li>
+</ul>
+
+<p>Ces helpers seront réutilisables par les futurs sous-composants extraits (NoteModal, FilterPanel, etc.)</p>
+</div>
+
+<h2>🐛 Fix bonus : imports tabs/ corrigés</h2>
+<div class="panel">
+<p>Héritage de la refacto 0.57.1 : 2 imports dynamiques dans <code>tabs/</code> avaient le mauvais nombre de <code>../</code> :</p>
+<ul>
+<li><code>TabAudit.js</code> : <code>import("../../../../lib/bulletinsStorage")</code> → manquait 1 niveau</li>
+<li><code>TabPrescriptions.js</code> : <code>import("../../../../lib/prescriptionsStorage")</code> → idem</li>
+</ul>
+<p>Le code dans <code>tabs/</code> est <b>5 niveaux de profondeur</b> par rapport à <code>lib/</code> (app/patient/[id]/edit/tabs/ → lib/), donc il faut <code>../../../../../lib/...</code></p>
+
+<p>Le bug aurait crashé au runtime au moment du download de bulletin ou de prescription. Détecté en build avec Next 15 qui affiche des warnings plus stricts. Corrigé.</p>
+</div>
+
+<h2>🧪 +14 tests dédiés (v057-2-refacto-changelog.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.2+</li>
+<li>helpers.js existe et exporte ICONS_BY_CODE / getCodeMeta / versionKey / compareVersions</li>
+<li>SqlModal.js existe et default export</li>
+<li>SqlModal gère son propre fetch + ESC + clipboard (pas dépendant du parent)</li>
+<li>SqlModal a la signature correcte ({ sqlModal, onClose })</li>
+<li>page.js < 1400 lignes</li>
+<li>page.js importe helpers depuis ./lib/helpers et SqlModal depuis ./SqlModal</li>
+<li>page.js n'a plus de définition locale d'helpers (ICONS_BY_CODE, getCodeMeta, versionKey, compareVersions)</li>
+<li>page.js n'a plus la logique fetch SQL / copySqlToClipboard / ESC sql (déléguées à SqlModal)</li>
+<li>page.js utilise &lt;SqlModal /&gt; au lieu du JSX inline géant</li>
+<li>+ 2 tests bonus : fix imports tabs/ (bulletinsStorage + prescriptionsStorage avec 5 niveaux)</li>
+</ul>
+</div>
+
+<h2>📋 Reste à faire (versions ultérieures)</h2>
+<div class="panel tip">
+<h3>0.57.3 — Extraction NoteModal (208 lignes)</h3>
+<p>Le morceau le plus délicat restant dans <code>page.js</code>. Beaucoup d'état couplé au parent (search, currentMatch, matchCount, scroll vers match). À traiter dans une version dédiée car risque de régression plus élevé.</p>
+
+<h3>0.57.4+ — Refacto carte/page.js (1483) + utilisateurs/page.js (1400)</h3>
+<p>Ces 2 fichiers n'ont pas de sous-composants déjà internes — il faudra découper du JSX en nouveaux composants logiques. Chacun en version dédiée avec recette.</p>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (3)</h3>
+<ul>
+<li><code>app/changelog/lib/helpers.js</code> (33 lignes — 4 exports)</li>
+<li><code>app/changelog/SqlModal.js</code> (240 lignes — composant autonome)</li>
+<li><code>__tests__/v057-2-refacto-changelog.test.js</code> (14 tests)</li>
+</ul>
+<h3>Modifiés</h3>
+<ul>
+<li><code>app/changelog/page.js</code> : 1603 → 1363 lignes</li>
+<li><code>app/patient/[id]/edit/tabs/TabAudit.js</code> : fix import bulletinsStorage</li>
+<li><code>app/patient/[id]/edit/tabs/TabPrescriptions.js</code> : fix import prescriptionsStorage</li>
+</ul>
+
+<h2>SW auto-bump — 92ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.1 → <b>0.57.2</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.2 · 1er juin 2026 · 2340 tests verts · Refacto changelog</footer>
+</div></body></html>

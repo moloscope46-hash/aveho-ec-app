@@ -4,7 +4,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
-import { fmtDate } from "../../lib/format";
+// 0.57.10 : imports retirés (fmtDate non utilisés)
+
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Badge } from "../ui";

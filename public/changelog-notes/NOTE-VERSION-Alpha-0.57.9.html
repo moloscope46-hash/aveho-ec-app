@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.9 — Subset Tabler Icons</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#cce0ef;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#cce0ef;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#cce0ef}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#dff5e0);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.blue{background:#e8f0f8;border-color:#bfd7ea}.kpi.blue .kpi-val{color:#185FA5}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — SUBSET TABLER ICONS</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.9 — Subset CSS Tabler : 244 KB → 14.7 KB (-94%)<small>4640 icônes inutilisées éliminées du bundle</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.9-alpha</code></span>
+<span><b>Tests :</b> 2547 verts (+23)</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 3 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">-230</span>
+<span class="kpi-lbl">KB CSS économisés</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">-94%</span>
+<span class="kpi-lbl">Réduction Tabler CSS</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">322 / 4962</span>
+<span class="kpi-lbl">Icônes utiles (6.5%)</span>
+</div>
+</div>
+
+<h2>🚨 Le problème (audit fait en début de 0.57.9)</h2>
+<div class="panel warn">
+<p>Audit du code :</p>
+<pre><code>du -h node_modules/@tabler/icons-webfont/tabler-icons.css
+# → 244 KB
+
+grep -c "^\.ti-" node_modules/@tabler/icons-webfont/tabler-icons.css
+# → 4962 icônes définies
+
+grep -rohE "ti ti-[a-z0-9-]+" app/ | sort -u | wc -l
+# → 243 icônes utilisées</code></pre>
+
+<p>Verdict : <b>4962 icônes définies, ~243 utilisées dans Aveho. 95% du CSS est gaspillé.</b></p>
+
+<p>Conséquence sur Lighthouse :</p>
+<ul>
+<li>🔴 <b>FCP (First Contentful Paint)</b> dégradé car le CSS bloque le rendu</li>
+<li>🔴 <b>LCP (Largest Contentful Paint)</b> dégradé car le browser attend le CSS pour calculer le layout</li>
+<li>🔴 Coût parser CSS au démarrage</li>
+<li>🔴 Bande passante mobile gaspillée</li>
+</ul>
+</div>
+
+<h2>✂️ Fix — Sub-set CSS auto-généré</h2>
+<div class="panel">
+<p>Création d'un script Node ES modules qui :</p>
+
+<ol>
+<li><b>Scanne récursivement</b> <code>app/</code>, <code>lib/</code>, <code>public/changelog-notes/</code> pour trouver toutes les classes <code>ti-NAME</code> utilisées dans le code (JS, JSX, HTML, CSS)</li>
+<li><b>Lit</b> le CSS source <code>@tabler/icons-webfont/tabler-icons.css</code> pour extraire les codepoints (<code>content: "\eaXX"</code>) correspondants</li>
+<li><b>Génère</b> <code>app/tabler-icons-subset.css</code> avec uniquement :
+<ul>
+<li>Le bloc <code>@font-face</code> initial</li>
+<li>La classe générique <code>.ti</code></li>
+<li>Les ~322 classes d'icônes utilisées (filtrant les faux positifs comme "ti-x-circle" qui matche regex "ti-x")</li>
+</ul>
+</li>
+<li><b>Copie</b> les fonts <code>.woff2</code> / <code>.woff</code> / <code>.ttf</code> depuis <code>node_modules/@tabler/icons-webfont/fonts/</code> vers <code>public/tabler-icons/</code> pour les servir depuis le même domaine que l'app (cache HTTP optimal par Vercel + brotli)</li>
+</ol>
+
+<h3>Avant (globals.css)</h3>
+<pre><code>@import "@tabler/icons-webfont/tabler-icons.css";
+/* → 244 KB de CSS avec 4962 icônes */
+/* → 4640 icônes téléchargées MAIS jamais utilisées */</code></pre>
+
+<h3>Après (globals.css)</h3>
+<pre><code>/* 0.57.9 : sub-set Tabler Icons (322 icônes au lieu de 4962) */
+/* Régénérer avec : node scripts/build-tabler-icons-subset.mjs */
+@import "./tabler-icons-subset.css";
+/* → 14.7 KB de CSS avec uniquement les icônes utilisées */</code></pre>
+</div>
+
+<h2>🔧 Le script (scripts/build-tabler-icons-subset.mjs)</h2>
+<div class="panel">
+<pre><code>// 1. Scanner toutes les utilisations "ti-NAME" dans le code
+async function scanIcons(dir, found = new Set()) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const e of entries) {
+    if (e.name === "node_modules" || e.name === ".next") continue;
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      await scanIcons(full, found);
+    } else if (e.name.endsWith(".js") || ...) {
+      const src = await fs.readFile(full, "utf-8");
+      const matches = src.match(/ti-[a-z0-9-]+/g) || [];
+      for (const m of matches) {
+        if (m.length >= 4) found.add(m);
+      }
+    }
+  }
+  return found;
+}
+
+// 2. Lire le CSS source + extraire les codepoints des icônes utilisées
+const tablerCss = await fs.readFile(TABLER_CSS, "utf-8");
+const blockRe = /\.([a-z0-9-]+):before\s*\{\s*content:\s*"\\([a-f0-9]+)";\s*\}/g;
+let match;
+while ((match = blockRe.exec(tablerCss)) !== null) {
+  if (usedIcons.has(match[1])) {
+    lines.push(`.${match[1]}:before { content: "\\${match[2]}"; }`);
+  }
+}
+
+// 3. Adapter les paths fonts pour pointer vers /tabler-icons/ (public)
+let outputCss = lines.join("\n");
+outputCss = outputCss.replace(/url\("\.\/fonts\//g, 'url("/tabler-icons/');
+
+// 4. Copier les fonts dans public/tabler-icons/
+const woff2Files = await fs.readdir(TABLER_FONTS_DIR);
+for (const f of woff2Files) {
+  if (f.endsWith(".woff2") || f.endsWith(".woff") || f.endsWith(".ttf")) {
+    await fs.copyFile(...);
+  }
+}</code></pre>
+
+<p>Utilisation :</p>
+<pre><code>node scripts/build-tabler-icons-subset.mjs
+# Icônes détectées dans le code : 371 (avec faux positifs)
+# Icônes incluses dans le subset : 322
+# Icônes non trouvées dans Tabler (filtrées) : 49
+# ✓ Écrit : app/tabler-icons-subset.css (14.7 KB)
+# ✓ Fontes copiées dans public/tabler-icons/
+# Gain estimé : 244 KB → 14.7 KB CSS (-94%)</code></pre>
+
+<p><b>À relancer dès qu'on ajoute une nouvelle icône dans le code.</b></p>
+</div>
+
+<h2>📊 Mesure de l'impact</h2>
+<div class="panel hero">
+<table>
+<tr><th>Métrique</th><th>Avant 0.57.9</th><th>Après 0.57.9</th><th>Gain</th></tr>
+<tr><td>CSS Tabler chargé</td><td>244 KB</td><td>14.7 KB</td><td><b>-94%</b></td></tr>
+<tr><td>CSS principal build Next</td><td>~300 KB</td><td>69 KB</td><td>~-230 KB</td></tr>
+<tr><td>Icônes incluses</td><td>4962</td><td>322</td><td>-94%</td></tr>
+<tr><td>Icônes utilisées (= besoin réel)</td><td>~243</td><td>~243</td><td>identique</td></tr>
+<tr><td>Coût parser CSS au load</td><td>4962 règles</td><td>322 règles</td><td>15× moins</td></tr>
+</table>
+
+<p>Impact estimé sur Lighthouse :</p>
+<ul>
+<li>📉 <b>FCP</b> : meilleur (CSS plus rapide à parser)</li>
+<li>📉 <b>LCP</b> : meilleur (layout calculé plus vite)</li>
+<li>📉 <b>Total Blocking Time</b> : meilleur</li>
+<li>📉 <b>Network bytes transferred</b> : -230 KB CSS (gros gain mobile)</li>
+</ul>
+</div>
+
+<h2>⚠️ À retenir pour les futures versions</h2>
+<div class="panel tip">
+<p>Quand on ajoute une <b>nouvelle icône</b> dans le code (par exemple <code>&lt;i className="ti ti-magic-wand" /&gt;</code>), il faut <b>régénérer le subset</b> :</p>
+<pre><code>node scripts/build-tabler-icons-subset.mjs</code></pre>
+
+<p>Sinon l'icône <b>n'apparaîtra pas</b> (la classe <code>.ti-magic-wand:before</code> n'existe pas dans le subset). C'est facile à détecter en visuel mais à intégrer dans le workflow de release.</p>
+
+<p><b>Option pour CI</b> : ajouter une étape <code>node scripts/build-tabler-icons-subset.mjs</code> avant <code>npm run build</code> dans vercel.json. Mais pas critique pour le moment.</p>
+</div>
+
+<h2>📈 Bilan du marathon performance 0.57.6 → 0.57.9</h2>
+<div class="panel hero">
+<table>
+<tr><th>Version</th><th>Gain principal</th><th>Mesure</th></tr>
+<tr><td>0.57.6</td><td>Lazy CodeViewer + SqlModal + smoke-tests</td><td>-11 kB First Load /changelog</td></tr>
+<tr><td>0.57.7</td><td>Split versions-data → index + chantiers-extra lazy</td><td>-20 kB First Load /changelog</td></tr>
+<tr><td>0.57.8</td><td>next/font Quicksand + 8 composants layout lazy + preconnect</td><td>0 FOUT + ~100ms TTFB</td></tr>
+<tr><td><b>0.57.9</b></td><td><b>Subset Tabler Icons</b></td><td><b>-230 KB CSS</b></td></tr>
+</table>
+
+<p><b>Total estimé sur les 4 versions : ~-260 KB de poids initial téléchargé par le browser.</b></p>
+</div>
+
+<h2>📈 +23 tests dédiés (v057-9-tabler-icons-subset.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.9+ (1)</li>
+<li>Subset CSS : 7 tests (existe, < 30 KB, @font-face, paths /tabler-icons/, classe .ti, 200+ classes, < 500 classes)</li>
+<li>globals.css : 2 tests (import du subset + plus d'import du package)</li>
+<li>Fonts copiées : 3 tests (woff2/woff/ttf présents)</li>
+<li>Script build : 2 tests (existe + structure)</li>
+<li>Icônes essentielles dans subset : 8 tests (ti-home, ti-search, ti-user, ti-loader-2, ti-x, ti-check, ti-plus, ti-trash)</li>
+</ul>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (5)</h3>
+<ul>
+<li><code>app/tabler-icons-subset.css</code> (14.7 KB, généré automatiquement)</li>
+<li><code>scripts/build-tabler-icons-subset.mjs</code> (script de génération)</li>
+<li><code>public/tabler-icons/tabler-icons.woff2</code> (font principale)</li>
+<li><code>public/tabler-icons/tabler-icons.woff</code> (fallback)</li>
+<li><code>public/tabler-icons/tabler-icons.ttf</code> (legacy)</li>
+<li><code>__tests__/v057-9-tabler-icons-subset.test.js</code> (23 tests)</li>
+</ul>
+
+<h3>Modifiés (1)</h3>
+<ul>
+<li><code>app/globals.css</code> : remplace @import du package par @import du subset local</li>
+</ul>
+
+<h2>📋 Reste à faire (versions ultérieures)</h2>
+<div class="panel tip">
+<h3>Action prioritaire utilisateur</h3>
+<ul>
+<li><b>Déployer 0.57.6 → 0.57.9</b> sur Vercel</li>
+<li><b>Lancer Lighthouse</b> sur la prod (cf scripts/lighthouse-guide.sh) — c'est maintenant le moment idéal pour mesurer les gains réels</li>
+<li>Comparer avant/après et noter les chiffres</li>
+</ul>
+
+<h3>0.58+ — Au choix</h3>
+<ul>
+<li>Refactos qualité (NoteModal, carte/page.js, utilisateurs/page.js)</li>
+<li>Features métier (CNAM/AMC, Formation/HR/CRM, BiometricSection)</li>
+<li>Encore plus de perf : audit en prod, optimisations ciblées</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 99ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.8 → <b>0.57.9</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.9 · 2 juin 2026 · 2547 tests verts · -230 KB CSS</footer>
+</div></body></html>

@@ -8,6 +8,7 @@ import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, StateMsg } from "../ui";
+import { logger } from "../../lib/logger";
 
 export default function Magasins() {
   const supabase = createClient();
@@ -21,13 +22,19 @@ export default function Magasins() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const { data } = await supabase
-        .from("magasins")
-        .select("*")
-        .order("favori", { ascending: false })
-        .order("nom");
-      setMagasins(data || []);
-      setLoading(false);
+      try {
+        const { data } = await supabase
+          .from("magasins")
+          .select("*")
+          .order("favori", { ascending: false })
+          .order("nom");
+        setMagasins(data || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Magasins] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready]);
 

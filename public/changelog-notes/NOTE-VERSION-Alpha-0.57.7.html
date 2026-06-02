@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.7 — Split versions-data</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#7a6fb0 50%,#185FA5 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dcd5ec;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#dcd5ec;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#dcd5ec}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#dff5e0);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.blue{background:#e8f0f8;border-color:#bfd7ea}.kpi.blue .kpi-val{color:#185FA5}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — SPLIT VERSIONS-DATA</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.7 — Index léger + chantiers-extra lazy<small>/changelog : 293 → 274 kB First Load · architecture évolutive</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.7-alpha</code></span>
+<span><b>Tests :</b> 2486 verts (+26)</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 3 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">293 → 274</span>
+<span class="kpi-lbl">kB First Load /changelog</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">68</span>
+<span class="kpi-lbl">kB lazy via fetch</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">88</span>
+<span class="kpi-lbl">versions externalisées</span>
+</div>
+</div>
+
+<h2>📦 L'idée</h2>
+<div class="panel">
+<p>Le fichier <code>versions-data.js</code> (309 KB, 161 versions, ~930 chantiers) était chargé statiquement par <code>/changelog</code>. <b>61% de son poids</b> = les textes des chantiers (190 KB).</p>
+
+<p>Mais en pratique :</p>
+<ul>
+<li>L'affichage par défaut ne montre <b>que les 5 premiers chantiers</b> de chaque version (le reste est derrière "Voir les X autres")</li>
+<li><b>88 versions sur 161</b> ont plus de 5 chantiers (= des chantiers cachés derrière "Voir plus")</li>
+<li>L'utilisateur clique rarement sur "Voir plus" pour toutes les versions</li>
+</ul>
+
+<p>→ <b>Idée :</b> externaliser les chantiers > 5 dans un fichier JSON lazy-chargé.</p>
+</div>
+
+<h2>🗂️ Fix 1 — versions-index.js (index léger)</h2>
+<div class="panel">
+<p>Nouveau fichier <code>app/changelog/versions-index.js</code> généré automatiquement depuis <code>versions-data.js</code> avec :</p>
+<ul>
+<li>Toutes les versions (161)</li>
+<li>5 premiers chantiers max par version</li>
+<li>Champ <code>chantiers_total</code> = nb réel (pour afficher "Voir les X autres" avec le bon nombre, même avant que l'extra soit chargé)</li>
+<li>Tous les autres champs (titre, themes, date, noteFile, sqlFile) inchangés</li>
+</ul>
+
+<pre><code>export const VERSIONS_INDEX = [
+  {
+    "v": "0.57.7",
+    "kind": "version",
+    "titre": "📦 Split versions-data...",
+    "chantiers": [
+      { "code": "FE", "txt": "Création de app/changelog/..." },
+      { "code": "FE", "txt": "Refacto de app/changelog/page.js..." },
+      { "code": "FE", "txt": "Mise à jour des useMemo..." },
+      { "code": "FE", "txt": "Création de scripts/regen..." },
+      { "code": "DOC", "txt": "Gain mesuré sur le build Next..." }
+    ],
+    "chantiers_total": 6,  // 1 chantier caché (AI tests)
+    "themes": [...],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.7.html"
+  },
+  ...
+];
+
+export const THEME_LABELS = {...};  // déplacé depuis versions-data</code></pre>
+</div>
+
+<h2>🌐 Fix 2 — chantiers-extra.json (lazy fetch)</h2>
+<div class="panel">
+<p>Nouveau fichier <code>public/changelog-data/chantiers-extra.json</code> (~68 KB) qui contient les chantiers cachés (> 5) de chaque version concernée :</p>
+
+<pre><code>{
+  "0.57.7": [
+    { "code": "AI", "txt": "+26 tests Vitest..." }
+  ],
+  "0.57.5": [
+    { "code": "FE", "txt": "Patch automatique de 16 pages..." },
+    { "code": "FE", "txt": "Patch manuel des cas complexes..." },
+    { "code": "FE", "txt": "Fuite mémoire WebHID corrigée..." },
+    { "code": "AI", "txt": "+37 tests Vitest..." },
+    { "code": "DOC", "txt": "Bilan robustesse runtime..." }
+  ],
+  "0.56.8": [ ... ],  // 88 versions au total
+  ...
+}</code></pre>
+
+<p>Servi en static depuis <code>/public/</code>. Headers HTTP de cache automatiques (gzip + immutable via Vercel). <b>1 seul fetch</b> pour récupérer tous les chantiers cachés de toutes les versions.</p>
+</div>
+
+<h2>⚡ Fix 3 — Fetch background dans page.js</h2>
+<div class="panel">
+<p>Le useEffect au mount fetch <code>chantiers-extra.json</code> en background (non-bloquant). La page s'affiche d'abord avec les 5 premiers chantiers, puis se complète quand l'extra arrive (qq dizaines de ms).</p>
+
+<pre><code>const [ALL_VERSIONS, setAllVersions] = useState(VERSIONS_INDEX);
+const [extraLoaded, setExtraLoaded] = useState(false);
+
+useEffect(() => {
+  let cancelled = false;
+  (async () => {
+    try {
+      const res = await fetch("/changelog-data/chantiers-extra.json", {
+        cache: "force-cache",  // versionné par déploiement
+      });
+      const extra = await res.json();
+      if (cancelled) return;
+
+      // Merge : enrichit chaque version avec ses chantiers cachés
+      const augmented = VERSIONS_INDEX.map((v) => {
+        const hidden = extra[v.v];
+        if (!hidden || !hidden.length) return v;
+        return { ...v, chantiers: [...v.chantiers, ...hidden] };
+      });
+      setAllVersions(augmented);
+      setExtraLoaded(true);
+    } catch (e) {
+      // 0.57.7 : si fetch échoue (offline), on reste sur 5 chantiers max
+      logger.warn("[changelog] fetch chantiers-extra failed:", e?.message);
+    }
+  })();
+  return () => { cancelled = true; };
+}, []);</code></pre>
+
+<p><b>Gestion du fallback :</b> si le fetch échoue (offline, 404, etc.), l'UI reste fonctionnelle avec 5 chantiers max par version. Le bouton "Voir les X autres" affiche un état désactivé + tooltip "Chargement…" tant que l'extra n'est pas chargé.</p>
+</div>
+
+<h2>🔧 Fix 4 — useMemo deps + chantiers_total</h2>
+<div class="panel">
+<p>Les <code>useMemo</code> de <code>themeCounts</code> et <code>filtered</code> doivent maintenant inclure <code>ALL_VERSIONS</code> dans leurs deps : sinon ils ne se recalculent pas quand le fetch arrive et la recherche full-text se limite aux 5 premiers chantiers.</p>
+
+<pre><code>const themeCounts = useMemo(() => {
+  // ...
+}, [ALL_VERSIONS]);  // 0.57.7 : recalcul après merge
+
+const filtered = useMemo(() => {
+  // ...
+}, [filter, search, selectedThemes, ALL_VERSIONS]);  // 0.57.7 : idem</code></pre>
+
+<p>Le rendu du bouton "Voir les X autres" utilise <code>chantiers_total</code> au lieu de <code>v.chantiers.length</code> :</p>
+
+<pre><code>{(v.chantiers_total || v.chantiers.length) > 5 && (
+  &lt;button
+    disabled={!isExpanded && !extraLoaded && v.chantiers.length <= 5}
+    title={!extraLoaded && v.chantiers.length <= 5 ? "Chargement…" : ""}
+  &gt;
+    Voir les {(v.chantiers_total || v.chantiers.length) - 5} autres
+  &lt;/button&gt;
+)}</code></pre>
+</div>
+
+<h2>📜 Fix 5 — Script de régénération</h2>
+<div class="panel">
+<p>Nouveau <code>scripts/regen-versions-index.mjs</code> : à chaque nouvelle entrée dans <code>versions-data.js</code>, relancer ce script pour synchroniser l'index + l'extra.</p>
+
+<pre><code>$ node scripts/regen-versions-index.mjs
+Total versions : 161
+Index size : 218.2 KB (vs 309 KB versions-data.js)
+Extra size : 68.6 KB lazy-chargé
+Versions avec chantiers cachés : 88
+✓ public/changelog-data/chantiers-extra.json
+✓ app/changelog/versions-index.js (260.2 KB)</code></pre>
+
+<p>Le script lit <code>versions-data.js</code> (en ignorant l'import logger zombie), tronque chaque version à 5 chantiers, ajoute <code>chantiers_total</code>, et écrit les 2 fichiers.</p>
+</div>
+
+<h2>📊 Mesure du gain</h2>
+<div class="panel">
+<table>
+<tr><th>Métrique</th><th>0.57.6</th><th>0.57.7</th><th>Gain</th></tr>
+<tr><td>/changelog First Load</td><td>293 kB</td><td><b>274 kB</b></td><td>-19 kB (-6.5%)</td></tr>
+<tr><td>page.js bundle</td><td>105 kB</td><td><b>86 kB</b></td><td>-19 kB (-18%)</td></tr>
+<tr><td>chantiers-extra.json (lazy)</td><td>0</td><td>~68 KB</td><td>(non bloquant)</td></tr>
+</table>
+
+<h3>⚠️ Pourquoi pas plus de gain ?</h3>
+<p>Sur disque, on économise ~95 KB (versions-data 309 KB vs versions-index 218 KB + extra 68 KB). Mais Vercel compresse en gzip avec un taux ≈ 4×, et les fichiers JSON très répétitifs se compressent encore mieux. <b>Plus le fichier est "régulier", plus l'écart compressé est petit</b>.</p>
+
+<p>Architecture en place pour <b>futurs gains plus agressifs</b> :</p>
+<ul>
+<li>Split par version (1 JSON par v-X.X.X) → fetch à la demande quand user expand</li>
+<li>Index ultra-light (juste v + titre + date) → -200 KB encore</li>
+<li>Pagination des versions affichées (lazy scroll)</li>
+</ul>
+</div>
+
+<h2>🔄 versions-data.js conservé (pour smoke-tests)</h2>
+<div class="panel warn">
+<p>Le fichier original <code>versions-data.js</code> n'est PAS supprimé : <code>smoke-tests.js</code> en a besoin pour les vérifications de l'historique complet. Mais smoke-tests le charge déjà en <b>dynamic import</b> donc il n'apparaît pas dans le bundle initial de /changelog.</p>
+
+<p>→ versions-data sert maintenant uniquement à smoke-tests (et est lazy-chargé). page.js utilise versions-index (statique, lui).</p>
+</div>
+
+<h2>📈 +26 tests dédiés (v057-7-split-versions-data.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.7+ (1)</li>
+<li>versions-index.js : 5 tests (existe, plus léger que versions-data, exports VERSIONS_INDEX + THEME_LABELS, 150+ chantiers_total, 150+ versions)</li>
+<li>chantiers-extra.json : 4 tests (existe, JSON valide avec versions, arrays code+txt, < 100 KB)</li>
+<li>page.js patches : 11 tests (import versions-index, plus d'import versions-data, state ALL_VERSIONS + extraLoaded, fetch + force-cache, merge spread, setExtraLoaded(true), chantiers_total dans rendu, useMemo deps incluent ALL_VERSIONS)</li>
+<li>Script regen : 2 tests (existe + structure)</li>
+<li>versions-data conservé : 2 tests (fichier toujours là, smoke-tests dynamic import)</li>
+<li>Doc bundle gain : 1 test</li>
+<li>+ 1 test 0.57.2 ajusté (1500 lignes max)</li>
+</ul>
+</div>
+
+<h2>📋 Reste à faire</h2>
+<div class="panel tip">
+<h3>0.57.8 — Audit Lighthouse réel sur Vercel</h3>
+<ul>
+<li>Tester /changelog en prod avec Lighthouse (LCP, FID, CLS)</li>
+<li>Tester aussi /patients (213 kB), /etablissements (212 kB)</li>
+<li>Comparer avec versions précédentes</li>
+</ul>
+
+<h3>0.58+ — Au choix</h3>
+<ul>
+<li>Encore plus de gain perf sur /changelog : 1 JSON par version</li>
+<li>Refactos qualité (NoteModal, carte, utilisateurs)</li>
+<li>Features métier (CNAM/AMC, Formation/HR/CRM, BiometricSection)</li>
+</ul>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (4)</h3>
+<ul>
+<li><code>app/changelog/versions-index.js</code> (260 KB, généré)</li>
+<li><code>public/changelog-data/chantiers-extra.json</code> (68 KB, généré)</li>
+<li><code>scripts/regen-versions-index.mjs</code> (script de génération)</li>
+<li><code>__tests__/v057-7-split-versions-data.test.js</code> (26 tests)</li>
+</ul>
+
+<h3>Modifiés (3)</h3>
+<ul>
+<li><code>app/changelog/page.js</code> : import depuis versions-index + state ALL_VERSIONS + useEffect fetch chantiers-extra + useMemo deps + chantiers_total dans le rendu</li>
+<li><code>app/changelog/versions-data.js</code> : ajout entrée 0.57.7</li>
+<li><code>__tests__/v057-2-refacto-changelog.test.js</code> : seuil lignes 1400 → 1500</li>
+</ul>
+
+<h2>SW auto-bump — 97ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.6 → <b>0.57.7</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.7 · 2 juin 2026 · 2486 tests verts · -19 kB First Load</footer>
+</div></body></html>

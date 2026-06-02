@@ -12,6 +12,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
+import { logger } from "../lib/logger";
 
 export default function MesValidationsEnAttente({ auth }) {
   const supabase = createClient();
@@ -27,30 +28,36 @@ export default function MesValidationsEnAttente({ auth }) {
       return;
     }
     (async () => {
-      // 1) Achats à valider en première lecture
-      const { data: prem } = await supabase
-        .from("achats")
-        .select("id, numero, fournisseur, motif, budget_estime, statut, valideur_id, seuil_double_validation, created_at, demandeur_id")
-        .eq("structure_id", auth.structureId)
-        .in("statut", ["À valider", "En attente"])
-        .order("created_at", { ascending: true });
+      try {
+        // 1) Achats à valider en première lecture
+        const { data: prem } = await supabase
+          .from("achats")
+          .select("id, numero, fournisseur, motif, budget_estime, statut, valideur_id, seuil_double_validation, created_at, demandeur_id")
+          .eq("structure_id", auth.structureId)
+          .in("statut", ["À valider", "En attente"])
+          .order("created_at", { ascending: true });
 
-      // 2) Achats en attente de 2nde validation (et l'user n'est pas le 1er valideur)
-      const { data: deux } = await supabase
-        .from("achats")
-        .select("id, numero, fournisseur, motif, budget_estime, statut, valideur_id, seuil_double_validation, created_at, demandeur_id")
-        .eq("structure_id", auth.structureId)
-        .eq("statut", "Validée (1/2)")
-        .neq("valideur_id", auth.user.id)
-        .order("created_at", { ascending: true });
+        // 2) Achats en attente de 2nde validation (et l'user n'est pas le 1er valideur)
+        const { data: deux } = await supabase
+          .from("achats")
+          .select("id, numero, fournisseur, motif, budget_estime, statut, valideur_id, seuil_double_validation, created_at, demandeur_id")
+          .eq("structure_id", auth.structureId)
+          .eq("statut", "Validée (1/2)")
+          .neq("valideur_id", auth.user.id)
+          .order("created_at", { ascending: true });
 
-      // Marquer chaque item avec son étape
-      const merged = [
-        ...(prem || []).map(a => ({ ...a, etape: "1ère validation" })),
-        ...(deux || []).map(a => ({ ...a, etape: "2nde validation" })),
-      ];
-      setItems(merged);
-      setLoading(false);
+        // Marquer chaque item avec son étape
+        const merged = [
+          ...(prem || []).map(a => ({ ...a, etape: "1ère validation" })),
+          ...(deux || []).map(a => ({ ...a, etape: "2nde validation" })),
+        ];
+        setItems(merged);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[MesValidationsEnAttente] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth?.ready, auth?.user?.id, auth?.structureId, isManager]);
 

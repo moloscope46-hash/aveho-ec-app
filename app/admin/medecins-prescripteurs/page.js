@@ -16,6 +16,7 @@ import { useCart } from "../../useCart";
 import ContactActions from "../../ContactActions";
 import RppsVerifyBadge from "../../RppsVerifyBadge";
 import { PageHead, Panel, StateMsg } from "../../ui";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";
 
 export default function MedecinsPrescripteursPage() {
   const supabase = createClient();
@@ -56,7 +57,7 @@ export default function MedecinsPrescripteursPage() {
     }
     setVerifyingId(m.id);
     try {
-      const res = await fetch("/api/prescriptions/verify-rpps", {
+      const res = await fetchWithAuth("/api/prescriptions/verify-rpps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

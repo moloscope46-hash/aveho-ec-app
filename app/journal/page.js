@@ -8,7 +8,7 @@ import { logger } from "../../lib/logger";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
-import { fmtDate } from "../../lib/format";
+// 0.57.10 : imports retirés (fmtDate non utilisés)
 
 const COULEUR_ACTION = {
   creer: "#5aa05a", modifier: "#185FA5", supprimer: "#e35d5b",

@@ -6,7 +6,9 @@
 //  GET /api/mutuelles?amc=25992142 → recherche par n° AMC
 // =============================================================
 
-import { createClient } from "@supabase/supabase-js";
+// 0.57.10 : imports retirés (createClient non utilisés)
+
+import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +25,17 @@ export async function GET(req) {
   }
 
   try {
-    const authHeader = req.headers.get("authorization") || "";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // 0.57.4 : auth + rate limit obligatoire
+
+    const authCheck = await requireAuth(req);
+
+    if (!authCheck.ok) return authCheck.response;
+
+    const { user, supabase } = authCheck;
+
+    const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+    if (!rate.ok) return rate.response;
 
     if (amc) {
       const { data, error } = await supabase
@@ -66,10 +75,22 @@ export async function POST(req) {
     return Response.json({ ok: false, error: "raison_sociale requise" }, { status: 400 });
   }
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   // 0.56.12 : mapping vers le bon nom de colonne (la table a 'raison_sociale')
   const payload = {
@@ -114,10 +135,22 @@ export async function PUT(req) {
 
   if (!body.id) return Response.json({ ok: false, error: "id requis" }, { status: 400 });
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   const { id, nom, code_postal, type, ...rest } = body;
 
@@ -146,10 +179,22 @@ export async function DELETE(req) {
   const id = searchParams.get("id");
   if (!id) return Response.json({ ok: false, error: "id requis" }, { status: 400 });
 
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
+  // 0.57.4 : auth + rate limit obligatoire
+
+
+  const authCheck = await requireAuth(req);
+
+
+  if (!authCheck.ok) return authCheck.response;
+
+
+  const { user, supabase } = authCheck;
+
+
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+
+
+  if (!rate.ok) return rate.response;
 
   const { error } = await supabase.from("mutuelles").delete().eq("id", id);
   if (error) return Response.json({ ok: false, error: error.message }, { status: 200 });

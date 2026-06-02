@@ -1,6 +1,6 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.56.22-alpha",
+  "version": "0.57.15-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,22 +11,32 @@
     "prebuild": "node scripts/sync-sw-version.js",
     "sync-sw": "node scripts/sync-sw-version.js",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:visual": "playwright test tests/e2e/visual-regression.spec.js",
+    "test:visual:update": "playwright test tests/e2e/visual-regression.spec.js --update-snapshots"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.0",
-    "next": "^14.2.35",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
+    "next": "^15.5.19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "leaflet": "^1.9.4",
     "@tabler/icons-webfont": "^2.47.0",
-    "xlsx": "^0.18.5",
     "jszip": "^3.10.1",
     "html5-qrcode": "^2.3.8"
   },
   "devDependencies": {
     "vitest": "^4.1.8",
     "@playwright/test": "^1.48.0"
-  }
+  },
+  "browserslist": [
+    "last 2 Chrome major versions",
+    "last 2 Firefox major versions",
+    "last 2 Safari major versions",
+    "last 2 Edge major versions",
+    "not dead",
+    "not IE 11",
+    "not op_mini all"
+  ]
 }

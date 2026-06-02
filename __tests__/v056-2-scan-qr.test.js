@@ -201,6 +201,6 @@ describe("0.56.2 - package.json a html5-qrcode", () => {
 
   it("Version sur lignée 0.56.x", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
-    expect(pkg.version).toMatch(/^0\.56\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.(5[6-9]|[6-9]\d)\.\d+-alpha$/);
   });
 });

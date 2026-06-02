@@ -9,6 +9,8 @@
 //  retourne un diagnostic (match exact / divergences / non trouvé).
 // =============================================================
 
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
 
@@ -25,6 +27,15 @@ function similar(a, b) {
 }
 
 export async function POST(req) {
+  // 0.57.4 : auth + rate limit obligatoire (même si le route fait
+  // juste un fetch vers /api/rpps qui lui aussi check l'auth, on
+  // veut un 401 immédiat sans payer le coût du parsing du body)
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 30, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   let body;
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }

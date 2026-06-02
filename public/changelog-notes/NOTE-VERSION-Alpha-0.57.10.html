@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.10 — Refacto qualité</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#5aa05a 40%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dff0d6;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#dff0d6;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#dff0d6}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#dff5e0);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.blue{background:#e8f0f8;border-color:#bfd7ea}.kpi.blue .kpi-val{color:#185FA5}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — REFACTO QUALITÉ</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.10 — NoteModal extrait + 50 fichiers nettoyés<small>page.js : 1413 → 1070 lignes (-24%) · 69 imports zombies retirés</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.10-alpha</code></span>
+<span><b>Tests :</b> 2566 verts (+19)</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 3 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">-343</span>
+<span class="kpi-lbl">lignes dans page.js</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">69</span>
+<span class="kpi-lbl">imports zombies retirés</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">50</span>
+<span class="kpi-lbl">fichiers nettoyés</span>
+</div>
+</div>
+
+<h2>📦 Fix 1 — Extraction NoteModal (-343 lignes page.js)</h2>
+<div class="panel">
+<p>La modale qui affiche les notes HTML d'une version (avec highlight des mots-clés et navigation F3/n/p) faisait ~250 lignes de JSX + 2 useEffects + 5 fonctions helpers, tout dans <code>page.js</code>. Extraction en 2 fichiers :</p>
+
+<h3>app/changelog/NoteModal.js (Client Component)</h3>
+<ul>
+<li>State interne contrôlé via props { noteModal, setNoteModal, onClose }</li>
+<li>useEffect scroll auto vers le match courant (requestAnimationFrame double pour pas reflow)</li>
+<li>useEffect raccourcis Escape (ferme) + F3 / n (suivant) + Shift-F3 / p (précédent)</li>
+<li>Style navBtn défini localement</li>
+<li>Rendu JSX complet : header avec couleur par kind, navigation matches, bandeau search, contenu HTML scopé, bouton télécharger</li>
+<li>Lazy-loadé depuis page.js via <code>next/dynamic({ ssr: false })</code></li>
+</ul>
+
+<h3>app/changelog/lib/note-helpers.js (helpers purs)</h3>
+<ul>
+<li><code>STOPWORDS_FR</code> : Set de 70+ mots vides français</li>
+<li><code>scopeHtml(fullHtml)</code> : préfixe <code>.cl-note-scope</code> sur les sélecteurs CSS de la note pour ne pas écraser la page parent</li>
+<li><code>extractKeywords(text)</code> : tokenise + filtre stopwords + garde mots ≥4 chars + versions + acronymes</li>
+<li><code>highlightInHtml(html, keywords)</code> : tokenise alternativement les tags et le texte pour éviter de matcher dans les attributs, injecte des <code>&lt;mark class="cl-match"&gt;</code></li>
+<li><code>escapeRegex(s)</code> : échappe les caractères spéciaux d'un mot-clé</li>
+</ul>
+
+<h3>page.js (réduit)</h3>
+<p><code>fetchNoteHtml()</code> + <code>openNote()</code> restent dans page.js (utilisent <code>setNoteModal</code> du state local + <code>noteCacheRef</code>). Mais les helpers et le JSX sont externalisés.</p>
+
+<pre><code>// Avant 0.57.10
+// page.js — 1413 lignes
+// 200+ lignes de helpers + 2 useEffects + 200 lignes JSX
+
+// Après 0.57.10
+// page.js — 1070 lignes (-24%)
+import { scopeHtml, extractKeywords, highlightInHtml } from "./lib/note-helpers";
+const NoteModal = dynamic(() => import("./NoteModal"), { ssr: false });
+
+// JSX :
+&lt;NoteModal
+  noteModal={noteModal}
+  setNoteModal={setNoteModal}
+  onClose={() => setNoteModal(null)}
+/&gt;</code></pre>
+</div>
+
+<h2>🧹 Fix 2 — Nettoyage 69 imports zombies dans 50 fichiers</h2>
+<div class="panel">
+<p>Un script Python a audité tous les <code>import { X, Y } from "..."</code> dans app/ et lib/, vérifié que chaque nom est utilisé ailleurs dans le fichier (via word boundary regex), et retiré les noms non utilisés.</p>
+
+<h3>Quelques exemples de zombies trouvés</h3>
+<table>
+<tr><th>Fichier</th><th>Import inutilisé</th></tr>
+<tr><td><code>dialogs.js</code></td><td><code>useRef</code></td></tr>
+<tr><td><code>BiometricOptInModal.js</code></td><td><code>METHOD_ICON</code>, <code>METHOD_COLOR</code></td></tr>
+<tr><td><code>ConflictResolver.js</code></td><td><code>logger</code></td></tr>
+<tr><td><code>admin/doublons-forces/page.js</code></td><td><code>StateMsg</code></td></tr>
+<tr><td><code>admin/prescriptions-archive/page.js</code></td><td><code>StateMsg</code></td></tr>
+<tr><td><code>admin/rpps-dump/page.js</code></td><td><code>StateMsg</code></td></tr>
+<tr><td><code>admin/mail-diagnostic/page.js</code></td><td><code>StateMsg</code></td></tr>
+<tr><td><code>materiel/[id]/page.js</code></td><td><code>PageHead</code></td></tr>
+<tr><td><code>partenaires-rpps/page.js</code></td><td><code>FilterBar</code></td></tr>
+<tr><td><code>depots/page.js</code></td><td><code>Panel</code>, <code>StateMsg</code></td></tr>
+<tr><td><code>statistiques-interventions/page.js</code></td><td><code>BarChart</code></td></tr>
+</table>
+
+<h3>Logique du script</h3>
+<pre><code>// Pour chaque fichier .js dans app/ et lib/ :
+for each fichier:
+  parse les imports `import { X, Y, Z } from "..."`
+  for each nom (X, Y, Z) dans l'import:
+    rest = fichier sans cette ligne d'import
+    if /\bnom\b/.test(rest):  # word boundary
+      keep nom
+    else:
+      remove nom
+  
+  if all names removed:
+    remove l'import entièrement (remplace par commentaire)
+  else if some removed:
+    reconstruct l'import avec uniquement les noms gardés</code></pre>
+
+<p><b>Résultat :</b> 50 fichiers modifiés. Audit final : 0 import zombie restant. Build OK + tests inchangés.</p>
+</div>
+
+<h2>📊 Mesure du gain</h2>
+<div class="panel hero">
+<table>
+<tr><th>Métrique</th><th>Avant 0.57.10</th><th>Après 0.57.10</th><th>Gain</th></tr>
+<tr><td>app/changelog/page.js lignes</td><td>1413</td><td>1070</td><td><b>-343 (-24%)</b></td></tr>
+<tr><td>Imports zombies dans app/</td><td>69</td><td>0</td><td><b>-100%</b></td></tr>
+<tr><td>Fichiers modifiés (nettoyage)</td><td>—</td><td>50</td><td>—</td></tr>
+<tr><td>Tests Vitest</td><td>2547</td><td>2566</td><td>+19</td></tr>
+<tr><td>Bundle First Load /changelog</td><td>275 kB</td><td>275 kB</td><td>stable</td></tr>
+</table>
+
+<p>Le bundle ne change pas car NoteModal était déjà chargé statiquement et reste fonctionnellement identique. <b>Le gain est sur la lisibilité, la maintenabilité et la réutilisabilité</b> :</p>
+<ul>
+<li>page.js plus court → plus facile à comprendre + naviguer</li>
+<li>NoteModal autonome → testable indépendamment, réutilisable ailleurs</li>
+<li>note-helpers.js → fonctions pures testables séparément</li>
+<li>0 import zombie → audit propre, pas de "dead code" trompeur</li>
+</ul>
+</div>
+
+<h2>📈 +19 tests dédiés (v057-10-refacto-notemodal.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.10+ (1)</li>
+<li>NoteModal component : 7 tests (fichier Client Component, export default, props { noteModal, setNoteModal, onClose }, 2 useEffect, Escape/F3/n/p, navBtn défini localement, return null si null)</li>
+<li>note-helpers.js : 3 tests (fichier existe, exports complets, STOPWORDS_FR Set)</li>
+<li>page.js refacto : 5 tests (import helpers, import dynamic NoteModal, plus de helpers locaux, plus de useEffect locaux, &lt; 1100 lignes)</li>
+<li>0 imports zombies : 2 tests (page.js + NoteModal.js)</li>
+</ul>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (3)</h3>
+<ul>
+<li><code>app/changelog/NoteModal.js</code> (~250 lignes — Client Component autonome avec 2 useEffects)</li>
+<li><code>app/changelog/lib/note-helpers.js</code> (~110 lignes — 5 fonctions pures + STOPWORDS_FR)</li>
+<li><code>__tests__/v057-10-refacto-notemodal.test.js</code> (19 tests)</li>
+</ul>
+
+<h3>Modifiés (51)</h3>
+<ul>
+<li><code>app/changelog/page.js</code> : import helpers + dynamic NoteModal + retrait des 5 helpers locaux + retrait des 2 useEffects locaux + remplacement du JSX 200+ lignes par <code>&lt;NoteModal ... /&gt;</code></li>
+<li><b>50 fichiers</b> dans app/ avec imports zombies retirés (BiometricOptInModal, ConflictResolver, dialogs, materiel/[id], statistiques-interventions, et 45 autres)</li>
+</ul>
+
+<h2>📋 Reste à faire</h2>
+<div class="panel ok">
+<h3>Refactos qualité encore possibles (versions ultérieures)</h3>
+<ul>
+<li>app/carte/page.js (1483 lignes) — extraction des layers Leaflet + filtres</li>
+<li>app/utilisateurs/page.js (1400 lignes) — extraction des modales et tableaux</li>
+<li>app/maintenance/page.js (1016 lignes)</li>
+<li>app/statistiques-activite/page.js (999 lignes)</li>
+<li>app/parametres-rgpd/page.js (963 lignes) — extraction des éditeurs de templates</li>
+</ul>
+
+<h3>Features métier</h3>
+<ul>
+<li>Import auto adresses CNAM/AMC</li>
+<li>Module Formation / HR / CRM</li>
+<li>Refonte BiometricSection profil</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 100ème consécutif !</h2>
+<p>0.52.1 → ... → 0.57.9 → <b>0.57.10</b> ✓</p>
+<p>🎉 <b>Centième bump consécutif</b> du Service Worker depuis le système d'auto-bump !</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.10 · 2 juin 2026 · 2566 tests verts · -343 lignes refacto + 69 zombies retirés</footer>
+</div></body></html>

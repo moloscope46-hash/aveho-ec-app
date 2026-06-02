@@ -14,6 +14,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+import { logger } from "../../../lib/logger";
 
 export default function ScanBulletinSituationPage() {
   const supabase = createClient();
@@ -36,9 +37,14 @@ export default function ScanBulletinSituationPage() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const { count: nbC } = await supabase.from("caisses_assurance_maladie").select("*", { count: "exact", head: true });
-      const { count: nbM } = await supabase.from("mutuelles").select("*", { count: "exact", head: true });
-      setStats({ caisses: nbC || 0, mutuelles: nbM || 0 });
+      try {
+        const { count: nbC } = await supabase.from("caisses_assurance_maladie").select("*", { count: "exact", head: true });
+        const { count: nbM } = await supabase.from("mutuelles").select("*", { count: "exact", head: true });
+        setStats({ caisses: nbC || 0, mutuelles: nbM || 0 });
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[ScanBS] load failed:", e);
+      }
     })();
   }, [auth.ready]);
 

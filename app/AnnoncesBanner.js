@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
 import { useAuth } from "../lib/useAuth";
+import { logger } from "../lib/logger";
 
 const NIVEAUX = {
   info: { 
@@ -80,27 +81,32 @@ export default function AnnoncesBanner() {
   useEffect(() => {
     if (!auth?.ready || !auth.user?.id || !auth.structureId) return;
     (async () => {
-      const now = new Date().toISOString();
-      // Alpha 0.50.0 : annonces. Alpha 0.52.5 : filtre par établissement courant
-      const { data: ans } = await supabase
-        .from("annonces")
-        .select("*")
-        .eq("structure_id", auth.structureId)
-        .eq("active", true)
-        .lte("date_debut", now)
-        .or(`date_fin.is.null,date_fin.gt.${now}`)
-        // Annonce globale (etablissement_id null) OU ciblée sur l'étab courant
-        .or(`etablissement_id.is.null${auth.etabId ? `,etablissement_id.eq.${auth.etabId}` : ""}`)
-        .order("niveau", { ascending: false })
-        .order("date_debut", { ascending: false });
+      try {
+        const now = new Date().toISOString();
+        // Alpha 0.50.0 : annonces. Alpha 0.52.5 : filtre par établissement courant
+        const { data: ans } = await supabase
+          .from("annonces")
+          .select("*")
+          .eq("structure_id", auth.structureId)
+          .eq("active", true)
+          .lte("date_debut", now)
+          .or(`date_fin.is.null,date_fin.gt.${now}`)
+          // Annonce globale (etablissement_id null) OU ciblée sur l'étab courant
+          .or(`etablissement_id.is.null${auth.etabId ? `,etablissement_id.eq.${auth.etabId}` : ""}`)
+          .order("niveau", { ascending: false })
+          .order("date_debut", { ascending: false });
 
-      const { data: dis } = await supabase
-        .from("annonces_dismissees")
-        .select("annonce_id")
-        .eq("user_id", auth.user.id);
+        const { data: dis } = await supabase
+          .from("annonces_dismissees")
+          .select("annonce_id")
+          .eq("user_id", auth.user.id);
 
-      setAnnonces(ans || []);
-      setDismissedIds(new Set((dis || []).map(d => d.annonce_id)));
+        setAnnonces(ans || []);
+        setDismissedIds(new Set((dis || []).map(d => d.annonce_id)));
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[AnnoncesBanner] load failed:", e);
+      }
     })();
   }, [auth?.ready, auth?.user?.id, auth?.structureId, auth?.etabId]);
 

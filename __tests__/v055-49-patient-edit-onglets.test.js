@@ -1,14 +1,34 @@
 // =============================================================
-//  Tests unitaires — 0.55.49
+//  Tests unitaires — 0.55.49 (mis à jour en 0.57.1 pour refacto)
 //  Nouvelle page fiche patient édition + fix recherche libre carte
 // =============================================================
 import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
+// 0.57.1 : le code de la page est désormais éclaté entre page.js et
+// tabs/*.js. On concatène tous les fichiers du dossier edit/ pour
+// que les vérifications continuent à fonctionner.
+function readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  function walk(dir) {
+    let out = "";
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        out += walk(full);
+      } else if (entry.name.endsWith(".js") || entry.name.endsWith(".jsx")) {
+        out += "\n" + fs.readFileSync(full, "utf-8");
+      }
+    }
+    return out;
+  }
+  return walk(baseDir);
+}
+
 describe("0.55.49 - Page édition patient avec onglets", () => {
   const editPath = "app/patient/[id]/edit/page.js";
-  const src = fs.readFileSync(path.resolve(process.cwd(), editPath), "utf-8");
+  const src = readAllEditFiles();
 
   it("Page existe", () => {
     expect(fs.existsSync(path.resolve(process.cwd(), editPath))).toBe(true);

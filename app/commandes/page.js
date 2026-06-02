@@ -9,6 +9,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Statut, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
+import { logger } from "../../lib/logger";
 
 export default function Commandes() {
   const supabase = createClient();
@@ -23,11 +24,17 @@ export default function Commandes() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      let q = supabase.from("commandes").select("*, magasins(nom)").order("created_at", { ascending: false });
-      if (auth.etabId) q = q.eq("etablissement_id", auth.etabId);
-      const { data } = await q;
-      setCmds(data || []);
-      setLoading(false);
+      try {
+        let q = supabase.from("commandes").select("*, magasins(nom)").order("created_at", { ascending: false });
+        if (auth.etabId) q = q.eq("etablissement_id", auth.etabId);
+        const { data } = await q;
+        setCmds(data || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Commandes] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready, auth.etabId]);
 

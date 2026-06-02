@@ -12,8 +12,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg, Modal, Btn, EntityIcon, Badge } from "../../ui";
-
+import { PageHead, Panel, StateMsg, Modal, Btn, EntityIcon} from "../../ui";
 import { dialogs } from "../../dialogs";
 export default function EditionEtablissement() {
   const supabase = createClient();

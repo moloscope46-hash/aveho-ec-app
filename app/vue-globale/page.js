@@ -10,6 +10,7 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import EtabPhoto from "../components/EtabPhoto";
+import { logger } from "../../lib/logger";
 
 export default function VueGlobale() {
   const supabase = createClient();
@@ -25,68 +26,74 @@ export default function VueGlobale() {
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
-      // 0.55.31 : charge depuis 2 tables séparées
-      // Compat : si etablissements_partenaires n'existe pas encore, fallback sur est_partenaire
-      const [resMine, resPartners, pa, ma, di, cm] = await Promise.all([
-        supabase
-          .from("etablissements")
-          .select("id,nom,type,ville,actif,est_partenaire")
-          .eq("structure_id", auth.structureId)
-          .order("nom"),
-        supabase
-          .from("etablissements_partenaires")
-          .select("id,nom,type,ville,actif,archive,link_to_etablissement_id,type_relation")
-          .eq("structure_id", auth.structureId)
-          .eq("archive", false)
-          .order("nom"),
-        supabase.from("patients").select("id,etablissement_id"),
-        supabase.from("materiels").select("id,etablissement_id,etat"),
-        supabase.from("interventions").select("id,etablissement_id,statut"),
-        supabase.from("commandes").select("id,etablissement_id,total,statut"),
-      ]);
+      try {
+        // 0.55.31 : charge depuis 2 tables séparées
+        // Compat : si etablissements_partenaires n'existe pas encore, fallback sur est_partenaire
+        const [resMine, resPartners, pa, ma, di, cm] = await Promise.all([
+          supabase
+            .from("etablissements")
+            .select("id,nom,type,ville,actif,est_partenaire")
+            .eq("structure_id", auth.structureId)
+            .order("nom"),
+          supabase
+            .from("etablissements_partenaires")
+            .select("id,nom,type,ville,actif,archive,link_to_etablissement_id,type_relation")
+            .eq("structure_id", auth.structureId)
+            .eq("archive", false)
+            .order("nom"),
+          supabase.from("patients").select("id,etablissement_id"),
+          supabase.from("materiels").select("id,etablissement_id,etat"),
+          supabase.from("interventions").select("id,etablissement_id,statut"),
+          supabase.from("commandes").select("id,etablissement_id,total,statut"),
+        ]);
 
-      // 1) Mes établissements (non-partenaires)
-      const mineEtabs = (resMine.data || []).filter((e) => !e.est_partenaire);
-      const mineRows = mineEtabs.map((e) => ({
-        ...e,
-        est_partenaire: false,
-        source: "mine",
-        patients: (pa.data || []).filter((x) => x.etablissement_id === e.id).length,
-        materiels: (ma.data || []).filter((x) => x.etablissement_id === e.id).length,
-        di: (di.data || []).filter((x) => x.etablissement_id === e.id && x.statut !== "Clôturée").length,
-        commandes: (cm.data || []).filter((x) => x.etablissement_id === e.id).length,
-        aRegler: (cm.data || []).filter((x) => x.etablissement_id === e.id && x.statut !== "Livrée").reduce((s, c) => s + Number(c.total || 0), 0),
-      }));
-
-      // 2) Partenaires : nouvelle table dédiée + fallback legacy est_partenaire=true
-      const partnersFromNewTable = (resPartners.data || []).map((p) => ({
-        ...p,
-        est_partenaire: true,
-        source: "partner_table",
-        // Si link_to_etablissement_id existe, on peut chercher les stats agrégées
-        patients: p.link_to_etablissement_id ? (pa.data || []).filter((x) => x.etablissement_id === p.link_to_etablissement_id).length : 0,
-        materiels: p.link_to_etablissement_id ? (ma.data || []).filter((x) => x.etablissement_id === p.link_to_etablissement_id).length : 0,
-        di: 0,
-        commandes: 0,
-        aRegler: 0,
-      }));
-
-      // Legacy : partenaires encore dans etablissements (avant migration)
-      const legacyPartnerIds = partnersFromNewTable.map((p) => p.link_to_etablissement_id).filter(Boolean);
-      const legacyPartners = (resMine.data || [])
-        .filter((e) => e.est_partenaire && !legacyPartnerIds.includes(e.id))
-        .map((e) => ({
+        // 1) Mes établissements (non-partenaires)
+        const mineEtabs = (resMine.data || []).filter((e) => !e.est_partenaire);
+        const mineRows = mineEtabs.map((e) => ({
           ...e,
-          source: "partner_legacy",
-          patients: 0,
-          materiels: 0,
+          est_partenaire: false,
+          source: "mine",
+          patients: (pa.data || []).filter((x) => x.etablissement_id === e.id).length,
+          materiels: (ma.data || []).filter((x) => x.etablissement_id === e.id).length,
+          di: (di.data || []).filter((x) => x.etablissement_id === e.id && x.statut !== "Clôturée").length,
+          commandes: (cm.data || []).filter((x) => x.etablissement_id === e.id).length,
+          aRegler: (cm.data || []).filter((x) => x.etablissement_id === e.id && x.statut !== "Livrée").reduce((s, c) => s + Number(c.total || 0), 0),
+        }));
+
+        // 2) Partenaires : nouvelle table dédiée + fallback legacy est_partenaire=true
+        const partnersFromNewTable = (resPartners.data || []).map((p) => ({
+          ...p,
+          est_partenaire: true,
+          source: "partner_table",
+          // Si link_to_etablissement_id existe, on peut chercher les stats agrégées
+          patients: p.link_to_etablissement_id ? (pa.data || []).filter((x) => x.etablissement_id === p.link_to_etablissement_id).length : 0,
+          materiels: p.link_to_etablissement_id ? (ma.data || []).filter((x) => x.etablissement_id === p.link_to_etablissement_id).length : 0,
           di: 0,
           commandes: 0,
           aRegler: 0,
         }));
 
-      setRows([...mineRows, ...partnersFromNewTable, ...legacyPartners]);
-      setLoading(false);
+        // Legacy : partenaires encore dans etablissements (avant migration)
+        const legacyPartnerIds = partnersFromNewTable.map((p) => p.link_to_etablissement_id).filter(Boolean);
+        const legacyPartners = (resMine.data || [])
+          .filter((e) => e.est_partenaire && !legacyPartnerIds.includes(e.id))
+          .map((e) => ({
+            ...e,
+            source: "partner_legacy",
+            patients: 0,
+            materiels: 0,
+            di: 0,
+            commandes: 0,
+            aRegler: 0,
+          }));
+
+        setRows([...mineRows, ...partnersFromNewTable, ...legacyPartners]);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[VueGlobale] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready]);
 

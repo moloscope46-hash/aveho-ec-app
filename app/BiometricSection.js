@@ -12,21 +12,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
 import { logger } from "../lib/logger";
 import {
-  isWebAuthnSupported,
-  isPlatformAuthenticatorAvailable,
-  isMobileDevice,
-  isLikelyFaceCapable,
-  getAvailableMethods,
-  listMyCredentials,
-  registerBiometric,
-  revokeCredential,
-  getDeviceName,
-  clearOptInState,
-  METHOD_LABEL,
-  METHOD_ICON,
-  METHOD_COLOR,
-} from "../lib/webauthn";
-
+  isWebAuthnSupported, isPlatformAuthenticatorAvailable, isMobileDevice, isLikelyFaceCapable, getAvailableMethods, listMyCredentials, registerBiometric, revokeCredential, getDeviceName, clearOptInState, METHOD_LABEL, METHOD_ICON, METHOD_COLOR} from "../lib/webauthn";
 export default function BiometricSection({ auth, methodFilter = null }) {
   const supabase = createClient();
   const [supported, setSupported] = useState(false);

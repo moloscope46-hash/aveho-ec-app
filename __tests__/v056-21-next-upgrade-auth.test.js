@@ -7,13 +7,14 @@ import fs from "fs";
 import path from "path";
 
 describe("0.56.21 - Next.js upgraded to 14.2.35+", () => {
-  it("package.json next >= 14.2.35", () => {
+  it("package.json next >= 14.2.35 ou Next 15+", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
     const v = pkg.dependencies.next.replace(/^[\^~]/, "");
     const [maj, min, patch] = v.split(".").map(Number);
-    expect(maj).toBe(14);
-    expect(min).toBe(2);
-    expect(patch).toBeGreaterThanOrEqual(35);
+    // 0.57.0+ : on accepte Next 15+ ou Next 14.2.35+
+    const okNext14 = maj === 14 && min === 2 && patch >= 35;
+    const okNext15plus = maj >= 15;
+    expect(okNext14 || okNext15plus).toBe(true);
   });
 });
 

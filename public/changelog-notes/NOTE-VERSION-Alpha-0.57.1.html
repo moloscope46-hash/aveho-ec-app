@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.1 — Refacto patient/edit en tabs</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:32px 32px;margin-bottom:28px;box-shadow:0 12px 32px rgba(20,33,49,.24)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#dfeaf5;font-weight:700;margin-bottom:6px}
+.logo{font-size:26px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:22px;font-weight:700;margin:10px 0 4px}h1 small{font-size:13.5px;font-weight:500;color:#dfeaf5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px;font-size:12px;color:#dfeaf5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:28px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 20px;margin:12px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12.5px}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:14px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — REFACTO PATIENT/EDIT</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.1 — Split patient/[id]/edit en tabs<small>1065 lignes → 350 + 8 fichiers tabs/*.js · meilleure maintenabilité</small></h1>
+<div class="meta">
+<span><b>Date :</b> 1er juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.1-alpha</code></span>
+<span><b>Tests :</b> 2326 verts (+15)</span>
+</div>
+</header>
+
+<h2>📊 Le résultat en chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">1065 → 350</span>
+<span class="kpi-lbl">Lignes page.js (-67%)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">8</span>
+<span class="kpi-lbl">Fichiers tabs/ créés</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2326 ✓</span>
+<span class="kpi-lbl">Tests verts</span>
+</div>
+</div>
+
+<h2>📁 Structure du dossier après refacto</h2>
+<div class="panel">
+<pre><code>app/patient/[id]/edit/
+├── page.js                  (350 lignes — coordination, state, save)
+└── tabs/
+    ├── _helpers.js          (Field, FieldSelect, Lbl, Toggle, KvBlock, FieldCheckbox)
+    ├── TabIdentite.js       (39 lignes — nom/prénom + INSEE lieu naissance)
+    ├── TabSecu.js           (110 — caisse/mutuelle + ALD/C2S/AME + droits)
+    ├── TabAdresses.js       (110 — adresses livraison via BAN)
+    ├── TabContacts.js       (42 — urgence + personne de confiance)
+    ├── TabMedecin.js        (19 — médecin traitant)
+    ├── TabPrescriptions.js  (157 — liste + upload OCR + lien fichier)
+    └── TabAudit.js          (151 — source création + OCR brut + tokens)</code></pre>
+</div>
+
+<h2>🎯 Pourquoi cette refacto</h2>
+<div class="panel">
+<h3>Avant : un mégafichier</h3>
+<ul>
+<li><b>1065 lignes</b> dans un seul fichier</li>
+<li>13 fonctions internes au même endroit : 7 Tab*, Lbl, Field, FieldSelect, Toggle, KvBlock, PrescriptionFileLink</li>
+<li>Difficile à naviguer (recherche dans le fichier longue)</li>
+<li>Difficile à tester isolément</li>
+<li>Risque de régression élevé à chaque modification</li>
+<li>Lent à charger en VSCode (linting + autocomplete)</li>
+</ul>
+
+<h3>Après : split en fichiers cohérents</h3>
+<ul>
+<li><b>page.js</b> ne fait plus que la <b>coordination</b> : state global, useEffect de chargement, fonction save(), changement d'onglet, render principal</li>
+<li>Chaque <b>tab est dans son propre fichier</b> de 19 à 250 lignes</li>
+<li>Les <b>helpers</b> communs sont dans <code>_helpers.js</code> (Field, FieldSelect, Lbl, Toggle, KvBlock, FieldCheckbox)</li>
+<li>Le code est maintenant <b>navigable, testable, maintenable</b></li>
+</ul>
+</div>
+
+<h2>🛠 Détails techniques</h2>
+<div class="panel">
+<h3>Imports dans page.js (avant → après)</h3>
+<pre><code>// Avant 0.57.1 — page.js
+import CaisseSearch from "../../../CaisseSearch";
+import MutuelleSearch from "../../../MutuelleSearch";
+import AdresseAutocomplete from "../../../AdresseAutocomplete";
+import ContactActions from "../../../ContactActions";
+
+// ... 1000+ lignes plus bas :
+// function TabIdentite(...) { ... }
+// function TabSecu(...) { ... }
+// (...) total 13 fonctions internes</code></pre>
+
+<pre><code>// Après 0.57.1 — page.js
+import TabIdentite from "./tabs/TabIdentite";
+import TabSecu from "./tabs/TabSecu";
+import TabAdresses from "./tabs/TabAdresses";
+import TabContacts from "./tabs/TabContacts";
+import TabMedecin from "./tabs/TabMedecin";
+import TabPrescriptions from "./tabs/TabPrescriptions";
+import TabAudit from "./tabs/TabAudit";
+import { Field, FieldSelect, Lbl } from "./tabs/_helpers";
+// page.js ne contient plus de définitions de tab !</code></pre>
+
+<h3>Profondeur des imports dans tabs/</h3>
+<p>Les fichiers <code>tabs/*.js</code> sont un niveau plus profond, donc les imports de composants externes deviennent :</p>
+<ul>
+<li><code>import { Panel, Btn } from "../../../../ui";</code> (4 niveaux up au lieu de 3)</li>
+<li><code>import CaisseSearch from "../../../../CaisseSearch";</code></li>
+<li><code>import { fmtDate } from "../../../../../lib/format";</code> (5 niveaux up)</li>
+</ul>
+</div>
+
+<h2>🧪 Tests adaptés</h2>
+<div class="panel">
+<p>5 tests qui lisaient directement <code>app/patient/[id]/edit/page.js</code> ont été mis à jour avec un helper <code>_readAllEditFiles()</code> qui concatène tous les <code>.js</code> du dossier :</p>
+<pre><code>function _readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  const out = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".js")) {
+        out.push(fs.readFileSync(full, "utf-8"));
+      }
+    }
+  }
+  walk(baseDir);
+  return out.join("\n");
+}</code></pre>
+
+<p>2 tests d'import (AdresseAutocomplete, ContactActions) sont devenus <b>tolérants à la profondeur</b> :</p>
+<pre><code>// Avant : test strict sur chemin exact
+expect(src).toContain('import AdresseAutocomplete from "../../../AdresseAutocomplete"');
+
+// Après : regex tolérante (3 niveaux OU 4 niveaux)
+expect(src).toMatch(/import AdresseAutocomplete from ["'](\.\.\/)+AdresseAutocomplete["']/);</code></pre>
+
+<p>Fichiers de tests adaptés : <code>v055-49</code>, <code>v055-54</code>, <code>v055-55</code>, <code>v056-1</code>, <code>v056-3</code>, <code>v056-4</code>.</p>
+</div>
+
+<h2>📈 +15 tests dédiés (v057-1-refacto-tabs.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.1+</li>
+<li>Dossier <code>tabs/</code> existe</li>
+<li>8 fichiers tabs existent et exportent quelque chose (1 test × 8 fichiers)</li>
+<li>page.js fait < 500 lignes (vs 1065 avant)</li>
+<li>page.js importe bien tous les tabs externes (7 imports vérifiés)</li>
+<li>_helpers.js expose Field, FieldSelect, Lbl, Toggle, KvBlock</li>
+<li>page.js n'a plus de function TabXxx interne (vérifié)</li>
+<li>Chaque Tab*.js fait < 250 lignes (vérifié sur les 7 tabs)</li>
+</ul>
+</div>
+
+<h2>📋 Reste à faire (versions ultérieures)</h2>
+<div class="panel tip">
+<h3>3 fichiers > 1000 lignes restent à refacto</h3>
+<table>
+<tr><th>Fichier</th><th>Lignes</th><th>Complexité</th></tr>
+<tr><td><code>app/changelog/page.js</code></td><td>1603</td><td>Élevée — JSX géant + multiples modals (note, sql, zip)</td></tr>
+<tr><td><code>app/carte/page.js</code></td><td>1483</td><td>Élevée — Leaflet + search + détails + filtres</td></tr>
+<tr><td><code>app/utilisateurs/page.js</code></td><td>1400</td><td>Moyenne — modal invitation + rôles + droits</td></tr>
+</table>
+
+<p>Ces 3 fichiers sont plus complexes que patient/edit car ils n'ont <b>pas de sous-composants déjà internes</b> — le refacto demandera de découper du JSX en composants logiques nouveaux. À planifier en versions dédiées (0.57.2 / 0.57.3 / 0.57.4) avec recette spécifique pour chaque.</p>
+</div>
+
+<h2>Fichiers créés / modifiés</h2>
+<h3>Créés (9)</h3>
+<ul>
+<li><code>app/patient/[id]/edit/tabs/_helpers.js</code> (helpers Field, FieldSelect, Lbl, Toggle, KvBlock, FieldCheckbox)</li>
+<li><code>app/patient/[id]/edit/tabs/TabIdentite.js</code></li>
+<li><code>app/patient/[id]/edit/tabs/TabSecu.js</code></li>
+<li><code>app/patient/[id]/edit/tabs/TabAdresses.js</code></li>
+<li><code>app/patient/[id]/edit/tabs/TabContacts.js</code></li>
+<li><code>app/patient/[id]/edit/tabs/TabMedecin.js</code></li>
+<li><code>app/patient/[id]/edit/tabs/TabPrescriptions.js</code> (avec PrescriptionFileLink interne)</li>
+<li><code>app/patient/[id]/edit/tabs/TabAudit.js</code></li>
+<li><code>__tests__/v057-1-refacto-tabs.test.js</code></li>
+</ul>
+<h3>Modifiés</h3>
+<ul>
+<li><code>app/patient/[id]/edit/page.js</code> : 1065 → 350 lignes, suppression de 13 fonctions internes, ajout d'imports vers tabs/*</li>
+<li>6 fichiers de tests adaptés à la nouvelle structure (_readAllEditFiles helper + regex tolérantes)</li>
+</ul>
+
+<h2>SW auto-bump — 91ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.0 → <b>0.57.1</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.1 · 1er juin 2026 · 2326 tests verts · Refacto patient/edit</footer>
+</div></body></html>

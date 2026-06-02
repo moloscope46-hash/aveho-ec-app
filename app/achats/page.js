@@ -214,10 +214,15 @@ function AchatsInner() {
         structureId: auth.structureId, 
         achat: c, 
         demandeurEmail: auth.user?.email,
-      }).then(({ sent, errors }) => {
-        if (sent > 0) logger.debug(`📧 ${sent} valideur(s) notifié(s) par email`);
-        if (errors.length > 0) logger.warn("Erreurs envoi email :", errors);
-      });
+      })
+        .then(({ sent, errors }) => {
+          if (sent > 0) logger.debug(`📧 ${sent} valideur(s) notifié(s) par email`);
+          if (errors.length > 0) logger.warn("Erreurs envoi email :", errors);
+        })
+        .catch((e) => {
+          // 0.57.5 : le try ne couvre pas la promise async qui s'exécute plus tard
+          logger.warn("notifyValideurs a échoué :", e?.message);
+        });
     } catch (e) {
       logger.warn("notifyValideurs non disponible :", e?.message);
     }

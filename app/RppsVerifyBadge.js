@@ -14,6 +14,7 @@
 // =============================================================
 
 import { useEffect, useState } from "react";
+import { fetchWithAuth } from "../lib/fetchWithAuth";
 
 export default function RppsVerifyBadge({ rpps, nomOcr, prenomOcr, specialiteOcr, onOfficialData }) {
   const [status, setStatus] = useState("idle"); // idle | loading | match | divergences | not_found | error | invalid_rpps
@@ -31,7 +32,7 @@ export default function RppsVerifyBadge({ rpps, nomOcr, prenomOcr, specialiteOcr
     setStatus("loading");
     (async () => {
       try {
-        const res = await fetch("/api/prescriptions/verify-rpps", {
+        const res = await fetchWithAuth("/api/prescriptions/verify-rpps", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

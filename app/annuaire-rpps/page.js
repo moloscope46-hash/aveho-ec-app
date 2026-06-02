@@ -34,18 +34,23 @@ export default function AnnuaireRppsPage() {
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
-      // Charge mes étabs + partenaires + rôles disponibles
-      const [resMine, resPart, resRoles] = await Promise.all([
-        supabase.from("etablissements").select("id, nom, type, ville, est_partenaire").eq("structure_id", auth.structureId),
-        supabase.from("etablissements_partenaires").select("id, nom, type, ville, type_relation").eq("structure_id", auth.structureId).eq("archive", false),
-        supabase.from("roles").select("id, nom").eq("structure_id", auth.structureId).order("nom"),
-      ]);
-      const combined = [
-        ...(resMine.data || []).filter(e => !e.est_partenaire).map(e => ({ ...e, kind: "mine" })),
-        ...(resPart.data || []).map(e => ({ ...e, kind: "partner" })),
-      ];
-      setAllEtabs(combined);
-      setRoles(resRoles.data || []);
+      try {
+        // Charge mes étabs + partenaires + rôles disponibles
+        const [resMine, resPart, resRoles] = await Promise.all([
+          supabase.from("etablissements").select("id, nom, type, ville, est_partenaire").eq("structure_id", auth.structureId),
+          supabase.from("etablissements_partenaires").select("id, nom, type, ville, type_relation").eq("structure_id", auth.structureId).eq("archive", false),
+          supabase.from("roles").select("id, nom").eq("structure_id", auth.structureId).order("nom"),
+        ]);
+        const combined = [
+          ...(resMine.data || []).filter(e => !e.est_partenaire).map(e => ({ ...e, kind: "mine" })),
+          ...(resPart.data || []).map(e => ({ ...e, kind: "partner" })),
+        ];
+        setAllEtabs(combined);
+        setRoles(resRoles.data || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[AnnuaireRpps] load failed:", e);
+      }
     })();
   }, [auth.ready, auth.structureId]);
 

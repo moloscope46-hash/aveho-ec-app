@@ -3,6 +3,7 @@
 //  /changelog — Historique complet + recherche thématique
 //  Alpha 0.52.3 — Téléchargement HTML + filtres par thème
 //  Alpha 0.55.11 — Tooltip hover : preview HTML de la note au survol
+//  Alpha 0.57.7 — Split versions-data en index léger + chantiers-extra lazy
 // =============================================================
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "../../lib/useAuth";
@@ -10,37 +11,23 @@ import { useCart } from "../useCart";
 import TopBar from "../TopBar";
 import { PageHead, Panel } from "../ui";
 import pkg from "../../package.json";
-import { ALL_VERSIONS, THEME_LABELS } from "./versions-data";
-import { VERSION_TESTS, runTestsForVersion, runAllTests } from "./smoke-tests";
+// 0.57.11 : versions-index.js ne contient plus QUE THEME_LABELS (2 KB).
+// VERSIONS_INDEX (272 KB) est lazy-fetché depuis /changelog-data/versions-index.json
+// au mount → bundle initial de page.js -269 KB ➜ -84 KB après minification gzip.
+import { THEME_LABELS } from "./versions-index";
+// 0.57.6 : VERSION_TESTS_KEYS = juste les clés (Set), léger.
+// Les vrais tests sont chargés en dynamic import quand on clique sur "Tester".
+import { VERSION_TESTS_KEYS, runTestsForVersionLazy, runAllTestsLazy } from "./smoke-tests-index";
 import { logger } from "../../lib/logger";
-import CodeViewer from "./CodeViewer";
-
-const ICONS_BY_CODE = {
-  Fix: { color: "#c0392b", label: "FIX" },
-  "🆕": { color: "#5aa05a", label: "NEW" },
-  "🎂": { color: "#7a6fb0", label: "BONUS" },
-  "•": { color: "#6c7a89", label: "•" },
-};
-
-function getCodeMeta(code) {
-  if (ICONS_BY_CODE[code]) return ICONS_BY_CODE[code];
-  if (/^[A-Z]{1,2}$/.test(code)) return { color: "#185FA5", label: code };
-  return { color: "#6c7a89", label: code };
-}
-
-function versionKey(s) {
-  const parts = s.split(".").map(Number);
-  while (parts.length < 3) parts.push(0);
-  return parts;
-}
-function compareVersions(a, b) {
-  const ka = versionKey(a);
-  const kb = versionKey(b);
-  for (let i = 0; i < 3; i++) {
-    if (ka[i] !== kb[i]) return ka[i] - kb[i];
-  }
-  return 0;
-}
+// 0.57.6 : CodeViewer et SqlModal sont lazy-loadés (chargés à la demande)
+import dynamic from "next/dynamic";
+const CodeViewer = dynamic(() => import("./CodeViewer"), { ssr: false });
+const SqlModal = dynamic(() => import("./SqlModal"), { ssr: false });
+import { getCodeMeta, compareVersions } from "./lib/helpers";
+// 0.57.10 : NoteModal extrait dans son propre Client Component (lazy)
+// + helpers extractKeywords/highlightInHtml/scopeHtml extraits aussi.
+import { scopeHtml, extractKeywords, highlightInHtml } from "./lib/note-helpers";
+const NoteModal = dynamic(() => import("./NoteModal"), { ssr: false });
 
 export default function ChangelogPage() {
   const auth = useAuth();
@@ -61,15 +48,61 @@ export default function ChangelogPage() {
   const [codeSnippet, setCodeSnippet] = useState(null);
   const [zipProgress, setZipProgress] = useState("");
   // 0.55.15 : modale d'affichage du SQL
+  // 0.57.2 : sqlCopied et sqlCacheRef sont désormais gérés par le composant SqlModal
   const [sqlModal, setSqlModal] = useState(null); // { version, file, content }
-  const [sqlCopied, setSqlCopied] = useState(false);
-  const sqlCacheRef = useRef({});
   // 0.55.18 : modale tests + smoke tests
   const [testModal, setTestModal] = useState(null); // { version, results: [{name, ok, msg, error}], running: bool }
   // 0.55.24 : modale rapport global "Tester tout"
   const [globalTestModal, setGlobalTestModal] = useState(null); // { running, report, current }
 
+  // 0.57.11 : Liste des versions chargée en lazy via JSON public
+  // (avant 0.57.11 : import statique de VERSIONS_INDEX = 272 KB dans le bundle).
+  // Démarre vide → fetch parallèle versions-index.json + chantiers-extra.json
+  // → set les versions enrichies.
+  const [ALL_VERSIONS, setAllVersions] = useState([]);
+  const [extraLoaded, setExtraLoaded] = useState(false);
+  const [versionsLoaded, setVersionsLoaded] = useState(false);
+
+  useEffect(() => {
+    // 0.57.11 : fetch parallèle versions-index + chantiers-extra. Les 2 fichiers
+    // sont mis en cache HTTP par Vercel (immutable JSON dans /public).
+    // En attendant le fetch, page.js affiche un skeleton léger.
+    let cancelled = false;
+    (async () => {
+      try {
+        const [versionsRes, extraRes] = await Promise.all([
+          fetch("/changelog-data/versions-index.json", { cache: "force-cache" }),
+          fetch("/changelog-data/chantiers-extra.json", { cache: "force-cache" }),
+        ]);
+        if (!versionsRes.ok) throw new Error(`versions-index HTTP ${versionsRes.status}`);
+        const index = await versionsRes.json();
+        if (cancelled) return;
+
+        // Si extra OK, on enrichit. Si extra KO, on reste sur les 5 chantiers max.
+        let augmented = index;
+        if (extraRes.ok) {
+          const extra = await extraRes.json();
+          if (cancelled) return;
+          augmented = index.map((v) => {
+            const hidden = extra[v.v];
+            if (!hidden || !hidden.length) return v;
+            return { ...v, chantiers: [...v.chantiers, ...hidden] };
+          });
+          setExtraLoaded(true);
+        }
+        setAllVersions(augmented);
+        setVersionsLoaded(true);
+      } catch (e) {
+        logger.warn("[changelog] fetch versions-index failed:", e?.message);
+        // Affichage gracieux : pas de versions → message d'erreur dans le rendu
+        setVersionsLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Stats sur les thèmes filtrés (dynamique)
+  // 0.57.7 : recalculé quand ALL_VERSIONS change (après fetch chantiers-extra)
   const themeCounts = useMemo(() => {
     const counts = {};
     ALL_VERSIONS.forEach(v => {
@@ -78,7 +111,7 @@ export default function ChangelogPage() {
       });
     });
     return counts;
-  }, []);
+  }, [ALL_VERSIONS]);
 
   const filtered = useMemo(() => {
     let arr = [...ALL_VERSIONS];
@@ -105,7 +138,7 @@ export default function ChangelogPage() {
     }
     
     return arr;
-  }, [filter, search, selectedThemes]);
+  }, [filter, search, selectedThemes, ALL_VERSIONS]);
 
   const currentVersion = pkg.version.replace(/-alpha$/, "");
   const totalVersions = ALL_VERSIONS.filter(v => v.kind === "version").length;
@@ -151,94 +184,8 @@ export default function ChangelogPage() {
     }
   }
 
-  // Helper : scope les styles du body de la note pour ne pas écraser la page
-  function scopeHtml(fullHtml) {
-    const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    const styleMatch = fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-    const body = bodyMatch ? bodyMatch[1] : fullHtml;
-    const styles = styleMatch ? styleMatch[1] : "";
-    // Préfixe ".cl-note-scope" sur tous les sélecteurs pour les confiner
-    const scopedStyles = styles
-      .replace(/body\s*\{/g, '.cl-note-scope {')
-      .replace(/(^|\})\s*\.wrap\b/g, '$1 .cl-note-scope .wrap');
-    return `<style>${scopedStyles}</style><div class="cl-note-scope">${body}</div>`;
-  }
-
-  // 0.55.16 — Extraction des mots-clés significatifs d'un texte d'évolution
-  // pour pouvoir les surligner dans la note HTML.
-  const STOPWORDS_FR = new Set([
-    "le","la","les","un","une","des","de","du","au","aux","et","ou","mais","donc","car","ni","or",
-    "à","en","dans","sur","sous","pour","par","avec","sans","chez","vers","entre","contre","selon",
-    "ce","cet","cette","ces","mon","ma","mes","ton","ta","tes","son","sa","ses","notre","votre","leur","leurs","nos","vos",
-    "qui","que","quoi","dont","où","quand","comme","si","ne","pas","plus","moins","très","trop","aussi","encore","déjà","puis",
-    "est","sont","être","était","sera","ont","avoir","avait","fait","faire","peut","peuvent","doit","doivent",
-    "tous","toutes","tout","toute","chaque","autre","autres","même","mêmes","aucun","aucune",
-    "alors","ainsi","puis","ensuite","enfin","cependant","toutefois","néanmoins",
-    "via","sans","cas","mode","etc",
-  ]);
-
-  function extractKeywords(text) {
-    if (!text) return [];
-    // Normalise et tokenise
-    const tokens = text
-      .toLowerCase()
-      .replace(/[«»''""()[\]{},;:!?.…]/g, " ")
-      .split(/\s+/)
-      .filter(Boolean);
-    const kws = new Set();
-    for (const t of tokens) {
-      // Garde les mots de 4+ caractères, non-stopword
-      // OU les versions/numéros (ex: "0.55.12") ou les codes (ex: "CERFA")
-      if (t.length >= 4 && !STOPWORDS_FR.has(t) && /[a-zà-ÿ0-9]/i.test(t)) {
-        // Strip leading/trailing punct restant
-        const clean = t.replace(/^[^a-zà-ÿ0-9]+|[^a-zà-ÿ0-9]+$/gi, "");
-        if (clean.length >= 4) kws.add(clean);
-      } else if (/^\d+(\.\d+)+$/.test(t)) {
-        kws.add(t); // versions
-      } else if (t.length >= 3 && /^[A-Z0-9]+$/i.test(t) && /[A-Z]/.test(t)) {
-        kws.add(t); // acronymes type RPC, FR, etc.
-      }
-    }
-    return Array.from(kws);
-  }
-
-  // Échappe les caractères regex spéciaux dans un mot-clé
-  function escapeRegex(s) {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  // Surligne les keywords dans le HTML scopé en injectant des <mark>
-  // Renvoie { html, matchCount }
-  function highlightInHtml(html, keywords) {
-    if (!keywords || keywords.length === 0) return { html, matchCount: 0 };
-    // Construit une regex OR des keywords avec word boundaries (compatible accents)
-    // \b ne marche pas bien avec les accents, donc on utilise lookaround
-    const escaped = keywords.map(escapeRegex).sort((a, b) => b.length - a.length); // long d'abord
-    const pattern = new RegExp(
-      `(?<![a-zà-ÿ0-9])(${escaped.join("|")})(?![a-zà-ÿ0-9])`,
-      "gi"
-    );
-
-    // On découpe le HTML en alternance tag/texte pour ne pas matcher dans les attributs
-    const tokenizer = /<[^>]+>|[^<]+/g;
-    let result = "";
-    let matchIdx = 0;
-    let match;
-    while ((match = tokenizer.exec(html)) !== null) {
-      const seg = match[0];
-      if (seg.startsWith("<")) {
-        // C'est un tag, on le laisse intact
-        result += seg;
-      } else {
-        // C'est du texte, on applique le highlight
-        result += seg.replace(pattern, (m) => {
-          const idx = matchIdx++;
-          return `<mark class="cl-match" data-cl-idx="${idx}">${m}</mark>`;
-        });
-      }
-    }
-    return { html: result, matchCount: matchIdx };
-  }
+  // 0.57.10 : scopeHtml, extractKeywords, highlightInHtml, STOPWORDS_FR, escapeRegex
+  // sont désormais dans app/changelog/lib/note-helpers.js (extraits pour alléger page.js)
 
   // 0.55.16 — Ouvrir la modale de note avec highlight optionnel
   async function openNote(version, kind, color, searchText = "") {
@@ -273,43 +220,13 @@ export default function ChangelogPage() {
     }
   }
 
-  // 0.55.15 — fetch du contenu SQL quand on ouvre la modale
-  useEffect(() => {
-    if (!sqlModal || sqlModal.content) return;
-    const { file } = sqlModal;
-    if (sqlCacheRef.current[file]) {
-      setSqlModal((m) => m ? { ...m, content: sqlCacheRef.current[file] } : null);
-      return;
-    }
-    (async () => {
-      try {
-        const res = await fetch(`/changelog-sql/${file}`, { cache: "force-cache" });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const txt = await res.text();
-        sqlCacheRef.current[file] = txt;
-        setSqlModal((m) => m && m.file === file ? { ...m, content: txt } : m);
-      } catch (e) {
-        setSqlModal((m) => m && m.file === file ? { ...m, content: `-- Erreur de chargement\n-- ${e.message}` } : m);
-      }
-    })();
-  }, [sqlModal?.file]);
-
-  async function copySqlToClipboard() {
-    if (!sqlModal?.content) return;
-    try {
-      await navigator.clipboard.writeText(sqlModal.content);
-      setSqlCopied(true);
-      setTimeout(() => setSqlCopied(false), 2000);
-    } catch (e) {
-      alert("Copie clipboard refusée. Utilisez Ctrl+A puis Ctrl+C dans la fenêtre.");
-    }
-  }
+  // 0.57.2 : la logique fetch SQL + copy + ESC est désormais dans SqlModal.js
 
   // 0.55.18 — Lancer les tests in-browser pour une version
   async function runTests(version) {
     setTestModal({ version, results: [], running: true });
     try {
-      const results = await runTestsForVersion(version);
+      const results = await runTestsForVersionLazy(version);
       setTestModal({ version, results: results || [], running: false });
     } catch (e) {
       setTestModal({ version, results: [{ name: "Erreur", ok: false, msg: e.message }], running: false });
@@ -320,7 +237,7 @@ export default function ChangelogPage() {
   async function runAll() {
     setGlobalTestModal({ running: true, report: null, current: null });
     try {
-      const report = await runAllTests((progress) => {
+      const report = await runAllTestsLazy((progress) => {
         setGlobalTestModal({ running: !progress.done, report: progress, current: progress.current });
       });
       setGlobalTestModal({ running: false, report, current: null });
@@ -329,73 +246,10 @@ export default function ChangelogPage() {
     }
   }
 
-  // 0.55.16 — Scroll auto vers le match courant + toggle classe .active
-  useEffect(() => {
-    if (!noteModal || !noteContentRef.current || noteModal.currentMatch < 0) return;
-    const container = noteContentRef.current;
-    // 0.55.20 : utiliser requestAnimationFrame pour éviter le forced reflow
-    const raf = requestAnimationFrame(() => {
-      container.querySelectorAll("mark.cl-match.active").forEach((el) => el.classList.remove("active"));
-      const target = container.querySelector(`mark.cl-match[data-cl-idx="${noteModal.currentMatch}"]`);
-      if (target) {
-        target.classList.add("active");
-        // scrollIntoView dans un 2e RAF pour laisser le navigateur appliquer la classe
-        requestAnimationFrame(() => {
-          target.scrollIntoView({ behavior: "smooth", block: "center" });
-        });
-      }
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [noteModal?.currentMatch, noteModal?.html]);
+  // 0.57.10 : les 2 useEffect (scroll auto vers match + Escape/F3/n/p) ainsi que
+  // le style navBtn sont désormais dans le composant NoteModal extrait.
 
-  // 0.55.16 — Escape pour fermer la modale note + raccourcis nav (F3 / n / p)
-  useEffect(() => {
-    if (!noteModal) return;
-    function handleKey(e) {
-      if (e.key === "Escape") {
-        setNoteModal(null);
-        return;
-      }
-      if (noteModal.matchCount > 0) {
-        if (e.key === "F3" || (e.key === "n" && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== "INPUT")) {
-          e.preventDefault();
-          setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch + 1) % m.matchCount } : m);
-        }
-        if ((e.shiftKey && e.key === "F3") || (e.key === "p" && !e.ctrlKey && !e.metaKey && document.activeElement.tagName !== "INPUT")) {
-          e.preventDefault();
-          setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch - 1 + m.matchCount) % m.matchCount } : m);
-        }
-      }
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [noteModal]);
-
-  // Style des boutons de navigation matches
-  const navBtn = {
-    background: "transparent",
-    border: "none",
-    color: "#fff",
-    width: 30,
-    height: 30,
-    borderRadius: 6,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 14,
-    transition: "background .15s",
-  };
-
-  // 0.55.15 — Escape pour fermer la modale SQL
-  useEffect(() => {
-    if (!sqlModal) return;
-    function handleKey(e) {
-      if (e.key === "Escape") setSqlModal(null);
-    }
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [sqlModal]);
+  // 0.57.2 : ESC pour fermer SqlModal est désormais géré dans le composant
 
   // 0.55.14 — Télécharger toutes les notes HTML en un seul .zip
   async function downloadAllNotesZip() {
@@ -665,7 +519,17 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
         <div style={{ position: "relative", paddingLeft: 26 }}>
           <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 2, background: "#e3e9ee" }} aria-hidden="true" />
 
-          {filtered.length === 0 && (
+          {/* 0.57.11 : loader pendant le fetch initial de versions-index.json */}
+          {!versionsLoaded && (
+            <Panel>
+              <div style={{ textAlign: "center", color: "#8a98a8", padding: 24, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                <i className="ti ti-loader-2" style={{ fontSize: 22, animation: "spin 1s linear infinite" }} />
+                <span style={{ fontSize: 13 }}>Chargement du changelog…</span>
+              </div>
+            </Panel>
+          )}
+
+          {versionsLoaded && filtered.length === 0 && (
             <Panel><div style={{ textAlign: "center", color: "#8a98a8", padding: 20 }}>Aucun résultat — essaie d'élargir tes filtres</div></Panel>
           )}
 
@@ -742,8 +606,8 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                         title={`Lancer les smoke tests de la version ${v.v}`}
                         style={{ 
                           display: "inline-flex", alignItems: "center", gap: 3,
-                          background: VERSION_TESTS[v.v] ? "#5aa05a" : "#8a98a8",
-                          border: `1px solid ${VERSION_TESTS[v.v] ? "#5aa05a" : "#8a98a8"}`,
+                          background: VERSION_TESTS_KEYS.has(v.v) ? "#5aa05a" : "#8a98a8",
+                          border: `1px solid ${VERSION_TESTS_KEYS.has(v.v) ? "#5aa05a" : "#8a98a8"}`,
                           color: "#fff", padding: "3px 8px", borderRadius: 12,
                           fontSize: 11, fontWeight: 600, cursor: "pointer",
                           fontFamily: "inherit",
@@ -821,13 +685,18 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
                           </li>
                         );
                       })}
-                      {v.chantiers.length > 5 && (
+                      {/* 0.57.7 : on utilise chantiers_total au lieu de v.chantiers.length
+                          car les chantiers cachés sont lazy-chargés et peuvent ne pas
+                          encore être présents (mais on connaît leur nombre via l'index). */}
+                      {(v.chantiers_total || v.chantiers.length) > 5 && (
                         <li>
                           <button 
                             onClick={() => setExpandedV(isExpanded ? null : v.v + v.kind)}
-                            style={{ background: "transparent", border: "none", color: "#185FA5", fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: "4px 0", fontFamily: "inherit" }}
+                            disabled={!isExpanded && !extraLoaded && v.chantiers.length <= 5}
+                            title={!extraLoaded && v.chantiers.length <= 5 ? "Chargement des chantiers supplémentaires…" : ""}
+                            style={{ background: "transparent", border: "none", color: "#185FA5", fontSize: 11.5, fontWeight: 600, cursor: "pointer", padding: "4px 0", fontFamily: "inherit", opacity: (!isExpanded && !extraLoaded && v.chantiers.length <= 5) ? 0.6 : 1 }}
                           >
-                            {isExpanded ? <><i className="ti ti-chevron-up" /> Voir moins</> : <><i className="ti ti-chevron-down" /> Voir les {v.chantiers.length - 5} autre{v.chantiers.length - 5 > 1 ? "s" : ""}</>}
+                            {isExpanded ? <><i className="ti ti-chevron-up" /> Voir moins</> : <><i className="ti ti-chevron-down" /> Voir les {(v.chantiers_total || v.chantiers.length) - 5} autre{(v.chantiers_total || v.chantiers.length) - 5 > 1 ? "s" : ""}</>}
                           </button>
                         </li>
                       )}
@@ -1204,395 +1073,12 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
       )}
 
       {/* 0.55.16 — Modale plein écran d'affichage de la note avec highlight et navigation */}
-      {noteModal && (
-        <div
-          onClick={(e) => e.target === e.currentTarget && setNoteModal(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(20,33,49,.75)",
-            zIndex: 9991,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px 14px",
-            animation: "fadeIn .15s",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#fff",
-              borderRadius: 14,
-              width: "100%",
-              maxWidth: 960,
-              height: "92vh",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 30px 80px rgba(0,0,0,.45)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Header */}
-            <div style={{
-              background: `linear-gradient(135deg, #142131 0%, ${noteModal.color || "#185FA5"} 100%)`,
-              color: "#fff",
-              padding: "14px 18px",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-            }}>
-              <i className="ti ti-file-text" style={{ fontSize: 22, color: "#7CC8C8", flexShrink: 0 }} />
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#cfe4f5", fontWeight: 700 }}>
-                  NOTE DE VERSION — {noteModal.version}
-                </div>
-                <div style={{ fontSize: 12.5, fontFamily: "Consolas, monospace", marginTop: 2, opacity: 0.85 }}>
-                  {noteModal.noteFile}
-                </div>
-              </div>
+      {/* 0.57.10 : NoteModal extrait dans son propre composant (lazy) */}
+      <NoteModal noteModal={noteModal} setNoteModal={setNoteModal} onClose={() => setNoteModal(null)} />
 
-              {/* Navigation matches */}
-              {noteModal.matchCount > 0 && (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                  background: "rgba(255,255,255,.12)",
-                  border: "1px solid rgba(255,255,255,.22)",
-                  borderRadius: 8,
-                  padding: "2px 4px",
-                }}>
-                  <button
-                    onClick={() => setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch - 1 + m.matchCount) % m.matchCount } : m)}
-                    title="Match précédent"
-                    style={navBtn}
-                  >
-                    <i className="ti ti-chevron-up" />
-                  </button>
-                  <span style={{
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    padding: "0 8px",
-                    minWidth: 56,
-                    textAlign: "center",
-                    fontFamily: "Consolas, monospace",
-                  }}>
-                    {noteModal.currentMatch + 1}/{noteModal.matchCount}
-                  </span>
-                  <button
-                    onClick={() => setNoteModal((m) => m ? { ...m, currentMatch: (m.currentMatch + 1) % m.matchCount } : m)}
-                    title="Match suivant"
-                    style={navBtn}
-                  >
-                    <i className="ti ti-chevron-down" />
-                  </button>
-                </div>
-              )}
 
-              <a
-                href={`/changelog-notes/${noteModal.noteFile}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                title="Télécharger la note"
-                style={{
-                  background: "#7CC8C8",
-                  color: "#142131",
-                  border: "none",
-                  padding: "7px 12px",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                  minHeight: 34,
-                }}
-              >
-                <i className="ti ti-download" /> HTML
-              </a>
-
-              <button
-                onClick={() => setNoteModal(null)}
-                title="Fermer (Échap)"
-                style={{
-                  background: "transparent",
-                  color: "#fff",
-                  border: "none",
-                  padding: 6,
-                  cursor: "pointer",
-                  fontSize: 22,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <i className="ti ti-x" />
-              </button>
-            </div>
-
-            {/* Bandeau search context */}
-            {noteModal.searchText && noteModal.keywords?.length > 0 && (
-              <div style={{
-                background: noteModal.matchCount > 0 ? "#fff8ec" : "#f4f7fa",
-                borderBottom: `1px solid ${noteModal.matchCount > 0 ? "#f0d59f" : "#e3e9ee"}`,
-                padding: "8px 18px",
-                fontSize: 12,
-                color: noteModal.matchCount > 0 ? "#7a4f15" : "#6c7a89",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                flexWrap: "wrap",
-              }}>
-                <i className={`ti ${noteModal.matchCount > 0 ? "ti-highlight" : "ti-search-off"}`} />
-                <span>
-                  {noteModal.matchCount > 0 ? (
-                    <>
-                      <b>{noteModal.matchCount} passage{noteModal.matchCount > 1 ? "s" : ""}</b> surligné{noteModal.matchCount > 1 ? "s" : ""} pour&nbsp;
-                    </>
-                  ) : (
-                    <>Aucun passage correspondant trouvé pour&nbsp;</>
-                  )}
-                  <i style={{ color: "#142131" }}>« {noteModal.searchText.slice(0, 90)}{noteModal.searchText.length > 90 ? "…" : ""} »</i>
-                </span>
-                {noteModal.keywords?.length > 0 && (
-                  <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.7 }}>
-                    Mots : {noteModal.keywords.slice(0, 6).join(", ")}{noteModal.keywords.length > 6 ? "…" : ""}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Contenu HTML scrollable */}
-            <div
-              ref={noteContentRef}
-              style={{
-                flex: 1,
-                overflow: "auto",
-                background: "#f4f7fa",
-              }}
-            >
-              {noteModal.loading || !noteModal.html ? (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 200,
-                  color: "#8a98a8",
-                }}>
-                  <i className="ti ti-loader-2" style={{ fontSize: 24, animation: "spin 1s linear infinite" }} />
-                  <span style={{ marginLeft: 10, fontSize: 13 }}>Chargement de la note…</span>
-                </div>
-              ) : (
-                <div dangerouslySetInnerHTML={{ __html: noteModal.html }} />
-              )}
-            </div>
-          </div>
-
-          {/* Styles inline pour les <mark> */}
-          <style>{`
-            .cl-note-scope mark.cl-match {
-              background: #ffeb9c;
-              color: #142131;
-              padding: 1px 3px;
-              border-radius: 3px;
-              box-shadow: 0 0 0 1px rgba(239,159,39,.4);
-              transition: background .15s, box-shadow .15s, outline .15s;
-            }
-            .cl-note-scope mark.cl-match.active {
-              background: #EF9F27;
-              color: #fff;
-              box-shadow: 0 0 0 2px #EF9F27, 0 0 12px rgba(239,159,39,.5);
-              outline: 2px solid #fff;
-              outline-offset: 2px;
-            }
-            .cl-note-scope { font-family: 'Segoe UI', sans-serif; }
-            .cl-note-scope .wrap { padding: 24px 28px 40px; }
-          `}</style>
-        </div>
-      )}
-
-      {/* 0.55.15 — Modale d'affichage du SQL d'une version */}
-      {sqlModal && (
-        <div
-          onClick={(e) => e.target === e.currentTarget && setSqlModal(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(20,33,49,.7)",
-            zIndex: 9991,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px 14px",
-            animation: "fadeIn .15s",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#fff",
-              borderRadius: 14,
-              width: "100%",
-              maxWidth: 920,
-              maxHeight: "90vh",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 30px 80px rgba(0,0,0,.45)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Header */}
-            <div style={{
-              background: "linear-gradient(135deg, #142131 0%, #185FA5 100%)",
-              color: "#fff",
-              padding: "14px 18px",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-            }}>
-              <i className="ti ti-database" style={{ fontSize: 22, color: "#7CC8C8" }} />
-              <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontSize: 11, letterSpacing: 1.5, color: "#cfe4f5", fontWeight: 700 }}>
-                  REQUÊTE SQL — VERSION {sqlModal.version}
-                </div>
-                <div style={{ fontSize: 13, fontFamily: "Consolas, monospace", marginTop: 2 }}>
-                  {sqlModal.file}
-                </div>
-              </div>
-              <button
-                onClick={copySqlToClipboard}
-                disabled={!sqlModal.content}
-                title="Copier dans le presse-papier"
-                style={{
-                  background: sqlCopied ? "#5aa05a" : "#fff",
-                  color: sqlCopied ? "#fff" : "#142131",
-                  border: "none",
-                  padding: "7px 14px",
-                  borderRadius: 8,
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  cursor: sqlModal.content ? "pointer" : "wait",
-                  fontFamily: "inherit",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  minHeight: 36,
-                }}
-              >
-                <i className={`ti ${sqlCopied ? "ti-check" : "ti-copy"}`} />
-                {sqlCopied ? "Copié !" : "Copier"}
-              </button>
-              <a
-                href={sqlModal.content ? `/changelog-sql/${sqlModal.file}` : "#"}
-                download={sqlModal.file}
-                title="Télécharger le fichier .sql"
-                style={{
-                  background: "#7CC8C8",
-                  color: "#142131",
-                  border: "none",
-                  padding: "7px 14px",
-                  borderRadius: 8,
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  minHeight: 36,
-                }}
-              >
-                <i className="ti ti-download" /> Télécharger
-              </a>
-              <button
-                onClick={() => setSqlModal(null)}
-                title="Fermer"
-                style={{
-                  background: "transparent",
-                  color: "#fff",
-                  border: "none",
-                  padding: 6,
-                  cursor: "pointer",
-                  fontSize: 22,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <i className="ti ti-x" />
-              </button>
-            </div>
-
-            {/* Instructions */}
-            <div style={{
-              background: "#fff8ec",
-              borderBottom: "1px solid #f0d59f",
-              padding: "8px 18px",
-              fontSize: 11.5,
-              color: "#7a4f15",
-              lineHeight: 1.5,
-            }}>
-              <i className="ti ti-info-circle" /> Coller dans <b>Supabase Dashboard → SQL Editor → Run</b>. Le patch est idempotent (peut être exécuté plusieurs fois sans risque).
-            </div>
-
-            {/* Contenu SQL */}
-            <div style={{
-              flex: 1,
-              overflow: "auto",
-              background: "#142131",
-              padding: 0,
-            }}>
-              {!sqlModal.content ? (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 200,
-                  color: "#7CC8C8",
-                }}>
-                  <i className="ti ti-loader-2" style={{ fontSize: 24, animation: "spin 1s linear infinite" }} />
-                  <span style={{ marginLeft: 10, fontSize: 13 }}>Chargement…</span>
-                </div>
-              ) : (
-                <pre style={{
-                  margin: 0,
-                  padding: "16px 20px",
-                  color: "#e8edf2",
-                  fontFamily: "Consolas, 'Menlo', monospace",
-                  fontSize: 12.5,
-                  lineHeight: 1.55,
-                  whiteSpace: "pre",
-                  overflow: "auto",
-                }}>
-                  <code>{sqlModal.content}</code>
-                </pre>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div style={{
-              background: "#f4f7fa",
-              borderTop: "1px solid #e3e9ee",
-              padding: "8px 18px",
-              fontSize: 11,
-              color: "#8a98a8",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: 8,
-            }}>
-              <span>
-                <i className="ti ti-file-text" /> {sqlModal.content ? `${sqlModal.content.split("\n").length} lignes · ${(sqlModal.content.length / 1024).toFixed(1)} Ko` : "—"}
-              </span>
-              <span>Échap pour fermer</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 0.57.2 : Modale d'affichage du SQL → composant extrait */}
+      <SqlModal sqlModal={sqlModal} onClose={() => setSqlModal(null)} />
 
       {/* 0.56.19 : popup snippet de code */}
       {codeSnippet && (

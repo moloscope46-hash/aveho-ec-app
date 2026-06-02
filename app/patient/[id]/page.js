@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+import { logger } from "../../../lib/logger";
 import TopBar from "../../TopBar";
 import ContactActions from "../../ContactActions";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg, Btn, Modal } from "../../ui";
+import { Panel, StateMsg, Btn, Modal} from "../../ui";
 import { fmtDate } from "../../../lib/format";
 import Tooltip from "../../Tooltip";
 import { safeInsert, safeDelete } from "../../../lib/safeWrite";
@@ -43,42 +44,50 @@ export default function FichePatient() {
   useEffect(() => {
     if (!auth.ready || !patId) return;
     (async () => {
-      // Charger le patient + toutes ses relations en parallèle
-      // Alpha 0.48.0 : + consentements RGPD
-      const [{ data: p }, { data: etqs }, { data: links }, { data: mats }, { data: di }, { data: ev }, { data: cs }] = await Promise.all([
-        supabase.from("patients").select("*, etablissements(nom)").eq("id", patId).single(),
-        supabase.from("etiquettes").select("*"),
-        supabase.from("patient_etiquettes").select("etiquette_id").eq("patient_id", patId),
-        supabase.from("materiels").select("id, libelle, num_serie, num_parc, num_lot, etat, articles(libelle)").eq("patient_id", patId),
-        supabase.from("interventions").select("*, materiels(id,libelle,num_serie,num_parc)").eq("patient_id", patId).order("created_at", { ascending: false }),
-        supabase.from("audit_log").select("*").or(`details->>patient_id.eq.${patId}`).order("created_at", { ascending: false }).limit(20),
-        supabase.from("consentements_rgpd").select("id, date_signature, a_consenti, date_expiration").eq("patient_id", patId).order("date_signature", { ascending: false }),
-      ]);
-      setPat(p || null);
-      const etqIds = (links || []).map((l) => l.etiquette_id);
-      setEtiquettes((etqs || []).filter((e) => etqIds.includes(e.id)));
-      setToutesEtiquettes(etqs || []);
-      setMateriels(mats || []);
-      setInterventions(di || []);
-      setHistorique(ev || []);
-      setConsents(cs || []);
+      try {
+        // Charger le patient + toutes ses relations en parallèle
+        // Alpha 0.48.0 : + consentements RGPD
+        const [{ data: p }, { data: etqs }, { data: links }, { data: mats }, { data: di }, { data: ev }, { data: cs }] = await Promise.all([
+          supabase.from("patients").select("*, etablissements(nom)").eq("id", patId).single(),
+          supabase.from("etiquettes").select("*"),
+          supabase.from("patient_etiquettes").select("etiquette_id").eq("patient_id", patId),
+          supabase.from("materiels").select("id, libelle, num_serie, num_parc, num_lot, etat, articles(libelle)").eq("patient_id", patId),
+          supabase.from("interventions").select("*, materiels(id,libelle,num_serie,num_parc)").eq("patient_id", patId).order("created_at", { ascending: false }),
+          supabase.from("audit_log").select("*").or(`details->>patient_id.eq.${patId}`).order("created_at", { ascending: false }).limit(20),
+          supabase.from("consentements_rgpd").select("id, date_signature, a_consenti, date_expiration").eq("patient_id", patId).order("date_signature", { ascending: false }),
+        ]);
+        setPat(p || null);
+        const etqIds = (links || []).map((l) => l.etiquette_id);
+        setEtiquettes((etqs || []).filter((e) => etqIds.includes(e.id)));
+        setToutesEtiquettes(etqs || []);
+        setMateriels(mats || []);
+        setInterventions(di || []);
+        setHistorique(ev || []);
+        setConsents(cs || []);
 
-      // 0.56.18 : charger en parallèle caisse + mutuelle si le patient en a une
-      const promises = [];
-      if (p?.caisse_id) {
-        promises.push(
-          supabase.from("caisses_assurance_maladie").select("*").eq("id", p.caisse_id).single()
-            .then(r => setCaisseInfo(r.data || null))
-        );
+        // 0.56.18 : charger en parallèle caisse + mutuelle si le patient en a une
+        const promises = [];
+        if (p?.caisse_id) {
+          promises.push(
+            supabase.from("caisses_assurance_maladie").select("*").eq("id", p.caisse_id).single()
+              .then(r => setCaisseInfo(r.data || null))
+              .catch(() => {})  // 0.57.5 : ignore si caisse pas trouvée
+          );
+        }
+        if (p?.mutuelle_id) {
+          promises.push(
+            supabase.from("mutuelles").select("*").eq("id", p.mutuelle_id).single()
+              .then(r => setMutuelleInfo(r.data || null))
+              .catch(() => {})  // 0.57.5 : ignore si mutuelle pas trouvée
+          );
+        }
+        await Promise.all(promises);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas planter la page si Supabase répond mal
+        logger.error("[Patient] load failed:", e);
+      } finally {
+        setLoading(false);
       }
-      if (p?.mutuelle_id) {
-        promises.push(
-          supabase.from("mutuelles").select("*").eq("id", p.mutuelle_id).single()
-            .then(r => setMutuelleInfo(r.data || null))
-        );
-      }
-      await Promise.all(promises);
-      setLoading(false);
     })();
   }, [auth.ready, patId]);
 

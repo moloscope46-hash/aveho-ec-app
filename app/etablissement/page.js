@@ -9,6 +9,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { flatten, computeRows, kpisFromRows } from "./lib";
+import { logger } from "../../lib/logger";
 
 export default function Etablissement() {
   const supabase = createClient();
@@ -28,24 +29,30 @@ export default function Etablissement() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const [b, e, s, c, l, pa, ma, di] = await Promise.all([
-        supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId).order("nom"),
-        supabase.from("etages").select("*").order("nom"),
-        supabase.from("services").select("*").order("nom"),
-        supabase.from("chambres").select("*").order("nom"),
-        supabase.from("lits").select("*").order("nom"),
-        supabase.from("patients").select("*").eq("etablissement_id", auth.etabId),
-        supabase.from("materiels").select("*").eq("etablissement_id", auth.etabId),
-        supabase.from("interventions").select("id,patient_id,type,urgence,statut,numero").eq("etablissement_id", auth.etabId),
-      ]);
-      // reconstruire l'arbre
-      const lits = l.data || [];
-      const chambres = (c.data || []).map((ch) => ({ ...ch, lits: lits.filter((x) => x.chambre_id === ch.id) }));
-      const services = (s.data || []).map((sv) => ({ ...sv, chambres: chambres.filter((x) => x.service_id === sv.id) }));
-      const etages = (e.data || []).map((et) => ({ ...et, services: services.filter((x) => x.etage_id === et.id) }));
-      const bats = (b.data || []).map((ba) => ({ ...ba, etages: etages.filter((x) => x.batiment_id === ba.id) }));
-      setTree(bats); setPatients(pa.data || []); setMateriels(ma.data || []); setDis(di.data || []);
-      setLoading(false);
+      try {
+        const [b, e, s, c, l, pa, ma, di] = await Promise.all([
+          supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId).order("nom"),
+          supabase.from("etages").select("*").order("nom"),
+          supabase.from("services").select("*").order("nom"),
+          supabase.from("chambres").select("*").order("nom"),
+          supabase.from("lits").select("*").order("nom"),
+          supabase.from("patients").select("*").eq("etablissement_id", auth.etabId),
+          supabase.from("materiels").select("*").eq("etablissement_id", auth.etabId),
+          supabase.from("interventions").select("id,patient_id,type,urgence,statut,numero").eq("etablissement_id", auth.etabId),
+        ]);
+        // reconstruire l'arbre
+        const lits = l.data || [];
+        const chambres = (c.data || []).map((ch) => ({ ...ch, lits: lits.filter((x) => x.chambre_id === ch.id) }));
+        const services = (s.data || []).map((sv) => ({ ...sv, chambres: chambres.filter((x) => x.service_id === sv.id) }));
+        const etages = (e.data || []).map((et) => ({ ...et, services: services.filter((x) => x.etage_id === et.id) }));
+        const bats = (b.data || []).map((ba) => ({ ...ba, etages: etages.filter((x) => x.batiment_id === ba.id) }));
+        setTree(bats); setPatients(pa.data || []); setMateriels(ma.data || []); setDis(di.data || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Etablissement] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready, auth.etabId]);
 

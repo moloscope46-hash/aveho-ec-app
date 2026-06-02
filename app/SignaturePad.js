@@ -30,6 +30,7 @@ const SignaturePad = forwardRef(function SignaturePad(
   const isEmptyRef = useRef(true);
   const [hidDevice, setHidDevice] = useState(null);
   const [hidStatus, setHidStatus] = useState("idle"); // idle | available | connected | unsupported
+  const hidListenerRef = useRef(null); // 0.57.5 : pour cleanup au démontage
 
   // Détection WebHID au montage
   useEffect(() => {
@@ -45,7 +46,23 @@ const SignaturePad = forwardRef(function SignaturePad(
         [0x056a, 0x0403, 0x06a8, 0x162e].includes(d.vendorId)
       );
       if (pad) connectHid(pad);
+    }).catch((e) => {
+      // 0.57.5 : ignore les erreurs getDevices (browser ancien, permission refusée…)
+      logger.warn("WebHID getDevices failed:", e);
     });
+
+    // 0.57.5 : cleanup au démontage — retire le listener inputreport
+    return () => {
+      if (hidListenerRef.current) {
+        const { device, listener } = hidListenerRef.current;
+        try {
+          device.removeEventListener("inputreport", listener);
+        } catch (e) {
+          // device peut déjà être fermé/déconnecté, on ignore
+        }
+        hidListenerRef.current = null;
+      }
+    };
   }, []);
 
   async function requestHid() {
@@ -71,6 +88,8 @@ const SignaturePad = forwardRef(function SignaturePad(
       setHidDevice(device);
       setHidStatus("connected");
       device.addEventListener("inputreport", handleHidInput);
+      // 0.57.5 : on garde une réf pour pouvoir cleanup au démontage
+      hidListenerRef.current = { device, listener: handleHidInput };
     } catch (e) {
       logger.warn("WebHID connect failed:", e);
     }

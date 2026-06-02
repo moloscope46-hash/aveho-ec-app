@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.4 — Audit sécurité applicatif</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 45%,#EF9F27 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fce5e0;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#fce5e0;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#fce5e0}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#dff5e0);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700}
+.b-ok{background:#dff5e0;color:#2e6f33}
+.b-warn{background:#fef9ed;color:#7a6a1a}
+.b-crit{background:#fce5e0;color:#7a1f15}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.blue{background:#e8f0f8;border-color:#bfd7ea}.kpi.blue .kpi-val{color:#185FA5}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — AUDIT SÉCURITÉ APPLICATIF</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.4 — 100% des routes API protégées<small>7 routes migrées · 7 frontends migrés · 6 headers OWASP</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.4-alpha</code></span>
+<span><b>Tests :</b> 2402 verts (+43)</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 3 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">17 / 17</span>
+<span class="kpi-lbl">Routes API protégées</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+43</span>
+<span class="kpi-lbl">Tests verts</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">6</span>
+<span class="kpi-lbl">Headers OWASP ajoutés</span>
+</div>
+</div>
+
+<h2>🛡️ Fix 1 — 7 routes API migrées vers requireAuth + checkRateLimit</h2>
+<div class="panel">
+<p>Audit avant 0.57.4 : <b>7 routes</b> faisaient leur propre auth via le pattern fragile :</p>
+<pre><code>const authHeader = req.headers.get("authorization") || "";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  global: { headers: { Authorization: authHeader } },
+});</code></pre>
+
+<p>Problèmes :</p>
+<ul>
+<li>Si <code>authHeader</code> vide → RLS bloque les rows mais <b>pas de 401 immédiat</b></li>
+<li><b>Aucun rate limit</b> = ces routes brûlent le quota Supabase et coûtent en CPU</li>
+<li>Pas de check <code>getUser()</code> = un Bearer expiré passe quand même par la query (gaspillage)</li>
+</ul>
+
+<h3>Routes migrées</h3>
+<table>
+<tr><th>Route</th><th>Handlers</th><th>Rate limit</th></tr>
+<tr><td><code>/api/caisses</code></td><td>4 (GET POST PUT DELETE)</td><td>60 req/min</td></tr>
+<tr><td><code>/api/mutuelles</code></td><td>4 (GET POST PUT DELETE)</td><td>60 req/min</td></tr>
+<tr><td><code>/api/place</code></td><td>1 (GET)</td><td>30 req/min ⚠️ Google API coûte</td></tr>
+<tr><td><code>/api/prescriptions/search</code></td><td>1 (GET)</td><td>30 req/min</td></tr>
+<tr><td><code>/api/prescriptions/export-csv</code></td><td>1 (GET)</td><td>10 req/min 🔒 RGPD</td></tr>
+<tr><td><code>/api/prescriptions/verify-rpps</code></td><td>1 (POST)</td><td>30 req/min</td></tr>
+<tr><td><code>/api/google-reviews/sync</code></td><td>1 (POST)</td><td>5 req/min ⚠️ Google API très coûteux</td></tr>
+</table>
+
+<p>12 handlers migrés en automatique via patch Python qui détecte le pattern et le remplace.</p>
+
+<h3>Pattern utilisé</h3>
+<pre><code>import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
+
+export async function GET(req) {
+  // 0.57.4 : auth + rate limit obligatoire
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user, supabase } = authCheck;
+  const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+  // ... logique
+}</code></pre>
+</div>
+
+<h2>🚀 Fix 2 — Routes OCR créatrices avec rate limit (anti-quota)</h2>
+<div class="panel">
+<p>2 routes OCR avaient déjà l'auth mais pas de rate limit :</p>
+<table>
+<tr><th>Route</th><th>Avant</th><th>Après</th></tr>
+<tr><td><code>/api/patients/from-ocr</code></td><td>auth getUser OK · 0 rate limit</td><td>+ 10 req/min</td></tr>
+<tr><td><code>/api/prescriptions/from-ocr</code></td><td>token optionnel · 0 rate limit</td><td>+ 401 si Bearer absent · 10 req/min</td></tr>
+</table>
+<p>Ces routes créent des rows en DB + déclenchent des RPC complexes (upsert médecin prescripteur avec lookup RPPS). Sans rate limit, un script malveillant pouvait spammer la création.</p>
+</div>
+
+<h2>🌐 Fix 3 — 7 frontends migrés vers fetchWithAuth()</h2>
+<div class="panel">
+<p>Avant 0.57.4, <b>7 composants frontend</b> appelaient les routes API avec <code>fetch()</code> standard, sans Bearer token. Avec les nouveaux <code>requireAuth</code>, ils auraient tous reçu <b>401</b>.</p>
+
+<h3>Composants migrés</h3>
+<ul>
+<li><code>app/CaisseSearch.js</code> (1 fetch)</li>
+<li><code>app/MutuelleSearch.js</code> (1 fetch)</li>
+<li><code>app/components/EtabGoogleDetails.js</code> (1 fetch)</li>
+<li><code>app/components/EtabPhoto.js</code> (1 fetch)</li>
+<li><code>app/parametres/integrations/page.js</code> (1 fetch)</li>
+<li><code>app/admin/medecins-prescripteurs/page.js</code> (1 fetch)</li>
+<li><code>app/RppsVerifyBadge.js</code> (1 fetch)</li>
+</ul>
+
+<p>Patch automatique via Python : regex <code>fetch('/api/...')</code> → <code>fetchWithAuth('/api/...')</code> + ajout de l'import au bon path.</p>
+
+<h3>fetchWithAuth — rappel du fonctionnement</h3>
+<pre><code>// lib/fetchWithAuth.js
+export async function fetchWithAuth(url, options = {}) {
+  const supabase = getClient();
+  const { data } = await supabase.auth.getSession();
+  const token = data?.session?.access_token || null;
+
+  const headers = new Headers(options.headers || {});
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  return fetch(url, { ...options, headers });
+}</code></pre>
+</div>
+
+<h2>🔐 Fix 4 — Headers HTTP de sécurité (OWASP)</h2>
+<div class="panel">
+<p><b>6 nouveaux headers</b> ajoutés dans <code>next.config.js</code> via <code>async headers()</code>, appliqués sur <b>toutes les routes</b> :</p>
+
+<table>
+<tr><th>Header</th><th>Valeur</th><th>Mitige</th></tr>
+<tr><td><code>X-Content-Type-Options</code></td><td><code>nosniff</code></td><td>XSS via content-type sniffing</td></tr>
+<tr><td><code>X-Frame-Options</code></td><td><code>SAMEORIGIN</code></td><td>Clickjacking via iframe</td></tr>
+<tr><td><code>Strict-Transport-Security</code></td><td><code>max-age=15552000</code></td><td>Force HTTPS (HSTS 6 mois)</td></tr>
+<tr><td><code>Referrer-Policy</code></td><td><code>strict-origin-when-cross-origin</code></td><td>Fuites Referer</td></tr>
+<tr><td><code>Permissions-Policy</code></td><td><code>camera=(self), microphone=(), geolocation=(self), payment=()</code></td><td>API navigateur sensibles désactivées par défaut</td></tr>
+<tr><td><code>Cross-Origin-Opener-Policy</code></td><td><code>same-origin-allow-popups</code></td><td>Spectre via window.opener</td></tr>
+</table>
+
+<pre><code>// next.config.js
+async headers() {
+  return [{
+    source: "/(.*)",
+    headers: SECURITY_HEADERS,
+  }];
+}</code></pre>
+
+<p>Le score Mozilla Observatory + securityheaders.com devrait passer de F/D à A/B après déploiement Vercel.</p>
+</div>
+
+<h2>🔍 Fix 5 — Audit XSS via dangerouslySetInnerHTML</h2>
+<div class="panel ok">
+<p>5 occurrences trouvées dans le code, toutes auditées et <b>SAFE</b> :</p>
+
+<table>
+<tr><th>Composant</th><th>Source du HTML</th><th>Protection</th></tr>
+<tr><td><code>ConsentementRGPD</code></td><td>Template RGPD utilisateur</td><td>✅ <code>consentementToHtml()</code> escape <code>&amp; &lt; &gt;</code> avant traitement markdown</td></tr>
+<tr><td><code>parametres-rgpd</code> preview</td><td>Édition template</td><td>✅ Même fonction <code>consentementToHtml()</code></td></tr>
+<tr><td><code>changelog</code> noteModal.html</td><td><code>/public/changelog-notes/*.html</code></td><td>✅ Fichiers statiques trusted (chaîne de build interne)</td></tr>
+<tr><td><code>CodeViewer</code> highlightCode</td><td>Snippets de code</td><td>✅ <code>escapeHtml()</code> appelé en premier avant les regex de coloration</td></tr>
+<tr><td><code>versions-data.js</code></td><td>Exemples de code en JSON</td><td>✅ Jamais rendu en innerHTML, juste affiché en texte</td></tr>
+</table>
+
+<p><b>0 XSS exploitable</b> dans le code applicatif.</p>
+</div>
+
+<h2>📊 Bilan complet de la stabilisation sécurité (0.56.20 → 0.57.4)</h2>
+<div class="panel hero">
+<table>
+<tr><th>Domaine</th><th>Avant</th><th>Après</th></tr>
+<tr><td><b>npm audit</b></td><td>7 vulns (2 CRIT + 1 HIGH + 4 MOD)</td><td>2 vulns (0 CRIT + 0 HIGH + 2 MOD)</td></tr>
+<tr><td><b>Routes API avec auth</b></td><td>8 / 19</td><td>17 / 17 (les 2 publiques OK)</td></tr>
+<tr><td><b>Routes API avec rate limit</b></td><td>8 / 19</td><td>17 / 17</td></tr>
+<tr><td><b>Frontends avec Bearer auto</b></td><td>4 / 11</td><td>11 / 11</td></tr>
+<tr><td><b>Headers HTTP de sécurité</b></td><td>0</td><td>6 (OWASP)</td></tr>
+<tr><td><b>Fonctions SQL search_path</b></td><td>16 vulnérables</td><td>0 (corrigées 0.56.20)</td></tr>
+<tr><td><b>Secrets hardcodés</b></td><td>0 (déjà OK)</td><td>0</td></tr>
+<tr><td><b>dangerouslySetInnerHTML</b></td><td>5 (à auditer)</td><td>5 (audités, 100% safe)</td></tr>
+<tr><td><b>Tests Vitest</b></td><td>2220</td><td>2402 (+182)</td></tr>
+</table>
+</div>
+
+<h2>📈 +43 tests dédiés (v057-4-security-audit-app.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.4+ (1)</li>
+<li>7 routes API × 2 (requireAuth + checkRateLimit) = 14 tests</li>
+<li>2 routes OCR × 2 (rate limit + 401 explicite) = 4 tests</li>
+<li>7 frontends × 2 (import fetchWithAuth + appel) = 14 tests</li>
+<li>Headers OWASP : 8 tests (async headers, 6 headers, source /(.*) pattern)</li>
+<li>dangerouslySetInnerHTML safe (2 tests)</li>
+<li>+ 1 test 0.56.4 ajusté pour le nouveau pattern requireAuth</li>
+</ul>
+</div>
+
+<h2>📋 Reste à faire (versions ultérieures)</h2>
+<div class="panel tip">
+<h3>Sécurité — 2 MODERATE restantes (non actionnables)</h3>
+<ul>
+<li><b>postcss XSS via Unescaped &lt;/style&gt;</b> — fix nécessiterait downgrade Next 9</li>
+<li><b>next moderate</b> — dépend de postcss (même cause)</li>
+</ul>
+
+<h3>Qualité — Refactos restants (optionnel)</h3>
+<ul>
+<li><b>0.57.5</b> — Extraction NoteModal de changelog/page.js (208 lignes)</li>
+<li><b>0.57.6+</b> — Refacto carte/page.js (1483) ou utilisateurs/page.js (1400)</li>
+</ul>
+
+<h3>Features métier (à voir avec l'utilisateur)</h3>
+<ul>
+<li>Import auto adresses CNAM/AMC</li>
+<li>Refonte BiometricSection profil</li>
+<li>Module Formation / HR / CRM</li>
+</ul>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Routes API (9)</h3>
+<ul>
+<li>7 routes migrées vers requireAuth + checkRateLimit (caisses, mutuelles, place, prescriptions/search, prescriptions/export-csv, prescriptions/verify-rpps, google-reviews/sync)</li>
+<li>2 routes OCR avec rate limit ajouté (patients/from-ocr, prescriptions/from-ocr)</li>
+</ul>
+
+<h3>Frontends (7)</h3>
+<ul>
+<li>CaisseSearch.js, MutuelleSearch.js, EtabGoogleDetails.js, EtabPhoto.js, parametres/integrations/page.js, admin/medecins-prescripteurs/page.js, RppsVerifyBadge.js</li>
+</ul>
+
+<h3>Config (2)</h3>
+<ul>
+<li><code>next.config.js</code> : 6 headers HTTP de sécurité OWASP</li>
+<li><code>package.json</code> : version 0.57.4</li>
+</ul>
+
+<h3>Tests (2)</h3>
+<ul>
+<li><code>__tests__/v057-4-security-audit-app.test.js</code> : <b>NOUVEAU</b> 43 tests</li>
+<li><code>__tests__/v056-4-referentiels-sante.test.js</code> : 1 test ajusté</li>
+</ul>
+
+<h2>SW auto-bump — 94ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.3 → <b>0.57.4</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.4 · 2 juin 2026 · 2402 tests verts · 100% routes API protégées</footer>
+</div></body></html>

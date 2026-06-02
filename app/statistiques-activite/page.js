@@ -20,7 +20,7 @@ import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import { BarChart, Heatmap, Gauge, TrendBadge } from "../Charts";
 import { Modal } from "../ui";
-import { relativeTime, fmtDate } from "../../lib/format";
+import { relativeTime} from "../../lib/format";
 import { logger } from "../../lib/logger";
 
 export default function StatistiquesActivite() {

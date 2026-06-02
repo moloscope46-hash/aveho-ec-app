@@ -12,7 +12,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
-import { getStoredPosition, getGeolocChoice } from "../GeolocPrompt";
+import { getStoredPosition} from "../GeolocPrompt";
 import { logger } from "../../lib/logger";
 import { fetchWithAuth } from "../../lib/fetchWithAuth";
 

@@ -6,7 +6,7 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
+import { PageHead, Panel, StateMsg, Btn} from "../ui";
 import { useTheme } from "../../lib/useTheme";
 import { useKiosque } from "../../lib/useKiosque";
 import NotificationOptIn from "../NotificationOptIn";

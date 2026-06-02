@@ -18,8 +18,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
-import { BarChart, StackedBarChart, Heatmap, Gauge, TrendBadge, DonutChart } from "../Charts";
-
+import { StackedBarChart, Heatmap, Gauge, TrendBadge, DonutChart} from "../Charts";
 export default function StatistiquesInterventions() {
   const supabase = createClient();
   const auth = useAuth();

@@ -102,15 +102,25 @@ describe("0.56.16 - FloatingActionBar component", () => {
   });
 });
 
-describe("0.56.16 - Layout intègre FloatingActionBar", () => {
-  const src = fs.readFileSync(path.resolve(process.cwd(), "app/layout.js"), "utf-8");
+describe("0.56.16 - Layout intègre FloatingActionBar (via LazyLayoutChrome depuis 0.57.8)", () => {
+  // 0.57.8 : FloatingActionBar est désormais lazy-loadé via LazyLayoutChrome.js
+  // (Next 15 interdit ssr:false dans un Server Component, donc on a déplacé
+  // les imports dans un Client Component séparé).
+  const layoutSrc = fs.readFileSync(path.resolve(process.cwd(), "app/layout.js"), "utf-8");
+  const chromeSrc = fs.readFileSync(path.resolve(process.cwd(), "app/LazyLayoutChrome.js"), "utf-8");
 
-  it("Import FloatingActionBar", () => {
-    expect(src).toContain('import FloatingActionBar from "./FloatingActionBar"');
+  it("Import FloatingActionBar (statique dans layout OU lazy dans LazyLayoutChrome)", () => {
+    const inLayout = layoutSrc.includes('import FloatingActionBar from "./FloatingActionBar"');
+    const inChrome = /import\(["']\.\/FloatingActionBar["']\)/.test(chromeSrc);
+    expect(inLayout || inChrome).toBe(true);
   });
 
-  it("Composant monté dans le body", () => {
-    expect(src).toContain("<FloatingActionBar />");
+  it("Composant monté (dans layout body OU dans LazyLayoutChrome)", () => {
+    const inLayout = layoutSrc.includes("<FloatingActionBar />");
+    const inChrome = chromeSrc.includes("<FloatingActionBar />");
+    // Et LazyLayoutChrome doit être monté dans le layout
+    const chromeMonté = layoutSrc.includes("<LazyLayoutChrome");
+    expect(inLayout || (inChrome && chromeMonté)).toBe(true);
   });
 });
 

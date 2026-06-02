@@ -11,7 +11,7 @@ import { PageHead, Panel, StateMsg, Btn, EntityIcon, CollapsibleSection } from "
 import { resetOnboarding } from "../OnboardingTour";
 import NotifCategories from "../NotifCategories";
 import { KpiRow } from "../kpis";
-import { fmtDate, relativeTime } from "../../lib/format";
+import { relativeTime} from "../../lib/format";
 import NotificationPreferences from "../NotificationPreferences";
 import DigestPreferences from "../DigestPreferences";
 import DigestHistory from "../DigestHistory";

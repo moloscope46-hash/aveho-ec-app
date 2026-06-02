@@ -15,7 +15,8 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { useCart } from "../useCart";
 import TopBar from "../TopBar";
-import { PageHead, Panel, StateMsg, Btn } from "../ui";
+import { PageHead, Panel, StateMsg} from "../ui";
+import { logger } from "../../lib/logger";
 
 export default function DigestDashboardPage() {
   const supabase = createClient();
@@ -36,24 +37,30 @@ export default function DigestDashboardPage() {
       return;
     }
     (async () => {
-      const [{ data: st }, { data: du }, { data: err }] = await Promise.all([
-        supabase.from("v_digest_stats")
-          .select("*")
-          .eq("structure_id", auth.structureId),
-        supabase.from("v_digest_destinataires_uniques")
-          .select("*")
-          .eq("structure_id", auth.structureId),
-        supabase.from("notification_digest_log")
-          .select("envoyee_le, user_id, type_digest, erreur")
-          .eq("structure_id", auth.structureId)
-          .eq("succes", false)
-          .order("envoyee_le", { ascending: false })
-          .limit(10),
-      ]);
-      setStats(st || []);
-      setDestinatairesUniques(du || []);
-      setErreursRecentes(err || []);
-      setLoading(false);
+      try {
+        const [{ data: st }, { data: du }, { data: err }] = await Promise.all([
+          supabase.from("v_digest_stats")
+            .select("*")
+            .eq("structure_id", auth.structureId),
+          supabase.from("v_digest_destinataires_uniques")
+            .select("*")
+            .eq("structure_id", auth.structureId),
+          supabase.from("notification_digest_log")
+            .select("envoyee_le, user_id, type_digest, erreur")
+            .eq("structure_id", auth.structureId)
+            .eq("succes", false)
+            .order("envoyee_le", { ascending: false })
+            .limit(10),
+        ]);
+        setStats(st || []);
+        setDestinatairesUniques(du || []);
+        setErreursRecentes(err || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[DigestDashboard] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready, auth.structureId, peutVoir]);
 

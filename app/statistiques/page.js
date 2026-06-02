@@ -328,10 +328,10 @@ export default function Statistiques() {
                   collectiviteNom: auth.structureNom,
                   etabNom: auth.etabNom,
                 });
-              } catch (e) { alert("Export Excel : " + e.message); }
+              } catch (e) { alert("Export CSV : " + e.message); }
               finally { setLoading(false); }
             }}>
-              <i className="ti ti-file-spreadsheet" /> Export Excel
+              <i className="ti ti-file-spreadsheet" /> Export CSV
             </button>
           )}
         </div>

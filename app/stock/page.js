@@ -6,7 +6,7 @@ import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, Statut, StateMsg } from "../ui";
+import { PageHead} from "../ui";
 import { KpiRow } from "../kpis";
 import Crud from "../crud";
 

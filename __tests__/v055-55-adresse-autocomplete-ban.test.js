@@ -6,6 +6,23 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
+// 0.57.1 : helper qui concatène tous les fichiers du dossier edit/
+function _readAllEditFiles() {
+  const baseDir = path.resolve(process.cwd(), "app/patient/[id]/edit");
+  const out = [];
+  function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".js") || entry.name.endsWith(".jsx")) {
+        out.push(fs.readFileSync(full, "utf-8"));
+      }
+    }
+  }
+  walk(baseDir);
+  return out.join("\n");
+}
+
 describe("0.55.55 - Composant AdresseAutocomplete", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/AdresseAutocomplete.js"), "utf-8");
 
@@ -85,10 +102,12 @@ describe("0.55.55 - Intégration dans /patients (modale création)", () => {
 });
 
 describe("0.55.55 - Intégration dans /patient/[id]/edit", () => {
-  const src = fs.readFileSync(path.resolve(process.cwd(), "app/patient/[id]/edit/page.js"), "utf-8");
+  const src = _readAllEditFiles();
 
   it("Import AdresseAutocomplete", () => {
-    expect(src).toContain('import AdresseAutocomplete from "../../../AdresseAutocomplete"');
+    // 0.57.1 : le composant peut être importé depuis page.js (../../../) ou
+    // depuis tabs/*.js (../../../../) — on accepte les deux profondeurs.
+    expect(src).toMatch(/import AdresseAutocomplete from ["'](\.\.\/)+AdresseAutocomplete["']/);
   });
 
   it("Onglet Identité : autocomplete commune pour lieu_naissance", () => {

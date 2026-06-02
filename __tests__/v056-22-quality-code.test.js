@@ -24,7 +24,9 @@ describe("0.56.22 - console.* migré vers lib/logger", () => {
     "app/api/finess/route.js",
     "app/lib/checkEtabDoublon.js",
     "app/NotificationOptIn.js",
-    "lib/exportExcel.js",
+    // 0.57.3 : lib/exportExcel.js retiré de la liste — il est devenu
+    // un simple ré-exporteur vers lib/exportData.js (qui lui utilise
+    // bien logger, mais le ré-exporteur n'a plus de logique propre).
   ];
 
   filesToCheck.forEach((f) => {

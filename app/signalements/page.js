@@ -7,7 +7,7 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
+import { PageHead, Panel, StateMsg, Modal, Btn} from "../ui";
 import { fmtDate } from "../../lib/format";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";

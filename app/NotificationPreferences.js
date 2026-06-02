@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
 
 import { dialogs } from "./dialogs";
+import { logger } from "../lib/logger";
 const CATEGORIES = [
   { key: "di", label: "Demandes d'intervention", icon: "ti-tools", desc: "Nouvelles DI, urgences, assignations", default: true },
   { key: "achat", label: "Workflow achats", icon: "ti-shopping-cart", desc: "À valider, validées, refusées, reçues", default: true },
@@ -36,20 +37,26 @@ export default function NotificationPreferences({ auth }) {
   useEffect(() => {
     if (!auth?.user?.id) return;
     (async () => {
-      const { data } = await supabase
-        .from("user_notification_preferences")
-        .select("prefs, quiet_hours")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-      setPrefs(data?.prefs || {});
-      if (data?.quiet_hours) {
-        setQuietHours(data.quiet_hours);
-        setEnableQuiet(true);
-      } else {
-        setQuietHours({ start: "22:00", end: "07:00" });
-        setEnableQuiet(false);
+      try {
+        const { data } = await supabase
+          .from("user_notification_preferences")
+          .select("prefs, quiet_hours")
+          .eq("user_id", auth.user.id)
+          .maybeSingle();
+        setPrefs(data?.prefs || {});
+        if (data?.quiet_hours) {
+          setQuietHours(data.quiet_hours);
+          setEnableQuiet(true);
+        } else {
+          setQuietHours({ start: "22:00", end: "07:00" });
+          setEnableQuiet(false);
+        }
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[NotificationPreferences] load failed:", e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [auth?.user?.id]);
 

@@ -7,6 +7,7 @@
 // =============================================================
 
 import { createClient } from "@supabase/supabase-js";
+import { checkRateLimit } from "../../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,10 @@ export async function POST(req) {
   // Récup user + structure
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ ok: false, error: "Non authentifié" }, { status: 401 });
+
+  // 0.57.4 : rate limit (1 patient OCR / 6 secondes max = 10/min)
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
 
   const { data: membre } = await supabase
     .from("membres_structure").select("structure_id").eq("user_id", user.id).maybeSingle();

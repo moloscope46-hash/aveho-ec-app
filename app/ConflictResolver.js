@@ -13,6 +13,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
 import { removeOp } from "../lib/offlineQueue";
+// 0.57.10 : imports retirés (logger non utilisés)
 
 export default function ConflictResolver({ queueItem, onResolved, onClose }) {
   const supabase = createClient();

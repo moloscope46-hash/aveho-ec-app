@@ -10,6 +10,7 @@
 // =============================================================
 
 import { useEffect, useState } from "react";
+import { fetchWithAuth } from "../../lib/fetchWithAuth";
 
 export default function EtabGoogleDetails({ nom, ville, adresse, compact = false }) {
   const [place, setPlace] = useState(null);
@@ -20,7 +21,7 @@ export default function EtabGoogleDetails({ nom, ville, adresse, compact = false
     const adresseComplete = [adresse, ville].filter(Boolean).join(", ");
     const params = new URLSearchParams({ nom });
     if (adresseComplete) params.set("adresse", adresseComplete);
-    fetch(`/api/place?${params}`)
+    fetchWithAuth(`/api/place?${params}`)
       .then(r => r.json())
       .then(d => {
         setPlace(d.place);

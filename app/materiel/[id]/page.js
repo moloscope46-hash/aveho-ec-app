@@ -7,7 +7,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, StateMsg, Btn } from "../../ui";
+import { Panel, StateMsg, Btn} from "../../ui";
 import { fmtDate } from "../../../lib/format";
 import { logger } from "../../../lib/logger";
 import Tooltip from "../../Tooltip";

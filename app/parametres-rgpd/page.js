@@ -21,10 +21,7 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { dialogs } from "../dialogs";
 import { 
-  TEMPLATE_CONSENTEMENT, VERSION_TEMPLATE, TEMPLATE_VARIABLES,
-  renderConsentement, consentementToHtml, validateTemplate, nextVersion,
-  loadCustomVariables, saveCustomVariables,
-} from "../../lib/rgpd";
+  TEMPLATE_CONSENTEMENT, VERSION_TEMPLATE, TEMPLATE_VARIABLES, renderConsentement, consentementToHtml, validateTemplate, nextVersion, loadCustomVariables, saveCustomVariables} from "../../lib/rgpd";
 import { logger } from "../../lib/logger";
 
 export default function ParametresRgpd() {

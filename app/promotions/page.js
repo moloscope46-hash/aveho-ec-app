@@ -7,6 +7,7 @@ import { joursRestants } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, StateMsg } from "../ui";
+import { logger } from "../../lib/logger";
 
 export default function Promotions() {
   const supabase = createClient();
@@ -19,13 +20,19 @@ export default function Promotions() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const [{ data: pr }, { data: mg }] = await Promise.all([
-        supabase.from("promotions").select("*").eq("actif", true).order("fin_le"),
-        supabase.from("magasins").select("id,nom"),
-      ]);
-      setPromos(pr || []);
-      setMagasins(Object.fromEntries((mg || []).map((m) => [m.id, m.nom])));
-      setLoading(false);
+      try {
+        const [{ data: pr }, { data: mg }] = await Promise.all([
+          supabase.from("promotions").select("*").eq("actif", true).order("fin_le"),
+          supabase.from("magasins").select("id,nom"),
+        ]);
+        setPromos(pr || []);
+        setMagasins(Object.fromEntries((mg || []).map((m) => [m.id, m.nom])));
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Promotions] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready]);
 

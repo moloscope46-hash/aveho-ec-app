@@ -16,6 +16,8 @@ import { KpiRow } from "../kpis";
 import { fmtDate, relativeTime } from "../../lib/format";
 
 import { dialogs } from "../dialogs";
+// 0.57.10 : imports retirés (logger non utilisés)
+
 export default function ConsentementsPage() {
   const supabase = createClient();
   const router = useRouter();
