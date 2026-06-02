@@ -13,6 +13,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 export default function AvisGooglePage() {
   const supabase = createClient();
@@ -61,7 +62,7 @@ export default function AvisGooglePage() {
     setSyncMsg(null);
     const token = (await supabase.auth.getSession()).data?.session?.access_token;
     try {
-      const res = await fetch("/api/google-reviews/sync", {
+      const res = await fetchWithAuth("/api/google-reviews/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ etablissement_id: etabId }),

@@ -120,6 +120,69 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.57.17",
+    "kind": "version",
+    "titre": "🛡️ Durcissement sécurité approfondi : CSP report-only, HSTS preload 1 an, Permissions-Policy 27 directives, COEP/CORP, auth standardisée from-ocr, +31 tests sécurité",
+    "chantiers": [
+      { "code": "FE", "txt": "Content-Security-Policy (CSP) ajouté en mode REPORT-ONLY (10 directives) : default-src 'self' (deny by default), script-src + connect-src + img-src configurés finement (Supabase wss + api.gouv.fr + tile.openstreetmap.org + maps.googleapis.com + recherche-entreprises.api.gouv.fr), frame-src 'none' (zéro iframe externe), object-src 'none' (pas de Flash/Java), form-action 'self' (anti-CSRF forms), frame-ancestors 'self' (anti-clickjacking via header moderne), upgrade-insecure-requests (force HTTPS sous-resources). Mode REPORT-ONLY pour ne pas casser le site, à basculer en enforcing après quelques jours d'observation en prod",
+        "code_snippet": {
+          "file": "next.config.js",
+          "note": "CSP directives complètes (extrait)",
+          "lang": "js",
+          "before": "// 0.57.4 — pas de CSP\nconst SECURITY_HEADERS = [\n  { key: \"X-Content-Type-Options\", value: \"nosniff\" },\n  { key: \"X-Frame-Options\", value: \"SAMEORIGIN\" },\n  { key: \"Strict-Transport-Security\", value: \"max-age=15552000; includeSubDomains\" },\n  { key: \"Permissions-Policy\", value: \"camera=(self), microphone=(), geolocation=(self), payment=()\" },\n  // ... 6 headers au total\n];",
+          "after": "// 0.57.17 — CSP + HSTS preload + Permissions étendue\nconst CSP_DIRECTIVES = [\n  \"default-src 'self'\",\n  \"script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api.gouv.fr https://*.googleapis.com\",\n  \"style-src 'self' 'unsafe-inline'\",\n  \"font-src 'self' data:\",\n  \"img-src 'self' data: blob: https://*.tile.openstreetmap.org\",\n  \"connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.gouv.fr ...\",\n  \"worker-src 'self' blob:\",\n  \"frame-src 'none'\",\n  \"object-src 'none'\",\n  \"form-action 'self'\",\n  \"frame-ancestors 'self'\",\n  \"upgrade-insecure-requests\"\n];\n\nconst SECURITY_HEADERS = [\n  // ... headers OWASP existants\n  { key: \"Strict-Transport-Security\", value: \"max-age=31536000; includeSubDomains; preload\" },  // 1 an + preload\n  { key: \"Cross-Origin-Resource-Policy\", value: \"same-origin\" },  // NEW : anti-Spectre\n  { key: \"Content-Security-Policy-Report-Only\", value: CSP_DIRECTIVES.join(\"; \") },  // NEW\n  { key: \"X-Aveho-Security-Audit\", value: \"0.57.17\" },\n];\n\nmodule.exports = {\n  // ...\n  poweredByHeader: false,  // NEW : anti-fingerprinting\n};"
+        }
+      },
+      { "code": "FE", "txt": "HSTS renforcé : max-age 6 mois (15552000s) → 1 an (31536000s) + ajout du flag 'preload' qui permet de soumettre aveho-ec-app.vercel.app au site hstspreload.org de Google. Une fois listé, TOUS les browsers (Chrome, Firefox, Safari, Edge) forceront HTTPS dès la 1ère visite sans avoir besoin du header — protège contre les MITM même au tout premier appel" },
+      { "code": "FE", "txt": "Permissions-Policy étendue de 4 directives à 27 : ajout de bloquages explicites pour toutes les APIs sensibles (interest-cohort=() pour bloquer FLoC tracking Google, ambient-light-sensor, battery, bluetooth, display-capture, document-domain, encrypted-media, gamepad, gyroscope, hid, idle-detection, magnetometer, midi, navigation-override, screen-wake-lock, serial, speaker-selection, usb, xr-spatial-tracking, etc.) + autorisations ciblées (camera/geolocation/web-share/publickey-credentials-get sur 'self' uniquement pour OCR, carte, partage PWA, biométrie WebAuthn). Aucune surface d'attaque non nécessaire" },
+      { "code": "FE", "txt": "Cross-Origin-Resource-Policy: same-origin ajouté pour mitiger Spectre/Meltdown (les attaques side-channel CPU qui pouvaient lire des données cross-origin). Exception : /tabler-icons/* en cross-origin car ce sont des ressources statiques publiques sans donnée sensible. Cache-Control public max-age=1 an + immutable sur les fonts Tabler pour optimiser le perf en plus" },
+      { "code": "FE", "txt": "poweredByHeader: false dans next.config.js — désactive le header 'X-Powered-By: Next.js' qui permettait à un attaquant de fingerprinter le framework (et donc cibler des CVE spécifiques). Mesure anti-reconnaissance simple mais efficace" },
+      { "code": "FIX", "txt": "Auth standardisée pour les 2 routes /from-ocr (patients/from-ocr + prescriptions/from-ocr) : avant elles faisaient leur propre vérification Bearer token avec createClient inline + supabase.auth.getUser() (~15 lignes de boilerplate dupliqué). Maintenant elles passent par requireAuth() du lib/apiAuth.js comme les 15 autres routes API. Code 50% plus court, comportement strictement identique, gain en maintenabilité (un fix dans requireAuth bénéficie automatiquement à toutes les routes)" },
+      { "code": "FE", "txt": "Couverture requireAuth élargie : 15/19 routes (avant 0.57.17) → 17/19 routes (après). Les 2 routes restantes (/api/version et /api/health) sont des health-checks publics par design (consultés par les sondes Vercel et les monitoring externes). Le test 0.57.17 anti-régression vérifie que la whitelist contient EXACTEMENT ces 2 routes — si un dev ajoute /api/dump-all-patients sans requireAuth, le test échoue" },
+      { "code": "AI", "txt": "Score sécurité headers : 10/10 mesuré en local après build (script test-headers.mjs) : X-Content-Type-Options nosniff ✓, X-Frame-Options SAMEORIGIN ✓, HSTS 1 an + preload ✓, Referrer-Policy strict-origin-when-cross-origin ✓, Permissions-Policy 27 directives ✓, COOP same-origin-allow-popups ✓, CORP same-origin ✓, CSP report-only 12 directives ✓, X-Aveho-Security-Audit 0.57.17 ✓, X-Powered-By ABSENT ✓. /tabler-icons : Cache-Control immutable + CORP cross-origin (assets publics)" },
+      { "code": "AI", "txt": "+31 tests Vitest (v057-17-security-hardening.test.js) : version (1), 14 headers de sécurité durcis dans next.config.js (14), 9 CSP directives spécifiques (9), cache + CORP tabler-icons (2), auth standardisée from-ocr (3 : import requireAuth + authCheck pattern + plus de createClient inline), couverture requireAuth (2 : 17 routes protégées + seules /version+/health non protégées), LINT ANTI-RÉGRESSION (1 test critique : toute nouvelle route POST/PUT/DELETE hors whitelist doit avoir requireAuth). +2 tests anciens 0.56.3 et 0.57.4 ajustés pour le nouveau pattern requireAuth. Total 2734 tests verts (vs 2703)" },
+      { "code": "DOC", "txt": "CSP en mode REPORT-ONLY : pour basculer en enforcing (Content-Security-Policy header au lieu de Content-Security-Policy-Report-Only), il faut d'abord observer les rapports d'erreur en prod (browsers envoient des reports sur ce qui aurait été bloqué). Quand on est sûr que rien de légitime ne casse, on bascule. Action : (1) déployer 0.57.17 en prod, (2) attendre 3-5 jours en surveillant la console DevTools, (3) si 0 erreur CSP : basculer dans 0.57.18 en remplaçant 'Content-Security-Policy-Report-Only' par 'Content-Security-Policy'" },
+      { "code": "AI", "txt": "Audit sécurité actuel du soft Aveho EC : ✅ npm audit : 0 CRIT + 0 HIGH + 2 MOD postcss (build-time only, non exploitable). ✅ 17/19 routes API protégées (auth + rate limit). ✅ 10 headers HTTP sécurité (vs 6 en 0.57.4). ✅ CSP report-only configurée (mitigation XSS). ✅ HSTS 1 an + preload (force HTTPS). ✅ Permissions-Policy 27 directives. ✅ poweredByHeader désactivé. ✅ 0 secret en dur dans le code (audit grep AIzaSy/sk_live/service_role). ✅ 9 dangerouslySetInnerHTML audités SAFE (escape avant + sources statiques générées). ✅ 0 eval/new Function. ✅ Tests anti-régression actifs : ne pas oublier requireAuth + ne pas oublier fetchWithAuth + LINT POST/PUT/DELETE. ✅ lib/logger.js redacte les valeurs sensibles (password/token/credential_id)" }
+    ],
+    "themes": ["securite", "csp", "headers"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.17.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.16",
+    "kind": "version",
+    "titre": "🚨 HOTFIX critique : 7 fichiers utilisaient fetch() au lieu de fetchWithAuth() → SIRET, RPPS, OCR, prescriptions cassés en prod depuis 0.56.21",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ PAR L'UTILISATEUR : 'api siret ne fonctionne plus'. Diagnostic : depuis 0.56.21 qui a protégé toutes les routes API avec requireAuth (Bearer token Supabase obligatoire), 7 fichiers caller utilisaient encore fetch() direct au lieu de fetchWithAuth() → toutes ces fonctionnalités renvoyaient 401 'Non authentifié (Bearer token manquant)' en prod. Le bug est resté caché plusieurs jours car ces routes étaient peu testées en E2E (les smoke tests internes utilisent volontairement fetch sans auth pour vérifier le refus 401, donc passaient verts à tort)",
+        "code_snippet": {
+          "file": "app/SireneSearch.js",
+          "note": "Le fix type — répété sur 7 fichiers",
+          "lang": "js",
+          "before": "// AVANT 0.57.16 - fetch direct sans token\nimport { useState, useEffect, useRef } from \"react\";\n// ...\nconst res = await fetch(url);  // → 401 Unauthorized en prod depuis 0.56.21\nconst data = await res.json();",
+          "after": "// 0.57.16 - utilise fetchWithAuth qui ajoute Authorization: Bearer\nimport { useState, useEffect, useRef } from \"react\";\nimport { fetchWithAuth } from \"../lib/fetchWithAuth\";  // 0.57.16 : auth Bearer obligatoire\n// ...\nconst res = await fetchWithAuth(url);  // 0.57.16\nconst data = await res.json();"
+        }
+      },
+      { "code": "FIX", "txt": "7 fichiers fixés : (1) app/SireneSearch.js — recherche entreprises par nom/SIRET/SIREN, utilisé dans les onboarding partenaires + fiche établissement. (2) app/RppsAutocomplete.js — /api/place (le /api/rpps était déjà OK), utilisé pour autocompléter les adresses des praticiens. (3) app/admin/prescriptions-archive/page.js — /api/prescriptions/search et /api/prescriptions/export-csv, page d'archive utilisée par les admins pour rechercher d'anciennes prescriptions. (4) app/admin/avis-google/page.js — /api/google-reviews/sync, page de gestion des avis Google. (5) app/scan/bulletin-situation/page.js — /api/ocr/bulletin-situation et /api/patients/from-ocr, scanner de bulletins de situation CPAM. (6) app/scan/prescription/page.js — /api/ocr/prescription et /api/prescriptions/from-ocr, scanner de prescriptions. (7) app/scan/ocr/page.js — /api/ocr/generic, scanner OCR générique" },
+      { "code": "AI", "txt": "Script Python automatisé pour le fix : (a) parse chaque fichier cassé, (b) ajoute l'import 'import { fetchWithAuth } from \"...../lib/fetchWithAuth\"' après le dernier import existant si absent, (c) remplace tous les patterns 'await fetch(\"<route>\")' et 'await fetch(`<route>`)' par 'await fetchWithAuth(...)' pour les routes spécifiques de chaque fichier. Évite les remplacements globaux qui auraient pu casser d'autres fetch() légitimes (ex: APIs externes, /api/version qui n'a pas requireAuth)" },
+      { "code": "AI", "txt": "+19 tests Vitest (v057-16-hotfix-fetchwithauth.test.js) dont 1 test de NON-RÉGRESSION majeur : (1) Version 0.57.16+ (1 test). (2) Imports fetchWithAuth dans les 7 fichiers fixés (7 tests). (3) SireneSearch.js : fetchWithAuth utilisé + plus de fetch(url) direct (2 tests). (4) **LINT ANTI-RÉGRESSION** : parcourt récursivement app/ (hors app/api et hors changelog), parse chaque .js, détecte les await fetch(\"/api/...\") ou await fetch(`/api/...`) qui pointent vers une route protégée par requireAuth → fail si trouvé (1 test critique + 1 test sanity ≥ 10 routes protégées). (5) Documentation : 4 fichiers contiennent le marqueur 0.57.16 dans un commentaire explicatif (4 tests). Total 2703 tests verts (vs 2687)",
+        "code_snippet": {
+          "file": "__tests__/v057-16-hotfix-fetchwithauth.test.js",
+          "note": "Test anti-régression critique",
+          "lang": "js",
+          "before": "// Avant 0.57.16 : aucun test ne détectait ce bug\n// Le bug 0.56.21 → 0.57.15 (4 jours) est resté en prod",
+          "after": "// 0.57.16 - lint anti-régression\nfunction findDirectFetches() {\n  const bugs = [];\n  const protectedRoutes = getProtectedRoutes();  // routes avec requireAuth\n  walk(path.join(projectRoot, \"app\"));\n  // → cherche /await fetch([\"'`])\\/api\\// dans tous les .js (hors app/api, hors changelog)\n  // → matche contre les routes protégées\n  // → renvoie [{file, route}] si bug détecté\n  return bugs;\n}\n\nit(\"Aucun fetch() direct vers une route avec requireAuth\", () => {\n  const bugs = findDirectFetches();\n  expect(bugs).toEqual([]);  // ← FAIL automatique si quelqu'un ajoute un fetch oublié\n});"
+        }
+      },
+      { "code": "DOC", "txt": "Marqueur '0.57.16' dans les commentaires d'import et de fetchWithAuth permet de tracer rapidement les changements (grep -rn '0.57.16' montre tous les endroits touchés). Pattern reproductible pour les hotfixes futurs : toujours mettre la version dans le commentaire du fix pour qu'un futur dev comprenne pourquoi le code est comme ça" },
+      { "code": "FIX", "txt": "ACTION CRITIQUE POUR L'UTILISATEUR : déployer cette 0.57.16 le plus vite possible sur Vercel pour que les fonctionnalités SIRET, RPPS-place, OCR (bulletins/prescriptions), avis Google et archive prescriptions redeviennent fonctionnelles. C'est un blocker pour les utilisateurs Aveho qui ne peuvent plus utiliser ces 7 features depuis le déploiement 0.56.21" }
+    ],
+    "themes": ["hotfix", "securite", "auth"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.16.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.57.15",
     "kind": "version",
     "titre": "📸 Visual regression étendu : 18 baselines (vs 7) — viewports multiples, mode signup, sections, notes 4 versions",

@@ -19,6 +19,7 @@ import { useCart } from "../../useCart";
 import RppsVerifyBadge from "../../RppsVerifyBadge";
 import { PageHead, Panel } from "../../ui";
 import { logger } from "../../../lib/logger";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 // 0.56.3 : useSearchParams requiert un Suspense boundary à la racine
 export default function ScanPrescriptionPageWrapper() {
@@ -94,7 +95,7 @@ function ScanPrescriptionPage() {
       const b64 = await fileToBase64(file);
       // 0.56.20 : envoyer le token pour passer la check requireAuth côté API
       const token = (await supabase.auth.getSession()).data?.session?.access_token;
-      const res = await fetch("/api/ocr/prescription", {
+      const res = await fetchWithAuth("/api/ocr/prescription", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -137,7 +138,7 @@ function ScanPrescriptionPage() {
 
     try {
       const token = (await supabase.auth.getSession()).data?.session?.access_token;
-      const res = await fetch("/api/prescriptions/from-ocr", {
+      const res = await fetchWithAuth("/api/prescriptions/from-ocr", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({

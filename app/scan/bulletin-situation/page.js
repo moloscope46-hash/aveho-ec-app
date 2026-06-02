@@ -15,6 +15,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
 import { logger } from "../../../lib/logger";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 export default function ScanBulletinSituationPage() {
   const supabase = createClient();
@@ -77,7 +78,7 @@ export default function ScanBulletinSituationPage() {
       });
       // 0.56.20 : envoyer le token pour passer la check requireAuth côté API
       const token = (await supabase.auth.getSession()).data?.session?.access_token;
-      const res = await fetch("/api/ocr/bulletin-situation", {
+      const res = await fetchWithAuth("/api/ocr/bulletin-situation", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +108,7 @@ export default function ScanBulletinSituationPage() {
     try {
       const token = (await supabase.auth.getSession()).data?.session?.access_token;
       // 0.56.1 : on transmet les méta-données du fichier source pour audit
-      const res = await fetch("/api/patients/from-ocr", {
+      const res = await fetchWithAuth("/api/patients/from-ocr", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({

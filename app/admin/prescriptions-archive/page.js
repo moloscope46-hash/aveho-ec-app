@@ -14,6 +14,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel} from "../../ui";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 export default function PrescriptionsArchivePage() {
   const supabase = createClient();
   const router = useRouter();
@@ -68,7 +69,7 @@ export default function PrescriptionsArchivePage() {
     setSearching(true);
     const token = (await supabase.auth.getSession()).data?.session?.access_token;
     try {
-      const res = await fetch("/api/prescriptions/search", {
+      const res = await fetchWithAuth("/api/prescriptions/search", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ ...filters, limit: 100 }),
@@ -91,7 +92,7 @@ export default function PrescriptionsArchivePage() {
     setExporting(true);
     const token = (await supabase.auth.getSession()).data?.session?.access_token;
     try {
-      const res = await fetch("/api/prescriptions/export-csv", {
+      const res = await fetchWithAuth("/api/prescriptions/export-csv", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ ...filters, include_lignes: withLignes }),

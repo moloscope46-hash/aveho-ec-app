@@ -134,7 +134,7 @@ export default function RppsAutocomplete({
       const nom = [r.prenom, r.nom].filter(Boolean).join(" ");
       if (!nom || !adresseComplete) return;
       const params = new URLSearchParams({ nom, adresse: adresseComplete });
-      const res = await fetch(`/api/place?${params}`);
+      const res = await fetchWithAuth(`/api/place?${params}`);  // 0.57.16 : fix bug auth Bearer (était fetch direct)
       if (!res.ok) return;
       const data = await res.json();
       const photoUrl = data?.place?.photoUrl || "";

@@ -14,12 +14,20 @@
 // =============================================================
 
 import { createClient } from "@supabase/supabase-js";
-import { checkRateLimit } from "../../../../lib/apiAuth";
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
 
 export async function POST(req) {
+  // 0.57.17 : auth standardisée via requireAuth (avant : code dupliqué inline)
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user, supabase } = authCheck;
+
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
+
   let body;
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
@@ -32,27 +40,6 @@ export async function POST(req) {
   if (!patient_id) return Response.json({ ok: false, error: "patient_id manquant" }, { status: 400 });
   if (!structure_id) return Response.json({ ok: false, error: "structure_id manquant" }, { status: 400 });
   if (!data) return Response.json({ ok: false, error: "data manquante" }, { status: 400 });
-
-  // Token utilisateur (Bearer) → utiliser un client supabase avec ce token pour respecter RLS
-  const auth = req.headers.get("Authorization") || "";
-  const token = auth.replace(/^Bearer\s+/i, "");
-  if (!token) {
-    return Response.json({ ok: false, error: "Non authentifié (Bearer token manquant)" }, { status: 401 });
-  }
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-    }
-  );
-
-  // 0.57.4 : vérifier le user + appliquer rate limit
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ ok: false, error: "Token invalide ou expiré" }, { status: 401 });
-
-  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
-  if (!rate.ok) return rate.response;
 
   const p = data.prescripteur || {};
   const meds = Array.isArray(data.medicaments) ? data.medicaments : [];

@@ -13,6 +13,7 @@ import { createClient } from "../../../lib/supabase";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 export default function ScanOcrPage() {
   const auth = useAuth();
@@ -50,7 +51,7 @@ export default function ScanOcrPage() {
       });
       // 0.56.20 : token Bearer pour passer requireAuth
       const token = (await supabase.auth.getSession()).data?.session?.access_token;
-      const res = await fetch("/api/ocr/generic", {
+      const res = await fetchWithAuth("/api/ocr/generic", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

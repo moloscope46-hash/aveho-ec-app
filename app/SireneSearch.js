@@ -8,6 +8,7 @@
 //  Utile pour importer fournisseurs, prestataires, sociétés tierces.
 // =============================================================
 import { useState, useEffect, useRef } from "react";
+import { fetchWithAuth } from "../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 // 0.55.5 : catégories médicales prédéfinies pour SIRENE
 const SIRENE_CATEGORIES = {
@@ -76,7 +77,7 @@ export default function SireneSearch({ onSelect, placeholder = "Chercher par nom
           url = `/api/sirene?${params.toString()}`;
         }
         
-        const res = await fetch(url);
+        const res = await fetchWithAuth(url);  // 0.57.16
         const data = await res.json();
         
         if (!res.ok) {

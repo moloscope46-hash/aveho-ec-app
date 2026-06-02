@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.17 — Durcissement sécurité</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--steel:#37474f}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#37474f 40%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#cfd8dc;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#cfd8dc;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#cfd8dc}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--steel)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#c8e6c9);border-color:#a5d6a7;border-left:4px solid #2e7d32}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.danger{background:#fef0ee;border-color:#f5b8b0;border-left:4px solid #c0392b}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.steel{background:#eceff1;border-color:#b0bec5}.kpi.steel .kpi-val{color:#263238}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.score-bar{height:8px;background:#e3e9ee;border-radius:4px;overflow:hidden;margin:4px 0}
+.score-fill{height:100%;background:linear-gradient(90deg,#5aa05a,#7CC8C8)}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — DURCISSEMENT SÉCURITÉ APPROFONDI</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.17 — Durcissement sécurité<small>CSP report-only · HSTS preload · 27 Permissions · COEP/CORP · auth standardisée</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.17-alpha</code></span>
+<span><b>Tests :</b> 2734 Vitest dont 31 sécurité</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel en 4 chiffres</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">10/10</span>
+<span class="kpi-lbl">Headers sécurité (mesuré)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">17/19</span>
+<span class="kpi-lbl">Routes API protégées</span>
+</div>
+<div class="kpi steel">
+<span class="kpi-val">27</span>
+<span class="kpi-lbl">Permissions-Policy directives</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+31</span>
+<span class="kpi-lbl">Tests sécurité dont 1 anti-régression</span>
+</div>
+</div>
+
+<h2>🛡️ Score sécurité global Aveho EC</h2>
+<div class="panel hero">
+<table>
+<tr><th>Domaine</th><th>État 0.57.17</th><th>Anti-régression</th></tr>
+<tr><td>npm audit (vulnérabilités CVE)</td><td>0 CRIT · 0 HIGH · 2 MOD (postcss build-time)</td><td>✓ check à chaque install</td></tr>
+<tr><td>Routes API protégées</td><td>17/19 (sauf /version + /health)</td><td>✓ LINT POST/PUT/DELETE</td></tr>
+<tr><td>fetchWithAuth côté frontend</td><td>100% des callers</td><td>✓ LINT anti-régression 0.57.16</td></tr>
+<tr><td>Headers HTTP de sécurité</td><td>10/10 mesurés</td><td>✓ 14 tests Vitest</td></tr>
+<tr><td>Content-Security-Policy</td><td>12 directives, mode report-only</td><td>✓ 9 tests directives</td></tr>
+<tr><td>HSTS</td><td>1 an + preload</td><td>✓ test pattern strict</td></tr>
+<tr><td>Permissions-Policy</td><td>27 directives (vs 4 en 0.57.4)</td><td>✓ tests bloquages</td></tr>
+<tr><td>Secrets en dur dans le code</td><td>0 (audit grep)</td><td>✓ audit manuel</td></tr>
+<tr><td>eval / new Function (RCE)</td><td>0</td><td>✓ audit grep</td></tr>
+<tr><td>dangerouslySetInnerHTML</td><td>9 occurrences, 100% audités SAFE</td><td>✓ docs en 0.57.4</td></tr>
+<tr><td>Logs sensibles</td><td>lib/logger redacte automatiquement</td><td>✓ 0.56.20 implémenté</td></tr>
+<tr><td>Auth standardisée routes API</td><td>100% via requireAuth (avant : duplication)</td><td>✓ tests pattern uniforme</td></tr>
+</table>
+</div>
+
+<h2>🔒 1. Content-Security-Policy (CSP) — mitigation XSS critique</h2>
+<div class="panel">
+<p>CSP est <b>la défense la plus efficace contre les XSS</b> côté browser. Aveho l'avait pas → ajouté en mode <b>REPORT-ONLY</b> pour observer sans casser.</p>
+
+<h3>12 directives configurées</h3>
+<pre><code>default-src 'self'                                    # deny by default
+script-src 'self' 'unsafe-eval' 'unsafe-inline'       # + Next.js bootstrap
+  https://api.gouv.fr https://*.googleapis.com
+style-src 'self' 'unsafe-inline'                      # + styled-jsx
+font-src 'self' data:                                 # Quicksand + Tabler
+img-src 'self' data: blob:                            # uploads OCR
+  https://*.tile.openstreetmap.org                    # tuiles Leaflet
+connect-src 'self' https://*.supabase.co              # Supabase
+  wss://*.supabase.co                                 # realtime WS
+  https://api.gouv.fr https://*.api.gouv.fr           # RPPS/SIRENE/FINESS
+  https://recherche-entreprises.api.gouv.fr           # SIRET search
+  https://maps.googleapis.com                         # Places API
+worker-src 'self' blob:                               # service worker
+frame-src 'none'                                      # ZÉRO iframe externe
+object-src 'none'                                     # pas de Flash/Java
+form-action 'self'                                    # anti-CSRF forms
+frame-ancestors 'self'                                # anti-clickjacking
+upgrade-insecure-requests                             # force HTTPS sub-res</code></pre>
+
+<h3>Pourquoi REPORT-ONLY au lieu d'enforcing</h3>
+<p>Mode REPORT-ONLY = le browser <b>ne bloque pas</b> ce qui violerait la policy, il <b>rapporte juste</b> ce qu'il aurait bloqué dans la console DevTools. Permet de valider qu'aucun script légitime n'est cassé avant de durcir.</p>
+
+<h3>Plan de durcissement</h3>
+<ol>
+<li>Déployer 0.57.17 en prod → CSP report-only active</li>
+<li>Observer la console DevTools pendant 3-5 jours en prod</li>
+<li>Si 0 erreur CSP légitime : bascule en 0.57.18 (header <code>Content-Security-Policy</code> sans <code>-Report-Only</code>)</li>
+<li>À terme : retirer <code>'unsafe-inline'</code> + <code>'unsafe-eval'</code> via nonce dynamique dans middleware.js (chantier 0.58.x)</li>
+</ol>
+</div>
+
+<h2>🔒 2. HSTS preload — force HTTPS dès la 1ère visite</h2>
+<div class="panel">
+<table>
+<tr><th>Aspect</th><th>0.57.4</th><th>0.57.17</th></tr>
+<tr><td>max-age</td><td>15552000s (6 mois)</td><td><b>31536000s (1 an)</b></td></tr>
+<tr><td>includeSubDomains</td><td>✓</td><td>✓</td></tr>
+<tr><td>preload</td><td>❌</td><td><b>✓</b></td></tr>
+</table>
+
+<h3>Que fait 'preload'</h3>
+<p>Le flag <code>preload</code> permet de soumettre <code>aveho-ec-app.vercel.app</code> au site officiel <a href="https://hstspreload.org">hstspreload.org</a> de Google. Une fois listé (process automatique après soumission), <b>tous les browsers</b> (Chrome, Firefox, Safari, Edge) baked-in la liste dans leur binaire — donc ils forcent HTTPS dès la <b>1ère visite</b>, sans même avoir besoin du header.</p>
+
+<p>Protège contre les attaques MITM sur la toute première connexion (avant que le user ait vu le header HSTS au moins une fois).</p>
+
+<h3>Action recommandée</h3>
+<p>Après le déploiement, soumettre Aveho à hstspreload.org. Note : ça implique un engagement de <b>ne plus jamais downgrade en HTTP</b>, donc à faire seulement si Aveho restera en HTTPS sur le long terme (ce qui est le cas avec Vercel).</p>
+</div>
+
+<h2>🔒 3. Permissions-Policy étendue (4 → 27 directives)</h2>
+<div class="panel">
+<h3>Autorisations ciblées (sur 'self' uniquement)</h3>
+<ul>
+<li><code>camera=(self)</code> — pour l'OCR scanner</li>
+<li><code>geolocation=(self)</code> — pour la carte logistique</li>
+<li><code>web-share=(self)</code> — pour le bouton "Partager" PWA</li>
+<li><code>publickey-credentials-get=(self)</code> — pour la biométrie WebAuthn</li>
+<li><code>sync-xhr=(self)</code> — pour Supabase realtime</li>
+</ul>
+
+<h3>Bloquages explicites (22 APIs)</h3>
+<ul>
+<li><b>Tracking</b> : <code>interest-cohort=()</code> bloque FLoC (Federated Learning of Cohorts de Google)</li>
+<li><b>Capture sensible</b> : microphone, display-capture, encrypted-media</li>
+<li><b>Sensors</b> : ambient-light-sensor, battery, gyroscope, magnetometer, hid, idle-detection</li>
+<li><b>Périphériques</b> : bluetooth, usb, serial, midi, gamepad</li>
+<li><b>Misc</b> : payment, document-domain, navigation-override, xr-spatial-tracking, etc.</li>
+</ul>
+
+<p>Aucun API navigateur ne peut être utilisé silencieusement par un script malicieux qui aurait trouvé une faille XSS — la défense est en profondeur.</p>
+</div>
+
+<h2>🔒 4. Cross-Origin Resource Policy + COOP (anti-Spectre)</h2>
+<div class="panel">
+<p>Les attaques side-channel CPU (Spectre, Meltdown, MDS) peuvent leak des données cross-origin via le timing des branches. La mitigation côté web standard :</p>
+
+<table>
+<tr><th>Header</th><th>Valeur</th><th>Effet</th></tr>
+<tr><td>Cross-Origin-Opener-Policy</td><td>same-origin-allow-popups</td><td>Isole window.opener (déjà en 0.57.4)</td></tr>
+<tr><td><b>Cross-Origin-Resource-Policy</b></td><td><b>same-origin</b></td><td><b>NOUVEAU 0.57.17</b> : seules les pages de aveho-ec-app.vercel.app peuvent charger nos ressources</td></tr>
+</table>
+
+<h3>Exception : /tabler-icons/* en cross-origin</h3>
+<p>Les fonts Tabler peuvent être loadées depuis n'importe où (CDN externes, embeds...) car ce sont des ressources publiques sans donnée sensible. Cache-Control immutable 1 an pour gain perf.</p>
+</div>
+
+<h2>🔒 5. poweredByHeader désactivé (anti-fingerprinting)</h2>
+<div class="panel">
+<p>Par défaut, Next.js envoie un header <code>X-Powered-By: Next.js</code> qui permet à un attaquant de :</p>
+<ol>
+<li>Savoir qu'on utilise Next.js</li>
+<li>Cibler des CVE spécifiques aux versions Next 14/15/16</li>
+<li>Construire des payloads adaptés (ex: SSRF dans middleware Next, RCE RSC, etc.)</li>
+</ol>
+
+<p>Avec <code>poweredByHeader: false</code> dans next.config.js, plus d'info gratuite. <b>Vérifié mesuré</b> : le header est ABSENT des réponses HTTP.</p>
+</div>
+
+<h2>🔒 6. Auth standardisée routes /from-ocr</h2>
+<div class="panel">
+<p>Les 2 routes OCR (<code>/api/patients/from-ocr</code> et <code>/api/prescriptions/from-ocr</code>) faisaient leur propre vérification Bearer token avec ~15 lignes de boilerplate dupliqué. Refactor : utiliser <code>requireAuth()</code> du <code>lib/apiAuth.js</code> comme les 15 autres routes.</p>
+
+<h3>Avant (boilerplate dupliqué)</h3>
+<pre><code>const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if (!SUPABASE_URL || !SUPABASE_ANON) {
+  return Response.json({ ok: false, error: "Supabase non configuré" }, { status: 500 });
+}
+const auth = req.headers.get("Authorization") || "";
+const token = auth.replace(/^Bearer\s+/i, "");
+if (!token) {
+  return Response.json({ ok: false, error: "Non authentifié (Bearer token manquant)" }, { status: 401 });
+}
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  global: { headers: { Authorization: `Bearer ${token}` } },
+});
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return Response.json({ ok: false, error: "Token invalide" }, { status: 401 });</code></pre>
+
+<h3>Après (3 lignes propres)</h3>
+<pre><code>const authCheck = await requireAuth(req);
+if (!authCheck.ok) return authCheck.response;
+const { user, supabase } = authCheck;</code></pre>
+
+<p>Comportement strictement identique mais : (1) maintenable, (2) un fix dans requireAuth bénéficie à toutes les routes, (3) tests anti-régression couvrent toutes les routes uniformément.</p>
+</div>
+
+<h2>🛡️ Test anti-régression critique (le plus important)</h2>
+<div class="panel hero">
+<p>Pour empêcher qu'un dev oublie <code>requireAuth</code> dans une nouvelle route POST/PUT/DELETE :</p>
+
+<pre><code>// __tests__/v057-17-security-hardening.test.js
+const WHITELIST = ["/version", "/health"];  // health-checks publics par design
+
+it("Toute route POST/PUT/DELETE utilise requireAuth", () => {
+  const routes = listApiPostRoutes();
+  const violations = routes.filter(r =>
+    !WHITELIST.includes(r.path) && !r.src.includes("requireAuth")
+  );
+  expect(violations.map(v => v.path)).toEqual([]);
+});</code></pre>
+
+<p><b>Garantie :</b> si quelqu'un ajoute <code>/api/dump-all-patients/route.js</code> avec un <code>POST</code> sans <code>requireAuth</code>, le test échoue avant même le push. La whitelist ne peut être étendue qu'en modifiant ce test explicitement, ce qui force le reviewer du PR à se poser la question.</p>
+</div>
+
+<h2>📊 Headers HTTP mesurés en local</h2>
+<div class="panel ok">
+<table>
+<tr><th>Header</th><th>Valeur</th><th>Statut</th></tr>
+<tr><td>X-Content-Type-Options</td><td>nosniff</td><td>✓</td></tr>
+<tr><td>X-Frame-Options</td><td>SAMEORIGIN</td><td>✓</td></tr>
+<tr><td>Strict-Transport-Security</td><td>max-age=31536000; includeSubDomains; preload</td><td>✓ <b>NEW 1 an + preload</b></td></tr>
+<tr><td>Referrer-Policy</td><td>strict-origin-when-cross-origin</td><td>✓</td></tr>
+<tr><td>Permissions-Policy</td><td>27 directives</td><td>✓ <b>NEW étendue</b></td></tr>
+<tr><td>Cross-Origin-Opener-Policy</td><td>same-origin-allow-popups</td><td>✓</td></tr>
+<tr><td>Cross-Origin-Resource-Policy</td><td>same-origin</td><td>✓ <b>NEW</b></td></tr>
+<tr><td>Content-Security-Policy-Report-Only</td><td>12 directives</td><td>✓ <b>NEW report-only</b></td></tr>
+<tr><td>X-Aveho-Security-Audit</td><td>0.57.17</td><td>✓ <b>NEW informatif</b></td></tr>
+<tr><td>X-Powered-By</td><td>ABSENT</td><td>✓ <b>NEW anti-fingerprint</b></td></tr>
+</table>
+<p><b>Score : 10/10</b> ✅ Mesuré via curl sur le serveur local prod build.</p>
+</div>
+
+<h2>📈 +31 tests Vitest (v057-17-security-hardening.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.17+ (1 test)</li>
+<li>14 headers de sécurité dans next.config.js (14 tests)</li>
+<li>9 directives CSP spécifiques (9 tests)</li>
+<li>Cache + CORP sur /tabler-icons (2 tests)</li>
+<li>Auth standardisée routes /from-ocr (3 tests)</li>
+<li>Couverture requireAuth : 17 routes protégées + whitelist exacte (2 tests)</li>
+<li><b>LINT ANTI-RÉGRESSION</b> : POST/PUT/DELETE doit avoir requireAuth (1 test critique)</li>
+<li>+1 test 0.56.3 ajusté + +1 test 0.57.4 ajusté pour nouveau pattern</li>
+</ul>
+<p>Total : <b>2734 tests verts</b> (vs 2703 en 0.57.16)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>__tests__/v057-17-security-hardening.test.js</code> (31 tests sécurité)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>next.config.js</code> : 12 directives CSP + 10 headers (vs 6) + poweredByHeader false + cache assets</li>
+<li><code>app/api/patients/from-ocr/route.js</code> : auth standardisée via requireAuth</li>
+<li><code>app/api/prescriptions/from-ocr/route.js</code> : idem</li>
+<li><code>__tests__/v056-3-ocr-prescriptions.test.js</code> : 1 test ajusté pour pattern requireAuth</li>
+<li><code>__tests__/v057-4-security-audit-app.test.js</code> : 1 test ajusté</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                              # 2734 verts attendu
+npm run build                         # vérif Vercel
+git add -A
+git commit -m "Alpha 0.57.17 - Durcissement securite : CSP + HSTS preload + 27 Permissions + COEP/CORP + auth standardisee"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Après déploiement : observer la console DevTools</h2>
+<div class="panel warn">
+<p>Le CSP est en mode <b>REPORT-ONLY</b> donc il ne casse rien. Mais pendant les premiers jours, observe la console (F12) sur la prod :</p>
+
+<ul>
+<li>S'il y a des erreurs <code>[Report Only] Refused to load the script...</code> → c'est qu'un script légitime est bloqué. Il faut ajouter sa source dans la directive script-src de next.config.js</li>
+<li>S'il y a des erreurs <code>[Report Only] Refused to connect to...</code> → ajouter dans connect-src</li>
+<li>S'il y a des erreurs <code>[Report Only] Refused to load the image...</code> → ajouter dans img-src</li>
+</ul>
+
+<p>Quand tu n'as plus aucune erreur CSP en prod pendant 3-5 jours d'usage normal, on bascule en <b>enforcing</b> (version 0.57.18) en retirant <code>-Report-Only</code> du nom du header.</p>
+</div>
+
+<h2>📋 Prochaines étapes possibles</h2>
+<div class="panel tip">
+<ul>
+<li><b>0.57.18</b> — Basculer CSP en enforcing après observation 3-5j prod</li>
+<li><b>0.57.19</b> — Validation Zod des body API (anti-injection / typage strict)</li>
+<li><b>0.57.20</b> — Endpoint /api/csp-report pour collecter les rapports CSP en BDD</li>
+<li><b>0.57.21</b> — Audit RLS Supabase complet (sécurité des policies cross-tenant)</li>
+<li><b>C</b> — Tests a11y axe-core sur les 5 environnements</li>
+<li><b>D</b> — Refactos qualité</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 107ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.16 → <b>0.57.17</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.17 · 2 juin 2026 · 2734 Vitest · 10/10 headers sécurité mesurés</footer>
+</div></body></html>

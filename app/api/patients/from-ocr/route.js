@@ -7,16 +7,19 @@
 // =============================================================
 
 import { createClient } from "@supabase/supabase-js";
-import { checkRateLimit } from "../../../../lib/apiAuth";
+import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req) {
-  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!SUPABASE_URL || !SUPABASE_ANON) {
-    return Response.json({ ok: false, error: "Supabase non configuré" }, { status: 500 });
-  }
+  // 0.57.17 : auth standardisée via requireAuth (avant : code dupliqué inline)
+  const authCheck = await requireAuth(req);
+  if (!authCheck.ok) return authCheck.response;
+  const { user, supabase } = authCheck;
+
+  // Rate limit (10 patients OCR / minute par user)
+  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
+  if (!rate.ok) return rate.response;
 
   let body;
   try { body = await req.json(); } catch {
@@ -27,19 +30,6 @@ export async function POST(req) {
   if (!ocr || !ocr.nom) {
     return Response.json({ ok: false, error: "Données OCR insuffisantes (nom manquant)" }, { status: 400 });
   }
-
-  const authHeader = req.headers.get("authorization") || "";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON, {
-    global: { headers: { Authorization: authHeader } },
-  });
-
-  // Récup user + structure
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ ok: false, error: "Non authentifié" }, { status: 401 });
-
-  // 0.57.4 : rate limit (1 patient OCR / 6 secondes max = 10/min)
-  const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
-  if (!rate.ok) return rate.response;
 
   const { data: membre } = await supabase
     .from("membres_structure").select("structure_id").eq("user_id", user.id).maybeSingle();

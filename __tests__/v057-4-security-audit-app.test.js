@@ -56,11 +56,14 @@ describe("0.57.4 - Routes OCR créatrices avec rate limit (anti-quota Supabase)"
       expect(src).toMatch(/checkRateLimit/);
     });
 
-    it(`${f} : refuse 401 si Bearer absent`, () => {
+    it(`${f} : refuse 401 si Bearer absent (via requireAuth depuis 0.57.17)`, () => {
       const src = fs.readFileSync(path.resolve(process.cwd(), f), "utf-8");
-      // Doit avoir une logique qui renvoie 401 (Bearer manquant OU getUser échoué)
-      expect(src).toMatch(/401/);
-      expect(src).toMatch(/Non authentifié|Token invalide/);
+      // Depuis 0.57.17, le 401 vient de lib/apiAuth.js (requireAuth)
+      // Avant : code inline avec "401" et "Non authentifié" dans la route
+      // Maintenant : import requireAuth qui gère ça en interne
+      const hasNewPattern = /requireAuth/.test(src);
+      const hasOldPattern = /401/.test(src) && /Non authentifié|Token invalide/.test(src);
+      expect(hasNewPattern || hasOldPattern, "Route doit utiliser requireAuth (nouveau pattern) ou avoir 401 inline (ancien)").toBe(true);
     });
   });
 });

@@ -194,9 +194,10 @@ describe("0.56.3 - Route /api/prescriptions/from-ocr", () => {
     expect(src).toContain('.from("prescriptions_lignes")');
   });
 
-  it("Utilise Bearer token utilisateur pour respecter RLS", () => {
-    expect(src).toContain("Authorization");
-    expect(src).toContain("Bearer");
+  it("Utilise Bearer token utilisateur pour respecter RLS (via requireAuth depuis 0.57.17)", () => {
+    // Depuis 0.57.17, le Bearer est géré en interne par lib/apiAuth.js
+    // (avant : code inline avec Authorization+Bearer dupliqué)
+    expect(src).toMatch(/requireAuth/);
   });
 
   it("source_creation = 'ocr'", () => {
