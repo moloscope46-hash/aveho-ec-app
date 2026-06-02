@@ -120,6 +120,96 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.57.20",
+    "kind": "version",
+    "titre": "🛡️ Fix views auth.users exposées (Supabase Security Advisor) — v_users_emails + v_users_complete sécurisées par security_invoker + filtre structure",
+    "chantiers": [
+      { "code": "DB", "txt": "AUDIT IDENTIFIÉ 2 VIEWS QUI EXPOSAIENT auth.users : suite à la requête de l'étape 4 du script 0.57.18, l'utilisateur a remonté 2 views publiques. v_users_emails (utilisée par /signalements pour récupérer l'email de l'auteur quand on lui répond) : exposait user_id + email + nom_affiche + created_at de TOUS les users de la base — n'importe quel user authentifié pouvait dump tous les emails Aveho. v_users_complete (mentionnée dans le changelog 0.55.12 mais plus utilisée actuellement) : exposait email + last_sign_in_at + email_verifie cross-structure — un user d'une structure pouvait voir les emails et derniers logins de toutes les structures",
+        "code_snippet": {
+          "file": "scripts/fix-views-auth-exposed.sql",
+          "note": "Fix v_users_emails : avant vs après",
+          "lang": "sql",
+          "before": "-- AVANT 0.57.20 : view sans filtre, expose tous les users\nCREATE VIEW public.v_users_emails AS\nSELECT id AS user_id, email,\n  (raw_user_meta_data ->> 'nom_affiche'::text) AS nom_affiche,\n  created_at\nFROM auth.users;\n\n-- Risque : n'importe quel user authentifié peut faire :\nSELECT email FROM v_users_emails;\n-- → dump de TOUS les emails Aveho EC",
+          "after": "-- 0.57.20 : view avec security_invoker + filtre par structure\nDROP VIEW IF EXISTS public.v_users_emails CASCADE;\n\nCREATE VIEW public.v_users_emails\n  WITH (security_invoker = true)    -- ← applique RLS du caller, pas du créateur\n  AS\nSELECT u.id AS user_id, u.email,\n  (u.raw_user_meta_data ->> 'nom_affiche'::text) AS nom_affiche,\n  u.created_at\nFROM auth.users u\nWHERE u.id IN (\n  -- Le user lui-même peut toujours voir son propre email\n  SELECT auth.uid()\n  UNION\n  -- + tous les autres users de SA structure\n  SELECT ms2.user_id\n  FROM public.membres_structure ms2\n  WHERE ms2.structure_id IN (\n    SELECT ms1.structure_id\n    FROM public.membres_structure ms1\n    WHERE ms1.user_id = auth.uid()\n  )\n);\n\nGRANT SELECT ON public.v_users_emails TO authenticated;\n\n-- Résultat : SELECT email FROM v_users_emails;\n-- → ne renvoie que les membres de la structure du caller"
+        }
+      },
+      { "code": "DB", "txt": "Script SQL livré scripts/fix-views-auth-exposed.sql : (1) sauvegarde commentée des definitions originales pour rollback rapide si besoin, (2) DROP+CREATE v_users_emails avec security_invoker=true + filtre via auth.uid() + membres_structure (UNION pour inclure le user lui-même au cas où il n'est pas encore dans membres_structure), (3) DROP+CREATE v_users_complete avec même pattern (préservée même si non utilisée actuellement, car des RPC SQL pourraient en dépendre), (4) GRANT SELECT TO authenticated explicite (sinon les views ne sont plus accessibles), (5) vérification post-fix via pg_class.reloptions qui confirme security_invoker=true, (6) bloc ROLLBACK d'urgence commenté pour restaurer rapidement si /signalements ne fonctionne plus" },
+      { "code": "DB", "txt": "Pattern security_invoker = true expliqué : par défaut, une view PostgreSQL exécute avec les privilèges de SON CRÉATEUR (typiquement le rôle 'postgres' qui bypass RLS de toutes les tables). C'est ce qui cause les fuites de données : la view 'voit' tout, et n'importe quel utilisateur qui peut la querier hérite de cette vision globale. Avec security_invoker=true (Postgres 15+, supporté par Supabase), la view exécute avec les privilèges du caller — donc applique son RLS, ses filtres, etc. C'est exactement ce qu'on veut pour qu'une view sur auth.users respecte l'isolation par structure" },
+      { "code": "FE", "txt": "Compatibilité préservée pour app/signalements/page.js : le code Aveho utilise déjà v_users_emails pour récupérer l'email de l'auteur d'un signalement avant de lui envoyer une notif via Edge Function. Avec le nouveau filtre, ça continue de fonctionner SI l'auteur du signalement est dans la même structure que celui qui répond (cas normal — un signalement = local à une structure). Si l'auteur est dans une autre structure, l'email ne sera plus visible et la notif sera dégradée vers une notif in-app seulement (déjà géré par le fallback gracieux 'if (email)' du code)" },
+      { "code": "AI", "txt": "+20 tests Vitest (v057-20-fix-views-auth.test.js) : version (1), script SQL fix views (15 — fichier existe, documente 2 views, sauvegarde originaux, DROP+CREATE chacune, security_invoker=true, filtre auth.uid()+membres_structure, GRANT SELECT, vérif post-fix, rollback, test fonctionnel, snapshot recommandé), usage v_users_emails (2 — toujours utilisé dans signalements + comptage unique d'usages), score final (2 — stratégie security_invoker + alerte Supabase visée). Total 2788 tests verts (vs 2768)" },
+      { "code": "DOC", "txt": "WORKFLOW UTILISATEUR : (1) faire un snapshot Supabase (Dashboard → Database → Backups → Create snapshot), (2) ouvrir SQL Editor, (3) coller scripts/fix-views-auth-exposed.sql et lancer étape par étape, (4) après exécution, vérifier dans /signalements qu'on peut toujours créer un signalement et qu'un user qui y répond déclenche bien la notif email à l'auteur (test cross-user dans la même structure), (5) re-vérifier Supabase Dashboard → Database → Advisors → l'alerte 'auth_users_exposed' doit avoir disparu, (6) si problème : décommenter et exécuter le bloc ROLLBACK qui restaure l'ancienne version sans filtre" },
+      { "code": "AI", "txt": "Score sécurité RLS Supabase Aveho EC après 0.57.19 + 0.57.20 : 68/68 tables RLS activé (100% — caisses_assurance_maladie et mutuelles fixées en 0.57.19), 2/2 views auth.users sécurisées (security_invoker + filtre structure — fixées en 0.57.20), 140+ policies actives, 0 alerte Supabase Security Advisor attendue. Aveho EC passe de '97% sécurisé' (date du mail 31 mai) à '100% sur les critères Supabase Advisor'" }
+    ],
+    "themes": ["securite", "rls", "supabase", "views"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.20.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.19",
+    "kind": "version",
+    "titre": "🔧 Fix bug Windows path dans LINT 0.57.17 + script SQL personnalisé Aveho RLS (caisses + mutuelles)",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ : 1 test Vitest échouait avec 'expected [\\\\health\\\\route.js, \\\\version\\\\route.js] to deeply equal [/health, /version]'. Cause : le test 'Seules /api/version et /api/health ne sont pas protégées' faisait .replace('/route.js', '') AVANT de normaliser les séparateurs Windows. Sous Windows, fs.readdirSync renvoie des paths avec \\\\ donc le replace ne matchait pas. Fix : inverser l'ordre — d'abord replace(/\\\\\\\\/g, '/') pour normaliser, ENSUITE replace('/route.js', ''). Le LINT POST/PUT/DELETE avait le même bug, fixé pareil",
+        "code_snippet": {
+          "file": "__tests__/v057-17-security-hardening.test.js",
+          "note": "Fix ordre des replace pour Windows",
+          "lang": "js",
+          "before": "// 0.57.17 - bug Windows : .replace('/route.js') AVANT normalisation \\\nconst apiPath = full\n  .replace(path.join(process.cwd(), \"app/api\"), \"\")\n  .replace(\"/route.js\", \"\")     // ← ne matche pas sous Windows (path = \\\\health\\\\route.js)\n  .replace(/\\\\\\\\/g, \"/\");        // ← trop tard\n\n// → Sous Windows : ['\\\\health\\\\route.js', '\\\\version\\\\route.js']\n// → Sous Linux : ['/health', '/version']\n// → expected.toEqual([/health, /version]) FAIL sous Windows",
+          "after": "// 0.57.19 - normaliser AVANT le replace /route.js\nconst apiPath = full\n  .replace(path.join(process.cwd(), \"app/api\"), \"\")\n  .replace(/\\\\\\\\/g, \"/\")          // ✓ normalise d'abord\n  .replace(\"/route.js\", \"\");       // ✓ puis matche bien sous Windows ET Linux\n\n// → Sous les 2 OS : ['/health', '/version']\n// → Tests verts partout"
+        }
+      },
+      { "code": "DB", "txt": "AUDIT RLS SUPABASE TERMINÉ : utilisateur a lancé la PARTIE 1 du script audit-rls-supabase.sql (0.57.18) et envoyé les résultats — 68 tables totales, 66 avec RLS activé déjà ✅, 2 SANS RLS : caisses_assurance_maladie (référentiel caisses CPAM) et mutuelles (référentiel mutuelles santé). Score actuel : 97% (66/68). Ces 2 tables sont des référentiels partagés entre toutes les structures PSAD (pas de colonne structure_id), donc pattern policy = lecture authenticated (USING true), pas isolation par structure" },
+      { "code": "DB", "txt": "Script SQL fix personnalisé livré (scripts/fix-rls-aveho.sql) : (1) vérification pré-fix qui confirme has_structure_id=0 pour les 2 tables, (2) ALTER TABLE ENABLE ROW LEVEL SECURITY sur caisses_assurance_maladie + mutuelles, (3) CREATE POLICY 'Lecture caisses/mutuelles pour utilisateurs authentifiés' FOR SELECT TO authenticated USING (true) — pas de INSERT/UPDATE/DELETE pour authenticated car ces référentiels sont en lecture seule côté utilisateur, modifiés uniquement par service_role en backend lors des imports, (4) investigation de la view exposant auth.users (étape 4 à faire car non identifiée par l'audit basique), (5) vérification post-fix qui confirme rls_enabled=true et nb_policies=1, (6) test fonctionnel app (vérifier que /api/caisses?q=Paris et /api/mutuelles?q=Harmonie répondent bien)",
+        "code_snippet": {
+          "file": "scripts/fix-rls-aveho.sql",
+          "note": "Pattern policy lecture authenticated pour référentiel partagé",
+          "lang": "sql",
+          "before": "-- AVANT 0.57.19 : caisses_assurance_maladie et mutuelles SANS RLS\n-- → n'importe qui avec l'URL Supabase + clé anon (publique) peut\n--    SELECT, INSERT, UPDATE, DELETE sur ces tables\n-- → Alerte Supabase Security Advisor 'rls_disabled_in_public'\n\nSELECT tablename, rowsecurity FROM pg_tables\nWHERE tablename IN ('caisses_assurance_maladie', 'mutuelles');\n-- caisses_assurance_maladie | false  ❌\n-- mutuelles                 | false  ❌",
+          "after": "-- 0.57.19 - Fix : RLS activé + policy lecture authenticated\n\nALTER TABLE public.caisses_assurance_maladie ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"Lecture caisses pour utilisateurs authentifiés\"\n  ON public.caisses_assurance_maladie\n  FOR SELECT TO authenticated\n  USING (true);\n\nALTER TABLE public.mutuelles ENABLE ROW LEVEL SECURITY;\nCREATE POLICY \"Lecture mutuelles pour utilisateurs authentifiés\"\n  ON public.mutuelles\n  FOR SELECT TO authenticated\n  USING (true);\n\n-- Note : pas de policy INSERT/UPDATE/DELETE pour authenticated\n-- → refus par défaut (RLS bloque tout sans policy explicite)\n-- → seul le service_role (backend Aveho) peut écrire\n--   (le service_role bypass RLS par défaut)\n\n-- POST-FIX vérification :\nSELECT tablename, rowsecurity FROM pg_tables\nWHERE tablename IN ('caisses_assurance_maladie', 'mutuelles');\n-- caisses_assurance_maladie | true   ✅\n-- mutuelles                 | true   ✅"
+        }
+      },
+      { "code": "DOC", "txt": "Pour l'utilisateur : (1) faire un snapshot Supabase (Database → Backups → Create snapshot), (2) ouvrir le SQL Editor Supabase, (3) coller scripts/fix-rls-aveho.sql et lancer les étapes une par une, (4) tester dans Aveho que la recherche caisses et mutuelles fonctionne toujours (création de patient avec OCR bulletin de situation), (5) re-vérifier dans Supabase Dashboard → Database → Advisors que les 2 alertes 'rls_disabled_in_public' sont parties. (6) Pour la view exposant auth.users : lancer l'étape 4 du script et m'envoyer le résultat (viewname + definition) pour qu'on fixe ensemble" },
+      { "code": "AI", "txt": "+15 tests Vitest (v057-19-fix-rls-aveho.test.js) : version (1), fix bug Windows path 2 endroits (2), script SQL fix personnalisé (10 — fichier existe, contexte 68 tables audité, cible caisses_assurance_maladie + mutuelles, policy lecture authenticated, pas d'INSERT/UPDATE/DELETE, vérif pré-fix + post-fix, test fonctionnel app documenté, investigation view auth.users, snapshot recommandé), score sécurité RLS (2 — actuel 97%, visé 100%). Total 2768 tests verts (vs 2752)" }
+    ],
+    "themes": ["fix", "rls", "supabase", "windows"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.19.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.18",
+    "kind": "version",
+    "titre": "🔒 Hotfix /api/finess (401 caché) + LINT amélioré (catch pattern variable) + Script SQL audit RLS Supabase",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ : /api/finess?q=lom renvoyait 401 en prod. Diagnostic : FinessSearch.js (autocomplete recherche établissements de santé) utilisait fetch(url) au lieu de fetchWithAuth(url) — même bug que SireneSearch.js fixé en 0.57.16, mais cette fois le LINT anti-régression ne l'a PAS détecté car le pattern est différent : url est assignée dans une variable AVANT le fetch, alors que le regex 0.57.16 cherchait des littéraux ('await fetch(\"/api/...\")') uniquement",
+        "code_snippet": {
+          "file": "app/FinessSearch.js",
+          "note": "Le fix + le pattern qui a échappé au LINT",
+          "lang": "js",
+          "before": "// 0.57.16 LINT cherchait : await fetch(\"/api/...\") en littéral\n// → MAIS FinessSearch.js fait :\nlet url;\nif (isFinessNumber) {\n  url = `/api/finess?finess=${val}`;     // <- url assignée\n} else {\n  url = `/api/finess?${params}`;\n}\nconst res = await fetch(url);             // <- fetch(url) — pas en littéral !\n// → LINT 0.57.16 ne détecte rien → bug passe en prod",
+          "after": "// 0.57.18 - fix + LINT amélioré (v2)\nimport { fetchWithAuth } from \"../lib/fetchWithAuth\";  // 0.57.18\n\nlet url;\nif (isFinessNumber) {\n  url = `/api/finess?finess=${val}`;\n} else {\n  url = `/api/finess?${params}`;\n}\nconst res = await fetchWithAuth(url);     // 0.57.18 : auth Bearer obligatoire\n\n// + LINT v2 dans __tests__/v057-16-hotfix-fetchwithauth.test.js :\n//   - PATTERN 1 : await fetch(\"/api/...\") en littéral (déjà couvert)\n//   - PATTERN 2 : await fetch(url) + url = \"/api/...\" assignée ailleurs\n//     → détecte FinessSearch + tout futur composant avec ce pattern"
+        }
+      },
+      { "code": "FE", "txt": "LINT anti-régression v2 dans __tests__/v057-16-hotfix-fetchwithauth.test.js : ajout du PATTERN 2 qui détecte 'await fetch(url)' couplé à 'url = \"/api/...\"' ailleurs dans le fichier. Test parcourt récursivement app/, parse chaque .js, et matche maintenant LES DEUX patterns (literal ET variable). Garantit que tout futur composant avec ce style sera attrapé avant le push. Validé : le LINT v2 aurait détecté FinessSearch.js cassé si on n'avait pas fixé en parallèle" },
+      { "code": "DB", "txt": "Script SQL audit RLS Supabase livré (scripts/audit-rls-supabase.sql) : suite à l'alerte Supabase Security Advisor signalant (1) une table publique sans RLS, (2) une view exposant auth.users. Le script est en 6 parties — toutes en READ-ONLY pour la PARTIE 1 (audit) et COMMENTÉES pour la PARTIE 2 (fix) afin d'éviter toute exécution accidentelle",
+        "code_snippet": {
+          "file": "scripts/audit-rls-supabase.sql",
+          "note": "Aperçu du script audit",
+          "lang": "sql",
+          "before": "-- Avant 0.57.18 : pas d'audit RLS automatisé\n-- → l'utilisateur a découvert le problème via mail Supabase\n--   'Table publicly accessible' (rls_disabled_in_public)\n--   'User data exposed through a view' (auth_users_exposed)",
+          "after": "-- PARTIE 1 (lecture seule) : audit\n-- 1.1 Tables sans RLS (= publiquement accessibles)\nSELECT tablename, '🚨 RLS DÉSACTIVÉ' AS warning\nFROM pg_tables\nWHERE schemaname = 'public' AND rowsecurity = false;\n\n-- 1.2 Tables avec RLS mais 0 policy (= cassées)\nSELECT t.tablename, '⚠️ RLS activé mais 0 policy' AS warning\nFROM pg_tables t\nLEFT JOIN pg_policies p ON p.tablename = t.tablename\nWHERE t.schemaname = 'public' AND t.rowsecurity = true\nGROUP BY t.tablename HAVING COUNT(p.policyname) = 0;\n\n-- 1.3 Views exposant auth.users\nSELECT viewname, '🚨 VIEW EXPOSE AUTH.USERS' AS warning\nFROM pg_views\nWHERE schemaname = 'public' AND definition ILIKE '%auth.users%';\n\n-- 1.4 Fonctions SECURITY DEFINER (potentielle escalade)\nSELECT proname, '⚠️ Vérifier search_path' AS warning\nFROM pg_proc p JOIN pg_namespace n ON p.pronamespace = n.oid\nWHERE n.nspname = 'public' AND p.prosecdef = true;\n\n-- PARTIE 2 (commentée) : fix templates prêts à customiser\n-- 2.1 ALTER TABLE ... ENABLE ROW LEVEL SECURITY (batch)\n-- 2.2 Policy 'lecture authenticated' (refs)\n-- 2.3 Policy 'isolation structure_id' (table métier)\n-- 2.4 Recréer view sans auth.users (security_invoker=true)\n-- 2.5 Figer search_path SECURITY DEFINER"
+        }
+      },
+      { "code": "DOC", "txt": "Pour l'utilisateur : lancer le script audit-rls-supabase.sql depuis Supabase Dashboard → SQL Editor. Les 6 requêtes de la PARTIE 1 retournent les tables/views/fonctions à fixer. Ensuite, dans la PARTIE 2 (commentée), décommenter et adapter UN BLOC À LA FOIS selon ce qui ressort : (a) si une table métier sans RLS → utiliser le template 2.3 'isolation par structure', (b) si une table référentiel sans RLS → template 2.2 'lecture authenticated', (c) si une view expose auth.users → template 2.4 'recréer avec security_invoker=true', (d) si fonction SECURITY DEFINER sans search_path → template 2.5. Toujours faire un SNAPSHOT Supabase avant la PARTIE 2" },
+      { "code": "AI", "txt": "+24 tests Vitest (v057-18-hotfix-finess-rls.test.js) : version (1), hotfix FinessSearch (4 — import fetchWithAuth + utilise fetchWithAuth(url) + plus aucun fetch(url) direct + marqueur 0.57.18), LINT amélioré (3 — PATTERN 1 + PATTERN 2 + détection url variable), script SQL RLS (8 — fichier existe + 6 audits + fix templates + recommandation snapshot), anti-régression (1 test indirect que LINT v2 fonctionne). Total 2752 tests verts (vs 2734)" }
+    ],
+    "themes": ["hotfix", "securite", "rls"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.18.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.57.17",
     "kind": "version",
     "titre": "🛡️ Durcissement sécurité approfondi : CSP report-only, HSTS preload 1 an, Permissions-Policy 27 directives, COEP/CORP, auth standardisée from-ocr, +31 tests sécurité",

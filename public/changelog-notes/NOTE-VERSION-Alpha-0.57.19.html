@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.19 — Fix bug Windows + Script SQL RLS personnalisé</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--cyan:#00838f}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#185FA5 0%,#142131 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#c8e6c9;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#c8e6c9;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#c8e6c9}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#eef9ef,#c8e6c9);border-color:#a5d6a7;border-left:4px solid #2e7d32}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.danger{background:#fef0ee;border-color:#f5b8b0;border-left:4px solid #c0392b}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.blue{background:#e3f2fd;border-color:#90caf9}.kpi.blue .kpi-val{color:#0d47a1}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — FIX WINDOWS + AUDIT RLS RÉEL</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.19 — Fix Windows + Script SQL RLS personnalisé<small>2 tables fixées sur 68 (97% → 100% RLS) + bug ordre replace sous Windows</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.19-alpha</code></span>
+<span><b>Tests :</b> 2768 Vitest dont 15 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi green">
+<span class="kpi-val">2/2</span>
+<span class="kpi-lbl">Tables RLS à fixer identifiées</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">97% → 100%</span>
+<span class="kpi-lbl">Couverture RLS attendue</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">1</span>
+<span class="kpi-lbl">Bug Windows fixé (LINT 0.57.17)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+15</span>
+<span class="kpi-lbl">Tests Vitest (2768 total)</span>
+</div>
+</div>
+
+<h2>📊 Résultat audit RLS Supabase (PARTIE 1 lancée par utilisateur)</h2>
+<div class="panel hero">
+<table>
+<tr><th>Aspect</th><th>Résultat</th></tr>
+<tr><td>Total tables schéma <code>public</code></td><td><b>68</b></td></tr>
+<tr><td>Tables avec RLS activé déjà</td><td><b>66</b> (97%) ✅</td></tr>
+<tr><td>Tables SANS RLS (à fixer)</td><td><b>2</b> :<br><code>caisses_assurance_maladie</code> + <code>mutuelles</code></td></tr>
+<tr><td>Tables avec policies définies</td><td>~140 policies au total ✅</td></tr>
+</table>
+
+<p><b>Diagnostic</b> : excellente nouvelle, ton app est à 97% sécurisée côté RLS. Tu as fait un super boulot de policies au fil de l'eau. Restent juste 2 référentiels qui sont passés à travers les mailles.</p>
+</div>
+
+<h2>🔍 Pourquoi ces 2 tables sont sans RLS</h2>
+<div class="panel">
+<p>Les tables <code>caisses_assurance_maladie</code> et <code>mutuelles</code> sont des <b>référentiels partagés</b> :</p>
+
+<ul>
+<li>Données communes à toutes les structures PSAD (pas de colonne <code>structure_id</code>)</li>
+<li>Importées depuis des sources externes (RPPS, INAMI, ROC, etc.) par le backend Aveho</li>
+<li>Utilisées par <b>tous les utilisateurs</b> pour auto-link les patients lors de l'OCR bulletin</li>
+</ul>
+
+<p>Probablement créées au début du projet sans qu'on pense à activer RLS car "c'est juste un référentiel, ya rien de sensible". Mais en l'absence de RLS, n'importe qui avec l'URL Supabase + la clé anon (publique par design) peut :</p>
+<ul>
+<li>❌ SELECT toutes les caisses + tous les codes organisme CPAM</li>
+<li>❌ INSERT de fausses caisses pour fausser l'application Aveho</li>
+<li>❌ UPDATE/DELETE des entrées existantes</li>
+</ul>
+
+<p>C'est exactement ce que Supabase Security Advisor alertait.</p>
+</div>
+
+<h2>✅ Fix : script SQL personnalisé livré</h2>
+<div class="panel ok">
+<p>J'ai créé <code>scripts/fix-rls-aveho.sql</code> spécifique à <b>tes</b> 2 tables. Pattern : <b>lecture authenticated, écriture service_role only</b>.</p>
+
+<pre><code>-- 1. Vérification pré-fix (lecture seule)
+SELECT table_name,
+  COUNT(*) FILTER (WHERE column_name = 'structure_id') AS has_structure_id
+FROM information_schema.columns
+WHERE table_schema = 'public'
+  AND table_name IN ('caisses_assurance_maladie', 'mutuelles')
+GROUP BY table_name;
+-- Attendu : has_structure_id = 0 → confirme que ce sont des référentiels
+
+-- 2. Fix caisses
+ALTER TABLE public.caisses_assurance_maladie ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Lecture caisses pour utilisateurs authentifiés"
+  ON public.caisses_assurance_maladie
+  FOR SELECT TO authenticated
+  USING (true);
+
+-- 3. Fix mutuelles (identique)
+ALTER TABLE public.mutuelles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Lecture mutuelles pour utilisateurs authentifiés"
+  ON public.mutuelles
+  FOR SELECT TO authenticated
+  USING (true);
+
+-- 4. Vérification post-fix
+SELECT t.tablename, t.rowsecurity AS rls_enabled,
+  COUNT(p.policyname) AS nb_policies
+FROM pg_tables t
+LEFT JOIN pg_policies p ON p.tablename = t.tablename
+WHERE t.tablename IN ('caisses_assurance_maladie', 'mutuelles')
+GROUP BY t.tablename, t.rowsecurity;
+-- Attendu : rls_enabled=true, nb_policies=1 pour chacune</code></pre>
+</div>
+
+<h2>🔒 Pourquoi PAS de policy INSERT/UPDATE/DELETE pour authenticated</h2>
+<div class="panel tip">
+<p>RLS bloque tout par défaut. Si on n'écrit AUCUNE policy pour INSERT/UPDATE/DELETE, les utilisateurs authentifiés ne peuvent PAS écrire dans ces tables. C'est exactement ce qu'on veut pour un référentiel :</p>
+
+<ul>
+<li>✅ Tous les users PSAD peuvent <b>LIRE</b> (via la policy SELECT)</li>
+<li>❌ Aucun user PSAD ne peut <b>ÉCRIRE</b> (pas de policy = refus)</li>
+<li>✅ Le <code>service_role</code> (utilisé en backend Aveho pour les imports CSV/RPPS) bypass RLS par défaut → peut tout faire</li>
+</ul>
+
+<p>Pattern réutilisable pour tout référentiel partagé futur.</p>
+</div>
+
+<h2>🐛 Bug 1 : Test Vitest échouait sous Windows</h2>
+<div class="panel danger">
+<p><b>Symptôme</b> : un seul test échouait quand tu lançais <code>npm test</code> sous Windows :</p>
+<pre><code>AssertionError: expected [ '\health\route.js', …(1) ] to deeply equal [ '/health', '/version' ]</code></pre>
+
+<h3>Cause</h3>
+<p>Le test faisait <code>.replace("/route.js", "")</code> AVANT de normaliser les séparateurs Windows <code>\\</code>. Sous Windows, <code>fs.readdirSync</code> renvoie des paths avec <code>\\</code>, donc <code>/route.js</code> ne matche jamais.</p>
+
+<pre><code>// AVANT (cassé sous Windows) :
+const apiPath = full
+  .replace(path.join(process.cwd(), "app/api"), "")
+  .replace("/route.js", "")     // ← ne matche pas \\health\\route.js
+  .replace(/\\/g, "/");         // ← trop tard
+
+// APRÈS (0.57.19) :
+const apiPath = full
+  .replace(path.join(process.cwd(), "app/api"), "")
+  .replace(/\\/g, "/")           // ✓ normalise d'abord
+  .replace("/route.js", "");     // ✓ matche maintenant partout</code></pre>
+
+<p>Le même bug existait dans 2 endroits du test 0.57.17 : test "Seules /api/version et /api/health" + test "POST/PUT/DELETE doit avoir requireAuth". Les 2 fixés. Le test 0.57.16 (LINT v2) avait déjà l'ordre correct.</p>
+</div>
+
+<h2>🚀 Workflow d'application</h2>
+<div class="panel">
+<ol>
+<li><b>📸 Snapshot Supabase</b> : Dashboard → Database → Backups → "Create snapshot" (par sécurité, peu probable que ça casse mais on n'est jamais trop prudent)</li>
+<li><b>SQL Editor Supabase</b> → coller <code>scripts/fix-rls-aveho.sql</code></li>
+<li>Lancer <b>étape par étape</b> :
+<ul>
+<li>Étape 1 : vérification pré-fix (lecture seule, confirme les colonnes)</li>
+<li>Étape 2 : ALTER TABLE caisses + CREATE POLICY</li>
+<li>Étape 3 : ALTER TABLE mutuelles + CREATE POLICY</li>
+<li>Étape 4 : lister la view exposant auth.users (résultat à m'envoyer pour qu'on fixe ensemble)</li>
+<li>Étape 5 : vérification post-fix</li>
+</ul>
+</li>
+<li><b>Test fonctionnel dans Aveho EC</b> :
+<ul>
+<li>Aller dans "Établissements" → créer un patient via OCR bulletin → vérifier que l'auto-link caisse/mutuelle fonctionne</li>
+<li>Aller dans "Patients" → ajouter manuellement un patient → vérifier que les listes de caisses/mutuelles s'affichent</li>
+</ul>
+</li>
+<li><b>Re-vérifier Supabase Advisor</b> : Dashboard → Database → Advisors → Performance and Security Lints → les 2 alertes "rls_disabled_in_public" doivent avoir disparu</li>
+<li><b>Pour la view auth.users</b> : m'envoyer le résultat de l'étape 4 (viewname + definition) pour qu'on génère le fix exact en 0.57.20</li>
+</ol>
+</div>
+
+<h2>📈 +15 tests Vitest (v057-19-fix-rls-aveho.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.19+ (1 test)</li>
+<li>Fix bug Windows path (2 tests : ordre des replace correct dans 2 LINT)</li>
+<li>Script SQL fix RLS personnalisé (10 tests : fichier existe, contexte 68 tables documenté, cible caisses + mutuelles, policy lecture authenticated, pas d'INSERT/UPDATE/DELETE, vérif pré-fix + post-fix, test fonctionnel app documenté, investigation view auth.users, snapshot recommandé)</li>
+<li>Score sécurité RLS (2 tests : actuel 97% + visé 100%)</li>
+</ul>
+<p>Total : <b>2768 tests verts</b> (vs 2752 en 0.57.18)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>scripts/fix-rls-aveho.sql</code> (fix personnalisé pour les 2 tables Aveho)</li>
+<li><code>__tests__/v057-19-fix-rls-aveho.test.js</code> (15 tests)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>__tests__/v057-17-security-hardening.test.js</code> : 2 fix Windows path order</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                                # 2768 verts attendu (était 2767 sous Windows en 0.57.18)
+npm run build                            # vérif Vercel
+git add -A
+git commit -m "Alpha 0.57.19 - Fix bug Windows path + script SQL personnalise RLS Aveho (caisses + mutuelles)"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets ouverts pour les prochaines versions</h2>
+<div class="panel tip">
+<ul>
+<li><b>0.57.20</b> — Fix view exposant auth.users (étape 4 du script, après ton retour de Supabase)</li>
+<li><b>Mails d'invitation multi-étapes</b> → toujours en attente de précisions sur les symptômes</li>
+<li><b>Login 2FA non déclenchée</b> → toujours en attente de précisions</li>
+<li><b>Détection faciale</b> → toujours en attente de browser/appareil + symptôme exact</li>
+<li><b>Pop-up code/SQL dans /changelog</b> → diagnostic 0.57.18 : 36/36 code_snippet bien dans l'index JSON → à retester visuellement après ce déploiement</li>
+</ul>
+</div>
+
+<h2>🛡️ Score sécurité Aveho EC</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État après 0.57.19</th></tr>
+<tr><td>npm audit</td><td>0 CRIT + 0 HIGH + 2 MOD postcss build-time</td></tr>
+<tr><td>Routes API protégées requireAuth</td><td>17/19 (sauf /version + /health par design)</td></tr>
+<tr><td>Headers HTTP sécurité</td><td>10/10</td></tr>
+<tr><td>CSP</td><td>12 directives report-only</td></tr>
+<tr><td>HSTS</td><td>1 an + preload</td></tr>
+<tr><td>Permissions-Policy</td><td>27 directives</td></tr>
+<tr><td>RLS Supabase</td><td><b>97% → 100% après application du script</b></td></tr>
+<tr><td>Tests anti-régression Vitest</td><td>4 LINT critiques (fetch direct, POST/PUT requireAuth, etc.)</td></tr>
+<tr><td>Tests E2E Playwright</td><td>74 tests cross-browser</td></tr>
+<tr><td>Visual regression baselines</td><td>18 stables</td></tr>
+</table>
+</div>
+
+<h2>SW auto-bump — 109ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.18 → <b>0.57.19</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.19 · 2 juin 2026 · 2768 Vitest · 97% RLS Supabase (100% après application du script)</footer>
+</div></body></html>

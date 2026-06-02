@@ -192,7 +192,11 @@ describe("0.57.17 - Routes API : couverture requireAuth élargie", () => {
   it("Seules /api/version et /api/health ne sont pas protégées (health-checks publics)", () => {
     const unprotected = listApiRoutes()
       .filter(f => !fs.readFileSync(f, "utf-8").includes("requireAuth"))
-      .map(f => f.replace(path.join(process.cwd(), "app/api"), "").replace("/route.js", ""));
+      .map(f => f
+        .replace(path.join(process.cwd(), "app/api"), "")
+        .replace(/\\/g, "/")                        // 0.57.19 : normalise séparateurs Windows
+        .replace("/route.js", "")
+      );
 
     // Doit contenir uniquement /version et /health
     expect(unprotected.sort()).toEqual(["/health", "/version"]);
@@ -216,8 +220,8 @@ describe("0.57.17 - LINT anti-régression : nouvelle route POST doit utiliser re
           if (/export\s+async\s+function\s+(POST|PUT|DELETE|PATCH)/.test(src)) {
             const apiPath = full
               .replace(path.join(process.cwd(), "app/api"), "")
-              .replace("/route.js", "")
-              .replace(/\\/g, "/");
+              .replace(/\\/g, "/")                  // 0.57.19 : normalise AVANT replace /route.js
+              .replace("/route.js", "");
             routes.push({ path: apiPath, src });
           }
         }

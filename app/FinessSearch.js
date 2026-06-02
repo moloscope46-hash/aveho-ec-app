@@ -14,6 +14,7 @@
 // =============================================================
 import { useState, useEffect, useRef } from "react";
 import { FINESS_CATEGORIES_GROUPS } from "../lib/finessCategories";
+import { fetchWithAuth } from "../lib/fetchWithAuth";  // 0.57.18 : fix bug auth (était fetch direct)
 
 export default function FinessSearch({ onSelect, placeholder = "Chercher par nom, ville ou n° FINESS…", style, defaultCategories = [] }) {
   const [query, setQuery] = useState("");
@@ -71,7 +72,7 @@ export default function FinessSearch({ onSelect, placeholder = "Chercher par nom
           url = `/api/finess?${params.toString()}`;
         }
         
-        const res = await fetch(url);
+        const res = await fetchWithAuth(url);  // 0.57.18 : auth Bearer obligatoire (même bug que SireneSearch fixé en 0.57.16)
         const data = await res.json();
         
         if (!res.ok) {

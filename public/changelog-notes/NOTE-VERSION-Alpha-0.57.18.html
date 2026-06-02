@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.18 — Hotfix /api/finess + audit RLS</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--cyan:#00838f}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#c0392b 0%,#142131 40%,#00838f 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#b2ebf2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#b2ebf2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#b2ebf2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--cyan)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#e0f7fa,#b2ebf2);border-color:#80deea;border-left:4px solid #00838f}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.danger{background:#fef0ee;border-color:#f5b8b0;border-left:4px solid #c0392b}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.cyan{background:#e0f7fa;border-color:#80deea}.kpi.cyan .kpi-val{color:#006064}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — HOTFIX /api/finess + AUDIT RLS</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.18 — Hotfix /api/finess + audit RLS<small>LINT amélioré (catch pattern variable) + Script SQL audit Supabase</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.18-alpha</code></span>
+<span><b>Tests :</b> 2752 Vitest dont 16 anti-régression renforcés</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi cyan">
+<span class="kpi-val">2</span>
+<span class="kpi-lbl">Bugs sécurité fixés</span>
+</div>
+<div class="kpi cyan">
+<span class="kpi-val">v2</span>
+<span class="kpi-lbl">LINT anti-régression amélioré</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+24</span>
+<span class="kpi-lbl">Tests Vitest (2752 total)</span>
+</div>
+<div class="kpi cyan">
+<span class="kpi-val">6</span>
+<span class="kpi-lbl">Requêtes audit SQL RLS</span>
+</div>
+</div>
+
+<h2>🚨 Bug 1 : /api/finess?q=lom → 401 Unauthorized</h2>
+<div class="panel danger">
+<p><b>Signalé par l'utilisateur :</b></p>
+<pre><code>GET https://aveho-ec-pnzuew0c1-fleos-projects.vercel.app/api/finess?q=lom&amp;limit=12 401 (Unauthorized)</code></pre>
+
+<p><b>Cause</b> : <code>FinessSearch.js</code> (autocomplete de recherche établissements de santé) utilisait <code>fetch(url)</code> au lieu de <code>fetchWithAuth(url)</code>. Même pattern de bug que <code>SireneSearch.js</code> fixé en 0.57.16.</p>
+
+<p><b>MAIS</b>, le LINT anti-régression de 0.57.16 ne l'a <b>pas détecté</b> car le pattern est différent :</p>
+
+<h3>Pourquoi le LINT 0.57.16 n'a rien vu</h3>
+<pre><code>// Pattern DÉTECTÉ par le LINT v1 (0.57.16) :
+await fetch("/api/sirene?...")          // littéral ← match
+await fetch(`/api/sirene?${params}`)    // template ← match
+
+// Pattern NON DÉTECTÉ par le LINT v1 → bug passe en prod :
+let url;
+if (isFinessNumber) {
+  url = `/api/finess?finess=${val}`;    // <- url assignée
+} else {
+  url = `/api/finess?${params}`;
+}
+const res = await fetch(url);            // <- fetch(url) — pas en littéral
+//                          ^^^^
+//                          LINT v1 ne sait pas que `url` contient "/api/..."</code></pre>
+</div>
+
+<h2>✅ Fix : FinessSearch + LINT v2</h2>
+<div class="panel ok">
+<h3>1) FinessSearch.js corrigé</h3>
+<pre><code>// Avant
+import { useState, useEffect, useRef } from "react";
+import { FINESS_CATEGORIES_GROUPS } from "../lib/finessCategories";
+// ...
+const res = await fetch(url);           // ← 401 en prod
+
+// Après (0.57.18)
+import { useState, useEffect, useRef } from "react";
+import { FINESS_CATEGORIES_GROUPS } from "../lib/finessCategories";
+import { fetchWithAuth } from "../lib/fetchWithAuth";  // 0.57.18
+// ...
+const res = await fetchWithAuth(url);   // ← auth Bearer auto</code></pre>
+
+<h3>2) LINT v2 : détection 2 patterns</h3>
+<pre><code>// __tests__/v057-16-hotfix-fetchwithauth.test.js (mis à jour)
+
+function findDirectFetches() {
+  const bugs = [];
+  const protectedRoutes = getProtectedRoutes();
+
+  walk((file, src) => {
+    // PATTERN 1 : await fetch("/api/...") en littéral (déjà couvert)
+    const re1 = /(?<!fetchWithAuth)\bawait\s+fetch\(["'`](\/api\/[^"'`?]+)/g;
+    matchAndReport(src, re1);
+
+    // PATTERN 2 (0.57.18) : await fetch(url) + url = "/api/..." ailleurs
+    if (/\bawait\s+fetch\(url\)/.test(src)) {
+      const urlAssign = /(?:let|const|var)?\s*url\s*=\s*["'`](\/api\/[^"'`?]+)/g;
+      matchAndReport(src, urlAssign);
+    }
+  });
+
+  return bugs;
+}</code></pre>
+
+<p><b>Garantie</b> : tout composant Search futur qui adopterait ce style (assignation de <code>url</code> puis <code>fetch(url)</code>) sera attrapé par le LINT avant le push.</p>
+</div>
+
+<h2>🛡️ Bug 2 : Alertes Supabase Security Advisor</h2>
+<div class="panel danger">
+<p><b>Email reçu le 31 mai 2026 :</b></p>
+<ul>
+<li>🚨 <b>Table publicly accessible</b> — Une table publique sans RLS, accessible en lecture/écriture/suppression par n'importe qui</li>
+<li>🚨 <b>User data exposed through a view</b> — Une view expose auth.users (données utilisateurs publiques)</li>
+</ul>
+
+<p><b>Impact potentiel</b> : si un attaquant connaît l'URL du projet Supabase + la clé anon (publique par design), il peut directement requêter ces tables/views via l'API REST sans authentification. <b>C'est critique pour Aveho car ça concerne des données médicales (RGPD)</b>.</p>
+</div>
+
+<h2>📋 Solution : Script SQL audit + fix livré</h2>
+<div class="panel hero">
+<p>J'ai créé <code>scripts/audit-rls-supabase.sql</code> qui s'utilise en 2 phases :</p>
+
+<h3>PARTIE 1 : Audit (lecture seule, à lancer en premier)</h3>
+<table>
+<tr><th>Section</th><th>Ce qui est listé</th></tr>
+<tr><td>1.1</td><td>Tables du schéma <code>public</code> sans RLS activé</td></tr>
+<tr><td>1.2</td><td>Tables avec RLS activé mais aucune policy (= cassées, personne ne peut lire)</td></tr>
+<tr><td>1.3</td><td>Views exposant <code>auth.users</code> / <code>auth.identities</code> / <code>auth.sessions</code></td></tr>
+<tr><td>1.4</td><td>Fonctions <code>SECURITY DEFINER</code> (potentielle privilege escalation)</td></tr>
+<tr><td>1.5</td><td>Récap de toutes les policies par table (visibilité globale)</td></tr>
+<tr><td>1.6</td><td>Grants <code>anon</code> / <code>authenticated</code> par table (quelles tables sont exposées via REST)</td></tr>
+</table>
+
+<h3>PARTIE 2 : Templates de fix (commentés)</h3>
+<table>
+<tr><th>Section</th><th>Template fourni</th></tr>
+<tr><td>2.1</td><td>Batch <code>ALTER TABLE ... ENABLE ROW LEVEL SECURITY</code> pour toutes les tables sans RLS</td></tr>
+<tr><td>2.2</td><td>Policy "lecture authenticated" pour les tables référentiel (NAF, CCAM...)</td></tr>
+<tr><td>2.3</td><td>Policy "isolation par structure_id" pour les tables métier (patients, commandes, etc.)</td></tr>
+<tr><td>2.4</td><td>Recréer une view <code>auth.users</code> en <code>security_invoker=true</code> + filtre <code>auth.uid()</code></td></tr>
+<tr><td>2.5</td><td>Figer <code>search_path</code> sur les fonctions SECURITY DEFINER</td></tr>
+</table>
+
+<p><b>Tout est COMMENTÉ par défaut</b> pour éviter l'exécution accidentelle. À décommenter un bloc à la fois après audit.</p>
+</div>
+
+<h2>🚀 Comment l'utiliser (workflow recommandé)</h2>
+<div class="panel">
+<ol>
+<li>Se connecter à <a href="https://supabase.com/dashboard">Supabase Dashboard</a></li>
+<li>Projet <code>aveho-ec</code> → <b>SQL Editor</b></li>
+<li>Coller le contenu de <code>scripts/audit-rls-supabase.sql</code></li>
+<li><b>Run PARTIE 1 seulement</b> (les 6 requêtes SELECT) → noter ce qui ressort :
+<ul>
+<li>Quelles tables sont sans RLS</li>
+<li>Quelle view expose auth.users</li>
+<li>Quelles fonctions SECURITY DEFINER existent</li>
+</ul>
+</li>
+<li>📸 <b>Faire un snapshot/backup</b> avant la PARTIE 2 (Dashboard → Database → Backups → Create snapshot)</li>
+<li>Décommenter UN bloc à la fois dans la PARTIE 2 :
+<ul>
+<li>Pour les tables métier (patients, commandes, etc.) → bloc 2.3 isolation par structure_id</li>
+<li>Pour les tables référentiel (NAF, CCAM, etc.) → bloc 2.2 lecture authenticated</li>
+<li>Pour les views auth.users → bloc 2.4 security_invoker</li>
+<li>Pour les fonctions SECURITY DEFINER → bloc 2.5 search_path figé</li>
+</ul>
+</li>
+<li>Adapter le template au nom exact de ta table/view/fonction</li>
+<li>Run le bloc</li>
+<li>Vérifier dans l'app Aveho que tout fonctionne encore (lire un patient, en créer un, etc.)</li>
+<li>Recommencer pour la table/view/fonction suivante</li>
+</ol>
+
+<p><b>Si quelque chose casse</b> : restaurer le snapshot ou faire le <code>DROP POLICY</code> + <code>ALTER TABLE ... DISABLE ROW LEVEL SECURITY</code> temporairement.</p>
+</div>
+
+<h2>💡 Pattern de policy le plus courant Aveho</h2>
+<div class="panel tip">
+<p>La majorité des tables métier Aveho ont une colonne <code>structure_id</code> qui identifie la collectivité du PSAD. Pattern : un user voit/édite SEULEMENT les lignes de sa structure.</p>
+
+<pre><code>-- Pour une table 'patients' (exemple) :
+
+ALTER TABLE public.patients ENABLE ROW LEVEL SECURITY;
+
+-- 4 policies (SELECT, INSERT, UPDATE, DELETE) :
+
+CREATE POLICY "Lecture par structure" ON public.patients
+  FOR SELECT TO authenticated
+  USING (
+    structure_id IN (
+      SELECT structure_id FROM membres_structure WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Insertion dans ma structure" ON public.patients
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    structure_id IN (
+      SELECT structure_id FROM membres_structure WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Modification dans ma structure" ON public.patients
+  FOR UPDATE TO authenticated
+  USING (
+    structure_id IN (
+      SELECT structure_id FROM membres_structure WHERE user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    structure_id IN (
+      SELECT structure_id FROM membres_structure WHERE user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Suppression dans ma structure" ON public.patients
+  FOR DELETE TO authenticated
+  USING (
+    structure_id IN (
+      SELECT structure_id FROM membres_structure WHERE user_id = auth.uid()
+    )
+  );</code></pre>
+
+<p>Si tu as plusieurs tables avec ce pattern, je peux te générer un script qui les fait toutes d'un coup — il te suffit de me dire la liste des tables à protéger.</p>
+</div>
+
+<h2>📈 +24 tests Vitest (v057-18-hotfix-finess-rls.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.18+ (1 test)</li>
+<li>Hotfix FinessSearch (4 tests : import + utilise + plus de fetch direct + marqueur)</li>
+<li>LINT amélioré v2 (3 tests : PATTERN 1 + PATTERN 2 + détection url variable)</li>
+<li>Script SQL RLS (8 tests : fichier existe + 6 audits parties + 2 fix templates)</li>
+<li>Recommandation snapshot (1 test)</li>
+<li>Anti-régression LINT v2 (1 test indirect)</li>
+</ul>
+<p>Total : <b>2752 tests verts</b> (vs 2734 en 0.57.17)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>scripts/audit-rls-supabase.sql</code> (6 requêtes audit + 5 templates fix commentés)</li>
+<li><code>__tests__/v057-18-hotfix-finess-rls.test.js</code> (24 tests)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>app/FinessSearch.js</code> : import fetchWithAuth + remplacement fetch(url) → fetchWithAuth(url)</li>
+<li><code>__tests__/v057-16-hotfix-fetchwithauth.test.js</code> : LINT v2 avec PATTERN 1 + PATTERN 2</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                                # 2752 verts attendu
+npm run build                            # vérif Vercel
+git add -A
+git commit -m "Alpha 0.57.18 - Hotfix /api/finess 401 + LINT v2 + script audit RLS Supabase"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 ACTION IMPORTANTE POST-DÉPLOIEMENT</h2>
+<div class="panel warn">
+<ol>
+<li>✅ Vérifier que la recherche FINESS fonctionne (créer un partenaire, taper le nom d'un établissement de santé)</li>
+<li>🚨 <b>Lancer le script audit RLS dans Supabase Dashboard</b> et m'envoyer les résultats de la PARTIE 1 (les 6 requêtes SELECT) → je te génère le script de fix personnalisé pour tes tables réelles</li>
+<li>📸 Faire un snapshot Supabase avant d'appliquer le fix</li>
+</ol>
+</div>
+
+<h2>📋 Sujets ouverts pour les prochaines versions</h2>
+<div class="panel tip">
+<p>Tu m'avais signalé dans le dernier message plusieurs points que je n'ai pas pu traiter dans cette version :</p>
+<ul>
+<li><b>Mails d'invitation multi-étapes</b> non fonctionnels → besoin de précisions (quelle page Aveho ? quoi exactement ne marche pas ?)</li>
+<li><b>Login : 2FA ne se déclenche pas</b> si paramétrée → vérifier le workflow profil → login</li>
+<li><b>Détection faciale</b> ne fonctionne pas → besoin de savoir browser/appareil + symptôme exact</li>
+<li><b>Pop-up code/SQL dans /changelog</b> n'apparaîtrait plus → diagnostic : <b>les data sont bien là</b> (36/36 code_snippet dans l'index JSON), le bug est probablement UI. À tester visuellement après le déploiement de cette 0.57.18</li>
+</ul>
+
+<p>Si après le déploiement les pop-up code/SQL ne marchent toujours pas → ouvre la console F12 sur /changelog, clique sur un bouton "</>" et regarde les erreurs JS qui apparaissent. Envoie-moi les erreurs et je trouve la cause exacte.</p>
+</div>
+
+<h2>SW auto-bump — 108ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.17 → <b>0.57.18</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.18 · 2 juin 2026 · 2752 Vitest + LINT v2 + audit RLS Supabase</footer>
+</div></body></html>

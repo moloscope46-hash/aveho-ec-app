@@ -98,15 +98,36 @@ describe("0.57.16 - LINT ANTI-RÉGRESSION : aucun fetch() direct vers route prot
           walk(full);
         } else if (entry.name.endsWith(".js")) {
           const src = fs.readFileSync(full, "utf-8");
-          // Pattern : await fetch("/api/...") ou await fetch(`/api/...`)
-          const re = /(?<!fetchWithAuth)\bawait\s+fetch\(["'`](\/api\/[^"'`?]+)/g;
+          const fileRel = full.replace(projectRoot + "/", "");
+
+          // PATTERN 1 : await fetch("/api/...") ou await fetch(`/api/...`) en littéral
+          const re1 = /(?<!fetchWithAuth)\bawait\s+fetch\(["'`](\/api\/[^"'`?]+)/g;
           let m;
-          while ((m = re.exec(src)) !== null) {
+          while ((m = re1.exec(src)) !== null) {
             const calledRoute = m[1];
             for (const protectedRoute of protectedRoutes) {
               if (calledRoute === protectedRoute || calledRoute.startsWith(protectedRoute + "/")) {
-                bugs.push({ file: full.replace(projectRoot + "/", ""), route: calledRoute });
+                bugs.push({ file: fileRel, route: calledRoute, pattern: "literal" });
                 break;
+              }
+            }
+          }
+
+          // PATTERN 2 (0.57.18 — corrige faux négatif FinessSearch) :
+          // url = "/api/..."  ou  url = `/api/...`  ailleurs dans le fichier
+          // ET  await fetch(url)  utilisé
+          // → bug identique
+          if (/\bawait\s+fetch\(url\)/.test(src)) {
+            // Le fichier fait fetch(url) → cherchons à quoi url est assigné
+            const urlAssign = /(?:let|const|var)?\s*url\s*=\s*["'`](\/api\/[^"'`?]+)/g;
+            let m2;
+            while ((m2 = urlAssign.exec(src)) !== null) {
+              const calledRoute = m2[1];
+              for (const protectedRoute of protectedRoutes) {
+                if (calledRoute === protectedRoute || calledRoute.startsWith(protectedRoute + "/")) {
+                  bugs.push({ file: fileRel, route: calledRoute, pattern: "variable" });
+                  break;
+                }
               }
             }
           }
