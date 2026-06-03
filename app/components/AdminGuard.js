@@ -33,6 +33,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/useAuth";
+import { createClient } from "../../lib/supabase";
 
 export default function AdminGuard({ children, fallbackUrl = "/accueil" }) {
   const auth = useAuth();
@@ -44,6 +45,30 @@ export default function AdminGuard({ children, fallbackUrl = "/accueil" }) {
     auth.can?.("manage_collectivite") ||
     auth.role?.systeme === "admin" ||
     auth.role?.nom === "Administrateur";
+
+  // 0.57.38 : audit log centralisé si access refused
+  useEffect(() => {
+    if (auth.ready && auth.user && !isAdmin) {
+      (async () => {
+        try {
+          const supabase = createClient();
+          const { auditAccessDenied } = await import("../../lib/securityAudit");
+          await auditAccessDenied(
+            supabase,
+            {
+              structureId: auth.structureId,
+              userId: auth.user?.id,
+              userEmail: auth.user?.email,
+            },
+            {
+              path: typeof window !== "undefined" ? window.location.pathname : null,
+              role: auth.role?.nom || null,
+            }
+          );
+        } catch {}
+      })();
+    }
+  }, [auth.ready, auth.user, isAdmin]);
 
   // 1) Attente du chargement auth
   if (!auth.ready) {

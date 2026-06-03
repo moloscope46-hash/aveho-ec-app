@@ -80,9 +80,10 @@ describe("0.57.27 - login/page.js appelle syncBiometricRefreshTokens", () => {
   });
 
   it("Appel après signInWithPassword réussi", () => {
+    // 0.57.38 : le flow login a grandi (audit + rate-limit + 2FA), élargir la window
     const block = src.substring(
       src.indexOf("signInWithPassword"),
-      src.indexOf("signInWithPassword") + 1500
+      src.indexOf("signInWithPassword") + 3000
     );
     expect(block).toMatch(/await syncBiometricRefreshTokens/);
   });

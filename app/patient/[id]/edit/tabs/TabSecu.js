@@ -8,7 +8,7 @@ import { Panel} from "../../../../ui";
 import CaisseSearch from "../../../../CaisseSearch";
 import MutuelleSearch from "../../../../MutuelleSearch";
 import ContactActions from "../../../../ContactActions";
-import { Field, FieldSelect, Toggle} from "./_helpers";
+import { Lbl, Field, FieldSelect, Toggle} from "./_helpers";
 function TabSecu({ pat, set, caisseInfo, onCaisseSelect, mutuelleInfo, onMutuelleSelect }) {
   return (
     <>

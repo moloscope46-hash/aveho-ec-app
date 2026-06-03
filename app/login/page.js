@@ -2,6 +2,7 @@
 // Page Login — Page de connexion (email/mot de passe + magic link + empreinte)
 // Alpha 0.55.13 : ajout connexion par empreinte (WebAuthn) si dispo
 // Alpha 0.55.37 : version dynamique + features list mise à jour
+// Alpha 0.57.38 : honeypot anti-bot
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
@@ -9,6 +10,7 @@ import pkg from "../../package.json";
 import {
   isWebAuthnSupported, getAvailableMethods, authenticateBiometric, isPlatformAuthenticatorAvailable,
   syncBiometricRefreshTokens } from "../../lib/webauthn";
+import { useHoneypot } from "../../lib/honeypot";
 export default function Login() {
   const supabase = createClient();
   const router = useRouter();
@@ -18,6 +20,8 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+  // 0.57.38 : honeypot anti-bot (champ caché qui détecte les bots naïfs)
+  const { honeypotProps, isBot, getHoneypotValue } = useHoneypot("website_url");
   // 0.55.13/17 : empreinte + face
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioMethodsForEmail, setBioMethodsForEmail] = useState([]); // ['empreinte', 'face'] disponibles
@@ -46,6 +50,24 @@ export default function Login() {
 
   async function submit() {
     setBusy(true); setErr(""); setOk("");
+
+    // 0.57.38 : honeypot anti-bot — si rempli, c'est un bot
+    if (isBot()) {
+      // Log silencieux pour analyse + delay aléatoire + erreur générique
+      try {
+        const { auditHoneypotTriggered } = await import("../../lib/securityAudit");
+        await auditHoneypotTriggered(supabase, { userEmail: email }, {
+          honeypot_value_length: getHoneypotValue().length,
+          mode,
+        });
+      } catch {}
+      // Simule un délai pour ne pas trop dévoiler la détection
+      await new Promise((r) => setTimeout(r, 800 + Math.random() * 400));
+      setErr("Erreur de validation. Réessaie.");
+      setBusy(false);
+      return;
+    }
+
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({ email, password: pwd });
@@ -68,12 +90,28 @@ export default function Login() {
         if (error) {
           // 0.57.36 : enregistrer l'échec pour le compteur de rate-limit
           const result = recordFailedLogin(email);
+
+          // 0.57.38 : audit log centralisé (security event)
+          try {
+            const { auditLoginFailed, auditLoginBlocked } = await import("../../lib/securityAudit");
+            if (result.blocked) {
+              await auditLoginBlocked(supabase, { userEmail: email }, {
+                reason: "rate_limit_5_attempts",
+                blocked_for_ms: result.remainingMs,
+              });
+            } else {
+              await auditLoginFailed(supabase, { userEmail: email }, {
+                error_code: error.code || null,
+                attempts_left: result.attemptsLeft,
+              });
+            }
+          } catch {}
+
           if (result.blocked) {
             throw new Error(
               `Trop de tentatives. Compte temporairement bloqué pour ${formatBlockTime(result.remainingMs)}.`
             );
           }
-          // Sinon afficher le nombre de tentatives restantes (info utile pour l'utilisateur légitime)
           if (result.attemptsLeft <= 2) {
             throw new Error(
               `${error.message} (${result.attemptsLeft} tentative${result.attemptsLeft > 1 ? "s" : ""} restante${result.attemptsLeft > 1 ? "s" : ""} avant blocage)`
@@ -84,6 +122,16 @@ export default function Login() {
 
         // 0.57.36 : login OK → reset le compteur pour cet email
         resetLoginAttempts(email);
+
+        // 0.57.38 : audit log centralisé (login success)
+        try {
+          const { auditLoginSuccess } = await import("../../lib/securityAudit");
+          const { data: { session } } = await supabase.auth.getSession();
+          await auditLoginSuccess(supabase, {
+            userId: session?.user?.id,
+            userEmail: email,
+          }, { method: "password" });
+        } catch {}
 
         // 0.57.27 : sync refresh_token biométrique pour empêcher l'erreur
         // "Session expirée" lors d'un futur login empreinte/face
@@ -163,6 +211,10 @@ export default function Login() {
           <div className="muted">{mode === "signin" ? "Connectez-vous à votre Espace Aveho" : "Créez votre compte"}</div>
           {err && <div className="err">{err}</div>}
           {ok && <div className="ok">{ok}</div>}
+
+          {/* 0.57.38 : honeypot anti-bot — invisible aux humains, rempli par bots naïfs */}
+          <input {...honeypotProps} />
+
           <label>Email professionnel</label>
           <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="cedric@hop01.fr" autoComplete="email" />
 

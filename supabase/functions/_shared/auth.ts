@@ -22,8 +22,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // 0.57.31 : CORS restrictif — only Aveho EC origins
-// Format : on accepte plusieurs origins via vérification dynamique
-// (Supabase Edge ne supporte pas les regex dans Access-Control-Allow-Origin)
+// 0.57.38 : élargissement des patterns vercel.app (toutes les previews Vercel d'Aveho)
 const ALLOWED_ORIGINS = [
   "https://aveho-ec-app.vercel.app",
   "https://aveho.fr",
@@ -33,7 +32,11 @@ const ALLOWED_ORIGINS = [
 ];
 
 const ALLOWED_ORIGIN_PATTERNS = [
-  /^https:\/\/aveho-ec-app-[a-z0-9-]+-fleos-projects\.vercel\.app$/,  // preview Vercel
+  // 0.57.38 : ANY sous-domaine vercel.app commençant par "aveho-ec-app"
+  // Couvre : aveho-ec-app-<hash>-fleos-projects.vercel.app
+  //          aveho-ec-app-git-main-fleos-projects.vercel.app
+  //          aveho-ec-app-<branche>-fleos-projects.vercel.app
+  /^https:\/\/aveho-ec-app[a-z0-9-]*\.vercel\.app$/,
 ];
 
 export function isAllowedOrigin(origin: string | null): boolean {

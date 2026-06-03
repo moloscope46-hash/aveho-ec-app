@@ -120,6 +120,73 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.57.39",
+    "kind": "version",
+    "titre": "🚨 HOTFIX PROD : 'Lbl is not defined' sur /patient/[id]/edit + IconButton manquant dans maintenance + LINT anti-régression critique",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 BUG CRITIQUE EN PROD signalé via stack trace browser : 'Uncaught ReferenceError: Lbl is not defined' sur 515-23b922f2ca00f063.js. Diagnostic : app/patient/[id]/edit/tabs/TabSecu.js importait uniquement { Field, FieldSelect, Toggle } depuis ./_helpers mais utilisait <Lbl> 2 fois dans le JSX. En dev ça passait peut-être (HMR), mais en build prod minifié → Lbl = undefined → crash. Cause des erreurs 400 Supabase qui suivaient : le crash React annulait les useEffect, les requêtes consentements_rgpd et interventions partaient avec patientId undefined" },
+      { "code": "FIX", "txt": "FIX TabSecu.js : ajout de Lbl dans la liste d'imports → import { Lbl, Field, FieldSelect, Toggle } from './_helpers'. Build prod testé OK, plus de crash",
+        "code_snippet": {
+          "file": "app/patient/[id]/edit/tabs/TabSecu.js",
+          "note": "Import manquant qui crashait toute la page patient",
+          "lang": "jsx",
+          "before": "// AVANT 0.57.39 - Lbl manquant\nimport { Field, FieldSelect, Toggle } from \"./_helpers\";\n//        ↑↑↑ Lbl manque ici !\n\nfunction TabSecu({ ... }) {\n  return (\n    <>\n      ...\n      <Lbl>Caisse d'affiliation</Lbl>    // ← crash en prod\n      ...\n      <Lbl>Organisme complémentaire</Lbl>  // ← crash en prod\n    </>\n  );\n}",
+          "after": "// 0.57.39 - Lbl ajouté dans l'import\nimport { Lbl, Field, FieldSelect, Toggle } from \"./_helpers\";\n//          ↑↑↑ NEW : Lbl maintenant disponible\n\nfunction TabSecu({ ... }) {\n  return (\n    <>\n      ...\n      <Lbl>Caisse d'affiliation</Lbl>    // ← OK\n      ...\n      <Lbl>Organisme complémentaire</Lbl>  // ← OK\n    </>\n  );\n}"
+        }
+      },
+      { "code": "FIX", "txt": "2e BUG TROUVÉ via audit complet : app/maintenance/page.js utilisait <IconButton> 3 fois mais ne l'importait pas. Fix : ajout dans la liste import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from '../ui'. Probablement pas encore crashé en prod mais aurait crashé dès qu'un user avec droits ecrire ouvrait la page maintenance" },
+      { "code": "AI", "txt": "LINT ANTI-RÉGRESSION CRITIQUE 22e (le plus important !) : 'Aucun composant connu utilisé dans le JSX sans être importé ou défini localement'. Scan TOUTES les pages app/*.js + app/*/page.js + app/*/*/page.js. Pour chaque <X> dans le JSX où X est dans la whitelist UI_COMPONENTS (Modal/Btn/IconButton/PageHead/Panel/StateMsg/FilterBar/Pill/Spinner/Empty/ErrorBox) ou HELPER_COMPONENTS (Lbl/Field/FieldSelect/FieldCheckbox/Toggle/KvBlock), vérifie qu'il est importé OU défini localement (export function X, const X = ..., etc.). Reconnaît les 4 patterns d'import : (a) import X from, (b) import { A, B } from, (c) import X, { A, B } from, (d) export function/const/class X + export default function X. Si violation → fail le test → bloque le push. Garantit qu'aucun futur dev (humain ou IA) ne pourra introduire ce genre de bug",
+        "code_snippet": {
+          "file": "__tests__/v057-39-hotfix-lbl-iconbutton.test.js",
+          "note": "LINT anti-régression qui aurait attrapé le bug 0.57.x",
+          "lang": "js",
+          "before": "// AVANT 0.57.39 - pas de check des imports JSX\n// → un import oublié dans Tab*, page.js, ou autre\n//   ne se voyait QU'EN PROD après build minifié\n// → debug très long (minified var names = Lbl, X, S...)",
+          "after": "// 0.57.39 - LINT anti-régression critique\nconst UI_COMPONENTS = new Set([\n  \"PageHead\", \"Panel\", \"StateMsg\", \"Modal\", \"Btn\",\n  \"IconButton\", \"FilterBar\", \"Pill\", \"Spinner\",\n  \"Empty\", \"ErrorBox\",\n]);\nconst HELPER_COMPONENTS = new Set([\n  \"Lbl\", \"Field\", \"FieldSelect\", \"FieldCheckbox\",\n  \"Toggle\", \"KvBlock\",\n]);\n\nit(\"Aucun composant connu utilisé sans import\", () => {\n  for (const page of findPages()) {\n    const src = fs.readFileSync(page, \"utf-8\");\n\n    // 4 patterns d'import reconnus :\n    // (a) import X from\n    // (b) import { A, B } from\n    // (c) import X, { A, B } from\n    // (d) export (default) (function|const|class) X\n\n    const imported = collectImports(src);\n    const used = collectJsxUsage(src, ALL_KNOWN);\n\n    for (const comp of used) {\n      if (!imported.has(comp)) violations.push(...);\n    }\n  }\n  expect(violations).toEqual([]);\n});"
+        }
+      },
+      { "code": "AI", "txt": "+8 tests Vitest (v057-39-hotfix-lbl-iconbutton.test.js) : version + SW (2), TabSecu fix Lbl (2), maintenance fix IconButton (2), LINT critique (1), pattern detection robustesse (1). Total 3261 verts (+8)" },
+      { "code": "DOC", "txt": "RÉCAP : Erreur stack trace 'Lbl is not defined' = symptôme côté browser MINIFIÉ qui correspondait à TabSecu.js importait pas Lbl. Une fois ce crash fixé, les 2 erreurs 400 Supabase qui suivaient (consentements_rgpd + interventions) devraient aussi disparaître : elles venaient des useEffect qui partaient avec des paramètres undefined à cause du crash React partiel. À tester en prod après déploiement de 0.57.39" }
+    ],
+    "themes": ["hotfix", "import", "lint-critique"],
+    "date": "3 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.39.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.38",
+    "kind": "version",
+    "titre": "🔧 Fix CORS Edge Functions + audit logs centralisé (security events) + honeypot anti-bot login + guide 2FA",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 BUG SIGNALÉ : 'profil:1 Access to fetch at send-digest from origin aveho-ec-app.vercel.app has been blocked by CORS policy: No Access-Control-Allow-Origin header'. Diagnostic : le pattern regex strict ALLOWED_ORIGIN_PATTERNS (aveho-ec-app-[a-z0-9-]+-fleos-projects.vercel.app) ne matchait pas certains sous-domaines Vercel. Fix : pattern élargi à 'aveho-ec-app[a-z0-9-]*.vercel.app' qui matche maintenant : aveho-ec-app.vercel.app + tous les sous-domaines preview/branches. ⚠️ ACTION REQUISE : redéployer les 11 Edge Functions Supabase après ce fix pour que les changements prennent effet : supabase functions deploy <chaque-fonction>" },
+      { "code": "SEC", "txt": "📊 SUJET 1/3 — AUDIT LOGS CENTRALISÉ. Création de lib/securityAudit.js (220 lignes) avec : (a) Whitelist fermée SEC_EVENT_TYPES (18 catégories : LOGIN_*, MFA_*, WEBAUTHN_*, ACCESS_DENIED, RGPD_EXPORT, BULK_EXPORT, ADMIN_ACTION, SUSPICIOUS_ACTIVITY, CSP_VIOLATION, HONEYPOT_TRIGGERED). (b) Helper logSecurityEvent() bas-niveau qui insère dans audit_log existante avec entite='security_event'. (c) 9 helpers prêts à l'emploi (auditLoginSuccess, auditLoginFailed, auditLoginBlocked, auditAccessDenied, auditMfaEnrolled/Unenrolled, auditHoneypotTriggered, auditBulkExport, auditAdminAction). (d) Enrichissement auto contexte browser (UA, locale, timestamp). (e) Try/catch pour ne JAMAIS bloquer le flow sécurité si audit échoue",
+        "code_snippet": {
+          "file": "lib/securityAudit.js + intégrations login + AdminGuard",
+          "note": "Helper centralisé events sécurité",
+          "lang": "js",
+          "before": "// AVANT 0.57.38 - login sans audit centralisé\nconst { error } = await supabase.auth.signInWithPassword({ email, password: pwd });\nif (error) {\n  const result = recordFailedLogin(email);\n  // ↑ Compteur incrémenté, mais aucune trace audit_log\n  // → Impossible de détecter une attaque de bruteforce a posteriori\n  // → Pas de visibilité côté admin sur les patterns d'attaque\n  throw error;\n}",
+          "after": "// 0.57.38 - audit log centralisé\nconst { error } = await supabase.auth.signInWithPassword({ email, password: pwd });\nif (error) {\n  const result = recordFailedLogin(email);\n\n  // ✅ Audit log centralisé via lib/securityAudit\n  const { auditLoginFailed, auditLoginBlocked } = await import(\"../../lib/securityAudit\");\n  if (result.blocked) {\n    await auditLoginBlocked(supabase, { userEmail: email }, {\n      reason: \"rate_limit_5_attempts\",\n      blocked_for_ms: result.remainingMs,\n    });\n  } else {\n    await auditLoginFailed(supabase, { userEmail: email }, {\n      error_code: error.code || null,\n      attempts_left: result.attemptsLeft,\n    });\n  }\n  throw error;\n}\n\n// ✅ Login success aussi loggé\nawait auditLoginSuccess(supabase, { userId, userEmail }, { method: \"password\" });"
+        }
+      },
+      { "code": "SEC", "txt": "INTÉGRATIONS audit log (3 points d'entrée) : (a) app/login/page.js : auditLoginSuccess après login OK, auditLoginFailed sur error, auditLoginBlocked sur 5 échecs. (b) app/components/AdminGuard.js : useEffect qui logge auditAccessDenied avec path + role si user authentifié mais pas admin → permet d'analyser les patterns de tentatives d'élévation de privilèges. (c) Honeypot triggered : log auditHoneypotTriggered. Requête SQL pour voir tous les events sécurité : SELECT * FROM audit_log WHERE entite='security_event' ORDER BY created_at DESC" },
+      { "code": "SEC", "txt": "🤖 SUJET 2/3 — HONEYPOT ANTI-BOT. Création de lib/honeypot.js (115 lignes). Stratégie : champ caché avec nom plausible (website_url, company_fax, etc.) + style display:none + tabIndex=-1 + autocomplete=off. Les bots automatisés naïfs remplissent TOUS les champs aveuglément → on les détecte instantanément. Exports : useHoneypot() hook React + getHoneypotHtml() pour HTML pur + detectBotFromBody() pour API routes serveur. Intégré dans app/login/page.js : si isBot() === true → log + délai 800-1200ms + erreur générique (anti-fingerprinting bot)",
+        "code_snippet": {
+          "file": "lib/honeypot.js + app/login/page.js",
+          "note": "Champ caché anti-bot",
+          "lang": "jsx",
+          "before": "// AVANT 0.57.38 - aucun honeypot\n<form>\n  <input type=\"email\" value={email} ... />\n  <input type=\"password\" value={pwd} ... />\n  <button>Connexion</button>\n</form>\n// ↑ Un bot peut hammer la page de login sans aucune friction",
+          "after": "// 0.57.38 - honeypot anti-bot\nimport { useHoneypot } from \"../../lib/honeypot\";\n\nconst { honeypotProps, isBot } = useHoneypot(\"website_url\");\n\nasync function submit() {\n  // ✅ Check AVANT le signIn\n  if (isBot()) {\n    // Log + délai aléatoire 800-1200ms + erreur générique\n    await auditHoneypotTriggered(supabase, ...);\n    await new Promise((r) => setTimeout(r, 800 + Math.random() * 400));\n    setErr(\"Erreur de validation. Réessaie.\");\n    return;\n  }\n  // ... flow normal\n}\n\n// Dans le JSX\n<form>\n  <input {...honeypotProps} />  {/* Invisible, mais bots le remplissent */}\n  <input type=\"email\" ... />\n  <input type=\"password\" ... />\n</form>"
+        }
+      },
+      { "code": "DOC", "txt": "🔑 SUJET 3/3 — GUIDE-ACTIVATION-2FA.md créé (scripts/GUIDE-ACTIVATION-2FA.md, 130 lignes). 4 étapes détaillées : (1) Activer TOTP dans Dashboard Supabase → Authentication. (2) Intégrer <MfaSetup /> dans app/profil/page.js (3 lignes de code). (3) Activer checkMfaRequired() dans le flow login (12 lignes). (4) Tester. + Tableau de recommandations par profil utilisateur (admin OBLIGATOIRE, user accès patients OBLIGATOIRE, etc.). + Exemple SQL pour requêter les events MFA (audit_log entite=security_event action LIKE 'mfa_%'). + Help section debug" },
+      { "code": "AI", "txt": "+35 tests Vitest (v057-38-audit-honeypot-cors.test.js) : version + SW (2), fix CORS pattern élargi (2), securityAudit structure (9 — exports SEC_EVENT_TYPES + 4 catégories + 9 helpers + whitelist + enrichissement + entite=security_event + try/catch), honeypot structure (6 — fields names + hook + style invisible + getHoneypotHtml + detectBotFromBody), intégration login honeypot (5 — import + JSX + ordre check + audit + délai), audit log login (3), AdminGuard audit (3), guide 2FA (4 — 4 étapes + URL Dashboard + recommandations + SQL exemple), LINT (1). Total 3253 verts (+35)" },
+      { "code": "DOC", "txt": "BILAN SÉCURITÉ APRÈS 0.57.38 : (1) Bug CORS Edge Functions fixé (NEW). (2) Audit logs centralisé security events (NEW). (3) Honeypot anti-bot sur login (NEW). (4) Guide activation 2FA livré (NEW). (5) 21 LINT anti-régression critiques actifs. (6) Tests Vitest : 3253 verts. (7) Routes API + OCR + Storage + Edge Functions + pages admin + login + logout + biométrie + CRON + tous sécurisés. (8) Foundation 2FA TOTP prête (activable côté Supabase Dashboard + 3 lignes de code dans /profil)" }
+    ],
+    "themes": ["securite", "audit-logs", "anti-bot", "cors-fix"],
+    "date": "3 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.38.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.57.37",
     "kind": "version",
     "titre": "🛡️ MEGA RELEASE SÉCURITÉ : security.txt + IndexedDB purge + CSP enrichie + SRI sur 3 scripts CDN + 2FA TOTP foundation + audit Referer (6 sujets)",

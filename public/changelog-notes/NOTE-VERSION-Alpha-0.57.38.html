@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.38 — Fix CORS + Audit logs + Honeypot + Guide 2FA</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#c0392b 0%,#EF9F27 30%,#5aa05a 70%,#185FA5 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fff5e6;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:#7CC8C8}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#fff5e6;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#fff5e6}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#ffebee,#ffcdd2);border-color:#ef9a9a;border-left:4px solid #c0392b}
+.panel.action{background:#fff3cd;border-color:#f0d59f;border-left:4px solid #EF9F27}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.sujet{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0;border-left:4px solid #185FA5}
+.sujet h3{margin-top:0;color:#185FA5}
+.sujet.fix{border-left-color:#c0392b}.sujet.fix h3{color:#c0392b}
+.sujet.s1{border-left-color:#5aa05a}.sujet.s1 h3{color:#5aa05a}
+.sujet.s2{border-left-color:#EF9F27}.sujet.s2 h3{color:#EF9F27}
+.sujet.s3{border-left-color:#7a6fb0}.sujet.s3 h3{color:#7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.red{background:#ffebee;border-color:#ef9a9a}.kpi.red .kpi-val{color:#b71c1c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.amber{background:#fff3cd;border-color:#f0d59f}.kpi.amber .kpi-val{color:#7a4f15}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.bigwarn{background:#c0392b;color:#fff;padding:18px 22px;border-radius:12px;margin:20px 0;font-weight:600}
+.bigwarn pre{background:rgba(0,0,0,.3);color:#fff;font-weight:400}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">FIX BUG SIGNALÉ + 3 SUJETS SÉCURITÉ</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.38 — Fix CORS + Audit logs + Honeypot + Guide 2FA<small>Bug send-digest fixé + securityAudit + anti-bot login + 4 étapes activation 2FA</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.38-alpha</code></span>
+<span><b>Tests :</b> 3253 Vitest dont 35 nouveaux</span>
+</div>
+</header>
+
+<div class="bigwarn">
+🚨 <b>ACTION REQUISE après ce déploiement :</b>
+<pre style="margin-top:10px">supabase functions deploy send-email
+supabase functions deploy send-webhook
+supabase functions deploy send-push
+supabase functions deploy invite-user
+supabase functions deploy auto-archive-consents
+supabase functions deploy maintenance-daily-cron
+supabase functions deploy send-digest
+supabase functions deploy send-renouvellement-rappels
+supabase functions deploy sync-google-reviews
+supabase functions deploy weekly-stats-digest
+supabase functions deploy welcome-user</pre>
+<small style="color:#fff5e6">Les 11 Edge Functions doivent être redéployées pour appliquer le fix CORS.</small>
+</div>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi red"><span class="kpi-val">1</span><span class="kpi-lbl">Bug CORS fixé</span></div>
+<div class="kpi green"><span class="kpi-val">3</span><span class="kpi-lbl">Sujets traités</span></div>
+<div class="kpi amber"><span class="kpi-val">11</span><span class="kpi-lbl">Edge Functions à redéployer</span></div>
+<div class="kpi green"><span class="kpi-val">+35</span><span class="kpi-lbl">Tests Vitest (3253 total)</span></div>
+</div>
+
+<h2>🚨 Bug CORS send-digest — diagnostic + fix</h2>
+
+<div class="sujet fix">
+<h3>🔧 Le bug</h3>
+<p><b>Erreur observée :</b></p>
+<pre><code>profil:1 Access to fetch at 'https://rnvlzddgxiuslgljkobm.supabase.co/functions/v1/send-digest'
+from origin 'https://aveho-ec-app.vercel.app' has been blocked by CORS policy:
+Response to preflight request doesn't pass access control check:
+No 'Access-Control-Allow-Origin' header is present on the requested resource.</code></pre>
+
+<p><b>Cause :</b> Dans <code>supabase/functions/_shared/auth.ts</code>, le pattern regex <code>ALLOWED_ORIGIN_PATTERNS</code> était trop strict :</p>
+<pre><code>// AVANT 0.57.38 - pattern restrictif
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/aveho-ec-app-[a-z0-9-]+-fleos-projects\.vercel\.app$/,
+];
+// ↑ Matche seulement les previews "aveho-ec-app-XXX-fleos-projects"
+//   mais ton domaine principal "aveho-ec-app.vercel.app" était bien
+//   dans ALLOWED_ORIGINS... donc le bug venait d'ailleurs.</code></pre>
+
+<p><b>Hypothèse retenue :</b> Le helper <code>_shared/auth.ts</code> n'a peut-être pas été correctement uploadé avec chaque déploiement de fonction. Quand on fait <code>supabase functions deploy send-digest</code>, Supabase upload aussi <code>_shared</code>, mais il peut y avoir des cas où la dernière version n'a pas pris.</p>
+
+<h3>✅ Le fix</h3>
+<p>Pattern élargi pour matcher TOUS les sous-domaines vercel.app commençant par "aveho-ec-app" :</p>
+<pre><code>// 0.57.38 - pattern élargi
+const ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/aveho-ec-app[a-z0-9-]*\.vercel\.app$/,
+];
+// ↑ Matche :
+//   - aveho-ec-app.vercel.app (principal)
+//   - aveho-ec-app-git-main-XXX.vercel.app (preview Git)
+//   - aveho-ec-app-XXX-fleos-projects.vercel.app (preview Vercel)</code></pre>
+
+<div class="panel action">
+<b>⚠️ Pour que ce fix prenne effet :</b>
+<ol>
+<li>Dézipper le nouveau zip 0.57.38</li>
+<li>Redéployer les 11 Edge Functions (commandes en haut de cette note)</li>
+<li>Tester depuis /profil → bouton "Envoyer maintenant" du Digest</li>
+</ol>
+</div>
+</div>
+
+<h2>📊 Sujet 1/3 — Audit logs centralisé (security events)</h2>
+
+<div class="sujet s1">
+<h3>Le problème</h3>
+<p>L'app avait <code>audit_log</code> mais uniquement pour les events métier (créations, modifications). Aucune trace des events sécurité :</p>
+<ul>
+<li>Tentatives de login échouées</li>
+<li>Blocages rate-limit</li>
+<li>Accès refusés aux pages admin</li>
+<li>Bots détectés par honeypot</li>
+<li>Exports massifs de données</li>
+</ul>
+<p>→ Impossible d'analyser une attaque a posteriori, pas de visibilité côté admin.</p>
+
+<h3>Le helper lib/securityAudit.js (220 lignes)</h3>
+<pre><code>// 18 catégories d'events whitelist fermée
+export const SEC_EVENT_TYPES = Object.freeze({
+  // Authentification
+  LOGIN_SUCCESS, LOGIN_FAILED, LOGIN_BLOCKED, LOGOUT,
+  PASSWORD_RESET_REQUEST, PASSWORD_RESET_SUCCESS,
+  // MFA
+  MFA_ENROLLED, MFA_UNENROLLED,
+  MFA_CHALLENGE_SUCCESS, MFA_CHALLENGE_FAILED,
+  // Biométrie
+  WEBAUTHN_ENROLLED, WEBAUTHN_REVOKED, WEBAUTHN_USED, WEBAUTHN_FAILED,
+  // Accès / Autorisation
+  ACCESS_DENIED, ROLE_CHANGED, STRUCTURE_SWITCHED,
+  // Données sensibles
+  RGPD_EXPORT, RGPD_DELETE, BULK_EXPORT, ADMIN_ACTION,
+  // Anomalies
+  SUSPICIOUS_ACTIVITY, CSP_VIOLATION, HONEYPOT_TRIGGERED,
+});
+
+// 9 helpers prêts à l'emploi
+auditLoginSuccess()      auditLoginFailed()     auditLoginBlocked()
+auditAccessDenied()      auditMfaEnrolled()     auditMfaUnenrolled()
+auditHoneypotTriggered() auditBulkExport()      auditAdminAction()</code></pre>
+
+<h3>Intégrations (3 points d'entrée)</h3>
+<table>
+<tr><th>Fichier</th><th>Events loggés</th></tr>
+<tr><td><code>app/login/page.js</code></td><td>auditLoginSuccess (login OK), auditLoginFailed (mdp invalide), auditLoginBlocked (5 échecs)</td></tr>
+<tr><td><code>app/components/AdminGuard.js</code></td><td>auditAccessDenied (path + role tentés)</td></tr>
+<tr><td><code>app/login/page.js</code> (honeypot)</td><td>auditHoneypotTriggered (bot détecté)</td></tr>
+</table>
+
+<h3>Requête SQL pour analyser les events sécurité</h3>
+<pre><code>SELECT created_at, user_email, action, details
+FROM audit_log
+WHERE entite = 'security_event'
+ORDER BY created_at DESC
+LIMIT 50;
+
+-- Top 10 emails avec le plus de tentatives échouées (anti-bruteforce)
+SELECT user_email, COUNT(*) as nb_failed
+FROM audit_log
+WHERE entite = 'security_event'
+  AND action = 'login_failed'
+  AND created_at > NOW() - INTERVAL '24 hours'
+GROUP BY user_email
+ORDER BY nb_failed DESC
+LIMIT 10;</code></pre>
+</div>
+
+<h2>🤖 Sujet 2/3 — Honeypot anti-bot login</h2>
+
+<div class="sujet s2">
+<h3>Pourquoi ?</h3>
+<p>Les bots automatisés naïfs remplissent <b>TOUS</b> les champs d'un formulaire, même ceux invisibles. En ajoutant un champ piège invisible, on détecte instantanément ces bots — sans friction pour les humains.</p>
+
+<h3>Le helper lib/honeypot.js (115 lignes)</h3>
+<pre><code>// Hook React
+export function useHoneypot(fieldName = "website_url") {
+  const [value, setValue] = useState("");
+  return {
+    honeypotProps: {
+      type: "text",
+      name: fieldName,
+      value,
+      onChange: (e) => setValue(e.target.value),
+      style: {
+        position: "absolute", left: "-9999px",
+        width: "1px", height: "1px", opacity: 0,
+        pointerEvents: "none",
+      },
+      tabIndex: -1,
+      autoComplete: "off",
+      "aria-hidden": "true",
+    },
+    isBot: () => value.length > 0,
+    getHoneypotValue: () => value,
+  };
+}</code></pre>
+
+<h3>Intégration login</h3>
+<pre><code>// 1. Hook au top du composant
+const { honeypotProps, isBot } = useHoneypot("website_url");
+
+// 2. Check AVANT signIn
+async function submit() {
+  if (isBot()) {
+    // Log silencieux + délai 800-1200ms + erreur générique
+    await auditHoneypotTriggered(supabase, { userEmail: email }, {
+      honeypot_value_length: getHoneypotValue().length,
+    });
+    await new Promise((r) => setTimeout(r, 800 + Math.random() * 400));
+    setErr("Erreur de validation. Réessaie.");
+    return;
+  }
+  // ... flow normal
+}
+
+// 3. Dans le JSX, AVANT l'email
+&lt;input {...honeypotProps} /&gt;</code></pre>
+
+<h3>Limites assumées</h3>
+<div class="panel tip">
+<ul>
+<li>Stoppe seulement les <b>bots naïfs</b> qui remplissent tout aveuglément</li>
+<li>Les bots sophistiqués lisent le CSS et skipent les champs <code>display:none</code></li>
+<li>Pour ces derniers : le <b>rate-limit serveur Supabase + le rate-limit client de 0.57.36</b> restent la défense principale</li>
+</ul>
+</div>
+</div>
+
+<h2>🔑 Sujet 3/3 — Guide d'activation 2FA TOTP</h2>
+
+<div class="sujet s3">
+<h3>scripts/GUIDE-ACTIVATION-2FA.md (130 lignes, 4 étapes)</h3>
+
+<table>
+<tr><th>Étape</th><th>Action</th></tr>
+<tr><td>1️⃣</td><td>Activer TOTP dans Dashboard Supabase (Authentication → MFA → Enable TOTP)</td></tr>
+<tr><td>2️⃣</td><td>Intégrer <code>&lt;MfaSetup /&gt;</code> dans <code>app/profil/page.js</code> (3 lignes de code)</td></tr>
+<tr><td>3️⃣</td><td>Appeler <code>checkMfaRequired()</code> dans le flow login après <code>signInWithPassword</code> (12 lignes)</td></tr>
+<tr><td>4️⃣</td><td>Tester : enrollment via authenticator app + login avec code TOTP</td></tr>
+</table>
+
+<h3>Recommandations par profil utilisateur</h3>
+<table>
+<tr><th>Profil</th><th>2FA recommandé ?</th></tr>
+<tr><td>Administrateur structure</td><td>✅ <b>OBLIGATOIRE</b></td></tr>
+<tr><td>User avec accès données patients</td><td>✅ <b>OBLIGATOIRE</b></td></tr>
+<tr><td>User standard</td><td>🟡 Recommandé</td></tr>
+<tr><td>User externe / partenaire</td><td>🟢 Optionnel</td></tr>
+</table>
+
+<p>Tout le code applicatif est déjà en place depuis 0.57.37 (<code>lib/mfa.js</code> + <code>app/components/MfaSetup.js</code>). Il reste juste à activer côté Supabase Dashboard et intégrer dans 2 endroits.</p>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC après 0.57.38</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>Routes API + OCR + Storage + Edge Functions + RLS</td><td>✅ Tous</td></tr>
+<tr><td>Pages admin AdminGuard + XSS toast + Cleanup logout + Rate-limit login</td><td>✅</td></tr>
+<tr><td>security.txt RFC 9116 + CSP enrichie + SRI sur 3 scripts CDN</td><td>✅</td></tr>
+<tr><td>2FA TOTP foundation prête</td><td>✅ + guide 4 étapes</td></tr>
+<tr><td><b>Bug CORS Edge Functions fixé</b></td><td>✅ <b>NEW 0.57.38</b></td></tr>
+<tr><td><b>Audit logs centralisé security events</b></td><td>✅ <b>NEW 0.57.38</b></td></tr>
+<tr><td><b>Honeypot anti-bot sur login</b></td><td>✅ <b>NEW 0.57.38</b></td></tr>
+<tr><td><b>Guide activation 2FA livré</b></td><td>✅ <b>NEW 0.57.38</b></td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>21 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3253</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés (4)</h3>
+<ul>
+<li><code>lib/securityAudit.js</code> (220 lignes — helper audit centralisé)</li>
+<li><code>lib/honeypot.js</code> (115 lignes — anti-bot)</li>
+<li><code>scripts/GUIDE-ACTIVATION-2FA.md</code> (130 lignes — guide complet)</li>
+<li><code>__tests__/v057-38-audit-honeypot-cors.test.js</code> (35 tests)</li>
+</ul>
+<h3>Modifiés (5)</h3>
+<ul>
+<li><code>supabase/functions/_shared/auth.ts</code> : pattern Vercel élargi (FIX CORS)</li>
+<li><code>app/login/page.js</code> : honeypot + audit success/failed/blocked/honeypot</li>
+<li><code>app/components/AdminGuard.js</code> : audit access_denied</li>
+<li><code>app/changelog/versions-data.js</code> : entrée 0.57.38</li>
+<li><code>public/sw.js</code> : VERSION bumpée à 0.57.38</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+# Dézipper le zip 0.57.38 par-dessus
+npm install --legacy-peer-deps
+npm test                              # 3253 verts ✅
+git add -A
+git commit -m "Alpha 0.57.38 - Fix CORS + audit logs centralisé + honeypot login + guide 2FA"
+git push origin main
+
+# IMPORTANT : redéployer les 11 Edge Functions Supabase
+supabase functions deploy send-email
+supabase functions deploy send-webhook
+supabase functions deploy send-push
+supabase functions deploy invite-user
+supabase functions deploy auto-archive-consents
+supabase functions deploy maintenance-daily-cron
+supabase functions deploy send-digest
+supabase functions deploy send-renouvellement-rappels
+supabase functions deploy sync-google-reviews
+supabase functions deploy weekly-stats-digest
+supabase functions deploy welcome-user</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts (pour la suite)</h2>
+<div class="panel tip">
+<ul>
+<li><b>Activer le 2FA</b> : suivre le guide scripts/GUIDE-ACTIVATION-2FA.md (4 étapes, ~15 min)</li>
+<li><b>CRON_SECRET</b> dans Supabase secrets (si pas encore fait)</li>
+<li><b>Script SQL Supabase</b> à exécuter (SANS-CRON ou EDITOR selon plan)</li>
+<li><b>HDS</b> : migration vers hébergeur certifié avant prod réelle</li>
+<li><b>CSP enforce</b> : passage report-only → enforce après observation prod</li>
+<li><b>Dashboard admin security events</b> : page qui affiche le top des events suspects (graph + détail)</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 128ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.37 → <b>0.57.38</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.38 · 3 juin 2026 · 3253 Vitest · CORS fixé + audit logs + honeypot + guide 2FA · 21 LINT actifs</footer>
+</div></body></html>

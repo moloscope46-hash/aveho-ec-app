@@ -46,7 +46,9 @@ describe("0.57.31 - Helper _shared/auth.ts pour Edge Functions", () => {
   });
 
   it("Pattern regex pour les previews Vercel", () => {
-    expect(src).toMatch(/aveho-ec-app-\[a-z0-9-\]\+-fleos-projects\\.vercel\\.app/);
+    // 0.57.38 : pattern élargi pour matcher tous sous-domaines aveho-ec-app*.vercel.app
+    // (avant : aveho-ec-app-[a-z0-9-]+-fleos-projects, maintenant : aveho-ec-app[a-z0-9-]*)
+    expect(src).toMatch(/aveho-ec-app\[a-z0-9-\][*+]\\\.vercel\\\.app|aveho-ec-app-\[a-z0-9-\]\+-fleos-projects/);
   });
 
   it("Header Vary: Origin (correctness cache CDN)", () => {

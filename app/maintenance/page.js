@@ -8,7 +8,7 @@ import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
+import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 import { fmtDate } from "../../lib/format";
 import { logEvent } from "../../lib/events";
 import { openPdfPreview } from "../../lib/pdfPreview";
