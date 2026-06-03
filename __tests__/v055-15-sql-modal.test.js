@@ -31,11 +31,14 @@ describe("0.55.15 - sqlFile dans versions-data", () => {
 });
 
 describe("0.55.15 - Format des sqlFile", () => {
-  it("tous les sqlFile respectent le pattern aveho-PATCH-vers-X.Y.Z.sql", () => {
+  it("tous les sqlFile respectent le pattern aveho-* SQL", () => {
     const withSql = ALL_VERSIONS.filter(v => v.sqlFile);
-    const pattern = /^aveho-PATCH-vers-\d+\.\d+(?:\.\d+)?\.sql$/;
+    // 0.57.33 : accepte les 2 patterns historiques
+    //  - "aveho-PATCH-vers-X.Y[.Z].sql" (ancien, 1 fichier par version)
+    //  - "aveho-supabase-securite-*-X.Y.Z.sql" (nouveau, scripts combinés sécurité)
+    const pattern = /^aveho-(PATCH-vers|supabase-securite-[A-Z]+)-\d+\.\d+(?:\.\d+)?\.sql$/;
     withSql.forEach(v => {
-      expect(pattern.test(v.sqlFile)).toBe(true);
+      expect(pattern.test(v.sqlFile), `${v.v} → ${v.sqlFile}`).toBe(true);
     });
   });
 

@@ -1,7 +1,7 @@
 "use client";
 // =============================================================
 //  Page Statistiques DI — Dashboard interventions
-//  Alpha 0.43.0
+//  Alpha 0.43.0 (0.57.34 : force-dynamic pour éviter SSG fail)
 //
 //  Affiche :
 //   - KPIs globaux (total, ce mois vs précédent, % urgent, % résolu)
@@ -11,6 +11,12 @@
 //   - Top demandeurs
 //   - Split par urgence
 // =============================================================
+
+// 0.57.34 : Force le rendu dynamique (pas de SSG au build)
+// Évite "Error: @supabase/ssr: Your project's URL and API key are required"
+// car la page utilise createClient() au top-level
+export const dynamic = "force-dynamic";
+
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
