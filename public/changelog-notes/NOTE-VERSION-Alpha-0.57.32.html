@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.32 — Storage uploads hardening</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#EF9F27 0%,#142131 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#fff8ec;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#fff8ec;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#fff8ec}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid #EF9F27}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#fef9ed,#f5e0a8);border-color:#f0d59f;border-left:4px solid #EF9F27}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.amber{background:#fef9ed;border-color:#f0d59f}.kpi.amber .kpi-val{color:#7a4f15}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — STORAGE HARDENING</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.32 — Durcissement uploads Supabase Storage<small>UUID validation + MIME whitelist + taille max 10 MB</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.32-alpha</code></span>
+<span><b>Tests :</b> 3076 Vitest dont 21 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi amber">
+<span class="kpi-val">3</span>
+<span class="kpi-lbl">Protections cumulées par helper</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2</span>
+<span class="kpi-lbl">Helpers Storage durcis</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+1</span>
+<span class="kpi-lbl">LINT critique (15 total)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+21</span>
+<span class="kpi-lbl">Tests Vitest (3076 total)</span>
+</div>
+</div>
+
+<h2>🔍 Audit complet des Storage uploads</h2>
+<div class="panel">
+<table>
+<tr><th>Fichier</th><th>État avant fix</th></tr>
+<tr><td><code>app/ConsentementRGPD.js</code></td><td>✅ Déjà SAFE : blob généré côté client, <code>image/png</code> hardcodé, structure_id depuis contexte auth</td></tr>
+<tr><td><code>lib/bulletinsStorage.js</code></td><td>⚠ Manquait : taille max, whitelist MIME, validation UUID des path segments</td></tr>
+<tr><td><code>lib/prescriptionsStorage.js</code></td><td>⚠ Mêmes manques</td></tr>
+</table>
+
+<p><b>Note importante :</b> les <code>structureId</code> et <code>patientId</code> passés à ces helpers viennent du contexte authentifié (<code>auth.structureId</code>) — ils ne sont <b>pas directement user-controlled</b>. Donc pas d'exploit immédiat. Mais c'est une <b>defense-in-depth essentielle</b> : si demain un nouveau caller mal codé arrive, la validation stricte protège déjà.</p>
+</div>
+
+<h2>🛡️ Les 3 protections cumulées</h2>
+
+<h3>1️⃣ Validation UUID stricte (anti path-traversal)</h3>
+<div class="panel hero">
+<p>Avant le fix, <code>buildPath</code> assemblait directement les IDs dans le chemin Supabase Storage. Si demain quelqu'un appelait <code>buildPath("../other-structure", ...)</code>, le path serait <code>"../other-structure/patientId/..."</code> → traversée de path possible.</p>
+
+<pre><code>// AVANT 0.57.32
+export function buildPath(structureId, patientId, originalFilename) {
+  const ts = Date.now();
+  const safe = sanitizeFilename(originalFilename);
+  return `${structureId}/${patientId}/${ts}-${safe}`;
+  //       ↑↑↑↑↑↑↑↑↑↑↑↑
+  //       Si structureId = "../other-structure", path traversal !
+}
+
+// 0.57.32 - validation stricte
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUuid(id) {
+  return typeof id === "string" && UUID_RE.test(id);
+}
+
+export function buildPath(structureId, patientId, originalFilename) {
+  if (!isValidUuid(structureId)) {
+    throw new Error("structureId invalide (UUID requis)");
+  }
+  if (!isValidUuid(patientId)) {
+    throw new Error("patientId invalide (UUID requis)");
+  }
+  // ... safe
+}</code></pre>
+</div>
+
+<h3>2️⃣ Whitelist MIME (anti upload HTML/JS/exe)</h3>
+<div class="panel hero">
+<p>Avant : <code>contentType: file.type || "application/octet-stream"</code> → on acceptait n'importe quel type, y compris HTML/JS qui pouvaient ensuite être servis via signed URL (XSS via download).</p>
+
+<pre><code>// 0.57.32 - whitelist stricte
+const ALLOWED_MIMES = [
+  "image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"
+];
+
+const mime = file.type || "application/octet-stream";
+if (!ALLOWED_MIMES.includes(mime)) {
+  return { error: `Type de fichier non supporté : ${mime}` };
+}</code></pre>
+</div>
+
+<h3>3️⃣ Taille max 10 MB (anti-DoS + facturation)</h3>
+<div class="panel hero">
+<p>Avant : pas de check. Un attaquant pouvait uploader des fichiers énormes (DoS + facturation Supabase Storage qui explose).</p>
+
+<pre><code>// 0.57.32 - limite stricte
+const MAX_FILE_SIZE = 10 * 1024 * 1024;  // 10 MB
+
+if (file.size > MAX_FILE_SIZE) {
+  return { error: `Fichier trop volumineux (max ${MAX_FILE_SIZE / 1024 / 1024} MB)` };
+}</code></pre>
+</div>
+
+<h2>🔍 Audit Logger redaction (déjà excellent)</h2>
+<div class="panel ok">
+<p>Audit du logger pour vérifier qu'il redacte bien les patterns sensibles. ✅ Tout est en place :</p>
+<table>
+<tr><th>Catégorie</th><th>Patterns masqués</th></tr>
+<tr><td>Auth</td><td><code>password</code>, <code>token</code>, <code>refresh_token</code>, <code>access_token</code>, <code>secret</code>, <code>api_key</code>, <code>credential_id</code></td></tr>
+<tr><td>RGPD</td><td><code>email</code>, <code>telephone</code>, <code>mobile</code>, <code>phone</code></td></tr>
+<tr><td>Données médicales</td><td><code>numero_secu</code>, <code>nir</code>, <code>numero_amc</code>, <code>patient_nom</code>, <code>date_naissance</code></td></tr>
+<tr><td>Professionnels</td><td><code>rpps</code>, <code>adeli</code>, <code>finess</code></td></tr>
+<tr><td>Strings (regex)</td><td>Bearer tokens, JWT (eyJ...), query params <code>?token=...</code></td></tr>
+</table>
+</div>
+
+<h2>🔒 15e LINT anti-régression critique</h2>
+<div class="panel">
+<pre><code>describe("0.57.32 - LINT : tous les helpers Storage validate UUID", () => {
+  const STORAGE_HELPERS = [
+    "lib/bulletinsStorage.js",
+    "lib/prescriptionsStorage.js",
+  ];
+
+  it("Tous les helpers Storage ont MAX_FILE_SIZE défini", () => { ... });
+  it("Tous les helpers Storage ont ALLOWED_MIMES whitelist", () => { ... });
+  it("Tous les helpers Storage valident UUID dans buildPath", () => { ... });
+});</code></pre>
+<p>Si demain un nouveau helper Storage est créé (ex : <code>signalementsStorage.js</code>) sans les 3 protections → le test fail avant le push.</p>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC après 0.57.32</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API protégées requireAuth</td><td>✅ 17/19</td></tr>
+<tr><td>Routes API POST validation body</td><td>✅ 9/9</td></tr>
+<tr><td>Routes API GET validation searchParams</td><td>✅ 5/5</td></tr>
+<tr><td>Routes API anti-leak e.message</td><td>✅ 12/12</td></tr>
+<tr><td>Routes API PUT/DELETE anti-mass-assignment</td><td>✅ 4/4</td></tr>
+<tr><td>Routes OCR avec MIME whitelist</td><td>✅ 3/3</td></tr>
+<tr><td><b>Storage helpers avec UUID + MIME + taille</b></td><td>✅ <b>2/2 NEW 0.57.32</b></td></tr>
+<tr><td>Edge Functions client avec auth + check structure</td><td>✅ 4/4</td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10</td></tr>
+<tr><td>RLS Supabase</td><td>100% (après script combiné)</td></tr>
+<tr><td>Logger redaction (auth + RGPD + médical)</td><td>✅ Audité</td></tr>
+<tr><td>SSRF, IDOR, biométrie, SQL, SW cleanup, Bearer, mass-assign, cross-tenant</td><td>✅ Tous fixés</td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>15 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3076</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<ul>
+<li><code>lib/bulletinsStorage.js</code> : UUID validation + MAX_FILE_SIZE + ALLOWED_MIMES</li>
+<li><code>lib/prescriptionsStorage.js</code> : idem (avec 3 UUIDs : structure, patient, prescription)</li>
+<li><code>public/sw.js</code> : VERSION bumpée à 0.57.32</li>
+</ul>
+<h3>Créés</h3>
+<ul>
+<li><code>__tests__/v057-32-storage-uploads-hardening.test.js</code> (21 tests)</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                              # 3076 verts
+npm run build
+git add -A
+git commit -m "Alpha 0.57.32 - Storage uploads UUID + MIME whitelist + taille max"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>Script SQL Supabase</b> à appliquer (toujours en attente côté DB)</li>
+<li><b>Login 2FA</b> + Détection faciale (en attente précisions)</li>
+<li><b>HDS</b> : migration vers hébergeur certifié avant production réelle</li>
+<li><b>Audit CRON Edge Functions</b> (7 fonctions whitelistées en 0.57.31)</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 122ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.31 → <b>0.57.32</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.32 · 3 juin 2026 · 3076 Vitest · Storage uploads sécurisés + 15 LINT actifs</footer>
+</div></body></html>

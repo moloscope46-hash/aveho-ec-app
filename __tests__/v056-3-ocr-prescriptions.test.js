@@ -184,9 +184,10 @@ describe("0.56.3 - Route /api/prescriptions/from-ocr", () => {
     expect(fs.existsSync(path.resolve(process.cwd(), p))).toBe(true);
   });
 
-  it("Vérifie patient_id + structure_id obligatoires", () => {
-    expect(src).toContain("patient_id manquant");
-    expect(src).toContain("structure_id manquant");
+  it("Vérifie patient_id + structure_id obligatoires (via validate() depuis 0.57.25)", () => {
+    // Depuis 0.57.25, c'est validate() qui gère ces required (au lieu de if inline)
+    expect(src).toMatch(/patient_id:\s*\{[^}]*required:\s*true/);
+    expect(src).toMatch(/structure_id:\s*\{[^}]*required:\s*true/);
   });
 
   it("Insert prescription puis insert lignes en batch", () => {

@@ -6,14 +6,15 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 
-describe("0.56.11 - Edge Function invite-user CORS", () => {
+describe("0.56.11 - Edge Function invite-user CORS (refactoré 0.57.31)", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "supabase/functions/invite-user/index.ts"), "utf-8");
 
-  it("Constantes CORS_HEADERS définies (Origin/Methods/Headers)", () => {
-    expect(src).toContain("CORS_HEADERS");
-    expect(src).toContain('"Access-Control-Allow-Origin"');
-    expect(src).toContain('"Access-Control-Allow-Methods"');
-    expect(src).toContain('"Access-Control-Allow-Headers"');
+  it("Utilise CORS dynamique via _shared/auth.ts (refactoré 0.57.31)", () => {
+    // Depuis 0.57.31 : plus de constante CORS_HEADERS hardcodée
+    // → on importe buildCorsHeaders() du helper partagé
+    expect(src).toContain("buildCorsHeaders");
+    expect(src).toContain("_shared/auth.ts");
+    expect(src).toContain("CORS_HEADERS"); // toujours utilisé comme variable locale dans le handler
   });
 
   it("Handler OPTIONS preflight retourne 204 + CORS headers", () => {
@@ -21,14 +22,23 @@ describe("0.56.11 - Edge Function invite-user CORS", () => {
     expect(src).toContain("status: 204");
   });
 
-  it("Allow-Headers inclut authorization + apikey + content-type", () => {
-    expect(src).toContain("authorization");
-    expect(src).toContain("apikey");
-    expect(src).toContain("content-type");
+  it("Allow-Headers inclut authorization + apikey + content-type (via _shared)", () => {
+    // Les headers sont définis dans _shared/auth.ts
+    const sharedSrc = fs.readFileSync(
+      path.resolve(process.cwd(), "supabase/functions/_shared/auth.ts"),
+      "utf-8"
+    );
+    expect(sharedSrc).toContain("authorization");
+    expect(sharedSrc).toContain("apikey");
+    expect(sharedSrc).toContain("content-type");
   });
 
-  it("Allow-Methods inclut POST et OPTIONS", () => {
-    expect(src).toMatch(/Access-Control-Allow-Methods.*POST.*OPTIONS|"POST,\s*OPTIONS"/);
+  it("Allow-Methods inclut POST et OPTIONS (via _shared)", () => {
+    const sharedSrc = fs.readFileSync(
+      path.resolve(process.cwd(), "supabase/functions/_shared/auth.ts"),
+      "utf-8"
+    );
+    expect(sharedSrc).toMatch(/Access-Control-Allow-Methods.*POST.*OPTIONS|"POST,\s*OPTIONS"/);
   });
 
   it("JSON_HEADERS combine Content-Type + CORS_HEADERS", () => {

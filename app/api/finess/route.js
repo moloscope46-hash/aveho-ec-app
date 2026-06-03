@@ -1,4 +1,5 @@
 import { logger } from "../../../lib/logger";
+import { safeError } from "../../../lib/safeError";  // 0.57.28
 // =============================================================
 //  app/api/finess/route.js
 //  Alpha 0.55.0 — Proxy serveur vers la base FINESS officielle
@@ -39,6 +40,25 @@ export async function GET(request) {
   if (!rate.ok) return rate.response;
 
   const { searchParams } = new URL(request.url);
+
+  // 0.57.28 : validation searchParams (FINESS 9 chiffres strict + maxLen sur le reste)
+  const { validateQueryParams } = await import("../../../lib/validateInput");
+  const paramErrors = validateQueryParams(searchParams, {
+    q: { type: "string", maxLen: 200 },
+    finess: { type: "finess" },
+    type: { type: "enum", values: ["ET", "EJ", "et", "ej"] },
+    categories: { type: "string", maxLen: 300 },
+    cp_prefix: { type: "string", maxLen: 10 },
+    bbox: { type: "string", maxLen: 100 },
+    limit: { type: "number", min: 1, max: 200, integer: true },
+  });
+  if (paramErrors.length > 0) {
+    return Response.json(
+      { error: "Paramètres invalides", details: paramErrors, results: [] },
+      { status: 400 }
+    );
+  }
+
   const q = (searchParams.get("q") || "").trim();
   const limit = Math.min(Number(searchParams.get("limit") || 10), 200);  // 0.55.10 : max API tabular-api = 200
   const finess = searchParams.get("finess");
@@ -120,13 +140,10 @@ export async function GET(request) {
     return normalize(payload);
   } catch (e) {
     logger.error("[FINESS proxy] Exception:", e);
-    // On renvoie un 200 vide pour ne pas crash le client
+    // 0.57.28 : safeError → message générique en prod, ID pour cross-réf logs Vercel
+    const safe = safeError(e, "Erreur API FINESS", { results: [], count: 0 });
     return new Response(
-      JSON.stringify({ 
-        error: e.message || "Erreur API FINESS", 
-        results: [],
-        count: 0,
-      }),
+      JSON.stringify(safe),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }

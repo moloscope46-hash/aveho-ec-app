@@ -8,6 +8,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+import { validate } from "../../../../lib/validateInput";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,42 @@ export async function POST(req) {
   try { body = await req.json(); } catch {
     return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 });
   }
+
+  // 0.57.25 : validation schema des inputs (anti-DoS + anti-IDOR + anti-type-confusion)
+  const validationErrors = validate(body, {
+    etablissement_id: { type: "uuid" },          // optionnel mais si présent doit être UUID valide
+    ocr_text_brut: { type: "string", maxLen: 50_000 },
+    bs_file_url: { type: "string", maxLen: 2_000 },
+    ocr_confiance: { type: "number", min: 0, max: 100 },
+    ocr_tokens_in: { type: "number", min: 0, max: 1_000_000, integer: true },
+    ocr_tokens_out: { type: "number", min: 0, max: 1_000_000, integer: true },
+    data: { type: "object", required: true },    // payload OCR (validé en détail ci-dessous)
+  });
+  if (validationErrors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: validationErrors },
+      { status: 400 }
+    );
+  }
+
   const { data: ocr, etablissement_id, ocr_text_brut, bs_file_url,
           ocr_confiance, ocr_tokens_in, ocr_tokens_out } = body;
-  if (!ocr || !ocr.nom) {
-    return Response.json({ ok: false, error: "Données OCR insuffisantes (nom manquant)" }, { status: 400 });
+
+  // 0.57.25 : valider en plus l'objet OCR (champs critiques patient)
+  const ocrErrors = validate(ocr, {
+    nom: { type: "string", required: true, minLen: 1, maxLen: 100 },
+    prenom: { type: "string", maxLen: 100 },
+    date_naissance: { type: "string", maxLen: 30 },
+    cp: { type: "string", maxLen: 10 },
+    ville: { type: "string", maxLen: 100 },
+    code_organisme: { type: "string", maxLen: 20 },
+    numero_amc: { type: "string", maxLen: 50 },
+  });
+  if (ocrErrors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Données OCR invalides", details: ocrErrors },
+      { status: 400 }
+    );
   }
 
   const { data: membre } = await supabase
@@ -48,9 +81,11 @@ export async function POST(req) {
   }
   // Si pas trouvé via code, essai via nom_caisse
   if (!caisse_id && ocr.nom_caisse) {
+    // 0.57.27 : escape wildcards SQL
+    const { escapeIlike } = await import("../../../../lib/validateInput");
     const { data: caisses } = await supabase
       .from("caisses_assurance_maladie").select("id")
-      .ilike("nom", `%${ocr.nom_caisse}%`).limit(1);
+      .ilike("nom", `%${escapeIlike(ocr.nom_caisse)}%`).limit(1);
     if (caisses?.length) caisse_id = caisses[0].id;
   }
 
@@ -62,8 +97,10 @@ export async function POST(req) {
     if (muts?.length) mutuelle_id = muts[0].id;
   }
   if (!mutuelle_id && ocr.mutuelle_nom) {
+    // 0.57.27 : escape wildcards SQL
+    const { escapeIlike } = await import("../../../../lib/validateInput");
     const { data: muts } = await supabase
-      .from("mutuelles").select("id").ilike("raison_sociale", `%${ocr.mutuelle_nom}%`).limit(1);
+      .from("mutuelles").select("id").ilike("raison_sociale", `%${escapeIlike(ocr.mutuelle_nom)}%`).limit(1);
     if (muts?.length) mutuelle_id = muts[0].id;
   }
 

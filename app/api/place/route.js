@@ -6,6 +6,7 @@
 // 0.57.10 : imports retirés (createClient non utilisés)
 
 import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
+import { safeError } from "../../../lib/safeError";  // 0.57.28
 
 const KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,6 +43,20 @@ async function logCall(req, status, httpStatus, errorMessage, durationMs, endpoi
 export async function GET(req) {
   const t0 = Date.now();
   const { searchParams } = new URL(req.url);
+
+  // 0.57.28 : validation des query params (anti-DoS + anti-type-confusion)
+  const { validateQueryParams } = await import("../../../lib/validateInput");
+  const errors = validateQueryParams(searchParams, {
+    nom: { type: "string", required: true, minLen: 1, maxLen: 200 },
+    adresse: { type: "string", maxLen: 500 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Query params invalides", details: errors },
+      { status: 400 }
+    );
+  }
+
   const nom = (searchParams.get("nom") || "").trim();
   const adresse = (searchParams.get("adresse") || "").trim();
 
@@ -119,6 +134,6 @@ export async function GET(req) {
     });
   } catch (e) {
     logCall(req, "error", 500, e.message, Date.now() - t0, "exception");
-    return Response.json({ ok: false, error: e.message, place: null }, { status: 200 });
+    return Response.json(safeError(e, "Erreur API place", { place: null }), { status: 200 });
   }
 }

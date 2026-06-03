@@ -6,9 +6,25 @@
 //
 // Body attendu :
 //   { email, prenom, nom, role, structure }
+//
+// 0.57.33 : requireAuth obligatoire (anti-phishing : sans ça,
+// un attaquant pouvait spammer "Bienvenue chez Aveho" à n'importe qui
+// avec un faux structure name + faux role pour usurpation).
+
+import { buildCorsHeaders, requireAuth } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { status: 204, headers: corsHeaders });
+  }
+  if (req.method !== "POST") {
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
+  }
+
+  // 0.57.33 : auth obligatoire (l'user vient d'accepter l'invitation, il a un Bearer valide)
+  const authResult = await requireAuth(req);
+  if (authResult.errorResponse) return authResult.errorResponse;
 
   try {
     const { email, prenom, nom, role, structure } = await req.json();

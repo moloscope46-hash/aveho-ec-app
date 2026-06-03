@@ -20,11 +20,17 @@
 
 // @ts-nocheck — Deno env, types non disponibles ici
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders, requireAuth, requireCronSecret } from "../_shared/auth.ts";
 
 const GOOGLE_API = "https://maps.googleapis.com/maps/api/place/details/json";
 
+// 0.57.33 : check CRON_SECRET (si appel scheduled) OU requireAuth (si appel admin UI)
 Deno.serve(async (req) => {
   const t0 = Date.now();
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { status: 204, headers: corsHeaders });
+  }
 
   // Parsing body (optionnel — peut être appelé sans body depuis cron)
   let body = {};
@@ -34,7 +40,20 @@ Deno.serve(async (req) => {
     }
   } catch (_) { /* ignore */ }
 
+  // 0.57.33 : double mode d'auth
+  // Si appel admin UI (trigger_source === "manual" ou "admin") → requireAuth
+  // Sinon (cron scheduled) → CRON_SECRET
   const triggerSource = body.trigger_source || "manual";
+  const isAdminCall = triggerSource === "manual" || triggerSource === "admin";
+
+  if (isAdminCall) {
+    const authResult = await requireAuth(req);
+    if (authResult.errorResponse) return authResult.errorResponse;
+  } else {
+    const cronCheck = requireCronSecret(req);
+    if (cronCheck) return cronCheck;
+  }
+
   const etabIdFilter = body.etablissement_id || null;  // optionnel : sync 1 seul établissement
 
   const GOOGLE_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");

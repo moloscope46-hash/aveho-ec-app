@@ -121,10 +121,20 @@ export async function POST(req) {
     return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 });
   }
 
-  let { image_base64, media_type } = body;
-  if (!image_base64) {
-    return Response.json({ ok: false, error: "Champ image_base64 manquant" }, { status: 400 });
+  // 0.57.26 : validation schema (image_base64 = potentiellement énorme → 25 MB max)
+  const { validate } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    image_base64: { type: "string", required: true, maxLen: 25_000_000 },  // 25 MB en base64
+    media_type: { type: "string", maxLen: 100 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
   }
+
+  let { image_base64, media_type } = body;
 
   // Si l'image arrive avec le préfixe data: URL, on l'enlève
   if (image_base64.startsWith("data:")) {

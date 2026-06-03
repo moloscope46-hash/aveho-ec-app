@@ -8,6 +8,7 @@
 // 0.57.10 : imports retirés (createClient non utilisés)
 
 import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+import { safeError } from "../../../../lib/safeError";  // 0.57.28
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,18 +23,25 @@ export async function POST(req) {
   let body = {};
   try { body = await req.json(); } catch (_) { /* empty body OK */ }
 
-  // Token utilisateur pour appeler l'Edge Function avec ses credentials
   // 0.57.4 : auth + rate limit obligatoire
-
   const authCheck = await requireAuth(req);
-
   if (!authCheck.ok) return authCheck.response;
-
   const { user, supabase } = authCheck;
-
   const rate = checkRateLimit(user.id, { maxRequests: 5, windowMs: 60_000 });
-
   if (!rate.ok) return rate.response;
+
+  // 0.57.26 : validation schema
+  const { validate } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    etablissement_id: { type: "uuid" },
+    trigger_source: { type: "string", maxLen: 50 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
+  }
 
   // Appelle l'Edge Function
   try {
@@ -89,10 +97,10 @@ export async function POST(req) {
 
     return Response.json({ ok: true, ...data });
   } catch (e) {
+    // 0.57.28 : safeError → message générique en prod
     return Response.json({
-      ok: false,
-      error: e.message,
-      hint: "Erreur côté Next route. Vérifie les logs Vercel.",
+      ...safeError(e, "Erreur Google Reviews sync"),
+      hint: "Vérifie les logs Vercel",
     }, { status: 500 });
   }
 }

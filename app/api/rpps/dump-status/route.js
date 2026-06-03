@@ -7,6 +7,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+import { safeError } from "../../../../lib/safeError";  // 0.57.28
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -41,6 +42,6 @@ export async function GET(req) {
       empty: (row.total_records || 0) === 0,
     });
   } catch (e) {
-    return Response.json({ ok: false, error: e.message }, { status: 200 });
+    return Response.json(safeError(e, "Erreur RPPS dump-status"), { status: 200 });
   }
 }

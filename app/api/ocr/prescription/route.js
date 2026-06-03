@@ -74,6 +74,7 @@ Retourne UNIQUEMENT le JSON.`;
 
 // 0.56.20 : auth + rate limit
 import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+import { safeError } from "../../../../lib/safeError";  // 0.57.28
 
 export async function POST(req) {
   const t0 = Date.now();
@@ -93,10 +94,20 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
-  const { image_base64, media_type } = body;
-  if (!image_base64) {
-    return Response.json({ ok: false, error: "image_base64 manquante" }, { status: 400 });
+  // 0.57.26 : validation schema (image_base64 = potentiellement énorme → 25 MB max)
+  const { validate } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    image_base64: { type: "string", required: true, maxLen: 25_000_000 },  // 25 MB en base64
+    media_type: { type: "string", maxLen: 100 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
   }
+
+  const { image_base64, media_type } = body;
 
   // Nettoyer le préfixe data:image/...;base64, si présent
   const cleanB64 = image_base64.replace(/^data:[^;]+;base64,/, "");
@@ -193,8 +204,7 @@ export async function POST(req) {
       }, { status: 504 });
     }
     return Response.json({
-      ok: false,
-      error: e.message || "Erreur inconnue",
+      ...safeError(e, "Erreur OCR prescription"),
       duration_ms: Date.now() - t0,
     }, { status: 500 });
   }

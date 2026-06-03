@@ -40,6 +40,25 @@ export async function GET(request) {
   if (!rate.ok) return rate.response;
 
   const { searchParams } = new URL(request.url);
+
+  // 0.57.28 : validation searchParams (SIRET 14 chiffres / SIREN 9 chiffres stricts)
+  const { validateQueryParams } = await import("../../../lib/validateInput");
+  const paramErrors = validateQueryParams(searchParams, {
+    q: { type: "string", maxLen: 200 },
+    siret: { type: "siret" },
+    siren: { type: "string", pattern: /^\d{9}$/, maxLen: 9 },
+    limit: { type: "number", min: 1, max: 50, integer: true },
+    code_postal: { type: "string", maxLen: 10 },
+    commune: { type: "string", maxLen: 200 },
+    categorie: { type: "string", maxLen: 100 },
+  });
+  if (paramErrors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Paramètres invalides", details: paramErrors, results: [] },
+      { status: 400 }
+    );
+  }
+
   const q = (searchParams.get("q") || "").trim();
   const siret = searchParams.get("siret");
   const siren = searchParams.get("siren");

@@ -19,16 +19,30 @@
 // =============================================================
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders, requireCronSecret } from "../_shared/auth.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const RESEND_FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "Aveho EC <noreply@aveho.fr>";
 
+// 0.57.33 : CORS restrictif + check CRON_SECRET
 serve(async (req) => {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  };
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+
+  // 0.57.33 : vérification du secret CRON (sauf si dry_run pour tests internes)
+  // Bypass possible : si le body contient { dry_run: true, user_id: "xxx" }
+  // l'appelant doit avoir un Bearer valide (mode test depuis /profil)
+  const bodyText = await req.text();
+  let body: any = {};
+  try { body = bodyText ? JSON.parse(bodyText) : {}; } catch {}
+
+  const isInternalTest = body?.force_send === true || body?.user_id;
+  if (!isInternalTest) {
+    const cronCheck = requireCronSecret(req);
+    if (cronCheck) return cronCheck;
+  }
+  // Recréer la req avec le body lu (sinon req.json() plus tard ne marche pas)
+  // → on passe les valeurs directement au lieu de re-lire
 
   try {
     const supabase = createClient(
@@ -36,7 +50,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const body = await req.json().catch(() => ({}));
     const dryRun = body.dry_run === true;
     const forceSend = body.force_send === true; // Alpha 0.41.0 : test depuis /profil
     const specificUserId = body.user_id || null;

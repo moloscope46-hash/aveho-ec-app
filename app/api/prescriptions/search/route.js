@@ -33,22 +33,38 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
-  // 0.57.4 : auth + rate limit obligatoire
-
-
+  // 0.57.26 : auth + rate limit AVANT validation
   const authCheck = await requireAuth(req);
-
-
   if (!authCheck.ok) return authCheck.response;
-
-
   const { user, supabase } = authCheck;
-
-
   const rate = checkRateLimit(user.id, { maxRequests: 30, windowMs: 60_000 });
-
-
   if (!rate.ok) return rate.response;
+
+  // 0.57.26 : validation schema (recherche → strings courtes + ints bornés)
+  // 0.57.27 : + escapeIlike pour les ILIKE queries
+  const { validate, escapeIlike } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    patient_id: { type: "uuid" },
+    prescripteur_nom: { type: "string", maxLen: 200 },
+    prescripteur_rpps: { type: "string", maxLen: 20 },
+    type_prescription: { type: "string", maxLen: 50 },
+    medicament_query: { type: "string", maxLen: 200 },
+    dci_query: { type: "string", maxLen: 200 },
+    sort: { type: "string", maxLen: 30 },
+    limit: { type: "number", min: 1, max: 500, integer: true },
+    offset: { type: "number", min: 0, max: 1_000_000, integer: true },
+    date_min: { type: "string", maxLen: 30 },
+    date_max: { type: "string", maxLen: 30 },
+    include_lignes: { type: "boolean" },
+    etablissement_id: { type: "uuid" },
+    structure_id: { type: "uuid" },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
+  }
 
   const limit = Math.min(parseInt(body.limit) || 50, 500);
   const offset = parseInt(body.offset) || 0;
@@ -66,10 +82,11 @@ export async function POST(req) {
       .select("prescription_id", { count: "exact" });
 
     if (body.medicament_query) {
-      linesQuery = linesQuery.ilike("medicament_nom", `%${body.medicament_query}%`);
+      // 0.57.27 : escape wildcards SQL (% et _) pour éviter le wildcard injection
+      linesQuery = linesQuery.ilike("medicament_nom", `%${escapeIlike(body.medicament_query)}%`);
     }
     if (body.dci_query) {
-      linesQuery = linesQuery.ilike("medicament_dci", `%${body.dci_query}%`);
+      linesQuery = linesQuery.ilike("medicament_dci", `%${escapeIlike(body.dci_query)}%`);
     }
 
     const { data: ligneIds } = await linesQuery.limit(2000);
@@ -91,7 +108,7 @@ export async function POST(req) {
 
   // Filtres communs
   if (body.patient_id) query = query.eq("patient_id", body.patient_id);
-  if (body.prescripteur_nom) query = query.ilike("prescripteur_nom", `%${body.prescripteur_nom}%`);
+  if (body.prescripteur_nom) query = query.ilike("prescripteur_nom", `%${escapeIlike(body.prescripteur_nom)}%`);  // 0.57.27 : escape wildcards
   if (body.prescripteur_rpps) query = query.eq("prescripteur_rpps", body.prescripteur_rpps);
   if (body.type_prescription && body.type_prescription !== "all") query = query.eq("type_prescription", body.type_prescription);
   if (body.source_creation && body.source_creation !== "all") query = query.eq("source_creation", body.source_creation);

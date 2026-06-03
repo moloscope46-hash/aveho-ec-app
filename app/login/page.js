@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import pkg from "../../package.json";
 import {
-  isWebAuthnSupported, getAvailableMethods, authenticateBiometric, isPlatformAuthenticatorAvailable} from "../../lib/webauthn";
+  isWebAuthnSupported, getAvailableMethods, authenticateBiometric, isPlatformAuthenticatorAvailable,
+  syncBiometricRefreshTokens } from "../../lib/webauthn";
 export default function Login() {
   const supabase = createClient();
   const router = useRouter();
@@ -54,6 +55,13 @@ export default function Login() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });
         if (error) throw error;
+
+        // 0.57.27 : sync refresh_token biométrique pour empêcher l'erreur
+        // "Session expirée" lors d'un futur login empreinte/face
+        try {
+          await syncBiometricRefreshTokens({ supabase, email });
+        } catch (_) { /* non-bloquant */ }
+
         // Alpha 0.5 : trace de connexion dans audit_log
         try {
           const { data: { session } } = await supabase.auth.getSession();

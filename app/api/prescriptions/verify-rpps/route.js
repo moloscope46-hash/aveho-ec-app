@@ -10,6 +10,7 @@
 // =============================================================
 
 import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+import { safeError } from "../../../../lib/safeError";  // 0.57.28
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
@@ -40,6 +41,21 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
+  // 0.57.26 : validation schema
+  const { validate } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    rpps: { type: "string", required: true, maxLen: 20 },     // pas pattern strict car nettoyé après
+    nom_ocr: { type: "string", maxLen: 200 },
+    prenom_ocr: { type: "string", maxLen: 200 },
+    specialite_ocr: { type: "string", maxLen: 200 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
+  }
+
   const { rpps, nom_ocr, prenom_ocr, specialite_ocr } = body;
 
   if (!rpps || !/^\d{11}$/.test(rpps.replace(/\s/g, ""))) {
@@ -52,15 +68,12 @@ export async function POST(req) {
 
   const cleanRpps = rpps.replace(/\s/g, "");
 
-  // Appel /api/rpps qui a déjà le fallback ANS → dump local
-  const proto = req.headers.get("x-forwarded-proto") || "https";
-  const host = req.headers.get("host") || "localhost:3000";
-  const baseUrl = `${proto}://${host}`;
+  // 0.57.25 : utilise internalFetch qui whitelist les hosts autorisés
+  // (avant : Host header injection possible → SSRF + leak du Bearer token)
+  const { internalFetch } = await import("../../../../lib/internalFetch");
 
   try {
-    const lookupRes = await fetch(`${baseUrl}/api/rpps?rpps=${encodeURIComponent(cleanRpps)}`, {
-      headers: { "Authorization": req.headers.get("authorization") || "" },
-    });
+    const lookupRes = await internalFetch(req, `/api/rpps?rpps=${encodeURIComponent(cleanRpps)}`);
     const lookup = await lookupRes.json();
 
     if (!lookup.ok || !lookup.results || lookup.results.length === 0) {
@@ -123,10 +136,10 @@ export async function POST(req) {
       },
     });
   } catch (e) {
+    // 0.57.28 : safeError
     return Response.json({
-      ok: false,
+      ...safeError(e, "Erreur vérification RPPS"),
       status: "error",
-      error: e.message,
     }, { status: 200 });
   }
 }

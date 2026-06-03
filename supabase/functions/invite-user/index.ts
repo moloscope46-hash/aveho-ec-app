@@ -11,20 +11,15 @@
 //     rpps_profession?, rpps_specialite?, rpps?, lock_assignment? }
 
 // Headers CORS appliqués sur TOUTES les réponses (preflight OPTIONS + réponses POST)
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Max-Age": "86400",
-};
-
-const JSON_HEADERS = {
-  "Content-Type": "application/json",
-  ...CORS_HEADERS,
-};
+// 0.57.31 : import du helper de sécurité partagé (CORS + auth)
+import { buildCorsHeaders, requireAuth } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  // 0.56.11 : preflight CORS (le navigateur envoie OPTIONS avant POST cross-origin)
+  // 0.57.31 : CORS restrictif (only Aveho EC origins, plus de "*")
+  const CORS_HEADERS = buildCorsHeaders(req);
+  const JSON_HEADERS = { "Content-Type": "application/json", ...CORS_HEADERS };
+
+  // Preflight CORS (le navigateur envoie OPTIONS avant POST cross-origin)
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
@@ -32,6 +27,12 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
   }
+
+  // 0.57.31 : auth obligatoire (sinon vector de phishing massif :
+  // un attaquant peut faire envoyer "Inscrivez-vous chez Aveho" depuis
+  // notre serveur Resend avec son propre inviteLink malveillant)
+  const authResult = await requireAuth(req);
+  if (authResult.errorResponse) return authResult.errorResponse;
 
   try {
     const RESEND_KEY = Deno.env.get("RESEND_API_KEY");

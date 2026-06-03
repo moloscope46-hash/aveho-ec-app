@@ -10,11 +10,28 @@
 // 0.57.10 : imports retirés (createClient non utilisés)
 
 import { requireAuth, checkRateLimit } from "../../../lib/apiAuth";
+import { safeError } from "../../../lib/safeError";  // 0.57.28
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
+
+  // 0.57.28 : validation searchParams
+  const { validateQueryParams } = await import("../../../lib/validateInput");
+  const paramErrors = validateQueryParams(searchParams, {
+    q: { type: "string", maxLen: 200 },
+    dept: { type: "string", maxLen: 10 },
+    code: { type: "string", maxLen: 20 },
+    limit: { type: "number", min: 1, max: 100, integer: true },
+  });
+  if (paramErrors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Paramètres invalides", details: paramErrors, results: [] },
+      { status: 400 }
+    );
+  }
+
   const q = (searchParams.get("q") || "").trim();
   const dept = (searchParams.get("dept") || "").trim() || null;
   const code = (searchParams.get("code") || "").trim();
@@ -60,7 +77,7 @@ export async function GET(req) {
 
     return Response.json({ ok: true, count: data?.length || 0, results: data || [] });
   } catch (e) {
-    return Response.json({ ok: false, error: e.message, results: [] }, { status: 200 });
+    return Response.json(safeError(e, "Erreur API caisses", { results: [] }), { status: 200 });
   }
 }
 
@@ -76,26 +93,36 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
-  if (!body.nom || !body.code_organisme) {
-    return Response.json({ ok: false, error: "nom et code_organisme requis" }, { status: 400 });
-  }
-
-  // 0.57.4 : auth + rate limit obligatoire
-
-
+  // 0.57.26 : auth + rate limit AVANT validation (économise les ressources si non-auth)
   const authCheck = await requireAuth(req);
-
-
   if (!authCheck.ok) return authCheck.response;
-
-
   const { user, supabase } = authCheck;
-
-
   const rate = checkRateLimit(user.id, { maxRequests: 60, windowMs: 60_000 });
-
-
   if (!rate.ok) return rate.response;
+
+  // 0.57.26 : validation schema des inputs (anti-DoS + anti-type-confusion)
+  const { validate } = await import("../../../lib/validateInput");
+  const errors = validate(body, {
+    nom: { type: "string", required: true, minLen: 1, maxLen: 200 },
+    code_organisme: { type: "string", required: true, minLen: 1, maxLen: 20 },
+    type_caisse: { type: "string", maxLen: 50 },
+    type: { type: "string", maxLen: 50 },              // alias legacy
+    regime: { type: "string", maxLen: 50 },
+    departement: { type: "string", maxLen: 100 },
+    region: { type: "string", maxLen: 100 },
+    adresse: { type: "string", maxLen: 500 },
+    cp: { type: "string", maxLen: 10 },
+    code_postal: { type: "string", maxLen: 10 },        // alias legacy
+    ville: { type: "string", maxLen: 200 },
+    telephone: { type: "string", maxLen: 30 },
+    email: { type: "string", maxLen: 254 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
+  }
 
   // 0.56.13 : mapping vers les bons noms de colonnes (type_caisse, cp)
   const payload = {

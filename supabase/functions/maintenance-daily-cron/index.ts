@@ -26,12 +26,23 @@
 //   );
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders, requireCronSecret } from "../_shared/auth.ts";
 
+// 0.57.33 : check CRON_SECRET (anti-déclenchement non autorisé)
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { status: 204, headers: corsHeaders });
+  }
+
+  // 0.57.33 : vérification du secret CRON
+  const cronCheck = requireCronSecret(req);
+  if (cronCheck) return cronCheck;
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceKey) {
-    return new Response("Configuration manquante", { status: 500 });
+    return new Response("Configuration manquante", { status: 500, headers: corsHeaders });
   }
   const supabase = createClient(supabaseUrl, serviceKey);
 

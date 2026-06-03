@@ -27,16 +27,18 @@
 //   );
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders, requireCronSecret } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
+// 0.57.33 : CORS restrictif (via _shared) + check CRON_SECRET (anti-déclenchement non autorisé)
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { status: 204, headers: corsHeaders });
   }
+
+  // 0.57.33 : vérification du secret CRON (anti-DoS, anti-déclenchement non autorisé)
+  const cronCheck = requireCronSecret(req);
+  if (cronCheck) return cronCheck;
 
   try {
     const admin = createClient(

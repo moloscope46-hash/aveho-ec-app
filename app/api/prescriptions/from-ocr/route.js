@@ -15,6 +15,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { requireAuth, checkRateLimit } from "../../../../lib/apiAuth";
+import { validate } from "../../../../lib/validateInput";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
@@ -32,14 +33,67 @@ export async function POST(req) {
   try { body = await req.json(); }
   catch (e) { return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 }); }
 
+  // 0.57.25 : validation schema des inputs (anti-DoS + anti-IDOR + anti-type-confusion)
+  const validationErrors = validate(body, {
+    patient_id: { type: "uuid", required: true },
+    structure_id: { type: "uuid", required: true },
+    etablissement_id: { type: "uuid" },
+    data: { type: "object", required: true },
+    ocr_text_brut: { type: "string", maxLen: 50_000 },
+    ocr_confiance: { type: "number", min: 0, max: 100 },
+    ocr_tokens_in: { type: "number", min: 0, max: 1_000_000, integer: true },
+    ocr_tokens_out: { type: "number", min: 0, max: 1_000_000, integer: true },
+  });
+  if (validationErrors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: validationErrors },
+      { status: 400 }
+    );
+  }
+
   const {
     patient_id, structure_id, etablissement_id,
     data, ocr_text_brut, ocr_confiance, ocr_tokens_in, ocr_tokens_out,
   } = body;
 
-  if (!patient_id) return Response.json({ ok: false, error: "patient_id manquant" }, { status: 400 });
-  if (!structure_id) return Response.json({ ok: false, error: "structure_id manquant" }, { status: 400 });
-  if (!data) return Response.json({ ok: false, error: "data manquante" }, { status: 400 });
+  // 0.57.25 : valider la structure data (prescripteur + medicaments)
+  if (data.prescripteur && typeof data.prescripteur === "object") {
+    const presErrors = validate(data.prescripteur, {
+      nom: { type: "string", maxLen: 100 },
+      prenom: { type: "string", maxLen: 100 },
+      rpps: { type: "string", maxLen: 20 },          // pas strict RPPS car OCR pas sûr
+      adeli: { type: "string", maxLen: 20 },
+      specialite: { type: "string", maxLen: 200 },
+    });
+    if (presErrors.length > 0) {
+      return Response.json(
+        { ok: false, error: "Prescripteur invalide", details: presErrors },
+        { status: 400 }
+      );
+    }
+  }
+  if (Array.isArray(data.medicaments) && data.medicaments.length > 100) {
+    return Response.json(
+      { ok: false, error: "Trop de médicaments (max 100 par prescription)" },
+      { status: 400 }
+    );
+  }
+
+  // 0.57.25 : IDOR check — vérifier que le user a accès à cette structure_id
+  // (avant : le RLS Supabase faisait le contrôle au moment de l'INSERT, mais
+  //  c'est plus défensif d'échouer tôt avec un message clair)
+  const { data: membership } = await supabase
+    .from("membres_structure")
+    .select("structure_id")
+    .eq("user_id", user.id)
+    .eq("structure_id", structure_id)
+    .maybeSingle();
+  if (!membership) {
+    return Response.json(
+      { ok: false, error: "Accès refusé à cette structure" },
+      { status: 403 }
+    );
+  }
 
   const p = data.prescripteur || {};
   const meds = Array.isArray(data.medicaments) ? data.medicaments : [];
@@ -74,11 +128,10 @@ export async function POST(req) {
     // Si RPPS fourni, on tente la vérification via l'API interne
     if (p.rpps && /^\d{11}$/.test(p.rpps.replace(/\s/g, ""))) {
       try {
-        const proto = req.headers.get("x-forwarded-proto") || "https";
-        const host = req.headers.get("host") || "localhost:3000";
-        const verifRes = await fetch(`${proto}://${host}/api/rpps?rpps=${encodeURIComponent(p.rpps.replace(/\s/g, ""))}`, {
-          headers: { Authorization: req.headers.get("authorization") || "" },
-        });
+        // 0.57.25 : utilise internalFetch qui whitelist les hosts autorisés
+        // (avant : Host header injection possible → SSRF + leak token)
+        const { internalFetch } = await import("../../../../lib/internalFetch");
+        const verifRes = await internalFetch(req, `/api/rpps?rpps=${encodeURIComponent(p.rpps.replace(/\s/g, ""))}`);
         const verifData = await verifRes.json();
         if (verifData.ok && verifData.results?.length > 0) {
           const found = verifData.results[0];

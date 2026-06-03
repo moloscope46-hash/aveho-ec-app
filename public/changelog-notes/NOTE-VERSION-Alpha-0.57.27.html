@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.27 — Fix Session expirée biométrie</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#c0392b 0%,#142131 60%,#185FA5 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#ffcdd2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#ffcdd2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#ffcdd2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#ffebee,#ffcdd2);border-color:#ef9a9a;border-left:4px solid #c0392b}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.red{background:#ffebee;border-color:#ef9a9a}.kpi.red .kpi-val{color:#b71c1c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — FIX BIOMÉTRIE</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.27 — Fix Session expirée empreinte<small>Sync auto refresh_tokens biométriques à chaque login + escape SQL wildcards ILIKE</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.27-alpha</code></span>
+<span><b>Tests :</b> 3026 Vitest dont 26 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi red">
+<span class="kpi-val">1</span>
+<span class="kpi-lbl">Bug biométrie fixé</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">3</span>
+<span class="kpi-lbl">Routes ILIKE sanitizées</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+26</span>
+<span class="kpi-lbl">Tests Vitest</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">3026</span>
+<span class="kpi-lbl">Total Vitest verts</span>
+</div>
+</div>
+
+<h2>🐛 1. Bug signalé : "pour l'empreinte digital il me dit session expirée"</h2>
+
+<h3>Diagnostic</h3>
+<div class="panel hero">
+<p>Les refresh_tokens Supabase ont une durée limitée (<b>60 jours par défaut</b>). Si le user se connecte <b>toujours par mot de passe</b> et <b>jamais par empreinte</b>, le refresh_token stocké pour la biométrie vieillit jusqu'à expiration.</p>
+
+<p>Workflow buggué avant 0.57.27 :</p>
+<ol>
+<li>User enregistre son empreinte → stockage local IndexedDB : <code>{ refresh_token: "abc..." }</code></li>
+<li>User se connecte toujours par mot de passe pendant 60+ jours</li>
+<li>User essaie l'empreinte → <code>supabase.auth.refreshSession({ refresh_token: "abc..." })</code></li>
+<li>Supabase répond : <i>refresh_token expired</i> (>60j)</li>
+<li>removeLocalCredential() + throw "Session expirée"</li>
+<li><b>User perd sa biométrie</b> → doit re-enrôler à zéro</li>
+</ol>
+<p>Chicken-and-egg : pour rafraîchir le refresh_token, il fallait pouvoir l'utiliser. Mais le seul moyen de l'utiliser, c'était la biométrie !</p>
+</div>
+
+<h3>Fix : sync auto à chaque login mot de passe</h3>
+<div class="panel ok">
+<p>Nouvelle fonction <code>syncBiometricRefreshTokens()</code> dans <code>lib/webauthn.js</code> appelée après chaque <code>signInWithPassword</code> réussi.</p>
+
+<pre><code>export async function syncBiometricRefreshTokens({ supabase, email }) {
+  if (!email) return;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.refresh_token) return;
+
+    const emailKey = email.toLowerCase().trim();
+    const raw = await dbGet(emailKey);
+    const item = normalizeStorage(raw);
+    if (!item) return;
+
+    // Sync sur empreinte ET face si présentes
+    let updated = false;
+    for (const method of ["empreinte", "face"]) {
+      if (item[method]?.refresh_token) {
+        item[method].refresh_token = session.refresh_token;
+        item[method].last_synced_at = new Date().toISOString();
+        updated = true;
+      }
+    }
+    if (updated) {
+      await dbPut(item);
+      logger.info("[WebAuthn] Refresh tokens biométriques synchronisés");
+    }
+  } catch (e) {
+    // Non-bloquant : si ça échoue, on log mais on ne casse pas le login
+    logger.warn("[WebAuthn] syncBiometricRefreshTokens fail:", e);
+  }
+}</code></pre>
+
+<p>Effet : <b>tant que tu te connectes régulièrement (par n'importe quel moyen)</b>, ton refresh_token biométrique reste frais et ne peut pas expirer.</p>
+</div>
+
+<h3>Bug secondaire fixé : erreur réseau confondue avec token expiré</h3>
+<div class="panel warn">
+<p>Avant 0.57.27, TOUTE erreur lors de <code>refreshSession</code> (y compris coupure réseau de 5 sec) faisait <code>removeLocalCredential()</code> → l'user perdait sa biométrie pour rien.</p>
+
+<p>Fix : distinguer les 2 cas.</p>
+<pre><code>const isExpiredToken =
+  error?.status === 400 ||
+  /refresh.*token|invalid_grant|expir/i.test(error?.message || "");
+
+if (!isExpiredToken) {
+  // Erreur réseau / autre → GARDE le credential, message neutre
+  throw new Error("Connexion à Supabase impossible. Vérifiez votre réseau et réessayez.");
+}
+
+// Token vraiment expiré → on supprime + message clair
+await removeLocalCredential(email, method);
+throw new Error(
+  "Votre " + METHOD_LABEL[method] + " n'est plus valide (inutilisée depuis longtemps). " +
+  "Connectez-vous avec votre mot de passe, elle sera automatiquement réactivée."
+);</code></pre>
+</div>
+
+<h2>🛡️ 2. Bonus sécurité : escape SQL wildcards ILIKE</h2>
+<div class="panel">
+<p>Supabase JS client échappe les valeurs (parameterized queries) → <b>pas de risque de vraie SQL injection</b>. MAIS les caractères wildcards <code>%</code> et <code>_</code> ne sont pas échappés.</p>
+
+<p>Conséquences :</p>
+<ul>
+<li>Un user peut envoyer <code>prescripteur_nom = "%"</code> → matche TOUT → scan exhaustif des prescriptions (potentiel DoS)</li>
+<li>Ou <code>nom = "_"</code> → matche n'importe quelle string d'1 caractère</li>
+</ul>
+
+<h3>Nouvelle fonction escapeIlike()</h3>
+<pre><code>// lib/validateInput.js
+export function escapeIlike(s) {
+  if (typeof s !== "string") return s;
+  // Échapper \\ d'abord (sinon casse l'échappement des % et _)
+  return s
+    .replace(/\\/g, "\\\\")
+    .replace(/%/g, "\\%")
+    .replace(/_/g, "\\_");
+}
+
+// Usage dans 3 routes :
+//  - prescriptions/search (3 ILIKE : medicament_nom, medicament_dci, prescripteur_nom)
+//  - prescriptions/export-csv (1 ILIKE : prescripteur_nom)
+//  - patients/from-ocr (2 ILIKE : caisses.nom, mutuelles.raison_sociale)
+linesQuery = linesQuery.ilike("medicament_nom", `%${escapeIlike(body.medicament_query)}%`);</code></pre>
+</div>
+
+<h3>LINT anti-régression</h3>
+<div class="panel hero">
+<pre><code>it("Aucune route API ne fait .ilike(`%${...}%`) sans escapeIlike", () => {
+  const violations = [];
+  for (const f of findFiles("app/api")) {
+    const src = fs.readFileSync(f, "utf-8");
+    const matches = src.match(/\.ilike\(\s*"[^"]*"\s*,\s*`[^`]*\$\{[^}]+\}[^`]*`/g) || [];
+    for (const m of matches) {
+      if (!/escapeIlike/.test(m)) violations.push({ file: f, match: m });
+    }
+  }
+  expect(violations).toEqual([]);   // ← FAIL si pattern dangereux revient
+});</code></pre>
+<p>9ème LINT critique anti-régression. Garantit qu'aucune future route ne pourra introduire un ILIKE non sanitizé.</p>
+</div>
+
+<h2>📊 Bilan complet sécurité Aveho EC</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>npm audit</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API protégées requireAuth</td><td>✅ 17/19</td></tr>
+<tr><td>Routes API avec validation body</td><td>✅ 9/9</td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10</td></tr>
+<tr><td>CSP + report-uri actif</td><td>✅</td></tr>
+<tr><td>HSTS preload 1 an</td><td>✅</td></tr>
+<tr><td>RLS Supabase 100%</td><td>après script SQL combiné</td></tr>
+<tr><td>SSRF / Host header injection</td><td>✅ Fixé 0.57.25</td></tr>
+<tr><td>IDOR check explicite</td><td>✅ 0.57.25</td></tr>
+<tr><td><b>Bug "Session expirée" biométrie</b></td><td>✅ <b>NEW 0.57.27</b></td></tr>
+<tr><td><b>SQL wildcard injection (ILIKE)</b></td><td>✅ <b>NEW 0.57.27</b> escapeIlike</td></tr>
+<tr><td>LINT anti-régression critiques</td><td>✅ <b>9 actifs</b></td></tr>
+<tr><td>Tests Vitest</td><td>✅ <b>3026</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>__tests__/v057-27-biometric-sync-escape.test.js</code> (26 tests)</li>
+</ul>
+<h3>Modifiés</h3>
+<ul>
+<li><code>lib/webauthn.js</code> : nouvelle fonction <code>syncBiometricRefreshTokens()</code> + distinction erreur réseau/expiré dans <code>authenticateBiometric()</code></li>
+<li><code>app/login/page.js</code> : import + appel <code>syncBiometricRefreshTokens()</code> après signIn réussi</li>
+<li><code>lib/validateInput.js</code> : nouvelle fonction <code>escapeIlike()</code></li>
+<li><code>app/api/prescriptions/search/route.js</code> : 3 ILIKE escapés</li>
+<li><code>app/api/prescriptions/export-csv/route.js</code> : 1 ILIKE escapé</li>
+<li><code>app/api/patients/from-ocr/route.js</code> : 2 ILIKE escapés</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                                # 3026 verts
+npm run build
+git add -A
+git commit -m "Alpha 0.57.27 - Fix bug biometrie Session expiree + escape SQL ILIKE wildcards"
+git push origin main</code></pre>
+</div>
+
+<h2>🧪 Comment tester le fix biométrie</h2>
+<div class="panel tip">
+<ol>
+<li>Va sur <code>/login</code></li>
+<li>Si tu as déjà une biométrie enregistrée → essaie de te connecter par mot de passe</li>
+<li>Après le login → check la console → tu dois voir : <code>[WebAuthn] Refresh tokens biométriques synchronisés</code></li>
+<li>Déconnecte-toi</li>
+<li>Reviens sur /login → utilise la biométrie → ça doit marcher direct</li>
+</ol>
+
+<p>Si tu avais déjà perdu ta biométrie à cause du bug, tu peux la ré-enregistrer maintenant : login mot de passe → modale opt-in propose le re-bind → c'est reparti pour 60 jours frais à chaque login.</p>
+</div>
+
+<h2>📋 Sujets toujours ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>Script SQL Supabase combiné</b> à appliquer (RLS + views + tracking mail) — fichier livré en 0.57.26</li>
+<li><b>Login 2FA</b> non déclenchée → besoin de précisions</li>
+<li><b>Détection faciale</b> → pourrait avoir le même bug (probablement fixé aussi par syncBiometricRefreshTokens qui couvre face aussi)</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 117ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.26 → <b>0.57.27</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.27 · 3 juin 2026 · 3026 Vitest · bug "Session expirée" biométrie fixé</footer>
+</div></body></html>

@@ -202,6 +202,24 @@ export async function GET(req) {
   if (!rate.ok) return rate.response;
 
   const { searchParams } = new URL(req.url);
+
+  // 0.57.28 : validation searchParams (maxLen + types stricts pour les IDs)
+  const { validateQueryParams } = await import("../../../lib/validateInput");
+  const paramErrors = validateQueryParams(searchParams, {
+    q: { type: "string", maxLen: 200 },
+    profession: { type: "string", maxLen: 100 },
+    cp: { type: "string", maxLen: 10 },
+    ville: { type: "string", maxLen: 100 },
+    rpps: { type: "string", maxLen: 11 },
+    limit: { type: "number", min: 1, max: 200, integer: true },
+  });
+  if (paramErrors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Paramètres invalides", details: paramErrors, results: [] },
+      { status: 400 }
+    );
+  }
+
   const q = (searchParams.get("q") || "").trim();
   const profession = (searchParams.get("profession") || "").trim();
   const cp = (searchParams.get("cp") || "").trim();

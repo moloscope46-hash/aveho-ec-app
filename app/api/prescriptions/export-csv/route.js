@@ -31,22 +31,35 @@ export async function POST(req) {
   let body = {};
   try { body = await req.json(); } catch (_) { /* empty body OK */ }
 
-  // 0.57.4 : auth + rate limit obligatoire
-
-
+  // 0.57.26 : auth + rate limit AVANT validation
   const authCheck = await requireAuth(req);
-
-
   if (!authCheck.ok) return authCheck.response;
-
-
   const { user, supabase } = authCheck;
-
-
   const rate = checkRateLimit(user.id, { maxRequests: 10, windowMs: 60_000 });
-
-
   if (!rate.ok) return rate.response;
+
+  // 0.57.26 : validation schema (mêmes filtres que /search)
+  // 0.57.27 : + escapeIlike
+  const { validate, escapeIlike } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    patient_id: { type: "uuid" },
+    prescripteur_nom: { type: "string", maxLen: 200 },
+    prescripteur_rpps: { type: "string", maxLen: 20 },
+    type_prescription: { type: "string", maxLen: 50 },
+    medicament_query: { type: "string", maxLen: 200 },
+    dci_query: { type: "string", maxLen: 200 },
+    date_min: { type: "string", maxLen: 30 },
+    date_max: { type: "string", maxLen: 30 },
+    include_lignes: { type: "boolean" },
+    etablissement_id: { type: "uuid" },
+    structure_id: { type: "uuid" },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
+  }
 
   // Mêmes filtres que /search mais sans pagination, max 5000
   const includeLignes = body.include_lignes === true;
@@ -56,7 +69,7 @@ export async function POST(req) {
     .select("*, patients(nom, prenom, numero_dossier), etablissements(nom)");
 
   if (body.patient_id) query = query.eq("patient_id", body.patient_id);
-  if (body.prescripteur_nom) query = query.ilike("prescripteur_nom", `%${body.prescripteur_nom}%`);
+  if (body.prescripteur_nom) query = query.ilike("prescripteur_nom", `%${escapeIlike(body.prescripteur_nom)}%`);  // 0.57.27 : escape wildcards
   if (body.prescripteur_rpps) query = query.eq("prescripteur_rpps", body.prescripteur_rpps);
   if (body.type_prescription && body.type_prescription !== "all") query = query.eq("type_prescription", body.type_prescription);
   if (body.source_creation && body.source_creation !== "all") query = query.eq("source_creation", body.source_creation);

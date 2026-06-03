@@ -39,14 +39,37 @@ export async function POST(req) {
   try { body = await req.json(); } catch {
     return Response.json({ ok: false, error: "Body JSON invalide" }, { status: 400 });
   }
+
+  // 0.57.26 : validation schema (image_base64 = potentiellement énorme → 25 MB max)
+  const { validate } = await import("../../../../lib/validateInput");
+  const errors = validate(body, {
+    image_base64: { type: "string", required: true, maxLen: 25_000_000 },
+    media_type: { type: "string", maxLen: 100 },
+  });
+  if (errors.length > 0) {
+    return Response.json(
+      { ok: false, error: "Body invalide", details: errors },
+      { status: 400 }
+    );
+  }
+
   let { image_base64, media_type } = body;
-  if (!image_base64) return Response.json({ ok: false, error: "image_base64 manquant" }, { status: 400 });
 
   if (image_base64.startsWith("data:")) {
     const match = image_base64.match(/^data:([^;]+);base64,(.+)$/);
     if (match) { media_type = media_type || match[1]; image_base64 = match[2]; }
   }
   if (!media_type) media_type = "image/jpeg";
+
+  // 0.57.31 : whitelist stricte du MIME (anti type-confusion + cohérence avec
+  // les 2 autres routes OCR prescription/bulletin-situation)
+  const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+  if (!ALLOWED_MIMES.includes(media_type)) {
+    return Response.json(
+      { ok: false, error: `Type MIME non supporté : ${media_type}` },
+      { status: 400 }
+    );
+  }
 
   const isPdf = media_type === "application/pdf";
   try {

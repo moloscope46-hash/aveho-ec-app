@@ -48,9 +48,11 @@ describe("0.56.4 - SQL ajout colonnes lat/lng/email", () => {
 describe("0.56.4 - API /api/caisses CRUD", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/api/caisses/route.js"), "utf-8");
 
-  it("POST création avec validation nom + code_organisme", () => {
+  it("POST création avec validation nom + code_organisme (via validate() depuis 0.57.26)", () => {
     expect(src).toContain("export async function POST");
-    expect(src).toContain("nom et code_organisme requis");
+    // Depuis 0.57.26 : validation via validate() au lieu de if inline
+    expect(src).toMatch(/nom:\s*\{[^}]*required:\s*true/);
+    expect(src).toMatch(/code_organisme:\s*\{[^}]*required:\s*true/);
   });
 
   it("PUT mise à jour avec id requis", () => {

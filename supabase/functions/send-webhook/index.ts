@@ -14,12 +14,9 @@
 //     }
 //   })
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildCorsHeaders, authAndCheckStructure } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// 0.57.31 : CORS restrictif via _shared/auth.ts (avant: Access-Control-Allow-Origin: "*")
 
 // Format Teams (MessageCard simplifié)
 function buildTeamsPayload({ title, message, url, fields, color }: any) {
@@ -89,8 +86,9 @@ async function postWebhook(url: string, payload: any) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   try {
     const body = await req.json();
@@ -102,10 +100,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // 0.57.31 : auth + check membership structure_id (anti-spam webhooks autres structures)
+    const authResult = await authAndCheckStructure(req, structure_id);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const admin = authResult.admin!;
 
     // Récupérer les URLs webhook de la structure
     const { data: struct, error: e1 } = await admin

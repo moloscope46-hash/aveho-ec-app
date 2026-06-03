@@ -17,7 +17,6 @@
 //     }
 //   })
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as webpush from "https://esm.sh/web-push@3.6.7";
 
 const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY");
@@ -28,14 +27,14 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 }
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { buildCorsHeaders, authAndCheckStructure } from "../_shared/auth.ts";
+
+// 0.57.31 : CORS restrictif via _shared/auth.ts
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
 
   // Garde-fou : si pas de clés VAPID configurées, on log et on retourne succès silencieux
   // (l'app continue de marcher, juste sans envoyer de push)
@@ -54,10 +53,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // 0.57.31 : auth + check membership structure_id (anti-spam push autres structures)
+    const authResult = await authAndCheckStructure(req, structure_id);
+    if (authResult.errorResponse) return authResult.errorResponse;
+    const admin = authResult.admin!;
 
     // Récupérer les subscriptions cibles
     let q = admin.from("v_push_targets").select("*").eq("structure_id", structure_id);

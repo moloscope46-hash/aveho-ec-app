@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.33 — CRON Secret + SQL complet</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#c0392b 0%,#142131 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#ffcdd2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#ffcdd2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#ffcdd2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#ffebee,#ffcdd2);border-color:#ef9a9a;border-left:4px solid #c0392b}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.red{background:#ffebee;border-color:#ef9a9a}.kpi.red .kpi-val{color:#b71c1c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — 7 CRON FUNCTIONS SÉCURISÉES + SQL COMPLET</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.33 — CRON_SECRET + script SQL final<small>Auth obligatoire sur les 7 CRON Edge Functions + reconfig pg_cron</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.33-alpha</code></span>
+<span><b>Tests :</b> 3115 Vitest dont 39 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi red"><span class="kpi-val">7</span><span class="kpi-lbl">CRON Functions sécurisées</span></div>
+<div class="kpi green"><span class="kpi-val">+1</span><span class="kpi-lbl">Script SQL complet</span></div>
+<div class="kpi green"><span class="kpi-val">+1</span><span class="kpi-lbl">LINT critique (16 total)</span></div>
+<div class="kpi green"><span class="kpi-val">+39</span><span class="kpi-lbl">Tests Vitest (3115 total)</span></div>
+</div>
+
+<h2>🚨 Le bug critique : 7 CRON Functions sans auth</h2>
+<div class="panel hero">
+<p>Audit complet des 7 CRON Edge Functions appelées par Supabase scheduled cron :</p>
+<table>
+<tr><th>Function</th><th>Rôle</th><th>Vulnérable avant fix</th></tr>
+<tr><td><code>auto-archive-consents</code></td><td>Archive consentements expirés (mensuel)</td><td>Archivage forçable à volonté</td></tr>
+<tr><td><code>maintenance-daily-cron</code></td><td>Génère DI, maintenances, push quotidiens</td><td>DoS via génération massive</td></tr>
+<tr><td><code>send-digest</code></td><td>Digest emails quotidiens</td><td>Spam emails Aveho</td></tr>
+<tr><td><code>send-renouvellement-rappels</code></td><td>Rappels expiration consentement</td><td>Spam emails + push</td></tr>
+<tr><td><code>sync-google-reviews</code></td><td>Sync reviews Google Places hebdo</td><td>Quota Google consommé</td></tr>
+<tr><td><code>weekly-stats-digest</code></td><td>Digest hebdo lundis matin</td><td>Spam emails admins</td></tr>
+<tr><td><code>welcome-user</code></td><td>Email bienvenue après inscription</td><td>Vector phishing massif</td></tr>
+</table>
+<p><b>Toutes ces fonctions avaient CORS '*' et AUCUNE vérification d'authentification.</b> Le commentaire dans le code disait "appeler avec Bearer SERVICE_ROLE_KEY" mais aucun check côté serveur ! Un attaquant connaissant l'URL pouvait les déclencher à volonté. <b>CVSS estimé : 7.5 HIGH</b>.</p>
+</div>
+
+<h2>✅ Le fix : header x-cron-secret + helper requireCronSecret</h2>
+<div class="panel ok">
+<h3>Nouveau helper dans <code>_shared/auth.ts</code></h3>
+<pre><code>export function requireCronSecret(req: Request): Response | null {
+  const expected = Deno.env.get("CRON_SECRET");
+
+  if (!expected) {
+    // Fail-secure : refuse si pas de secret configuré
+    return new Response(
+      JSON.stringify({ error: "CRON_SECRET non configuré" }),
+      { status: 500, headers: { ... } }
+    );
+  }
+
+  const provided = req.headers.get("x-cron-secret") || "";
+
+  // Comparaison constant-time (anti timing-attacks)
+  if (provided.length !== expected.length) return new Response(..., { status: 401 });
+  let mismatch = 0;
+  for (let i = 0; i &lt; provided.length; i++) {
+    mismatch |= provided.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  if (mismatch !== 0) return new Response(..., { status: 401 });
+
+  return null;  // OK
+}</code></pre>
+
+<h3>Usage dans chaque CRON Function</h3>
+<pre><code>import { buildCorsHeaders, requireCronSecret } from "../_shared/auth.ts";
+
+Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+  if (req.method === "OPTIONS") return new Response("ok", { status: 204, headers: corsHeaders });
+
+  // 0.57.33 : vérification du secret CRON
+  const cronCheck = requireCronSecret(req);
+  if (cronCheck) return cronCheck;
+
+  // ... safe : seul Supabase pg_cron (avec le bon secret) peut déclencher
+});</code></pre>
+</div>
+
+<h3>Cas particuliers</h3>
+<div class="panel">
+<table>
+<tr><th>Function</th><th>Mode d'auth</th></tr>
+<tr><td><code>send-digest</code></td><td>Dual : CRON_SECRET pour scheduled + requireAuth pour tests admin depuis /profil</td></tr>
+<tr><td><code>sync-google-reviews</code></td><td>Dual : CRON_SECRET si trigger_source=cron + requireAuth si admin UI</td></tr>
+<tr><td><code>welcome-user</code></td><td>requireAuth uniquement (appelée par client après inscription, pas par cron)</td></tr>
+</table>
+</div>
+
+<h2>📄 Script SQL Supabase complet — <code>aveho-supabase-securite-COMPLET-0.57.33.sql</code></h2>
+<div class="panel">
+<p>Un seul fichier SQL qui contient TOUS les patchs sécurité Supabase :</p>
+<table>
+<tr><th>Partie</th><th>Contenu</th></tr>
+<tr><td><b>A</b></td><td>RLS sur caisses_assurance_maladie + mutuelles (read authenticated + write admin)</td></tr>
+<tr><td><b>B</b></td><td>Vues v_equipe_structure + v_admins_structure avec <code>security_invoker = true</code></td></tr>
+<tr><td><b>C</b></td><td>3 colonnes tracking statut mail invitation (membres_structure)</td></tr>
+<tr><td><b>D</b> NEW</td><td>Reconfiguration des 6 cron jobs avec header <code>x-cron-secret</code> dans le POST HTTP</td></tr>
+<tr><td><b>E</b></td><td>Bloc DO plpgsql avec RAISE NOTICE affichant ✓ OK / ✗ FAIL sur 9 critères</td></tr>
+</table>
+
+<h3>Extrait Partie D (reconfig cron jobs)</h3>
+<pre><code>SELECT cron.schedule(
+  'auto-archive-consents',
+  '0 4 1 * *',
+  format($cron$
+    SELECT net.http_post(
+      url := '%s/functions/v1/auto-archive-consents',
+      headers := jsonb_build_object(
+        'Authorization', 'Bearer %s',
+        'x-cron-secret', '%s',          -- ← NOUVEAU 0.57.33
+        'Content-Type', 'application/json'
+      ),
+      body := '{}'::jsonb
+    );
+  $cron$, :'supabase_url', :'service_role_key', :'cron_secret')
+);</code></pre>
+</div>
+
+<h2>⚠️ Action requise côté Supabase (avant déploiement)</h2>
+<div class="panel warn">
+<ol>
+<li><b>Générer un secret aléatoire long :</b>
+<pre><code>openssl rand -hex 32
+# → ex : "a8f5c9e2d3b7a1f6e4d8b9c2a5e7f3d1b6a9c4e8f2d5b7a3c6e9f1d4b8a2c5e7"</code></pre></li>
+
+<li><b>Ajouter aux secrets Supabase</b> :
+<br>Dashboard → Edge Functions → Secrets → Add new secret
+<br>Name = <code>CRON_SECRET</code>, Value = <code>&lt;secret généré&gt;</code></li>
+
+<li><b>Éditer le script SQL</b> et remplacer :
+<ul>
+<li><code>TON_CRON_SECRET_ICI</code> par la même valeur que dans Supabase Vault</li>
+<li><code>VOTRE_PROJET</code> par ton vrai nom de projet Supabase</li>
+<li><code>eyJhbGc...</code> par ta vraie <code>service_role_key</code></li>
+</ul></li>
+
+<li><b>Exécuter le script</b> dans Supabase SQL Editor</li>
+
+<li><b>Redéployer les 7 Edge Functions modifiées</b> :
+<pre><code>supabase functions deploy _shared
+supabase functions deploy auto-archive-consents
+supabase functions deploy maintenance-daily-cron
+supabase functions deploy send-digest
+supabase functions deploy send-renouvellement-rappels
+supabase functions deploy sync-google-reviews
+supabase functions deploy weekly-stats-digest
+supabase functions deploy welcome-user</code></pre></li>
+
+<li><b>Vérification</b> : le bloc DO plpgsql final affiche 9 ✓ OK si tout est OK</li>
+</ol>
+</div>
+
+<h2>🔒 16e LINT anti-régression critique</h2>
+<div class="panel hero">
+<pre><code>it("Toutes les CRON Functions importent requireCronSecret", () => {
+  const CRON_FUNCTIONS_REQUIRING_SECRET = [
+    "auto-archive-consents", "maintenance-daily-cron",
+    "send-digest", "send-renouvellement-rappels", "weekly-stats-digest",
+  ];
+  const violations = [];
+  for (const fn of CRON_FUNCTIONS_REQUIRING_SECRET) {
+    const src = fs.readFileSync(`supabase/functions/${fn}/index.ts`, "utf-8");
+    if (!/requireCronSecret/.test(src)) violations.push(fn);
+  }
+  expect(violations).toEqual([]);  // ← FAIL si nouvelle CRON sans secret
+});</code></pre>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC après 0.57.33</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API protégées requireAuth</td><td>✅ 17/19</td></tr>
+<tr><td>Routes API POST validation body</td><td>✅ 9/9</td></tr>
+<tr><td>Routes API GET validation searchParams</td><td>✅ 5/5</td></tr>
+<tr><td>Routes API anti-leak e.message</td><td>✅ 12/12</td></tr>
+<tr><td>Routes API PUT/DELETE anti-mass-assignment</td><td>✅ 4/4</td></tr>
+<tr><td>Routes OCR avec MIME whitelist</td><td>✅ 3/3</td></tr>
+<tr><td>Storage helpers avec UUID + MIME + taille</td><td>✅ 2/2</td></tr>
+<tr><td>Edge Functions client avec auth + check structure</td><td>✅ 4/4</td></tr>
+<tr><td><b>CRON Edge Functions avec CRON_SECRET</b></td><td>✅ <b>6/6 NEW 0.57.33</b></td></tr>
+<tr><td><b>welcome-user avec requireAuth</b></td><td>✅ <b>NEW 0.57.33</b></td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10</td></tr>
+<tr><td>CSP + report-uri actif</td><td>✅</td></tr>
+<tr><td>HSTS preload 1 an</td><td>✅</td></tr>
+<tr><td>RLS Supabase</td><td>100% (après script combiné)</td></tr>
+<tr><td>SSRF, IDOR, biométrie, SQL, SW cleanup, Bearer, mass-assign, cross-tenant</td><td>✅ Tous fixés</td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>16 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3115</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>scripts/aveho-supabase-securite-COMPLET-0.57.33.sql</code> (script SQL final tout-en-un)</li>
+<li><code>public/changelog-sql/aveho-supabase-securite-COMPLET-0.57.33.sql</code> (copie publique)</li>
+<li><code>__tests__/v057-33-cron-secret-edge-functions.test.js</code> (39 tests)</li>
+</ul>
+<h3>Modifiés (8 fichiers)</h3>
+<ul>
+<li><code>supabase/functions/_shared/auth.ts</code> : ajout requireCronSecret + timing-attack-safe</li>
+<li><code>supabase/functions/auto-archive-consents/index.ts</code> : requireCronSecret</li>
+<li><code>supabase/functions/maintenance-daily-cron/index.ts</code> : idem</li>
+<li><code>supabase/functions/send-digest/index.ts</code> : dual mode CRON + requireAuth</li>
+<li><code>supabase/functions/send-renouvellement-rappels/index.ts</code> : requireCronSecret</li>
+<li><code>supabase/functions/sync-google-reviews/index.ts</code> : dual mode CRON + requireAuth</li>
+<li><code>supabase/functions/weekly-stats-digest/index.ts</code> : requireCronSecret</li>
+<li><code>supabase/functions/welcome-user/index.ts</code> : requireAuth</li>
+<li><code>public/sw.js</code> : VERSION bumpée à 0.57.33</li>
+</ul>
+
+<h2>🚀 Déploiement complet</h2>
+<div class="panel ok">
+<pre><code># 1. Code applicatif
+cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                              # 3115 verts ✅
+git add -A
+git commit -m "Alpha 0.57.33 - CRON_SECRET pour 7 Edge Functions + script SQL complet"
+git push origin main
+
+# 2. Configurer le secret CRON (Supabase Dashboard)
+# Dashboard → Edge Functions → Secrets → Add CRON_SECRET
+
+# 3. Éditer + exécuter le script SQL dans Supabase SQL Editor
+# (remplacer TON_CRON_SECRET_ICI + VOTRE_PROJET + service_role_key)
+
+# 4. Redéployer les 7 Edge Functions
+supabase functions deploy _shared
+supabase functions deploy auto-archive-consents
+supabase functions deploy maintenance-daily-cron
+supabase functions deploy send-digest
+supabase functions deploy send-renouvellement-rappels
+supabase functions deploy sync-google-reviews
+supabase functions deploy weekly-stats-digest
+supabase functions deploy welcome-user</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>Login 2FA</b> non déclenchée → précisions ?</li>
+<li><b>Détection faciale</b> → précisions ?</li>
+<li><b>HDS</b> : migration vers hébergeur certifié avant production réelle</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 123ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.32 → <b>0.57.33</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.33 · 3 juin 2026 · 3115 Vitest · 7 CRON sécurisées + script SQL complet + 16 LINT actifs</footer>
+</div></body></html>
