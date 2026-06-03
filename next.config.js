@@ -24,6 +24,9 @@ const CSP_DIRECTIVES = [
   "object-src 'none'",
   "form-action 'self'",
   "frame-ancestors 'self'",
+  // 0.57.37 : durcissement CSP defense-in-depth
+  "base-uri 'self'",         // anti <base> tag hijack (XSS qui détourne tous les liens relatifs)
+  "manifest-src 'self'",     // n'autorise que notre manifest.json (anti spoof PWA)
   // 0.57.22 : 'upgrade-insecure-requests' RETIRÉE car ignorée en mode report-only
   // Cette protection est déjà couverte par HSTS max-age=1 an + preload.
   // 0.57.24 : report-uri pour collecter les violations CSP en prod

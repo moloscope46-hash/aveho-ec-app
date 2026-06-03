@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Politique de divulgation responsable — Aveho EC</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font-family:'Segoe UI',Quicksand,sans-serif;max-width:760px;margin:40px auto;padding:0 24px;color:#2a3a48;line-height:1.6}
+h1{color:#142131;border-bottom:3px solid #185FA5;padding-bottom:8px}
+h2{color:#185FA5;margin-top:32px}
+.contact{background:#eef9ef;border-left:4px solid #5aa05a;padding:16px;border-radius:8px;margin:20px 0}
+code{background:#f4f7fa;padding:2px 6px;border-radius:4px;color:#185FA5}
+</style>
+</head>
+<body>
+<h1>Aveho EC — Politique de divulgation responsable</h1>
+<p><em>Version 1.0 — 3 juin 2026</em></p>
+
+<div class="contact">
+<strong>📧 Contact sécurité :</strong> <a href="mailto:securite@aveho.fr">securite@aveho.fr</a>
+</div>
+
+<h2>1. Engagement Aveho</h2>
+<p>Aveho EC est un logiciel SaaS de santé manipulant des données médicales. La sécurité est une priorité absolue. Nous accueillons les signalements de vulnérabilités de la part de la communauté.</p>
+
+<h2>2. Que faire si vous trouvez une vulnérabilité</h2>
+<ol>
+<li>Envoyez un email à <code>securite@aveho.fr</code> avec :
+<ul>
+<li>Description technique de la vulnérabilité</li>
+<li>Étapes de reproduction (POC minimal)</li>
+<li>Impact estimé</li>
+<li>Vos coordonnées pour le suivi</li>
+</ul>
+</li>
+<li>Ne publiez pas la vulnérabilité avant la correction</li>
+<li>Ne testez pas sur des données de production réelles</li>
+</ol>
+
+<h2>3. Notre engagement</h2>
+<ul>
+<li><strong>Sous 72h</strong> : accusé de réception</li>
+<li><strong>Sous 14 jours</strong> : évaluation et plan de remédiation</li>
+<li><strong>Délai de remédiation</strong> : selon CVSS (24h critique, 7j high, 30j medium, 90j low)</li>
+<li><strong>Communication</strong> : tenu informé jusqu'à la résolution</li>
+<li><strong>Reconnaissance</strong> : mention dans nos remerciements publics (sauf demande contraire)</li>
+</ul>
+
+<h2>4. Pratiques interdites</h2>
+<ul>
+<li>Exploitation au-delà du POC nécessaire</li>
+<li>Accès aux données d'autres utilisateurs</li>
+<li>Attaques DoS / DDoS / spam</li>
+<li>Ingénierie sociale du personnel</li>
+<li>Vol ou destruction de données</li>
+<li>Publication avant correction</li>
+</ul>
+
+<h2>5. Périmètre</h2>
+<p>Sites et applications couverts :</p>
+<ul>
+<li><code>https://aveho-ec-app.vercel.app/*</code></li>
+<li><code>https://aveho.fr/*</code></li>
+<li>API Supabase Edge Functions (préfixe <code>/functions/v1/</code>)</li>
+</ul>
+
+<h2>6. Hors périmètre</h2>
+<ul>
+<li>Vulnérabilités sur des services tiers (Supabase, Vercel, Resend, Google) → signalez-les directement à l'éditeur</li>
+<li>Vulnérabilités nécessitant un accès physique au device de l'utilisateur</li>
+<li>Vulnérabilités déjà connues et publiées</li>
+</ul>
+
+<h2>7. Mentions légales</h2>
+<p>En signalant une vulnérabilité de bonne foi conformément à cette politique, nous nous engageons à ne pas engager de poursuites légales à votre encontre.</p>
+
+<hr>
+<p><small>Aveho — Groupe Fidéciel · <a href="https://aveho.fr">aveho.fr</a></small></p>
+</body>
+</html>

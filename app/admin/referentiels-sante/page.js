@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/referentiels-sante/page.js (Alpha 0.56.4)
 //
@@ -16,7 +17,7 @@ import ContactActions from "../../ContactActions";
 import AdresseAutocomplete from "../../AdresseAutocomplete";
 import { PageHead, Panel, StateMsg } from "../../ui";
 
-export default function ReferentielsSantePage() {
+function ReferentielsSantePageInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
@@ -479,3 +480,12 @@ const btnGhost = {
   padding: "5px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 600,
   cursor: "pointer", fontFamily: "inherit",
 };
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function ReferentielsSantePage() {
+  return (
+    <AdminGuard>
+      <ReferentielsSantePageInner />
+    </AdminGuard>
+  );
+}

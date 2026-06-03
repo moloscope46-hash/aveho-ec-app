@@ -120,6 +120,139 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.57.37",
+    "kind": "version",
+    "titre": "🛡️ MEGA RELEASE SÉCURITÉ : security.txt + IndexedDB purge + CSP enrichie + SRI sur 3 scripts CDN + 2FA TOTP foundation + audit Referer (6 sujets)",
+    "chantiers": [
+      { "code": "SEC", "txt": "📨 SUJET 1 — security.txt RFC 9116 : création de public/.well-known/security.txt (contact securite@aveho.fr, expires 2027, languages fr/en, canonical URL) + public/.well-known/policy.html (politique complète : SLA accusé réception 72h, évaluation 14j, périmètre, pratiques interdites, mentions légales protection chercheurs bonne foi). Permet aux chercheurs en sécurité de signaler les vulnérabilités via le canal officiel" },
+      { "code": "SEC", "txt": "🔐 SUJET 2 — clearUserData étendu pour Supabase tokens + IndexedDB WebAuthn. (a) SENSITIVE_LS_PREFIXES inclut maintenant 'sb-' → purge les clés sb-<projet>-auth-token (access_token + refresh_token). signOut() devrait les nettoyer mais defense-in-depth si signOut échoue partiellement. (b) Nouveau export clearWebauthnDb() qui supprime l'IndexedDB 'aveho-webauthn' (credentials face/empreinte). À utiliser UNIQUEMENT en mode 'logout complet' (option deepClean: true) car sinon l'user perd sa biométrie à chaque logout normal. (c) Signature clearUserData(options) avec options.deepClean booléen",
+        "code_snippet": {
+          "file": "lib/clearUserData.js",
+          "note": "Extension purge avec IndexedDB",
+          "lang": "js",
+          "before": "// AVANT 0.57.37\nconst SENSITIVE_LS_PREFIXES = [\n  \"aveho:\", \"aveho_\", \"ville:\", \"etab-photo-\",\n];\n\nexport async function clearUserData() {\n  const ls_purged = purgeLocalStorage();\n  const sw_cleared = await clearSwCache();\n  return { ls_purged, sw_cleared };\n}",
+          "after": "// 0.57.37 - sb-* + IndexedDB biométrie\nconst SENSITIVE_LS_PREFIXES = [\n  \"aveho:\", \"aveho_\", \"ville:\", \"etab-photo-\",\n  \"sb-\",  // ← NEW : Supabase Auth tokens defense-in-depth\n];\n\nexport async function clearWebauthnDb() {\n  // Supprime IndexedDB 'aveho-webauthn' (face/empreinte)\n  return new Promise((resolve) => {\n    const req = indexedDB.deleteDatabase(\"aveho-webauthn\");\n    req.onsuccess = () => resolve(true);\n    req.onerror = () => resolve(false);\n  });\n}\n\nexport async function clearUserData(options = {}) {\n  const ls_purged = purgeLocalStorage();\n  const sw_cleared = await clearSwCache();\n  // ⚠️ Purge bio UNIQUEMENT si deepClean explicite\n  const bio_cleared = options.deepClean === true\n    ? await clearWebauthnDb() : false;\n  return { ls_purged, sw_cleared, bio_cleared };\n}"
+        }
+      },
+      { "code": "SEC", "txt": "🔗 SUJET 3 — Audit Referer leak + uniformisation rel='noopener noreferrer'. Référer-Policy 'strict-origin-when-cross-origin' déjà en place au niveau HTTP. Audit complet de TOUS les target='_blank' (15 fichiers) : 13/15 avaient déjà 'noopener noreferrer' ✅, 2/15 avaient juste 'noopener' (rpps-dump + mail-diagnostic). Uniformisation avec sed → 100% des liens externes ont maintenant 'noopener noreferrer' (defense-in-depth contre tabnabbing ET fuite Referer)" },
+      { "code": "SEC", "txt": "🛡️ SUJET 4 — CSP enrichie avec 2 directives manquantes : (a) base-uri 'self' → empêche un attaquant XSS d'injecter une balise <base href='evil.com'> qui détournerait TOUS les liens relatifs de la page vers son serveur. (b) manifest-src 'self' → empêche le spoofing d'un manifest PWA malveillant. Garde le mode report-only par défaut (passage à enforce strict prévu après observation des CSP reports sur quelques semaines de prod)" },
+      { "code": "SEC", "txt": "🔐 SUJET 5 — SRI (Subresource Integrity) sur les 3 scripts CDN externes : (a) jspdf@2.5.2 utilisé dans lib/consentPdf.js, app/statistiques-rgpd/page.js, app/statistiques-activite/page.js → sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/. (b) qrcode-generator@1.4.4 utilisé dans lib/qrcode.js → sha384-lQXOAyZwHXE55JFyrOMB7nY2Wv+m5ZWNtJcHrd1rceRQXAYNLak8ukN5TjBTcIwz. Si jsdelivr est compromis ou si DNS hijacking, le browser refusera d'exécuter les scripts altérés (anti supply-chain attack). crossOrigin='anonymous' ajouté (requis pour SRI cross-origin)",
+        "code_snippet": {
+          "file": "lib/consentPdf.js + qrcode.js + 2 stats pages",
+          "note": "SRI defense contre supply-chain CDN",
+          "lang": "js",
+          "before": "// AVANT 0.57.37 - script CDN sans intégrité vérifiée\nconst s = document.createElement(\"script\");\ns.src = \"https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js\";\ns.async = true;\n// ↑ Si jsdelivr compromise, script malveillant chargé\n//   dans le contexte authentifié de notre app",
+          "after": "// 0.57.37 - SRI verification\nconst s = document.createElement(\"script\");\ns.src = \"https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js\";\ns.integrity = \"sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/\";\ns.crossOrigin = \"anonymous\";  // requis pour SRI cross-origin\ns.async = true;\n// ↑ Browser vérifie le hash SHA-384. Si mismatch → refus + erreur\n//   La sandbox CSP empêche tout dommage."
+        }
+      },
+      { "code": "SEC", "txt": "🔑 SUJET 6 — 2FA TOTP (Supabase Auth MFA) — foundation prête à activer. (a) lib/mfa.js (160 lignes) : 6 fonctions exportées (enrollTotp, verifyTotpEnrollment, listMfaFactors, checkMfaRequired, challengeAndVerifyTotp, unenrollMfaFactor) wrappant les APIs Supabase Auth MFA. Compatible Google Authenticator, Authy, 1Password, etc. (b) app/components/MfaSetup.js (composant React 3 états idle/verifying/active) : affiche QR code SVG, secret en backup manuel, input 6 chiffres avec validation, confirmation avant désactivation. (c) Helper checkMfaRequired() au login : si user a un factor TOTP vérifié + AAL pas encore aal2 → exiger le code TOTP. (d) À activer dans Dashboard Supabase → Auth → MFA → enable TOTP, puis intégrer <MfaSetup /> dans /profil et appeler checkMfaRequired() après signInWithPassword" },
+      { "code": "AI", "txt": "2 LINT ANTI-RÉGRESSION CRITIQUES (20e + 21e LINT actifs) : (1) 'Aucun target=_blank sans noopener' — scan app/, vérifie 200 chars autour de chaque target=_blank pour matcher 'noopener'. Si un futur dev oublie le rel → fail. (2) 'Aucun script CDN externe sans SRI' — scan app/ + lib/ pour script.src = 'https://cdn|unpkg|cdnjs' chargeant un .js, vérifie qu'integrity est présent dans les 500 chars suivants. Si nouveau CDN ajouté sans SRI → fail" },
+      { "code": "AI", "txt": "+28 tests Vitest (v057-37-six-sujets-securite.test.js) : version + SW (2), security.txt RFC 9116 (3), clearUserData IndexedDB (4 — sb prefix + clearWebauthnDb + deepClean + mode normal préserve bio), liens externes (1 LINT), CSP enrichie (3 — base-uri + manifest-src + reste report-only), SRI sur 3 fichiers (4) + LINT (1), 2FA TOTP (10 — mfa.js exports + Supabase API + validation 6 chiffres + aal2 + MfaSetup composant + 3 états + QR + maxLength + confirm). Total 3218 verts (+28)" },
+      { "code": "DOC", "txt": "BILAN SÉCURITÉ APRÈS 0.57.37 : (1) security.txt + policy.html (NEW). (2) clearUserData étendu sb-* + IndexedDB biométrie en mode deepClean (NEW). (3) Tous target=_blank avec noopener noreferrer (NEW LINT). (4) CSP enrichie base-uri + manifest-src (NEW). (5) SRI sur 3 scripts CDN externes (NEW LINT). (6) 2FA TOTP foundation lib/mfa.js + composant MfaSetup (NEW). (7) 21 LINT anti-régression critiques actifs (vs 19 en 0.57.36). (8) Tests Vitest : 3218 verts. (9) Tous les bugs majeurs identifiés sont fixés. Reste à activer côté Supabase Dashboard : Authentication → MFA → TOTP" }
+    ],
+    "themes": ["securite", "mfa", "sri", "csp", "rfc-9116"],
+    "date": "3 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.37.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.36",
+    "kind": "version",
+    "titre": "🔐 Rate-limit login côté client (anti-bruteforce) + check origin SW handler (defense-in-depth)",
+    "chantiers": [
+      { "code": "SEC", "txt": "🚨 AUDIT BRUTEFORCE LOGIN — page app/login/page.js. Supabase Auth a un rate-limit serveur (visible dans Dashboard Logs Auth) mais aucun rate-limit côté client. Conséquences : (a) Un attaquant peut hammer notre page de login avec credential stuffing (combos email/password) → consomme notre quota d'auth Supabase. (b) Pas de feedback UX : l'attaquant ne sait pas qu'il est rate-limited côté serveur. (c) Pas de protection contre l'automation naïve qui n'a pas de logique de retry. Risque : DoS sur le login + consommation quota + crédit Supabase facturé pour les tentatives échouées" },
+      { "code": "SEC", "txt": "HELPER lib/loginRateLimit.js créé (145 lignes). Exporte 4 fonctions : (a) checkLoginBlock(email) — retourne { blocked, remainingMs, attempts } selon l'état actuel. (b) recordFailedLogin(email) — incrémente le compteur + bloque à 5 tentatives sur 5 minutes. (c) resetLoginAttempts(email) — efface après login réussi. (d) formatBlockTime(ms) — affichage human-readable (secondes/minutes). Email lowercased pour la clé (anti case-bypass). Storage key 'aveho:login-attempts' purgée au logout par le helper clearUserData de 0.57.35",
+        "code_snippet": {
+          "file": "lib/loginRateLimit.js",
+          "note": "Helper anti-bruteforce côté client",
+          "lang": "js",
+          "before": "// AVANT 0.57.36 - login direct sans rate-limit\nasync function submit() {\n  const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });\n  if (error) throw error;\n  // ↑↑↑\n  // L'attaquant peut hammer cette page :\n  // - 1000 tentatives × 100 emails × 100 passwords\n  // - Pas de feedback côté client\n  // - Consomme notre quota Supabase Auth\n}",
+          "after": "// 0.57.36 - rate-limit côté client\nimport {\n  checkLoginBlock, recordFailedLogin,\n  resetLoginAttempts, formatBlockTime\n} from \"../../lib/loginRateLimit\";\n\nasync function submit() {\n  // ✅ Check AVANT de hit Supabase\n  const block = checkLoginBlock(email);\n  if (block.blocked) {\n    throw new Error(`Trop de tentatives. Réessaie dans ${formatBlockTime(block.remainingMs)}.`);\n  }\n\n  const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });\n  if (error) {\n    // ✅ Incrémenter le compteur sur échec\n    const r = recordFailedLogin(email);\n    if (r.blocked) {\n      throw new Error(`Bloqué pour ${formatBlockTime(r.remainingMs)}.`);\n    }\n    // Affiche tentatives restantes (UX) si <= 2\n    if (r.attemptsLeft <= 2) {\n      throw new Error(`${error.message} (${r.attemptsLeft} restante${r.attemptsLeft > 1 ? 's' : ''})`);\n    }\n    throw error;\n  }\n\n  // ✅ Reset après login réussi\n  resetLoginAttempts(email);\n}"
+        }
+      },
+      { "code": "SEC", "txt": "CONFIGURATION : 5 tentatives en 5 minutes par email → blocage 60 secondes. Reset après login réussi. Compteur par email lowercased (anti TEST@example.com vs test@example.com). Stockage localStorage clé 'aveho:login-attempts' (préfixe aveho: → purgée au logout par clearUserData de 0.57.35). Limites assumées : côté client uniquement (attaquant peut vider localStorage) — c'est une protection UX + anti-spam basique, le vrai rate-limit reste côté Supabase Auth. Protège contre bruteforce manuel/script naïf + credential stuffing automatisé basique + DoS sur notre page" },
+      { "code": "SEC", "txt": "DEFENSE-IN-DEPTH SW : public/sw.js handler 'message' CLEAR_USER_CACHE vérifie maintenant event.source.url et compare avec self.location.href. Si origin différente → refuse + log warn. Risque exploitable réel quasi-nul (les SW ne reçoivent normalement que des messages same-origin par contrat browser), mais on rend la vérification explicite pour éviter qu'un futur changement d'API browser ne crée une faille subtle. try/catch sur new URL() pour fail-secure si parsing impossible",
+        "code_snippet": {
+          "file": "public/sw.js handler CLEAR_USER_CACHE",
+          "note": "Check origin defense-in-depth",
+          "lang": "js",
+          "before": "self.addEventListener(\"message\", (event) => {\n  if (!event.data || event.data.type !== \"CLEAR_USER_CACHE\") return;\n  // ↑ aucun check origin\n  event.waitUntil(/* vide DATA + PAGE caches */);\n});",
+          "after": "self.addEventListener(\"message\", (event) => {\n  if (!event.data || event.data.type !== \"CLEAR_USER_CACHE\") return;\n\n  // 0.57.36 : defense-in-depth — check origin\n  if (event.source && event.source.url) {\n    try {\n      const sourceUrl = new URL(event.source.url);\n      const myUrl = new URL(self.location.href);\n      if (sourceUrl.origin !== myUrl.origin) {\n        console.warn(\"[SW] Refus message origin différente\", sourceUrl.origin);\n        return;\n      }\n    } catch (e) {\n      return;  // fail-secure si parsing impossible\n    }\n  }\n\n  event.waitUntil(/* ... */);\n});"
+        }
+      },
+      { "code": "AI", "txt": "LINT ANTI-RÉGRESSION CRITIQUE (19e LINT actif) : 'Toute page qui appelle signInWithPassword doit aussi avoir checkLoginBlock ou recordFailedLogin'. Scan tous les fichiers page.js sous app/, sauf whitelist inscription/[token]/ (login auto après accept invitation, pas un login normal). Si un futur dev ajoute un autre point d'entrée signInWithPassword sans rate-limit → fail" },
+      { "code": "AI", "txt": "+21 tests Vitest (v057-36-login-ratelimit-sw-origin.test.js) : version + SW sync (2), loginRateLimit structure (4 — 4 exports + config + storage key + lowercase email), tests fonctionnels (8 — never seen + compte + bloque à 5 + check confirme + reset + case-insensitive + email invalide + format), intégration login page (4 — import + ordre check avant signIn + record + reset), SW check origin (2), LINT anti-régression (1). Total 3190 verts (+21)" },
+      { "code": "DOC", "txt": "BILAN SÉCURITÉ APRÈS 0.57.36 : (1) Rate-limit login côté client : 5 tentatives / 5 min → blocage 60s (NEW). (2) SW handler check origin defense-in-depth (NEW). (3) 19 LINT anti-régression critiques actifs (vs 18 en 0.57.35). (4) Tests Vitest : 3190 verts. (5) Routes API protégées + validation + anti-leak (NEW : login). (6) 11 Edge Functions sécurisées + 9 pages admin AdminGuard. (7) Headers HTTP 10/10 + RLS 100%. (8) Cleanup logout localStorage + SW. (9) Toast realtime XSS protégé. (10) Tous les bugs majeurs identifiés sont fixés" }
+    ],
+    "themes": ["securite", "bruteforce", "rate-limit"],
+    "date": "3 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.36.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.35",
+    "kind": "version",
+    "titre": "🧹 Cleanup données user au logout (device partagé) : localStorage + SW caches + LINT anti-PII",
+    "chantiers": [
+      { "code": "SEC", "txt": "🚨 AUDIT POST-LOGOUT — sur les devices PARTAGÉS (poste de soin, tablette commune), après le logout user A, l'user B suivant pouvait accéder à des traces persistantes : (a) localStorage 'aveho:search-history' contenait les patients recherchés (noms+prénoms+ID) via le Cmd+K. (b) localStorage 'aveho_dashboard' contenait la config des widgets de l'accueil (PII faible). (c) Caches Service Worker DATA_CACHE + PAGE_CACHE contenaient des réponses API et pages HTML mises en cache pour l'utilisation offline (PII forte : noms patients, codes INS, etc). (d) Cache photos établissement (lib/EtabPhoto.js). Le bug 0.57.29 avait identifié + commencé à fixer mais le code n'avait pas été déployé correctement. CVSS estimé : 5.5 MEDIUM (exploitation locale uniquement, device partagé)" },
+      { "code": "SEC", "txt": "HELPER lib/clearUserData.js créé (105 lignes). Exporte 3 fonctions : (a) purgeLocalStorage() — itère localStorage, supprime toutes les clés qui matchent SENSITIVE_LS_PREFIXES (aveho:, aveho_, ville:, etab-photo-) sauf KEEP_KEYS whitelist (aveho:debug-logs flag debug volontaire). (b) clearSwCache() — envoie message CLEAR_USER_CACHE au SW via MessageChannel, attend la réponse avec timeout 2s. (c) clearUserData() — combo (purge + SW cleanup), retourne { ls_purged, sw_cleared } pour logs",
+        "code_snippet": {
+          "file": "lib/clearUserData.js",
+          "note": "Helper de purge logout",
+          "lang": "js",
+          "before": "// AVANT 0.57.35 - logout minimal\nasync function logout() {\n  setOpen(false);\n  await supabase.auth.signOut();\n  router.push(\"/login\");\n}\n// ↑↑↑\n// signOut() vide UNIQUEMENT IndexedDB Supabase Auth (tokens)\n// → localStorage \"aveho:search-history\" reste\n// → SW DATA_CACHE / PAGE_CACHE restent\n// → User B sur même device : Cmd+K → voit les patients recherchés par user A",
+          "after": "// 0.57.35 - logout sécurisé\nasync function logout() {\n  setOpen(false);\n  try {\n    const { clearUserData } = await import(\"../lib/clearUserData\");\n    await clearUserData();\n    // ↑↑↑ purge localStorage aveho:* + caches SW DATA + PAGES\n  } catch {\n    // Si erreur, on continue le logout malgré tout\n  }\n  await supabase.auth.signOut();\n  router.push(\"/login\");\n}"
+        }
+      },
+      { "code": "SEC", "txt": "HANDLER public/sw.js : ajout d'un listener 'message' pour CLEAR_USER_CACHE. Vide DATA_CACHE et PAGE_CACHE en parallèle (Promise.all sur cache.delete pour chaque clé). NE vide PAS STATIC_CACHE (assets immutables comme /icon-192.png, /sw.js : partagés entre tous les users, conserver = perf). Reply via event.ports[0].postMessage avec stats { ok: true, deleted: { data: N, pages: N } }" },
+      { "code": "SEC", "txt": "MODIF app/UserMenu.js : function logout() appelle await clearUserData() AVANT supabase.auth.signOut(). Import dynamique pour ne pas charger le helper au démarrage (only au logout). try/catch graceful : si purge échoue (quota, mode privé), on continue quand même le signOut (mieux vaut être déconnecté avec localStorage pollué que rester connecté)" },
+      { "code": "AI", "txt": "LINT ANTI-RÉGRESSION CRITIQUE (18e LINT actif) : 'Toutes les clés localStorage commencent par un préfixe purgeable (aveho:, aveho_, ville:, etab-photo-)'. Scan tous les fichiers .js/.jsx sous app/ et lib/, trouve les localStorage.setItem(\"xxx\", ...), vérifie que la clé matche un préfixe purgeable (skip les variables dynamiques type cacheKey). Si un futur dev ajoute localStorage.setItem(\"patient-history\", ...) sans préfixe purgeable → le test fail (sinon cette clé survivrait au logout, fuite PII)" },
+      { "code": "AI", "txt": "+19 tests Vitest (v057-35-clear-user-data-logout.test.js) : version + SW sync (2), clearUserData structure (6 — exports + SENSITIVE_LS_PREFIXES + KEEP_KEYS + MessageChannel + timeout 2s + combo), tests fonctionnels purgeLocalStorage (2 — purge sélective + fallback), SW handler CLEAR_USER_CACHE (5 — listener + DATA + PAGE + skip STATIC + reply MessageChannel), UserMenu logout (3 — import + ordre + try/catch), LINT anti-régression (1). Total 3169 verts (+19)" },
+      { "code": "DOC", "txt": "BILAN SÉCURITÉ APRÈS 0.57.35 : (1) Cleanup logout complet : localStorage aveho:* + SW DATA_CACHE/PAGE_CACHE + Supabase IndexedDB (via signOut). (2) Devices partagés safe : user B ne peut plus voir search-history, cart, dashboard config, caches photos, réponses API patients de user A. (3) 18 LINT anti-régression critiques actifs (vs 17 en 0.57.34). (4) Tests Vitest : 3169 verts. (5) Routes API : 17/19 protégées + 9/9 POST + 5/5 GET + 12/12 anti-leak + 4/4 PUT/DELETE + 3/3 OCR + 2/2 Storage. (6) 11 Edge Functions Supabase sécurisées. (7) Headers HTTP 10/10. (8) RLS Supabase 100%. (9) 9 pages admin AdminGuard + XSS toast realtime fixé. (10) Tous les bugs majeurs identifiés sont fixés" }
+    ],
+    "themes": ["securite", "logout", "localStorage", "service-worker"],
+    "date": "3 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.35.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.34",
+    "kind": "version",
+    "titre": "🛡️ AdminGuard sur 9 pages admin + escape XSS toast realtime (user A → user B) + fix prerender SSG",
+    "chantiers": [
+      { "code": "SEC", "txt": "🚨 AUDIT PAGES ADMIN — Les 9 pages app/admin/* (avis-google, bulletins-archive, doublons-forces, mail-diagnostic, medecins-prescripteurs, prescriptions-archive, referentiels-sante, rpps-diagnostic, rpps-dump) n'avaient AUCUN check de rôle côté client ! Le RLS Postgres protège les données sensibles, mais conséquences pour un user non-admin qui accède aux URL : (1) UI cassée croyant à un bug. (2) Découverte de la structure interne (noms tables, schémas via les erreurs). (3) Erreurs 401/403 confuses au lieu d'un blocage clair. Risque medium" },
+      { "code": "SEC", "txt": "COMPOSANT AdminGuard créé (app/components/AdminGuard.js, 130 lignes). Vérifie via 4 checks defense-in-depth : auth.can('gerer_roles') OU auth.can('manage_collectivite') OU auth.role.systeme === 'admin' OU auth.role.nom === 'Administrateur'. Attend auth.ready avant de juger (évite faux négatifs au reload). Affiche message clair 'Accès restreint' avec boutons 'Retour accueil' + 'Mon profil' si non admin. Wrap children sinon",
+        "code_snippet": {
+          "file": "app/components/AdminGuard.js + 9 pages admin",
+          "note": "Composant + wrapping auto via script Python",
+          "lang": "jsx",
+          "before": "// AVANT 0.57.34 - pages admin sans check de rôle\n\"use client\";\nexport default function AvisGooglePage() {\n  // ... tout le code admin direct\n  // ↑↑↑↑↑↑↑↑↑↑↑↑\n  // N'importe quel user authentifié peut accéder à l'URL\n  // /admin/avis-google et voir l'UI (les données BDD sont\n  // protégées par RLS mais l'UI elle-même est exposée)\n}",
+          "after": "// 0.57.34 - AdminGuard restreint l'accès\n\"use client\";\nimport AdminGuard from \"../../components/AdminGuard\";\n\nfunction AvisGooglePageInner() {\n  // ... tout le code admin (inchangé)\n}\n\n// Wrapper qui vérifie le rôle avant de rendre les enfants\nexport default function AvisGooglePage() {\n  return (\n    <AdminGuard>\n      <AvisGooglePageInner />\n    </AdminGuard>\n  );\n}\n\n// Si user non-admin :\n//   → Affiche \"Accès restreint - réservée aux administrateurs\"\n//   → Bouton retour vers /accueil + bouton vers /profil\n//   → Pas de fuite de la structure interne"
+        }
+      },
+      { "code": "SEC", "txt": "🚨 XSS TROUVÉ DANS TOAST REALTIME — lib/useRealtimeTable.js faisait toast.innerHTML = `...${title}...${message}...`. Les variables title et message peuvent venir d'événements realtime (changements en BDD par d'autres users via Supabase Realtime). Scénario d'attaque : user A crée une intervention avec titre `<img src=x onerror=alert(document.cookie)>` → user B reçoit un toast realtime qui exécute le JS dans le contexte de son onglet authentifié. Pouvait être utilisé pour voler la session Bearer Supabase. CVSS estimé : 6.5 MEDIUM (exploit nécessite Realtime activé + 2 users connectés)" },
+      { "code": "FIX", "txt": "FIX XSS toast realtime : 3 helpers ajoutés dans lib/useRealtimeTable.js : (a) escapeHtml() — escape &<>\"' standard. (b) safeIconClass() — whitelist regex ^ti-[a-z0-9-]+$ pour les icônes Tabler (empêche injection de class CSS malicieuse). (c) safeColor() — whitelist hex #abc ou #abcdef (empêche injection CSS). Les 4 inputs (title, message, icon, color) passent par les helpers AVANT injection dans innerHTML",
+        "code_snippet": {
+          "file": "lib/useRealtimeTable.js",
+          "note": "3 helpers de sanitization",
+          "lang": "js",
+          "before": "// AVANT 0.57.34 - XSS via realtime\ntoast.innerHTML = `\n  <div>\n    <i class=\"ti ${icon}\" style=\"color: ${color};\"></i>\n    <div style=\"color: ${color};\">${title}</div>\n    <div>${message}</div>\n  </div>\n`;\n// ↑↑↑ Si title vient de la BDD : <img src=x onerror=alert(1)>\n//     → XSS exécuté chez tous les users connectés en realtime",
+          "after": "// 0.57.34 - sanitization avant injection\nfunction escapeHtml(s) {\n  return String(s ?? \"\")\n    .replace(/&/g, \"&amp;\").replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\").replace(/\"/g, \"&quot;\")\n    .replace(/'/g, \"&#39;\");\n}\n\nfunction safeIconClass(icon) {\n  if (typeof icon !== \"string\") return \"ti-bell\";\n  if (!/^ti-[a-z0-9-]{1,40}$/.test(icon)) return \"ti-bell\";\n  return icon;\n}\n\nfunction safeColor(color) {\n  if (typeof color !== \"string\") return \"#185FA5\";\n  if (!/^#[0-9a-fA-F]{3,6}$/.test(color)) return \"#185FA5\";\n  return color;\n}\n\n// Sanitize TOUS les inputs avant innerHTML\nconst safeTitle = escapeHtml(title);\nconst safeMessage = escapeHtml(message);\nconst safeIcon = safeIconClass(icon);\nconst safeColorVal = safeColor(color);\n\ntoast.innerHTML = `\n  <div>\n    <i class=\"ti ${safeIcon}\" style=\"color: ${safeColorVal};\"></i>\n    <div style=\"color: ${safeColorVal};\">${safeTitle}</div>\n    <div>${safeMessage}</div>\n  </div>\n`;"
+        }
+      },
+      { "code": "SEC", "txt": "DEFENSE-IN-DEPTH lib/pdfPreview.js : la fonction openPdfPreview({ titre, html }) injectait titre direct dans innerHTML. En pratique appelé avec des constantes, mais si demain du contenu BDD/user transite par cette fonction, c'est XSS. Fix : escapeHtml(titre) avant l'injection" },
+      { "code": "FIX", "txt": "FIX BUILD VERCEL — Erreur 'Export encountered an error on /statistiques-interventions/page' lors du prerender SSG. La page utilisait createClient() au top-level mais Next.js essayait quand même de pré-rendre la page au build (sans env vars Supabase). Fix : export const dynamic = 'force-dynamic' sur app/statistiques-interventions/page.js → désactive le SSG, rend la page à chaque request. Build Vercel + local OK maintenant" },
+      { "code": "FIX", "txt": "FIX TEST v055-15-sql-modal — Le pattern regex acceptait UNIQUEMENT 'aveho-PATCH-vers-X.Y.Z.sql' mais ne reconnaissait pas les nouveaux scripts combinés 'aveho-supabase-securite-COMPLET-X.Y.Z.sql'. Élargissement du regex pour accepter les deux patterns" },
+      { "code": "AI", "txt": "LINT ANTI-RÉGRESSION CRITIQUE (17e LINT actif) : 'Aucune page /admin/* n'expose son contenu sans AdminGuard'. Scan toutes les pages sous app/admin/. Si un futur dev crée une nouvelle page admin sans wrapper avec AdminGuard → le test fail avant le push" },
+      { "code": "AI", "txt": "+35 tests Vitest (v057-34-admin-guard-xss-toast.test.js) : version + SW (2), AdminGuard composant (6 — fichier existe + use client + 4 checks role + auth.ready + message accès restreint + bouton retour), 9 pages admin × 2 vérifs = 18 (import + wrap), useRealtimeTable escape (5 — escapeHtml + safeIconClass + safeColor + 4 sanitize + innerHTML utilise safe), pdfPreview escape (2 — escapeHtml + safeTitre), fix prerender (1), LINT anti-régression (1). Total 3150 verts (+35)" },
+      { "code": "DOC", "txt": "BILAN SÉCURITÉ APRÈS 0.57.34 : (1) 9 pages admin protégées avec AdminGuard (NEW). (2) XSS toast realtime fixé (NEW). (3) pdfPreview defense-in-depth (NEW). (4) Build Vercel fix (NEW). (5) 17 LINT anti-régression critiques actifs (vs 16 en 0.57.33). (6) Tests Vitest : 3150 verts. (7) Routes API : 17/19 protégées + 9/9 POST + 5/5 GET + 12/12 anti-leak + 4/4 PUT/DELETE + 3/3 OCR + 2/2 Storage. (8) 11 Edge Functions Supabase TOUTES sécurisées. (9) Headers HTTP 10/10. (10) RLS Supabase 100%. (11) Tous les bugs majeurs identifiés sont fixés (SSRF, IDOR, biométrie, mass-assign, cross-tenant, CRON auth, XSS toast, pages admin)" }
+    ],
+    "themes": ["securite", "admin", "xss"],
+    "date": "3 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.34.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.57.33",
     "kind": "version",
     "titre": "🚨 Audit + sécurisation des 7 CRON Edge Functions (CRON_SECRET) + script SQL Supabase complet 0.57.33",

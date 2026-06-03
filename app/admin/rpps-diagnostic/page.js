@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/rpps-diagnostic/page.js (Alpha 0.55.48)
 //
@@ -14,7 +15,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
 
-export default function RppsDiagnosticPage() {
+function RppsDiagnosticPageInner() {
   const auth = useAuth();
   const cart = useCart();
   const [diag, setDiag] = useState(null);
@@ -260,5 +261,14 @@ function TestCard({ test }) {
         )}
       </details>
     </div>
+  );
+}
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function RppsDiagnosticPage() {
+  return (
+    <AdminGuard>
+      <RppsDiagnosticPageInner />
+    </AdminGuard>
   );
 }

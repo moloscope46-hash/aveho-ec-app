@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/mail-diagnostic/page.js (Alpha 0.55.53)
 //
@@ -12,7 +13,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel} from "../../ui";
-export default function MailDiagnosticPage() {
+function MailDiagnosticPageInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
@@ -151,8 +152,8 @@ export default function MailDiagnosticPage() {
             <i className="ti ti-help-circle" /> Causes fréquentes et solutions
           </h3>
           <ul style={{ fontSize: 12, color: "#7a4f15", margin: 0, paddingLeft: 18, lineHeight: 1.65 }}>
-            <li><b>missing_resend_key</b> → Configure <code>RESEND_API_KEY</code> dans Supabase Dashboard → Project Settings → Edge Functions → Secrets (clé sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener" style={{ color: "#185FA5" }}>resend.com/api-keys</a>)</li>
-            <li><b>resend_test_mode_restricted</b> → En mode test, Resend n'envoie qu'à l'email du propriétaire du compte. Solutions : (1) vérifier un domaine sur <a href="https://resend.com/domains" target="_blank" rel="noopener" style={{ color: "#185FA5" }}>resend.com/domains</a> puis configurer <code>RESEND_FROM</code> avec une adresse de ce domaine, OU (2) tester avec ton propre mail Resend pour valider, puis upgrade plan</li>
+            <li><b>missing_resend_key</b> → Configure <code>RESEND_API_KEY</code> dans Supabase Dashboard → Project Settings → Edge Functions → Secrets (clé sur <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: "#185FA5" }}>resend.com/api-keys</a>)</li>
+            <li><b>resend_test_mode_restricted</b> → En mode test, Resend n'envoie qu'à l'email du propriétaire du compte. Solutions : (1) vérifier un domaine sur <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer" style={{ color: "#185FA5" }}>resend.com/domains</a> puis configurer <code>RESEND_FROM</code> avec une adresse de ce domaine, OU (2) tester avec ton propre mail Resend pour valider, puis upgrade plan</li>
             <li><b>resend_invalid_key</b> → La clé Resend est expirée ou révoquée. Régénère-la et remplace le secret</li>
             <li><b>resend_rate_limit</b> → Quota dépassé (3000 mails/mois sur le plan gratuit). Attends ou upgrade</li>
             <li><b>Mail bien envoyé mais pas reçu</b> → Vérifie les SPAM. Si toujours rien, regarde le dashboard Resend (Logs) pour voir si Resend a essayé de le livrer</li>
@@ -169,5 +170,14 @@ function Kv({ label, value, mono }) {
       <div style={{ fontSize: 10, color: "#6c7a89", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700 }}>{label}</div>
       <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 2, color: "#142131", fontFamily: mono ? "Consolas, monospace" : "inherit", wordBreak: "break-all" }}>{value}</div>
     </div>
+  );
+}
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function MailDiagnosticPage() {
+  return (
+    <AdminGuard>
+      <MailDiagnosticPageInner />
+    </AdminGuard>
   );
 }

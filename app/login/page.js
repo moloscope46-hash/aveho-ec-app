@@ -53,8 +53,37 @@ export default function Login() {
         setOk("Compte créé. Vérifie tes mails si la confirmation est activée, puis connecte-toi.");
         setMode("signin");
       } else {
+        // 0.57.36 : check rate-limit côté client avant de hit Supabase Auth
+        // (anti-bruteforce + protection quota Supabase + UX claire)
+        const { checkLoginBlock, recordFailedLogin, resetLoginAttempts, formatBlockTime } =
+          await import("../../lib/loginRateLimit");
+        const block = checkLoginBlock(email);
+        if (block.blocked) {
+          throw new Error(
+            `Trop de tentatives échouées. Réessaie dans ${formatBlockTime(block.remainingMs)}.`
+          );
+        }
+
         const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });
-        if (error) throw error;
+        if (error) {
+          // 0.57.36 : enregistrer l'échec pour le compteur de rate-limit
+          const result = recordFailedLogin(email);
+          if (result.blocked) {
+            throw new Error(
+              `Trop de tentatives. Compte temporairement bloqué pour ${formatBlockTime(result.remainingMs)}.`
+            );
+          }
+          // Sinon afficher le nombre de tentatives restantes (info utile pour l'utilisateur légitime)
+          if (result.attemptsLeft <= 2) {
+            throw new Error(
+              `${error.message} (${result.attemptsLeft} tentative${result.attemptsLeft > 1 ? "s" : ""} restante${result.attemptsLeft > 1 ? "s" : ""} avant blocage)`
+            );
+          }
+          throw error;
+        }
+
+        // 0.57.36 : login OK → reset le compteur pour cet email
+        resetLoginAttempts(email);
 
         // 0.57.27 : sync refresh_token biométrique pour empêcher l'erreur
         // "Session expirée" lors d'un futur login empreinte/face

@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/medecins-prescripteurs/page.js (Alpha 0.56.5)
 //
@@ -18,7 +19,7 @@ import RppsVerifyBadge from "../../RppsVerifyBadge";
 import { PageHead, Panel, StateMsg } from "../../ui";
 import { fetchWithAuth } from "../../../lib/fetchWithAuth";
 
-export default function MedecinsPrescripteursPage() {
+function MedecinsPrescripteursPageInner() {
   const supabase = createClient();
   const router = useRouter();
   const auth = useAuth();
@@ -251,5 +252,14 @@ function Kpi({ label, value, color, icon }) {
       </div>
       <div style={{ fontSize: 18, fontWeight: 700, color, marginTop: 4 }}>{value}</div>
     </div>
+  );
+}
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function MedecinsPrescripteursPage() {
+  return (
+    <AdminGuard>
+      <MedecinsPrescripteursPageInner />
+    </AdminGuard>
   );
 }

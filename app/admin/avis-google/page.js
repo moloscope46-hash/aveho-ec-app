@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/avis-google/page.js (Alpha 0.56.6)
 //
@@ -15,7 +16,7 @@ import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
 import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
-export default function AvisGooglePage() {
+function AvisGooglePageInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
@@ -380,5 +381,14 @@ function Stars({ rating }) {
       ))}
       <span style={{ marginLeft: 4, color: "#6c7a89", fontSize: 11 }}>({rating}/5)</span>
     </span>
+  );
+}
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function AvisGooglePage() {
+  return (
+    <AdminGuard>
+      <AvisGooglePageInner />
+    </AdminGuard>
   );
 }

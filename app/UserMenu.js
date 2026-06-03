@@ -62,7 +62,23 @@ export default function UserMenu({ auth }) {
   }, [open]);
 
   function go(p) { setOpen(false); router.push(p); }
-  async function logout() { setOpen(false); await supabase.auth.signOut(); router.push("/login"); }
+
+  // 0.57.35 : purge données user-spécifiques AVANT signOut
+  // Critique sur devices partagés (poste de soin) — empêche user B
+  // de voir search-history, cart, dashboard config, caches photos
+  // et données API mises en cache par le SW
+  async function logout() {
+    setOpen(false);
+    try {
+      const { clearUserData } = await import("../lib/clearUserData");
+      await clearUserData();
+    } catch {
+      // En cas d'erreur, on continue le logout : mieux vaut être déconnecté
+      // avec localStorage pollué que rester connecté
+    }
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
   async function installApp() {
     if (installPrompt) {
       // Cas idéal : Chrome a fourni un prompt natif → on l'utilise

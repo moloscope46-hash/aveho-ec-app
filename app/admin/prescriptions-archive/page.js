@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/prescriptions-archive/page.js (Alpha 0.56.8)
 //
@@ -15,7 +16,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel} from "../../ui";
 import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
-export default function PrescriptionsArchivePage() {
+function PrescriptionsArchivePageInner() {
   const supabase = createClient();
   const router = useRouter();
   const auth = useAuth();
@@ -535,3 +536,12 @@ const btnGhost = {
   padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600,
   cursor: "pointer", fontFamily: "inherit",
 };
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function PrescriptionsArchivePage() {
+  return (
+    <AdminGuard>
+      <PrescriptionsArchivePageInner />
+    </AdminGuard>
+  );
+}

@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.57.34";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.57.37";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -288,4 +288,64 @@ self.addEventListener("notificationclick", (event) => {
       if (self.clients.openWindow) return self.clients.openWindow(url);
     })
   );
+});
+
+// =============================================================
+//  0.57.35 : Handler CLEAR_USER_CACHE (logout sécurisé)
+//  Appelé depuis lib/clearUserData.js au logout, vide DATA_CACHE
+//  et PAGE_CACHE (qui peuvent contenir des réponses API personnelles
+//  et des pages HTML rendues avec données sensibles). STATIC_CACHE
+//  est conservé (assets immutables, partagés entre tous les users).
+// =============================================================
+self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "CLEAR_USER_CACHE") return;
+
+  // 0.57.36 : defense-in-depth — vérifier que le message vient bien
+  // d'un client de notre origin (les SW ne reçoivent normalement que
+  // des messages same-origin, mais on rend explicite la vérification
+  // pour éviter qu'un futur changement d'API browser ne crée une faille)
+  if (event.source && event.source.url) {
+    try {
+      const sourceUrl = new URL(event.source.url);
+      const myUrl = new URL(self.location.href);
+      if (sourceUrl.origin !== myUrl.origin) {
+        // Origin différente : on log et on ignore
+        console.warn("[SW] Message CLEAR_USER_CACHE refusé : origin différente", sourceUrl.origin);
+        return;
+      }
+    } catch (e) {
+      // En cas d'erreur de parsing URL, on refuse par sécurité
+      return;
+    }
+  }
+
+  event.waitUntil((async () => {
+    let deletedData = 0;
+    let deletedPages = 0;
+    try {
+      // Vider DATA_CACHE (réponses Supabase REST/RPC)
+      const dataCache = await caches.open(DATA_CACHE);
+      const dataKeys = await dataCache.keys();
+      await Promise.all(dataKeys.map((k) => dataCache.delete(k)));
+      deletedData = dataKeys.length;
+
+      // Vider PAGE_CACHE (pages HTML)
+      const pageCache = await caches.open(PAGE_CACHE);
+      const pageKeys = await pageCache.keys();
+      await Promise.all(pageKeys.map((k) => pageCache.delete(k)));
+      deletedPages = pageKeys.length;
+    } catch (e) {
+      // En cas d'erreur (quota, mode privé), on continue silencieusement
+    }
+
+    // Reply au client via MessageChannel si fourni
+    if (event.ports && event.ports[0]) {
+      try {
+        event.ports[0].postMessage({
+          ok: true,
+          deleted: { data: deletedData, pages: deletedPages },
+        });
+      } catch {}
+    }
+  })());
 });

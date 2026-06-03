@@ -222,15 +222,18 @@ export default function StatistiquesActivite() {
   }));
 
   // ----- Export PDF -----
+  // 0.57.37 : SRI ajouté sur le script jsPDF
   async function loadJsPdfFromCDN() {
     if (typeof window === "undefined") throw new Error("PDF : côté client uniquement");
     if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
       s.src = "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
+      s.integrity = "sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/";
+      s.crossOrigin = "anonymous";
       s.async = true;
       s.onload = () => resolve(window.jspdf.jsPDF);
-      s.onerror = () => reject(new Error("Impossible de charger jsPDF depuis le CDN"));
+      s.onerror = () => reject(new Error("Impossible de charger jsPDF (CDN down ou SRI mismatch)"));
       document.head.appendChild(s);
     });
   }

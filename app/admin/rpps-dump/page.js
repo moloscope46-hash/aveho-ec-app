@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/rpps-dump/page.js (Alpha 0.55.56)
 //
@@ -14,7 +15,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel} from "../../ui";
-export default function RppsDumpAdminPage() {
+function RppsDumpAdminPageInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
@@ -306,7 +307,7 @@ export default function RppsDumpAdminPage() {
             <i className="ti ti-upload" /> Seeder le dump
           </h3>
           <p style={{ fontSize: 12.5, color: "#6c7a89", margin: "0 0 10px" }}>
-            Télécharge le fichier CSV RPPS open data depuis <a href="https://annuaire.sante.fr/web/site-pro/extractions-publiques" target="_blank" rel="noopener" style={{ color: "#185FA5" }}>annuaire.sante.fr</a> (≈ 500 Mo, mise à jour mensuelle), puis charge-le ici. Les données seront upsertées par batchs de 5 000 lignes.
+            Télécharge le fichier CSV RPPS open data depuis <a href="https://annuaire.sante.fr/web/site-pro/extractions-publiques" target="_blank" rel="noopener noreferrer" style={{ color: "#185FA5" }}>annuaire.sante.fr</a> (≈ 500 Mo, mise à jour mensuelle), puis charge-le ici. Les données seront upsertées par batchs de 5 000 lignes.
           </p>
 
           {/* 0.56.14 : raccourcis direct vers les pages de téléchargement ANS */}
@@ -468,5 +469,14 @@ function Kv({ label, value, color, mono }) {
       <div style={{ fontSize: 10, color: "#6c7a89", textTransform: "uppercase", letterSpacing: 0.4, fontWeight: 700 }}>{label}</div>
       <div style={{ fontSize: 13, fontWeight: 700, marginTop: 2, color: color || "#142131", fontFamily: mono ? "Consolas, monospace" : "inherit" }}>{value}</div>
     </div>
+  );
+}
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function RppsDumpAdminPage() {
+  return (
+    <AdminGuard>
+      <RppsDumpAdminPageInner />
+    </AdminGuard>
   );
 }

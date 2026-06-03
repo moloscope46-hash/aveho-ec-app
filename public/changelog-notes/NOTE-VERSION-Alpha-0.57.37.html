@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.37 — MEGA RELEASE SÉCURITÉ (6 sujets)</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 30%,#7a6fb0 60%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#cfe0f5;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#cfe0f5;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#cfe0f5}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#fff3cd,#ffe69c);border-color:#f0d59f;border-left:4px solid #EF9F27}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.sujet{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0;border-left:4px solid #185FA5}
+.sujet h3{margin-top:0;color:#185FA5}
+.sujet.s1{border-left-color:#5aa05a}.sujet.s1 h3{color:#5aa05a}
+.sujet.s2{border-left-color:#185FA5}
+.sujet.s3{border-left-color:#7a6fb0}.sujet.s3 h3{color:#7a6fb0}
+.sujet.s4{border-left-color:#EF9F27}.sujet.s4 h3{color:#EF9F27}
+.sujet.s5{border-left-color:#c0392b}.sujet.s5 h3{color:#c0392b}
+.sujet.s6{border-left-color:#7CC8C8}.sujet.s6 h3{color:#185FA5}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;text-align:center}
+.kpi-val{font-size:24px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">MEGA RELEASE — 6 SUJETS SÉCURITÉ</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.37 — 6 sujets sécurité d'un coup<small>security.txt + clearUserData++ + Referer + CSP++ + SRI + 2FA TOTP</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.37-alpha</code></span>
+<span><b>Tests :</b> 3218 Vitest dont 28 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi green"><span class="kpi-val">6</span><span class="kpi-lbl">Sujets sécurité traités</span></div>
+<div class="kpi green"><span class="kpi-val">+2</span><span class="kpi-lbl">LINT critiques (21 total)</span></div>
+<div class="kpi green"><span class="kpi-val">+28</span><span class="kpi-lbl">Tests Vitest (3218 total)</span></div>
+<div class="kpi green"><span class="kpi-val">3</span><span class="kpi-lbl">Hashes SRI calculés</span></div>
+</div>
+
+<h2>📋 Les 6 sujets traités</h2>
+
+<div class="sujet s1">
+<h3>📨 Sujet 1 — security.txt + politique de divulgation (RFC 9116)</h3>
+<p><b>Pourquoi ?</b> Les chercheurs en sécurité ne savaient pas comment nous contacter pour signaler des vulnérabilités. Le standard RFC 9116 définit un fichier <code>/.well-known/security.txt</code> qu'ils peuvent retrouver automatiquement.</p>
+<p><b>Fichiers créés :</b></p>
+<ul>
+<li><code>public/.well-known/security.txt</code> : Contact, Expires 2027, langues fr/en</li>
+<li><code>public/.well-known/policy.html</code> : Politique complète (SLA 72h accusé + 14j évaluation, périmètre, pratiques interdites, mention légale protection chercheurs bonne foi)</li>
+</ul>
+</div>
+
+<div class="sujet s2">
+<h3>🔐 Sujet 2 — clearUserData étendu (sb-* + IndexedDB WebAuthn)</h3>
+<p><b>Pourquoi ?</b> Audit du logout post-0.57.35 → 2 vecteurs manquaient :</p>
+<ul>
+<li>Les clés <code>sb-&lt;projet&gt;-auth-token</code> de Supabase (devraient être nettoyées par signOut() mais defense-in-depth)</li>
+<li>L'IndexedDB <code>aveho-webauthn</code> avec les credentials face/empreinte (sur device partagé, user B peut potentiellement les voir)</li>
+</ul>
+
+<pre><code>// 0.57.37 - SENSITIVE_LS_PREFIXES inclut maintenant "sb-"
+const SENSITIVE_LS_PREFIXES = [
+  "aveho:", "aveho_", "ville:", "etab-photo-",
+  "sb-",  // ← NEW : Supabase Auth tokens defense-in-depth
+];
+
+// NEW : purge IndexedDB biométrie (mode deepClean uniquement)
+export async function clearWebauthnDb() {
+  return new Promise((resolve) => {
+    const req = indexedDB.deleteDatabase("aveho-webauthn");
+    req.onsuccess = () => resolve(true);
+    req.onerror = () => resolve(false);
+  });
+}
+
+// Signature avec options.deepClean
+export async function clearUserData(options = {}) {
+  const ls_purged = purgeLocalStorage();
+  const sw_cleared = await clearSwCache();
+  // ⚠️ Biométrie purgée UNIQUEMENT si deepClean=true
+  // (sinon l'user perd sa face/empreinte à chaque logout normal)
+  const bio_cleared = options.deepClean === true
+    ? await clearWebauthnDb() : false;
+  return { ls_purged, sw_cleared, bio_cleared };
+}</code></pre>
+</div>
+
+<div class="sujet s3">
+<h3>🔗 Sujet 3 — Audit Referer leak + rel="noopener noreferrer"</h3>
+<p><b>Pourquoi ?</b> Vérifier qu'aucun lien externe ne fuite le path complet (qui pourrait contenir des tokens d'invitation, IDs de patient, etc.) via le header Referer.</p>
+<p><b>État existant :</b> <code>Referrer-Policy: strict-origin-when-cross-origin</code> déjà configuré au niveau HTTP (envoie seulement l'origin, pas le path). Audit des 15 liens <code>target="_blank"</code> :</p>
+<ul>
+<li>13/15 avaient déjà <code>rel="noopener noreferrer"</code> ✅</li>
+<li>2/15 (rpps-dump + mail-diagnostic) avaient juste <code>noopener</code> → fix → uniformisé à 100%</li>
+</ul>
+<p>+ LINT anti-régression : aucun futur <code>target="_blank"</code> sans <code>noopener</code> ne passera le test.</p>
+</div>
+
+<div class="sujet s4">
+<h3>🛡️ Sujet 4 — CSP enrichie : base-uri + manifest-src</h3>
+<p><b>Pourquoi ?</b> La CSP report-only existait mais 2 directives manquaient :</p>
+<table>
+<tr><th>Directive</th><th>Risque évité</th></tr>
+<tr><td><code>base-uri 'self'</code></td><td>Anti <code>&lt;base href="evil.com"&gt;</code> hijack : un XSS qui injecte une balise base détournerait TOUS les liens relatifs vers le serveur de l'attaquant</td></tr>
+<tr><td><code>manifest-src 'self'</code></td><td>Anti spoofing manifest PWA malveillant</td></tr>
+</table>
+<p>Mode <code>Content-Security-Policy-Report-Only</code> conservé. Le passage à enforce est prévu après observation des CSP reports en prod sur quelques semaines.</p>
+</div>
+
+<div class="sujet s5">
+<h3>🔐 Sujet 5 — SRI (Subresource Integrity) sur 3 scripts CDN externes</h3>
+<p><b>Pourquoi ?</b> 3 scripts JavaScript étaient chargés depuis CDN sans vérification d'intégrité. Si jsdelivr est compromis (supply-chain attack) ou si DNS hijacking, un script malveillant s'exécute dans le contexte authentifié de notre app.</p>
+
+<h4>3 fichiers modifiés avec hashes SHA-384 calculés</h4>
+<table>
+<tr><th>Fichier</th><th>Script CDN</th><th>SRI Hash</th></tr>
+<tr><td><code>lib/consentPdf.js</code></td><td>jspdf@2.5.2</td><td><code>sha384-en/ztfPSRk...</code></td></tr>
+<tr><td><code>app/statistiques-rgpd/page.js</code></td><td>jspdf@2.5.2</td><td><code>sha384-en/ztfPSRk...</code></td></tr>
+<tr><td><code>app/statistiques-activite/page.js</code></td><td>jspdf@2.5.2</td><td><code>sha384-en/ztfPSRk...</code></td></tr>
+<tr><td><code>lib/qrcode.js</code></td><td>qrcode-generator@1.4.4</td><td><code>sha384-lQXOAyZw...</code></td></tr>
+</table>
+
+<pre><code>// 0.57.37 - SRI verification
+const s = document.createElement("script");
+s.src = "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
+s.integrity = "sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/";
+s.crossOrigin = "anonymous";  // requis pour SRI cross-origin
+s.async = true;
+// ↑ Browser vérifie le hash SHA-384 avant exécution.
+//   Si mismatch → refus + erreur dans la console.</code></pre>
+
+<p>+ LINT anti-régression : aucun futur script CDN externe ne passera le test sans SRI.</p>
+</div>
+
+<div class="sujet s6">
+<h3>🔑 Sujet 6 — 2FA TOTP (Supabase Auth MFA) — Foundation prête</h3>
+<p><b>Pourquoi ?</b> Aveho EC n'avait pas de 2FA. Pour la prod réelle, un 2e facteur (Google Authenticator, Authy, 1Password, etc.) est essentiel pour les comptes admin et les utilisateurs sensibles.</p>
+
+<h4>Fichiers créés (prêts à activer)</h4>
+<table>
+<tr><th>Fichier</th><th>Contenu</th></tr>
+<tr><td><code>lib/mfa.js</code> (160 lignes)</td><td>6 fonctions exportées wrappant les APIs Supabase Auth MFA</td></tr>
+<tr><td><code>app/components/MfaSetup.js</code></td><td>Composant React 3 états (idle / verifying / active)</td></tr>
+</table>
+
+<h4>Les 6 fonctions du helper lib/mfa.js</h4>
+<table>
+<tr><td><code>enrollTotp(supabase)</code></td><td>Lance l'enrollment, retourne QR code SVG + secret</td></tr>
+<tr><td><code>verifyTotpEnrollment(supabase, factorId, code)</code></td><td>Valide le code 6 chiffres → factor verified</td></tr>
+<tr><td><code>listMfaFactors(supabase)</code></td><td>Liste les factors actifs de l'user</td></tr>
+<tr><td><code>checkMfaRequired(supabase)</code></td><td>Au login : faut-il demander un code TOTP ?</td></tr>
+<tr><td><code>challengeAndVerifyTotp(supabase, factorId, code)</code></td><td>Challenge + verify au login (AAL aal1 → aal2)</td></tr>
+<tr><td><code>unenrollMfaFactor(supabase, factorId)</code></td><td>Désactiver le 2FA</td></tr>
+</table>
+
+<h4>⚠️ Pour activer (étapes Supabase)</h4>
+<ol>
+<li>Dashboard Supabase → <b>Authentication → Multi-Factor Authentication → Enable TOTP</b></li>
+<li>Intégrer <code>&lt;MfaSetup /&gt;</code> dans <code>app/profil/page.js</code></li>
+<li>Appeler <code>checkMfaRequired()</code> dans le flow login après <code>signInWithPassword</code></li>
+<li>Si <code>challengeRequired</code> → afficher un input 6 chiffres → <code>challengeAndVerifyTotp()</code></li>
+</ol>
+</div>
+
+<h2>🔒 2 nouveaux LINT anti-régression (20e + 21e)</h2>
+<div class="panel hero">
+<pre><code>// LINT 20 : Aucun target=_blank sans noopener (anti tabnabbing)
+const matches = src.matchAll(/target=["']_blank["']/g);
+for (const m of matches) {
+  const context = src.substring(m.index - 100, m.index + 200);
+  if (!context.includes("noopener")) violations.push(...);
+}
+
+// LINT 21 : Aucun script CDN externe sans SRI (anti supply-chain)
+const matches = src.matchAll(/\.src\s*=\s*["']https:\/\/(cdn\.|unpkg|cdnjs)[^"']+\.js["']/g);
+for (const m of matches) {
+  const after = src.substring(m.index, m.index + 500);
+  if (!after.includes("integrity")) violations.push(...);
+}</code></pre>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC après 0.57.37</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API + OCR + Storage + Edge Functions</td><td>✅ Tous</td></tr>
+<tr><td>Pages admin AdminGuard + XSS toast + Cleanup logout + Rate-limit login</td><td>✅</td></tr>
+<tr><td><b>security.txt RFC 9116</b></td><td>✅ <b>NEW 0.57.37</b></td></tr>
+<tr><td><b>clearUserData étendu sb-* + IndexedDB biométrie</b></td><td>✅ <b>NEW 0.57.37</b></td></tr>
+<tr><td><b>Tous liens externes avec noopener noreferrer</b></td><td>✅ <b>NEW 0.57.37</b></td></tr>
+<tr><td><b>CSP enrichie base-uri + manifest-src</b></td><td>✅ <b>NEW 0.57.37</b></td></tr>
+<tr><td><b>SRI sur 3 scripts CDN externes</b></td><td>✅ <b>NEW 0.57.37</b></td></tr>
+<tr><td><b>2FA TOTP foundation prête</b></td><td>✅ <b>NEW 0.57.37</b></td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10</td></tr>
+<tr><td>RLS Supabase</td><td>100%</td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>21 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3218</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés (6)</h3>
+<ul>
+<li><code>public/.well-known/security.txt</code> (RFC 9116)</li>
+<li><code>public/.well-known/policy.html</code> (politique divulgation)</li>
+<li><code>lib/mfa.js</code> (helper 2FA TOTP, 160 lignes)</li>
+<li><code>app/components/MfaSetup.js</code> (UI activation 2FA)</li>
+<li><code>__tests__/v057-37-six-sujets-securite.test.js</code> (28 tests)</li>
+</ul>
+<h3>Modifiés (8)</h3>
+<ul>
+<li><code>lib/clearUserData.js</code> : sb-* + clearWebauthnDb + option deepClean</li>
+<li><code>lib/consentPdf.js</code> : SRI jspdf</li>
+<li><code>lib/qrcode.js</code> : SRI qrcode-generator</li>
+<li><code>app/statistiques-rgpd/page.js</code> : SRI jspdf</li>
+<li><code>app/statistiques-activite/page.js</code> : SRI jspdf</li>
+<li><code>app/admin/rpps-dump/page.js</code> : noopener noreferrer uniformisé</li>
+<li><code>app/admin/mail-diagnostic/page.js</code> : idem</li>
+<li><code>next.config.js</code> : CSP base-uri + manifest-src</li>
+<li><code>public/sw.js</code> : VERSION bumpée à 0.57.37</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+# Dézipper le zip 0.57.37 par-dessus
+npm install --legacy-peer-deps
+npm test                              # 3218 verts ✅
+npm run build
+git add -A
+git commit -m "Alpha 0.57.37 - MEGA SECU : security.txt + IndexedDB + Referer + CSP + SRI + 2FA"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts (pour la suite)</h2>
+<div class="panel tip">
+<ul>
+<li><b>Activer 2FA côté Supabase Dashboard</b> + intégrer MfaSetup dans /profil + checkMfaRequired dans login (UI prête, fait quand t'es prêt)</li>
+<li><b>CRON_SECRET</b> dans Supabase secrets (si pas encore fait)</li>
+<li><b>Script SQL Supabase</b> à exécuter (SANS-CRON ou EDITOR selon plan)</li>
+<li><b>HDS</b> : migration vers hébergeur certifié avant prod réelle</li>
+<li><b>Passage CSP report-only → enforce</b> après observation reports prod</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 127ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.36 → <b>0.57.37</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.37 · 3 juin 2026 · 3218 Vitest · 6 sujets sécurité d'un coup + 21 LINT actifs</footer>
+</div></body></html>

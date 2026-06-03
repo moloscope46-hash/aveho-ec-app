@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.36 — Rate-limit login + SW origin</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#c0392b 50%,#EF9F27 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#ffd9c2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#ffd9c2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#ffd9c2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--red)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#ffebee,#ffcdd2);border-color:#ef9a9a;border-left:4px solid #c0392b}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.red{background:#ffebee;border-color:#ef9a9a}.kpi.red .kpi-val{color:#b71c1c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — ANTI-BRUTEFORCE LOGIN</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.36 — Rate-limit login + SW origin<small>5 tentatives / 5 min → blocage 60s + check origin SW defense-in-depth</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.36-alpha</code></span>
+<span><b>Tests :</b> 3190 Vitest dont 21 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi red"><span class="kpi-val">5</span><span class="kpi-lbl">Tentatives max / 5 min</span></div>
+<div class="kpi red"><span class="kpi-val">60s</span><span class="kpi-lbl">Blocage après échec</span></div>
+<div class="kpi green"><span class="kpi-val">+1</span><span class="kpi-lbl">LINT critique (19 total)</span></div>
+<div class="kpi green"><span class="kpi-val">+21</span><span class="kpi-lbl">Tests Vitest (3190 total)</span></div>
+</div>
+
+<h2>🚨 Le problème : bruteforce login non-limité côté client</h2>
+<div class="panel hero">
+<p>Supabase Auth a un rate-limit serveur (visible dans Dashboard → Logs → Auth) mais <b>aucun rate-limit côté client/UI</b>. Conséquences :</p>
+<ul>
+<li>L'attaquant peut hammer notre page de login avec du credential stuffing (combos email/password leakés)</li>
+<li>Consomme notre quota d'auth Supabase + crédits facturés</li>
+<li>Pas de feedback UX : l'attaquant ne sait pas qu'il est rate-limited côté serveur</li>
+<li>Pas de protection contre l'automation naïve qui n'a pas de logique de retry</li>
+</ul>
+
+<h3>Scénarios d'attaque</h3>
+<ul>
+<li><b>Credential stuffing</b> : un attaquant teste 10 000 combos volés sur d'autres sites → notre page accepte tout</li>
+<li><b>Spray attack</b> : un seul email × 1000 passwords courants → notre page accepte tout</li>
+<li><b>DoS</b> : 100 emails × 100 passwords par minute → notre quota Supabase explose</li>
+</ul>
+</div>
+
+<h2>✅ Le fix : helper loginRateLimit + intégration page login</h2>
+
+<h3>1️⃣ Helper lib/loginRateLimit.js</h3>
+<div class="panel ok">
+<pre><code>// 4 fonctions exportées
+export function checkLoginBlock(email)    // { blocked, remainingMs, attempts }
+export function recordFailedLogin(email)  // { blocked, attemptsLeft, remainingMs }
+export function resetLoginAttempts(email) // après login réussi
+export function formatBlockTime(ms)        // "30 secondes" / "2 minutes"
+
+// Configuration
+const MAX_ATTEMPTS = 5;
+const ATTEMPT_WINDOW_MS = 5 * 60_000;   // 5 minutes
+const BLOCK_DURATION_MS = 60_000;        // 1 minute de blocage
+
+// Stockage
+const STORAGE_KEY = "aveho:login-attempts";  // purgé au logout (0.57.35)
+// Email lowercased → "TEST@..." === "test@..." (anti case-bypass)</code></pre>
+</div>
+
+<h3>2️⃣ Intégration dans app/login/page.js</h3>
+<div class="panel">
+<pre><code>async function submit() {
+  // ✅ Check AVANT de hit Supabase
+  const block = checkLoginBlock(email);
+  if (block.blocked) {
+    throw new Error(`Trop de tentatives. Réessaie dans ${formatBlockTime(block.remainingMs)}.`);
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password: pwd });
+
+  if (error) {
+    // ✅ Incrémenter sur échec
+    const r = recordFailedLogin(email);
+    if (r.blocked) {
+      throw new Error(`Bloqué pour ${formatBlockTime(r.remainingMs)}.`);
+    }
+    // UX : affiche les tentatives restantes si <= 2
+    if (r.attemptsLeft &lt;= 2) {
+      throw new Error(`${error.message} (${r.attemptsLeft} restante(s))`);
+    }
+    throw error;
+  }
+
+  // ✅ Reset après login réussi
+  resetLoginAttempts(email);
+}</code></pre>
+</div>
+
+<h3>UX attendue côté utilisateur légitime</h3>
+<div class="panel">
+<table>
+<tr><th>Action</th><th>Comportement</th></tr>
+<tr><td>1re-2e tentative échouée</td><td>Message d'erreur classique de Supabase</td></tr>
+<tr><td>3e tentative échouée</td><td>"Email ou mot de passe invalide (2 tentatives restantes avant blocage)"</td></tr>
+<tr><td>4e tentative échouée</td><td>"Email ou mot de passe invalide (1 tentative restante avant blocage)"</td></tr>
+<tr><td>5e tentative échouée</td><td>"Trop de tentatives. Compte temporairement bloqué pour 1 minute."</td></tr>
+<tr><td>Tentative pendant blocage</td><td>"Trop de tentatives échouées. Réessaie dans 45 secondes."</td></tr>
+<tr><td>Login réussi à tout moment</td><td>Reset complet du compteur</td></tr>
+</table>
+</div>
+
+<h3>⚠️ Limites assumées</h3>
+<div class="panel tip">
+<p>Ce helper est <b>côté client uniquement</b>. Un attaquant déterminé peut :</p>
+<ul>
+<li>Vider son localStorage avant chaque tentative</li>
+<li>Changer d'IP / utiliser un VPN</li>
+<li>Faire des appels directs à l'API Supabase Auth (qui a son propre rate-limit)</li>
+</ul>
+<p>C'est une protection <b>UX + anti-spam basique</b>, le vrai rate-limit reste côté Supabase Auth.</p>
+<p>Ça protège effectivement contre :</p>
+<ul>
+<li>Bruteforce manuel/script naïf qui ne pense pas au clear localStorage</li>
+<li>Credential stuffing automatisé basique</li>
+<li>DoS sur notre page (consommation quota Supabase)</li>
+</ul>
+</div>
+
+<h2>🛡️ Bonus : check origin SW handler (defense-in-depth)</h2>
+<div class="panel">
+<p>Le SW handler <code>CLEAR_USER_CACHE</code> de 0.57.35 ne vérifiait pas l'origin du message envoyeur. Risque exploitable réel quasi-nul (les SW ne reçoivent normalement que des messages same-origin par contrat browser), mais defense-in-depth.</p>
+<pre><code>self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "CLEAR_USER_CACHE") return;
+
+  // 0.57.36 : check origin defense-in-depth
+  if (event.source && event.source.url) {
+    try {
+      const sourceUrl = new URL(event.source.url);
+      const myUrl = new URL(self.location.href);
+      if (sourceUrl.origin !== myUrl.origin) {
+        console.warn("[SW] Refus message origin différente", sourceUrl.origin);
+        return;
+      }
+    } catch (e) {
+      return;  // fail-secure si parsing impossible
+    }
+  }
+
+  event.waitUntil(/* vide DATA + PAGE caches */);
+});</code></pre>
+</div>
+
+<h2>🔒 19e LINT anti-régression critique</h2>
+<div class="panel hero">
+<pre><code>it("Toute page qui appelle signInWithPassword doit avoir rate-limit", () => {
+  // Scan toutes les pages sous app/, exception inscription/[token]/ (login auto)
+  const violations = [];
+  for (const page of findPages()) {
+    const src = fs.readFileSync(page, "utf-8");
+    if (/signInWithPassword/.test(src)) {
+      if (!/checkLoginBlock|recordFailedLogin/.test(src)) {
+        violations.push(page);
+      }
+    }
+  }
+  expect(violations).toEqual([]);
+  // ← FAIL si nouveau point d'entrée signInWithPassword sans rate-limit
+});</code></pre>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC après 0.57.36</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API protégées + validation + anti-leak</td><td>✅ Tous</td></tr>
+<tr><td>Routes OCR + Storage helpers</td><td>✅ 3/3 + 2/2 (avec rate-limit 10/60s déjà)</td></tr>
+<tr><td>Edge Functions Supabase TOUTES sécurisées</td><td>✅ 11/11</td></tr>
+<tr><td>Pages admin avec AdminGuard</td><td>✅ 9/9</td></tr>
+<tr><td>Toast realtime XSS protégé</td><td>✅</td></tr>
+<tr><td>Cleanup localStorage + SW au logout</td><td>✅</td></tr>
+<tr><td><b>Rate-limit login côté client (anti-bruteforce)</b></td><td>✅ <b>NEW 0.57.36</b></td></tr>
+<tr><td><b>SW handler check origin defense-in-depth</b></td><td>✅ <b>NEW 0.57.36</b></td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10</td></tr>
+<tr><td>CSP + report-uri actif</td><td>✅</td></tr>
+<tr><td>HSTS preload 1 an</td><td>✅</td></tr>
+<tr><td>RLS Supabase</td><td>100%</td></tr>
+<tr><td>Logger redaction (auth + RGPD + médical)</td><td>✅</td></tr>
+<tr><td>Tous les bugs majeurs (SSRF, IDOR, biométrie, mass-assign, cross-tenant, CRON, XSS, leak logout, bruteforce)</td><td>✅ Fixés</td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>19 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3190</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés (2)</h3>
+<ul>
+<li><code>lib/loginRateLimit.js</code> (145 lignes — helper rate-limit anti-bruteforce)</li>
+<li><code>__tests__/v057-36-login-ratelimit-sw-origin.test.js</code> (21 tests)</li>
+</ul>
+<h3>Modifiés (3)</h3>
+<ul>
+<li><code>app/login/page.js</code> : check + record + reset rate-limit</li>
+<li><code>public/sw.js</code> : check origin handler CLEAR_USER_CACHE + VERSION bumpée à 0.57.36</li>
+<li><code>app/changelog/versions-data.js</code> : entrée 0.57.36</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+# Dézipper le zip 0.57.36 par-dessus
+npm install --legacy-peer-deps
+npm test                              # 3190 verts ✅
+npm run build
+git add -A
+git commit -m "Alpha 0.57.36 - Rate-limit login anti-bruteforce + SW origin check + 19 LINT"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>CRON_SECRET</b> dans Supabase secrets (si pas déjà fait)</li>
+<li><b>Script SQL Supabase</b> à exécuter (SANS-CRON ou EDITOR selon plan)</li>
+<li><b>Login 2FA</b> + Détection faciale (en attente précisions)</li>
+<li><b>HDS</b> : migration vers hébergeur certifié avant prod réelle</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 126ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.35 → <b>0.57.36</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.36 · 3 juin 2026 · 3190 Vitest · Bruteforce login bloqué + 19 LINT actifs</footer>
+</div></body></html>

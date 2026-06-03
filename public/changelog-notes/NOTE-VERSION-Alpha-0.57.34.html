@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.34 — AdminGuard + XSS toast + fix prerender</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#7a6fb0 0%,#142131 50%,#7CC8C8 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#e6def4;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#e6def4;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#e6def4}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#ffebee,#ffcdd2);border-color:#ef9a9a;border-left:4px solid #c0392b}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.red{background:#ffebee;border-color:#ef9a9a}.kpi.red .kpi-val{color:#b71c1c}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+.kpi.violet{background:#f3effa;border-color:#d6c9ec}.kpi.violet .kpi-val{color:#5a4b8a}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — 3 AXES SÉCURITÉ + 2 FIXES BUILD</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.34 — AdminGuard + XSS toast + fixes<small>9 pages admin protégées + escape XSS realtime + fix prerender SSG</small></h1>
+<div class="meta">
+<span><b>Date :</b> 3 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.34-alpha</code></span>
+<span><b>Tests :</b> 3150 Vitest dont 35 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi violet"><span class="kpi-val">9</span><span class="kpi-lbl">Pages admin protégées</span></div>
+<div class="kpi red"><span class="kpi-val">1</span><span class="kpi-lbl">XSS toast fixé</span></div>
+<div class="kpi green"><span class="kpi-val">+1</span><span class="kpi-lbl">LINT critique (17 total)</span></div>
+<div class="kpi green"><span class="kpi-val">+35</span><span class="kpi-lbl">Tests Vitest (3150 total)</span></div>
+</div>
+
+<h2>🔒 Axe 1 — AdminGuard sur les 9 pages admin</h2>
+<div class="panel hero">
+<h3>Le problème</h3>
+<p>Les 9 pages <code>app/admin/*</code> (avis-google, bulletins-archive, doublons-forces, mail-diagnostic, medecins-prescripteurs, prescriptions-archive, referentiels-sante, rpps-diagnostic, rpps-dump) n'avaient <b>aucun check de rôle côté client</b>. N'importe quel user authentifié pouvait accéder à leurs URLs.</p>
+
+<p>Le RLS Postgres bloquait l'accès aux données sensibles, mais conséquences pour un user non-admin :</p>
+<ul>
+<li>UI cassée → croyait à un bug</li>
+<li>Découverte de la structure interne (noms tables/routes via erreurs 401/403)</li>
+<li>Mauvais retour utilisateur (pas de blocage clair)</li>
+</ul>
+</div>
+
+<h3>Le fix : composant AdminGuard réutilisable</h3>
+<div class="panel ok">
+<pre><code>// app/components/AdminGuard.js (130 lignes)
+export default function AdminGuard({ children, fallbackUrl = "/accueil" }) {
+  const auth = useAuth();
+  const router = useRouter();
+
+  // 4 checks defense-in-depth (compatibles legacy + nouveau système)
+  const isAdmin =
+    auth.can?.("gerer_roles") ||
+    auth.can?.("manage_collectivite") ||
+    auth.role?.systeme === "admin" ||
+    auth.role?.nom === "Administrateur";
+
+  if (!auth.ready) return &lt;Spinner /&gt;;          // chargement
+  if (!auth.user) return null;                  // useAuth redirige vers /login
+  if (!isAdmin) return &lt;AccesRestreint /&gt;;     // blocage clair + bouton retour
+  return children;                              // admin OK
+}</code></pre>
+</div>
+
+<h3>Wrap auto sur les 9 pages via script Python</h3>
+<div class="panel">
+<pre><code>// Pattern appliqué automatiquement sur les 9 pages :
+"use client";
+import AdminGuard from "../../components/AdminGuard";
+
+function AvisGooglePageInner() {
+  // ... tout le code existant (inchangé)
+}
+
+export default function AvisGooglePage() {
+  return (
+    &lt;AdminGuard&gt;
+      &lt;AvisGooglePageInner /&gt;
+    &lt;/AdminGuard&gt;
+  );
+}</code></pre>
+</div>
+
+<h2>🚨 Axe 2 — XSS dans toast realtime (user A → user B)</h2>
+<div class="panel hero">
+<h3>Le bug critique</h3>
+<p><code>lib/useRealtimeTable.js</code> faisait :</p>
+<pre><code>toast.innerHTML = `
+  &lt;div&gt;
+    &lt;i class="ti ${icon}" style="color: ${color};"&gt;&lt;/i&gt;
+    &lt;div style="color: ${color};"&gt;${title}&lt;/div&gt;
+    &lt;div&gt;${message}&lt;/div&gt;
+  &lt;/div&gt;
+`;</code></pre>
+<p>Les variables <code>title</code> et <code>message</code> viennent d'événements <b>Supabase Realtime</b> (changements en BDD par d'autres users).</p>
+
+<h3>Scénario d'attaque</h3>
+<ol>
+<li>User A (malveillant) crée une intervention avec titre : <code>&lt;img src=x onerror=alert(document.cookie)&gt;</code></li>
+<li>Supabase Realtime broadcast le changement → user B reçoit un toast</li>
+<li><code>toast.innerHTML = ...${title}...</code> injecte le HTML → exécution du JS</li>
+<li>Le JS tourne dans le contexte de l'onglet authentifié de user B → exfiltration du Bearer Supabase possible</li>
+</ol>
+<p><b>CVSS estimé : 6.5 MEDIUM</b> (exploit nécessite Realtime activé + 2 users connectés)</p>
+</div>
+
+<h3>Le fix : 3 helpers de sanitization</h3>
+<div class="panel ok">
+<pre><code>// 1. escapeHtml standard
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;")
+    .replace(/&gt;/g, "&amp;gt;").replace(/"/g, "&amp;quot;")
+    .replace(/'/g, "&amp;#39;");
+}
+
+// 2. Whitelist class Tabler icons (empêche injection CSS)
+function safeIconClass(icon) {
+  if (typeof icon !== "string") return "ti-bell";
+  if (!/^ti-[a-z0-9-]{1,40}$/.test(icon)) return "ti-bell";
+  return icon;
+}
+
+// 3. Whitelist couleur hex
+function safeColor(color) {
+  if (typeof color !== "string") return "#185FA5";
+  if (!/^#[0-9a-fA-F]{3,6}$/.test(color)) return "#185FA5";
+  return color;
+}
+
+// Sanitize TOUS les inputs AVANT innerHTML
+const safeTitle = escapeHtml(title);
+const safeMessage = escapeHtml(message);
+const safeIcon = safeIconClass(icon);
+const safeColorVal = safeColor(color);
+
+toast.innerHTML = `... ${safeTitle} ... ${safeMessage} ...`;</code></pre>
+</div>
+
+<h2>🛡️ Axe 3 — Defense-in-depth pdfPreview</h2>
+<div class="panel">
+<p><code>lib/pdfPreview.js</code> injectait <code>${titre}</code> direct dans innerHTML. En pratique appelé avec des constantes hardcodées ("Aperçu de la prescription"), mais si demain du contenu BDD transite par cette fonction → XSS. Fix : <code>safeTitre = escapeHtml(titre)</code> appliqué.</p>
+</div>
+
+<h2>🔧 Axes bonus — fixes build</h2>
+<h3>Fix prerender SSG /statistiques-interventions</h3>
+<div class="panel">
+<p>Erreur de build observée : <code>Error: @supabase/ssr: Your project's URL and API key are required</code>. Cause : Next.js essayait de pré-rendre la page au build SANS les env vars Supabase. Fix : <code>export const dynamic = "force-dynamic"</code> → désactive le SSG, rend la page à chaque request.</p>
+</div>
+
+<h3>Fix test v055-15-sql-modal</h3>
+<div class="panel">
+<p>Le test acceptait uniquement le pattern <code>aveho-PATCH-vers-X.Y.Z.sql</code> mais le nouveau script <code>aveho-supabase-securite-COMPLET-0.57.33.sql</code> ne matchait pas. Élargissement du regex pour accepter les 2 patterns historiques.</p>
+</div>
+
+<h2>🔒 17e LINT anti-régression critique</h2>
+<div class="panel hero">
+<pre><code>it("Aucune page /admin/* n'expose son contenu sans AdminGuard", () => {
+  const violations = [];
+  for (const page of findAdminPages()) {
+    const src = fs.readFileSync(page.path, "utf-8");
+    if (!/AdminGuard/.test(src)) {
+      violations.push(page.name);
+    }
+  }
+  expect(violations).toEqual([]);
+  // ← FAIL si une nouvelle page admin est créée sans AdminGuard
+});</code></pre>
+</div>
+
+<h2>📊 Bilan sécurité Aveho EC après 0.57.34</h2>
+<div class="panel ok">
+<table>
+<tr><th>Domaine</th><th>État</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API protégées requireAuth</td><td>✅ 17/19</td></tr>
+<tr><td>Routes API validation (POST + GET + PUT/DELETE)</td><td>✅ 18/18</td></tr>
+<tr><td>Routes API anti-leak e.message</td><td>✅ 12/12</td></tr>
+<tr><td>Routes OCR avec MIME whitelist</td><td>✅ 3/3</td></tr>
+<tr><td>Storage helpers avec UUID + MIME + taille</td><td>✅ 2/2</td></tr>
+<tr><td>Edge Functions Supabase TOUTES sécurisées</td><td>✅ 11/11 (4 client + 6 CRON + 1 welcome)</td></tr>
+<tr><td><b>Pages admin avec AdminGuard</b></td><td>✅ <b>9/9 NEW 0.57.34</b></td></tr>
+<tr><td><b>Toast realtime XSS protégé</b></td><td>✅ <b>NEW 0.57.34</b></td></tr>
+<tr><td>Headers HTTP sécurité</td><td>✅ 10/10</td></tr>
+<tr><td>CSP + report-uri actif</td><td>✅</td></tr>
+<tr><td>HSTS preload 1 an</td><td>✅</td></tr>
+<tr><td>RLS Supabase</td><td>100% (après script combiné)</td></tr>
+<tr><td>Logger redaction (auth + RGPD + médical)</td><td>✅</td></tr>
+<tr><td>SSRF, IDOR, biométrie, SQL, SW, Bearer, mass-assign, cross-tenant, CRON, XSS toast</td><td>✅ Tous fixés</td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>17 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3150</b></td></tr>
+</table>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés (3)</h3>
+<ul>
+<li><code>app/components/AdminGuard.js</code> (130 lignes — composant de protection)</li>
+<li><code>__tests__/v057-34-admin-guard-xss-toast.test.js</code> (35 tests)</li>
+</ul>
+<h3>Modifiés (12 fichiers)</h3>
+<ul>
+<li><code>lib/useRealtimeTable.js</code> : escapeHtml + safeIconClass + safeColor + 4 sanitize</li>
+<li><code>lib/pdfPreview.js</code> : escapeHtml + safeTitre defense-in-depth</li>
+<li><code>app/admin/avis-google/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/bulletins-archive/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/doublons-forces/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/mail-diagnostic/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/medecins-prescripteurs/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/prescriptions-archive/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/referentiels-sante/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/rpps-diagnostic/page.js</code> : wrap AdminGuard</li>
+<li><code>app/admin/rpps-dump/page.js</code> : wrap AdminGuard</li>
+<li><code>app/statistiques-interventions/page.js</code> : <code>force-dynamic</code> anti-SSG-crash</li>
+<li><code>__tests__/v055-15-sql-modal.test.js</code> : pattern élargi</li>
+<li><code>public/sw.js</code> : VERSION bumpée à 0.57.34</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+# Dézipper le zip 0.57.34 par-dessus
+npm install --legacy-peer-deps
+npm test                              # 3150 verts ✅
+npm run build                         # Build local OK maintenant ✅
+git add -A
+git commit -m "Alpha 0.57.34 - AdminGuard 9 pages + XSS toast + fix prerender + 17 LINT"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>CRON_SECRET</b> à ajouter dans Supabase secrets si pas encore fait (sinon les 7 Edge Functions retournent 500)</li>
+<li><b>Script SQL Supabase</b> à exécuter (SANS-CRON ou EDITOR selon plan)</li>
+<li><b>Login 2FA</b> + Détection faciale (en attente précisions)</li>
+<li><b>HDS</b> : migration vers hébergeur certifié avant prod réelle</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 124ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.33 → <b>0.57.34</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.34 · 3 juin 2026 · 3150 Vitest · 9 pages admin protégées + XSS toast fixé + 17 LINT actifs</footer>
+</div></body></html>

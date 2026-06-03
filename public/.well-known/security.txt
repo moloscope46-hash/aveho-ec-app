@@ -1,0 +1,25 @@
+# Aveho EC — Politique de divulgation responsable des vulnérabilités
+# https://aveho-ec-app.vercel.app/.well-known/security.txt
+# Format conforme à RFC 9116
+
+Contact: mailto:securite@aveho.fr
+Contact: https://aveho.fr/contact
+Expires: 2027-06-03T00:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://aveho-ec-app.vercel.app/.well-known/security.txt
+Policy: https://aveho-ec-app.vercel.app/.well-known/policy.html
+
+# Si vous découvrez une vulnérabilité de sécurité dans Aveho EC,
+# merci de nous contacter à l'adresse ci-dessus.
+#
+# Nous nous engageons à :
+#  - Accuser réception de votre signalement sous 72h
+#  - Évaluer la vulnérabilité sous 14 jours
+#  - Vous tenir informé de la remédiation
+#  - Vous mentionner dans nos remerciements (sauf demande contraire)
+#
+# Merci de respecter les principes suivants :
+#  - Ne pas exploiter la vulnérabilité au-delà du POC nécessaire
+#  - Ne pas accéder aux données d'autres utilisateurs
+#  - Ne pas dégrader le service ni mener d'attaques DoS
+#  - Nous laisser un délai raisonnable pour corriger avant publication

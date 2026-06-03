@@ -150,15 +150,20 @@ export default function StatistiquesRgpd() {
 
   // ---------- Export PDF ----------
   // Charge jsPDF dynamiquement depuis le CDN (même stratégie que lib/consentPdf.js)
+  // 0.57.37 : SRI (Subresource Integrity) ajouté — si jsdelivr est compromis
+  // ou si le fichier est altéré, le browser refusera de l'exécuter
   async function loadJsPdfFromCDN() {
     if (typeof window === "undefined") throw new Error("PDF : côté client uniquement");
     if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
       s.src = "https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
+      // 0.57.37 : SRI pour jspdf@2.5.2 (à recalculer si upgrade de version)
+      s.integrity = "sha384-en/ztfPSRkGfME4KIm05joYXynqzUgbsG5nMrj/xEFAHXkeZfO3yMK8QQ+mP7p1/";
+      s.crossOrigin = "anonymous";  // requis pour SRI cross-origin
       s.async = true;
       s.onload = () => resolve(window.jspdf.jsPDF);
-      s.onerror = () => reject(new Error("Impossible de charger jsPDF depuis le CDN"));
+      s.onerror = () => reject(new Error("Impossible de charger jsPDF (CDN down ou SRI mismatch)"));
       document.head.appendChild(s);
     });
   }

@@ -1,4 +1,5 @@
 "use client";
+import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/doublons-forces/page.js (Alpha 0.56.7)
 //
@@ -19,7 +20,7 @@ const CIBLES = [
   { id: "medecins", lbl: "Médecins", icon: "ti-stethoscope", color: "#5a4a90", seuilDefault: 0.6 },
 ];
 
-export default function DoublonsForcesPage() {
+function DoublonsForcesPageInner() {
   const supabase = createClient();
   const auth = useAuth();
   const router = useRouter();
@@ -808,5 +809,14 @@ function HistoriqueRow({ h, supabase, onRollback }) {
         </div>
       )}
     </div>
+  );
+}
+
+// 0.57.34 : wrapper AdminGuard pour restreindre l'accès aux admins
+export default function DoublonsForcesPage() {
+  return (
+    <AdminGuard>
+      <DoublonsForcesPageInner />
+    </AdminGuard>
   );
 }
