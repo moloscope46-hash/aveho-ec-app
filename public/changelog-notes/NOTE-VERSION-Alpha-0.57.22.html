@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.22 — Fix CSP + tracking mail invitations</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--cyan:#00838f}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#142131 0%,#185FA5 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#c8e6c9;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#c8e6c9;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#c8e6c9}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--blue)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#e3f2fd,#bbdefb);border-color:#90caf9;border-left:4px solid #1565c0}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+.panel.danger{background:#fef0ee;border-color:#f5b8b0;border-left:4px solid #c0392b}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.blue{background:#e3f2fd;border-color:#90caf9}.kpi.blue .kpi-val{color:#0d47a1}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+.mail-statut{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600}
+.mail-ok{background:#eef9ef;color:#5aa05a}
+.mail-ko{background:#fef0ee;color:#c0392b}
+.mail-unknown{background:#f4f7fa;color:#8a98a8}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — CSP FIX + TRACKING MAIL INVITATIONS</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.22 — Fix CSP + tracking mail<small>Warning console réglé + statut envoi mail visible dans la liste des invitations</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.22-alpha</code></span>
+<span><b>Tests :</b> 2829 Vitest dont 33 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi blue">
+<span class="kpi-val">2</span>
+<span class="kpi-lbl">Sujets traités</span>
+</div>
+<div class="kpi blue">
+<span class="kpi-val">3</span>
+<span class="kpi-lbl">Colonnes ajoutées invitations</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+33</span>
+<span class="kpi-lbl">Tests Vitest (2829 total)</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">10/10</span>
+<span class="kpi-lbl">Headers sécurité maintenus</span>
+</div>
+</div>
+
+<h2>🔧 1. Fix warning CSP <code>upgrade-insecure-requests</code></h2>
+<div class="panel">
+<p><b>Symptôme</b> dans la console DevTools :</p>
+<pre><code>The Content Security Policy directive 'upgrade-insecure-requests'
+is ignored when delivered in a report-only policy.</code></pre>
+
+<h3>Explication</h3>
+<p>La directive <code>upgrade-insecure-requests</code> force les browsers à upgrader automatiquement les ressources HTTP en HTTPS. Mais elle ne peut être appliquée qu'en mode <b>enforcing</b> (Content-Security-Policy) — en mode <b>report-only</b> (Content-Security-Policy-Report-Only) elle est ignorée silencieusement avec ce warning.</p>
+
+<p>Comme on est en mode report-only depuis la 0.57.17 (pour observer sans casser), la directive est inutile. Et même : la protection est <b>déjà couverte par HSTS preload 1 an</b> qui force HTTPS au niveau navigateur AVANT que la CSP soit évaluée.</p>
+
+<h3>Fix</h3>
+<pre><code>// 0.57.22 — retirée du tableau CSP_DIRECTIVES
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  // ... 11 autres directives
+  "frame-ancestors 'self'",
+  // 0.57.22 : 'upgrade-insecure-requests' RETIRÉE car ignorée en report-only
+  // (warning browser : "ignored when delivered in a report-only policy")
+  // Protection couverte par HSTS max-age=1 an + preload
+  // À réintroduire si/quand on bascule en CSP enforcing.
+];</code></pre>
+
+<p>Résultat : <b>console DevTools propre</b>, 10/10 headers sécurité maintenus, HTTPS toujours forcé par HSTS.</p>
+</div>
+
+<h2>📬 2. Tracking statut envoi mail des invitations</h2>
+<div class="panel hero">
+<h3>Problème signalé</h3>
+<p><i>"les statuts d'envoi de mail sur la liste des invitations et plusieurs étapes set soit fonctionnel"</i></p>
+
+<p>Avant cette version, le workflow d'invitation était :</p>
+<ol>
+<li>User clique "Inviter" dans /utilisateurs</li>
+<li>Insert dans table <code>invitations</code> avec un token</li>
+<li>Appel Edge Function <code>invite-user</code> qui envoie via Resend</li>
+<li>Si succès : popup "Invitation créée"</li>
+<li>Si échec : warning UI temporaire (<code>mailWarning</code>)</li>
+<li>Mais <b>aucune trace en BDD</b> du succès/échec</li>
+</ol>
+
+<p>Résultat : impossible de savoir plus tard si le mail est parti ou pas. Le warning UI disparaît au reload, et la table <code>invitations</code> n'a aucune colonne de tracking.</p>
+</div>
+
+<h3>Solution : 3 colonnes + affichage</h3>
+<div class="panel">
+<table>
+<tr><th>Colonne</th><th>Type</th><th>Sens</th></tr>
+<tr><td><code>mail_envoye_at</code></td><td>TIMESTAMPTZ NULL</td><td>Date d'envoi réussi (NULL = pas envoyé)</td></tr>
+<tr><td><code>mail_erreur</code></td><td>TEXT NULL</td><td>Message d'erreur Resend si échec</td></tr>
+<tr><td><code>mail_tentatives</code></td><td>INTEGER DEFAULT 0</td><td>Nombre total d'essais</td></tr>
+</table>
+
+<p><b>Affichage dans la liste</b> :</p>
+<ul>
+<li><span class="mail-statut mail-ok"><i class="ti ti-mail-check"></i> Envoyé</span> si <code>mail_envoye_at IS NOT NULL</code> (tooltip avec date + tentatives)</li>
+<li><span class="mail-statut mail-ko"><i class="ti ti-mail-x"></i> Échec</span> si <code>mail_erreur IS NOT NULL</code> (tooltip avec détail erreur Resend)</li>
+<li><span class="mail-statut mail-unknown"><i class="ti ti-mail-question"></i> —</span> sinon (invitations avant 0.57.22)</li>
+</ul>
+</div>
+
+<h2>🚀 Workflow d'application</h2>
+<div class="panel ok">
+<ol>
+<li><b>📸 Snapshot Supabase</b> (par précaution)</li>
+<li><b>SQL Editor</b> → coller <code>supabase/aveho-PATCH-vers-0.57.22.sql</code></li>
+<li>Lancer le patch (idempotent, peut être relancé sans problème) :
+<ul>
+<li>ALTER TABLE x3 (ADD COLUMN IF NOT EXISTS)</li>
+<li>Backfill mail_tentatives=1 pour les invitations &gt; 1h</li>
+<li>CREATE INDEX partiel sur mail_erreur</li>
+<li>COMMENT ON COLUMN x3 (documentation)</li>
+</ul>
+</li>
+<li><b>Vérifier</b> dans la table invitations que les 3 colonnes apparaissent (Supabase Dashboard → Table Editor)</li>
+<li><b>Tester côté app</b> :
+<ul>
+<li>Créer une invitation avec un email valide → colonne "Mail" affiche <span class="mail-statut mail-ok">Envoyé</span></li>
+<li>Créer une invitation avec un email invalide → <span class="mail-statut mail-ko">Échec</span> avec tooltip détaillé</li>
+<li>Cliquer sur le bouton renvoi → le compteur tentatives s'incrémente</li>
+</ul>
+</li>
+</ol>
+</div>
+
+<h2>📊 Stats SQL livrées dans le patch</h2>
+<div class="panel">
+<p>Le patch inclut une requête de stats post-migration que tu peux relancer à tout moment :</p>
+<pre><code>SELECT
+  COUNT(*) AS total,
+  COUNT(*) FILTER (WHERE mail_envoye_at IS NOT NULL) AS mails_envoyes,
+  COUNT(*) FILTER (WHERE mail_erreur IS NOT NULL) AS mails_en_echec,
+  COUNT(*) FILTER (WHERE mail_envoye_at IS NULL AND mail_erreur IS NULL) AS jamais_tente,
+  AVG(mail_tentatives) AS moyenne_tentatives
+FROM public.invitations;</code></pre>
+<p>Te permet de mesurer la santé de tes envois mail au fil du temps.</p>
+</div>
+
+<h2>⚙️ Rétrocompatibilité préservée</h2>
+<div class="panel tip">
+<p>Le code app/utilisateurs/page.js fait l'update dans un <code>try/catch</code> silencieux. Si tu déploies le code 0.57.22 mais que tu n'as PAS encore appliqué le SQL patch :</p>
+<ul>
+<li>✅ L'invitation continue de fonctionner normalement</li>
+<li>✅ Le mail est envoyé</li>
+<li>⚠️ Un warning dans la console (<code>logger.warn</code>) indique "SQL patch 0.57.22 non appliqué ?"</li>
+<li>⚠️ La colonne "Mail" affiche <span class="mail-statut mail-unknown">—</span> pour toutes les invitations</li>
+</ul>
+<p>Quand tu appliqueras le SQL plus tard, les nouvelles invitations seront trackées automatiquement.</p>
+</div>
+
+<h2>📈 +33 tests Vitest (v057-22-csp-fix-invitations-mail-status.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.22+ (1 test)</li>
+<li>Fix warning CSP (3 tests : directive retirée + justification + "à réintroduire" noté)</li>
+<li>SQL patch invitations (10 tests : fichier existe, 3 ADD COLUMN, idempotence, index partiel, backfill, COMMENT ON COLUMN, vérification, ROLLBACK)</li>
+<li>Code app/utilisateurs persiste statut (9 tests : update succès/échec/tentatives, try/catch silencieux, colonne Mail dans &lt;th&gt;, 3 icônes statut, loadAll refresh)</li>
+<li>Score headers sécurité maintenu (10 tests : 9 headers requis + poweredByHeader false)</li>
+</ul>
+<p>Total : <b>2829 tests verts</b> (vs 2796 en 0.57.21)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>supabase/aveho-PATCH-vers-0.57.22.sql</code> (3 ADD COLUMN + index + backfill + comments + vérif + rollback)</li>
+<li><code>__tests__/v057-22-csp-fix-invitations-mail-status.test.js</code> (33 tests)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>next.config.js</code> : retrait directive 'upgrade-insecure-requests' du CSP report-only + commentaire explicatif</li>
+<li><code>app/utilisateurs/page.js</code> : (1) sendInvite() persiste mail_envoye_at / mail_erreur / mail_tentatives, (2) relancerInvitation() incrémente mail_tentatives + update statut, (3) tableau invitations : nouvelle colonne "Mail" avec 3 états visuels (Envoyé vert / Échec rouge / — gris)</li>
+<li><code>__tests__/v057-17-security-hardening.test.js</code> : test 'upgrade-insecure-requests' inversé (vérifie qu'elle est ABSENTE du tableau actif)</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                                # 2829 verts attendu
+npm run build                            # vérif Vercel
+git add -A
+git commit -m "Alpha 0.57.22 - Fix CSP warning + tracking statut envoi mail invitations"
+git push origin main
+
+# Puis dans Supabase SQL Editor :
+# Coller supabase/aveho-PATCH-vers-0.57.22.sql et lancer
+# (idempotent, sans risque, ajoute juste 3 colonnes + 1 index)</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts pour les prochaines versions</h2>
+<div class="panel tip">
+<ul>
+<li><b>Login 2FA</b> : ne se déclenche pas si paramétrée dans /profil → besoin de précisions sur le workflow exact</li>
+<li><b>Détection faciale</b> : ne fonctionne pas → besoin browser/appareil + symptôme exact (bouton inactif, erreur, rien ?)</li>
+<li><b>Pop-up code/SQL changelog</b> → diagnostic montre que les data sont OK, à retester visuellement après ce déploiement</li>
+<li><b>Scripts Supabase à appliquer</b> (sécurité prioritaire) :
+<ul>
+<li>fix-rls-aveho.sql (0.57.19) — active RLS sur caisses + mutuelles</li>
+<li>fix-views-auth-exposed.sql (0.57.20) — fix les 2 views auth.users</li>
+<li>aveho-PATCH-vers-0.57.22.sql (cette version) — tracking statut mail</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<h2>🛡️ Score sécurité Aveho EC après 0.57.22</h2>
+<div class="panel ok">
+<table>
+<tr><th>Aspect</th><th>État</th></tr>
+<tr><td>npm audit (CVE)</td><td>✅ 0 CRIT + 0 HIGH</td></tr>
+<tr><td>Routes API protégées</td><td>✅ 17/19</td></tr>
+<tr><td>Headers HTTP de sécurité</td><td>✅ 10/10 mesurés (warning report-only résolu)</td></tr>
+<tr><td>Content-Security-Policy</td><td>✅ 11 directives (report-only) — sans la directive incompatible</td></tr>
+<tr><td>HSTS preload</td><td>✅ 1 an</td></tr>
+<tr><td>Permissions-Policy</td><td>✅ 27 directives</td></tr>
+<tr><td>RLS Supabase tables</td><td>97% → 100% après application script 0.57.19</td></tr>
+<tr><td>Views auth.users sécurisées</td><td>0% → 100% après application script 0.57.20</td></tr>
+<tr><td>Tracking envoi mail invitations</td><td><b>NEW 0.57.22 : 3 colonnes + UI</b></td></tr>
+<tr><td>Tests Vitest</td><td>✅ 2829 verts</td></tr>
+<tr><td>LINT anti-régression</td><td>✅ 5 critiques</td></tr>
+</table>
+</div>
+
+<h2>SW auto-bump — 112ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.21 → <b>0.57.22</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.22 · 2 juin 2026 · 2829 Vitest · CSP propre + tracking mail invitations</footer>
+</div></body></html>

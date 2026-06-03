@@ -115,8 +115,17 @@ describe("0.57.17 - CSP directives", () => {
     expect(src).toMatch(/frame-ancestors 'self'/);
   });
 
-  it("upgrade-insecure-requests (force HTTPS sub-resources)", () => {
-    expect(src).toMatch(/upgrade-insecure-requests/);
+  it("Pas de 'upgrade-insecure-requests' en CSP report-only (warning browser)", () => {
+    // 0.57.22 : la directive est ignorée en report-only par tous les browsers,
+    // protection couverte par HSTS preload de toute façon.
+    // À RÉINTRODUIRE si on bascule en CSP enforcing.
+    const block = src.substring(
+      src.indexOf("CSP_DIRECTIVES"),
+      src.indexOf("CSP_DIRECTIVES") + 2000
+    );
+    // Pas dans le tableau actif (juste dans un commentaire/explication)
+    const inActiveDirectives = /^\s*"upgrade-insecure-requests"/m.test(block);
+    expect(inActiveDirectives, "upgrade-insecure-requests doit être retirée en mode report-only").toBe(false);
   });
 });
 
@@ -189,7 +198,7 @@ describe("0.57.17 - Routes API : couverture requireAuth élargie", () => {
     expect(getProtected().length).toBeGreaterThanOrEqual(17);
   });
 
-  it("Seules /api/version et /api/health ne sont pas protégées (health-checks publics)", () => {
+  it("Seules /api/version et /api/health et /api/csp-report ne sont pas protégées (publics par design)", () => {
     const unprotected = listApiRoutes()
       .filter(f => !fs.readFileSync(f, "utf-8").includes("requireAuth"))
       .map(f => f
@@ -198,15 +207,15 @@ describe("0.57.17 - Routes API : couverture requireAuth élargie", () => {
         .replace("/route.js", "")
       );
 
-    // Doit contenir uniquement /version et /health
-    expect(unprotected.sort()).toEqual(["/health", "/version"]);
+    // 0.57.24 : ajout /csp-report (browser envoie sans auth par design)
+    expect(unprotected.sort()).toEqual(["/csp-report", "/health", "/version"]);
   });
 });
 
 describe("0.57.17 - LINT anti-régression : nouvelle route POST doit utiliser requireAuth", () => {
   // Toute nouvelle route POST/PUT/DELETE qui n'est pas dans la whitelist
   // doit utiliser requireAuth (sinon = trou de sécurité)
-  const WHITELIST = ["/version", "/health"]; // health-checks publics par design
+  const WHITELIST = ["/version", "/health", "/csp-report"]; // publics par design (health-checks + CSP reports)
 
   function listApiPostRoutes() {
     const routes = [];

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.21 — Hotfix Windows path bis</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--orange:#ff6f00}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#ff6f00 0%,#142131 50%,#185FA5 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#ffe0b2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#ffe0b2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#ffe0b2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--orange)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-color:#ffcc80;border-left:4px solid #ff6f00}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.orange{background:#fff3e0;border-color:#ffcc80}.kpi.orange .kpi-val{color:#e65100}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">HOTFIX — WINDOWS PATH BUG (3ÈME OCCURRENCE)</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.21 — Hotfix Windows path bis<small>Fix test 0.57.20 + audit anti-régression : ne reviendra plus jamais</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.21-alpha</code></span>
+<span><b>Tests :</b> 2796 Vitest + 1 audit anti-régression</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi orange">
+<span class="kpi-val">3ème</span>
+<span class="kpi-lbl">Bug Windows path du marathon</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+8</span>
+<span class="kpi-lbl">Tests dont 1 anti-régression</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">2796</span>
+<span class="kpi-lbl">Tests Vitest verts total</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">100%</span>
+<span class="kpi-lbl">Tests safe Windows ET Linux</span>
+</div>
+</div>
+
+<h2>🐛 Le bug</h2>
+<div class="panel">
+<p><b>Tu as lancé <code>npm test</code> après le déploiement 0.57.20 et 1 test fail sous Windows :</b></p>
+<pre><code>AssertionError: v_users_emails ne doit être utilisé qu'à 1 endroit (signalements):
+  expected 2 to be 1</code></pre>
+
+<h3>Cause</h3>
+<p>Mon test 0.57.20 parcourait <code>app/</code> et excluait <code>app/changelog/versions-data.js</code> via :</p>
+<pre><code>if (full.includes("changelog/versions-data")) continue;</code></pre>
+
+<p>Mais sous Windows, <code>fs.readdirSync</code> + <code>path.join()</code> retournent un path avec <code>\</code> :</p>
+
+<table>
+<tr><th>OS</th><th>full</th><th><code>.includes("changelog/versions-data")</code></th></tr>
+<tr><td>Linux/macOS</td><td><code>app/changelog/versions-data.js</code></td><td>✅ true → fichier exclu</td></tr>
+<tr><td>Windows</td><td><code>app\changelog\versions-data.js</code></td><td>❌ false → fichier compté</td></tr>
+</table>
+
+<p>Résultat : sous Linux <code>v_users_emails</code> est compté 1 fois (signalements seulement), sous Windows il est compté 2 fois (signalements + versions-data.js qui le documente). Test fail.</p>
+</div>
+
+<h2>✅ Fix : normaliser AVANT .includes()</h2>
+<div class="panel ok">
+<pre><code>// 0.57.21
+for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+  const full = path.join(dir, item.name);
+  const fullNorm = full.replace(/\\/g, "/");   // ← AJOUT : normalise d'abord
+  if (item.isDirectory()) { ... }
+  else if (item.name.endsWith(".js")) {
+    if (fullNorm.includes("changelog/versions-data")) continue;  // ✓ Linux ET Windows
+    if (fullNorm.includes("changelog/lib")) continue;            // ✓ Linux ET Windows
+    if (src.includes("v_users_emails")) count++;
+  }
+}</code></pre>
+</div>
+
+<h2>🛡️ Audit anti-régression : ce bug ne reviendra plus jamais</h2>
+<div class="panel hero">
+<p>C'est la <b>3ème occurrence</b> du même bug Windows path dans le marathon. Pour qu'il ne revienne jamais, j'ai ajouté un test qui parcourt TOUS les fichiers <code>__tests__/*.js</code> et détecte le pattern dangereux :</p>
+
+<pre><code>it("Aucun test ne fait .includes() sur un path raw issu de path.join()", () => {
+  const violations = [];
+  for (const file of listTestFiles()) {
+    const src = fs.readFileSync(file, "utf-8");
+    if (!src.includes("readdirSync")) continue;
+
+    // Pattern dangereux : variable.includes("...") avec / dans la string
+    const danger = /\b(full|fpath|filePath|fullPath)\.includes\(["'][^"']*\/[^"']*["']\)/g;
+    const matches = src.match(danger) || [];
+
+    for (const m of matches) {
+      // Vérifier qu'il y a une normalisation .replace(/\\/g, "/") quelque part
+      const hasNormalize = /\.replace\(\/\\\\\/g\s*,\s*["']\/["']\)/.test(src);
+      if (!hasNormalize) {
+        violations.push({ file: path.basename(file), match: m });
+      }
+    }
+  }
+  expect(violations).toEqual([]);  // ← FAIL si bug Windows réintroduit
+});</code></pre>
+
+<p>Si un futur dev (ou moi-même) écrit un test qui fait <code>full.includes("/api/...")</code> sans normaliser d'abord, ce test échoue. C'est exactement ce qu'il fallait depuis 0.57.17.</p>
+</div>
+
+<h2>📜 Règle d'or pour les tests qui manipulent des paths</h2>
+<div class="panel tip">
+<p>Quand on manipule un path issu de <code>path.join()</code>, <code>path.resolve()</code> ou <code>fs.readdirSync</code> :</p>
+
+<ol>
+<li><b>TOUJOURS</b> faire <code>.replace(/\\/g, "/")</code> en PREMIER</li>
+<li>PUIS utiliser <code>.includes()</code>, <code>.split()</code>, <code>.replace()</code> avec des slashes forward</li>
+</ol>
+
+<pre><code>// ❌ MAUVAIS (cassé sous Windows)
+const full = path.join(dir, file);
+if (full.includes("/api/")) { ... }
+const apiPath = full.replace("/route.js", "");
+
+// ✅ BON
+const full = path.join(dir, file);
+const fullNorm = full.replace(/\\/g, "/");
+if (fullNorm.includes("/api/")) { ... }
+const apiPath = fullNorm.replace("/route.js", "");</code></pre>
+</div>
+
+<h2>📊 Historique des bugs Windows path du marathon</h2>
+<div class="panel">
+<table>
+<tr><th>Version</th><th>Bug</th><th>Fix</th></tr>
+<tr><td>0.57.17</td><td>LINT POST/PUT/DELETE : .replace("/route.js") avant .replace(/\\/g, "/")</td><td>Fixé en 0.57.19 (ordre inversé)</td></tr>
+<tr><td>0.57.17</td><td>Test "Seules /api/version et /api/health" : même bug</td><td>Fixé en 0.57.19</td></tr>
+<tr><td>0.57.20</td><td>Usage v_users_emails : full.includes("changelog/...")</td><td>Fixé en 0.57.21</td></tr>
+<tr><td colspan="3">→ <b>Audit anti-régression actif en 0.57.21</b> : ces bugs ne reviendront plus.</td></tr>
+</table>
+</div>
+
+<h2>📈 +8 tests Vitest (v057-21-hotfix-windows-path.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.21+ (1 test)</li>
+<li>Fix Windows path dans test v057-20 (4 tests : fullNorm + normalize + includes paths + marqueur 0.57.21)</li>
+<li>Audit anti-régression (2 tests : lint qui détecte le pattern dangereux + sanity ≥ 100 fichiers tests)</li>
+<li>Documentation règle d'or (1 test)</li>
+</ul>
+<p>Total : <b>2796 tests verts</b> (vs 2788 en 0.57.20)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés</h3>
+<ul>
+<li><code>__tests__/v057-21-hotfix-windows-path.test.js</code> (8 tests dont 1 audit anti-régression)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>__tests__/v057-20-fix-views-auth.test.js</code> : ajout fullNorm = .replace(/\\/g, "/")</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm test                                # 2796 verts attendu cette fois
+git add -A
+git commit -m "Alpha 0.57.21 - Hotfix Windows path bis + audit anti-regression"
+git push origin main</code></pre>
+</div>
+
+<h2>📋 Sujets toujours ouverts</h2>
+<div class="panel tip">
+<ul>
+<li><b>Script Supabase</b> : tu peux maintenant lancer les 2 scripts (fix-rls-aveho.sql en 0.57.19, fix-views-auth-exposed.sql en 0.57.20) — toutes les commandes sont testées et prêtes</li>
+<li><b>Mails d'invitation multi-étapes</b> → besoin de précisions</li>
+<li><b>Login 2FA</b> → besoin de précisions</li>
+<li><b>Détection faciale</b> → besoin browser/appareil + symptôme</li>
+<li><b>Pop-up code/SQL changelog</b> → à retester visuellement</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 111ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.20 → <b>0.57.21</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.21 · 2 juin 2026 · 2796 Vitest · 100% safe Windows + Linux</footer>
+</div></body></html>

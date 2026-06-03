@@ -24,7 +24,11 @@ const CSP_DIRECTIVES = [
   "object-src 'none'",
   "form-action 'self'",
   "frame-ancestors 'self'",
-  "upgrade-insecure-requests",
+  // 0.57.22 : 'upgrade-insecure-requests' RETIRÉE car ignorée en mode report-only
+  // Cette protection est déjà couverte par HSTS max-age=1 an + preload.
+  // 0.57.24 : report-uri pour collecter les violations CSP en prod
+  // → app/api/csp-report/route.js logge via lib/logger (Vercel logs)
+  "report-uri /api/csp-report",
 ];
 
 const SECURITY_HEADERS = [
@@ -35,15 +39,40 @@ const SECURITY_HEADERS = [
   {
     key: "Permissions-Policy",
     value: [
-      "camera=(self)", "microphone=()", "geolocation=(self)", "payment=()",
-      "interest-cohort=()", "ambient-light-sensor=()", "battery=()", "bluetooth=()",
-      "display-capture=()", "document-domain=()", "encrypted-media=()",
-      "execution-while-not-rendered=()", "execution-while-out-of-viewport=()",
-      "gamepad=()", "gyroscope=()", "hid=()", "idle-detection=()",
-      "magnetometer=()", "midi=()", "navigation-override=()",
-      "publickey-credentials-get=(self)", "screen-wake-lock=()", "serial=()",
-      "speaker-selection=()", "sync-xhr=(self)", "usb=()", "web-share=(self)",
+      // === Features standard supportées par Chrome (Permissions-Policy spec) ===
+      // Autorisées sur (self) uniquement
+      "camera=(self)",                          // OCR scanner
+      "geolocation=(self)",                     // carte logistique
+      "web-share=(self)",                       // bouton Partager PWA
+      "publickey-credentials-get=(self)",       // WebAuthn biométrie
+      "sync-xhr=(self)",                        // Supabase realtime
+      // Bloquées explicitement
+      "microphone=()",
+      "payment=()",                             // Aveho n'encaisse pas
+      "interest-cohort=()",                     // FLoC tracking Google
+      "bluetooth=()",
+      "display-capture=()",
+      "encrypted-media=()",
+      "gamepad=()",
+      "gyroscope=()",
+      "hid=()",
+      "idle-detection=()",
+      "magnetometer=()",
+      "midi=()",
+      "screen-wake-lock=()",
+      "serial=()",
+      "usb=()",
       "xr-spatial-tracking=()",
+      // 0.57.23 : retirées car non reconnues par Chrome (warnings console) :
+      //  - ambient-light-sensor (origin trial seulement)
+      //  - battery (deprecated)
+      //  - document-domain (deprecated, remplacé par COOP)
+      //  - execution-while-not-rendered (experimental)
+      //  - execution-while-out-of-viewport (experimental)
+      //  - navigation-override (experimental)
+      //  - speaker-selection (pas implémenté Chrome)
+      // Ces features ne pouvaient pas être bloquées par Permissions-Policy
+      // car les browsers ne les reconnaissent pas comme tokens valides.
     ].join(", ")
   },
   { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },

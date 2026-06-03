@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.57.23 — Permissions-Policy nettoyée</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--blue:#185FA5;--green:#5aa05a;--amber:#EF9F27;--violet:#7a6fb0;--red:#c0392b;--cyan:#00838f}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 60px}
+header.cover{background:linear-gradient(135deg,#7CC8C8 0%,#142131 50%,#5aa05a 100%);color:#fff;border-radius:16px;padding:34px;margin-bottom:28px;box-shadow:0 14px 38px rgba(20,33,49,.3)}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#b2ebf2;font-weight:700;margin-bottom:6px}
+.logo{font-size:28px;font-weight:600;letter-spacing:2px}.logo .v{color:var(--teal)}
+h1{font-size:24px;font-weight:700;margin:12px 0 6px}h1 small{font-size:14px;font-weight:500;color:#b2ebf2;display:block;margin-top:4px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12px;color:#b2ebf2}.meta b{color:#fff}
+h2{font-size:18px;color:var(--navy);margin:30px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--cyan)}
+h3{font-size:14px;color:var(--navy);margin:18px 0 8px}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 22px;margin:14px 0}
+.panel.ok{background:#eef9ef;border-color:#bfe2bf;border-left:4px solid #5aa05a}
+.panel.hero{background:linear-gradient(135deg,#e0f7fa,#b2ebf2);border-color:#80deea;border-left:4px solid #00838f}
+.panel.tip{background:#f3effa;border-color:#d6c9ec;border-left:4px solid #7a6fb0}
+.panel.warn{background:#fef9ed;border-color:#f5e0a8;border-left:4px solid #EF9F27}
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:12px;line-height:1.5}
+ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:12.5px}
+table th{background:#142131;color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+table td{padding:7px 10px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.kpi{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:16px;text-align:center}
+.kpi-val{font-size:28px;font-weight:700;color:#142131;display:block}
+.kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.cyan{background:#e0f7fa;border-color:#80deea}.kpi.cyan .kpi-val{color:#006064}
+.kpi.green{background:#eef9ef;border-color:#bfe2bf}.kpi.green .kpi-val{color:#2e6f33}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+<div class="eyebrow">VERSION — PERMISSIONS-POLICY NETTOYÉE</div>
+<div class="logo">a<span class="v">v</span>eho</div>
+<h1>Version 0.57.23 — Console propre<small>7 features non reconnues par Chrome retirées (warnings 'Unrecognized feature' éliminés)</small></h1>
+<div class="meta">
+<span><b>Date :</b> 2 juin 2026</span>
+<span><b>Version :</b> <code style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3)">v0.57.23-alpha</code></span>
+<span><b>Tests :</b> 2870 Vitest dont 41 nouveaux</span>
+</div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="kpi-grid">
+<div class="kpi cyan">
+<span class="kpi-val">27 → 21</span>
+<span class="kpi-lbl">Features Permissions-Policy</span>
+</div>
+<div class="kpi cyan">
+<span class="kpi-val">-7</span>
+<span class="kpi-lbl">Warnings console éliminés</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">10/10</span>
+<span class="kpi-lbl">Headers sécurité maintenus</span>
+</div>
+<div class="kpi green">
+<span class="kpi-val">+41</span>
+<span class="kpi-lbl">Tests Vitest (2870 total)</span>
+</div>
+</div>
+
+<h2>🐛 Le bug</h2>
+<div class="panel">
+<p>7 warnings dans la console DevTools sur chaque page Aveho :</p>
+<pre><code>Error with Permissions-Policy header: Unrecognized feature: 'ambient-light-sensor'.
+Error with Permissions-Policy header: Unrecognized feature: 'battery'.
+Error with Permissions-Policy header: Unrecognized feature: 'document-domain'.
+Error with Permissions-Policy header: Unrecognized feature: 'execution-while-not-rendered'.
+Error with Permissions-Policy header: Unrecognized feature: 'execution-while-out-of-viewport'.
+Error with Permissions-Policy header: Unrecognized feature: 'navigation-override'.
+Error with Permissions-Policy header: Unrecognized feature: 'speaker-selection'.</code></pre>
+
+<h3>Cause</h3>
+<p>En 0.57.17, j'avais ajouté 27 directives Permissions-Policy pour bloquer "toutes les APIs sensibles au cas où". Mais 7 d'entre elles ne sont PAS dans la liste officielle des features standard reconnues par Chrome (Permissions Policy spec). Chrome les ignore et log un warning à chaque page load.</p>
+</div>
+
+<h2>🔍 Les 7 features retirées — analyse détaillée</h2>
+<div class="panel hero">
+<table>
+<tr><th>Feature</th><th>Raison du retrait</th></tr>
+<tr><td><code>ambient-light-sensor</code></td><td>Origin trial uniquement, jamais sorti de l'expérimentation Chrome</td></tr>
+<tr><td><code>battery</code></td><td>API Battery Status <b>deprecated en 2019</b> pour des raisons de fingerprinting, plus exposée par les browsers modernes</td></tr>
+<tr><td><code>document-domain</code></td><td>Deprecated en faveur de <b>Cross-Origin-Opener-Policy</b> qu'on a déjà</td></tr>
+<tr><td><code>execution-while-not-rendered</code></td><td>Spec experimentale Permissions Policy V2, pas encore standardisée</td></tr>
+<tr><td><code>execution-while-out-of-viewport</code></td><td>Idem, spec V2 experimentale</td></tr>
+<tr><td><code>navigation-override</code></td><td>Experimental, jamais implémenté Chrome</td></tr>
+<tr><td><code>speaker-selection</code></td><td>Feature WebRTC future, pas dans Chrome stable</td></tr>
+</table>
+
+<p><b>Point important</b> : ces features ne pouvaient PAS être bloquées via Permissions-Policy de toute façon. Le retrait n'enlève AUCUNE protection réelle. C'est juste du nettoyage cosmétique de la config + élimination des warnings console.</p>
+</div>
+
+<h2>✅ 21 features standard maintenues</h2>
+<div class="panel">
+<h3>Autorisées sur (self) uniquement</h3>
+<ul>
+<li><code>camera=(self)</code> — OCR scanner</li>
+<li><code>geolocation=(self)</code> — carte logistique</li>
+<li><code>web-share=(self)</code> — bouton Partager PWA</li>
+<li><code>publickey-credentials-get=(self)</code> — WebAuthn biométrie</li>
+<li><code>sync-xhr=(self)</code> — Supabase realtime</li>
+</ul>
+
+<h3>Bloquées explicitement (16 APIs)</h3>
+<ul>
+<li><code>microphone=()</code></li>
+<li><code>payment=()</code> — Aveho n'encaisse pas</li>
+<li><code>interest-cohort=()</code> — bloque FLoC tracking Google</li>
+<li><code>bluetooth=()</code>, <code>usb=()</code>, <code>serial=()</code>, <code>hid=()</code>, <code>midi=()</code>, <code>gamepad=()</code></li>
+<li><code>gyroscope=()</code>, <code>magnetometer=()</code></li>
+<li><code>display-capture=()</code>, <code>encrypted-media=()</code></li>
+<li><code>idle-detection=()</code>, <code>screen-wake-lock=()</code></li>
+<li><code>xr-spatial-tracking=()</code></li>
+</ul>
+
+<p>Toutes les protections importantes sont maintenues. Aveho est toujours aussi sécurisé.</p>
+</div>
+
+<h2>⚠️ Pour l'autre warning 'upgrade-insecure-requests'</h2>
+<div class="panel warn">
+<p>Tu m'as signalé que le warning <code>upgrade-insecure-requests is ignored when delivered in a report-only policy</code> revient sur certaines pages (ex: <code>magasins:1</code>).</p>
+
+<h3>Statut</h3>
+<p>La directive a été <b>retirée du code en 0.57.22</b>. Si le warning revient en prod, c'est ton <b>cache navigateur</b> ou le <b>service worker</b> qui sert l'ancienne version de la page.</p>
+
+<h3>Comment vider le cache</h3>
+<ol>
+<li>F12 → onglet <b>Application</b> (Chrome) ou <b>Storage</b> (Firefox)</li>
+<li>Dans la sidebar : <b>Service Workers</b> → cliquer sur <b>"Unregister"</b> pour Aveho</li>
+<li>Dans la sidebar : <b>Storage</b> → cliquer sur <b>"Clear site data"</b> (tous les caches)</li>
+<li>Hard reload : <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (Windows) ou <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> (Mac)</li>
+</ol>
+
+<p>Le SW Aveho est bumpé à chaque version donc devrait normalement se mettre à jour tout seul, mais parfois il faut forcer manuellement après un déploiement majeur. C'est exactement pour ça que la 0.57.23 bump le SW à la 112ème fois consécutive.</p>
+</div>
+
+<h2>📊 Vérification headers sécurité</h2>
+<div class="panel ok">
+<p>Le score reste à <b>10/10</b> headers mesurés en local :</p>
+<ul>
+<li>✓ X-Content-Type-Options: nosniff</li>
+<li>✓ X-Frame-Options: SAMEORIGIN</li>
+<li>✓ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload</li>
+<li>✓ Referrer-Policy: strict-origin-when-cross-origin</li>
+<li>✓ <b>Permissions-Policy: 21 directives propres (sans warnings Chrome)</b></li>
+<li>✓ Cross-Origin-Opener-Policy: same-origin-allow-popups</li>
+<li>✓ Cross-Origin-Resource-Policy: same-origin</li>
+<li>✓ Content-Security-Policy-Report-Only: 11 directives</li>
+<li>✓ X-Aveho-Security-Audit: 0.57.17</li>
+<li>✓ X-Powered-By: ABSENT</li>
+</ul>
+</div>
+
+<h2>📈 +41 tests Vitest (v057-23-permissions-policy-clean.test.js)</h2>
+<div class="panel">
+<ul>
+<li>Version 0.57.23+ (1 test)</li>
+<li>7 features retirées vérifiées absentes du tableau actif (7 tests)</li>
+<li>21 features standard maintenues vérifiées présentes (21 tests)</li>
+<li>Commentaire explicatif présent dans le code (1 test)</li>
+<li>Comptage exactement 21 features actives (1 test)</li>
+<li>Score sécurité 10 headers maintenus (10 tests : 9 headers requis + poweredByHeader false)</li>
+</ul>
+<p>Total : <b>2870 tests verts</b> (vs 2829 en 0.57.22)</p>
+</div>
+
+<h2>Fichiers modifiés</h2>
+<h3>Modifiés</h3>
+<ul>
+<li><code>next.config.js</code> : Permissions-Policy 27 → 21 features + commentaire explicatif des 7 retirées</li>
+</ul>
+<h3>Créés</h3>
+<ul>
+<li><code>__tests__/v057-23-permissions-policy-clean.test.js</code> (41 tests)</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre><code>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                                # 2870 verts attendu
+npm run build                            # vérif Vercel
+git add -A
+git commit -m "Alpha 0.57.23 - Nettoyage Permissions-Policy (7 features non reconnues Chrome retirees)"
+git push origin main</code></pre>
+
+<p>Après le déploiement, <b>vide le cache et unregister le SW</b> pour bénéficier des nouveaux headers et faire disparaître les warnings console.</p>
+</div>
+
+<h2>📋 Sujets ouverts pour la suite</h2>
+<div class="panel tip">
+<ul>
+<li><b>3 scripts Supabase à appliquer</b> (sécurité prioritaire) :
+<ul>
+<li>fix-rls-aveho.sql (0.57.19) — RLS sur caisses + mutuelles</li>
+<li>fix-views-auth-exposed.sql (0.57.20) — fix views auth.users</li>
+<li>aveho-PATCH-vers-0.57.22.sql (0.57.22) — tracking statut mail invitations</li>
+</ul>
+</li>
+<li><b>Login 2FA</b> non déclenchée → besoin de précisions</li>
+<li><b>Détection faciale</b> non fonctionnelle → besoin browser + symptôme exact</li>
+<li><b>Pop-up code/SQL changelog</b> → à retester visuellement</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 113ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.22 → <b>0.57.23</b> ✓</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.57.23 · 2 juin 2026 · 2870 Vitest · console propre, 10/10 headers</footer>
+</div></body></html>

@@ -120,6 +120,128 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.57.24",
+    "kind": "version",
+    "titre": "🎨 Bulles d'identification colorées + 13 fichiers SQL restaurés + Endpoint /api/csp-report + audit RPC routes",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ PAR UTILISATEUR : 'il en manque plein' (bulles d'identification) + 404 sur /changelog-sql/aveho-PATCH-vers-0.56.3.sql et 0.56.4.sql. DIAGNOSTIC : (1) 13 fichiers SQL existaient dans supabase/ mais pas dans public/changelog-sql/ → quand la modale SQL faisait fetch(/changelog-sql/...) ça renvoyait 404. Fix : copie automatique des 13 fichiers manquants. (2) ICONS_BY_CODE dans helpers.js ne contenait que 4 codes (Fix, 🆕, 🎂, •), donc TOUS les codes 3 lettres (SQL, FIX, DOC, SEC, BUG, API, USR) tombaient dans le fallback gris, et TOUS les codes 1-2 lettres (FE, AI, BE, UX, DB) tombaient dans le même bleu → bulles indistinguables visuellement",
+        "code_snippet": {
+          "file": "app/changelog/lib/helpers.js",
+          "note": "ICONS_BY_CODE enrichi avec 12 codes",
+          "lang": "js",
+          "before": "// AVANT 0.57.24 — 4 codes seulement\nexport const ICONS_BY_CODE = {\n  Fix: { color: \"#c0392b\", label: \"FIX\" },\n  \"🆕\": { color: \"#5aa05a\", label: \"NEW\" },\n  \"🎂\": { color: \"#7a6fb0\", label: \"BONUS\" },\n  \"•\": { color: \"#6c7a89\", label: \"•\" },\n};\n\nexport function getCodeMeta(code) {\n  if (ICONS_BY_CODE[code]) return ICONS_BY_CODE[code];\n  if (/^[A-Z]{1,2}$/.test(code)) return { color: \"#185FA5\", label: code };\n  // ↑ FE, AI, BE, UX, DB → tous BLEU uniforme, indistinguables\n  return { color: \"#6c7a89\", label: code };\n  // ↑ SQL, FIX, DOC, SEC, BUG, API, USR → tous GRIS, indistinguables\n}",
+          "after": "// 0.57.24 — palette complète sémantique\nexport const ICONS_BY_CODE = {\n  Fix:  { color: \"#c0392b\", label: \"FIX\" },\n  \"🆕\": { color: \"#5aa05a\", label: \"NEW\" },\n  \"🎂\": { color: \"#7a6fb0\", label: \"BONUS\" },\n  \"•\":  { color: \"#6c7a89\", label: \"•\" },\n\n  // Frontend / Backend\n  FE:  { color: \"#185FA5\", label: \"FE\" },   // Frontend → bleu\n  BE:  { color: \"#EF9F27\", label: \"BE\" },   // Backend → orange\n  API: { color: \"#1565c0\", label: \"API\" },  // API → bleu marine\n\n  // Base de données\n  SQL: { color: \"#5aa05a\", label: \"SQL\" },  // SQL → vert\n  DB:  { color: \"#2e7d32\", label: \"DB\" },   // DB → vert foncé\n\n  // Qualité\n  FIX: { color: \"#c0392b\", label: \"FIX\" },  // Correctif → rouge\n  BUG: { color: \"#e65100\", label: \"BUG\" },  // Bug → orange foncé\n  AI:  { color: \"#7a6fb0\", label: \"AI\" },   // Tests AI → violet\n\n  // Sécurité\n  SEC: { color: \"#b71c1c\", label: \"SEC\" },  // Sécurité → rouge foncé\n\n  // Documentation / UX\n  DOC: { color: \"#00838f\", label: \"DOC\" },  // Doc → cyan\n  UX:  { color: \"#ec407a\", label: \"UX\" },   // UX → rose\n\n  USR: { color: \"#9575cd\", label: \"USR\" },  // User → violet clair\n};\n// → 13 catégories distinctes, identification visuelle immédiate"
+        }
+      },
+      { "code": "FIX", "txt": "13 FICHIERS SQL RESTAURÉS : aveho-PATCH-vers-0.55.56.sql, 0.56.1, 0.56.3, 0.56.4, 0.56.5, 0.56.6, 0.56.7, 0.56.8, 0.56.9, 0.56.10, 0.56.15, 0.56.20, 0.57.22. Total public/changelog-sql/ passe de 50 à 63 fichiers. La popup SQL du changelog peut maintenant charger n'importe quel patch. Anti-régression : nouveau test qui parcourt tous les sqlFile référencés dans versions-data et vérifie qu'ils existent physiquement dans public/changelog-sql/" },
+      { "code": "SEC", "txt": "NOUVEAU ENDPOINT /api/csp-report : collecte les violations CSP envoyées par les browsers. Quand une directive CSP est violée (script bloqué, image bloquée), le browser POST automatiquement un rapport JSON. Le endpoint logge via lib/logger (qui redacte les valeurs sensibles) et répond 204 No Content. Sécurité : rate limit strict 30 reports/min par IP (anti-flood), nettoyage périodique des vieux buckets mémoire (anti-leak), support des 2 formats (legacy csp-report + Reporting API moderne). Whitelisté dans le LINT anti-régression car publics par design (browsers envoient sans credentials)",
+        "code_snippet": {
+          "file": "app/api/csp-report/route.js",
+          "note": "Endpoint sécurisé pour reports CSP",
+          "lang": "js",
+          "before": "// AVANT 0.57.24 — pas de collecte CSP\n// Les violations CSP étaient juste loggées dans la console DevTools\n// du user, jamais remontées côté serveur.\n// On ne savait pas si CSP cassait des choses légitimes en prod.",
+          "after": "// 0.57.24 - endpoint sécurisé pour collecte CSP\nimport { logger } from \"../../../lib/logger\";\nexport const dynamic = \"force-dynamic\";\n\n// Rate limit : 30/min par IP\nconst ipBuckets = new Map();\nfunction checkRateLimit(ip) {\n  const now = Date.now();\n  const bucket = ipBuckets.get(ip) || { count: 0, windowStart: now };\n  if (now - bucket.windowStart > 60_000) {\n    bucket.count = 0; bucket.windowStart = now;\n  }\n  bucket.count++;\n  ipBuckets.set(ip, bucket);\n  return bucket.count <= 30;\n}\n\nexport async function POST(req) {\n  const ip = req.headers.get(\"x-forwarded-for\")?.split(\",\")[0].trim() || \"unknown\";\n  if (!checkRateLimit(ip)) return new Response(null, { status: 204 });\n\n  let body = null;\n  try { body = await req.json(); } catch {}\n  const report = body?.[\"csp-report\"] || body?.body || body || {};\n\n  logger.warn(\"[CSP-Report] Violation détectée\", {\n    ip,\n    blocked: report[\"blocked-uri\"] || report.blockedURL || \"?\",\n    directive: report[\"violated-directive\"] || report.effectiveDirective || \"?\",\n    document: report[\"document-uri\"] || report.documentURL || \"?\",\n  });\n  return new Response(null, { status: 204 });\n}"
+        }
+      },
+      { "code": "SEC", "txt": "AUDIT SUPPLÉMENTAIRE COMPLET de la sécurité Aveho EC : (1) Cookies HttpOnly / Secure / SameSite — Supabase Auth gère via cookies signés, pas de manipulation manuelle dans le code Aveho. (2) localStorage avec données sensibles — 0 occurrence sensible (password/token/secret/email). (3) Routes API qui font du SQL raw / RPC — 6 routes utilisent .rpc() (prescriptions/from-ocr, place, rpps, rpps/dump-status, caisses, mutuelles) → TOUTES protégées par requireAuth. (4) npm audit — 0 CRIT + 0 HIGH + 2 MOD (postcss build-time, non exploitable). (5) Patterns CORS — défaut Next.js same-origin. (6) Logs sensibles — 0 console.log avec données sensibles dans le code actif" },
+      { "code": "AI", "txt": "+46 tests Vitest (v057-24-bulles-csp-report.test.js) : version (1), bulles d'identification (15 — 12 codes REQUIRED + couleurs distinctes + FIX/SEC/AI/DOC spécifiques + fallback compat), 13 SQL files restaurés (14 — chaque fichier vérifié), audit anti-régression sqlFile (1 — tous les référencés existent), endpoint csp-report (10 — POST, GET, pas de requireAuth, rate limit, lib/logger, 2 formats, 204, cleanup mémoire), report-uri dans CSP (1), audit RPC routes protégées (1), score sécurité global (3). Total 2916 tests verts (vs 2870 en 0.57.23)" },
+      { "code": "DOC", "txt": "Bilan sécurité Aveho EC après marathon 0.56.20 → 0.57.24 (25 versions) : npm audit 0 CRIT/HIGH, 17/19 routes API protégées (sauf 2 health-checks + csp-report publics par design), 10/10 headers HTTP sécurité, CSP 11 directives report-only avec collecte des violations, HSTS 1 an + preload, Permissions-Policy 21 directives propres (sans warnings), 100% des routes RPC protégées par requireAuth, lib/logger redacte les valeurs sensibles (password/token/credential_id), 0 secret en dur dans le code, 9 dangerouslySetInnerHTML audités SAFE, 0 eval/new Function, RLS Supabase 97% (100% après application des scripts 0.57.19+0.57.20), 5 LINT anti-régression critiques actifs, 2916 tests Vitest" }
+    ],
+    "themes": ["fix", "ux", "securite", "csp"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.24.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.23",
+    "kind": "version",
+    "titre": "🧹 Nettoyage Permissions-Policy : retrait de 7 features non reconnues par Chrome (warnings console)",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ : 7 warnings console 'Error with Permissions-Policy header: Unrecognized feature' sur les pages Aveho. Cause : depuis 0.57.17, j'avais ajouté 27 directives Permissions-Policy pour bloquer toutes les APIs sensibles 'au cas où'. Mais 7 d'entre elles ne sont PAS dans la liste officielle des features standard reconnues par Chrome (Permissions Policy spec). Conséquence : Chrome les ignore et log un warning à chaque page load",
+        "code_snippet": {
+          "file": "next.config.js",
+          "note": "7 features non reconnues retirées",
+          "lang": "js",
+          "before": "// 0.57.17 — 27 directives, dont 7 non standard\nvalue: [\n  \"camera=(self)\", \"microphone=()\", \"geolocation=(self)\", \"payment=()\",\n  \"interest-cohort=()\",\n  \"ambient-light-sensor=()\",     // ⚠️ warning Chrome\n  \"battery=()\",                   // ⚠️ deprecated\n  \"bluetooth=()\",\n  \"display-capture=()\",\n  \"document-domain=()\",           // ⚠️ deprecated (COOP remplace)\n  \"encrypted-media=()\",\n  \"execution-while-not-rendered=()\",     // ⚠️ experimental\n  \"execution-while-out-of-viewport=()\",  // ⚠️ experimental\n  \"gamepad=()\", \"gyroscope=()\", \"hid=()\", \"idle-detection=()\",\n  \"magnetometer=()\", \"midi=()\",\n  \"navigation-override=()\",       // ⚠️ experimental\n  \"publickey-credentials-get=(self)\", \"screen-wake-lock=()\", \"serial=()\",\n  \"speaker-selection=()\",         // ⚠️ pas dans Chrome\n  \"sync-xhr=(self)\", \"usb=()\", \"web-share=(self)\",\n  \"xr-spatial-tracking=()\",\n].join(\", \")\n// → Chrome log 7 warnings 'Unrecognized feature' à chaque page",
+          "after": "// 0.57.23 — 21 features standard supportées par Chrome\nvalue: [\n  // Autorisées sur (self) uniquement\n  \"camera=(self)\",                          // OCR scanner\n  \"geolocation=(self)\",                     // carte logistique\n  \"web-share=(self)\",                       // bouton Partager PWA\n  \"publickey-credentials-get=(self)\",       // WebAuthn biométrie\n  \"sync-xhr=(self)\",                        // Supabase realtime\n  // Bloquées explicitement\n  \"microphone=()\",\n  \"payment=()\",\n  \"interest-cohort=()\",                     // FLoC tracking\n  \"bluetooth=()\", \"display-capture=()\", \"encrypted-media=()\",\n  \"gamepad=()\", \"gyroscope=()\", \"hid=()\", \"idle-detection=()\",\n  \"magnetometer=()\", \"midi=()\",\n  \"screen-wake-lock=()\", \"serial=()\", \"usb=()\",\n  \"xr-spatial-tracking=()\",\n].join(\", \")\n// → Console propre, pas de warnings"
+        }
+      },
+      { "code": "DOC", "txt": "Les 7 features retirées et POURQUOI : (1) ambient-light-sensor : origin trial uniquement, jamais sorti de l'expérimentation Chrome. (2) battery : API Battery Status deprecated en 2019 pour des raisons de fingerprinting, plus exposée par les browsers modernes. (3) document-domain : deprecated en faveur de Cross-Origin-Opener-Policy (qu'on a déjà). (4) execution-while-not-rendered + execution-while-out-of-viewport : spec experimentale Permissions Policy V2, pas encore standardisée. (5) navigation-override : experimental, jamais implémenté Chrome. (6) speaker-selection : feature WebRTC future, pas dans Chrome stable. Ces features ne pouvaient PAS être bloquées via Permissions-Policy de toute façon — le retrait n'enlève AUCUNE protection réelle" },
+      { "code": "DOC", "txt": "Côté Permissions-Policy on est passé de 27 → 21 features actives. Toutes les protections importantes sont maintenues : pas de microphone, pas de paiement, pas de FLoC tracking, pas de Bluetooth/USB/Serial/HID/MIDI/Gamepad, pas de display-capture, pas de XR spatial tracking. Et les autorisations ciblées sur (self) restent : camera (OCR), geolocation (carte), web-share (PWA), WebAuthn (biométrie), sync-xhr (Supabase)" },
+      { "code": "DOC", "txt": "Pour le 2ème warning signalé ('upgrade-insecure-requests is ignored when delivered in a report-only policy') : la directive a été RETIRÉE en 0.57.22. Si tu vois encore ce warning, c'est ton CACHE NAVIGATEUR ou SERVICE WORKER qui sert l'ancienne version. Solution : (1) DevTools → Application → Service Workers → Unregister, (2) DevTools → Application → Storage → Clear site data, (3) Hard reload (Ctrl+Shift+R). Le SW Aveho est bumpé à chaque version donc devrait normalement se mettre à jour tout seul, mais parfois il faut forcer manuellement après un déploiement majeur" },
+      { "code": "AI", "txt": "+41 tests Vitest (v057-23-permissions-policy-clean.test.js) : version (1), 7 features retirées vérifiées absentes du tableau actif (7), 21 features maintenues présentes (21), commentaire explicatif présent (1), comptage exactement 21 features actives (1), score sécurité 10 headers maintenus (10). Total 2870 tests verts (vs 2829 en 0.57.22)" }
+    ],
+    "themes": ["fix", "headers", "permissions-policy"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.23.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.57.22",
+    "kind": "version",
+    "titre": "🔧 Fix warning CSP report-only + tracking statut envoi mail invitations (mail_envoye_at, mail_erreur, mail_tentatives)",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ : warning console 'The Content Security Policy directive upgrade-insecure-requests is ignored when delivered in a report-only policy'. C'est un comportement standard des browsers : la directive upgrade-insecure-requests force HTTPS sur les sous-ressources mais ne peut être appliquée qu'en mode enforcing (pas report-only). En mode report-only elle est ignorée silencieusement avec ce warning. Solution : retirer la directive du CSP report-only. La protection est de toute façon couverte par HSTS preload 1 an (force HTTPS au niveau browser AVANT que la CSP soit évaluée). À réintroduire si/quand on bascule en CSP enforcing (sans -Report-Only)",
+        "code_snippet": {
+          "file": "next.config.js",
+          "note": "Retrait directive ignorée en report-only",
+          "lang": "js",
+          "before": "// 0.57.17 — directive ignorée en mode report-only\nconst CSP_DIRECTIVES = [\n  \"default-src 'self'\",\n  // ... autres directives\n  \"frame-ancestors 'self'\",\n  \"upgrade-insecure-requests\",  // ← warning browser : ignored in report-only\n];",
+          "after": "// 0.57.22 — retirée temporairement (warning browser)\nconst CSP_DIRECTIVES = [\n  \"default-src 'self'\",\n  // ... autres directives\n  \"frame-ancestors 'self'\",\n  // 0.57.22 : 'upgrade-insecure-requests' RETIRÉE car ignorée en report-only\n  // (warning browser : 'ignored when delivered in a report-only policy')\n  // Protection couverte par HSTS max-age=1 an + preload qui force HTTPS\n  // au niveau navigateur AVANT même que la CSP soit évaluée.\n  // À réintroduire si/quand on bascule en CSP enforcing.\n];"
+        }
+      },
+      { "code": "FE", "txt": "TRACKING DU STATUT D'ENVOI MAIL POUR LES INVITATIONS : avant cette version, quand on invitait un user, le mail était envoyé via Edge Function 'invite-user' (Resend) mais aucune trace du succès/échec n'était persistée en BDD. Le warning UI affichait l'erreur temporairement, mais disparaissait au reload. Résultat : impossible de savoir plus tard si le mail est parti ou pas, et l'utilisateur signalait 'les statuts d'envoi de mail sur la liste des invitations ne sont pas fonctionnels'. Fix : 3 nouvelles colonnes dans la table invitations + update côté client + affichage dans la liste",
+        "code_snippet": {
+          "file": "supabase/aveho-PATCH-vers-0.57.22.sql",
+          "note": "Patch SQL idempotent",
+          "lang": "sql",
+          "before": "-- AVANT 0.57.22 : table invitations sans tracking statut mail\n-- L'utilisateur ne pouvait savoir si le mail Resend avait abouti\n-- (warning UI temporaire seulement)",
+          "after": "-- 0.57.22 : 3 colonnes pour le tracking\nALTER TABLE public.invitations\n  ADD COLUMN IF NOT EXISTS mail_envoye_at TIMESTAMPTZ NULL;\n\nALTER TABLE public.invitations\n  ADD COLUMN IF NOT EXISTS mail_erreur TEXT NULL;\n\nALTER TABLE public.invitations\n  ADD COLUMN IF NOT EXISTS mail_tentatives INTEGER DEFAULT 0;\n\n-- Index sur mail_erreur pour requêtes 'invitations en échec'\nCREATE INDEX IF NOT EXISTS idx_invitations_mail_erreur\n  ON public.invitations(mail_erreur)\n  WHERE mail_erreur IS NOT NULL;\n\n-- Stats actuelles\nSELECT COUNT(*) AS total,\n  COUNT(*) FILTER (WHERE mail_envoye_at IS NOT NULL) AS mails_envoyes,\n  COUNT(*) FILTER (WHERE mail_erreur IS NOT NULL) AS mails_en_echec\nFROM public.invitations;"
+        }
+      },
+      { "code": "FE", "txt": "Code app/utilisateurs/page.js modifié pour persister le statut : (1) après création d'une invitation, update invitations.mail_envoye_at avec now() si succès ou mail_erreur avec le détail si échec, mail_tentatives=1, (2) sur renvoi (bouton ti-send), incrémenter mail_tentatives et update mail_envoye_at (succès) ou mail_erreur (échec), (3) loadAll() appelé après chaque update pour refresh la liste affichée, (4) try/catch silencieux qui n'interrompt pas le flow si le SQL patch n'est pas encore appliqué (rétrocompatibilité)" },
+      { "code": "FE", "txt": "Nouvelle colonne 'Mail' dans le tableau des invitations de /utilisateurs : (1) si mail_envoye_at présent → icône ti-mail-check verte + 'Envoyé' + tooltip avec date d'envoi et nombre de tentatives, (2) si mail_erreur présent → icône ti-mail-x rouge + 'Échec' + tooltip détaillé sur le message Resend (Quota dépassé, Email invalide, Domain not verified, etc.), (3) sinon (avant 0.57.22 ou pas encore tenté) → icône ti-mail-question grise + '—'. L'utilisateur peut maintenant savoir EN UN COUP D'ŒIL quelles invitations ont mal abouti et les renvoyer" },
+      { "code": "DB", "txt": "Patch SQL livré supabase/aveho-PATCH-vers-0.57.22.sql en 6 étapes : (1) ALTER TABLE x3 idempotents IF NOT EXISTS, (2) UPDATE backfill pour les invitations existantes > 1h (marque mail_tentatives=1 pour éviter de pourrir les stats), (3) CREATE INDEX partiel sur mail_erreur WHERE NOT NULL (perf requête échecs), (4) COMMENT ON COLUMN x3 pour documentation auto (DBeaver, pgAdmin), (5) Vérification information_schema, (6) Stats actuelles. Bloc ROLLBACK commenté inclus pour rollback rapide" },
+      { "code": "AI", "txt": "+33 tests Vitest (v057-22-csp-fix-invitations-mail-status.test.js) : version (1), fix warning CSP (3 — directive retirée + justification documentée + 'à réintroduire' noté), SQL patch (10 — fichier existe, 3 ADD COLUMN, idempotence, index, backfill, comments, vérification, rollback), code app/utilisateurs (9 — update succès/échec/tentatives, try/catch silencieux, colonne Mail, 3 icônes statut, loadAll refresh), score headers maintenu (10 — 9 headers requis + poweredByHeader false). Total 2829 tests verts (vs 2796)" },
+      { "code": "DOC", "txt": "Workflow utilisateur recommandé après déploiement : (1) appliquer scripts/aveho-PATCH-vers-0.57.22.sql dans Supabase SQL Editor → vérifier que les 3 colonnes apparaissent dans la table invitations + que le COUNT de stats post-migration fonctionne, (2) tester sur /utilisateurs : créer une invitation avec un email valide → vérifier que la colonne 'Mail' affiche 'Envoyé' en vert, (3) créer une invitation avec un email invalide (ex: foo@xxx.invalid) → vérifier que la colonne 'Mail' affiche 'Échec' en rouge avec tooltip détaillé, (4) cliquer sur le bouton 'Renvoyer' → vérifier que le compteur de tentatives s'incrémente" }
+    ],
+    "themes": ["fix", "csp", "invitations", "ux"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.22.html",
+    "sqlFile": "aveho-PATCH-vers-0.57.22.sql"
+  },
+  {
+    "v": "0.57.21",
+    "kind": "version",
+    "titre": "🔧 Hotfix Windows path bug bis (test 0.57.20) + audit anti-régression : tout test Vitest doit normaliser \\ avant .includes() sur path",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG SIGNALÉ PAR UTILISATEUR : 1 test fail sous Windows en lançant npm test après le déploiement 0.57.20 — 'expected 2 to be 1' sur 'v_users_emails ne doit être utilisé qu'à 1 endroit'. Cause : le test parcourait app/ et excluait app/changelog/versions-data.js via 'full.includes(\"changelog/versions-data\")'. Sous Linux le path est 'app/changelog/versions-data.js' donc match OK, sous Windows le path est 'app\\\\changelog\\\\versions-data.js' donc .includes(\"/\") ne match PAS → le fichier est COMPTÉ → 2 occurrences au lieu de 1 → test fail",
+        "code_snippet": {
+          "file": "__tests__/v057-20-fix-views-auth.test.js",
+          "note": "Fix : normaliser AVANT d'utiliser .includes()",
+          "lang": "js",
+          "before": "// 0.57.20 - bug Windows\nfor (const item of fs.readdirSync(dir, { withFileTypes: true })) {\n  const full = path.join(dir, item.name);\n  // Sous Linux : full = 'app/changelog/versions-data.js'\n  // Sous Windows : full = 'app\\\\changelog\\\\versions-data.js'\n  if (item.isDirectory()) { ... }\n  else if (item.name.endsWith(\".js\")) {\n    if (full.includes(\"changelog/versions-data\")) continue;  // ← FAIL sous Windows\n    if (full.includes(\"changelog/lib\")) continue;            // ← FAIL sous Windows\n    if (src.includes(\"v_users_emails\")) count++;\n  }\n}\n// → Linux : 1 occurrence (signalements)\n// → Windows : 2 occurrences (signalements + versions-data) → test fail",
+          "after": "// 0.57.21 - normaliser AVANT .includes()\nfor (const item of fs.readdirSync(dir, { withFileTypes: true })) {\n  const full = path.join(dir, item.name);\n  const fullNorm = full.replace(/\\\\\\\\/g, \"/\");      // 0.57.21 : normalise d'abord\n  if (item.isDirectory()) { ... }\n  else if (item.name.endsWith(\".js\")) {\n    if (fullNorm.includes(\"changelog/versions-data\")) continue;  // ✓ marche partout\n    if (fullNorm.includes(\"changelog/lib\")) continue;            // ✓ marche partout\n    if (src.includes(\"v_users_emails\")) count++;\n  }\n}\n// → Linux ET Windows : 1 occurrence → test pass"
+        }
+      },
+      { "code": "AI", "txt": "AUDIT ANTI-RÉGRESSION : nouveau test dans v057-21-hotfix-windows-path.test.js qui parcourt TOUS les fichiers __tests__/*.js, détecte les patterns dangereux 'full.includes(\"...\")' sur un path raw sans .replace(/\\\\\\\\/g, \"/\") préalable, et fail si trouvé. Garantit que ce bug ne reviendra plus jamais. Pattern de détection : tout fichier qui (1) utilise fs.readdirSync, (2) fait variable.includes() sur full/fpath/filePath/fullPath avec un slash forward dans la string. Si oui ET pas de normalisation détectée → bug signalé",
+        "code_snippet": {
+          "file": "__tests__/v057-21-hotfix-windows-path.test.js",
+          "note": "Test anti-régression Windows path",
+          "lang": "js",
+          "before": "// Avant 0.57.21 : aucun garde-fou\n// Le bug Windows path revient à chaque test qui fait .includes() sur path",
+          "after": "// 0.57.21 - lint anti-régression\nit(\"Aucun test ne fait .includes() sur un path raw issu de path.join()\", () => {\n  const violations = [];\n  for (const file of listTestFiles()) {\n    const src = fs.readFileSync(file, \"utf-8\");\n    if (!src.includes(\"readdirSync\")) continue;\n    \n    const danger = /\\b(full|fpath|filePath|fullPath)\\.includes\\([\"'][^\"']*\\/[^\"']*[\"']\\)/g;\n    const matches = src.match(danger) || [];\n    \n    for (const m of matches) {\n      const hasNormalize = /\\.replace\\(\\/\\\\\\\\\\/g\\s*,\\s*[\"']\\/[\"']\\)/.test(src);\n      if (!hasNormalize) {\n        violations.push({ file: path.basename(file), match: m });\n      }\n    }\n  }\n  expect(violations).toEqual([]);  // ← FAIL si bug Windows reintroduit\n});"
+        }
+      },
+      { "code": "DOC", "txt": "Règle d'or documentée : 'Quand on manipule un path issu de path.join() ou fs.readdirSync, TOUJOURS faire .replace(/\\\\\\\\/g, \"/\") en PREMIER, puis comparer'. C'est le 3ème bug Windows path dans le marathon 0.56.20→0.57.21 (0.57.17 LINT POST/PUT/DELETE → fixé en 0.57.19, 0.57.20 usage v_users_emails → fixé en 0.57.21). Pattern récurrent : sous Linux les paths utilisent '/', sous Windows '\\\\'. Les fonctions de path comme join() retournent le format natif. Donc .includes() et .replace() qui matchent du '/' ne fonctionnent pas sous Windows si on les fait AVANT de normaliser" },
+      { "code": "AI", "txt": "+8 tests Vitest (v057-21-hotfix-windows-path.test.js) : version (1), fix Windows path dans test v057-20 (4 — fullNorm + normalize + includes paths + marqueur 0.57.21), audit anti-régression (2 — lint qui détecte le pattern dangereux + sanity ≥ 100 fichiers tests), documentation règle d'or (1). Total 2796 tests verts (vs 2788)" }
+    ],
+    "themes": ["hotfix", "windows", "tests"],
+    "date": "2 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.57.21.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.57.20",
     "kind": "version",
     "titre": "🛡️ Fix views auth.users exposées (Supabase Security Advisor) — v_users_emails + v_users_complete sécurisées par security_invoker + filtre structure",

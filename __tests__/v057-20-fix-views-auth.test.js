@@ -113,12 +113,14 @@ describe("0.57.20 - Usage de v_users_emails dans le code Aveho", () => {
       let count = 0;
       for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, item.name);
+        // 0.57.21 : normalise les \ Windows en / pour les .includes()
+        const fullNorm = full.replace(/\\/g, "/");
         if (item.isDirectory()) {
           if (item.name === "node_modules" || item.name === ".next") continue;
           count += walk(full);
         } else if (item.name.endsWith(".js")) {
-          if (full.includes("changelog/versions-data")) continue;
-          if (full.includes("changelog/lib")) continue;
+          if (fullNorm.includes("changelog/versions-data")) continue;
+          if (fullNorm.includes("changelog/lib")) continue;
           const src = fs.readFileSync(full, "utf-8");
           if (src.includes("v_users_emails")) count++;
         }

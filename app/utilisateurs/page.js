@@ -343,14 +343,38 @@ export default function Utilisateurs() {
             if (json.error) detail = json.error;
           }
         } catch {}
+        // 0.57.22 : persister l'échec dans la BDD
+        try {
+          await supabase.from("invitations").update({
+            mail_erreur: detail,
+            mail_tentatives: (i.mail_tentatives || 0) + 1,
+          }).eq("id", i.id);
+        } catch {}
         alert(`Échec : ${detail}`);
+        await loadAll();
         return;
       }
       if (data && data.ok === false) {
+        try {
+          await supabase.from("invitations").update({
+            mail_erreur: data.error || "raison inconnue",
+            mail_tentatives: (i.mail_tentatives || 0) + 1,
+          }).eq("id", i.id);
+        } catch {}
         alert(`Échec : ${data.error || "raison inconnue"}`);
+        await loadAll();
         return;
       }
+      // Succès : marquer le mail envoyé
+      try {
+        await supabase.from("invitations").update({
+          mail_envoye_at: new Date().toISOString(),
+          mail_erreur: null,
+          mail_tentatives: (i.mail_tentatives || 0) + 1,
+        }).eq("id", i.id);
+      } catch {}
       alert("Invitation renvoyée.");
+      await loadAll();
     } catch (e) {
       alert("Échec : la fonction d'envoi d'email n'est pas configurée.\n" + (e?.message || ""));
     }
@@ -466,6 +490,22 @@ export default function Utilisateurs() {
     }
 
     // 4) trace audit + notif
+    // 0.57.22 : persister le statut d'envoi mail dans la table invitations
+    // (avant : le warning UI était temporaire, disparaissait au reload)
+    try {
+      await supabase.from("invitations")
+        .update({
+          mail_envoye_at: mailWarning ? null : new Date().toISOString(),
+          mail_erreur: mailWarning || null,
+          mail_tentatives: 1,
+        })
+        .eq("token", invData.token);
+    } catch (e) {
+      // Si les colonnes n'existent pas encore (SQL patch 0.57.22 pas appliqué),
+      // on ignore silencieusement — le code continue de marcher comme avant
+      logger.warn("[invitations] update statut mail échoué (SQL patch 0.57.22 non appliqué ?)", e);
+    }
+
     await logEvent(supabase, auth, {
       action: "inviter", entite: "invitation",
       details: { email: inviteForm.email, nom: nom_affiche_fallback },
@@ -738,13 +778,32 @@ export default function Utilisateurs() {
                   if (visibles.length === 0) return <StateMsg>Aucune invitation {filtreInvit === "archivees" ? "archivée" : filtreInvit === "non-archivees" ? "en cours" : ""}.</StateMsg>;
                   return (
                   <div className="panel-table"><table>
-                    <thead><tr><th>Email</th><th>Nom</th><th>Rôle</th><th>Date</th><th>Statut</th><th></th></tr></thead>
+                    <thead><tr><th>Email</th><th>Nom</th><th>Rôle</th><th>Date</th><th>Statut</th><th>Mail</th><th></th></tr></thead>
                     <tbody>
                       {visibles.map((i) => (
                         <tr key={i.id} style={i.archive ? { opacity:.55 } : null}>
                           <td>{i.email}</td><td>{i.nom_affiche || "—"}</td><td>{i.roles?.nom || "—"}</td><td>{fmtDate(i.created_at)}</td>
                           <td>
                             <span className={`statut ${i.statut === "Acceptée" ? "s-validee" : i.statut === "Expirée" ? "s-refusee" : "s-attente"}`}>{i.statut || "En attente"}</span>
+                          </td>
+                          <td>
+                            {/* 0.57.22 : affichage du statut d'envoi mail */}
+                            {i.mail_envoye_at ? (
+                              <span title={`Mail envoyé le ${fmtDate(i.mail_envoye_at)}${i.mail_tentatives > 1 ? ` (${i.mail_tentatives} tentatives)` : ""}`}
+                                style={{ color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
+                                <i className="ti ti-mail-check" /> Envoyé
+                              </span>
+                            ) : i.mail_erreur ? (
+                              <span title={`Échec : ${i.mail_erreur}\nTentatives : ${i.mail_tentatives || 1}`}
+                                style={{ color: "#c0392b", fontSize: 12, fontWeight: 600, cursor: "help" }}>
+                                <i className="ti ti-mail-x" /> Échec
+                              </span>
+                            ) : (
+                              <span title="Statut inconnu (avant 0.57.22) ou pas encore tenté"
+                                style={{ color: "#8a98a8", fontSize: 12 }}>
+                                <i className="ti ti-mail-question" /> —
+                              </span>
+                            )}
                           </td>
                           <td style={{ whiteSpace:"nowrap", textAlign:"right" }}>
                             {i.statut !== "Acceptée" && !i.archive && (
