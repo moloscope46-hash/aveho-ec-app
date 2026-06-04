@@ -1,0 +1,248 @@
+/* =============================================================
+ *  Design Tokens premium — Aveho EC 0.58.0
+ *
+ *  Système de design étendu : ombres, gradients, transitions,
+ *  radius, spacing, motion. Tout sous forme de variables CSS
+ *  pour cohérence et facilité d'évolution.
+ *
+ *  Inspiré de Linear / Vercel / Stripe pour le look premium.
+ * ============================================================= */
+
+:root {
+  /* === COULEURS DE MARQUE === */
+  --av-navy: #142131;
+  --av-navy-2: #1d2d42;
+  --av-navy-3: #243044;
+  --av-teal: #7CC8C8;
+  --av-teal-dk: #5db5b5;
+  --av-teal-deep: #2a5a5a;
+  --av-terra: #C9867F;
+  --av-terra-dk: #b06d65;
+  --av-blue: #185FA5;
+  --av-blue-light: #4a8dd4;
+  --av-amber: #EF9F27;
+  --av-green: #5aa05a;
+  --av-red: #c0392b;
+  --av-violet: #7a6fb0;
+
+  /* === GRAYS === */
+  --av-g0: #ffffff;
+  --av-g50: #f8fafc;
+  --av-g100: #f4f7fa;
+  --av-g200: #e3e9ee;
+  --av-g300: #d3d9e0;
+  --av-g400: #b4bdc7;
+  --av-g500: #8a98a8;
+  --av-g600: #6c7a89;
+  --av-g700: #4a5868;
+  --av-g800: #2a3a48;
+  --av-g900: #142131;
+
+  /* === GRADIENTS PREMIUM === */
+  --av-grad-navy: linear-gradient(135deg, #142131 0%, #243044 100%);
+  --av-grad-teal: linear-gradient(135deg, #7CC8C8 0%, #5db5b5 50%, #2a5a5a 100%);
+  --av-grad-terra: linear-gradient(135deg, #C9867F 0%, #b06d65 100%);
+  --av-grad-blue: linear-gradient(135deg, #185FA5 0%, #4a8dd4 100%);
+  --av-grad-hero: linear-gradient(135deg, #142131 0%, #1d2d42 30%, #2a5a5a 70%, #7CC8C8 130%);
+  --av-grad-success: linear-gradient(135deg, #5aa05a 0%, #7CC8C8 100%);
+  --av-grad-warning: linear-gradient(135deg, #EF9F27 0%, #C9867F 100%);
+  --av-grad-danger: linear-gradient(135deg, #c0392b 0%, #C9867F 100%);
+  --av-grad-violet: linear-gradient(135deg, #7a6fb0 0%, #5db5b5 100%);
+
+  /* Mesh gradients (effet WOW background) */
+  --av-mesh-navy: radial-gradient(at 27% 37%, hsla(195, 35%, 25%, 0.7) 0px, transparent 50%),
+                  radial-gradient(at 97% 21%, hsla(195, 35%, 35%, 0.5) 0px, transparent 50%),
+                  radial-gradient(at 52% 99%, hsla(190, 95%, 80%, 0.15) 0px, transparent 50%),
+                  radial-gradient(at 10% 29%, hsla(220, 40%, 20%, 0.7) 0px, transparent 50%),
+                  radial-gradient(at 97% 96%, hsla(195, 45%, 40%, 0.3) 0px, transparent 50%);
+
+  /* === OMBRES PREMIUM (multi-layer, doux et profonds) === */
+  --av-shadow-xs: 0 1px 2px rgba(20, 33, 49, 0.04), 0 1px 1px rgba(20, 33, 49, 0.06);
+  --av-shadow-sm: 0 1px 3px rgba(20, 33, 49, 0.06), 0 2px 4px rgba(20, 33, 49, 0.04);
+  --av-shadow-md: 0 4px 6px rgba(20, 33, 49, 0.05), 0 8px 14px rgba(20, 33, 49, 0.08);
+  --av-shadow-lg: 0 10px 15px rgba(20, 33, 49, 0.08), 0 20px 35px rgba(20, 33, 49, 0.10);
+  --av-shadow-xl: 0 20px 25px rgba(20, 33, 49, 0.10), 0 35px 60px rgba(20, 33, 49, 0.15);
+  --av-shadow-2xl: 0 25px 50px rgba(20, 33, 49, 0.20), 0 50px 100px rgba(20, 33, 49, 0.10);
+
+  /* Ombres colorées (pour cards thématiques) */
+  --av-shadow-teal: 0 8px 20px rgba(124, 200, 200, 0.25), 0 4px 8px rgba(124, 200, 200, 0.15);
+  --av-shadow-blue: 0 8px 20px rgba(24, 95, 165, 0.25), 0 4px 8px rgba(24, 95, 165, 0.15);
+  --av-shadow-terra: 0 8px 20px rgba(201, 134, 127, 0.30), 0 4px 8px rgba(201, 134, 127, 0.20);
+  --av-shadow-amber: 0 8px 20px rgba(239, 159, 39, 0.25), 0 4px 8px rgba(239, 159, 39, 0.15);
+
+  /* Glow (effet halo doux pour hover) */
+  --av-glow-teal: 0 0 0 4px rgba(124, 200, 200, 0.15), 0 0 20px rgba(124, 200, 200, 0.25);
+  --av-glow-blue: 0 0 0 4px rgba(24, 95, 165, 0.15), 0 0 20px rgba(24, 95, 165, 0.25);
+
+  /* === RADIUS === */
+  --av-r-sm: 6px;
+  --av-r-md: 10px;
+  --av-r-lg: 14px;
+  --av-r-xl: 18px;
+  --av-r-2xl: 24px;
+  --av-r-full: 9999px;
+
+  /* === TRANSITIONS (cubic-bezier premium) === */
+  --av-ease-out: cubic-bezier(0.16, 1, 0.3, 1);          /* sortie douce — Linear feel */
+  --av-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);       /* in-out smooth */
+  --av-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);    /* effet rebond léger */
+  --av-ease-decel: cubic-bezier(0, 0, 0.2, 1);            /* Material decelerate */
+
+  --av-t-fast: 150ms;
+  --av-t-normal: 250ms;
+  --av-t-slow: 400ms;
+
+  /* === SPACING (grille 4px) === */
+  --av-s-1: 4px;
+  --av-s-2: 8px;
+  --av-s-3: 12px;
+  --av-s-4: 16px;
+  --av-s-5: 20px;
+  --av-s-6: 24px;
+  --av-s-8: 32px;
+  --av-s-10: 40px;
+  --av-s-12: 48px;
+  --av-s-16: 64px;
+}
+
+/* =============================================================
+ *  ANIMATIONS RÉUTILISABLES
+ * ============================================================= */
+
+@keyframes av-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes av-fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes av-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes av-slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes av-shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+@keyframes av-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes av-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(124, 200, 200, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(124, 200, 200, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(124, 200, 200, 0); }
+}
+
+@keyframes av-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes av-bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes av-count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes av-progress {
+  from { width: 0; }
+  to { width: var(--av-progress-target, 100%); }
+}
+
+/* Stagger pour entrée en cascade */
+.av-stagger > * {
+  opacity: 0;
+  animation: av-fade-in-up 0.5s var(--av-ease-out) forwards;
+}
+.av-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.av-stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.av-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.av-stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.av-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.av-stagger > *:nth-child(6) { animation-delay: 0.30s; }
+.av-stagger > *:nth-child(7) { animation-delay: 0.35s; }
+.av-stagger > *:nth-child(8) { animation-delay: 0.40s; }
+
+/* =============================================================
+ *  CLASSES UTILITAIRES
+ * ============================================================= */
+
+/* Glassmorphism (transparence + flou) */
+.av-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.av-glass-dark {
+  background: rgba(20, 33, 49, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Card premium (la base de tous nos cards) */
+.av-card {
+  background: var(--av-g0);
+  border: 1px solid var(--av-g200);
+  border-radius: var(--av-r-lg);
+  box-shadow: var(--av-shadow-sm);
+  transition: transform var(--av-t-normal) var(--av-ease-out),
+              box-shadow var(--av-t-normal) var(--av-ease-out),
+              border-color var(--av-t-fast) var(--av-ease-out);
+}
+
+.av-card-interactive {
+  cursor: pointer;
+}
+
+.av-card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--av-shadow-lg);
+  border-color: var(--av-teal);
+}
+
+.av-card-interactive:active {
+  transform: translateY(-1px);
+  transition-duration: 80ms;
+}
+
+/* Text utilities */
+.av-text-gradient {
+  background: var(--av-grad-teal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Focus ring (a11y) */
+.av-focus:focus-visible {
+  outline: none;
+  box-shadow: var(--av-glow-teal);
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .av-stagger > * { animation: none; opacity: 1; }
+}

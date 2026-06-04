@@ -9,7 +9,7 @@ import path from "path";
 describe("0.57.2 - Refacto changelog/page.js : extractions", () => {
   it("Version 0.57.2+", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
-    expect(pkg.version).toMatch(/^0\.57\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.\d+\.\d+-alpha$/);
   });
 
   it("app/changelog/lib/helpers.js existe", () => {

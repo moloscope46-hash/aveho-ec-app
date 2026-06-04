@@ -11,7 +11,7 @@ const tabsDir = "app/patient/[id]/edit/tabs";
 describe("0.57.1 - Refacto patient/[id]/edit : tabs extraits", () => {
   it("Version 0.57.1+", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
-    expect(pkg.version).toMatch(/^0\.57\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.\d+\.\d+-alpha$/);
   });
 
   it("Dossier tabs/ existe", () => {

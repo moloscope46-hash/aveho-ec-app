@@ -11,9 +11,9 @@ import path from "path";
 describe("0.57.11 - Version + bump", () => {
   it("Version 0.57.11+", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
-    expect(pkg.version).toMatch(/^0\.57\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.\d+\.\d+-alpha$/);
     const patch = parseInt(pkg.version.split(".")[2].replace("-alpha", ""), 10);
-    expect(patch).toBeGreaterThanOrEqual(11);
+    const [major,minor,p2]=pkg.version.split(".");if(parseInt(minor)===57){expect(patch).toBeGreaterThanOrEqual(11);}else{expect(parseInt(minor)).toBeGreaterThan(57);}
   });
 });
 

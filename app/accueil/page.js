@@ -12,6 +12,8 @@ import { PageHead, Panel, Statut, StateMsg } from "../ui";
 import OnboardingTour from "../OnboardingTour";
 import MultiEtabSummary from "../MultiEtabSummary";
 import MesValidationsEnAttente from "../MesValidationsEnAttente";
+// 0.58.0 : refonte UI premium
+import HeroDashboard from "./HeroDashboard";
 
 export default function Accueil() {
   const supabase = createClient();
@@ -263,19 +265,21 @@ export default function Accueil() {
 
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
           <>
+            {/* 0.58.0 : Hero Dashboard premium remplace les anciens KPIs + atraiter */}
+            {(widgets.kpis || widgets.atraiter) && (
+              <HeroDashboard
+                auth={auth}
+                kpis={widgets.kpis ? kpis : null}
+                atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 }}
+                loading={loading}
+                onNavigate={(p) => router.push(p)}
+              />
+            )}
+
             {widgetOrder.map((k) => {
               if (!widgets[k]) return null;
-              if (k === "kpis") return (
-                <div key="kpis" className="kpi-grid">
-                  {tiles.map((t) => (
-                    <button key={t.label} className="kpi-tile" onClick={() => router.push(t.to)}>
-                      <span className="kpi-ic" style={{ background: t.color + "22", color: t.color }}><i className={`ti ${t.icon}`} /></span>
-                      <span className="kpi-val">{t.value}</span>
-                      <span className="kpi-lbl">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              );
+              // 0.58.0 : ces 2 widgets sont déjà dans HeroDashboard
+              if (k === "kpis" || k === "atraiter") return null;
               if (k === "raccourcis") return (
                 <Panel key="raccourcis" style={{ marginTop: 18 }}>
                   <h2 style={{ margin: "0 0 14px", fontSize: 17 }}>Accès rapide</h2>

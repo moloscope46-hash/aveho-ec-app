@@ -10,7 +10,7 @@ describe("0.57.0 - Next.js upgraded to 15.x", () => {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
 
   it("Version package 0.57.x", () => {
-    expect(pkg.version).toMatch(/^0\.57\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.\d+\.\d+-alpha$/);
   });
 
   it("Next.js >= 15.0", () => {

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.0 — REFONTE UI/UX PREMIUM</title>
+<style>
+:root{
+  --navy:#142131;--teal:#7CC8C8;--tealdk:#2a5a5a;--terra:#C9867F;
+  --blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--red:#c0392b;--violet:#7a6fb0;
+  --g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',Quicksand,Helvetica,Arial,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:36px 28px 60px}
+
+/* HERO COVER */
+header.cover{
+  position:relative;
+  background:linear-gradient(135deg,#142131 0%,#1d2d42 30%,#2a5a5a 70%,#7CC8C8 130%);
+  color:#fff;
+  border-radius:24px;
+  padding:48px 40px;
+  margin-bottom:36px;
+  box-shadow:0 30px 60px rgba(20,33,49,.35);
+  overflow:hidden;
+}
+header.cover::before{
+  content:"";position:absolute;
+  top:-100px;right:-100px;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(124,200,200,0.3) 0%,transparent 70%);
+  border-radius:50%;
+  pointer-events:none;
+}
+header.cover::after{
+  content:"";position:absolute;
+  bottom:-80px;left:200px;
+  width:300px;height:300px;
+  background:radial-gradient(circle,rgba(201,134,127,0.2) 0%,transparent 70%);
+  border-radius:50%;
+  pointer-events:none;
+}
+header.cover > *{position:relative;z-index:1}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:3px;
+  color:#bfe6e6;font-weight:700;
+  background:rgba(124,200,200,.15);
+  border:1px solid rgba(124,200,200,.3);
+  padding:6px 14px;border-radius:20px;
+  margin-bottom:18px;
+}
+.eyebrow .dot{
+  width:6px;height:6px;border-radius:50%;background:#7CC8C8;
+  animation:pulse 2s ease-out infinite;
+}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}
+  70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}
+  100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}
+}
+
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:var(--teal)}
+
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{
+  background:rgba(255,255,255,.15);color:#fff;
+  border:1px solid rgba(255,255,255,.3);
+  padding:3px 10px;border-radius:6px;
+  font-family:'Consolas',monospace;font-size:11.5px;
+}
+
+/* SECTIONS */
+h2{
+  font-size:22px;color:var(--navy);
+  margin:40px 0 16px;
+  letter-spacing:-.01em;
+  display:flex;align-items:center;gap:10px;
+}
+h2::before{
+  content:"";width:4px;height:24px;border-radius:2px;
+  background:linear-gradient(180deg,#7CC8C8,#185FA5);
+}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px;letter-spacing:-.01em}
+
+/* PANELS */
+.panel{
+  background:#fff;border:1px solid var(--g200);
+  border-radius:16px;padding:22px 26px;margin:16px 0;
+  box-shadow:0 2px 6px rgba(20,33,49,.04);
+}
+.panel.hero-panel{
+  background:linear-gradient(135deg,#eef9f7,#f0fafa);
+  border-color:#bfe6e6;border-left:4px solid var(--teal);
+}
+.panel.ok{
+  background:linear-gradient(135deg,#eef9ef,#f4faf4);
+  border-color:#bfe2bf;border-left:4px solid var(--green);
+}
+.panel.tip{
+  background:linear-gradient(135deg,#f3effa,#faf8ff);
+  border-color:#d6c9ec;border-left:4px solid var(--violet);
+}
+
+/* KPI cards (montrer le résultat de la refonte avec les nouvelles cards) */
+.kpi-showcase{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0;
+}
+.kpi-demo{
+  position:relative;background:#fff;border:1px solid var(--g200);
+  border-radius:14px;padding:20px 22px;
+  box-shadow:0 1px 3px rgba(20,33,49,.06);
+  transition:transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s;
+  overflow:hidden;
+}
+.kpi-demo:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(124,200,200,.25);border-color:transparent}
+.kpi-demo::after{
+  content:"";position:absolute;top:-40px;right:-40px;
+  width:140px;height:140px;
+  border-radius:50%;filter:blur(20px);opacity:.1;
+  pointer-events:none;
+}
+.kpi-demo.teal::after{background:linear-gradient(135deg,#7CC8C8,#5db5b5,#2a5a5a)}
+.kpi-demo.terra::after{background:linear-gradient(135deg,#C9867F,#b06d65)}
+.kpi-demo.amber::after{background:linear-gradient(135deg,#EF9F27,#C9867F)}
+.kpi-demo.blue::after{background:linear-gradient(135deg,#185FA5,#4a8dd4)}
+.kpi-demo .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative}
+.kpi-demo .ic{
+  width:42px;height:42px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:20px;
+  box-shadow:0 4px 12px rgba(124,200,200,.4);
+}
+.kpi-demo.teal .ic{background:linear-gradient(135deg,#7CC8C8,#5db5b5,#2a5a5a);box-shadow:0 4px 12px rgba(124,200,200,.4)}
+.kpi-demo.terra .ic{background:linear-gradient(135deg,#C9867F,#b06d65);box-shadow:0 4px 12px rgba(201,134,127,.4)}
+.kpi-demo.amber .ic{background:linear-gradient(135deg,#EF9F27,#C9867F);box-shadow:0 4px 12px rgba(239,159,39,.4)}
+.kpi-demo.blue .ic{background:linear-gradient(135deg,#185FA5,#4a8dd4);box-shadow:0 4px 12px rgba(24,95,165,.4)}
+.kpi-demo .trend{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:4px 9px;border-radius:99px;
+  font-size:11px;font-weight:700;
+  background:rgba(90,160,90,.12);color:var(--green);
+}
+.kpi-demo .trend.down{background:rgba(192,57,43,.12);color:var(--red)}
+.kpi-demo .val{font-size:30px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1;margin-bottom:6px}
+.kpi-demo .lbl{font-size:12px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi-demo .sparkline{margin-top:14px;height:32px;position:relative}
+.kpi-demo .sparkline svg{width:100%;height:100%;display:block}
+
+/* COMPONENTS GRID showcase */
+.comp-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:20px 0;
+}
+.comp-card{
+  background:#fff;border:1px solid var(--g200);
+  border-radius:14px;padding:20px;
+  transition:transform .25s, box-shadow .25s;
+}
+.comp-card:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(20,33,49,.1)}
+.comp-card .name{
+  font-size:16px;font-weight:700;color:var(--navy);
+  display:flex;align-items:center;gap:10px;margin-bottom:8px;
+}
+.comp-card .ic-comp{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;
+}
+.comp-card .desc{font-size:13px;color:#6c7a89;line-height:1.5}
+
+/* CODE */
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{
+  background:#142131;color:#e8edf2;
+  padding:16px 18px;border-radius:10px;
+  overflow-x:auto;font-size:12.5px;line-height:1.55;
+  border-left:3px solid var(--teal);
+}
+
+/* KPI TOP */
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}
+.top-kpi.t .top-kpi-val{color:var(--tealdk)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}
+.top-kpi.g .top-kpi-val{color:#2e6f33}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}
+.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}
+.top-kpi.b .top-kpi-val{color:var(--blue)}
+
+ul{padding-left:20px;margin:6px 0}li{margin:5px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+/* HERO HOMEPAGE preview */
+.hero-preview{
+  background:linear-gradient(135deg,#142131 0%,#1d2d42 30%,#2a5a5a 70%,#7CC8C8 130%);
+  border-radius:20px;
+  padding:32px 30px;
+  margin:20px 0;
+  position:relative;
+  overflow:hidden;
+  color:#fff;
+}
+.hero-preview::before{
+  content:"";position:absolute;top:-40px;right:-40px;
+  width:220px;height:220px;
+  background:radial-gradient(circle,rgba(124,200,200,.4),transparent 70%);
+  border-radius:50%;
+}
+.hero-preview > *{position:relative;z-index:1}
+.hero-preview .greet{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.hero-preview .greet .name{color:var(--teal)}
+.hero-preview .sub{font-size:13.5px;color:rgba(255,255,255,.7);margin-top:6px}
+
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>REFONTE UI/UX PREMIUM</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.0 — UI premium<small>Design tokens, 6 nouveaux composants pro, Hero Dashboard, Login premium</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 3 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.0-alpha</code></span>
+    <span><b>Tests :</b> 3307 Vitest (+46)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Composants premium</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">9</div><div class="top-kpi-lbl">Gradients</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">10</div><div class="top-kpi-lbl">Animations</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">+46</div><div class="top-kpi-lbl">Tests Vitest</div></div>
+</div>
+
+<h2>🃏 Le résultat : nouvelles KPI Cards</h2>
+
+<div class="panel hero-panel">
+<p style="margin:0 0 12px;font-size:14px"><b>Avant 0.58.0</b> : des kpi-tile basiques avec icon + valeur + label. <b>Maintenant</b> : KpiCard premium avec gradient blob en arrière-plan, count-up animé, badge de tendance, sparkline intégrée, hover effects sophistiqués.</p>
+</div>
+
+<div class="kpi-showcase">
+  <div class="kpi-demo terra">
+    <div class="head">
+      <div class="ic"><i style="font-style:normal">🔧</i></div>
+      <div class="trend"><span style="font-size:13">↑</span>11%</div>
+    </div>
+    <div class="val">42</div>
+    <div class="lbl">DI à traiter</div>
+    <div class="sparkline"><svg viewBox="0 0 100 32" preserveAspectRatio="none"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#C9867F" stop-opacity="0.3"/><stop offset="100%" stop-color="#C9867F" stop-opacity="0"/></linearGradient></defs><path d="M 0 22 L 14 18 L 28 24 L 42 12 L 56 5 L 70 8 L 84 4 L 100 2" fill="none" stroke="#C9867F" stroke-width="1.8" stroke-linecap="round"/><path d="M 0 22 L 14 18 L 28 24 L 42 12 L 56 5 L 70 8 L 84 4 L 100 2 L 100 32 L 0 32 Z" fill="url(#g1)"/><circle cx="100" cy="2" r="3" fill="#C9867F"/></svg></div>
+  </div>
+  <div class="kpi-demo amber">
+    <div class="head">
+      <div class="ic"><i style="font-style:normal">🛒</i></div>
+      <div class="trend down"><span style="font-size:13">↓</span>5%</div>
+    </div>
+    <div class="val">8</div>
+    <div class="lbl">Achats à valider</div>
+    <div class="sparkline"><svg viewBox="0 0 100 32" preserveAspectRatio="none"><defs><linearGradient id="g2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#EF9F27" stop-opacity="0.3"/><stop offset="100%" stop-color="#EF9F27" stop-opacity="0"/></linearGradient></defs><path d="M 0 8 L 14 12 L 28 6 L 42 14 L 56 18 L 70 22 L 84 19 L 100 24" fill="none" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/><path d="M 0 8 L 14 12 L 28 6 L 42 14 L 56 18 L 70 22 L 84 19 L 100 24 L 100 32 L 0 32 Z" fill="url(#g2)"/><circle cx="100" cy="24" r="3" fill="#EF9F27"/></svg></div>
+  </div>
+  <div class="kpi-demo teal">
+    <div class="head">
+      <div class="ic"><i style="font-style:normal">📦</i></div>
+      <div class="trend"><span style="font-size:13">↑</span>22%</div>
+    </div>
+    <div class="val">127</div>
+    <div class="lbl">Commandes</div>
+    <div class="sparkline"><svg viewBox="0 0 100 32" preserveAspectRatio="none"><defs><linearGradient id="g3" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7CC8C8" stop-opacity="0.3"/><stop offset="100%" stop-color="#7CC8C8" stop-opacity="0"/></linearGradient></defs><path d="M 0 25 L 14 22 L 28 19 L 42 16 L 56 10 L 70 12 L 84 6 L 100 3" fill="none" stroke="#5db5b5" stroke-width="1.8" stroke-linecap="round"/><path d="M 0 25 L 14 22 L 28 19 L 42 16 L 56 10 L 70 12 L 84 6 L 100 3 L 100 32 L 0 32 Z" fill="url(#g3)"/><circle cx="100" cy="3" r="3" fill="#2a5a5a"/></svg></div>
+  </div>
+  <div class="kpi-demo blue">
+    <div class="head">
+      <div class="ic"><i style="font-style:normal">⚙️</i></div>
+      <div class="trend"><span style="font-size:13">↑</span>8%</div>
+    </div>
+    <div class="val">15</div>
+    <div class="lbl">Maintenances</div>
+    <div class="sparkline"><svg viewBox="0 0 100 32" preserveAspectRatio="none"><defs><linearGradient id="g4" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#185FA5" stop-opacity="0.3"/><stop offset="100%" stop-color="#185FA5" stop-opacity="0"/></linearGradient></defs><path d="M 0 20 L 14 16 L 28 18 L 42 12 L 56 14 L 70 10 L 84 8 L 100 6" fill="none" stroke="#185FA5" stroke-width="1.8" stroke-linecap="round"/><path d="M 0 20 L 14 16 L 28 18 L 42 12 L 56 14 L 70 10 L 84 8 L 100 6 L 100 32 L 0 32 Z" fill="url(#g4)"/><circle cx="100" cy="6" r="3" fill="#185FA5"/></svg></div>
+  </div>
+</div>
+<p style="font-size:12px;color:#8a98a8;text-align:center;margin:8px 0 24px">↑ Survole les cards pour voir l'effet hover (translateY + ombre colorée). Dans l'app, le chiffre s'anime de 0 vers la valeur avec easeOutCubic.</p>
+
+<h2>🏠 Hero Dashboard refondu</h2>
+
+<div class="hero-preview">
+  <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(124,200,200,0.18);color:#7CC8C8;border:1px solid rgba(124,200,200,0.3);padding:5px 13px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:14px">
+    <span style="width:6px;height:6px;border-radius:50%;background:#7CC8C8"></span>
+    ESPACE COLLECTIVITÉ
+  </div>
+  <div class="greet">Bonjour, <span class="name">Cédric</span></div>
+  <div class="sub">Tu as <strong style="color:#7CC8C8">5 éléments</strong> à traiter aujourd'hui.</div>
+  <div style="display:flex;gap:8px;margin-top:18px">
+    <button style="padding:9px 17px;background:rgba(255,255,255,.95);color:#142131;border:none;border-radius:10px;font-weight:600;font-size:12.5px;cursor:pointer">📋 Kanban</button>
+    <button style="padding:9px 17px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;font-weight:600;font-size:12.5px;cursor:pointer">📊 Statistiques</button>
+  </div>
+</div>
+
+<div class="panel">
+<p style="margin:0;font-size:13.5px">Le HeroDashboard remplace l'ancien header de l'accueil par une <b>section gradient mesh radial</b> avec greeting personnalisé selon l'heure (Bonjour/Bonsoir), pill animée pulse-ring, comptage intelligent des items à traiter, et 2 quick actions glassmorphism.</p>
+</div>
+
+<h2>🎨 Design Tokens premium</h2>
+
+<div class="comp-grid">
+  <div class="comp-card">
+    <div class="name"><div class="ic-comp" style="background:linear-gradient(135deg,#7CC8C8,#2a5a5a)">🎨</div>Palette + Gradients</div>
+    <div class="desc">9 couleurs de marque + 9 gradients premium (navy, teal, terra, hero, warning, success, danger) + mesh radial gradient pour effet WOW background.</div>
+  </div>
+  <div class="comp-card">
+    <div class="name"><div class="ic-comp" style="background:linear-gradient(135deg,#185FA5,#4a8dd4)">🌑</div>Ombres multi-layer</div>
+    <div class="desc">6 ombres xs→2xl + 4 ombres colorées (teal, blue, terra, amber) + glow effects pour hover sophistiqués. Profondeur Linear/Vercel.</div>
+  </div>
+  <div class="comp-card">
+    <div class="name"><div class="ic-comp" style="background:linear-gradient(135deg,#7a6fb0,#5db5b5)">⚡</div>Transitions + animations</div>
+    <div class="desc">Cubic-bezier custom (ease-out, spring, decel) + 10 keyframes (fade-in-up, shimmer, pulse-ring, scale-in, shine, float-1/2) + classe .av-stagger.</div>
+  </div>
+  <div class="comp-card">
+    <div class="name"><div class="ic-comp" style="background:linear-gradient(135deg,#EF9F27,#C9867F)">🧊</div>Glassmorphism</div>
+    <div class="desc">Utilities .av-glass / .av-glass-dark avec backdrop-filter blur+saturate. A11y : prefers-reduced-motion respecté.</div>
+  </div>
+</div>
+
+<h2>📦 6 composants premium</h2>
+
+<table>
+<tr><th>Composant</th><th>Lignes</th><th>Description</th></tr>
+<tr><td><code>KpiCard</code></td><td>185</td><td>7 variants, count-up easeOutCubic, sparkline intégrée, trend auto, hover effects, 3 tailles, loading shimmer</td></tr>
+<tr><td><code>Sparkline</code></td><td>95</td><td>SVG mini-chart, stroke-dashoffset animé, area fill gradient, point final avec halo pulse</td></tr>
+<tr><td><code>MetricCard</code></td><td>140</td><td>Progress bar avec shimmer + breakdown détaillé, 6 variants colorés</td></tr>
+<tr><td><code>Skeleton</code></td><td>75</td><td>Loader shimmer + variants (circle, card) + helpers (Text, Row, Grid)</td></tr>
+<tr><td><code>EmptyState</code></td><td>120</td><td>Halo pulse autour de l'icône + 2 actions, 6 variants colorés, mode compact</td></tr>
+<tr><td><code>Toast</code></td><td>175</td><td>API moderne (toast.success), 4 types, slide-in, escape XSS, action callback</td></tr>
+</table>
+
+<h2>📝 Comment utiliser les nouveaux composants</h2>
+
+<h3>1. KpiCard</h3>
+<pre>import { KpiCard } from "../components/ui-premium";
+
+&lt;KpiCard
+  label="DI à traiter"
+  value={42}
+  previous={38}        // → calcul trend +11% automatique
+  icon="ti-tools"
+  variant="terra"      // teal | blue | terra | amber | navy | violet | success
+  sparkline={[12,15,8,22,30,28,35,42]}
+  onClick={() => router.push('/interventions')}
+/&gt;</pre>
+
+<h3>2. Toast (notifications)</h3>
+<pre>import { toast } from "../components/ui-premium";
+
+// Helpers shortcuts
+toast.success("Sauvegardé !", "Vos modifications sont enregistrées.");
+toast.error("Erreur réseau", "Impossible de se connecter au serveur.");
+toast.warning("Attention", "Action irréversible.");
+toast.info("Mise à jour disponible");
+
+// Avec action callback
+toast.info("Nouveau message", "De Cédric Mignot", {
+  actionLabel: "Voir",
+  onAction: () => router.push("/messages")
+});</pre>
+
+<h3>3. EmptyState</h3>
+<pre>import { EmptyState } from "../components/ui-premium";
+
+&lt;EmptyState
+  icon="ti-tools"
+  variant="teal"
+  title="Aucune intervention"
+  message="Tu n'as pas encore d'intervention en cours."
+  actionLabel="Créer une intervention"
+  onAction={() => router.push("/interventions/new")}
+  secondaryLabel="Voir l'aide"
+  onSecondary={() => openHelp()}
+/&gt;</pre>
+
+<h3>4. Skeleton (loaders)</h3>
+<pre>import { Skeleton, SkeletonGrid } from "../components/ui-premium";
+
+// Pendant un loading
+{loading ? &lt;SkeletonGrid count={4} cols={4} /&gt; : &lt;KpiCardGrid kpis={data} /&gt;}
+
+// Ligne de texte
+&lt;Skeleton w="60%" h={14} /&gt;
+
+// Avatar
+&lt;Skeleton variant="circle" size={40} /&gt;</pre>
+
+<h2>🔐 Login premium</h2>
+
+<div class="panel">
+<p style="margin:0 0 12px"><b>Avant :</b> background statique simple. <b>Maintenant :</b></p>
+<ul>
+<li><b>Blobs animés</b> (av-float-1/av-float-2) en arrière-plan sur 20-25s — effet WOW immédiat</li>
+<li><b>Effet shine</b> sur le titre accent ("matériel médical") avec background-position animé</li>
+<li><b>Decorative radials</b> dans le panneau gauche (navy gradient + teal accent)</li>
+<li><b>Features list</b> avec hover translateX(4px) + glow autour de l'icône</li>
+<li><b>Input focus</b> avec ring teal (box-shadow 4 layers)</li>
+<li><b>Errors/OK</b> avec border-left coloré + fade-in animation</li>
+</ul>
+</div>
+
+<h2>🔧 Fix tests version-bound</h2>
+<div class="panel ok">
+<p style="margin:0;font-size:13px">Le bump majeur 0.57.x → 0.58.x cassait 37 tests à cause de regex strictes <code>/^0\.57\.\d+/</code>. Script Python qui remplace par <code>/^0\.\d+\.\d+/</code> (version-agnostic) → 100% tests verts retrouvés.</p>
+</div>
+
+<h2>📊 Bilan complet</h2>
+
+<table>
+<tr><th>Métrique</th><th>État</th></tr>
+<tr><td>Design tokens premium (180 lignes CSS)</td><td>✅ <b>NEW 0.58.0</b></td></tr>
+<tr><td>Composants ui-premium</td><td>✅ <b>6 NEW</b></td></tr>
+<tr><td>Hero Dashboard refondu</td><td>✅ <b>NEW 0.58.0</b></td></tr>
+<tr><td>Login premium CSS</td><td>✅ <b>NEW 0.58.0</b></td></tr>
+<tr><td>Animations CSS pures (zéro dépendance)</td><td>✅ 60fps GPU</td></tr>
+<tr><td>Accessibilité (prefers-reduced-motion)</td><td>✅</td></tr>
+<tr><td>Build prod Next.js</td><td>✅ OK</td></tr>
+<tr><td>Routes API + OCR + Storage + Edge Functions + RLS</td><td>✅ Tous sécurisés</td></tr>
+<tr><td>Pages admin AdminGuard + Cleanup logout + Rate-limit</td><td>✅</td></tr>
+<tr><td>security.txt + CSP enrichie + SRI + Audit logs + Honeypot</td><td>✅</td></tr>
+<tr><td><b>LINT anti-régression critiques</b></td><td>✅ <b>22 actifs</b></td></tr>
+<tr><td><b>Tests Vitest</b></td><td>✅ <b>3307</b></td></tr>
+</table>
+
+<h2>Fichiers modifiés</h2>
+<h3>Créés (8)</h3>
+<ul>
+<li><code>app/design-tokens.css</code> (180 lignes)</li>
+<li><code>app/components/ui-premium/KpiCard.js</code> (185 lignes)</li>
+<li><code>app/components/ui-premium/Sparkline.js</code> (95 lignes)</li>
+<li><code>app/components/ui-premium/MetricCard.js</code> (140 lignes)</li>
+<li><code>app/components/ui-premium/Skeleton.js</code> (75 lignes)</li>
+<li><code>app/components/ui-premium/EmptyState.js</code> (120 lignes)</li>
+<li><code>app/components/ui-premium/Toast.js</code> (175 lignes)</li>
+<li><code>app/components/ui-premium/index.js</code> (exports)</li>
+<li><code>app/accueil/HeroDashboard.js</code> (270 lignes)</li>
+<li><code>__tests__/v058-0-refonte-ui-premium.test.js</code> (46 tests)</li>
+</ul>
+
+<h3>Modifiés</h3>
+<ul>
+<li><code>app/globals.css</code> : import design-tokens + login premium CSS (140 lignes)</li>
+<li><code>app/accueil/page.js</code> : intégration HeroDashboard</li>
+<li>37 fichiers <code>__tests__/v057-*.test.js</code> : regex version-agnostic</li>
+<li><code>public/sw.js</code> : VERSION 0.58.0</li>
+<li><code>app/changelog/versions-data.js</code> : entrée 0.58.0</li>
+</ul>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.0 par-dessus
+npm install --legacy-peer-deps
+npm test                              # 3307 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.0 - REFONTE UI PREMIUM (design tokens + 6 components + Hero Dashboard + Login)"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Remplacer toutes les vieilles Toast notifications</b> par le nouveau Toast premium</li>
+<li><b>Refonte Topbar</b> : avatar circulaire avec dégradé, search bar glassmorphism plus visible</li>
+<li><b>Refonte Drawer menu</b> : catégories mieux séparées avec icons gradients</li>
+<li><b>Pages Kanban</b> : cards drag&drop avec ombres animées au hover/drop</li>
+<li><b>Page Statistiques</b> : remplacer KpiRow par grille de KpiCard + Sparkline</li>
+<li><b>Mode sombre</b> : avec les CSS vars, possible en bonus (toggle dark/light)</li>
+<li><b>Migration vers le nouveau Toast</b> : remplacer les anciens .err/.ok par toast.error/toast.success</li>
+</ul>
+</div>
+
+<h2>SW auto-bump — 130ème consécutif</h2>
+<p>0.52.1 → ... → 0.57.39 → <b>0.58.0</b> ✓ (saut mineur pour marquer la refonte UI)</p>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.0 · 3 juin 2026 · 3307 Vitest · Design system + 6 composants premium · 22 LINT actifs</footer>
+</div></body></html>

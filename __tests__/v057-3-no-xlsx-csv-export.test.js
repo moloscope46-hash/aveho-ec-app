@@ -10,9 +10,9 @@ describe("0.57.3 - Version + suppression xlsx", () => {
   const pkg = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "package.json"), "utf-8"));
 
   it("Version 0.57.3+", () => {
-    expect(pkg.version).toMatch(/^0\.57\.\d+-alpha$/);
+    expect(pkg.version).toMatch(/^0\.\d+\.\d+-alpha$/);
     const patch = parseInt(pkg.version.split(".")[2].replace("-alpha", ""), 10);
-    expect(patch).toBeGreaterThanOrEqual(3);
+    const [major,minor,p2]=pkg.version.split(".");if(parseInt(minor)===57){expect(patch).toBeGreaterThanOrEqual(3);}else{expect(parseInt(minor)).toBeGreaterThan(57);}
   });
 
   it("xlsx absent de dependencies", () => {
