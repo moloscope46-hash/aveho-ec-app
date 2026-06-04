@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.58.17";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.58.18";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -155,7 +155,13 @@ async function cacheFirst(req, cacheName) {
       );
     }
     // Alpha 0.52.7 : pas de bruit en console pour les chunks manquants
-    return Response.error();
+    // 0.58.18 : 504 propre au lieu de Response.error() qui fait apparaître
+    // un "FetchEvent ... network error response" dans la console
+    return new Response("", {
+      status: 504,
+      statusText: "Gateway Timeout",
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
 
@@ -211,9 +217,16 @@ async function networkFirst(req, cacheName) {
         { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
       );
     }
-    // 0.58.2 : pour les chunks JS/CSS qui n'ont pas de cache, retourner un opaque error
-    // plutôt qu'un 503 visible dans la console (Next.js gère le retry automatique)
-    return Response.error();
+    // 0.58.18 : ne PLUS renvoyer Response.error() qui apparaît dans la
+    // console comme "FetchEvent for ... network error response". Pour les
+    // chunks JS/CSS non-html, retourner une 504 vraie avec un body vide
+    // qui sera interprétée correctement par Next.js (qui retry tout seul)
+    // sans logguer l'erreur "promise resolved with error response object".
+    return new Response("", {
+      status: 504,
+      statusText: "Gateway Timeout",
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
 

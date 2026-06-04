@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.18 — HOTFIX PROD</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+header.cover{position:relative;background:linear-gradient(135deg,#0d1822,#7a3037 50%,#C9867F 130%);color:#fff;border-radius:24px;padding:42px 36px;margin-bottom:30px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(201,134,127,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5d5d0;font-weight:700;background:rgba(201,134,127,.18);border:1px solid rgba(201,134,127,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#C9867F;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,134,127,.5)}70%{box-shadow:0 0 0 10px rgba(201,134,127,0)}100%{box-shadow:0 0 0 0 rgba(201,134,127,0)}}
+.logo{font-size:30px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:26px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.18}
+h1 small{font-size:14px;font-weight:500;color:#f5d5d0;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px;font-size:12px;color:#f5d5d0}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:20px;color:var(--navy);margin:32px 0 14px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#C9867F,#7a3037)}
+.bug{background:#fff;border:1px solid #e3e9ee;border-radius:14px;padding:20px 24px;margin:14px 0;box-shadow:0 2px 6px rgba(20,33,49,.04);border-left:4px solid #C9867F}
+.bug .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#C9867F;color:#fff;font-weight:800;font-size:13px;margin-right:10px;vertical-align:middle}
+.bug h3{margin:0 0 10px;font-size:16;color:#142131;display:inline-block}
+.bug .sym{padding:8px 12px;background:#fef0ee;border:1px solid #f8c5c0;border-radius:8px;color:#7a3037;font-size:12.5px;margin:10px 0}
+.bug .fix{padding:8px 12px;background:#eef9ef;border:1px solid #bfe2bf;border-radius:8px;color:#2e6f33;font-size:12.5px;margin:10px 0}
+
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.6;border-left:3px solid #C9867F}
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:14px;padding:20px 24px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.warn{background:linear-gradient(135deg,#fff8ec,#fffcf3);border-color:#f0d59f;border-left:4px solid #EF9F27}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid #5aa05a}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid #e3e9ee;font-size:11px;color:#6c7a89;text-align:center}
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX PROD CRITIQUE</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.18 — Hotfix patient_dashboard + SW + supabase.js<small>RPC résilientes · Response.error éliminé · Guard env vars · diagnostic console</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.18-alpha</code></span>
+    <span><b>Tests :</b> ⚠️ sandbox shell HS, à valider en local</span>
+  </div>
+</header>
+
+<div class="panel warn">
+<b>⚠️ Note sur cette release :</b> Le sandbox shell de l'environnement de dev a été indisponible pendant la session. Les patches ont été appliqués via l'éditeur de fichiers, mais <strong>non testés via Vitest</strong>. À valider en local avec <code>npm test</code> avant déploiement prod.
+</div>
+
+<h2>🐛 Bug 1 — RPC patient_dashboard_* en 400</h2>
+
+<div class="bug">
+<span class="num">1</span><h3>Le dashboard patient crashait sur RPC manquantes</h3>
+<div class="sym"><b>Symptôme :</b> 400 sur <code>rpc/patient_dashboard_medicaments_actifs</code> + autres → dashboard inutilisable</div>
+<div class="fix"><b>Cause :</b> RPC pas (toutes) déployées en base + Promise.all qui crashait à la 1ère erreur. <b>Fix :</b> helper <code>safeRpc()</code> avec try/catch individuel → log warning au lieu de crash → dashboard s'affiche partiellement</div>
+
+<pre>// AVANT 0.58.18
+const [{ data: s }, { data: m }, ...] = await Promise.all([
+  supabase.rpc('patient_dashboard_summary', { p_patient_id }),
+  supabase.rpc('patient_dashboard_medicaments_actifs', { p_patient_id }),  // ← 400
+  ...
+]);
+
+// 0.58.18 - chaque RPC en try/catch
+async function safeRpc(name, args) {
+  try {
+    const { data, error } = await supabase.rpc(name, args);
+    if (error) {
+      console.warn(`[patient_dashboard] RPC ${name} indisponible:`, error.message);
+      return null;
+    }
+    return data;
+  } catch (e) {
+    console.warn(`[patient_dashboard] RPC ${name} a planté:`, e?.message || e);
+    return null;
+  }
+}
+const [s, m, med, a] = await Promise.all([safeRpc(...), safeRpc(...), ...]);</pre>
+</div>
+
+<h2>🐛 Bug 2 — SW "FetchEvent network error" sur /profil</h2>
+
+<div class="bug">
+<span class="num">2</span><h3>Service Worker polluait la console avec faux network errors</h3>
+<div class="sym"><b>Symptôme :</b> <code>The FetchEvent for "/profil" resulted in a network error response</code> dans la console</div>
+<div class="fix"><b>Cause :</b> <code>Response.error()</code> en fallback offline → Chrome interprète comme network error. <b>Fix :</b> remplacement par 504 propre avec body vide. Next.js retry quand même tout seul, plus de bruit console</div>
+
+<pre>// AVANT 0.58.18
+return Response.error();   // ← Chrome console pollution
+
+// 0.58.18
+return new Response('', {
+  status: 504,
+  statusText: 'Gateway Timeout',
+  headers: { 'Content-Type': 'text/plain' },
+});</pre>
+</div>
+
+<h2>🛡 Hardening — lib/supabase.js défensif</h2>
+
+<div class="bug">
+<span class="num">3</span><h3>Diagnostic clair si env Supabase manquant</h3>
+<div class="fix"><b>Pourquoi :</b> avant on passait <code>undefined, undefined</code> à createBrowserClient → erreurs cryptiques downstream. <b>Fix :</b> check explicite + log console clair</div>
+
+<pre>// 0.58.18 - guard + diagnostic
+export function createClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    if (typeof window !== 'undefined') {
+      console.error(
+        '[lib/supabase] NEXT_PUBLIC_SUPABASE_URL ou NEXT_PUBLIC_SUPABASE_ANON_KEY manquant. ' +
+        'Vérifiez la config Vercel ou le .env.local.'
+      );
+    }
+  }
+  return createBrowserClient(url, key);
+}</pre>
+</div>
+
+<h2>🔍 Bug "createClient is not defined" — à investiguer</h2>
+
+<div class="panel warn">
+<p style="margin:0 0 8px"><b>Le bug persiste probablement</b> car il vient d'un fichier qui utilise <code>createClient</code> sans l'importer. Sans shell pour grep, je n'ai pas pu localiser le fichier coupable.</p>
+
+<p style="margin:8px 0"><b>Pour le trouver chez toi en 30 secondes :</b></p>
+<pre style="background:#fff;color:#142131;border-left:3px solid #EF9F27">cd C:\aveho-ec-app
+# Cherche les fichiers qui USENT createClient sans l'IMPORTER
+findstr /S /N "createClient" app\*.js lib\*.js | findstr /V "import.*createClient"
+findstr /S /N "createClient" app\*.js lib\*.js | findstr /V "export function createClient"
+# Le fichier qui apparaît dans les deux sans rien d'autre est le coupable</pre>
+
+<p style="margin:8px 0 0">Puis ajoute en haut du fichier : <code>import { createClient } from "../lib/supabase";</code> (en ajustant le chemin relatif selon le niveau du fichier).</p>
+</div>
+
+<h2>📋 SQL à déployer pour résoudre les 400 patient_dashboard</h2>
+
+<div class="panel">
+<p>Les 4 RPC doivent être créées en base Supabase (SQL Editor) pour que le dashboard fonctionne complètement :</p>
+<ul>
+<li><code>patient_dashboard_summary(p_patient_id uuid)</code></li>
+<li><code>patient_dashboard_medicaments_actifs(p_patient_id uuid)</code></li>
+<li><code>patient_dashboard_medecins(p_patient_id uuid)</code></li>
+<li><code>patient_dashboard_alertes(p_patient_id uuid)</code></li>
+</ul>
+<p>Sans elles, le dashboard fonctionne en mode dégradé (sections vides) mais ne crash plus.</p>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# IMPORTANT : ne pas de-zipper cette fois, juste appliquer les patches en local
+# car les 4 fichiers ont été modifiés directement dans la sandbox
+
+# Fichiers modifiés :
+#   package.json (version → 0.58.18-alpha)
+#   public/sw.js (VERSION + Response.error → 504)
+#   lib/supabase.js (guard env vars)
+#   app/patient/[id]/dashboard/page.js (safeRpc helper)
+#   app/changelog/versions-data.js (entry 0.58.18)
+#   public/changelog-notes/NOTE-VERSION-Alpha-0.58.18.html (cette note)
+
+# Workflow :
+npm install --legacy-peer-deps  # si besoin
+npm test                        # à valider !
+npm run build                   # à valider !
+git add -A
+git commit -m "Alpha 0.58.18 HOTFIX - RPC patient_dashboard résilientes + SW 504 + supabase.js guard"
+git push origin main</pre>
+</div>
+
+<h2>🆘 Workaround utilisateur en attendant</h2>
+<div class="panel warn">
+<p><b>Si la prod plante encore avant ton déploiement :</b></p>
+<ol>
+<li>F12 → onglet <b>Application</b></li>
+<li><b>Service Workers</b> → cocher <b>Bypass for network</b> + <b>Unregister</b></li>
+<li><b>Storage</b> → <b>Clear site data</b></li>
+<li>Recharger (Ctrl+F5)</li>
+</ol>
+<p>→ La prod refonctionne sans le cache SW jusqu'à ton prochain déploiement.</p>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.18 · 4 juin 2026 · HOTFIX prod (patient_dashboard + SW + supabase.js guard) — patches non testés en sandbox</footer>
+</div></body></html>

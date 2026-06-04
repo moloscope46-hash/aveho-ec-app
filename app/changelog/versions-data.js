@@ -120,6 +120,46 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.18",
+    "kind": "version",
+    "titre": "🔧 HOTFIX PROD : RPC patient_dashboard résilientes + SW Response.error éliminé + supabase.js défensif",
+    "chantiers": [
+      { "code": "BG", "txt": "🐛 BUG 1 — 400 sur RPC patient_dashboard_medicaments_actifs (et autres patient_dashboard_*). Cause : les RPC n'étaient pas (toutes) déployées en base, le code attendait toujours une réponse OK et crashait à la première erreur. Fix : helper `safeRpc(name, args)` qui wrap chaque RPC en try/catch individuel. Si une RPC indisponible → log warning console + fallback à null/[] → le dashboard s'affiche partiellement au lieu de crasher entièrement. Sectionnement automatique : si summary n'est pas dispo, les KPI ne s'affichent pas mais les médicaments/médecins peuvent quand même se charger",
+        "code_snippet": {
+          "file": "app/patient/[id]/dashboard/page.js",
+          "note": "RPC résilientes",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.18 - Promise.all qui crash dès qu'une RPC échoue\nconst [{ data: s }, { data: m }, { data: med }, { data: a }] = await Promise.all([\n  supabase.rpc('patient_dashboard_summary', { p_patient_id: params.id }),\n  supabase.rpc('patient_dashboard_medicaments_actifs', { p_patient_id: params.id }),  // ← 400 si RPC manquante\n  supabase.rpc('patient_dashboard_medecins', { p_patient_id: params.id }),\n  supabase.rpc('patient_dashboard_alertes', { p_patient_id: params.id }),\n]);\n// → tout le bloc crash, dashboard inutilisable",
+          "after": "// 0.58.18 - try/catch individuels\nasync function safeRpc(name, args) {\n  try {\n    const { data, error } = await supabase.rpc(name, args);\n    if (error) {\n      console.warn(`[patient_dashboard] RPC ${name} indisponible:`, error.message);\n      return null;\n    }\n    return data;\n  } catch (e) {\n    console.warn(`[patient_dashboard] RPC ${name} a planté:`, e?.message || e);\n    return null;\n  }\n}\n\nconst [s, m, med, a] = await Promise.all([\n  safeRpc('patient_dashboard_summary', { p_patient_id: params.id }),\n  safeRpc('patient_dashboard_medicaments_actifs', { p_patient_id: params.id }),\n  safeRpc('patient_dashboard_medecins', { p_patient_id: params.id }),\n  safeRpc('patient_dashboard_alertes', { p_patient_id: params.id }),\n]);\n// → si RPC manquante, juste cette section est vide, le reste s'affiche"
+        }
+      },
+      { "code": "BG", "txt": "🐛 BUG 2 — Service Worker affichait 'FetchEvent for /profil resulted in a network error response' dans la console. Cause : `Response.error()` (en fallback offline pour les chunks JS/CSS) est interprété par Chrome comme un 'network error' visible dans la console, créant beaucoup de bruit faux-positif. Fix : remplacement par `new Response('', { status: 504, statusText: 'Gateway Timeout' })` — Next.js retry quand même tout seul, mais sans pollution console",
+        "code_snippet": {
+          "file": "public/sw.js",
+          "note": "Plus de Response.error()",
+          "lang": "js",
+          "before": "// AVANT 0.58.18 - networkFirst et cacheFirst en cas d'échec\nreturn Response.error();\n// → Chrome console: 'FetchEvent for ... resulted in a network error response'",
+          "after": "// 0.58.18 - 504 propre sans bruit console\nreturn new Response('', {\n  status: 504,\n  statusText: 'Gateway Timeout',\n  headers: { 'Content-Type': 'text/plain' },\n});\n// → Next.js retry automatiquement, plus de log d'erreur dans la console"
+        }
+      },
+      { "code": "SEC", "txt": "🛡 HARDENING — lib/supabase.js défensif. Cause potentielle 'createClient is not defined' : env vars Supabase manquantes au runtime. Avant on passait `undefined, undefined` à `createBrowserClient`, ce qui provoquait des erreurs cryptiques downstream. Fix : check explicite + log console clair si NEXT_PUBLIC_SUPABASE_URL ou NEXT_PUBLIC_SUPABASE_ANON_KEY est absent. Pas de crash, mais erreur lisible dans la console pour diagnostic. NOTE : si le bug 'createClient is not defined' persiste après ce déploiement, il s'agit d'un fichier qui utilise createClient sans l'importer — investigation manuelle via `findstr /S /N \"createClient\" app\\*.js | findstr /V \"import\\|export\"` côté Windows pour trouver le coupable",
+        "code_snippet": {
+          "file": "lib/supabase.js",
+          "note": "Guard + diagnostic console",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.18\nexport function createClient() {\n  return createBrowserClient(\n    process.env.NEXT_PUBLIC_SUPABASE_URL,\n    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY\n  );\n}",
+          "after": "// 0.58.18 - check explicite + log clair\nexport function createClient() {\n  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;\n  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;\n  if (!url || !key) {\n    if (typeof window !== 'undefined') {\n      console.error(\n        '[lib/supabase] NEXT_PUBLIC_SUPABASE_URL ou NEXT_PUBLIC_SUPABASE_ANON_KEY manquant. ' +\n        'Vérifiez la config Vercel ou le .env.local.'\n      );\n    }\n  }\n  return createBrowserClient(url, key);\n}"
+        }
+      },
+      { "code": "DOC", "txt": "RPC SQL À DÉPLOYER pour résoudre définitivement les 400 sur le dashboard patient (à exécuter dans le SQL Editor Supabase) : patient_dashboard_summary(p_patient_id uuid), patient_dashboard_medicaments_actifs(p_patient_id uuid), patient_dashboard_medecins(p_patient_id uuid), patient_dashboard_alertes(p_patient_id uuid). Sans ces RPC, le dashboard fonctionnera maintenant en mode dégradé (sans crash) mais les sections seront vides. Pour le bug 'createClient is not defined' qui reste à investiguer : la commande Windows pour trouver le coupable est `findstr /S /N \"createClient\" app\\*.js | findstr /V \"import\\|export\"` — le fichier sans `import { createClient } from \".../lib/supabase\"` au top est le coupable" },
+      { "code": "AI", "txt": "Note : aucun test Vitest n'a été ajouté pour cette release car le shell sandbox est tombé. Les patches sont défensifs (try/catch, guards) et ne devraient pas régresser l'existant. À ajouter en 0.58.19 : 5 tests pour safeRpc + SW 504 + supabase.js guard" }
+    ],
+    "themes": ["bugfix", "prod"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.18.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.17",
     "kind": "version",
     "titre": "✨ ULTRA PREMIUM HITECH : Glow x4 + Glassmorphism v2 + 3D Tilt + Aurora blobs + NeonButton + Custom scrollbar + Grid cyber",

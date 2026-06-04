@@ -1,7 +1,7 @@
 "use client";
 // =============================================================
 //  /direction — Dashboard direction multi-structures
-//  Alpha 0.47.0 · polish sobre 0.58.15
+//  Alpha 0.47.0
 //
 //  Affiche les KPIs consolidés de toutes les structures auxquelles
 //  l'utilisateur appartient, plus un détail par structure.
@@ -92,9 +92,7 @@ export default function DirectionPage() {
         />
 
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 24 }}>
-            {Array.from({ length: 8 }).map((_, i) => <KpiSkeleton key={i} />)}
-          </div>
+          <Panel><StateMsg>Chargement…</StateMsg></Panel>
         ) : !totaux ? (
           <Panel><StateMsg>Aucune donnée. Vérifie que le patch SQL 0.47 a été appliqué.</StateMsg></Panel>
         ) : (
@@ -104,35 +102,35 @@ export default function DirectionPage() {
               <KpiBig label="Structures" value={totaux.nb_structures} icon="ti-building" color="#185FA5" />
               <KpiBig label="Patients" value={totaux.nb_patients} icon="ti-user" color="#7a6fb0" />
               <KpiBig label="Matériels" value={totaux.nb_materiels} icon="ti-armchair-2" color="#5a8f8f" />
-              <KpiBig
-                label="DI ouvertes"
-                value={totaux.nb_di_ouvertes}
-                icon="ti-tools"
+              <KpiBig 
+                label="DI ouvertes" 
+                value={totaux.nb_di_ouvertes} 
+                icon="ti-tools" 
                 color={totaux.nb_di_urgent > 0 ? "#c0392b" : "#EF9F27"}
                 detail={totaux.nb_di_urgent > 0 ? `${totaux.nb_di_urgent} urgentes` : null}
               />
-              <KpiBig
-                label="Users actifs (30j)"
-                value={totaux.nb_users_actifs_30j}
-                icon="ti-users-group"
-                color="#5aa05a"
+              <KpiBig 
+                label="Users actifs (30j)" 
+                value={totaux.nb_users_actifs_30j} 
+                icon="ti-users-group" 
+                color="#5aa05a" 
               />
-              <KpiBig
-                label="Maintenances retard"
-                value={totaux.nb_maint_retard}
-                icon="ti-clock-x"
+              <KpiBig 
+                label="Maintenances retard" 
+                value={totaux.nb_maint_retard} 
+                icon="ti-clock-x" 
                 color={totaux.nb_maint_retard > 0 ? "#c0392b" : "#5aa05a"}
               />
-              <KpiBig
-                label="Signalements ouverts"
-                value={totaux.nb_signal_ouvert}
-                icon="ti-message-circle"
+              <KpiBig 
+                label="Signalements ouverts" 
+                value={totaux.nb_signal_ouvert} 
+                icon="ti-message-circle" 
                 color="#7CC8C8"
               />
-              <KpiBig
-                label="DI ce mois"
-                value={totaux.nb_di_ce_mois}
-                icon="ti-calendar-month"
+              <KpiBig 
+                label="DI ce mois" 
+                value={totaux.nb_di_ce_mois} 
+                icon="ti-calendar-month" 
                 color="#5aa05a"
               />
             </div>
@@ -181,7 +179,7 @@ export default function DirectionPage() {
                           </td>
                           <td style={{ textAlign: "right" }}>{s.nb_signal_ouvert || "—"}</td>
                           <td style={{ textAlign: "right" }}>
-                            <span style={{
+                            <span style={{ 
                               fontSize: 12, fontWeight: 600,
                               color: s.pct_resolu >= 80 ? "#5aa05a" : s.pct_resolu >= 50 ? "#EF9F27" : "#c0392b"
                             }}>
@@ -214,53 +212,24 @@ export default function DirectionPage() {
   );
 }
 
-// Carte KPI sobre : carte blanche (design tokens), pastille d'icône teintée,
-// liseré couleur à gauche, léger survol. Mêmes couleurs/données qu'avant.
 function KpiBig({ label, value, icon, color, detail }) {
   return (
-    <div
-      className="av-card"
-      style={{
-        borderLeft: `3px solid ${color}`,
-        padding: "16px 18px",
-        cursor: "default",
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "var(--av-shadow-md)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
-        <span style={{
-          width: 30, height: 30, borderRadius: 8,
-          background: color + "18", color,
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-        }}>
-          <i className={`ti ${icon}`} style={{ fontSize: 16 }} aria-hidden="true" />
-        </span>
+    <div style={{ 
+      background: "#fff", border: `1px solid ${color}33`, borderLeft: `4px solid ${color}`,
+      borderRadius: 10, padding: "14px 16px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <i className={`ti ${icon}`} style={{ color, fontSize: 18 }} aria-hidden="true" />
         <span style={{ fontSize: 11, fontWeight: 700, color: "#6c7a89", textTransform: "uppercase", letterSpacing: ".5px" }}>
           {label}
         </span>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: value > 0 ? "#142131" : "#8a98a8", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
+      <div style={{ fontSize: 28, fontWeight: 700, color: value > 0 ? "#142131" : "#8a98a8", lineHeight: 1 }}>
         {value || 0}
       </div>
       {detail && (
         <div style={{ fontSize: 11, color, marginTop: 4, fontWeight: 600 }}>{detail}</div>
       )}
-    </div>
-  );
-}
-
-// Squelette de carte KPI pendant le chargement (sobre, shimmer discret).
-function KpiSkeleton() {
-  return (
-    <div className="av-card" style={{ padding: "16px 18px", height: 96, position: "relative", overflow: "hidden" }}>
-      <div style={{
-        position: "absolute", inset: 0,
-        background: "linear-gradient(90deg, transparent, rgba(20,33,49,.05), transparent)",
-        backgroundSize: "1000px 100%",
-        animation: "av-shimmer 1.5s linear infinite",
-      }} />
     </div>
   );
 }

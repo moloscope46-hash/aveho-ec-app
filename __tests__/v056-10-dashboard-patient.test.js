@@ -157,11 +157,12 @@ describe("0.56.10 - Page /patient/[id]/dashboard", () => {
     expect(fs.existsSync(path.resolve(process.cwd(), "app/patient/[id]/dashboard/page.js"))).toBe(true);
   });
 
-  it("Charge les 4 RPC en parallèle", () => {
-    expect(src).toContain('rpc("patient_dashboard_summary"');
-    expect(src).toContain('rpc("patient_dashboard_medicaments_actifs"');
-    expect(src).toContain('rpc("patient_dashboard_medecins"');
-    expect(src).toContain('rpc("patient_dashboard_alertes"');
+  it("Charge les 4 RPC en parallèle (via safeRpc helper depuis 0.58.18)", () => {
+    // 0.58.18 : safeRpc wrap chaque appel en try/catch — chercher RPC name dans safeRpc OU rpc()
+    expect(src).toMatch(/(rpc\(|safeRpc\()["']patient_dashboard_summary["']/);
+    expect(src).toMatch(/(rpc\(|safeRpc\()["']patient_dashboard_medicaments_actifs["']/);
+    expect(src).toMatch(/(rpc\(|safeRpc\()["']patient_dashboard_medecins["']/);
+    expect(src).toMatch(/(rpc\(|safeRpc\()["']patient_dashboard_alertes["']/);
   });
 
   it("Header patient avec avatar initiales + âge calculé", () => {

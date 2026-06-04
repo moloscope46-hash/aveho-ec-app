@@ -39,11 +39,28 @@ export default function PatientDashboardPage() {
     const { data: p } = await supabase.from("patients").select("*").eq("id", params.id).single();
     setPatient(p);
 
-    const [{ data: s }, { data: m }, { data: med }, { data: a }] = await Promise.all([
-      supabase.rpc("patient_dashboard_summary", { p_patient_id: params.id }),
-      supabase.rpc("patient_dashboard_medicaments_actifs", { p_patient_id: params.id }),
-      supabase.rpc("patient_dashboard_medecins", { p_patient_id: params.id }),
-      supabase.rpc("patient_dashboard_alertes", { p_patient_id: params.id }),
+    // 0.58.18 : appel RPC par RPC en try/catch pour qu'une RPC manquante (400/404)
+    // ne fasse pas crasher tout le dashboard. Les RPC patient_dashboard_* peuvent
+    // ne pas être déployées en base — on log et on tombe en fallback gracieux.
+    async function safeRpc(name, args) {
+      try {
+        const { data, error } = await supabase.rpc(name, args);
+        if (error) {
+          console.warn(`[patient_dashboard] RPC ${name} indisponible:`, error.message);
+          return null;
+        }
+        return data;
+      } catch (e) {
+        console.warn(`[patient_dashboard] RPC ${name} a planté:`, e?.message || e);
+        return null;
+      }
+    }
+
+    const [s, m, med, a] = await Promise.all([
+      safeRpc("patient_dashboard_summary", { p_patient_id: params.id }),
+      safeRpc("patient_dashboard_medicaments_actifs", { p_patient_id: params.id }),
+      safeRpc("patient_dashboard_medecins", { p_patient_id: params.id }),
+      safeRpc("patient_dashboard_alertes", { p_patient_id: params.id }),
     ]);
     setSummary((s && s[0]) || null);
     setMedicaments(m || []);

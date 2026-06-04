@@ -3,6 +3,8 @@
 
 import React, { useState, useEffect } from "react";
 import { Panel} from "../../../../ui";
+// 0.58.18 : fix bug "createClient is not defined" — import manquant depuis l'extract de 0.57.1
+import { createClient } from "../../../../../lib/supabase";
 // 0.57.10 : imports retirés (logger non utilisés)
 
 // 0.57.10 : imports retirés (fmtDate, fmtDateTime non utilisés)
