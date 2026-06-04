@@ -120,6 +120,113 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.16",
+    "kind": "version",
+    "titre": "🔧 HOTFIX UI : Profil coupé + Menu burger masqué hors accueil + Dropdowns coupés en bas",
+    "chantiers": [
+      { "code": "UI", "txt": "🐛 BUG 1 — PROFIL COUPÉ. Le bas de la page Profil (et de toutes les pages avec contenu long) était coupé par le viewport. Cause : `.wrap` avait `padding-bottom: 110px` (110px desktop, 130px mobile) — insuffisant quand BulkToolbar, ProgressBar floating ou bouton flottants flottent en bas, et trop juste sur les iPhone avec home indicator. Fix : passage à `calc(140px + env(safe-area-inset-bottom, 0px))` desktop et `calc(160px + env(safe-area-inset-bottom, 0px))` mobile. Le safe-area-inset gère automatiquement la barre de navigation iOS/Android",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Padding-bottom de .wrap",
+          "lang": "css",
+          "before": "/* AVANT 0.58.16 */\n.wrap { max-width: 1180px; margin: 0 auto; padding: 30px 24px 110px; }\n@media(max-width:760px) {\n  .wrap { padding: 18px 12px 130px; }\n}",
+          "after": "/* 0.58.16 - Espacement bas amélioré avec safe-area-inset */\n.wrap { \n  max-width: 1180px; \n  margin: 0 auto; \n  padding: 30px 24px calc(140px + env(safe-area-inset-bottom, 0px)); \n}\n@media(max-width:760px) {\n  .wrap { padding: 18px 12px calc(160px + env(safe-area-inset-bottom, 0px)); }\n}\n/* → +30px en desktop / mobile pour éviter que les widgets flottants masquent le contenu\n   → env(safe-area-inset-bottom) ajoute automatiquement la marge home indicator iOS */"
+        }
+      },
+      { "code": "UI", "txt": "🐛 BUG 2 — MENU BURGER MASQUÉ HORS ACCUEIL. Quand on cliquait sur le menu burger depuis une autre page que /accueil, on voyait juste le flou de l'overlay mais le menu drawer restait masqué. Cause : `.menu-overlay` avait `z-index: 48` et `.menu-drawer` `z-index: 49`. Les autres composants fixed des pages (BulkToolbar z:70, ProgressBar floating z:75, Modal z:80, Drawer backdrop z:85) passaient AU-DESSUS du menu, le rendant invisible. Fix : passage à z-index 9998 (overlay) et 9999 (drawer) — valeurs très hautes pour être SÛR d'être au-dessus de tout autre composant",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Z-index du menu burger",
+          "lang": "css",
+          "before": "/* AVANT 0.58.16 */\n.menu-overlay { position: fixed; inset: 0; ...; z-index: 48; }\n.menu-drawer { position: fixed; top: 0; left: 0; ...; z-index: 49; }\n\n/* Mais : */\n.bulk-toolbar { ...; z-index: 70 }     /* écrasait le menu */\n.export-progress { ...; z-index: 75 }  /* écrasait le menu */\n.modal-bg { ...; z-index: 80 }         /* écrasait le menu */\n.drawer-bg { ...; z-index: 85 }        /* écrasait le menu */",
+          "after": "/* 0.58.16 - z-index très haut pour être garantis au-dessus */\n.menu-overlay { position: fixed; inset: 0; ...; z-index: 9998; }\n.menu-drawer  { position: fixed; top: 0; left: 0; ...; z-index: 9999; }\n\n/* → Plus aucun composant ne peut écraser le menu burger\n   → 9998 / 9999 = au-dessus de tout (modales, drawers, etc.) */"
+        }
+      },
+      { "code": "UI", "txt": "🐛 BUG 3 — DROPDOWNS COUPÉS EN BAS. Les Select, TimePicker, RangePicker, Combobox s'ouvraient TOUJOURS vers le bas (`top: calc(100% + 6px)`). Quand le trigger était en bas de la page ou dans une modale, le dropdown débordait du viewport et était coupé, ou masqué par les widgets flottants. Fix : création d'un hook réutilisable `useDropdownPosition` qui calcule via `getBoundingClientRect()` si le trigger est dans la moitié basse du viewport, et qui détermine s'il faut flip up. Helper `dropdownPositionStyle(flipUp)` qui retourne `{ bottom: 'calc(100% + 6px)' }` si flip, sinon `{ top: 'calc(100% + 6px)' }`. Appliqué aux 4 composants concernés (DatePicker utilise un input HTML5 natif, pas concerné). Recalcul au scroll + resize pour rester correct si le user scroll pendant que le dropdown est ouvert",
+        "code_snippet": {
+          "file": "app/components/ui-premium/useDropdownPosition.js (NEW)",
+          "note": "Hook auto-flip réutilisable",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.16 - tous les dropdowns toujours vers le bas\n<div style={{\n  position: 'absolute',\n  top: 'calc(100% + 6px)',   // ← TOUJOURS vers le bas\n  ...\n}}>\n  Dropdown content\n</div>\n// → si le trigger est en bas de l'écran, dropdown coupé / invisible",
+          "after": "// 0.58.16 - hook réutilisable avec auto-flip\nimport { useDropdownPosition, dropdownPositionStyle } from './useDropdownPosition';\n\nconst rootRef = useRef(null);\nconst [open, setOpen] = useState(false);\nconst flipUp = useDropdownPosition(rootRef, open, { maxHeight: 320 });\n\n<div style={{\n  position: 'absolute',\n  ...dropdownPositionStyle(flipUp),  // ← top OU bottom selon position\n  ...\n}}>\n  Dropdown content\n</div>\n\n// Le hook :\n//   • Calcule spaceBelow = vh - rect.bottom - margin\n//   • Calcule spaceAbove = rect.top - margin\n//   • Flip si spaceBelow < maxHeight ET spaceAbove > spaceBelow\n//   • Recalcule au scroll et resize"
+        }
+      },
+      { "code": "AI", "txt": "+28 tests Vitest (v058-16-hotfix-ui.test.js) : version+SW (2), Fix 1 padding (3 — desktop calc 140 + mobile calc 160 + plus de 110 hardcodé), Fix 2 z-index menu (3 — overlay 9998 + drawer 9999 + position fixed conservée), Hook useDropdownPosition (6 — use client + exports + getBoundingClientRect + spaceBelow/Above + flip logic + scroll/resize listeners + cleanup + helper bottom/top), Application Select (4 — import + hook maxHeight 320 + spread style + plus de top hardcodé), TimePicker (3 — import + hook maxHeight 280 + spread), RangePicker (3 — import + hook maxHeight 280 + spread), Combobox (3 — import + hook maxHeight 320 + spread), DatePicker non concerné (1 — input type=date natif). +2 ajustements anciens tests 0.56.16 (regex acceptant nouvelles valeurs). Total 3770 verts (+28 nets)" },
+      { "code": "DOC", "txt": "HOTFIX critique sur 3 bugs UI signalés. (a) Les pages au contenu long (Profil, Statistiques) ne sont plus coupées au bas — le padding inclut env(safe-area-inset-bottom) pour gérer correctement les iPhones avec home indicator. (b) Le menu burger fonctionne maintenant sur TOUTES les pages, plus seulement /accueil — les z-index très hauts (9998/9999) garantissent qu'aucun widget fixed ne peut le masquer. (c) Les dropdowns custom (Select, TimePicker, RangePicker, Combobox) s'ouvrent intelligemment vers le haut quand le trigger est en bas de l'écran, évitant les coupures. Hook useDropdownPosition réutilisable pour de futurs composants" }
+    ],
+    "themes": ["bugfix", "ui"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.16.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.15",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 14 : CodeBlock + RangePicker branché queries Supabase + Lien Onboarding + Tooltips partout + ProgressBar exports + Drawer détail intervention",
+    "chantiers": [
+      { "code": "UI", "txt": "📋 COMPOSANT CODEBLOCK premium (app/components/ui-premium/CodeBlock.js, 320 lignes). Bloc de code/JSON/SQL avec coloration syntaxique légère + bouton 'Copier' avec feedback temporaire. (a) Highlight JSON : keys teal #7CC8C8 bold, strings green pâle, numbers violet pâle, booleans/null amber. (b) Highlight SQL : ~40 keywords (SELECT/FROM/WHERE/JOIN/etc) en teal, strings, numbers, commentaires --. (c) 4 variants thématiques (default navy / danger #2a1517 / success #16241a / info #152030). (d) Numéros de ligne en table avec userSelect:none (copie propre). (e) maxHeight scrollable (défaut 360). (f) Bouton Copier avec navigator.clipboard.writeText + fallback execCommand pour anciens navigateurs. (g) Feedback visuel 1.8s 'Copié !' (couleur accent + icon ti-check). (h) Header avec language label + line count. (i) Props : code, language, lineNumbers, maxHeight, variant, title, showCopy, wrap, ariaLabel. (j) A11y : role region + ariaLabel auto",
+        "code_snippet": {
+          "file": "app/components/ui-premium/CodeBlock.js",
+          "note": "JSON/SQL highlight + copie",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.15 - <pre><code> nu sans coloration\n<pre style={{ background: '#142131', color: '#fff' }}>\n  <code>{JSON.stringify(data, null, 2)}</code>\n</pre>\n// → illisible, pas de copie, pas de scroll géré, pas de langue affichée",
+          "after": "// 0.58.15 - CodeBlock premium\n<CodeBlock\n  code={JSON.stringify(adminPayload, null, 2)}\n  language='json'\n  title='Payload de la requête'\n  lineNumbers\n  maxHeight={400}\n/>\n\n// Pour du SQL avec variant danger (erreur)\n<CodeBlock\n  code={`SELECT * FROM patients\nWHERE etablissement_id = 'xxx'\n-- ERREUR : structure_id manquant`}\n  language='sql'\n  variant='danger'\n/>\n\n// → keys/strings/numbers/booleans colorés\n//   bouton 'Copier' avec feedback 'Copié !',\n//   numéros de ligne table userSelect:none"
+        }
+      },
+      { "code": "UI", "txt": "📅 BRANCHEMENT RANGEPICKER /statistiques sur queries Supabase. Le filtre est maintenant pleinement fonctionnel. (a) Calcul automatique de dateFromISO/dateFromDate et dateToISO/dateToDate selon range.from et range.to. (b) Fallback : si pas de range, comportement historique (6 derniers mois). (c) Helpers applyToISO(q, col) et applyToDate(q, col) qui ajoutent .lte() seulement si dateTo défini. (d) Les 5 queries principales (interventions, transferts, maintenances, signalements) utilisent ces helpers — sauf stock_articles qui n'a pas de date. (e) useEffect dépend de range.from + range.to → re-fetch automatique au changement. (f) Subtitle dynamique : 'Période : 4 mars → 4 juin 2026' avec dates formatées court, sinon 'Tableaux de bord visuels — 6 derniers mois'. (g) Message 'Filtre appliqué' vert ✓ (au lieu de l'ancien 'Filtre actif — recharger les données pour appliquer')",
+        "code_snippet": {
+          "file": "app/statistiques/page.js",
+          "note": "RangePicker enfin actif sur les queries",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.15 - RangePicker en UI mais pas branché\nconst sixMois = new Date(Date.now() - 6 * 30 * 86400000).toISOString();\n\nawait Promise.all([\n  supabase.from('interventions').select(...).gte('created_at', sixMois),\n  supabase.from('transferts').select(...).gte('created_at', sixMois),\n  ...\n]);\n// → le RangePicker ne servait à rien, plage fixe 6 mois",
+          "after": "// 0.58.15 - branchement complet\n// Calcul dynamique des bornes selon range\nlet dateFromISO, dateFromDate, dateToISO, dateToDate;\nif (range.from) {\n  dateFromISO = new Date(range.from + 'T00:00:00').toISOString();\n  dateFromDate = range.from;\n} else {\n  dateFromISO = new Date(Date.now() - 6 * 30 * 86400000).toISOString();\n  dateFromDate = dateFromISO.slice(0, 10);\n}\nif (range.to) {\n  dateToISO = new Date(range.to + 'T23:59:59').toISOString();\n  dateToDate = range.to;\n}\n\n// Helpers : appliquer .lte() seulement si dateTo défini\nconst applyToISO = (q, col) => dateToISO ? q.lte(col, dateToISO) : q;\nconst applyToDate = (q, col) => dateToDate ? q.lte(col, dateToDate) : q;\n\nawait Promise.all([\n  applyToISO(supabase.from('interventions').select(...).gte('created_at', dateFromISO), 'created_at'),\n  applyToISO(supabase.from('transferts').select(...).gte('created_at', dateFromISO), 'created_at'),\n  applyToDate(supabase.from('maintenances').select(...).gte('date_prevue', dateFromDate), 'date_prevue'),\n  ...\n]);\n\n// Et la deps du useEffect inclut range.from + range.to → re-fetch auto\n}, [auth.ready, auth.structureId, auth.etablissements, range.from, range.to]);"
+        }
+      },
+      { "code": "UI", "txt": "👥 LIEN ONBOARDING GUIDÉ depuis /utilisateurs. Nouveau bouton lavande à côté du bouton 'Créer un utilisateur' existant qui pointe vers /onboarding (la nouvelle page wizard de 0.58.14). (a) Style cohérent : gradient lavande rgba(122,111,176, .12) avec border .30 et color #5d52a0. (b) Icon ti-wand + label 'Onboarding guidé'. (c) Badge 'NEW' en pill lavande 9px uppercase pour signaler la nouveauté. (d) Hover : background plus opaque + translateY(-1px) + shadow lavande. (e) Visible uniquement si auth.can('inviter') (sécurité). Le user peut choisir entre le formulaire rapide existant ou le wizard guidé en 4 étapes",
+        "code_snippet": {
+          "file": "app/utilisateurs/page.js",
+          "note": "Raccourci vers wizard onboarding",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.15 - la page /onboarding existait mais cachée\n// → aucun lien depuis /utilisateurs, l'utilisateur devait taper l'URL manuellement",
+          "after": "// 0.58.15 - lien visible dans la barre d'actions de l'onglet Invitations\n{auth.can('inviter') && <button className='btn-new' onClick={...}>\n  <i className='ti ti-user-plus' /> Créer un utilisateur\n</button>}\n\n{/* Nouveau bouton vers le wizard */}\n{auth.can('inviter') && (\n  <a\n    href='/onboarding'\n    style={{\n      background: 'linear-gradient(135deg, rgba(122,111,176,.12), rgba(122,111,176,.06))',\n      border: '1px solid rgba(122,111,176,.30)',\n      color: '#5d52a0',\n      ...\n    }}\n  >\n    <i className='ti ti-wand' />\n    Onboarding guidé\n    <span className='badge-new'>NEW</span>\n  </a>\n)}"
+        }
+      },
+      { "code": "UI", "txt": "💬 TOOLTIPS PARTOUT (déploiement Tooltip premium). (a) NotifBell : le title HTML statique 'Notifications' est remplacé par un Tooltip dynamique 'Notifications · X non lue(s)' (position bottom, delay 500ms) qui change selon le compteur. (b) /interventions : date relative dans le tableau est wrappée d'un Tooltip qui affiche au hover la date complète avec heure ('lundi 4 juin 2026 à 14:32') — dateStyle:'full', timeStyle:'short' — avec underline dotted pour signaler le hover. (c) /interventions : badge transfert_id (icon ti-transfer dans la cellule numéro) avec Tooltip 'Un transfert (reprise matériel) a déjà été généré pour cette intervention'. (d) /interventions : bouton 'Détails' avec Tooltip position left 'Voir tous les détails dans un panneau latéral'. Le tout avec arrow CSS pure + auto-flip si débord viewport",
+        "code_snippet": {
+          "file": "app/NotifBell.js + app/interventions/page.js",
+          "note": "Tooltips premium remplaçant les title HTML moches",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.15 - title HTML natif (délai navigateur ~1.5s, style gris OS)\n<button title='Notifications'>🔔</button>\n\n<td>{fmtDate(r.created_at)}</td>\n\n{r.transfert_id && <i className='ti ti-transfer' title='Transfert généré' />}",
+          "after": "// 0.58.15 - Tooltips premium avec délai paramétrable + arrow CSS + auto-flip\n<Tooltip\n  content={nonLues > 0\n    ? `Notifications · ${nonLues} non lue${nonLues > 1 ? 's' : ''}`\n    : 'Notifications'\n  }\n  position='bottom'\n  delay={500}\n>\n  <button>🔔</button>\n</Tooltip>\n\n// Date avec tooltip date+heure complète\n<td>\n  <Tooltip\n    content={new Date(r.created_at).toLocaleString('fr-FR', {\n      dateStyle: 'full', timeStyle: 'short'\n    })}\n    position='top'\n    delay={300}\n  >\n    <span style={{ cursor: 'help', textDecoration: 'underline dotted' }}>\n      {fmtDate(r.created_at)}\n    </span>\n  </Tooltip>\n</td>\n\n// Badge transfert avec explication contextuelle\n<Tooltip content='Un transfert (reprise matériel) a déjà été généré pour cette intervention'>\n  <i className='ti ti-transfer' style={{ cursor: 'help' }} />\n</Tooltip>"
+        }
+      },
+      { "code": "UI", "txt": "📊 PROGRESSBAR DANS EXPORTS LOURDS. (1) /interventions bulk CSV >100 lignes : state exportProgress = { value, total } + ProgressBar floating en bas centre (position fixed, animation av-bulk-toolbar-in slide-up) avec showPercent et compteur 'value / total'. Yield au DOM tous les BATCH=50 items via Promise(setTimeout 0) pour ne pas freezer l'UI. (2) /statistiques export Excel complet (exportBilan) : state bilanExporting + ProgressBar mode indeterminate variant=success affichée juste sous la barre RangePicker pendant la génération (au lieu de bloquer toute la page avec setLoading(true) comme avant). Card avec gradient teal subtil + icon ti-file-spreadsheet + label 'Génération du bilan complet en cours…'",
+        "code_snippet": {
+          "file": "app/interventions/page.js + app/statistiques/page.js",
+          "note": "Feedback visuel pour exports lourds",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.15 - aucun feedback sur exports lourds\nasync function bulkExportCsv() {\n  // Boucle synchrone — freeze UI pour 200+ lignes\n  for (const r of subset) lines.push(...);\n  downloadCsv(lines);\n}\n\n// Stats Excel : bloque toute la page avec setLoading(true)\nawait exportBilan(data);",
+          "after": "// 0.58.15 - Bulk CSV avec ProgressBar floating\nconst useProgress = total > 100;\nif (useProgress) setExportProgress({ value: 0, total });\n\nconst BATCH = 50;\nfor (let i = 0; i < total; i++) {\n  lines.push(formatLine(subset[i]));\n  if (useProgress && (i + 1) % BATCH === 0) {\n    setExportProgress({ value: i + 1, total });\n    await new Promise((res) => setTimeout(res, 0));  // yield DOM\n  }\n}\n\n{/* JSX floating en bas */}\n{exportProgress && (\n  <ProgressBar\n    value={(exportProgress.value / exportProgress.total) * 100}\n    label={`Export en cours… (${exportProgress.value} / ${exportProgress.total})`}\n    showPercent\n  />\n)}\n\n// Stats Excel : ProgressBar indeterminate inline (UI reste utilisable)\n{bilanExporting && (\n  <ProgressBar indeterminate variant='success'\n    label='Génération du bilan complet en cours…' />\n)}"
+        }
+      },
+      { "code": "UI", "txt": "🔧 DRAWER DE DÉTAIL INTERVENTION dans /interventions. Nouveau bouton 'Détails' (icon ti-layout-sidebar-right-expand) dans chaque ligne du tableau. Click → ouvre un Drawer side='right' size='md' (480px) avec toutes les infos de la DI dans une vue confortable. (a) Header : numéro 22px + status tag + urgence à droite. (b) Grid 2 colonnes : Type (avec typeIcon), Créée le (dateStyle:short + timeStyle:short), Échéance, Assigné (avec Avatar). (c) Carte Matériel concerné en bleu (background gradient #185FA5 alpha .06) avec libellé + SN + parc. (d) Carte Patient concerné en violet avec Avatar 36px + chambre. (e) Description multiline avec whiteSpace:pre-wrap. (f) Section Actions disponibles : boutons Réassigner / Générer transfert / ou message vert 'Un transfert a déjà été généré'. (g) Footer : Fermer + bouton 'Passer à « Suivant »' si statut suivant possible. Excellente vue tablette/mobile",
+        "code_snippet": {
+          "file": "app/interventions/page.js",
+          "note": "Drawer riche de détail (alternative au modal pour vue full)",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.15 - infos dispersées dans la cellule du tableau\n// → matériel sur 2 lignes, patient ailleurs, description tronquée à 50 chars,\n//   pas d'historique visible, actions noyées dans la dernière colonne",
+          "after": "// 0.58.15 - bouton Détails par ligne → Drawer riche\n<Tooltip content='Voir tous les détails dans un panneau latéral'>\n  <button className='btn-mini' onClick={() => setDetailDi(r)}>\n    <i className='ti ti-layout-sidebar-right-expand' /> Détails\n  </button>\n</Tooltip>\n\n<Drawer\n  open={!!detailDi}\n  onClose={() => setDetailDi(null)}\n  title={`Intervention ${detailDi?.numero}`}\n  subtitle={`${detailDi?.type} · ${detailDi?.urgence}`}\n  icon='ti-tools'\n  side='right'\n  size='md'\n  footer={<>\n    <button onClick={close}>Fermer</button>\n    {next(detailDi.statut) && (\n      <button onClick={() => { advance(detailDi); close(); }}>\n        Passer à « {next(detailDi.statut)} »\n      </button>\n    )}\n  </>}\n>\n  {/* Numéro 22px + status + urgence */}\n  {/* Grid 2 cols : Type / Créée / Échéance / Assigné */}\n  {/* Carte matériel bleue avec SN/parc */}\n  {/* Carte patient violette avec Avatar */}\n  {/* Description multiline */}\n  {/* Actions disponibles : Réassigner / Transfert / message */}\n</Drawer>"
+        }
+      },
+      { "code": "AI", "txt": "+47 tests Vitest (v058-15-ui-phase14.test.js) : version+SW (2), CodeBlock (10 — use client + props + helpers JSON/SQL + 4 highlight classes + SQL keywords + 4 variants + copy avec feedback 1.8s + fallback execCommand + line numbers userSelect:none + index), Branchement RangePicker (8 — calcul dateFrom/To ISO/Date + fallback 6 mois + helpers applyTo + queries enveloppées + deps useEffect range + subtitle dynamique + 'Filtre appliqué' vert + setLoading), Lien Onboarding (5 — href + permission inviter + icon ti-wand + badge NEW + hover translateY), Tooltips (4 — NotifBell import + content dynamique + title supprimé + dates + transfert badge), ProgressBar exports (7 — interventions import + state exportProgress + seuil 100 + BATCH 50 yield + JSX floating + stats import + bilanExporting indeterminate + plus de setLoading bloquant), Drawer détail intervention (9 — Drawer import + state detailDi + bouton Détails + side+size+title + footer Fermer+Suivant + numéro+status + carte matériel SN/parc + carte patient Avatar + description+actions), Récap 20 composants (1). +1 ajustement test 0.58.13 (regex Drawer pour supporter Tooltip ajouté). Total 3742 verts" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.15 : 20 composants premium au total (ajout CodeBlock). Le RangePicker de /statistiques est ENFIN actif et filtre les données. Les exports lourds (bulk CSV >100, bilan Excel) ont maintenant un feedback de progression. Le Drawer de détail intervention transforme la vue tableau étroite en panneau latéral confortable. Tooltips premium déployés stratégiquement (NotifBell, dates relatives, badges). Le lien Onboarding rend la page wizard découvrable. Prochaines pistes : (a) Drawer pour édition patient (alternative au modal géant existant). (b) Drawer pour édition matériel (mêmes principes). (c) Composant Toast Stack premium (plusieurs toasts visibles en simultané, stacking). (d) Skeleton premium pour le Drawer de détail (pendant le fetch supabase). (e) Tooltip sur les boutons du modal Nouvelle DI (matériel/patient searchable, dépôt/zone). (f) CodeBlock dans /admin/state pour le payload JSON" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.15.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.14",
     "kind": "version",
     "titre": "🎨 UI PHASE 13 : ProgressBar + Tooltip + BulkToolbar dans /interventions + RangePicker dans /statistiques + Wizard onboarding",

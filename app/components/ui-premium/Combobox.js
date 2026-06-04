@@ -21,6 +21,7 @@
 // =============================================================
 
 import { useState, useRef, useEffect } from "react";
+import { useDropdownPosition, dropdownPositionStyle } from "./useDropdownPosition";
 
 export default function Combobox({
   values = [],
@@ -38,6 +39,8 @@ export default function Combobox({
   const [searchQ, setSearchQ] = useState("");
   const rootRef = useRef(null);
   const searchRef = useRef(null);
+  // 0.58.16 : auto-flip up si pas assez de place en bas
+  const flipUp = useDropdownPosition(rootRef, open, { maxHeight: 320 });
 
   const sizes = {
     sm: { padH: 8,  padV: 4, fontSize: 12 },
@@ -216,7 +219,7 @@ export default function Combobox({
           role="listbox"
           style={{
             position: "absolute",
-            top: "calc(100% + 6px)",
+            ...dropdownPositionStyle(flipUp),
             left: 0,
             right: 0,
             background: "var(--av-g0, #fff)",

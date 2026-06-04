@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.15 — CodeBlock + RangePicker actif + Onboarding link + Tooltips + ProgressBar exports + Drawer détail DI</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#0a1420 0%,#185FA5 45%,#7CC8C8 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(122,111,176,.22) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:30px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--teal)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* CodeBlock demo */
+.cb{background:#142131;border:1px solid rgba(124,200,200,.20);border-radius:12px;overflow:hidden;margin:14px 0;font-family:'Consolas','Monaco',monospace;box-shadow:0 4px 12px rgba(20,33,49,.10)}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(124,200,200,.20);background:rgba(255,255,255,.03)}
+.cb-pill{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#7CC8C8;padding:2px 8px;background:rgba(124,200,200,.15);border:1px solid rgba(124,200,200,.30);border-radius:99px;font-family:'Quicksand','Segoe UI',sans-serif}
+.cb-title{font-size:12;color:rgba(232,237,242,.85);margin-left:10;font-family:'Quicksand','Segoe UI',sans-serif;font-weight:600}
+.cb-lines{font-size:10;color:rgba(232,237,242,.50);margin-left:10;font-family:'Quicksand','Segoe UI',sans-serif}
+.cb-copy{display:inline-flex;align-items:center;gap:6;padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:6;color:rgba(232,237,242,.80);font-size:11;font-weight:600;font-family:'Quicksand','Segoe UI',sans-serif}
+.cb-body{padding:12px 0;font-size:12.5;line-height:1.6;color:#e8edf2;display:flex}
+.cb-nums{padding:0 12 0 14;color:rgba(232,237,242,.30);font-size:11;text-align:right;border-right:1px solid rgba(255,255,255,.05);user-select:none;white-space:pre}
+.cb-code{padding:0 14;flex:1;white-space:pre}
+.cb-key{color:#7CC8C8;font-weight:600}
+.cb-str{color:#b3e3a8}
+.cb-num{color:#d9a3e8}
+.cb-bool{color:#f4b961;font-weight:600}
+
+/* ProgressBar demo */
+.pb-wrap{margin:10px 0 14px;padding:14px 18px;background:#fff;border:1px solid #e3e9ee;border-radius:12px;box-shadow:0 4px 12px rgba(20,33,49,.06);max-width:420px}
+.pb-lbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:6;font-size:12.5;font-weight:600;color:#4a5868}
+.pb-pct{color:#142131;font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}
+.pb-track{width:100%;height:8;background:#f4f7fa;border:1px solid #e3e9ee;border-radius:99;overflow:hidden;position:relative}
+.pb-fill{height:100%;border-radius:99;position:relative;box-shadow:0 0 8px rgba(124,200,200,.4)}
+.pb-fill.teal{background:linear-gradient(90deg,#7CC8C8,#5db5b5);width:62%}
+.pb-fill::before{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.25),transparent);border-radius:99px 99px 0 0}
+.pb-indet{width:40%;background:linear-gradient(90deg,#5aa05a,#3e8540);height:100%;border-radius:99;position:absolute;animation:pb-i 1.4s cubic-bezier(.65,0,.35,1) infinite;box-shadow:0 0 12px rgba(90,160,90,.4)}
+@keyframes pb-i{0%{left:-40%}100%{left:100%}}
+
+/* Range/Stats demo */
+.stats-hdr{background:linear-gradient(135deg,#185FA5,#7CC8C8);color:#fff;padding:18px 22px;border-radius:14px;margin:14px 0}
+.stats-hdr .eyb{font-size:10;letter-spacing:3px;font-weight:700;opacity:.8}
+.stats-hdr h3{margin:6px 0 4px;font-size:22;color:#fff;font-weight:700}
+.stats-hdr .sub{font-size:12.5;opacity:.9}
+.range-bar{display:flex;align-items:center;gap:12;padding:12px 16;background:#fff;border:1px solid #e3e9ee;border-radius:12;margin:8px 0 14px}
+.range-bar .ic{color:#185FA5;font-size:18}
+.range-bar .lab{font-size:13;font-weight:600;color:#4a5868}
+.range-tr{display:inline-flex;align-items:center;gap:10;padding:10px 14;background:#fff;border:1.5px solid #7CC8C8;border-radius:10;box-shadow:0 0 0 3px rgba(124,200,200,.20);min-width:300;font-size:13.5;font-weight:500;color:#142131}
+.range-ok{font-size:11.5;color:#5aa05a;font-weight:600;margin-left:auto;display:inline-flex;align-items:center;gap:6}
+
+/* Drawer demo */
+.drawer-demo{position:relative;background:linear-gradient(135deg,#e3e9ee,#cfd8e0);border-radius:14px;height:560px;margin:14px 0;overflow:hidden;display:flex;justify-content:flex-end}
+.drawer-bg-fk{position:absolute;inset:0;background:rgba(13,24,34,.55);backdrop-filter:blur(6px) saturate(140%)}
+.drawer-d{position:relative;width:480px;background:#fff;display:flex;flex-direction:column;box-shadow:-30px 0 60px rgba(20,33,49,.30)}
+.drawer-h{padding:18px 22px;background:#142131;color:#fff;display:flex;align-items:center;gap:12;position:relative;overflow:hidden;flex-shrink:0}
+.drawer-h .ic{width:38;height:38;border-radius:11;background:rgba(255,255,255,.20);display:flex;align-items:center;justify-content:center;font-size:19}
+.drawer-h .t{font-weight:700;font-size:15}
+.drawer-h .st{font-size:12;opacity:.85;margin-top:2}
+.drawer-h .x{width:34;height:34;border-radius:10;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16}
+.drawer-b{flex:1;overflow-y:auto;padding:22px 24;display:flex;flex-direction:column;gap:16}
+.di-hdr{display:flex;align-items:center;gap:12;flex-wrap:wrap}
+.di-num{font-size:22;font-weight:800;color:#142131;letter-spacing:-.02em}
+.tag-st{font-size:12;padding:4px 10;background:rgba(122,111,176,.18);color:#5d52a0;border-radius:99;border:1px solid rgba(122,111,176,.30);font-weight:600}
+.tag-urg{font-size:12;padding:4px 10;background:#fee;color:#c0392b;border-radius:99;border:1px solid #f8c5c0;font-weight:600;margin-left:auto}
+.di-grid{padding:14;background:#f9fbfc;border:1px solid #e3e9ee;border-radius:10;display:grid;grid-template-columns:1fr 1fr;gap:14}
+.di-cell .l{font-size:10;font-weight:700;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4}
+.di-cell .v{font-size:13;font-weight:600;color:#142131;display:flex;align-items:center;gap:6}
+.di-mat,.di-pat{padding:12;border-radius:10}
+.di-mat{background:linear-gradient(135deg,rgba(24,95,165,.06),transparent);border:1px solid rgba(24,95,165,.20)}
+.di-pat{background:linear-gradient(135deg,rgba(122,111,176,.06),transparent);border:1px solid rgba(122,111,176,.20);display:flex;align-items:center;gap:12}
+.di-pat .av{width:36;height:36;border-radius:50%;background:linear-gradient(135deg,#7a6fb0,#5d52a0);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14;flex-shrink:0}
+.di-lbl{font-size:11;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6;display:flex;align-items:center;gap:6}
+.di-lbl.bl{color:#185FA5}.di-lbl.vi{color:#7a6fb0}
+.di-desc{padding:12;background:#f4f7fa;border:1px solid #e3e9ee;border-radius:10;font-size:13;color:#4a5868;line-height:1.55;white-space:pre-wrap}
+.drawer-f{padding:14px 22 18;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10;background:linear-gradient(180deg,#fafbfc,#f4f7fa);flex-shrink:0}
+.drawer-f button{padding:9px 16;border-radius:10;font-size:13;font-weight:600;cursor:pointer;font-family:inherit;border:none}
+.drawer-f .ghost{background:#fff;border:1px solid #e3e9ee;color:#4a5868}
+.drawer-f .next{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(124,200,200,.4);display:inline-flex;align-items:center;gap:6}
+
+/* Tooltip demo */
+.tt-demo{background:linear-gradient(135deg,#e3e9ee,#cfd8e0);border-radius:14px;padding:80px 30px 60px;margin:14px 0;display:flex;justify-content:center;align-items:center;gap:60px;position:relative}
+.tt-target{padding:8px 14;background:#fff;border:1px solid #e3e9ee;border-radius:8;font-size:13;color:#142131;text-decoration:underline dotted;text-underline-offset:3;text-decoration-color:#cfd8e0;position:relative;cursor:help}
+.tt-pop{position:absolute;background:#142131;color:#fff;padding:7px 11;border-radius:8;font-size:12;font-weight:500;line-height:1.45;box-shadow:0 10px 25px rgba(20,33,49,.30),0 4px 8px rgba(20,33,49,.20);white-space:nowrap;bottom:42px;left:50%;transform:translateX(-50%)}
+.tt-pop::after{content:"";position:absolute;bottom:-5px;left:50%;margin-left:-6px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #142131}
+
+/* Onboarding link demo */
+.onb-bar{display:flex;align-items:center;gap:10;padding:14;background:#fff;border:1px solid #e3e9ee;border-radius:12;margin:14px 0}
+.btn-new-demo{display:inline-flex;align-items:center;gap:6;padding:8px 14;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;border-radius:10;font-size:12.5;font-weight:700;border:none;cursor:pointer}
+.btn-onb-demo{display:inline-flex;align-items:center;gap:6;padding:8px 14;background:linear-gradient(135deg,rgba(122,111,176,.12),rgba(122,111,176,.06));border:1px solid rgba(122,111,176,.30);border-radius:10;color:#5d52a0;font-size:12.5;font-weight:700;cursor:pointer;text-decoration:none}
+.badge-new{font-size:9;padding:2px 6;background:rgba(122,111,176,.20);border:1px solid rgba(122,111,176,.30);border-radius:99;letter-spacing:.5px;text-transform:uppercase;font-weight:800;color:#5d52a0}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 14 — INTÉGRATIONS PROD</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.15 — CodeBlock + RangePicker actif + Onboarding link + Tooltips + ProgressBar exports + Drawer détail DI<small>1 nouveau composant · RangePicker enfin branché · Tooltips premium déployés · Exports lourds avec progression · Vue détail intervention en panneau latéral</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.15-alpha</code></span>
+    <span><b>Tests :</b> 3742 Vitest (+47)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Composant (20 total)</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Chantiers livrés</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">2</div><div class="top-kpi-lbl">Exports avec progression</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+47</div><div class="top-kpi-lbl">Tests Vitest (3742)</div></div>
+</div>
+
+<h2>📋 CodeBlock premium</h2>
+
+<div class="panel">
+<p style="margin:0">Bloc de code/JSON/SQL avec coloration syntaxique légère et bouton "Copier". 4 variants thématiques, numéros de ligne, scroll géré, header avec language label + line count.</p>
+</div>
+
+<div class="cb">
+  <div class="cb-head">
+    <div style="display:flex;align-items:center;flex:1;min-width:0">
+      <span class="cb-pill">JSON</span>
+      <span class="cb-title">Payload de la requête</span>
+      <span class="cb-lines">8 lignes</span>
+    </div>
+    <span class="cb-copy">⎘ Copier</span>
+  </div>
+  <div class="cb-body">
+    <div class="cb-nums">1
+2
+3
+4
+5
+6
+7
+8</div>
+    <div class="cb-code">{
+  <span class="cb-key">"id"</span>: <span class="cb-str">"intv-1238"</span>,
+  <span class="cb-key">"statut"</span>: <span class="cb-str">"Nouvelle"</span>,
+  <span class="cb-key">"urgent"</span>: <span class="cb-bool">true</span>,
+  <span class="cb-key">"montant"</span>: <span class="cb-num">142.50</span>,
+  <span class="cb-key">"materiel_id"</span>: <span class="cb-str">"mat-902"</span>,
+  <span class="cb-key">"assignee"</span>: <span class="cb-bool">null</span>
+}</div>
+  </div>
+</div>
+
+<pre>&lt;CodeBlock
+  code={JSON.stringify(adminPayload, null, 2)}
+  language='json'
+  title='Payload de la requête'
+  lineNumbers
+  maxHeight={400}
+/&gt;
+
+// Avec variant danger pour erreur
+&lt;CodeBlock
+  code={errorStack}
+  language='sql'
+  variant='danger'
+/&gt;</pre>
+
+<h2>📅 RangePicker enfin branché sur Supabase</h2>
+
+<div class="panel">
+<p style="margin:0">Le RangePicker de /statistiques ne servait à rien avant — les queries restaient sur les 6 derniers mois fixes. Maintenant les bornes <code>range.from</code> / <code>range.to</code> sont injectées dynamiquement dans les <code>.gte()</code> / <code>.lte()</code> et le useEffect re-fetch automatiquement au changement.</p>
+</div>
+
+<div class="stats-hdr">
+  <div class="eyb">ANALYSE</div>
+  <h3>📊 Statistiques</h3>
+  <div class="sub">Période : 4 mars 2026 → 4 juin 2026 · Aveho Softs & Services</div>
+</div>
+
+<div class="range-bar">
+  <i class="ic">🔍</i>
+  <span class="lab">Période d'analyse :</span>
+  <div class="range-tr">
+    <i style="color:#185FA5">📊</i>
+    <span style="flex:1">04 mars 2026 → 04 juin 2026</span>
+    <span style="width:22;height:22;border-radius:6;background:#f4f7fa;display:inline-flex;align-items:center;justify-content:center;font-size:11;color:#8a98a8">✕</span>
+    <i style="color:#8a98a8">▼</i>
+  </div>
+  <span class="range-ok">✓ Filtre appliqué</span>
+</div>
+
+<pre>// Calcul dynamique des bornes
+let dateFromISO = range.from
+  ? new Date(range.from + 'T00:00:00').toISOString()
+  : new Date(Date.now() - 6 * 30 * 86400000).toISOString();   // fallback 6 mois
+let dateToISO = range.to
+  ? new Date(range.to + 'T23:59:59').toISOString()
+  : null;
+
+// Helpers : .lte() optionnel seulement si dateTo défini
+const applyToISO = (q, col) => dateToISO ? q.lte(col, dateToISO) : q;
+
+await Promise.all([
+  applyToISO(supabase.from('interventions').select(...).gte('created_at', dateFromISO), 'created_at'),
+  applyToISO(supabase.from('transferts').select(...).gte('created_at', dateFromISO), 'created_at'),
+  ...
+]);
+
+// useEffect dépend de range.* → re-fetch auto au changement
+}, [auth.ready, auth.structureId, auth.etablissements, range.from, range.to]);</pre>
+
+<h2>👥 Lien Onboarding guidé depuis /utilisateurs</h2>
+
+<div class="panel">
+<p style="margin:0">La page <code>/onboarding</code> (wizard 4 étapes créée en 0.58.14) était cachée. Nouveau bouton lavande avec badge <strong>NEW</strong> à côté du bouton "Créer un utilisateur" existant.</p>
+</div>
+
+<div class="onb-bar">
+  <button class="btn-new-demo">👤 Créer un utilisateur</button>
+  <a class="btn-onb-demo">
+    <i>🪄</i>
+    Onboarding guidé
+    <span class="badge-new">NEW</span>
+  </a>
+</div>
+
+<h2>💬 Tooltips premium partout</h2>
+
+<div class="panel">
+<p style="margin:0">Déploiement stratégique du composant Tooltip premium en remplacement des <code>title</code> HTML natifs (qui ont 1.5s de délai navigateur et un style gris OS). Délais paramétrables, arrow CSS pure, auto-flip si débord viewport.</p>
+</div>
+
+<div class="tt-demo">
+  <span class="tt-target">
+    04 juin 2026
+    <span class="tt-pop">mardi 4 juin 2026 à 14:32</span>
+  </span>
+  <span class="tt-target" style="text-decoration:none;padding:6px 8;color:#2a5a5a">
+    🔄
+    <span class="tt-pop" style="white-space:normal;max-width:240">Un transfert (reprise matériel) a déjà été généré pour cette intervention</span>
+  </span>
+  <span class="tt-target" style="text-decoration:none;padding:6px 8">
+    🔔
+    <span class="tt-pop">Notifications · 3 non lues</span>
+  </span>
+</div>
+
+<table>
+<tr><th>Endroit</th><th>Tooltip</th></tr>
+<tr><td>NotifBell (TopBar)</td><td>"Notifications · X non lue(s)" dynamique selon compteur</td></tr>
+<tr><td>/interventions dates</td><td>Date+heure complète format full français</td></tr>
+<tr><td>/interventions badge transfert</td><td>Explication contextuelle multiline</td></tr>
+<tr><td>/interventions bouton Détails</td><td>"Voir tous les détails dans un panneau latéral"</td></tr>
+</table>
+
+<h2>📊 ProgressBar dans les exports lourds</h2>
+
+<div class="panel">
+<p style="margin:0">Deux types d'exports ont maintenant un feedback de progression visible.</p>
+</div>
+
+<h3>1. Bulk CSV interventions (&gt;100 lignes) — ProgressBar avec %</h3>
+
+<div class="pb-wrap">
+  <div class="pb-lbl">
+    <span>⬇ Export en cours… (134 / 217)</span>
+    <span class="pb-pct">62%</span>
+  </div>
+  <div class="pb-track">
+    <div class="pb-fill teal"></div>
+  </div>
+</div>
+
+<pre>const useProgress = total > 100;
+if (useProgress) setExportProgress({ value: 0, total });
+
+const BATCH = 50;  // yield au DOM tous les 50 items
+for (let i = 0; i < total; i++) {
+  lines.push(formatLine(subset[i]));
+  if (useProgress && (i + 1) % BATCH === 0) {
+    setExportProgress({ value: i + 1, total });
+    await new Promise((res) => setTimeout(res, 0));  // ne pas freezer l'UI
+  }
+}</pre>
+
+<h3>2. Bilan Excel /statistiques — ProgressBar indeterminate</h3>
+
+<div class="pb-wrap" style="max-width:520">
+  <div class="pb-lbl">
+    <span>📄 Génération du bilan complet en cours…</span>
+    <span style="color:#8a98a8;font-style:italic;font-size:11.5">en cours…</span>
+  </div>
+  <div class="pb-track" style="overflow:hidden;position:relative;height:8">
+    <div class="pb-indet"></div>
+  </div>
+</div>
+
+<p style="font-size:13px;color:#6c7a89;font-style:italic">→ avant : <code>setLoading(true)</code> bloquait toute la page · maintenant : ProgressBar inline, UI reste utilisable</p>
+
+<h2>🔧 Drawer de détail intervention</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau bouton "Détails" dans chaque ligne du tableau qui ouvre un <strong>Drawer side='right' size='md' (480px)</strong> avec toutes les infos riches : numéro 22px, status tag, urgence, grid 2 cols, carte matériel bleue avec SN/parc, carte patient violette avec Avatar, description multiline, actions disponibles.</p>
+</div>
+
+<div class="drawer-demo">
+  <div class="drawer-bg-fk"></div>
+  <div class="drawer-d">
+    <div class="drawer-h">
+      <div class="ic">🔧</div>
+      <div style="flex:1">
+        <div class="t">Intervention DI-1238</div>
+        <div class="st">Panne / réparation · Urgent</div>
+      </div>
+      <div class="x">✕</div>
+    </div>
+    <div class="drawer-b">
+      <div class="di-hdr">
+        <div class="di-num">DI-1238</div>
+        <span class="tag-st">Nouvelle</span>
+        <span class="tag-urg">Urgent</span>
+      </div>
+      <div class="di-grid">
+        <div class="di-cell"><div class="l">Type</div><div class="v">⚠ Panne / réparation</div></div>
+        <div class="di-cell"><div class="l">Créée le</div><div class="v">04/06/2026 14:32</div></div>
+        <div class="di-cell"><div class="l">Échéance</div><div class="v">06 juin 2026</div></div>
+        <div class="di-cell"><div class="l">Assigné à</div><div class="v">Hugo MARTIN</div></div>
+      </div>
+      <div>
+        <div class="di-lbl bl">🔧 Matériel concerné</div>
+        <div class="di-mat">
+          <div style="font-size:13.5;font-weight:600;color:#142131">Concentrateur O2 portable Inogen G5</div>
+          <div style="font-size:12;color:#6c7a89;margin-top:4;font-family:monospace">SN: IG5-44781230 · Parc: AVH-09421</div>
+        </div>
+      </div>
+      <div>
+        <div class="di-lbl vi">👤 Patient concerné</div>
+        <div class="di-pat">
+          <div class="av">JD</div>
+          <div>
+            <div style="font-size:13.5;font-weight:600;color:#142131">Jean DUPONT</div>
+            <div style="font-size:12;color:#6c7a89;margin-top:2">Chambre 12</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="di-lbl" style="color:#8a98a8">Description</div>
+        <div class="di-desc">Le concentrateur fait du bruit lors du démarrage et s'arrête après 5 minutes d'utilisation. Le patient a noté que cela se produit depuis 3 jours.</div>
+      </div>
+    </div>
+    <div class="drawer-f">
+      <button class="ghost">Fermer</button>
+      <button class="next">→ Passer à « Planifiée »</button>
+    </div>
+  </div>
+</div>
+
+<h2>📊 Bilan composants premium (20 au total)</h2>
+
+<table>
+<tr><th>#</th><th>Composant</th><th>Depuis</th></tr>
+<tr><td>1-3</td><td>KpiCard · Sparkline · MetricCard</td><td>0.58.0</td></tr>
+<tr><td>4</td><td>Skeleton (+6 variants)</td><td>0.58.0 → 0.58.11</td></tr>
+<tr><td>5</td><td>EmptyState</td><td>0.58.0</td></tr>
+<tr><td>6</td><td>Toast (6 helpers)</td><td>0.58.0 → 0.58.12</td></tr>
+<tr><td>7-8</td><td>PageHero · Tabs+TabPanel</td><td>0.58.3</td></tr>
+<tr><td>9</td><td>Avatar + AvatarGroup</td><td>0.58.4</td></tr>
+<tr><td>10-12</td><td>Select · DatePicker · Combobox</td><td>0.58.10/.11</td></tr>
+<tr><td>13-15</td><td>TimePicker · Dialog · Drawer</td><td>0.58.12</td></tr>
+<tr><td>16-18</td><td>RangePicker · Stepper · BulkToolbar</td><td>0.58.13</td></tr>
+<tr><td>19-20</td><td>ProgressBar · Tooltip</td><td>0.58.14</td></tr>
+<tr><td>21</td><td><b>CodeBlock</b></td><td><b>0.58.15</b></td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.15
+npm install --legacy-peer-deps
+npm test                              # 3742 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.15 - CodeBlock + RangePicker actif + Onboarding link + Tooltips + ProgressBar exports + Drawer détail DI"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Drawer pour édition patient</b> (alternative au modal géant existant — fiche patient complète avec onglets)</li>
+<li><b>Drawer pour édition matériel</b> (mêmes principes — historique des interventions, maintenances, mouvements)</li>
+<li><b>Toast Stack premium</b> : plusieurs toasts visibles en simultané avec stacking + position fixe</li>
+<li><b>Skeleton premium pour le Drawer de détail</b> (pendant le fetch supabase quand on clique sur "Détails")</li>
+<li><b>Tooltip sur les boutons du modal Nouvelle DI</b> (matériel/patient searchable, dépôt/zone)</li>
+<li><b>CodeBlock dans /admin/state</b> pour le payload JSON (debugging facile)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.15 · 4 juin 2026 · 3742 Vitest · UI Phase 14 (CodeBlock + RangePicker actif + Onboarding link + Tooltips + ProgressBar exports + Drawer détail DI)</footer>
+</div></body></html>

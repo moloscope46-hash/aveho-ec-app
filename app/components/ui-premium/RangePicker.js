@@ -17,6 +17,7 @@
 // =============================================================
 
 import { useState, useRef, useEffect } from "react";
+import { useDropdownPosition, dropdownPositionStyle } from "./useDropdownPosition";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -60,6 +61,8 @@ export default function RangePicker({
   const [draftFrom, setDraftFrom] = useState(value.from || "");
   const [draftTo, setDraftTo] = useState(value.to || "");
   const rootRef = useRef(null);
+  // 0.58.16 : auto-flip up si pas assez de place en bas (panel ~280px)
+  const flipUp = useDropdownPosition(rootRef, open, { maxHeight: 280 });
 
   const sizes = {
     sm: { padH: 10, padV: 6,  fontSize: 12,  iconSize: 14 },
@@ -196,7 +199,7 @@ export default function RangePicker({
           aria-label="Sélection de plage"
           style={{
             position: "absolute",
-            top: "calc(100% + 6px)",
+            ...dropdownPositionStyle(flipUp),
             left: 0,
             background: "var(--av-g0, #fff)",
             border: "1px solid var(--av-g200, #e3e9ee)",

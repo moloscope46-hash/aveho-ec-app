@@ -10,7 +10,7 @@ import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
-import { PageHero, toast, RangePicker } from "../components/ui-premium";
+import { PageHero, toast, RangePicker, ProgressBar } from "../components/ui-premium";
 import { openPdfPreview } from "../../lib/pdfPreview";
 // Alpha 0.19.0 : exportBilan importé dynamiquement à l'appel (économise ~5KB initial)
 
@@ -111,19 +111,43 @@ export default function Statistiques() {
   const [sgTauxReponse, setSgTauxReponse] = useState({ avec: 0, sans: 0, pct: 0 });
   // 0.58.14 : filtre période avec RangePicker
   const [range, setRange] = useState({ from: "", to: "" });
+  // 0.58.15 : ProgressBar indeterminate pendant l'export bilan complet
+  const [bilanExporting, setBilanExporting] = useState(false);
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
-      // Chargement parallèle de toutes les données nécessaires
-      const sixMois = new Date(Date.now() - 6 * 30 * 86400000).toISOString();
-      const sixMoisDate = new Date(Date.now() - 6 * 30 * 86400000).toISOString().slice(0, 10);
+      setLoading(true);
+      // 0.58.15 : si une plage est définie via RangePicker, l'utiliser.
+      //   Sinon, fallback sur les 6 derniers mois (comportement historique).
+      let dateFromISO, dateFromDate, dateToISO, dateToDate;
+      if (range.from) {
+        dateFromISO = new Date(range.from + "T00:00:00").toISOString();
+        dateFromDate = range.from; // déjà au format YYYY-MM-DD
+      } else {
+        dateFromISO = new Date(Date.now() - 6 * 30 * 86400000).toISOString();
+        dateFromDate = dateFromISO.slice(0, 10);
+      }
+      if (range.to) {
+        dateToISO = new Date(range.to + "T23:59:59").toISOString();
+        dateToDate = range.to;
+      } else {
+        dateToISO = null;
+        dateToDate = null;
+      }
+      // Variables conservées avec les noms historiques pour minimiser le diff
+      const sixMois = dateFromISO;
+      const sixMoisDate = dateFromDate;
+      // Helpers pour appliquer optionnellement le filtre haut (to)
+      const applyToISO = (q, col) => dateToISO ? q.lte(col, dateToISO) : q;
+      const applyToDate = (q, col) => dateToDate ? q.lte(col, dateToDate) : q;
+
       const [{ data: interventions }, { data: transferts }, { data: stockA }, { data: maintenances }, { data: signalements }] = await Promise.all([
-        supabase.from("interventions").select("created_at, statut, urgence, materiel_id, materiels(libelle)").gte("created_at", sixMois),
-        supabase.from("transferts").select("created_at, etablissement_id, etablissements(nom)").gte("created_at", sixMois),
+        applyToISO(supabase.from("interventions").select("created_at, statut, urgence, materiel_id, materiels(libelle)").gte("created_at", sixMois), "created_at"),
+        applyToISO(supabase.from("transferts").select("created_at, etablissement_id, etablissements(nom)").gte("created_at", sixMois), "created_at"),
         supabase.from("stock_articles").select("quantite, depots(nom)"),
-        supabase.from("maintenances").select("date_prevue, date_realisee, statut, type").gte("date_prevue", sixMoisDate),
-        supabase.from("signalements").select("type, statut, reponse, created_at").gte("created_at", sixMois),
+        applyToDate(supabase.from("maintenances").select("date_prevue, date_realisee, statut, type").gte("date_prevue", sixMoisDate), "date_prevue"),
+        applyToISO(supabase.from("signalements").select("type, statut, reponse, created_at").gte("created_at", sixMois), "created_at"),
       ]);
 
       // 1) Interventions par mois (6 derniers)
@@ -251,7 +275,7 @@ export default function Statistiques() {
 
       setLoading(false);
     })();
-  }, [auth.ready, auth.structureId, auth.etablissements]);
+  }, [auth.ready, auth.structureId, auth.etablissements, range.from, range.to]);
 
   if (!auth.ready) return null;
 
@@ -264,7 +288,14 @@ export default function Statistiques() {
           icon="ti-chart-bar"
           eyebrow="ANALYSE"
           title="Statistiques"
-          subtitle={`Tableaux de bord visuels — 6 derniers mois${auth.structureNom ? ` · ${auth.structureNom}` : ""}`}
+          subtitle={(() => {
+            // 0.58.15 : subtitle dynamique selon la plage active
+            if (range.from || range.to) {
+              const fmt = (iso) => iso ? new Date(iso + "T00:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+              return `Période : ${fmt(range.from)} → ${fmt(range.to)}${auth.structureNom ? ` · ${auth.structureNom}` : ""}`;
+            }
+            return `Tableaux de bord visuels — 6 derniers mois${auth.structureNom ? ` · ${auth.structureNom}` : ""}`;
+          })()}
           variant="blue"
           breadcrumbs={[
             { label: "Accueil", href: "/accueil" },
@@ -310,7 +341,7 @@ export default function Statistiques() {
               )}
               {auth.ready && (
                 <button className="btn-ghost btn-premium btn-sm" onClick={async () => {
-                  setLoading(true);
+                  setBilanExporting(true);
                   try {
                     let qPat = supabase.from("patients").select("*");
                     let qMat = supabase.from("materiels").select("*, articles(libelle, reference), depots(nom), patients(nom, prenom)");
@@ -339,7 +370,7 @@ export default function Statistiques() {
                       etabNom: auth.etabNom,
                     });
                   } catch (e) { toast.error("Export CSV : " + e.message); }
-                  finally { setLoading(false); }
+                  finally { setBilanExporting(false); }
                 }}>
                   <i className="ti ti-file-spreadsheet" /> Export CSV
                 </button>
@@ -364,11 +395,34 @@ export default function Statistiques() {
           </span>
           <RangePicker value={range} onChange={setRange} />
           {(range.from || range.to) && (
-            <span style={{ fontSize: 11.5, color: "#8a98a8", fontStyle: "italic", marginLeft: "auto" }}>
-              <i className="ti ti-info-circle" /> Filtre actif — recharger les données pour appliquer
+            <span style={{ fontSize: 11.5, color: "#5aa05a", fontWeight: 600, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <i className="ti ti-circle-check-filled" /> Filtre appliqué
             </span>
           )}
         </div>
+
+        {/* 0.58.15 : ProgressBar indeterminate pendant l'export du bilan Excel */}
+        {bilanExporting && (
+          <div style={{
+            padding: "12px 16px",
+            background: "linear-gradient(135deg, rgba(124,200,200,.08), rgba(255,255,255,.5))",
+            border: "1px solid rgba(124,200,200,.30)",
+            borderRadius: 12,
+            marginBottom: 16,
+          }}>
+            <ProgressBar
+              indeterminate
+              label={
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <i className="ti ti-file-spreadsheet" style={{ color: "#185FA5" }} />
+                  Génération du bilan complet en cours…
+                </span>
+              }
+              variant="success"
+              size="md"
+            />
+          </div>
+        )}
 
         {loading ? <Panel><StateMsg>Calcul des statistiques…</StateMsg></Panel> : (
           <>

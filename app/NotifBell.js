@@ -10,7 +10,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
 import { relativeTime } from "../lib/format";
 // 0.58.13 : Drawer pour panel notifications côté droit
-import { Drawer } from "./components/ui-premium";
+// 0.58.15 : Tooltip pour la cloche avec compteur dynamique
+import { Drawer, Tooltip } from "./components/ui-premium";
 
 const TYPES = {
   systeme:    { ic: "ti-info-circle",     color: "#185FA5" },
@@ -130,16 +131,22 @@ export default function NotifBell({ structureId, userId }) {
 
   return (
     <div className="notif-wrap" ref={ref}>
-      <button 
-        className="notif-btn" 
-        onClick={() => setOpen(!open)} 
-        aria-label="Notifications" 
-        title="Notifications"
-        style={hasNew ? { animation: "aveho-bell-shake .8s ease-in-out 3" } : null}
+      {/* 0.58.15 : Tooltip premium au lieu du title HTML */}
+      <Tooltip
+        content={nonLues > 0 ? `Notifications · ${nonLues} non lue${nonLues > 1 ? "s" : ""}` : "Notifications"}
+        position="bottom"
+        delay={500}
       >
-        <i className="ti ti-bell" style={hasNew ? { color: "#EF9F27" } : null} />
-        {nonLues > 0 && <span className="notif-badge">{nonLues > 9 ? "9+" : nonLues}</span>}
-      </button>
+        <button
+          className="notif-btn"
+          onClick={() => setOpen(!open)}
+          aria-label="Notifications"
+          style={hasNew ? { animation: "aveho-bell-shake .8s ease-in-out 3" } : null}
+        >
+          <i className="ti ti-bell" style={hasNew ? { color: "#EF9F27" } : null} />
+          {nonLues > 0 && <span className="notif-badge">{nonLues > 9 ? "9+" : nonLues}</span>}
+        </button>
+      </Tooltip>
       <style>{`
         @keyframes aveho-bell-shake {
           0%, 100% { transform: rotate(0deg); }

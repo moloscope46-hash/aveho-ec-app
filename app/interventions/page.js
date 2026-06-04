@@ -9,7 +9,7 @@ import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
-import { EmptyState, toast, SkeletonRow, Avatar, Select, DatePicker, BulkToolbar } from "../components/ui-premium";
+import { EmptyState, toast, SkeletonRow, Avatar, Select, DatePicker, BulkToolbar, Tooltip, ProgressBar, Drawer } from "../components/ui-premium";
 import { Dialog } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import DIPreview from "../DIPreview";
@@ -51,6 +51,10 @@ export default function Interventions() {
 
   // 0.58.14 : multi-sélection bulk
   const [selected, setSelected] = useState(new Set());
+  // 0.58.15 : Drawer de détail intervention (vue complète + historique)
+  const [detailDi, setDetailDi] = useState(null);
+  // 0.58.15 : progress bar pour export lourd (>100 lignes)
+  const [exportProgress, setExportProgress] = useState(null); // null | { value, total }
   function toggleSelected(id) {
     setSelected(prev => {
       const next = new Set(prev);
@@ -83,9 +87,15 @@ export default function Interventions() {
     try {
       const ids = Array.from(selected);
       const subset = rows.filter(r => ids.includes(r.id));
+      const total = subset.length;
       const headers = ["N°", "Date", "Type", "Urgence", "Statut", "Assigné"];
       const lines = [headers.join(";")];
-      for (const r of subset) {
+      // 0.58.15 : pour les exports lourds (>100 lignes), affiche une ProgressBar
+      const useProgress = total > 100;
+      if (useProgress) setExportProgress({ value: 0, total });
+      const BATCH = 50; // yield au DOM tous les 50 items pour ne pas freezer
+      for (let i = 0; i < total; i++) {
+        const r = subset[i];
         lines.push([
           r.numero || "",
           r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "",
@@ -94,7 +104,13 @@ export default function Interventions() {
           r.statut || "",
           (r.assignee_email || "—").replace(/;/g, ","),
         ].join(";"));
+        if (useProgress && (i + 1) % BATCH === 0) {
+          setExportProgress({ value: i + 1, total });
+          // yield au navigateur pour re-paint
+          await new Promise((res) => setTimeout(res, 0));
+        }
       }
+      if (useProgress) setExportProgress({ value: total, total });
       const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -103,8 +119,11 @@ export default function Interventions() {
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${selected.size} intervention${selected.size > 1 ? "s exportées" : " exportée"}`);
+      // Hide progress après un court délai pour laisser le user voir "100%"
+      if (useProgress) setTimeout(() => setExportProgress(null), 800);
     } catch (e) {
       toast.error("Erreur export CSV : " + e.message);
+      setExportProgress(null);
     }
   }
   async function bulkDelete() {
@@ -366,9 +385,24 @@ export default function Interventions() {
                         >
                           {r.numero}
                         </DIPreview>
-                        {r.transfert_id && <i className="ti ti-transfer" title="Transfert généré" style={{ marginLeft: 6, color: "#2a5a5a" }} />}
+                        {r.transfert_id && (
+                          <Tooltip content="Un transfert (reprise matériel) a déjà été généré pour cette intervention" position="top">
+                            <i className="ti ti-transfer" style={{ marginLeft: 6, color: "#2a5a5a", cursor: "help" }} />
+                          </Tooltip>
+                        )}
                       </td>
-                      <td>{fmtDate(r.created_at)}</td>
+                      <td>
+                        {/* 0.58.15 : Tooltip avec date+heure complète au hover */}
+                        <Tooltip
+                          content={r.created_at ? new Date(r.created_at).toLocaleString("fr-FR", { dateStyle: "full", timeStyle: "short" }) : "—"}
+                          position="top"
+                          delay={300}
+                        >
+                          <span style={{ cursor: "help", textDecoration: "underline dotted", textUnderlineOffset: 3, textDecorationColor: "#cfd8e0" }}>
+                            {fmtDate(r.created_at)}
+                          </span>
+                        </Tooltip>
+                      </td>
                       <td><span className="tag-type"><i className={`ti ${typeIcon(r.type)}`} /> {r.type}</span></td>
                       <td><span className={`urg ${r.urgence === "Urgent" ? "urg-urgent" : "urg-normal"}`}>{r.urgence}</span></td>
                       <td style={{ fontSize: 12 }}>
@@ -396,7 +430,17 @@ export default function Interventions() {
                         )}
                       </td>
                       <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                        {next(r.statut) && <button className="btn-mini" onClick={() => advance(r)} title={`Passer à « ${next(r.statut)} »`}><i className="ti ti-arrow-right" /> {next(r.statut)}</button>}
+                        {/* 0.58.15 : bouton Détails ouvre le Drawer */}
+                        <Tooltip content="Voir tous les détails dans un panneau latéral" position="left">
+                          <button
+                            className="btn-mini"
+                            onClick={() => setDetailDi(r)}
+                            aria-label={`Détails ${r.numero}`}
+                          >
+                            <i className="ti ti-layout-sidebar-right-expand" /> Détails
+                          </button>
+                        </Tooltip>
+                        {next(r.statut) && <button className="btn-mini" style={{ marginLeft: 6 }} onClick={() => advance(r)} title={`Passer à « ${next(r.statut)} »`}><i className="ti ti-arrow-right" /> {next(r.statut)}</button>}
                         {auth.can("ecrire") && <button className="btn-mini" style={{ marginLeft: 6 }} onClick={() => openAssign(r)} title="Assigner à un utilisateur"><i className="ti ti-user-check" /> {r.assignee_id ? "Réassigner" : "Assigner"}</button>}
                         {r.materiel_id && !r.transfert_id && (
                           <button className="btn-mini" style={{ marginLeft: 6 }} onClick={() => genTransfert(r)} title="Générer un transfert (reprise)"><i className="ti ti-transfer" /> Transfert</button>
@@ -559,6 +603,257 @@ export default function Interventions() {
           { id: "delete", label: "Supprimer",      icon: "ti-trash",        onClick: bulkDelete, variant: "danger" },
         ]}
       />
+
+      {/* 0.58.15 : ProgressBar floating pour les exports lourds (>100 lignes) */}
+      {exportProgress && (
+        <div style={{
+          position: "fixed",
+          bottom: 90,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 75,
+          background: "#fff",
+          border: "1px solid #e3e9ee",
+          borderRadius: 12,
+          padding: "14px 18px",
+          minWidth: 360,
+          boxShadow: "0 20px 50px rgba(20,33,49,.30), 0 8px 20px rgba(20,33,49,.18)",
+          animation: "av-bulk-toolbar-in 350ms cubic-bezier(.2,.8,.2,1)",
+        }}>
+          <ProgressBar
+            value={(exportProgress.value / exportProgress.total) * 100}
+            label={
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <i className="ti ti-download" style={{ color: "#185FA5" }} />
+                Export en cours… ({exportProgress.value} / {exportProgress.total})
+              </span>
+            }
+            showPercent
+            variant="default"
+            size="md"
+          />
+        </div>
+      )}
+
+      {/* 0.58.15 : Drawer de détail intervention — vue complète + historique */}
+      <Drawer
+        open={!!detailDi}
+        onClose={() => setDetailDi(null)}
+        title={detailDi ? `Intervention ${detailDi.numero}` : "Détails"}
+        subtitle={detailDi ? `${detailDi.type} · ${detailDi.urgence}` : ""}
+        icon="ti-tools"
+        color="#142131"
+        side="right"
+        size="md"
+        footer={
+          <>
+            <button
+              className="btn-ghost"
+              onClick={() => setDetailDi(null)}
+            >
+              Fermer
+            </button>
+            {detailDi && next(detailDi.statut) && (
+              <button
+                className="btn-save"
+                onClick={() => { advance(detailDi); setDetailDi(null); }}
+              >
+                <i className="ti ti-arrow-right" /> Passer à « {next(detailDi.statut)} »
+              </button>
+            )}
+          </>
+        }
+      >
+        {detailDi && (() => {
+          const r = detailDi;
+          const dStatut = stCls(r.statut);
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Numéro + statut */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div style={{
+                  fontSize: 22,
+                  fontWeight: 800,
+                  color: "#142131",
+                  letterSpacing: "-.02em",
+                }}>
+                  {r.numero}
+                </div>
+                <span className={`tag-statut ${dStatut}`} style={{ fontSize: 12 }}>
+                  {r.statut}
+                </span>
+                <span className={`urg ${r.urgence === "Urgent" ? "urg-urgent" : "urg-normal"}`} style={{ marginLeft: "auto" }}>
+                  {r.urgence}
+                </span>
+              </div>
+
+              {/* Informations clés */}
+              <div style={{
+                padding: 14,
+                background: "#f9fbfc",
+                border: "1px solid #e3e9ee",
+                borderRadius: 10,
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 14,
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>Type</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#142131", display: "flex", alignItems: "center", gap: 6 }}>
+                    <i className={`ti ${typeIcon(r.type)}`} />
+                    {r.type}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>Créée le</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#142131" }}>
+                    {r.created_at ? new Date(r.created_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }) : "—"}
+                  </div>
+                </div>
+                {r.due_date && (
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>Échéance</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#142131" }}>
+                      {fmtDate(r.due_date)}
+                    </div>
+                  </div>
+                )}
+                {r.assignee_email && (
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>Assigné à</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#142131", display: "flex", alignItems: "center", gap: 6 }}>
+                      <Avatar name={r.assignee_email} size={22} />
+                      {r.assignee_email}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Matériel concerné */}
+              {r.materiels && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    <i className="ti ti-tool" /> Matériel concerné
+                  </div>
+                  <div style={{
+                    padding: 12,
+                    background: "linear-gradient(135deg, rgba(24,95,165,.06), transparent)",
+                    border: "1px solid rgba(24,95,165,.20)",
+                    borderRadius: 10,
+                  }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: "#142131" }}>
+                      {r.materiels.libelle}
+                    </div>
+                    {(r.materiels.numero_serie || r.materiels.numero_parc) && (
+                      <div style={{ fontSize: 12, color: "#6c7a89", marginTop: 4, fontFamily: "monospace" }}>
+                        {r.materiels.numero_serie && <span>SN: {r.materiels.numero_serie}</span>}
+                        {r.materiels.numero_parc && <span style={{ marginLeft: 12 }}>Parc: {r.materiels.numero_parc}</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Patient concerné */}
+              {r.patients && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#7a6fb0", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    <i className="ti ti-user" /> Patient concerné
+                  </div>
+                  <div style={{
+                    padding: 12,
+                    background: "linear-gradient(135deg, rgba(122,111,176,.06), transparent)",
+                    border: "1px solid rgba(122,111,176,.20)",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                  }}>
+                    <Avatar name={`${r.patients.prenom || ""} ${r.patients.nom || ""}`.trim()} size={36} />
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "#142131" }}>
+                        {r.patients.prenom} {r.patients.nom}
+                      </div>
+                      {r.patients.chambre && (
+                        <div style={{ fontSize: 12, color: "#6c7a89", marginTop: 2 }}>
+                          Chambre {r.patients.chambre}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {r.description && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 6 }}>
+                    Description
+                  </div>
+                  <div style={{
+                    padding: 12,
+                    background: "#f4f7fa",
+                    border: "1px solid #e3e9ee",
+                    borderRadius: 10,
+                    fontSize: 13,
+                    color: "#4a5868",
+                    lineHeight: 1.55,
+                    whiteSpace: "pre-wrap",
+                  }}>
+                    {r.description}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{
+                paddingTop: 12,
+                borderTop: "1px solid #e3e9ee",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>
+                  Actions disponibles
+                </div>
+                {auth.can("ecrire") && (
+                  <button
+                    className="btn-mini"
+                    onClick={() => { openAssign(r); setDetailDi(null); }}
+                    style={{ justifyContent: "flex-start" }}
+                  >
+                    <i className="ti ti-user-check" /> {r.assignee_id ? "Réassigner" : "Assigner à un utilisateur"}
+                  </button>
+                )}
+                {r.materiel_id && !r.transfert_id && (
+                  <button
+                    className="btn-mini"
+                    onClick={() => { genTransfert(r); setDetailDi(null); }}
+                    style={{ justifyContent: "flex-start" }}
+                  >
+                    <i className="ti ti-transfer" /> Générer un transfert (reprise)
+                  </button>
+                )}
+                {r.transfert_id && (
+                  <div style={{
+                    fontSize: 12,
+                    color: "#2a5a5a",
+                    padding: "8px 12px",
+                    background: "rgba(124,200,200,.10)",
+                    border: "1px solid rgba(124,200,200,.30)",
+                    borderRadius: 8,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}>
+                    <i className="ti ti-circle-check" /> Un transfert a déjà été généré pour cette intervention
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      </Drawer>
     </div>
   );
 }

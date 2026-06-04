@@ -759,6 +759,50 @@ export default function Utilisateurs() {
               <Panel>
                 <div className="di-toolbar" style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:12 }}>
                   {auth.can("inviter") && <button className="btn-new" onClick={() => { setErr(""); setInviteModal(true); }}><i className="ti ti-user-plus" /> Créer un utilisateur</button>}
+                  {/* 0.58.15 : raccourci vers la page d'onboarding guidé */}
+                  {auth.can("inviter") && (
+                    <a
+                      href="/onboarding"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "8px 14px",
+                        background: "linear-gradient(135deg, rgba(122,111,176,.12) 0%, rgba(122,111,176,.06) 100%)",
+                        border: "1px solid rgba(122,111,176,.30)",
+                        borderRadius: 10,
+                        color: "#5d52a0",
+                        fontFamily: "inherit",
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        transition: "all 200ms",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "linear-gradient(135deg, rgba(122,111,176,.22) 0%, rgba(122,111,176,.12) 100%)";
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 4px 10px rgba(122,111,176,.20)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "linear-gradient(135deg, rgba(122,111,176,.12) 0%, rgba(122,111,176,.06) 100%)";
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      <i className="ti ti-wand" style={{ fontSize: 14 }} />
+                      Onboarding guidé
+                      <span style={{
+                        fontSize: 9,
+                        padding: "2px 6px",
+                        background: "rgba(122,111,176,.20)",
+                        border: "1px solid rgba(122,111,176,.30)",
+                        borderRadius: 99,
+                        letterSpacing: ".5px",
+                        textTransform: "uppercase",
+                        fontWeight: 800,
+                      }}>NEW</span>
+                    </a>
+                  )}
                   <span style={{ marginLeft:"auto" }}>
                     <FilterBar
                       label="Voir :"

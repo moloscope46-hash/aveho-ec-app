@@ -196,7 +196,7 @@ describe("0.58.13 - Refonte Notifications panel avec Drawer", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/NotifBell.js"), "utf-8");
 
   it("Import Drawer depuis ui-premium", () => {
-    expect(src).toMatch(/import\s+\{\s*Drawer\s*\}\s+from\s+["']\.\/components\/ui-premium["']/);
+    expect(src).toMatch(/import\s+\{[^}]*\bDrawer\b[^}]*\}\s+from\s+["']\.\/components\/ui-premium["']/);
   });
 
   it("Utilise <Drawer> au lieu de <div className='notif-panel'>", () => {

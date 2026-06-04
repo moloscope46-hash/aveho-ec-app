@@ -127,11 +127,13 @@ describe("0.56.16 - Layout intègre FloatingActionBar (via LazyLayoutChrome depu
 describe("0.56.16 - CSS : padding-bottom ajusté pour la FAB", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/globals.css"), "utf-8");
 
-  it("Desktop .wrap : padding-bottom augmenté à 110px", () => {
-    expect(src).toContain("padding:30px 24px 110px");
+  it("Desktop .wrap : padding-bottom augmenté à 110px (0.58.16 : 140px + safe-area)", () => {
+    // 0.58.16 hotfix UI : passé à 140px + safe-area-inset-bottom
+    expect(src).toMatch(/\.wrap\{[^}]*padding:30px 24px (110px|calc\(140px \+ env\(safe-area)/);
   });
 
-  it("Mobile .wrap : padding-bottom augmenté à 130px", () => {
-    expect(src).toContain("padding:18px 12px 130px");
+  it("Mobile .wrap : padding-bottom augmenté à 130px (0.58.16 : 160px + safe-area)", () => {
+    // 0.58.16 hotfix UI : passé à 160px + safe-area-inset-bottom
+    expect(src).toMatch(/\.wrap\{padding:18px 12px (130px|calc\(160px \+ env\(safe-area)/);
   });
 });

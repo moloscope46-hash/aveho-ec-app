@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.16 — HOTFIX UI</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:900px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#0d1822 0%,#7a3037 50%,#C9867F 130%);color:#fff;border-radius:24px;padding:42px 36px;margin-bottom:30px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(201,134,127,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"🔧";position:absolute;font-size:200px;opacity:.05;bottom:-50px;left:30px;transform:rotate(-15deg);pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5d5d0;font-weight:700;background:rgba(201,134,127,.18);border:1px solid rgba(201,134,127,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#C9867F;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,134,127,.5)}70%{box-shadow:0 0 0 10px rgba(201,134,127,0)}100%{box-shadow:0 0 0 0 rgba(201,134,127,0)}}
+.logo{font-size:30px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:28px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:14px;font-weight:500;color:#f5d5d0;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:18px;font-size:12px;color:#f5d5d0}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:20px;color:var(--navy);margin:36px 0 14px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#C9867F,#7a3037)}
+
+.bug{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:20px 24px;margin:14px 0;box-shadow:0 2px 6px rgba(20,33,49,.04);border-left:4px solid #C9867F}
+.bug .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#C9867F;color:#fff;font-weight:800;font-size:13px;margin-right:10px;vertical-align:middle}
+.bug h3{margin:0 0 10px;font-size:16;color:#142131;display:inline-block}
+.bug .sym{padding:8px 12px;background:#fef0ee;border:1px solid #f8c5c0;border-radius:8px;color:#7a3037;font-size:12.5px;font-weight:500;margin:10px 0;display:flex;align-items:start;gap:8px}
+.bug .sym i{font-style:normal}
+.bug .fix{padding:8px 12px;background:#eef9ef;border:1px solid #bfe2bf;border-radius:8px;color:#2e6f33;font-size:12.5px;font-weight:500;margin:10px 0;display:flex;align-items:start;gap:8px}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.55;border-left:3px solid #C9867F}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:20px 24px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:16px;text-align:center}
+.top-kpi-val{font-size:28px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#fef0ee,#fff);border-color:#f8c5c0}.top-kpi.t .top-kpi-val{color:#7a3037}
+.top-kpi.b{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.b .top-kpi-val{color:#2e6f33}
+
+/* Demo bugs visuels */
+.demo-coupé{position:relative;background:linear-gradient(180deg,#fff 70%,transparent);border:1px dashed #f8c5c0;border-radius:10px;padding:14px;margin:8px 0;height:80px;overflow:hidden}
+.demo-coupé .ct{position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(180deg,transparent,rgba(201,134,127,.18));pointer-events:none}
+.demo-coupé .cl{position:absolute;bottom:6px;right:8px;font-size:10px;color:#7a3037;font-weight:700;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid #f8c5c0}
+
+.demo-ok{background:linear-gradient(180deg,#fff,#fff);border:1px dashed #bfe2bf;border-radius:10px;padding:14px;margin:8px 0;height:80px;position:relative}
+.demo-ok .cl{position:absolute;bottom:6px;right:8px;font-size:10px;color:#2e6f33;font-weight:700;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid #bfe2bf}
+
+/* Demo flip */
+.flip-demo{background:linear-gradient(135deg,#e3e9ee,#cfd8e0);border-radius:10px;padding:30px;margin:14px 0;display:flex;justify-content:space-around;align-items:flex-start;gap:30px;height:240px;position:relative}
+.flip-side{position:relative;flex:1;max-width:200px}
+.flip-trigger{padding:8px 12;background:#fff;border:1.5px solid #7CC8C8;border-radius:10;font-size:13;color:#142131;display:flex;align-items:center;gap:6;cursor:pointer;font-weight:500}
+.flip-dropdown{position:absolute;background:#fff;border:1px solid #e3e9ee;border-radius:12;padding:8;box-shadow:0 20px 40px rgba(20,33,49,.18);left:0;right:0;width:100%;font-size:12}
+.flip-dropdown .opt{padding:6px 8;border-radius:6;color:#142131}
+.flip-dropdown .opt:hover{background:rgba(124,200,200,.14)}
+.flip-side.bot .flip-trigger{margin-top:160px}
+.flip-side.bot .flip-dropdown{bottom:calc(100% + 6px);top:auto}
+.flip-side.top .flip-dropdown{top:calc(100% + 6px)}
+.flip-label{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:10;font-weight:700;color:#142131;letter-spacing:.5px;text-transform:uppercase}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+table th{background:var(--navy);color:#fff;padding:8px 11;text-align:left;font-weight:700}
+table td{padding:8px 11;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+table code{font-size:11.5px}
+
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--g200);font-size:11px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:4px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX CRITIQUE — 3 BUGS</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.16 — HOTFIX UI<small>Profil coupé + Menu burger masqué hors accueil + Dropdowns coupés en bas</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.16-alpha</code></span>
+    <span><b>Tests :</b> 3770 Vitest (+28)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">3</div><div class="top-kpi-lbl">Bugs UI fixés</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">4</div><div class="top-kpi-lbl">Composants patchés</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Hook réutilisable</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">+28</div><div class="top-kpi-lbl">Tests Vitest (3770)</div></div>
+</div>
+
+<h2>🐛 Bug 1 — Profil coupé</h2>
+
+<div class="bug">
+  <span class="num">1</span><h3>Le bas du Profil (et d'autres pages longues) était coupé</h3>
+  <div class="sym"><i>🔴</i> <span><b>Symptôme :</b> sur la page Profil et autres pages avec contenu long, le bas était masqué par le viewport, surtout sur iPhone avec home indicator</span></div>
+  <div class="fix"><i>✓</i> <span><b>Cause :</b> <code>.wrap</code> avait <code>padding-bottom: 110px</code> (desktop) / <code>130px</code> (mobile) — insuffisant quand widgets fixed (BulkToolbar, ProgressBar) flottent en bas. <b>Fix :</b> passage à <code>140px</code> / <code>160px</code> + <code>env(safe-area-inset-bottom)</code> pour gérer auto le notch iOS</span></div>
+
+<pre>/* AVANT 0.58.16 */
+.wrap { padding: 30px 24px 110px; }              /* desktop */
+@media(max-width:760px) {
+  .wrap { padding: 18px 12px 130px; }            /* mobile */
+}
+
+/* 0.58.16 - safe-area-inset pour iPhone */
+.wrap { 
+  padding: 30px 24px calc(140px + env(safe-area-inset-bottom, 0px)); 
+}
+@media(max-width:760px) {
+  .wrap { padding: 18px 12px calc(160px + env(safe-area-inset-bottom, 0px)); }
+}</pre>
+</div>
+
+<h2>🐛 Bug 2 — Menu burger masqué hors accueil</h2>
+
+<div class="bug">
+  <span class="num">2</span><h3>Clic sur le burger → flou visible mais menu invisible</h3>
+  <div class="sym"><i>🔴</i> <span><b>Symptôme :</b> sur /interventions, /statistiques, etc. quand on clique sur le burger, on voit juste le flou (l'overlay sombre) mais le menu drawer ne s'affiche pas</span></div>
+  <div class="fix"><i>✓</i> <span><b>Cause :</b> z-index trop bas du menu (overlay <code>48</code>, drawer <code>49</code>) → masqué par BulkToolbar (70), ProgressBar (75), Modal (80), Drawer backdrop (85). <b>Fix :</b> passage à 9998 / 9999</span></div>
+
+<table>
+<tr><th>Composant</th><th>z-index avant</th><th>z-index après</th></tr>
+<tr><td><code>.menu-overlay</code></td><td style="color:#c0392b">48 (insuffisant)</td><td style="color:#2e6f33"><b>9998</b></td></tr>
+<tr><td><code>.menu-drawer</code></td><td style="color:#c0392b">49 (insuffisant)</td><td style="color:#2e6f33"><b>9999</b></td></tr>
+<tr><td><code>.bulk-toolbar</code></td><td colspan="2" style="text-align:center">70 — masquait le menu</td></tr>
+<tr><td>ProgressBar floating</td><td colspan="2" style="text-align:center">75 — masquait le menu</td></tr>
+<tr><td><code>.modal-bg</code></td><td colspan="2" style="text-align:center">80 — masquait le menu</td></tr>
+<tr><td>Drawer backdrop</td><td colspan="2" style="text-align:center">85 — masquait le menu</td></tr>
+</table>
+</div>
+
+<h2>🐛 Bug 3 — Dropdowns coupés en bas</h2>
+
+<div class="bug">
+  <span class="num">3</span><h3>Select / TimePicker / RangePicker / Combobox s'ouvraient toujours vers le bas</h3>
+  <div class="sym"><i>🔴</i> <span><b>Symptôme :</b> quand on cliquait sur un Select en bas d'écran ou dans une modale, le dropdown débordait du viewport et était coupé. Si deux dropdowns dans une rangée, le 2e était parfois invisible</span></div>
+  <div class="fix"><i>✓</i> <span><b>Cause :</b> hardcodé <code>top: calc(100% + 6px)</code> sans détection de débord. <b>Fix :</b> nouveau hook <code>useDropdownPosition</code> qui calcule via <code>getBoundingClientRect()</code> si flip vers le haut nécessaire</span></div>
+
+<div class="flip-demo">
+  <div class="flip-side top">
+    <div class="flip-trigger">📅 04 juin 2026 <span style="margin-left:auto;color:#8a98a8">▼</span></div>
+    <div class="flip-dropdown">
+      <div class="opt">04 juin 2026</div>
+      <div class="opt">05 juin 2026</div>
+      <div class="opt">06 juin 2026</div>
+    </div>
+    <span class="flip-label" style="bottom:-44px">↓ Haut viewport : dropdown vers le bas</span>
+  </div>
+  <div class="flip-side bot">
+    <div class="flip-dropdown" style="bottom:calc(100% + 6px);top:auto">
+      <div class="opt">14:00</div>
+      <div class="opt">14:15</div>
+      <div class="opt">14:30</div>
+    </div>
+    <div class="flip-trigger">🕐 14:30 <span style="margin-left:auto;color:#8a98a8">▼</span></div>
+    <span class="flip-label">↑ Bas viewport : flip vers le haut</span>
+  </div>
+</div>
+
+<p style="margin-top:50px"></p>
+
+<pre>// 0.58.16 - hook réutilisable
+import { useDropdownPosition, dropdownPositionStyle } from './useDropdownPosition';
+
+const rootRef = useRef(null);
+const [open, setOpen] = useState(false);
+const flipUp = useDropdownPosition(rootRef, open, { maxHeight: 320 });
+
+&lt;div style={{
+  position: 'absolute',
+  ...dropdownPositionStyle(flipUp),  // ← top OU bottom selon position
+  left: 0,
+  right: 0,
+  ...
+}}&gt;
+  Dropdown content
+&lt;/div&gt;
+
+// Logique du hook :
+//   • spaceBelow = vh - rect.bottom - margin
+//   • spaceAbove = rect.top - margin
+//   • flip si spaceBelow < maxHeight ET spaceAbove > spaceBelow
+//   • Recalcule au scroll + resize pendant que le dropdown est ouvert
+//   • Cleanup listeners au unmount</pre>
+
+<h3>Composants patchés</h3>
+
+<table>
+<tr><th>Composant</th><th>maxHeight</th><th>Auto-flip</th></tr>
+<tr><td><code>Select</code></td><td>320px</td><td>✅</td></tr>
+<tr><td><code>TimePicker</code></td><td>280px</td><td>✅</td></tr>
+<tr><td><code>RangePicker</code></td><td>280px</td><td>✅</td></tr>
+<tr><td><code>Combobox</code></td><td>320px</td><td>✅</td></tr>
+<tr><td><code>DatePicker</code></td><td colspan="2" style="text-align:center;color:#8a98a8;font-style:italic">utilise input HTML5 natif, géré par le navigateur</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a;font-size:12.5px">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.16
+npm install --legacy-peer-deps
+npm test                              # 3770 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.16 HOTFIX - Profil coupé + Menu burger z-index + Dropdowns auto-flip"
+git push origin main</pre>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.16 · 4 juin 2026 · 3770 Vitest · HOTFIX UI (3 bugs critiques)</footer>
+</div></body></html>

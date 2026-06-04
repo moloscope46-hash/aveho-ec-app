@@ -19,6 +19,7 @@
 // =============================================================
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import { useDropdownPosition, dropdownPositionStyle } from "./useDropdownPosition";
 
 function toMinutes(hhmm) {
   if (!hhmm) return null;
@@ -47,6 +48,8 @@ export default function TimePicker({
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
   const dropdownRef = useRef(null);
+  // 0.58.16 : auto-flip up si pas assez de place en bas
+  const flipUp = useDropdownPosition(rootRef, open, { maxHeight: 280 });
 
   const sizes = {
     sm: { padH: 10, padV: 6, fontSize: 12, iconSize: 14 },
@@ -216,7 +219,7 @@ export default function TimePicker({
           role="listbox"
           style={{
             position: "absolute",
-            top: "calc(100% + 6px)",
+            ...dropdownPositionStyle(flipUp),
             left: 0,
             right: 0,
             background: "var(--av-g0, #fff)",

@@ -38,5 +38,7 @@ export { default as BulkToolbar } from "./BulkToolbar";
 export { default as ProgressBar } from "./ProgressBar";
 // 0.58.14 : Tooltip premium (au hover avec arrow + délai)
 export { default as Tooltip } from "./Tooltip";
+// 0.58.15 : CodeBlock premium (JSON/SQL avec coloration + bouton copier)
+export { default as CodeBlock } from "./CodeBlock";
 // 0.58.11 : Combobox multi-select avec tags
 export { default as Combobox } from "./Combobox";
