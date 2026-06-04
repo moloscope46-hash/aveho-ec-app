@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.19 — MOBILE FIX CRITIQUE</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding:36px 28px 80px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#0d1822,#185FA5 50%,#7CC8C8 130%);color:#fff;border-radius:24px;padding:46px 38px;margin-bottom:32px;box-shadow:0 30px 60px rgba(20,33,49,.40);overflow:hidden;isolation:isolate}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:380px;height:380px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);border-radius:50%;pointer-events:none;z-index:0}
+header.cover::after{content:"📱";position:absolute;bottom:-30px;left:30px;font-size:180px;opacity:.06;pointer-events:none;z-index:0;transform:rotate(-12deg)}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px;backdrop-filter:blur(20px);box-shadow:0 0 24px rgba(124,200,200,.20)}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:6px;color:#fff}
+.logo .v{color:#7CC8C8;text-shadow:0 0 4px rgba(124,200,200,.9),0 0 12px rgba(124,200,200,.6),0 0 24px rgba(124,200,200,.3)}
+h1{font-size:28px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.18}
+h1 small{font-size:14.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.92}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5);box-shadow:0 0 8px rgba(124,200,200,.35)}
+h3{font-size:15px;color:#142131;margin:18px 0 8px;font-weight:700}
+
+.panel{background:#fff;border:1px solid #e3e9ee;border-radius:14px;padding:22px 26px;margin:14px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.warn{background:linear-gradient(135deg,#fff8ec,#fffcf3);border-color:#f0d59f;border-left:4px solid #EF9F27}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.crit{background:linear-gradient(135deg,#fef0ee,#fff8f6);border-color:#f8c5c0;border-left:4px solid #C9867F}
+
+code{font-family:'Consolas','Menlo',monospace;background:#f4f7fa;color:#185FA5;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid #e3e9ee}
+pre{background:#0d1822;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8;box-shadow:0 4px 12px rgba(0,0,0,.30)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px 16px;text-align:center;position:relative;overflow:hidden}
+.top-kpi::before{content:"";position:absolute;top:-30px;right:-30px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,var(--c,#7CC8C8) 0%,transparent 70%);opacity:.18;filter:blur(15px)}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1;position:relative;z-index:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600;position:relative;z-index:1}
+.top-kpi.t{--c:#7CC8C8;background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{--c:#185FA5;background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.r{--c:#C9867F;background:linear-gradient(135deg,#fef0ee,#fff);border-color:#f8c5c0}.top-kpi.r .top-kpi-val{color:#7a3037}
+.top-kpi.g{--c:#5aa05a;background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+.bug{background:#fff;border:1px solid #e3e9ee;border-radius:14px;padding:22px 24px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04);border-left:4px solid #C9867F}
+.bug .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#C9867F;color:#fff;font-weight:800;font-size:13px;margin-right:10px;vertical-align:middle}
+.bug h3{margin:0 0 12px;font-size:16.5px;color:#142131;display:inline-block;vertical-align:middle}
+.bug .sym{padding:10px 14px;background:#fef0ee;border:1px solid #f8c5c0;border-radius:8px;color:#7a3037;font-size:12.5px;font-weight:500;margin:10px 0}
+.bug .fix{padding:10px 14px;background:#eef9ef;border:1px solid #bfe2bf;border-radius:8px;color:#2e6f33;font-size:12.5px;font-weight:500;margin:10px 0}
+
+/* Demo phone simulant le bug avant/après */
+.demo-phones{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0}
+.phone{background:#1a1a1a;border-radius:32px;padding:8px;box-shadow:0 12px 32px rgba(0,0,0,.30),inset 0 0 0 2px #2a2a2a}
+.phone-screen{background:#142131;border-radius:24px;height:360px;position:relative;overflow:hidden}
+.phone-bar{height:28px;background:linear-gradient(90deg,#0d1822,#1d3540);display:flex;align-items:center;padding:0 10px;color:#fff;font-size:9px;border-bottom:1px solid rgba(124,200,200,.18)}
+.phone-bar .burg{margin-right:6px;color:#bfe6e6}
+.phone-bar .lg{font-weight:600}.phone-bar .lg .v{color:#7CC8C8;text-shadow:0 0 4px rgba(124,200,200,.7)}
+.phone-content{padding:14px;height:calc(100% - 28px);overflow-y:auto;background:radial-gradient(800px 400px at 70% -10%, #244a55 0%, #18202c 45%, #0f1b28 100%);position:relative}
+.phone-card{background:rgba(255,255,255,.06);border:1px solid rgba(124,200,200,.15);border-radius:8px;padding:10px;margin-bottom:10px;color:#bfe6e6;font-size:10px}
+.phone-card.tall{height:200px;display:flex;align-items:center;justify-content:center;color:#8aa0b0;font-style:italic}
+
+/* Drawer BEFORE bug : il s'arrête après PageTransition (en haut) */
+.phone-drawer-before{position:absolute;top:28px;left:0;width:78%;height:130px;background:linear-gradient(180deg,#f8fafc,#f4f7fa);border-radius:0 14px 14px 0;box-shadow:8px 0 18px rgba(0,0,0,.40);padding:10px;font-size:9px;color:#2a3a48}
+.phone-drawer-before::after{content:"❌ menu coupé en bas !";position:absolute;bottom:-10px;left:8px;background:#c0392b;color:#fff;padding:3px 7px;border-radius:99px;font-size:8px;font-weight:700}
+
+/* Drawer AFTER fix : il occupe tout le viewport */
+.phone-drawer-after{position:absolute;top:0;left:0;width:78%;height:100%;background:linear-gradient(180deg,#f8fafc,#f4f7fa);border-radius:0 14px 14px 0;box-shadow:8px 0 18px rgba(0,0,0,.50);padding:10px;font-size:9px;color:#2a3a48;z-index:2}
+.phone-drawer-after::after{content:"✓ Menu complet visible";position:absolute;bottom:8px;left:8px;background:#5aa05a;color:#fff;padding:3px 7px;border-radius:99px;font-size:8px;font-weight:700}
+.phone-drawer-h{font-weight:700;color:#142131;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #e3e9ee}
+.phone-drawer-i{padding:4px 6px;margin:2px 0;background:#f4f7fa;border-radius:4px;font-size:9px;color:#4a5868}
+.demo-label{text-align:center;font-size:11px;color:#6c7a89;margin-top:8px;font-weight:600}
+
+/* Bottom-sheet demo */
+.bs-demo{position:relative;background:linear-gradient(180deg,#e3e9ee,#cfd8e0);border-radius:14px;height:280px;margin:14px 0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.bs-bg-fk{position:absolute;inset:0;background:rgba(13,24,34,.55);backdrop-filter:blur(8px) saturate(140%)}
+.bs-sheet{position:relative;background:#fff;border-radius:18px 18px 0 0;padding:24px 20px calc(22px + 12px);box-shadow:0 -12px 40px rgba(20,33,49,.30);animation:bottom-up .7s ease-out backwards}
+@keyframes bottom-up{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.bs-handle{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:40px;height:4px;border-radius:99px;background:rgba(20,33,49,.18)}
+.bs-title{font-size:14px;font-weight:700;color:#142131;margin-bottom:4px}
+.bs-sub{font-size:12px;color:#6c7a89;margin-bottom:14px}
+.bs-actions{display:flex;gap:8px}
+.bs-btn{flex:1;padding:10px;background:#7CC8C8;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+.bs-btn.ghost{background:#f4f7fa;color:#142131;border:1px solid #e3e9ee}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12.5px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid #e3e9ee}
+table tr:nth-child(even){background:#f9fbfc}
+table code{font-size:11.5px}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid #e3e9ee;font-size:11.5px;color:#6c7a89;text-align:center}
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX MOBILE CRITIQUE</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.19 — Menu burger + popups + drawers invisibles en bas de page<small>Root cause : containing block PageTransition · Portals overlays · UX mobile premium (100dvh + safe-area)</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.19-alpha</code></span>
+    <span><b>Tests :</b> 3852 Vitest (+20)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi r"><div class="top-kpi-val">2</div><div class="top-kpi-lbl">Bugs critiques fixés</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">3</div><div class="top-kpi-lbl">Overlays passés en Portal</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Améliorations UX mobile</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+20</div><div class="top-kpi-lbl">Tests Vitest (3852)</div></div>
+</div>
+
+<h2>🐛 Root cause : <code>PageTransition</code> avec <code>willChange</code></h2>
+
+<div class="bug">
+<span class="num">1</span><h3>Le wrapper qui englobe TOUTE l'app cassait silencieusement les <code>position: fixed</code></h3>
+
+<div class="sym"><b>Symptôme prod :</b> sur mobile, quand on scroll en bas de page, cliquer sur le burger affichait l'overlay flou mais <b>pas le menu</b>. Les modales et popups idem — invisibles ou tronquées.</div>
+
+<div class="fix"><b>Cause :</b> <code>PageTransition</code> avait <code>willChange: 'opacity, transform'</code>. Cette propriété CSS crée un <strong>containing block</strong> pour les enfants <code>position: fixed</code>. Conséquence : <strong>TOUS les overlays</strong> (menu burger, modales, drawers) étaient positionnés relativement à PageTransition (qui reste fixe en haut) <strong>au lieu du viewport</strong>. Quand l'user scrollait en bas, les overlays restaient logés tout en haut, hors écran.</div>
+
+<pre>// AVANT 0.58.19 - createstaining block global app
+&lt;PageTransition&gt;
+  &lt;div style={{ willChange: 'opacity, transform' }}&gt;   ← BUG !
+    {/* TOUTE l'app rendue ici */}
+    {children}
+  &lt;/div&gt;
+&lt;/PageTransition&gt;
+
+// → TOUS les position:fixed enfants (menu, modale, drawer) sont
+//   relatifs à ce &lt;div&gt;, PAS au viewport.
+
+// 0.58.19 - willChange retiré
+&lt;PageTransition&gt;
+  &lt;div&gt;   ← Plus de containing block, fixed marche normalement
+    {children}
+  &lt;/div&gt;
+&lt;/PageTransition&gt;</pre>
+</div>
+
+<h2>📱 Démonstration visuelle (mobile)</h2>
+
+<div class="demo-phones">
+  <div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="phone-bar"><span class="burg">≡</span> <span class="lg">a<span class="v">v</span>eho</span> <span style="margin-left:auto;color:#bfe6e6;font-size:8px">14:32</span></div>
+        <div class="phone-content">
+          <div class="phone-card">📊 KPI Interventions: 142</div>
+          <div class="phone-card">👤 Patients: 87</div>
+          <div class="phone-card tall">↓ scroll en bas ↓</div>
+          <div class="phone-card">📦 Stock OK</div>
+          <div class="phone-drawer-before">
+            <div class="phone-drawer-h">📋 Menu</div>
+            <div class="phone-drawer-i">Accueil</div>
+            <div class="phone-drawer-i">Patients</div>
+            <div class="phone-drawer-i">Matériel</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="demo-label" style="color:#c0392b">❌ AVANT 0.58.19</div>
+  </div>
+  <div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="phone-bar"><span class="burg">≡</span> <span class="lg">a<span class="v">v</span>eho</span> <span style="margin-left:auto;color:#bfe6e6;font-size:8px">14:32</span></div>
+        <div class="phone-content">
+          <div class="phone-card">📊 KPI Interventions: 142</div>
+          <div class="phone-card">👤 Patients: 87</div>
+          <div class="phone-card tall">↓ scroll en bas ↓</div>
+          <div class="phone-drawer-after">
+            <div class="phone-drawer-h">📋 Menu Aveho</div>
+            <div class="phone-drawer-i">🏠 Accueil</div>
+            <div class="phone-drawer-i">👤 Patients</div>
+            <div class="phone-drawer-i">📦 Matériel</div>
+            <div class="phone-drawer-i">🔧 Interventions</div>
+            <div class="phone-drawer-i">📊 Statistiques</div>
+            <div class="phone-drawer-i">⚙ Paramètres</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="demo-label" style="color:#2e6f33">✓ 0.58.19</div>
+  </div>
+</div>
+
+<h2>🛡 Renforcement : Portals pour tous les overlays</h2>
+
+<div class="panel">
+<p style="margin:0 0 12px"><b>Pour empêcher ce bug de revenir</b> si quelqu'un remet un <code>willChange</code> ou un <code>transform</code> sur un wrapper ailleurs, j'ai migré tous les overlays critiques vers <strong>React Portals</strong> qui rendent directement dans <code>document.body</code>.</p>
+
+<table>
+<tr><th>Composant</th><th>Avant</th><th>0.58.19</th></tr>
+<tr><td>Menu burger (TopBar)</td><td>Rendu dans l'arbre TopBar</td><td><code>createPortal(document.body)</code></td></tr>
+<tr><td>Modal (legacy)</td><td>Rendu inline</td><td><code>createPortal(document.body)</code></td></tr>
+<tr><td>Drawer premium</td><td>Rendu inline</td><td><code>createPortal(document.body)</code></td></tr>
+<tr><td>Dialog premium</td><td colspan="2">déjà rendu via <code>createRoot</code> dans <code>av-dialog-root</code> → pas concerné</td></tr>
+</table>
+</div>
+
+<h2>📱 UX mobile premium</h2>
+
+<h3>1. Menu burger : 100dvh + safe-area</h3>
+
+<pre>/* AVANT 0.58.19 */
+.menu-drawer { height: 100vh; }  /* saute sur iOS Safari */
+.menu-scroll { padding: 18px 18px 32px; }  /* couvert par home indicator */
+
+/* 0.58.19 - mobile UX premium */
+.menu-drawer {
+  height: 100vh;
+  height: 100dvh;  /* iOS Safari dynamic viewport, plus de saut */
+}
+.menu-scroll {
+  padding: 18px 18px calc(32px + env(safe-area-inset-bottom, 0px));
+  /* → respecte le home indicator iOS / barre Android */
+}</pre>
+
+<h3>2. Bottom-sheet mobile (modales) : poignée iOS + safe-area + animation</h3>
+
+<div class="bs-demo">
+  <div class="bs-bg-fk"></div>
+  <div class="bs-sheet">
+    <div class="bs-handle"></div>
+    <div class="bs-title">Confirmer la suppression ?</div>
+    <div class="bs-sub">Cette action est irréversible — le patient et toutes ses fiches seront supprimés.</div>
+    <div class="bs-actions">
+      <button class="bs-btn ghost">Annuler</button>
+      <button class="bs-btn" style="background:#C9867F">🗑 Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<pre>/* 0.58.19 - bottom-sheet iOS-style */
+.modal {
+  max-height: calc(92vh - env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  animation: modal-bottom-up 320ms var(--av-ease-out);
+}
+.modal::before {  /* Poignée visuelle style iOS */
+  content: "";
+  position: absolute;
+  top: 8px; left: 50%; transform: translateX(-50%);
+  width: 40px; height: 4px; border-radius: 99px;
+  background: rgba(20,33,49,.18);
+}
+@keyframes modal-bottom-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}</pre>
+
+<h3>3. BulkToolbar : safe-area-inset-bottom</h3>
+
+<pre>// AVANT
+bottom: 20  /* couverte par home indicator sur iPhone */
+
+// 0.58.19
+bottom: `calc(20px + env(safe-area-inset-bottom, 0px))`</pre>
+
+<h2>📋 Bug instructif — règle d'or</h2>
+
+<div class="panel warn">
+<p style="margin:0 0 8px"><b>Propriétés CSS qui créent un containing block pour <code>position: fixed</code> :</b></p>
+<ul style="margin:6px 0">
+<li><code>will-change: transform</code> / <code>filter</code> / <code>opacity</code></li>
+<li><code>transform: ...</code> (autre que <code>none</code>)</li>
+<li><code>filter: ...</code></li>
+<li><code>perspective: ...</code></li>
+<li><code>backdrop-filter: ...</code></li>
+<li><code>contain: layout</code> / <code>paint</code> / <code>strict</code></li>
+<li><code>isolation: isolate</code></li>
+</ul>
+<p style="margin:8px 0 0"><b>Règle :</b> éviter ces propriétés sur les wrappers high-level qui englobent l'app. Pour les overlays critiques, toujours utiliser React Portals vers <code>document.body</code>.</p>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a;font-size:12.5px">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.19
+npm install --legacy-peer-deps
+npm test                              # 3852 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.19 MOBILE FIX - PageTransition containing block + Portals overlays + 100dvh + safe-area"
+git push origin main</pre>
+</div>
+
+<h2>🎯 Ce que tu vas voir en prod sur mobile</h2>
+
+<table>
+<tr><th>Action</th><th>Avant</th><th>Après 0.58.19</th></tr>
+<tr><td>Burger en bas de page</td><td>❌ menu coupé / invisible</td><td>✅ menu pleine hauteur</td></tr>
+<tr><td>Modale en bas de page</td><td>❌ popup au-dessus du scroll</td><td>✅ bottom-sheet propre avec poignée iOS</td></tr>
+<tr><td>Drawer "Détails" intervention</td><td>❌ tronqué hors viewport</td><td>✅ slide-in full-height respectant safe-area</td></tr>
+<tr><td>Hauteur menu iOS Safari</td><td>❌ saute quand la barre URL bouge</td><td>✅ stable avec 100dvh</td></tr>
+<tr><td>Home indicator iPhone</td><td>❌ couvre les boutons du bas</td><td>✅ padding-bottom auto via env(safe-area-inset)</td></tr>
+<tr><td>BulkToolbar (sélection multiple)</td><td>❌ collée au home indicator</td><td>✅ flottante au-dessus</td></tr>
+</table>
+
+<h2>📋 Prochaines pistes wow (0.58.20)</h2>
+<div class="panel">
+<ul>
+<li><b>ConicCard</b> : nouvelle card avec scan-line conic permanent (alt KpiCard)</li>
+<li><b>Particles canvas</b> sur /accueil (~30 particules teal flottantes)</li>
+<li><b>Cmd+K palette premium glass</b> (refonte de GlobalSearch)</li>
+<li><b>Page transitions</b> slide-in / fade entre routes</li>
+<li><b>Login redesign hitech</b> fullscreen avec NeonButton géant + aurora</li>
+<li><b>Migration progressive</b> btn-save/btn-mini → NeonButton sur pages clés</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.19 · 4 juin 2026 · 3852 Vitest · MOBILE FIX CRITIQUE (PageTransition containing block + Portals + 100dvh + safe-area)</footer>
+</div></body></html>

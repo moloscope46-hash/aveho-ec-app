@@ -120,6 +120,55 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.19",
+    "kind": "version",
+    "titre": "📱 MOBILE FIX CRITIQUE : Menu burger + popups + drawers invisibles en bas de page (containing block PageTransition)",
+    "chantiers": [
+      { "code": "BG", "txt": "🐛 BUG ROOT CAUSE — Menu burger et popups invisibles quand l'user était scrollé en bas de page sur mobile. CAUSE : Le composant `PageTransition` (qui wrap TOUTE l'app dans layout.js) avait `willChange: 'opacity, transform'` — propriété qui crée un **containing block** pour les enfants `position: fixed`. Conséquence : le menu-drawer, les modales, les drawers premium n'étaient PAS positionnés relativement au viewport mais relativement à PageTransition (qui reste fixe en haut). Quand l'user scrollait en bas, les overlays restaient logés en haut de la page (hors écran). FIX : `willChange` retiré de PageTransition. L'animation 280ms reste fluide sans cette hint",
+        "code_snippet": {
+          "file": "app/components/PageTransition.js",
+          "note": "Root cause : containing block",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.19 - willChange créait un containing block GLOBAL\nreturn (\n  <div\n    key={animKey}\n    style={{\n      animation: 'av-page-enter 280ms cubic-bezier(.2, .8, .2, 1)',\n      willChange: 'opacity, transform',  // ← crée containing block !\n    }}\n  >\n    {displayed}\n  </div>\n);\n// → TOUS les enfants position:fixed (menu, modales, drawers) sont\n//   relatifs à ce <div>, PAS au viewport.\n// → Invisibles quand l'user scroll en bas de page sur mobile",
+          "after": "// 0.58.19 - retrait du willChange\nreturn (\n  <div\n    key={animKey}\n    style={{\n      animation: 'av-page-enter 280ms cubic-bezier(.2, .8, .2, 1)',\n      // willChange retiré : créait un containing block sur le wrapper full-app\n      // qui cassait position:fixed pour tous les overlays enfants\n    }}\n  >\n    {displayed}\n  </div>\n);"
+        }
+      },
+      { "code": "BG", "txt": "🐛 BUG SECONDAIRE — KpiCard avait `transformStyle: preserve-3d` + `willChange: transform` qui créaient AUSSI des containing blocks pour les pages avec beaucoup de KPI (statistiques, accueil). Les drawers ouverts depuis un onClick sur KpiCard restaient bloqués au-dessus de la card. FIX : transformStyle et willChange retirés. Le tilt 3D fonctionne pareil via `perspective(1000px)` directement dans le transform inline (chaque tilt crée sa propre matrice 3D au moment du hover)",
+        "code_snippet": {
+          "file": "app/components/ui-premium/KpiCard.js",
+          "note": "Tilt 3D sans containing block permanent",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.19\nstyle={{\n  ...\n  transformStyle: 'preserve-3d',     // ← containing block !\n  willChange: onClick ? 'transform' : 'auto',  // ← containing block !\n}}",
+          "after": "// 0.58.19 - retirés, tilt fonctionne via perspective() inline\nstyle={{\n  ...\n  transition: 'transform 350ms ...',\n  // Le transformStyle:preserve-3d et willChange créaient des\n  // containing blocks pour les enfants fixed. Retirés.\n}}\n\n// Le tilt fonctionne quand même au hover :\nonMouseMove={(e) => {\n  e.currentTarget.style.transform =\n    `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) ...`;\n}}"
+        }
+      },
+      { "code": "UI", "txt": "🛡 RENFORCEMENT — Portals React pour TOUS les overlays. Pour empêcher ce genre de bug de revenir si on remet un willChange ailleurs, on **rend désormais les overlays dans `document.body` directement** via `createPortal`. Concerne : (a) menu-overlay + menu-drawer du burger TopBar. (b) Modal premium (legacy). (c) Drawer premium. Le Dialog premium était déjà rendu via `createRoot` (rien à faire). Chaque composant a un guard `mounted` pour gérer l'hydratation SSR (document indispo côté serveur)",
+        "code_snippet": {
+          "file": "app/TopBar.js + app/components/Modal.js + app/components/ui-premium/Drawer.js",
+          "note": "Portals vers document.body",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.19 - rendu dans l'arbre React normal\n<TopBar>\n  ...\n  <div className=\"menu-overlay\" />\n  <nav className=\"menu-drawer\">...</nav>\n</TopBar>\n// → captif des containing blocks de tous les ancêtres",
+          "after": "// 0.58.19 - rendu via Portal vers document.body\nimport { createPortal } from 'react-dom';\n\nconst [mounted, setMounted] = useState(false);\nuseEffect(() => { setMounted(true); }, []);\n\n{mounted && createPortal(\n  <>\n    <div className=\"menu-overlay\" />\n    <nav className=\"menu-drawer\">...</nav>\n  </>,\n  document.body\n)}\n\n// → garanti d'être rendu directement dans <body>,\n//   échappe à tous les containing blocks d'ancêtres"
+        }
+      },
+      { "code": "UI", "txt": "📱 UX MOBILE — multiples améliorations responsive. (a) **Menu burger** : `height: 100dvh` (Safari iOS dynamic viewport — ne saute plus quand la barre URL apparaît/disparaît) avec fallback `100vh`. Menu-scroll padding-bottom inclut `env(safe-area-inset-bottom)` (home indicator iOS). (b) **Bottom-sheet mobile** (modales en bas) : nouvelle poignée visuelle ::before (style iOS — pill grise centrée 40x4px). `max-height: calc(92vh - env(safe-area-inset-bottom))`. `padding-bottom: calc(22px + env(safe-area-inset-bottom))`. Nouvelle animation `modal-bottom-up` slide depuis le bas. (c) **Drawer premium mobile** : `.av-drawer-panel` full-width avec safe-area-inset-bottom sur le footer. (d) **BulkToolbar** : bottom inclut safe-area-inset",
+        "code_snippet": {
+          "file": "app/globals.css + app/components/ui-premium/BulkToolbar.js",
+          "note": "UX mobile premium",
+          "lang": "css",
+          "before": "/* AVANT 0.58.19 */\n.menu-drawer { height: 100vh; }  /* saute sur iOS Safari */\n.modal { max-height: 90vh; }     /* pas de safe-area */\n.bulk-toolbar { bottom: 20px; }  /* couvert par home indicator */",
+          "after": "/* 0.58.19 - mobile UX premium */\n.menu-drawer {\n  height: 100vh;\n  height: 100dvh;  /* iOS Safari dynamic viewport */\n}\n.menu-scroll {\n  padding: 18px 18px calc(32px + env(safe-area-inset-bottom, 0px));\n}\n.modal {\n  max-height: calc(92vh - env(safe-area-inset-bottom, 0px));\n  padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));\n  animation: modal-bottom-up 320ms var(--av-ease-out);\n}\n.modal::before {  /* Poignée visuelle iOS */\n  content: \"\";\n  position: absolute;\n  top: 8px; left: 50%; transform: translateX(-50%);\n  width: 40px; height: 4px; border-radius: 99px;\n  background: rgba(20,33,49,.18);\n}\n.bulk-toolbar {\n  bottom: calc(20px + env(safe-area-inset-bottom, 0px));\n}"
+        }
+      },
+      { "code": "AI", "txt": "+20 tests Vitest (v058-19-mobile-fix-ux.test.js) : version+SW (2), Fix containing blocks (3 — PageTransition willChange retiré + KpiCard transformStyle retiré + willChange retiré), Portals overlays (5 — TopBar import + Portal + Modal Portal + Drawer Portal + Dialog déjà OK), CSS mobile (8 — menu-drawer 100dvh + top/bottom/left explicites + menu-scroll safe-area + menu-overlay top/right/bottom/left + poignée iOS + max-height safe-area + padding-bottom safe-area + animation modal-bottom-up + drawer panel full-width), BulkToolbar safe-area (1), Drawer className (1). +2 ajustements anciens tests 0.58.16 (regex pour nouveaux selectors top/right/bottom/left) + 0.58.17 (transformStyle retiré). Total 3852 verts (+20 nets)" },
+      { "code": "DOC", "txt": "BUG INSTRUCTIF — Les propriétés CSS `will-change`, `transform`, `filter`, `perspective`, `backdrop-filter`, `contain: layout|paint|strict`, `isolation: isolate` créent toutes un **containing block** pour les enfants `position: fixed`. Quand on les met sur un wrapper qui englobe TOUTE l'app (comme PageTransition), on casse silencieusement TOUS les overlays. Règle d'or : éviter ces propriétés sur les wrappers high-level. Pour les composants overlay critiques (modales/drawers/menus), utiliser systématiquement React Portals vers `document.body` — solution robuste qui survit aux futures régressions. PROCHAINES PISTES UI WOW : ConicCard (alt KpiCard avec scan-line permanent), particles canvas /accueil, Cmd+K palette premium glass, page transitions slide entre routes, login redesign hitech fullscreen avec NeonButton géant" }
+    ],
+    "themes": ["bugfix", "ui", "mobile"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.19.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.18",
     "kind": "version",
     "titre": "🔧 HOTFIX PROD : RPC patient_dashboard résilientes + SW Response.error éliminé + supabase.js défensif",

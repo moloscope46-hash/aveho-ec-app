@@ -157,8 +157,10 @@ describe("0.58.17 - TopBar glassmorphism v2", () => {
 describe("0.58.17 - KpiCard 3D tilt", () => {
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/components/ui-premium/KpiCard.js"), "utf-8");
 
-  it("transform-style: preserve-3d sur la card", () => {
-    expect(src).toMatch(/transformStyle:\s*["']preserve-3d["']/);
+  it("transform-style: preserve-3d sur la card (RETIRÉ en 0.58.19 — créait containing block)", () => {
+    // 0.58.19 : transformStyle preserve-3d retiré pour fixer bug overlays mobile
+    // Le tilt 3D fonctionne quand même via perspective() dans le transform inline
+    expect(src).not.toMatch(/transformStyle:\s*["']preserve-3d["']/);
   });
 
   it("onMouseMove pour tilt parallax suivant le curseur", () => {

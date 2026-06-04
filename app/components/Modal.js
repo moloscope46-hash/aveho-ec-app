@@ -20,7 +20,8 @@
 //    </Modal>
 // =============================================================
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({
   open,
@@ -38,6 +39,10 @@ export default function Modal({
   // Variante bottom-sheet pour mobile
   variant = "centered", // 'centered' | 'bottom-sheet'
 }) {
+  // 0.58.19 : guard hydratation pour Portal (document.body indispo en SSR)
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   // Escape pour fermer
   useEffect(() => {
     if (!open || preventBackdropClose) return;
@@ -46,11 +51,14 @@ export default function Modal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose, preventBackdropClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const isBottomSheet = variant === "bottom-sheet";
 
-  return (
+  // 0.58.19 : Portal vers document.body pour échapper à tout containing block
+  // (PageTransition, transform, will-change, etc.) qui empêcherait le position:fixed
+  // de fonctionner correctement sur mobile en bas de page.
+  return createPortal((
     <div
       onClick={(e) => {
         if (e.target === e.currentTarget && !preventBackdropClose) onClose?.();
@@ -162,5 +170,5 @@ export default function Modal({
         }
       `}</style>
     </div>
-  );
+  ), document.body);
 }

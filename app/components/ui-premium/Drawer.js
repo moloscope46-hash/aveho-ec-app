@@ -21,7 +21,8 @@
 //    </Drawer>
 // =============================================================
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function Drawer({
   open,
@@ -39,6 +40,9 @@ export default function Drawer({
   ariaLabel,
 }) {
   const dialogRef = useRef(null);
+  // 0.58.19 : guard hydratation pour Portal
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Focus trap + ESC
   useEffect(() => {
@@ -73,13 +77,15 @@ export default function Drawer({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const widths = { sm: 360, md: 480, lg: 640, xl: 800 };
   const finalWidth = width || widths[size] || widths.md;
   const isRight = side === "right";
 
-  return (
+  // 0.58.19 : Portal vers document.body — évite que les containing blocks
+  // d'ancêtres (PageTransition, transforms, etc.) cassent le position: fixed.
+  return createPortal((
     <div
       onClick={(e) => closeOnBackdrop && e.target === e.currentTarget && onClose?.()}
       style={{
@@ -102,7 +108,10 @@ export default function Drawer({
           top: 0,
           bottom: 0,
           [isRight ? "right" : "left"]: 0,
+          // 0.58.19 : largeur adaptative — full-width sur mobile, finalWidth sinon
+          // Si viewport ≤ 600px, le drawer occupe 100% (95% pour laisser tap-zone backdrop)
           width: `min(${finalWidth}px, 100%)`,
+          maxWidth: "100vw",
           background: "var(--av-g0, #fff)",
           display: "flex",
           flexDirection: "column",
@@ -111,6 +120,7 @@ export default function Drawer({
             : "30px 0 60px rgba(20,33,49,.30), 12px 0 24px rgba(20,33,49,.18)",
           animation: `av-drawer-slide-${isRight ? "right" : "left"} 320ms cubic-bezier(.2,.8,.2,1)`,
         }}
+        className="av-drawer-panel"
       >
         {/* Header */}
         <div style={{
@@ -244,5 +254,5 @@ export default function Drawer({
         )}
       </div>
     </div>
-  );
+  ), document.body);
 }

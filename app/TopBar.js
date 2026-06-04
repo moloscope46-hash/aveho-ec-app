@@ -8,6 +8,7 @@
 //  Alpha 0.49.0 : + badge version cliquable dans le header
 // =============================================================
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import pkg from "../package.json";
 import NotifBell from "./NotifBell";
@@ -269,18 +270,24 @@ export default function TopBar({ cartCount = 0, auth }) {
         {mounted && auth && <UserMenu auth={auth} />}
       </div>
 
-      <div className={`menu-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
-      <nav 
-        className={`menu-drawer${open ? " open" : ""}`}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        style={{
-          // Suivi visuel du swipe en cours
-          transform: touchDelta < 0 ? `translateX(${touchDelta}px)` : undefined,
-          transition: touchDelta < 0 ? "none" : undefined,
-        }}
-      >
+      {/* 0.58.19 : menu-overlay + menu-drawer rendus dans <body> via Portal pour
+          échapper à tout containing block créé par un ancêtre (will-change,
+          transform, filter, etc.). Garantit position: fixed correct sur mobile,
+          même quand l'user est en bas de page. */}
+      {mounted && createPortal(
+        <>
+          <div className={`menu-overlay${open ? " open" : ""}`} onClick={() => setOpen(false)} />
+          <nav
+            className={`menu-drawer${open ? " open" : ""}`}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            style={{
+              // Suivi visuel du swipe en cours
+              transform: touchDelta < 0 ? `translateX(${touchDelta}px)` : undefined,
+              transition: touchDelta < 0 ? "none" : undefined,
+            }}
+          >
         <div className="menu-head">
           <span className="logo">a<span className="v">v</span>eho</span>
           {/* Alpha 0.48.0 : indicateur swipe sur mobile */}
@@ -331,6 +338,9 @@ export default function TopBar({ cartCount = 0, auth }) {
           ))}
         </div>
       </nav>
+        </>,
+        document.body
+      )}
 
       {/* 0.55.34 : popup info version (remplace la bulle ALPHA visible) */}
       <Modal

@@ -61,8 +61,9 @@ describe("0.58.16 - Fix 2 : z-index menu burger", () => {
   });
 
   it("menu-overlay et menu-drawer toujours en position fixed", () => {
-    expect(css).toMatch(/\.menu-overlay\{position:fixed/);
-    expect(css).toMatch(/\.menu-drawer\{[\s\S]*?position:fixed/);
+    // 0.58.19 : passage à top:0;right:0;bottom:0;left:0 explicite (au lieu de inset:0)
+    expect(css).toMatch(/\.menu-overlay\{[\s\S]{0,100}?position:fixed/);
+    expect(css).toMatch(/\.menu-drawer\{[\s\S]{0,100}?position:fixed/);
   });
 });
 

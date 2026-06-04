@@ -136,14 +136,17 @@ export default function KpiCard({
         padding: sz.padding,
         cursor: onClick ? "pointer" : "default",
         // 0.58.17 : transition multi-property avec transform-style preserve-3d
+        // 0.58.19 : transformStyle preserve-3d retiré (non nécessaire pour le tilt 2D
+        // sur l'élément lui-même, et créait un containing block pour les enfants
+        // position: fixed). Le tilt fonctionne pareil avec perspective() inline.
         transition: "transform 350ms var(--av-ease-out), box-shadow 350ms var(--av-ease-out), border-color 200ms",
-        transformStyle: "preserve-3d",
         boxShadow: "var(--av-shadow-sm)",
         overflow: "hidden",
         height: "100%",
         minHeight: 130,
         animation: "av-scale-in 0.4s var(--av-ease-out)",
-        willChange: onClick ? "transform" : "auto",
+        // 0.58.19 : willChange retiré (créait des containing blocks pour les enfants
+        // fixed dans les pages avec beaucoup de KpiCards). L'animation reste fluide.
       }}
       onMouseEnter={(e) => {
         if (!onClick) return;
