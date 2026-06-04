@@ -14,21 +14,39 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
 
 /* fond foncé dégradé façon maquette */
-.bg-dark{min-height:100vh;background:radial-gradient(1200px 600px at 70% -10%, #244a55 0%, #18202c 45%, #0f1b28 100%)}
+.bg-dark{
+  min-height:100vh;
+  /* 0.58.17 : mesh dégradé radial + grid cyber subtil en overlay */
+  background:
+    var(--av-grid-svg),
+    radial-gradient(1200px 600px at 70% -10%, #244a55 0%, #18202c 45%, #0f1b28 100%);
+  background-size: 40px 40px, 100% 100%;
+}
 
 /* === Topbar compacte === */
 /* === TOPBAR PREMIUM (0.58.3) === */
 .topbar{
   height:60px;
-  background:linear-gradient(90deg,#0d1822 0%,#142131 30%,#1d3540 65%,#2a5a5a 100%);
+  /* 0.58.17 : background un peu plus sombre + transparent pour glassmorphism */
+  background:linear-gradient(90deg,rgba(13,24,34,.92) 0%,rgba(20,33,49,.92) 30%,rgba(29,53,64,.92) 65%,rgba(42,90,90,.92) 100%);
   display:flex;align-items:center;gap:12px;
   padding:0 18px;color:#fff;
   position:sticky;top:0;z-index:40;max-width:100vw;
-  /* Glassmorphism subtil pour quand on scroll */
-  backdrop-filter:blur(14px) saturate(180%);
-  -webkit-backdrop-filter:blur(14px) saturate(180%);
-  border-bottom:1px solid rgba(124,200,200,.15);
-  box-shadow:0 2px 16px rgba(20,33,49,.25);
+  /* 0.58.17 : glassmorphism poussé blur 20px + saturate 200% */
+  backdrop-filter:blur(20px) saturate(200%);
+  -webkit-backdrop-filter:blur(20px) saturate(200%);
+  border-bottom:1px solid rgba(124,200,200,.18);
+  box-shadow:0 2px 16px rgba(20,33,49,.25), 0 1px 0 rgba(255,255,255,.04) inset;
+}
+/* 0.58.17 : ligne du bas animée (scan continu très subtil) */
+.topbar::after{
+  content:"";
+  position:absolute;bottom:-1px;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent 0%, rgba(124,200,200,.6) 50%, transparent 100%);
+  background-size:200% 100%;
+  animation:av-bg-pos-shift 8s ease-in-out infinite;
+  pointer-events:none;
 }
 /* Effet de brillance subtile en haut */
 .topbar::before{
@@ -48,7 +66,12 @@ button{font-family:inherit;cursor:pointer}
 .logo:hover{transform:scale(1.04)}
 .logo .v{
   color:var(--teal);
-  text-shadow:0 0 14px rgba(124,200,200,.6);
+  /* 0.58.17 : neon multi-layer pour un effet hitech */
+  text-shadow:
+    0 0 4px rgba(124,200,200,.9),
+    0 0 12px rgba(124,200,200,.65),
+    0 0 24px rgba(124,200,200,.35),
+    0 0 48px rgba(124,200,200,.15);
 }
 /* Version badge premium */
 .version-badge{
@@ -1697,6 +1720,22 @@ html[data-theme="dark"] [role="combobox"]{
   to   { opacity: 1; transform: scale(1);    }
 }
 /* === FIN TOOLTIP === */
+
+/* === 0.58.17 — NEON BUTTON RIPPLE + SCAN === */
+@keyframes av-ripple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+.av-neon-btn .av-neon-scan {
+  animation: av-scan-rotate 4s linear infinite;
+}
+.av-neon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(124,200,200,.30), 0 8px 24px rgba(124,200,200,.40) !important;
+}
+/* === FIN NEON BUTTON === */
 
 /* ============================================================
    Alpha 0.17.1 — Notifications opt-in card & webhook config

@@ -62,17 +62,49 @@ export default function PageHero({
       overflow: "hidden",
       boxShadow: "var(--av-shadow-lg)",
       animation: "av-fade-in 0.4s var(--av-ease-out)",
+      // 0.58.17 : isolation pour stacking context propre
+      isolation: "isolate",
     }}>
-      {/* Mesh decorative */}
+      {/* 0.58.17 : Grid SVG cyber subtil en background */}
       <div style={{
         position: "absolute",
         inset: 0,
-        background: "var(--av-mesh-navy)",
-        opacity: 0.5,
+        backgroundImage: "var(--av-grid-svg-strong)",
+        backgroundSize: "40px 40px",
+        opacity: 0.45,
         pointerEvents: "none",
+        zIndex: 0,
       }} />
 
-      {/* Decorative shapes */}
+      {/* Mesh decorative animé (background-position shift) */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "var(--av-mesh-aurora), var(--av-mesh-navy)",
+        backgroundSize: "200% 200%, 100% 100%",
+        opacity: 0.65,
+        pointerEvents: "none",
+        animation: "av-bg-pos-shift 18s ease-in-out infinite",
+        zIndex: 0,
+      }} />
+
+      {/* 0.58.17 : Aurora blobs animées qui flottent */}
+      <div className="av-aurora-blob" style={{
+        top: -80, right: -80,
+        width: 240, height: 240,
+        background: `radial-gradient(circle, ${cfg.accent}88 0%, transparent 65%)`,
+        animationDelay: "0s",
+        zIndex: 0,
+      }} />
+      <div className="av-aurora-blob" style={{
+        bottom: -100, left: "20%",
+        width: 200, height: 200,
+        background: `radial-gradient(circle, ${cfg.accent}55 0%, transparent 70%)`,
+        animationDelay: "-6s",
+        zIndex: 0,
+      }} />
+
+      {/* Decorative shape statique (compat) */}
       <div style={{
         position: "absolute",
         top: -60, right: -60,
@@ -80,6 +112,7 @@ export default function PageHero({
         background: `radial-gradient(circle, ${cfg.accent}55 0%, transparent 70%)`,
         borderRadius: "50%",
         pointerEvents: "none",
+        zIndex: 0,
       }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
@@ -134,27 +167,41 @@ export default function PageHero({
                 height: compact ? 44 : 56,
                 flexShrink: 0,
               }}>
-                {/* Halo glow */}
+                {/* 0.58.17 : Halo glow multi-layer (effet neon hitech) */}
                 <div style={{
                   position: "absolute",
-                  inset: -4,
+                  inset: -8,
                   background: cfg.accent,
                   borderRadius: "var(--av-r-md)",
-                  opacity: 0.25,
-                  filter: "blur(8px)",
+                  opacity: 0.30,
+                  filter: "blur(16px)",
+                  animation: "av-glow-pulse 4s ease-in-out infinite",
+                }} />
+                <div style={{
+                  position: "absolute",
+                  inset: -2,
+                  background: cfg.accent,
+                  borderRadius: "var(--av-r-md)",
+                  opacity: 0.55,
+                  filter: "blur(4px)",
                 }} />
                 <div style={{
                   position: "relative",
                   width: "100%",
                   height: "100%",
-                  background: `linear-gradient(135deg, ${cfg.accent}, rgba(255,255,255,0.15))`,
+                  background: `linear-gradient(135deg, ${cfg.accent}, rgba(255,255,255,0.18))`,
                   borderRadius: "var(--av-r-md)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  border: `1px solid ${cfg.accent}55`,
+                  border: `1.5px solid ${cfg.accent}aa`,
+                  boxShadow: `inset 0 1px 0 rgba(255,255,255,.30), 0 0 0 1px ${cfg.accent}40`,
                 }}>
-                  <i className={`ti ${icon}`} style={{ color: "#fff", fontSize: compact ? 22 : 28 }} />
+                  <i className={`ti ${icon}`} style={{
+                    color: "#fff",
+                    fontSize: compact ? 22 : 28,
+                    textShadow: `0 0 12px ${cfg.accent}, 0 0 24px ${cfg.accent}66`,
+                  }} />
                 </div>
               </div>
             )}

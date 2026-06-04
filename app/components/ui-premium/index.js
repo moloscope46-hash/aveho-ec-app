@@ -40,5 +40,9 @@ export { default as ProgressBar } from "./ProgressBar";
 export { default as Tooltip } from "./Tooltip";
 // 0.58.15 : CodeBlock premium (JSON/SQL avec coloration + bouton copier)
 export { default as CodeBlock } from "./CodeBlock";
+// 0.58.16 : Hook auto-flip pour dropdowns
+export { useDropdownPosition, dropdownPositionStyle } from "./useDropdownPosition";
+// 0.58.17 : NeonButton (gradient + scan-line + ripple + glow)
+export { default as NeonButton } from "./NeonButton";
 // 0.58.11 : Combobox multi-select avec tags
 export { default as Combobox } from "./Combobox";

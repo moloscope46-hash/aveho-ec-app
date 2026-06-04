@@ -24,9 +24,10 @@ export default function Skeleton({
     width: w,
     height: h,
     borderRadius: radius,
-    background: "linear-gradient(90deg, var(--av-g100) 0%, var(--av-g200) 50%, var(--av-g100) 100%)",
+    // 0.58.17 : shimmer plus visible avec teint teal pour effet hitech
+    background: "linear-gradient(90deg, var(--av-g100) 0%, var(--av-g200) 30%, rgba(124,200,200,.18) 50%, var(--av-g200) 70%, var(--av-g100) 100%)",
     backgroundSize: "1000px 100%",
-    animation: "av-shimmer 1.6s linear infinite",
+    animation: "av-shimmer 1.8s ease-in-out infinite",
     display: "inline-block",
     ...style,
   };

@@ -74,6 +74,51 @@
   --av-glow-teal: 0 0 0 4px rgba(124, 200, 200, 0.15), 0 0 20px rgba(124, 200, 200, 0.25);
   --av-glow-blue: 0 0 0 4px rgba(24, 95, 165, 0.15), 0 0 20px rgba(24, 95, 165, 0.25);
 
+  /* === 0.58.17 — GLOW PREMIUM HITECH (4 niveaux, multi-couleurs) === */
+  /* Glows sur 4 niveaux d'intensité, pour hover/focus/active states */
+  --av-glow-teal-sm: 0 0 0 2px rgba(124, 200, 200, 0.10), 0 0 12px rgba(124, 200, 200, 0.20);
+  --av-glow-teal-md: 0 0 0 4px rgba(124, 200, 200, 0.18), 0 0 24px rgba(124, 200, 200, 0.35), 0 0 48px rgba(124, 200, 200, 0.15);
+  --av-glow-teal-lg: 0 0 0 6px rgba(124, 200, 200, 0.25), 0 0 36px rgba(124, 200, 200, 0.50), 0 0 72px rgba(124, 200, 200, 0.25);
+  --av-glow-teal-xl: 0 0 0 8px rgba(124, 200, 200, 0.30), 0 0 48px rgba(124, 200, 200, 0.65), 0 0 96px rgba(124, 200, 200, 0.35), 0 0 144px rgba(124, 200, 200, 0.15);
+
+  --av-glow-blue-sm: 0 0 0 2px rgba(24, 95, 165, 0.10), 0 0 12px rgba(24, 95, 165, 0.20);
+  --av-glow-blue-md: 0 0 0 4px rgba(24, 95, 165, 0.18), 0 0 24px rgba(24, 95, 165, 0.35), 0 0 48px rgba(24, 95, 165, 0.15);
+  --av-glow-blue-lg: 0 0 0 6px rgba(24, 95, 165, 0.25), 0 0 36px rgba(24, 95, 165, 0.50), 0 0 72px rgba(24, 95, 165, 0.25);
+
+  --av-glow-violet-md: 0 0 0 4px rgba(122, 111, 176, 0.18), 0 0 24px rgba(122, 111, 176, 0.35), 0 0 48px rgba(122, 111, 176, 0.15);
+  --av-glow-terra-md: 0 0 0 4px rgba(201, 134, 127, 0.18), 0 0 24px rgba(201, 134, 127, 0.35), 0 0 48px rgba(201, 134, 127, 0.15);
+  --av-glow-amber-md: 0 0 0 4px rgba(239, 159, 39, 0.18), 0 0 24px rgba(239, 159, 39, 0.35), 0 0 48px rgba(239, 159, 39, 0.15);
+
+  /* === GLASS SURFACES (glassmorphism premium) === */
+  --av-glass-light: rgba(255, 255, 255, 0.55);
+  --av-glass-medium: rgba(255, 255, 255, 0.35);
+  --av-glass-heavy: rgba(255, 255, 255, 0.18);
+  --av-glass-dark-light: rgba(20, 33, 49, 0.55);
+  --av-glass-dark-medium: rgba(20, 33, 49, 0.35);
+  --av-glass-dark-heavy: rgba(20, 33, 49, 0.18);
+  --av-glass-border: 1px solid rgba(255, 255, 255, 0.18);
+  --av-glass-blur: blur(20px) saturate(180%);
+  --av-glass-blur-heavy: blur(30px) saturate(220%);
+
+  /* === CONIC GRADIENTS (effets de rotation futurs) === */
+  --av-conic-teal: conic-gradient(from 0deg, transparent 0deg, #7CC8C8 90deg, transparent 180deg, #7CC8C8 270deg, transparent 360deg);
+  --av-conic-blue: conic-gradient(from 0deg, transparent 0deg, #185FA5 90deg, transparent 180deg, #185FA5 270deg, transparent 360deg);
+  --av-conic-aurora: conic-gradient(from 0deg, #7CC8C8 0deg, #185FA5 90deg, #7a6fb0 180deg, #C9867F 270deg, #7CC8C8 360deg);
+  --av-conic-scan: conic-gradient(from var(--scan-angle, 0deg), transparent 0deg, rgba(124, 200, 200, 0.85) 30deg, transparent 60deg, transparent 360deg);
+
+  /* === MESH GRADIENTS animés === */
+  --av-mesh-aurora: radial-gradient(at 20% 30%, hsla(190, 60%, 60%, 0.3) 0px, transparent 50%),
+                    radial-gradient(at 80% 20%, hsla(220, 60%, 50%, 0.25) 0px, transparent 50%),
+                    radial-gradient(at 60% 80%, hsla(280, 50%, 60%, 0.20) 0px, transparent 50%),
+                    radial-gradient(at 10% 70%, hsla(195, 70%, 55%, 0.25) 0px, transparent 50%);
+  --av-mesh-cyber: radial-gradient(at 15% 25%, hsla(195, 100%, 50%, 0.15) 0px, transparent 40%),
+                   radial-gradient(at 85% 75%, hsla(280, 100%, 60%, 0.12) 0px, transparent 40%),
+                   radial-gradient(at 50% 50%, hsla(220, 80%, 50%, 0.10) 0px, transparent 60%);
+
+  /* === GRID SVG (background subtil cyber) === */
+  --av-grid-svg: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0H0V40' fill='none' stroke='%237CC8C8' stroke-opacity='0.06' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E");
+  --av-grid-svg-strong: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0H0V40' fill='none' stroke='%237CC8C8' stroke-opacity='0.12' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E");
+
   /* === RADIUS === */
   --av-r-sm: 6px;
   --av-r-md: 10px;
@@ -237,6 +282,170 @@
   outline: none;
   box-shadow: var(--av-glow-teal);
 }
+
+/* =============================================================
+ *  0.58.17 — HITECH UTILITIES PREMIUM
+ * ============================================================= */
+
+/* Variable angle pour rotation conic — animée via @property pour smooth */
+@property --scan-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes av-scan-rotate {
+  to { --scan-angle: 360deg; }
+}
+
+@keyframes av-bg-pos-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes av-aurora {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33%      { transform: translate(30px, -20px) rotate(120deg); }
+  66%      { transform: translate(-20px, 30px) rotate(240deg); }
+}
+
+@keyframes av-glow-pulse {
+  0%, 100% { box-shadow: var(--av-glow-teal-md); }
+  50%      { box-shadow: var(--av-glow-teal-lg); }
+}
+
+@keyframes av-shimmer-premium {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes av-float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+/* Card avec border conic-gradient animée (effet scan-line) */
+.av-card-scan {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--av-r-lg);
+}
+.av-card-scan::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: var(--av-conic-scan);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: av-scan-rotate 4s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 300ms var(--av-ease-out);
+}
+.av-card-scan:hover::before,
+.av-card-scan:focus-within::before { opacity: 1; }
+
+/* 3D tilt card — base pour KpiCard v2 */
+.av-tilt {
+  transform-style: preserve-3d;
+  transition: transform 400ms var(--av-ease-out), box-shadow 400ms var(--av-ease-out);
+  will-change: transform;
+}
+.av-tilt:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px) scale(1.01);
+}
+
+/* Glassmorphism surfaces */
+.av-glass {
+  background: var(--av-glass-medium);
+  backdrop-filter: var(--av-glass-blur);
+  -webkit-backdrop-filter: var(--av-glass-blur);
+  border: var(--av-glass-border);
+}
+.av-glass-heavy {
+  background: var(--av-glass-light);
+  backdrop-filter: var(--av-glass-blur-heavy);
+  -webkit-backdrop-filter: var(--av-glass-blur-heavy);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+/* Text glow neon (pour logo, titres clés) */
+.av-text-glow-teal {
+  text-shadow: 0 0 8px rgba(124, 200, 200, 0.5), 0 0 20px rgba(124, 200, 200, 0.3), 0 0 40px rgba(124, 200, 200, 0.15);
+}
+.av-text-glow-blue {
+  text-shadow: 0 0 8px rgba(24, 95, 165, 0.5), 0 0 20px rgba(24, 95, 165, 0.3);
+}
+
+/* Grid background (cyber pattern subtil) */
+.av-grid-bg {
+  background-image: var(--av-grid-svg);
+  background-size: 40px 40px;
+}
+.av-grid-bg-strong {
+  background-image: var(--av-grid-svg-strong);
+  background-size: 40px 40px;
+}
+
+/* Animated aurora blob (pour PageHero hitech) */
+.av-aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.55;
+  animation: av-aurora 18s ease-in-out infinite;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Float subtil (icons, badges) */
+.av-float {
+  animation: av-float-y 4s ease-in-out infinite;
+}
+
+/* Glow pulse (badges, états actifs) */
+.av-glow-pulse {
+  animation: av-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Custom scrollbar premium — appliqué à tous les scrollables */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 200, 200, 0.45) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(20, 33, 49, 0.03);
+  border-radius: 99px;
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(124, 200, 200, 0.40), rgba(93, 181, 181, 0.55));
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 200ms;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(124, 200, 200, 0.70), rgba(93, 181, 181, 0.85));
+  background-clip: padding-box;
+  box-shadow: inset 0 0 6px rgba(124, 200, 200, 0.4);
+}
+*::-webkit-scrollbar-corner { background: transparent; }
+
+/* Smooth scroll natif */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {

@@ -27,13 +27,13 @@ import { useEffect, useState, useRef } from "react";
 import Sparkline from "./Sparkline";
 
 const VARIANTS = {
-  teal:    { gradient: "var(--av-grad-teal)",    shadow: "var(--av-shadow-teal)",    glow: "rgba(124, 200, 200, 0.4)" },
-  blue:    { gradient: "var(--av-grad-blue)",    shadow: "var(--av-shadow-blue)",    glow: "rgba(24, 95, 165, 0.4)" },
-  terra:   { gradient: "var(--av-grad-terra)",   shadow: "var(--av-shadow-terra)",   glow: "rgba(201, 134, 127, 0.4)" },
-  amber:   { gradient: "var(--av-grad-warning)", shadow: "var(--av-shadow-amber)",   glow: "rgba(239, 159, 39, 0.4)" },
-  navy:    { gradient: "var(--av-grad-navy)",    shadow: "var(--av-shadow-lg)",      glow: "rgba(20, 33, 49, 0.4)" },
-  violet:  { gradient: "var(--av-grad-violet)",  shadow: "var(--av-shadow-md)",      glow: "rgba(122, 111, 176, 0.4)" },
-  success: { gradient: "var(--av-grad-success)", shadow: "var(--av-shadow-teal)",    glow: "rgba(90, 160, 90, 0.4)" },
+  teal:    { gradient: "var(--av-grad-teal)",    shadow: "var(--av-shadow-teal)",    glow: "0 0 40px rgba(124, 200, 200, 0.45), 0 0 80px rgba(124, 200, 200, 0.25)", color: "#7CC8C8" },
+  blue:    { gradient: "var(--av-grad-blue)",    shadow: "var(--av-shadow-blue)",    glow: "0 0 40px rgba(24, 95, 165, 0.45), 0 0 80px rgba(24, 95, 165, 0.25)",  color: "#185FA5" },
+  terra:   { gradient: "var(--av-grad-terra)",   shadow: "var(--av-shadow-terra)",   glow: "0 0 40px rgba(201, 134, 127, 0.45), 0 0 80px rgba(201, 134, 127, 0.25)", color: "#C9867F" },
+  amber:   { gradient: "var(--av-grad-warning)", shadow: "var(--av-shadow-amber)",   glow: "0 0 40px rgba(239, 159, 39, 0.45), 0 0 80px rgba(239, 159, 39, 0.25)",  color: "#EF9F27" },
+  navy:    { gradient: "var(--av-grad-navy)",    shadow: "var(--av-shadow-lg)",      glow: "0 0 40px rgba(20, 33, 49, 0.45), 0 0 80px rgba(20, 33, 49, 0.25)",     color: "#243044" },
+  violet:  { gradient: "var(--av-grad-violet)",  shadow: "var(--av-shadow-md)",      glow: "0 0 40px rgba(122, 111, 176, 0.45), 0 0 80px rgba(122, 111, 176, 0.25)", color: "#7a6fb0" },
+  success: { gradient: "var(--av-grad-success)", shadow: "var(--av-shadow-teal)",    glow: "0 0 40px rgba(90, 160, 90, 0.45), 0 0 80px rgba(90, 160, 90, 0.25)",   color: "#5aa05a" },
 };
 
 /**
@@ -135,22 +135,37 @@ export default function KpiCard({
         borderRadius: "var(--av-r-lg)",
         padding: sz.padding,
         cursor: onClick ? "pointer" : "default",
-        transition: "transform 250ms var(--av-ease-out), box-shadow 250ms var(--av-ease-out), border-color 150ms",
+        // 0.58.17 : transition multi-property avec transform-style preserve-3d
+        transition: "transform 350ms var(--av-ease-out), box-shadow 350ms var(--av-ease-out), border-color 200ms",
+        transformStyle: "preserve-3d",
         boxShadow: "var(--av-shadow-sm)",
         overflow: "hidden",
         height: "100%",
         minHeight: 130,
         animation: "av-scale-in 0.4s var(--av-ease-out)",
+        willChange: onClick ? "transform" : "auto",
       }}
       onMouseEnter={(e) => {
         if (!onClick) return;
-        e.currentTarget.style.transform = "translateY(-4px)";
-        e.currentTarget.style.boxShadow = cfg.shadow;
-        e.currentTarget.style.borderColor = "transparent";
+        // 0.58.17 : tilt 3D subtil au lieu d'un simple translateY
+        e.currentTarget.style.transform = "perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px) scale(1.015)";
+        e.currentTarget.style.boxShadow = cfg.shadow + ", " + (cfg.glow || "0 0 40px " + (cfg.color || "rgba(124,200,200,.30)"));
+        e.currentTarget.style.borderColor = cfg.color || "transparent";
+      }}
+      onMouseMove={(e) => {
+        if (!onClick) return;
+        // 0.58.17 : tilt qui suit la position du curseur (effet parallax)
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        const rotY = (x - 0.5) * 8;   // ±4deg max
+        const rotX = (0.5 - y) * 6;   // ±3deg max
+        e.currentTarget.style.transform =
+          `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-4px) scale(1.015)`;
       }}
       onMouseLeave={(e) => {
         if (!onClick) return;
-        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.transform = "perspective(1000px) rotateX(0) rotateY(0) translateY(0) scale(1)";
         e.currentTarget.style.boxShadow = "var(--av-shadow-sm)";
         e.currentTarget.style.borderColor = "var(--av-g200)";
       }}
