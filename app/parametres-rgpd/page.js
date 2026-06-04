@@ -19,6 +19,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
+import { toast } from "../components/ui-premium";
 import { dialogs } from "../dialogs";
 import { 
   TEMPLATE_CONSENTEMENT, VERSION_TEMPLATE, TEMPLATE_VARIABLES, renderConsentement, consentementToHtml, validateTemplate, nextVersion, loadCustomVariables, saveCustomVariables} from "../../lib/rgpd";
@@ -95,7 +96,7 @@ export default function ParametresRgpd() {
       setCustomVars(customVarsDraft);
       setCustomVarsModal(false);
     } else {
-      alert("Erreur lors de l'enregistrement");
+      toast.error("Erreur lors de l'enregistrement");
     }
     setCustomSaveBusy(false);
   }
@@ -174,12 +175,12 @@ export default function ParametresRgpd() {
           .update({ is_active: true })
           .eq("id", t.id);
       }
-      alert(`${selected.length} template(s) activé(s) avec succès.`);
+      toast.success(`${selected.length} template(s) activé(s) avec succès.`);
       setActMassModal(false);
       setActMassSelected(new Set());
       await load();
     } catch (e) {
-      alert("Erreur activation groupée : " + e.message);
+      toast.error("Erreur activation groupée : " + e.message);
     } finally {
       setActMassBusy(false);
     }
@@ -215,11 +216,11 @@ export default function ParametresRgpd() {
         }
         throw error;
       }
-      alert(`Template dupliqué vers ${etabIds.length} établissement(s). Activer manuellement chaque copie pour la rendre effective.`);
+      toast.success(`Template dupliqué vers ${etabIds.length} établissement(s). Activer manuellement chaque copie.`);
       setDupModal(null);
       await load();
     } catch (e) {
-      alert("Erreur duplication : " + e.message);
+      toast.error("Erreur duplication : " + e.message);
     } finally {
       setDupBusy(false);
     }
@@ -267,7 +268,7 @@ export default function ParametresRgpd() {
   function openEdit(t) {
     // Édition autorisée uniquement si pas encore activé / utilisé
     if (t.is_active || (usageStats[t.id] || 0) > 0) {
-      alert("Ce template est activé ou déjà utilisé. Crée une nouvelle version pour modifier.");
+      toast.error("Ce template est activé ou déjà utilisé. Crée une nouvelle version pour modifier.");
       return;
     }
     setEditor({ ...t });
@@ -275,8 +276,8 @@ export default function ParametresRgpd() {
 
   async function saveTemplate() {
     if (!editor) return;
-    if (!editor.contenu_md?.trim()) { alert("Le contenu du template ne peut pas être vide."); return; }
-    if (!editor.version?.trim()) { alert("Numéro de version requis."); return; }
+    if (!editor.contenu_md?.trim()) { toast.error("Le contenu du template ne peut pas être vide."); return; }
+    if (!editor.version?.trim()) { toast.error("Numéro de version requis."); return; }
     // Avertissements (non bloquants)
     const warnings = validateTemplate(editor.contenu_md, customVars.map(v => v.key));
     if (warnings.length > 0) {
@@ -315,7 +316,7 @@ export default function ParametresRgpd() {
       setEditor(null);
       await load();
     } catch (e) {
-      alert("Erreur : " + e.message);
+      toast.error("Erreur : " + e.message);
     } finally {
       setBusy(false);
     }
@@ -337,7 +338,7 @@ export default function ParametresRgpd() {
       if (error) throw error;
       await load();
     } catch (e) {
-      alert("Erreur : " + e.message);
+      toast.error("Erreur : " + e.message);
     } finally {
       setBusy(false);
     }

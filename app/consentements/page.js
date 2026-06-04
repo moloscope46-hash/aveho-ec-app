@@ -12,6 +12,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, FilterBar } from "../ui";
+import { toast } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { fmtDate, relativeTime } from "../../lib/format";
 
@@ -115,7 +116,7 @@ ${consentementToHtml(c.texte_consentement)}
     const blob = new Blob([html], { type: "text/html" });
     const blobUrl = URL.createObjectURL(blob);
     const w = window.open(blobUrl, "_blank", "width=900,height=700");
-    if (!w) { alert("Impossible d'ouvrir la fenêtre d'impression (popup bloquée ?)."); return; }
+    if (!w) { toast.error("Impossible d'ouvrir la fenêtre d'impression (popup bloquée ?)."); return; }
     setTimeout(() => { try { w.print(); } catch {} setTimeout(() => URL.revokeObjectURL(blobUrl), 30000); }, 500);
   }
 
@@ -134,7 +135,7 @@ ${consentementToHtml(c.texte_consentement)}
       const { generateConsentPDF } = await import("../../lib/consentPdf");
       await generateConsentPDF(c, { signatureUrl });
     } catch (e) {
-      alert("Erreur génération PDF : " + (e.message || "inconnue"));
+      toast.error("Erreur génération PDF : " + (e.message || "inconnue"));
     } finally {
       setPdfBusy(false);
     }
@@ -149,7 +150,7 @@ ${consentementToHtml(c.texte_consentement)}
         renouvellement_demande_at: new Date().toISOString(),
       })
       .eq("id", c.id);
-    if (error) { alert("Erreur : " + error.message); return; }
+    if (error) { toast.error("Erreur : " + error.message); return; }
     setViewModal(null);
     await load();
   }

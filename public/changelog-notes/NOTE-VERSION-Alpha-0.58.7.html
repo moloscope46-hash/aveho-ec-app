@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.7 — Drag&Drop premium + Migration toast</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#142131 0%,#73424d 60%,#C9867F 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,134,127,.25) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#ffd6cf;font-weight:700;background:rgba(201,134,127,.18);border:1px solid rgba(201,134,127,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#C9867F;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,134,127,.5)}70%{box-shadow:0 0 0 10px rgba(201,134,127,0)}100%{box-shadow:0 0 0 0 rgba(201,134,127,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:var(--teal)}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#ffd6cf;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#ffd6cf}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#C9867F,#7CC8C8)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--terra);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--terra)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.tr{background:linear-gradient(135deg,#fcf2f0,#fff);border-color:#e8c7c2}.top-kpi.tr .top-kpi-val{color:var(--terra)}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+
+/* KANBAN PREVIEW */
+.kanban-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0;padding:16px;background:#f8fafc;border-radius:14px;border:1px solid var(--g200)}
+.kb-col-mock{background:#f4f7fa;border:2px solid #e3e9ee;border-radius:12px;padding:12px;min-height:180px;position:relative;transition:all .3s}
+.kb-col-mock.over{
+  background:linear-gradient(180deg,rgba(124,200,200,.15) 0%,rgba(124,200,200,.06) 100%);
+  box-shadow:0 0 0 2px #7CC8C8 inset,0 0 0 6px rgba(124,200,200,.20) inset,0 8px 24px rgba(124,200,200,.15);
+  animation:kb-col-pulse 1.4s ease-in-out infinite;
+}
+@keyframes kb-col-pulse{0%,100%{box-shadow:0 0 0 2px #7CC8C8 inset,0 0 0 6px rgba(124,200,200,.20) inset,0 8px 24px rgba(124,200,200,.15)}50%{box-shadow:0 0 0 2px #7CC8C8 inset,0 0 0 10px rgba(124,200,200,.10) inset,0 8px 32px rgba(124,200,200,.30)}}
+.kb-col-mock.dim{opacity:.7}
+.kb-col-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid rgba(0,0,0,.05);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.kb-col-h.b{color:#185FA5}
+.kb-col-h.a{color:#EF9F27}
+.kb-col-h.g{color:#5aa05a}
+.kb-col-count{background:currentColor;color:#fff !important;padding:1px 7px;border-radius:9px;font-size:10px}
+
+.kb-card-mock{background:#fff;padding:10px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:3px solid #185FA5;font-size:11.5px;margin-bottom:7px;transition:all .2s;position:relative}
+.kb-card-mock.dragging{opacity:.35;transform:scale(0.96);filter:grayscale(.4)}
+.kb-card-mock.dropped{animation:kb-drop-flash-demo 1.8s ease-out infinite}
+@keyframes kb-drop-flash-demo{0%,55%{transform:scale(1);box-shadow:0 1px 3px rgba(0,0,0,.06)}10%{transform:scale(1.03);box-shadow:0 0 0 8px rgba(124,200,200,.30)}5%{transform:scale(0.94);box-shadow:0 0 0 0 rgba(124,200,200,.6)}}
+.kb-card-mock.urg{border-left-color:#c0392b}
+.kb-card-mock .nb{font-weight:700;color:#142131;font-size:11.5px}
+.kb-card-mock .ty{font-size:11px;color:#2a3a48;margin-top:2px}
+
+/* Ghost mockup flottant */
+.kb-ghost-mock{
+  background:#fff;padding:10px;border-radius:8px;
+  border-left:4px solid #c0392b;
+  display:inline-block;width:200px;
+  transform:rotate(3deg) scale(1.04);
+  box-shadow:0 24px 48px rgba(20,33,49,.30),0 10px 20px rgba(20,33,49,.20),0 0 0 1px rgba(124,200,200,.40),0 0 24px rgba(124,200,200,.25);
+  margin:30px 12px;
+}
+
+.ghost-row{background:#142131;padding:30px 20px;border-radius:14px;text-align:center;margin:14px 0;position:relative;overflow:hidden}
+.ghost-row::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(124,200,200,.2) 0%,transparent 70%);pointer-events:none}
+.ghost-row > *{position:relative;z-index:1}
+.ghost-row .label{color:#bfe6e6;font-size:12px;font-weight:600;margin-bottom:6px}
+
+/* Toast preview */
+.toast-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.toast-mock{padding:14px 18px;border-radius:12px;color:#fff;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13;box-shadow:0 12px 30px rgba(20,33,49,.25)}
+.toast-mock.success{background:linear-gradient(135deg,#5aa05a,#3e8540)}
+.toast-mock.error{background:linear-gradient(135deg,#c0392b,#a93026)}
+.toast-mock i{font-size:18px}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 6 — DEPLOYMENT</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.7 — Drag&Drop premium Kanban + Migration toast<small>Pickup soulevée · ghost flottant · drop zone pulsante · flash arrivée · feedback toast</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.7-alpha</code></span>
+    <span><b>Tests :</b> 3446 Vitest (+18)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi tr"><div class="top-kpi-val">5</div><div class="top-kpi-lbl">Effets DnD premium</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Keyframes ajoutés</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">3</div><div class="top-kpi-lbl">Pages migrées toast</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+18</div><div class="top-kpi-lbl">Tests Vitest (3446)</div></div>
+</div>
+
+<h2>🎯 Kanban Drag&Drop premium</h2>
+
+<div class="panel">
+<p style="margin:0">Le système de drag&drop existant (PointerEvents universel souris+tactile) avait juste un changement d'opacity + une rotation 2deg sur le ghost. Maintenant : <strong>5 effets premium</strong> qui rendent le drag&drop sensoriel et immersif.</p>
+</div>
+
+<h3>1. État de drag actif (focus sur la cible)</h3>
+<div class="kanban-preview">
+  <div class="kb-col-mock dim">
+    <div class="kb-col-h b">⏳ En cours <span class="kb-col-count">2</span></div>
+    <div class="kb-card-mock dragging">
+      <div class="nb">DI-1234</div>
+      <div class="ty">Maintenance préventive</div>
+    </div>
+    <div class="kb-card-mock">
+      <div class="nb">DI-1235</div>
+      <div class="ty">Réparation</div>
+    </div>
+  </div>
+  <div class="kb-col-mock over">
+    <div class="kb-col-h a">🔧 À traiter <span class="kb-col-count">1</span></div>
+    <div class="kb-card-mock urg">
+      <div class="nb">DI-1238</div>
+      <div class="ty">Panne URGENTE</div>
+    </div>
+  </div>
+  <div class="kb-col-mock dim">
+    <div class="kb-col-h g">✅ Résolue <span class="kb-col-count">5</span></div>
+    <div class="kb-card-mock">
+      <div class="nb">DI-1230</div>
+      <div class="ty">Calibrage</div>
+    </div>
+  </div>
+</div>
+
+<table>
+<tr><th>Élément</th><th>Effet</th></tr>
+<tr><td><b>Carte source</b> (en cours de drag)</td><td>opacity 0.35 + scale(0.96) + filter grayscale(0.4) → effet "soulevée" visible</td></tr>
+<tr><td><b>Colonne destination</b> (survol)</td><td>Ring teal 2px inset + glow 6/10px pulsant + gradient teal + animation pulse 1.4s</td></tr>
+<tr><td><b>Autres colonnes</b> (pendant drag)</td><td>opacity 0.7 → focus visuel sur la cible</td></tr>
+</table>
+
+<h3>2. Ghost premium (carte qui suit le pointeur)</h3>
+<div class="ghost-row">
+  <div class="label">Ghost = carte qui suit la souris/doigt</div>
+  <div class="kb-ghost-mock">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-weight:700;color:#142131;font-size:12px">DI-1238</span>
+      <span style="font-size:9px;font-weight:700;color:#c0392b;text-transform:uppercase">URGENTE</span>
+    </div>
+    <div style="font-size:11.5px;color:#2a3a48;margin-top:3px">Panne climatisation</div>
+    <div style="font-size:10.5px;color:#6c7a89">Chambre 12 — Salle de bain</div>
+  </div>
+</div>
+
+<table>
+<tr><th>Spec</th><th>Valeur</th></tr>
+<tr><td>Rotation</td><td>3deg (au lieu de 2deg)</td></tr>
+<tr><td>Scale</td><td>1.04 (effet de prise en main)</td></tr>
+<tr><td>Border left</td><td>4px (au lieu de 3px) — plus présente</td></tr>
+<tr><td>Box-shadow</td><td><b>4 couches</b> : 24+48px navy + 10+20px navy + 1px teal ring + 24px teal halo</td></tr>
+<tr><td>Animation d'entrée</td><td>kb-ghost-in 180ms (rotation 0→3deg + scale 1→1.04 + opacity 0.6→0.95)</td></tr>
+</table>
+
+<h3>3. Flash drop animation</h3>
+<div class="panel">
+<p style="margin:0">Au moment du drop, la carte qui vient d'arriver dans sa nouvelle colonne joue une animation <strong>kb-drop-flash</strong> 600ms : scale 0.94 → 1.03 → 1 + halo teal qui s'étend (0 → 8px → 0). Visible sur la carte centrale de l'aperçu ci-dessous ↓</p>
+</div>
+
+<div class="kanban-preview">
+  <div class="kb-col-mock">
+    <div class="kb-col-h a">🔧 À traiter <span class="kb-col-count">1</span></div>
+    <div class="kb-card-mock dropped urg">
+      <div class="nb">DI-1238 ← qui vient d'arriver</div>
+      <div class="ty">Animation flash teal</div>
+    </div>
+  </div>
+  <div class="kb-col-mock">
+    <div class="kb-col-h b">⏳ En cours <span class="kb-col-count">1</span></div>
+    <div class="kb-card-mock"><div class="nb">DI-1235</div><div class="ty">—</div></div>
+  </div>
+  <div class="kb-col-mock">
+    <div class="kb-col-h g">✅ Résolue <span class="kb-col-count">5</span></div>
+    <div class="kb-card-mock"><div class="nb">DI-1230</div><div class="ty">—</div></div>
+  </div>
+</div>
+
+<h2>🔔 Migration toast progressive</h2>
+
+<div class="panel">
+<p style="margin:0">Les <code>alert()</code> natifs sont <strong>bloquants, moches et n'offrent aucun feedback positif</strong>. Migration vers <code>toast.error()</code> / <code>toast.success()</code> sur 3 pages critiques.</p>
+</div>
+
+<div class="toast-row">
+  <div class="toast-mock success">
+    <i>✓</i> Statut mis à jour → À traiter
+  </div>
+  <div class="toast-mock error">
+    <i>✕</i> Échec du changement de statut
+  </div>
+</div>
+
+<table>
+<tr><th>Page</th><th>Migrations</th></tr>
+<tr><td><code>/interventions/kanban</code></td><td>1 alert sur erreur API → toast.error + <b>nouveau toast.success</b> sur changement de statut réussi</td></tr>
+<tr><td><code>/interventions</code></td><td>4 alert dans <code>genTransfert()</code> : matériel manquant + dépôt manquant + erreur API + succès avec numéro</td></tr>
+<tr><td><code>/patients</code></td><td>2 alert (droit supprimer + erreur suppression) + <b>nouveau toast.success</b> après bulk delete</td></tr>
+</table>
+
+<h2>📊 Bilan UI/UX complet (0.58.0 → 0.58.7)</h2>
+
+<table>
+<tr><th>Composant premium</th><th>Pages déployées</th></tr>
+<tr><td><code>PageHero</code></td><td>statistiques · kanban · calendrier · matériels · paramètres · profil <b>(6)</b></td></tr>
+<tr><td><code>EmptyState</code></td><td>patients · interventions · signalements · achats · maintenance · commandes <b>(6)</b></td></tr>
+<tr><td><code>Avatar</code></td><td>UserMenu (×2) · Profil · liste utilisateurs <b>(3 endroits)</b></td></tr>
+<tr><td><code>Tabs</code></td><td>paramètres · profil <b>(2)</b></td></tr>
+<tr><td><code>Toast</code></td><td><b>NOUVEAU</b> : kanban · interventions · patients <b>(3)</b></td></tr>
+<tr><td><code>KpiCard</code> + <code>Sparkline</code> + <code>Skeleton</code></td><td>HeroDashboard accueil</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.7
+npm install --legacy-peer-deps
+npm test                              # 3446 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.7 - Drag&Drop premium Kanban + Migration toast"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Migration toast suite</b> : /utilisateurs (8 alert), /parametres-rgpd (10 alert), /annuaire-rpps (6 alert)</li>
+<li><b>Avatar sur cards intervention</b> : créateur + assigné en bas de chaque carte kanban + liste DI</li>
+<li><b>AvatarGroup</b> : sur les cards multi-collaborateurs (à concevoir : table users_pour_intervention)</li>
+<li><b>Mode sombre</b> via les CSS vars (toggle dans Paramètres > Apparence > Thème)</li>
+<li><b>Refonte modales</b> : backdrop blur + animation slide-up + dismiss au swipe</li>
+<li><b>Skeleton</b> sur les chargements de listes (interventions, patients)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.7 · 4 juin 2026 · 3446 Vitest · UI Phase 6 (Drag&Drop premium + Migration toast)</footer>
+</div></body></html>

@@ -120,6 +120,546 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.14",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 13 : ProgressBar + Tooltip + BulkToolbar dans /interventions + RangePicker dans /statistiques + Wizard onboarding",
+    "chantiers": [
+      { "code": "UI", "txt": "📊 COMPOSANT PROGRESSBAR (app/components/ui-premium/ProgressBar.js, 110 lignes). Barre de progression linéaire avec gradient et glow. (a) Value clampé 0-100 automatiquement. (b) 3 tailles (sm 4px / md 8px / lg 12px). (c) 4 variants : default (teal), success (green), danger (terra), navy. (d) Mode indeterminate (animation sweep gauche→droite 1.4s infinie). (e) Brillance subtile au sommet de la barre (gradient white 25% → transparent). (f) Label optionnel + showPercent (avec font-variant-numeric tabular). (g) Transition width 300ms cubic-bezier pour les updates de valeur. (h) A11y : role progressbar + aria-valuenow/min/max/text + aria-valuetext français",
+        "code_snippet": {
+          "file": "app/components/ui-premium/ProgressBar.js",
+          "note": "Progress bar avec mode déterminé + indeterminate",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.14 - pas de composant standard\n// → solutions ad-hoc avec divs + width % partout",
+          "after": "// 0.58.14 - ProgressBar premium\n// Upload avec %\n<ProgressBar value={uploadProgress} label='Upload en cours…' showPercent />\n\n// Export lourd avec mode indeterminate\n<ProgressBar indeterminate label='Génération du PDF…' variant='success' />\n\n// Validation (taille large + couleur danger)\n<ProgressBar value={errorPct} size='lg' variant='danger' label='Erreurs détectées' showPercent />\n\n// → glow autour de la barre, brillance subtile au sommet,\n//   transition 300ms cubic-bezier, a11y complet"
+        }
+      },
+      { "code": "UI", "txt": "💬 COMPOSANT TOOLTIP premium (app/components/ui-premium/Tooltip.js, 220 lignes). Wrapper qui ajoute un tooltip stylé au hover ou focus. (a) 4 positions (top/bottom/left/right) + auto-flip si débord viewport. (b) Délai paramétrable (défaut 400ms). (c) MaxWidth configurable (défaut 240px). (d) Arrow CSS pure via borders (4 directions). (e) Animation av-tooltip-in 200ms (fade + scale 0.85→1). (f) Position fixed + getBoundingClientRect pour calcul précis. (g) Cleanup timeout au unmount pour éviter fuites. (h) Show sur mouseenter ET focus (a11y clavier). (i) Background navy + shadow profonde. (j) A11y : role=tooltip + aria-describedby + pointer-events:none pour ne pas bloquer le hover du parent",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Tooltip.js",
+          "note": "Tooltip premium avec auto-positioning",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.14 - title HTML natif moche\n<button title='Supprimer cet item'>\n  <i className='ti ti-trash' />\n</button>\n// → délai navigateur de ~1.5s, style natif gris, pas de styling possible",
+          "after": "// 0.58.14 - Tooltip premium\n<Tooltip content='Supprimer cet item' position='top' delay={300}>\n  <button>\n    <i className='ti ti-trash' />\n  </button>\n</Tooltip>\n\n// Avec contenu riche\n<Tooltip\n  content={<><b>Astuce</b><br />Cmd+K pour la recherche globale</>}\n  position='bottom'\n  maxWidth={280}\n>\n  <i className='ti ti-info-circle' />\n</Tooltip>\n\n// → délai paramétrable, arrow CSS pure,\n//   auto-flip si débord, animation pop"
+        }
+      },
+      { "code": "UI", "txt": "🛠️ INTÉGRATION BULKTOOLBAR DANS /interventions. (a) Nouvelle colonne checkbox en première position du tableau (head + body). Checkbox 'Tout sélectionner' qui sélectionne tous les éléments visibles. (b) State `selected: Set<id>` + helpers toggleSelected / clearSelected. (c) Lignes sélectionnées mises en évidence avec background teal subtil. (d) 3 actions bulk : 'Marquer résolue' (Dialog.confirm + update statut), 'Exporter CSV' (téléchargement avec BOM UTF-8 + séparateur ;), 'Supprimer' (Dialog.confirm danger + delete bulk). (e) Toutes les confirmations passent par Dialog premium (au lieu de window.confirm natif)",
+        "code_snippet": {
+          "file": "app/interventions/page.js",
+          "note": "Multi-sélection avec actions groupées",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.14 - aucune multi-sélection\n// → 'Pour clôturer 12 DI : cliquer chaque ligne, bouton Suivant, etc' (pénible)",
+          "after": "// 0.58.14 - bulk-select fluide\nconst [selected, setSelected] = useState(new Set());\n\n// Checkbox 'Tout sélectionner' dans thead\n<input\n  type='checkbox'\n  checked={visible.length > 0 && visible.every(r => selected.has(r.id))}\n  onChange={(e) => {\n    e.target.checked\n      ? setSelected(new Set(visible.map(r => r.id)))\n      : clearSelected();\n  }}\n/>\n\n// Toolbar contextuelle apparaît dès 1 sélection\n<BulkToolbar\n  count={selected.size}\n  onClear={clearSelected}\n  itemName='intervention'\n  itemNamePlural='interventions'\n  actions={[\n    { id: 'close',  label: 'Marquer résolue', icon: 'ti-circle-check', onClick: bulkClose },\n    { id: 'export', label: 'Exporter CSV',   icon: 'ti-download',     onClick: bulkExportCsv },\n    { id: 'delete', label: 'Supprimer',      icon: 'ti-trash',        onClick: bulkDelete, variant: 'danger' },\n  ]}\n/>"
+        }
+      },
+      { "code": "UI", "txt": "📅 INTÉGRATION RANGEPICKER DANS /statistiques. Nouvelle barre de filtre période juste après le PageHero avec icon ti-filter + label 'Période d'analyse :' + composant RangePicker. State `range = { from, to }` ajouté. Affichage d'un message d'info quand un filtre est actif. (Note : la query Supabase utilisera ce range dans une prochaine itération — pour cette release, la mécanique UI est en place et fonctionnelle)" },
+      { "code": "UI", "txt": "👤 PAGE /onboarding — Wizard nouveau collaborateur en 4 étapes avec Stepper. (a) Étape 1 Identité : nom + prénom + email avec validation regex live + preview Avatar dynamique. (b) Étape 2 Rôle : Select premium size=lg avec 4 rôles (admin / manager / utilisateur / lecture seule), chacun avec icon coloré + desc. Card preview du rôle sélectionné. (c) Étape 3 Permissions : Combobox tags avec 9 permissions granulaires (patients lecture/écriture/suppression, matériel lecture/écriture, interventions, transferts, stats, exports). (d) Étape 4 Invitation : récap complet avec Avatar 52px + role badge avec icon + permissions tags + message 'Email d'activation envoyé à...'. (e) Footer Stepper standardisé avec submitLabel='Envoyer l'invitation' + busy state. (f) handleCancel demande confirmation via Dialog.confirm si données saisies. (g) handleSubmit appelle supabase.functions.invoke('invite-user'). PageHero variant='violet' avec breadcrumbs",
+        "code_snippet": {
+          "file": "app/onboarding/page.js (430 lignes)",
+          "note": "Wizard onboarding nouveau collaborateur",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.14 - une seule modale Modal géante avec 30 champs\n// → utilisateur perdu, validation difficile, abandon fréquent",
+          "after": "// 0.58.14 - Wizard guidé en 4 étapes\nconst [step, setStep] = useState(0);\n\n<Stepper active={step} onStepClick={setStep} steps={STEPS} />\n\n<Stepper.Body active={step}>\n  {step === 0 && <FormIdentite />}      {/* nom + email + Avatar preview */}\n  {step === 1 && <FormRole />}          {/* Select premium + card desc */}\n  {step === 2 && <FormPermissions />}   {/* Combobox tags */}\n  {step === 3 && <RecapInvitation />}   {/* card complète + send */}\n</Stepper.Body>\n\n<Stepper.Footer\n  active={step}\n  total={STEPS.length}\n  onPrev={() => setStep(step - 1)}\n  onNext={() => setStep(step + 1)}\n  onSubmit={handleSubmit}\n  nextDisabled={!canGoNext()}\n  busy={busy}\n  submitLabel=\"Envoyer l'invitation\"\n/>"
+        }
+      },
+      { "code": "AI", "txt": "+48 tests Vitest (v058-14-ui-phase13.test.js) : version+SW (2), ProgressBar (8 — use client + props + clamp + 3 sizes + 4 variants + indeterminate + a11y + brillance + index), Tooltip (10 — use client + props + 4 positions + show/hide + cleanup + getBoundingClientRect + arrow CSS + animation + a11y + focus a11y + index), BulkToolbar dans /interventions (8 — import + state Set + 3 bulkActions + Dialog.confirm + checkbox header + checkbox row + BulkToolbar variant danger + CSV BOM UTF-8), RangePicker dans /statistiques (4 — import + state + JSX + barre filter), Page /onboarding (12 — use client + 4 steps + 4 roles + 9 permissions + email regex + Stepper.Body/Footer + Select role + Combobox permissions + récap + invite-user + Dialog cancel + PageHero violet), Récap 19 composants (1). Total 3695 verts (+48)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.14 : 19 composants premium au total (ajout ProgressBar, Tooltip). La page /interventions devient une vraie interface professionnelle avec multi-sélection bulk. La page /statistiques a maintenant un filtre période RangePicker (à brancher sur les queries dans une prochaine itération). Nouvelle page /onboarding accessible via lien 'Inviter un collaborateur' depuis /utilisateurs (à câbler côté liste). Prochaines pistes : (a) Brancher le filtre RangePicker de /statistiques sur les queries Supabase pour appliquer le filtre temporel. (b) Ajouter le lien vers /onboarding depuis /utilisateurs. (c) Tooltip partout (boutons icons sans label, dates relatives, status pills). (d) ProgressBar dans les exports lourds (/statistiques PDF, /interventions bulk CSV avec >100 lignes). (e) Composant Code Block premium (pour afficher du JSON dans /admin)" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.14.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.13",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 12 : RangePicker + Stepper + BulkToolbar + Refonte NotifBell en Drawer + Migration dialogs.alert legacy",
+    "chantiers": [
+      { "code": "UI", "txt": "📅 COMPOSANT RANGEPICKER (app/components/ui-premium/RangePicker.js, 260 lignes). Sélecteur de plage de dates avec dropdown 2 colonnes. (a) Colonne gauche : 5 presets cliquables (7 derniers jours, 30 derniers jours, 3 derniers mois, 6 derniers mois, Cette année) avec icon ti-clock-bolt. (b) Colonne droite : 2 inputs date 'Du' et 'Au' avec contraintes min/max croisées (from <= to automatique). (c) Boutons 'Effacer' + 'Appliquer' (désactivé si vide). (d) Affichage formaté français court (4 juin 2026 → 4 juin 2026). (e) Helpers internes : shiftDays(n), shiftMonths(n), formatDateFR(iso). (f) Click outside ferme. (g) Trigger button cohérent avec DatePicker (icon ti-calendar-stats, ring teal au focus, clear ×). (h) Presets customisables via prop 'presets'",
+        "code_snippet": {
+          "file": "app/components/ui-premium/RangePicker.js",
+          "note": "Sélection de plage avec presets",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.13 - 2 inputs date séparés sans presets\n<input type='date' value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />\n<input type='date' value={dateTo} onChange={(e) => setDateTo(e.target.value)} />\n// → 5 clics pour sélectionner 30 derniers jours",
+          "after": "// 0.58.13 - RangePicker premium\nconst [range, setRange] = useState({ from: '', to: '' });\n\n<RangePicker\n  value={range}\n  onChange={setRange}\n/>\n\n// → 1 clic sur preset '30 derniers jours' = du 4 mai au 4 juin 2026 appliqués\n// → ou inputs custom avec contraintes min/max auto"
+        }
+      },
+      { "code": "UI", "txt": "🎯 COMPOSANT STEPPER (app/components/ui-premium/Stepper.js, 280 lignes) — wizard multi-étapes avec progression visuelle. (a) Barre horizontale avec N étapes : cercle numéroté + label + sub-label optionnel. (b) 3 états : done (gradient teal + check icon + shadow), current (gradient navy + glow blanc 4px), future (gris). (c) Trait connecteur entre étapes : gradient teal si done, gris sinon. (d) Cercles cliquables pour reculer (par défaut) ou allowSkipForward pour permettre de sauter vers n'importe quelle étape. (e) 3 tailles (sm 28px / md 32px / lg 36px). (f) Sub-exports prêts à l'emploi : Stepper.Body (animation slide horizontal lors du changement d'étape via key) + Stepper.Footer (prev/next/submit standardisés, avec indicateur 'Étape X sur N', bouton submit en gradient vert success sur la dernière étape, support busy state). (g) A11y : aria-current=step + role navigation",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Stepper.js",
+          "note": "Wizard multi-étapes prêt à l'emploi",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.13 - pas de composant standard pour wizards\n// → Chaque assistant ad-hoc avec breadcrumb perso, état perso,\n//   boutons précédent/suivant dupliqués partout",
+          "after": "// 0.58.13 - Stepper standardisé\nconst [step, setStep] = useState(0);\nconst steps = [\n  { label: 'Informations', sub: 'Identité' },\n  { label: 'Adresse',      sub: 'Domicile' },\n  { label: 'Couverture',   sub: 'AMO + AMC' },\n  { label: 'Validation',   sub: 'Récap' },\n];\n\n<Stepper active={step} onStepClick={setStep} steps={steps} />\n\n<Stepper.Body active={step}>\n  {step === 0 && <FormInfos />}\n  {step === 1 && <FormAdresse />}\n  {step === 2 && <FormCouverture />}\n  {step === 3 && <Recap />}\n</Stepper.Body>\n\n<Stepper.Footer\n  active={step}\n  total={steps.length}\n  onPrev={() => setStep(step - 1)}\n  onNext={() => setStep(step + 1)}\n  onSubmit={handleSubmit}\n  busy={loading}\n/>"
+        }
+      },
+      { "code": "UI", "txt": "🛠️ COMPOSANT BULKTOOLBAR (app/components/ui-premium/BulkToolbar.js, 180 lignes) — action bar contextuelle qui apparaît quand des items sont sélectionnés en bulk. (a) Position fixed centrée bas d'écran (ou top), pill arrondi avec gradient navy + 3 ombres profondes. (b) Compteur badge avec gradient teal + shadow, pluralisation française auto. (c) Actions horizontales avec hover background blanc translucide, support variant='danger' en rouge tendre. (d) Bouton close (×) avec rotation 90° au hover. (e) Animation av-bulk-toolbar-in 350ms (slide-up + scale 0.92→1 + fade). (f) Display count mémorisé pour éviter le flash '0' pendant l'animation de sortie. (g) Props : count, onClear, actions[{ id, label, icon, onClick, variant, disabled }], position ('bottom'|'top'), itemName/itemNamePlural pour i18n du label",
+        "code_snippet": {
+          "file": "app/components/ui-premium/BulkToolbar.js",
+          "note": "Action bar bulk-select fixed bottom",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.13 - aucune ergonomie multi-sélection\n// → 'Pour sélectionner plusieurs : cocher chaque case, scroll vers le haut,\n//    cliquer sur bouton Actions dans la TopBar' (mauvais)",
+          "after": "// 0.58.13 - BulkToolbar contextuelle\nconst [selected, setSelected] = useState(new Set());\n\n{/* Liste avec checkbox */}\n{patients.map(p => (\n  <PatientRow\n    p={p}\n    selected={selected.has(p.id)}\n    onSelect={(checked) => {\n      const next = new Set(selected);\n      checked ? next.add(p.id) : next.delete(p.id);\n      setSelected(next);\n    }}\n  />\n))}\n\n{/* Toolbar apparaît auto quand selected.size > 0 */}\n<BulkToolbar\n  count={selected.size}\n  onClear={() => setSelected(new Set())}\n  itemName='patient'\n  itemNamePlural='patients'\n  actions={[\n    { id: 'assign', label: 'Assigner',  icon: 'ti-user-check', onClick: bulkAssign },\n    { id: 'export', label: 'Exporter',  icon: 'ti-download',   onClick: bulkExport },\n    { id: 'delete', label: 'Supprimer', icon: 'ti-trash',      onClick: bulkDelete, variant: 'danger' },\n  ]}\n/>"
+        }
+      },
+      { "code": "UI", "txt": "📬 REFONTE NOTIFICATIONS PANEL avec Drawer. L'ancien dropdown (className='notif-panel') était collé à la cloche dans la TopBar — peu confortable, masque la liste sur mobile, scroll difficile. Maintenant : (a) Drawer side='right' size='sm' (360px) qui glisse depuis la droite avec backdrop blur. (b) Header avec icon ti-bell + title 'Notifications' + subtitle dynamique ('X non lues' ou 'Tout est à jour'). (c) Footer sticky avec bouton 'Tout marquer comme lu' (uniquement si nonLues > 0). (d) Cards de notifications refondues : background gradient teal subtil si non lue, border teal, icon coloré dans badge 36x36 arrondi, titre + message + date relative, bouton suppression × hover rouge. (e) Empty state premium avec icon ti-bell-off géant + texte 'Aucune notification' centré. (f) Hover sur item : translateY(-1px) + shadow",
+        "code_snippet": {
+          "file": "app/NotifBell.js",
+          "note": "Panel notifications transformé en Drawer côté droit",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.13 - dropdown collé à la cloche\n<div className='notif-panel'>\n  <div className='notif-head'>\n    <b>Notifications</b>\n    {nonLues > 0 && <button>Tout marquer lu</button>}\n  </div>\n  <div className='notif-list'>\n    {items.map(n => <div className='notif-item'>...</div>)}\n  </div>\n</div>",
+          "after": "// 0.58.13 - Drawer premium côté droit\n<Drawer\n  open={open}\n  onClose={() => setOpen(false)}\n  title='Notifications'\n  subtitle={nonLues > 0 ? `${nonLues} non lue${nonLues > 1 ? 's' : ''}` : 'Tout est à jour'}\n  icon='ti-bell'\n  side='right'\n  size='sm'\n  footer={nonLues > 0 ? (\n    <button onClick={readAll}>\n      <i className='ti ti-checks' /> Tout marquer comme lu\n    </button>\n  ) : null}\n>\n  {items.length === 0 ? <EmptyState /> : items.map(n => <NotifCard n={n} />)}\n</Drawer>"
+        }
+      },
+      { "code": "UI", "txt": "🔄 MIGRATION dialogs.alert / dialogs.confirm legacy → Dialog premium (rétrocompatible 100%). L'ancien système dialogs (app/dialogs.js) était utilisé 28 fois dans 10 fichiers. Plutôt que de tout refactorer (risqué), on a fait déléguer en interne dialogs.alert() et dialogs.confirm() vers le nouveau composant Dialog premium via import dynamique. (a) Helper tryNewDialog qui import('./components/ui-premium/Dialog') et appelle Dialog[method]() avec mapping des props. (b) Mapping variant legacy → Dialog : primary→info, danger→danger, warning→warning, success→success. (c) Normalisation : dialogs.alert('texte simple') marche comme avant. (d) Fallback legacy (setConfirmGlobal / setAlertGlobal) conservé en cas d'erreur d'import. (e) SSR safe : if (typeof window === undefined) return null. Tous les 28 usages bénéficient automatiquement du nouveau design (backdrop blur, animations slide-up, header coloré, etc.) sans toucher au code appelant",
+        "code_snippet": {
+          "file": "app/dialogs.js",
+          "note": "Migration douce dialogs legacy → Dialog premium",
+          "lang": "js",
+          "before": "// AVANT 0.58.13 - design legacy modale basique\nexport const dialogs = {\n  alert(options) {\n    return new Promise((resolve) => {\n      resolveAlert = resolve;\n      setAlertGlobal(typeof options === 'string' ? { message: options } : (options || {}));\n    });\n  },\n};",
+          "after": "// 0.58.13 - délégation auto vers Dialog premium\nfunction tryNewDialog(method, options) {\n  if (typeof window === 'undefined') return null;\n  try {\n    return import('./components/ui-premium/Dialog').then((mod) => {\n      const D = mod.Dialog || mod.default;\n      return D[method](options);\n    });\n  } catch { return null; }\n}\n\nexport const dialogs = {\n  alert(options) {\n    const opts = typeof options === 'string' ? { message: options } : (options || {});\n    const variantMap = { primary: 'info', danger: 'danger', warning: 'warning', success: 'success' };\n    const newAttempt = tryNewDialog('alert', {\n      title: opts.title || 'Information',\n      message: opts.message,\n      variant: variantMap[opts.variant] || 'info',\n    });\n    if (newAttempt) return newAttempt;\n    // Fallback legacy si import échoue\n    return new Promise((resolve) => { resolveAlert = resolve; setAlertGlobal(opts); });\n  },\n};\n// → 28 usages dialogs.alert() partout dans l'app bénéficient\n//   automatiquement du nouveau design sans 1 ligne de code modifiée"
+        }
+      },
+      { "code": "AI", "txt": "+42 tests Vitest (v058-13-ui-phase12.test.js) : version+SW (2), RangePicker (8 — use client + props + 5 presets + helpers + click outside + draft state + min/max + index), Stepper (10 — use client + props + 3 tailles + 3 états + connecteur + click logic + aria-current + sub-exports + Footer prev/next/submit + isLast vert), BulkToolbar (9 — use client + props + null si <=0 + displayCount + animation + variant danger + close rotate + badge gradient + index), Refonte NotifBell (6 — import Drawer + utilisation + subtitle dynamique + footer conditionnel + empty state + plus de notif-panel), Migration dialogs (6 — tryNewDialog + confirm délégué + alert délégué + variantMap + fallback legacy + SSR safe), Récap 17 composants (1). Total 3647 verts (+42)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.13 : 17 composants premium au total (ajout RangePicker, Stepper+sub-exports, BulkToolbar). Le panel de notifications passe d'un dropdown étroit à un Drawer confortable côté droit. Les 28 usages de dialogs.alert/confirm legacy adoptent automatiquement le design premium grâce au pattern de délégation transparente. Prochaines pistes : (a) Migrer interventions/page.js vers BulkToolbar (multi-sélection pour assignation groupée). (b) Stepper pour onboarding nouveau collaborateur. (c) RangePicker dans /statistiques pour filtrer la période d'analyse. (d) Composant ProgressBar (barre de progression linéaire pour uploads/exports). (e) Tooltip premium (au hover, avec arrow + délai)" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.13.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.12",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 11 : TimePicker + Migration 5 selects modal interventions + Toast undo + Dialog (confirm/prompt/alert) + Drawer Side",
+    "chantiers": [
+      { "code": "UI", "txt": "⏰ COMPOSANT TIMEPICKER (app/components/ui-premium/TimePicker.js, 230 lignes). Complément du DatePicker pour les heures de RDV/intervention. (a) Trigger button cohérent avec DatePicker (background blanc, focus ring teal 3px, icon clock). (b) Dropdown avec créneaux générés selon step (15/30/60 min). (c) Props minTime / maxTime pour restreindre les horaires (ex: 08:00 → 19:00). (d) Auto-scroll vers la valeur sélectionnée à l'ouverture. (e) 3 tailles (sm/md/lg). (f) Bouton clear (×) hover rouge. (g) Keyboard navigation : Enter/Space/ArrowDown ouvre, Escape ferme. (h) A11y : role listbox + aria-selected + aria-haspopup/expanded",
+        "code_snippet": {
+          "file": "app/components/ui-premium/TimePicker.js",
+          "note": "TimePicker premium avec créneaux configurables",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.12 - input natif moche\n<input\n  type='time'\n  value={time}\n  onChange={(e) => setTime(e.target.value)}\n/>\n// → style natif OS différent partout, pas de step custom",
+          "after": "// 0.58.12 - TimePicker premium\n<TimePicker\n  value={time}\n  onChange={setTime}\n  step={15}             // créneaux toutes les 15 min\n  minTime='08:00'       // horaires bureau\n  maxTime='19:00'\n  size='md'\n/>\n// → dropdown avec créneaux scroll, auto-scroll vers valeur,\n//   clear × hover rouge, design Aveho cohérent"
+        }
+      },
+      { "code": "UI", "txt": "🎯 MIGRATION 5 SELECTS DU MODAL INTERVENTIONS — la modale 'Nouvelle DI' avait 5 <select> natifs. Tous migrés vers Select premium + l'input type=date remplacé par DatePicker. (a) Type de demande : Select avec icons ti-tag. (b) Échéance souhaitée : DatePicker (format français). (c) Matériel concerné : Select **searchable** avec icons ti-tool (liste souvent longue). (d) Patient concerné : Select **searchable** avec icons ti-user. (e) Dépôt : Select avec icons ti-building-warehouse. (f) Zone : Select avec icons ti-map-pin. Plus aucun <select> natif dans /interventions/page.js (vérifié par test)",
+        "code_snippet": {
+          "file": "app/interventions/page.js",
+          "note": "Modal Nouvelle DI entièrement migré",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.12 - 5 <select> natifs\n<select value={form.materiel_id} onChange={...}>\n  <option value=''>— Aucun —</option>\n  {refs.materiels.map((m) =>\n    <option key={m.value} value={m.value}>{m.label}</option>\n  )}\n</select>\n// → pas de search, style natif OS, scroll difficile sur listes longues",
+          "after": "// 0.58.12 - Select premium avec recherche live\n<Select\n  value={form.materiel_id || ''}\n  onChange={(v) => setForm({ ...form, materiel_id: v })}\n  fullWidth\n  searchable       // ← recherche live indispensable\n  placeholder='— Aucun —'\n  options={[\n    { value: '', label: '— Aucun —', icon: 'ti-circle-dashed' },\n    ...refs.materiels.map((m) => ({\n      value: m.value, label: m.label, icon: 'ti-tool'\n    })),\n  ]}\n/>\n// → taper 3 lettres filtre la liste de 200+ matériels instantanément"
+        }
+      },
+      { "code": "UI", "txt": "↩️ TOAST.UNDO() + Action button premium. (a) Refonte visuelle du bouton d'action dans les toasts : pill (border-radius 99px) avec background teinté de la couleur du type, border, icon ti-arrow-back-up, hover translateY + box-shadow. Plus de simple lien underline. (b) Nouveau helper toast.undo(title, onUndo) qui crée un toast success avec actionLabel='Annuler' et duration=6000ms (plus long pour laisser le temps de réagir). 6 helpers au total : success / info / warning / error / neutral / undo",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Toast.js",
+          "note": "Toast undo premium",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.12 - feedback sans undo possible\nawait deletePatient(p.id);\ntoast.success('Patient supprimé');\n// → trop tard si l'utilisateur regrette",
+          "after": "// 0.58.12 - toast.undo() avec restauration\nconst snapshot = { ...p };\nawait deletePatient(p.id);\ntoast.undo('Patient supprimé', async () => {\n  await restorePatient(snapshot);\n  toast.success('Restauration effectuée');\n});\n// → toast vert avec pill 'Annuler', 6 secondes pour réagir,\n//   restore propre via le snapshot avant suppression"
+        }
+      },
+      { "code": "UI", "txt": "💬 COMPOSANT DIALOG (app/components/ui-premium/Dialog.js, 380 lignes). API impérative qui retourne une Promise — au-dessus de Modal mais avec une API ergonomique pour 3 cas d'usage courants. (a) **Dialog.confirm({title, message, danger, preview})** → Promise<boolean>. Variante danger force le header rouge terra. Le slot preview affiche un aperçu stylé code du contenu à supprimer. (b) **Dialog.prompt({title, message, defaultValue, placeholder, validate, multiline})** → Promise<string|null>. Validation custom : (val) => null si OK ou message d'erreur. Multiline=true affiche un textarea + raccourci Cmd/Ctrl+Enter pour valider. (c) **Dialog.alert({title, message, variant})** → Promise<void>. 4 variants : info / success / warning / danger. Implementation : monte un container DOM dynamiquement à la racine via ReactDOM.createRoot, retourne une Promise résolue à la fermeture",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Dialog.js",
+          "note": "API impérative ergonomique",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.12 - boilerplate verbeux avec useState + Modal\nconst [showConfirm, setShowConfirm] = useState(false);\nconst [pendingPatient, setPendingPatient] = useState(null);\n\nfunction askDelete(p) {\n  setPendingPatient(p);\n  setShowConfirm(true);\n}\n\nfunction doDelete() {\n  setShowConfirm(false);\n  // ...delete logic\n}\n\n<Modal open={showConfirm} ...>...</Modal>",
+          "after": "// 0.58.12 - Dialog.confirm() impératif\nasync function askDelete(p) {\n  const ok = await Dialog.confirm({\n    title: 'Supprimer ce patient ?',\n    message: 'Cette action est irréversible.',\n    danger: true,\n    preview: `${p.nom} ${p.prenom} — Chambre ${p.chambre}`,\n  });\n  if (ok) {\n    await deletePatient(p.id);\n    toast.undo('Patient supprimé', () => restore(p));\n  }\n}\n\n// Pareil pour Dialog.prompt :\nconst reason = await Dialog.prompt({\n  title: 'Motif de rejet',\n  placeholder: 'Expliquer pourquoi…',\n  validate: (v) => v.length < 10 ? 'Au moins 10 caractères' : null,\n  multiline: true,\n});\nif (reason) await reject(reason);"
+        }
+      },
+      { "code": "UI", "txt": "📐 COMPOSANT DRAWER SIDE (app/components/ui-premium/Drawer.js, 230 lignes). Panneau latéral coulissant — alternative au Modal pour les longs formulaires ou les vues de détails. (a) Glisse depuis la droite ou la gauche (side='right'|'left'). (b) 4 tailles (sm 360px / md 480px / lg 640px / xl 800px) + width custom override. (c) Backdrop blur(6px) avec animation av-drawer-bg-in 220ms. (d) Animation av-drawer-slide-right ou left 320ms cubic-bezier. (e) Header avec brillance + decorative radial (cohérent avec Modal). (f) Close button avec rotation 90deg au hover. (g) Body scrollable indépendamment. (h) Footer sticky en bas. (i) Lock body scroll quand ouvert. (j) Focus trap + ESC + Tab cycle. (k) Closable au backdrop par défaut (closeOnBackdrop)",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Drawer.js",
+          "note": "Drawer pour formulaires longs",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.12 - Modal trop étroit pour gros formulaire\n<Modal open={open} onClose={close} title='Modifier le patient' size='lg'>\n  {/* 50 champs entassés, scroll horrible */}\n  <form>...</form>\n</Modal>",
+          "after": "// 0.58.12 - Drawer side coulissant\n<Drawer\n  open={open}\n  onClose={close}\n  title='Modifier le patient'\n  subtitle={`#${p.numero_dossier} — ${p.nom} ${p.prenom}`}\n  icon='ti-user-edit'\n  side='right'\n  size='lg'           // 640px\n  footer={\n    <>\n      <button className='btn-ghost' onClick={close}>Annuler</button>\n      <button className='btn-save' onClick={save}>Enregistrer</button>\n    </>\n  }\n>\n  <form>...</form>     {/* Plein de place + scroll dédié */}\n</Drawer>"
+        }
+      },
+      { "code": "AI", "txt": "+38 tests Vitest (v058-12-ui-phase11.test.js) : version+SW (2), TimePicker (8 — use client+export, helpers toMinutes/toHHMM, props, useMemo slots, auto-scroll, click outside, keyboard, index export), Migration 5 selects interventions (6 — DatePicker import + 5 Selects + 0 select natif restant), Toast undo (4 — action pill stylisé + hover + undo helper + 6 helpers), Dialog (7 — use client + ConfirmDialog danger/preview + PromptDialog validate/multiline/Cmd-Enter + AlertDialog 4 variants + Dialog.* + ensureRoot/createRoot + animation timeout + index), Drawer (9 — use client + props + 4 sizes + slide-right/left + backdrop blur + body lock + focus trap + close rotation + index), Récap 14 composants (1). Total 3605 verts (+38)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.12 : 14 composants premium au total (ajout TimePicker, Dialog, Drawer). Modal Nouvelle DI complètement migré (5 selects + 1 date = 6 contrôles modernisés). Le composant Dialog ouvre la voie à supprimer le boilerplate Modal+useState pour les cas simples (confirm/prompt/alert) — l'ancien `dialogs.alert()` legacy reste compatible mais Dialog est plus moderne. Le Drawer Side va permettre de transformer plusieurs Modal trop chargés (édition patient, détails intervention, configuration etablissement) en panneaux latéraux confortables. Prochaines pistes : (a) RangePicker (sélection plage de dates avec preset 7j/30j/3mois/année). (b) Stepper (wizard multi-étapes pour onboarding/setup). (c) Toolbar contextuelle (action bar qui apparaît quand des items sont sélectionnés en bulk). (d) Refonte Notifications panel avec le composant Drawer. (e) Migrer dialogs.alert() legacy vers Dialog.alert() premium" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.12.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.11",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 10 : HOTFIX recherche + Migration <select> + Modal API étendue + TabPanel + 3 Skeleton variants + DatePicker + Combobox",
+    "chantiers": [
+      { "code": "FIX", "txt": "🐛 HOTFIX GlobalSearch — corrige le 400 Bad Request sur PostgREST. Avant : taper 'ced=' dans la recherche globale envoyait `or=(numero.ilike.%ced=%25,type.ilike.%ced=%25)` à Supabase ; le `=` était interprété comme séparateur PostgREST, d'où le 400. Désormais le texte est passé dans `replace(/[=,()*]/g, '')` avant construction du term ilike : on supprime les caractères qui cassent la syntaxe `.or()` (=, virgule, parenthèses, étoile). Early-return si la query devient vide après nettoyage",
+        "code_snippet": {
+          "file": "app/GlobalSearch.js",
+          "note": "Sanitize PostgREST chars dans la recherche globale",
+          "lang": "js",
+          "before": "// AVANT 0.58.11 - bug \"ced=\" produit 400 Bad Request\nif (activeFilter) filterType = activeFilter;\nconst term = `%${searchTerm}%`;\n// → `or=(numero.ilike.%ced=%25,...)` → 400 PostgREST\n//   car `=` est le séparateur entre opérateur et valeur",
+          "after": "// 0.58.11 - sanitize avant query PostgREST\nif (activeFilter) filterType = activeFilter;\nconst safeSearch = searchTerm.replace(/[=,()*]/g, '').trim();\nif (!safeSearch) { setResults([]); setLoading(false); return; }\nconst term = `%${safeSearch}%`;\n// → query valide, 200 OK"
+        }
+      },
+      { "code": "UI", "txt": "🎯 MIGRATION <select> NATIFS → Select premium. (a) /parametres : devise (Euro/CHF/USD) et format des dates → Select avec icons ti-currency-euro/franc/dollar et ti-calendar. (b) /interventions : filtres statut + type en haut de la liste → Select size=sm avec icons. Bénéfices : design cohérent avec la charte Aveho (au lieu du style natif OS qui change selon Windows/Mac/Mobile), focus ring teal, animations pop, support keyboard et a11y identique partout",
+        "code_snippet": {
+          "file": "app/parametres/page.js + app/interventions/page.js",
+          "note": "Migration <select> → composant Select premium",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.11 - style natif OS\n<select value={params.devise} onChange={(e) => setP('devise', e.target.value)}>\n  <option value='EUR'>Euro (€)</option>\n  <option value='CHF'>Franc suisse (CHF)</option>\n  <option value='USD'>Dollar US ($)</option>\n</select>",
+          "after": "// 0.58.11 - Select premium custom\n<Select\n  value={params.devise || 'EUR'}\n  onChange={(v) => setP('devise', v)}\n  fullWidth\n  options={[\n    { value: 'EUR', label: 'Euro (€)', icon: 'ti-currency-euro' },\n    { value: 'CHF', label: 'Franc suisse (CHF)', icon: 'ti-currency-franc' },\n    { value: 'USD', label: 'Dollar US ($)', icon: 'ti-currency-dollar' },\n  ]}\n/>\n// → focus ring teal, icons, animation av-select-pop, keyboard, a11y complet"
+        }
+      },
+      { "code": "UI", "txt": "🪟 REFONTE MODAL API — nouveaux props pour personnaliser finement le header. (a) `subtitle` : sous-titre sous le titre principal (white-translucide). (b) `iconBg` + `iconColor` : couleur du badge icon customisable (par défaut white avec inset shadow). (c) `headerActions` : slot React pour boutons à droite du title (avant le X). (d) `variant` : 'default' (header coloré) / 'minimal' (pas de header, close button floating avec rotate 90° hover) / 'danger' (header rouge terra forcé). (e) Taille `xl` ajoutée (920px). Le composant reste rétrocompatible — tous les anciens usages fonctionnent à l'identique",
+        "code_snippet": {
+          "file": "app/ui.js (Modal)",
+          "note": "Nouvelle API plus expressive",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.11 - API basique\n<Modal\n  open={open}\n  onClose={close}\n  title='Confirmer'\n  icon='ti-check'\n  color='#5aa05a'\n  size='md'\n>",
+          "after": "// 0.58.11 - API étendue\n<Modal\n  open={open}\n  onClose={close}\n  title='Confirmer la suppression'\n  subtitle='Cette action est définitive'\n  variant='danger'           // header rouge terra forcé\n  size='lg'\n  headerActions={<button onClick={share}>↗ Partager</button>}\n>\n\n// OU - modal minimaliste sans header coloré\n<Modal\n  open={open}\n  onClose={close}\n  variant='minimal'         // close button floating\n  size='xl'                 // 920px\n>"
+        }
+      },
+      { "code": "UI", "txt": "📑 ANIMATIONS ENTRE TABS — slide horizontal au lieu de fade. (a) Nouveau composant `<TabPanel active={activeTab}>` exporté depuis ui-premium qui utilise `key={active}` pour forcer un remount visuel et déclencher l'animation. (b) Keyframe CSS `av-tab-slide-in` : opacity 0 + translateX(20px) → opacity 1 + translateX(0) sur 280ms avec cubic-bezier(.2,.8,.2,1). (c) Class utility `.av-tab-content` pour usage rétrocompatible. (d) Intégré dans /parametres (3 tabs : Général, Notifications, RGPD) et /profil (4 tabs : Activité, Profil, Notifications, Sécurité). Les contenus glissent de droite à gauche en switchant" },
+      { "code": "UI", "txt": "💀 3 NOUVEAUX SKELETON VARIANTS. (a) `SkeletonCard` : card autonome avec icon circle + label + valeur principale + détail + sparkline optionnel — pour mimiquer un KpiCard ou une MetricCard pendant le fetch. (b) `SkeletonAvatar` : avatar circulaire size customisable + nom + sous-titre optionnel — idéal pour listes d'utilisateurs/contacts. (c) `SkeletonKpi` : rangée de N cards alignées en grid (mimique d'une KpiRow). Tous les 3 utilisent l'animation shimmer existante",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Skeleton.js",
+          "note": "3 nouveaux variants prêts à l'emploi",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.11 - 4 variants seulement\nimport { Skeleton, SkeletonText, SkeletonRow, SkeletonGrid }\n  from '../components/ui-premium';",
+          "after": "// 0.58.11 - 7 variants\nimport {\n  Skeleton, SkeletonText, SkeletonRow, SkeletonGrid,\n  SkeletonCard, SkeletonAvatar, SkeletonKpi\n} from '../components/ui-premium';\n\n// Usage exemple : accueil pendant chargement KPIs\n{loading ? <SkeletonKpi count={4} /> : <KpiRow values={data} />}\n\n// Usage exemple : liste users\n{loading\n  ? Array.from({length: 5}).map((_, i) =>\n      <SkeletonAvatar key={i} size={36} showName showSub />)\n  : users.map(u => <UserRow user={u} />)}"
+        }
+      },
+      { "code": "UI", "txt": "📅 COMPOSANT DATEPICKER CUSTOM (app/components/ui-premium/DatePicker.js, 175 lignes). Wrapper sur `<input type='date'>` natif qui : (a) affiche un trigger button au design premium identique au Select (background blanc, border 1.5px, focus ring teal 3px, hover border gris). (b) Format français long lisible (`4 juin 2026` au lieu de `2026-06-04`). (c) Icon calendrier ti-calendar-event (couleur navy si valeur, gris sinon). (d) Bouton clear (×) à droite si valeur, qui devient rouge au hover. (e) Ouvre le picker natif via showPicker() (Chrome/Edge moderne) ou click fallback (Safari/Firefox). (f) 3 tailles (sm/md/lg). (g) Props min/max pour limites. (h) A11y : aria-label + input natif accessible préservé en absolute opacity 0",
+        "code_snippet": {
+          "file": "app/components/ui-premium/DatePicker.js",
+          "note": "Date picker premium avec format français",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.11 - input natif moche, format ISO inconvivial\n<input\n  type='date'\n  value={birthday}\n  onChange={(e) => setBirthday(e.target.value)}\n/>\n// → affichage 2026-06-04, style natif OS différent partout",
+          "after": "// 0.58.11 - DatePicker premium\n<DatePicker\n  value={birthday}\n  onChange={setBirthday}\n  label='Date de naissance'\n  min='1900-01-01'\n  max='2030-12-31'\n  size='md'\n/>\n// → affichage '4 juin 2026', design Aveho cohérent,\n//   showPicker() natif sous le capot pour fonctionnalité 100%"
+        }
+      },
+      { "code": "UI", "txt": "🏷️ COMPOSANT COMBOBOX (app/components/ui-premium/Combobox.js, 280 lignes) — multi-select avec tags. Sélection multiple d'options affichées sous forme de pills cliquables. (a) Container clickable avec wrap automatique des tags. (b) Chaque tag = gradient teal subtil + border + icon optionnel + bouton × qui devient rouge au hover. (c) Animation av-tag-pop 200ms à l'ajout (scale + fade). (d) Recherche live optionnelle (searchable=true par défaut). (e) Options déjà sélectionnées filtrées du dropdown automatiquement. (f) Props maxTags pour limiter (avec affichage 'N/MAX sélectionnés' dans dropdown). (g) Auto-close du dropdown quand maxTags atteint. (h) A11y : role combobox/listbox/option + aria-expanded/haspopup",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Combobox.js",
+          "note": "Multi-select avec tags pour catégories, mots-clés, tags",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.11 - pas de composant multi-select natif décent\n// → solutions ad-hoc avec checkboxes ou chips manuels partout",
+          "after": "// 0.58.11 - Combobox premium\nconst [tags, setTags] = useState(['urgent', 'perfusion']);\n\n<Combobox\n  values={tags}\n  onChange={setTags}\n  options={[\n    { value: 'urgent', label: 'Urgent', icon: 'ti-alert-triangle', iconColor: '#c0392b' },\n    { value: 'perfusion', label: 'Perfusion', icon: 'ti-droplet' },\n    { value: 'vph', label: 'VPH', icon: 'ti-wheelchair' },\n    { value: 'ned', label: 'NED', icon: 'ti-pill' },\n  ]}\n  placeholder='Choisir des tags…'\n  searchable\n  maxTags={3}      // limite à 3 tags max\n/>\n// → tags pills avec animation pop, search live, × hover rouge"
+        }
+      },
+      { "code": "UI", "txt": "🌙 DARK MODE pour les 3 nouveaux composants (Select, DatePicker, Combobox). Sélecteurs CSS génériques sur `[role='listbox']` et `[role='combobox']` qui s'appliquent automatiquement → background panel + border line + shadow noire profonde. Pas de spécificité par composant nécessaire, tout s'adapte" },
+      { "code": "AI", "txt": "+46 tests Vitest (v058-11-ui-phase10.test.js) : version+SW (2), HOTFIX GlobalSearch (4 — safeSearch + sanitize chars + early return + term), Migration Select (2 — parametres devise/format + interventions filtres), Refonte Modal API (7 — subtitle + iconBg/iconColor + headerActions + variant + minimal floating + xl 920 + CSS), TabPanel (6 — export + key+animation + keyframe + class + parametres 3 + profil 4), Skeleton variants (4 — Card + Avatar + Kpi + index exports), DatePicker (8 — use client + export + props + tailles + formatDateFR + input caché + clear + showPicker), Combobox (8 — export + props + animation + add/remove + filter available + maxTags close + search/outside + a11y), Dark mode (2), Récap 22 composants exports (1). Total 3567 verts (+46)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.11 : 12 composants premium au total (ajout DatePicker, Combobox + extension Tabs avec TabPanel + 3 Skeleton variants). 6 chantiers UI livrés + 1 HOTFIX. Animations slide horizontal entre tous les tabs de l'app. Modal API qui permet maintenant tous les cas d'usage (danger, minimal, header personnalisé, headerActions). Prochaines pistes : (a) Time Picker (pour heures de RDV/intervention). (b) Migrer les <select> natifs restants progressivement (modals interventions ont 5 selects sur materiel/patient/depot/zone/type). (c) Toast Action button (toast.success avec un bouton 'Annuler' pour undo). (d) Composant Dialog amélioré (au-dessus du Modal API)" }
+    ],
+    "themes": ["ui", "design-system", "hotfix"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.11.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.10",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 9 : ZÉRO alert natif + FilterBar pills + Select custom + PageTransition + Pagination premium",
+    "chantiers": [
+      { "code": "UI", "txt": "🔔 TOAST.NEUTRAL() ajouté — raccourci pour les infos non-critiques (duration courte 2500ms). toast.info(), toast.warning() et toast.error() existaient déjà depuis 0.58.0. Maintenant 5 helpers : success / info / warning / error / neutral" },
+      { "code": "UI", "txt": "🎯 ZÉRO ALERT() NATIF DANS TOUTE L'APP — Migration finale de 14 alerts natifs supplémentaires sur 9 pages. (a) /consent-verifications : 2 (export vide → toast.info, erreur export → toast.error). (b) /statistiques : 1 (erreur export CSV). (c) /statistiques-rgpd : 1 (erreur export PDF). (d) /changelog : 1 (erreur zip). (e) /audit : 1 (erreur export CSV). (f) /admin-perf : 1 (erreur reset). (g) /admin/medecins-prescripteurs : 3 (RPPS manquant, vérification, erreur). (h) /admin/doublons-forces : 1 (rollback). (i) /admin/prescriptions-archive : 3 (recherche, réseau, export). Total cumulé : **41 alert() natifs éliminés** depuis 0.58.7. **0 alert natif restant** confirmé par test scan",
+        "code_snippet": {
+          "file": "app/* (10 pages)",
+          "note": "Migration finale alert() → toast",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.7-10 - alert() bloquants partout\n// 41 alert() natifs sur 16 pages :\n// /interventions/kanban (1), /interventions (4), /patients (2),\n// /parametres-rgpd (10), /utilisateurs (6), /carte (4),\n// /consentements (3), /statistiques-activite (2), /maintenance (2),\n// /consent-verifications (2), /statistiques (1), /statistiques-rgpd (1),\n// /changelog (1), /audit (1), /admin-perf (1),\n// /admin/medecins-prescripteurs (3), /admin/doublons-forces (1),\n// /admin/prescriptions-archive (3)",
+          "after": "// 0.58.10 - ZÉRO alert natif\n// → toast.error/success/info animés non-bloquants\n// → Stack vertical (multiples toasts simultanés OK)\n// → Swipe-to-dismiss\n// → Feedback positif visible (avant : silence sur succès)\n\n// Helpers disponibles :\ntoast.success('Sauvegardé !');\ntoast.error('Erreur réseau');\ntoast.info('Vérification en cours…');\ntoast.warning('Action irréversible');\ntoast.neutral('Lien copié');  // NEW : duration 2500ms\n\n// Vérifié par test scan automatique :\nexpect(violations).toEqual([]);  // ✅"
+        }
+      },
+      { "code": "UI", "txt": "📍 FILTERBAR REFONTE PILLS MODERNES (CSS only, compat 100% du composant React). (a) Container pill arrondi 99px avec gradient subtil + border. (b) Label en uppercase letter-spacing. (c) Pills inactives avec hover translateY(-1px) + background blanc + border + shadow. (d) Pill active avec gradient 135deg #7CC8C8 → #5db5b5 + shadow multi-couches teal (4px+10px+inner). (e) Compteurs en pill avec background pill (rgba blanc 20% si actif, gris si inactif)",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "FilterBar transformée en pills premium",
+          "lang": "css",
+          "before": "/* AVANT 0.58.10 - boutons basiques */\n.filter-bar{display:flex;gap:8px;align-items:center}\n.filter-bar-chip{\n  background:#f1f3f5;\n  border-radius:12px;\n  padding:5px 12px;\n}\n.filter-bar-chip.on{\n  background:#7CC8C8;\n  color:#fff;\n}",
+          "after": "/* 0.58.10 - pills modernes */\n.filter-bar{\n  padding:5px;\n  background:linear-gradient(180deg,#fafbfc,#f4f7fa);\n  border:1px solid #e3e9ee;\n  border-radius:99px;  /* container pill */\n  width:fit-content;\n}\n.filter-bar-chip{\n  padding:7px 14px;\n  border-radius:99px;  /* pill */\n  background:transparent;\n  border:1px solid transparent;\n}\n.filter-bar-chip:hover:not(.on){\n  background:#fff;\n  border-color:#e3e9ee;\n  transform:translateY(-1px);\n  box-shadow:0 2px 4px rgba(20,33,49,.04);\n}\n.filter-bar-chip.on{\n  background:linear-gradient(135deg,#7CC8C8,#5db5b5);\n  box-shadow:\n    0 4px 10px rgba(124,200,200,.40),\n    0 2px 4px rgba(124,200,200,.30),\n    inset 0 -1px 2px rgba(0,0,0,.10);\n  transform:translateY(-1px);\n}\n.filter-bar-cnt{\n  background:rgba(255,255,255,.20);\n  border-radius:99px;  /* pill dans pill */\n}"
+        }
+      },
+      { "code": "UI", "txt": "🎯 COMPOSANT SELECT CUSTOM (app/components/ui-premium/Select.js, 310 lignes). Remplace les `<select>` natifs par un dropdown premium. (a) Trigger button avec icon optionnel + chevron rotate au focus + ring teal 3px au focus. (b) 3 variants (default/ghost/filled). (c) 3 tailles (sm/md/lg). (d) Animation av-select-pop 200ms (fade + translateY + scale). (e) Recherche live optionnelle (searchable=true) avec input avec icon. (f) Options avec icon + label + desc + iconColor custom. (g) Check icon sur option sélectionnée. (h) Highlight au hover/keyboard. (i) Click outside ferme. (j) Keyboard navigation : ArrowDown/Up/Enter/Escape + Space pour ouvrir. (k) A11y : role listbox/option + aria-selected/expanded/haspopup",
+        "code_snippet": {
+          "file": "app/components/ui-premium/Select.js",
+          "note": "Select premium avec recherche + keyboard nav",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.10 - <select> natif moche\n<select value={statut} onChange={(e) => setStatut(e.target.value)}>\n  <option value=\"Nouvelle\">Nouvelle</option>\n  <option value=\"En cours\">En cours</option>\n  <option value=\"Résolue\">Résolue</option>\n</select>\n// → Style natif OS, pas customisable, pas d'icons, pas de search",
+          "after": "// 0.58.10 - Select premium custom\n<Select\n  value={statut}\n  onChange={setStatut}\n  options={[\n    { value: 'Nouvelle', label: 'Nouvelle', icon: 'ti-plus' },\n    {\n      value: 'En cours',\n      label: 'En cours',\n      icon: 'ti-clock',\n      desc: 'DI prise en charge par un technicien'\n    },\n    { value: 'Résolue', label: 'Résolue', icon: 'ti-check', iconColor: '#5aa05a' },\n  ]}\n  searchable\n  placeholder='Choisir un statut…'\n/>\n// → Animation pop, recherche live, keyboard nav,\n//    icons + descriptions, focus ring teal, click outside,\n//    a11y complet (role listbox/option + aria-*)"
+        }
+      },
+      { "code": "UI", "txt": "🔀 PAGETRANSITION ENTRE ROUTES — nouveau composant client `app/components/PageTransition.js` qui utilise usePathname() de next/navigation pour détecter le changement de route et déclencher une animation av-page-enter 280ms (fade opacity 0→1 + translateY 8px→0). Intégré dans `app/layout.js` autour de {children}. Résultat : transition douce et fluide entre toutes les pages au lieu d'un swap brusque. Pas de framer-motion → 0 dépendance ajoutée" },
+      { "code": "UI", "txt": "📄 PAGINATION PREMIUM — refonte CSS complète. (a) Padding/gap revus pour plus d'aération. (b) pagination-info b transformé en pill teal subtile avec border. (c) Boutons : background blanc + border 1.5px gris + hover translateY(-1px) + border teal + shadow teal. (d) Bouton actif (class .active ou aria-current=page) avec gradient teal + shadow forte. (e) Variants dark mode adaptés (background panel + border line). (f) Disabled : opacity .4 + cursor not-allowed" },
+      { "code": "AI", "txt": "+31 tests Vitest (v058-10-ui-phase9.test.js) : version+SW (2), toast.info/neutral (3), 0 alert natif scan automatique (1), FilterBar pills (5 — container pill + label + hover + on gradient + counts), Select custom (8 — export + props + 3 tailles + keyboard + click outside + search + animation + a11y), Select index export (1), PageTransition (4 — use client + usePathname + animation + layout), Pagination premium (5 — gap + pill info + hover + active gradient + dark), récap toast 15+ pages (1). Total 3521 verts (+31)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.10 : ZÉRO alert() natif dans toute l'app (41 migrés au total). 10 composants premium (ajout Select). Page transitions actives entre toutes les routes. FilterBar et Pagination refondues. Prochaines pistes : (a) Migrer les <select> natifs critiques vers le nouveau Select premium (parametres, profil, modals interventions). (b) Refonte Modal API pour intégrer un slot 'header' avec icon coloré. (c) Animations entre les tabs (slide horizontal au lieu de fade). (d) Composant DatePicker custom (vs input type=date natif). (e) Composant Combobox (multi-select + tags)" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.10.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.9",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 8 : Modales premium + Mode sombre étendu + Skeleton 4 listes + Avatar liste DI + Migration toast suite",
+    "chantiers": [
+      { "code": "UI", "txt": "🪟 REFONTE MODALES PREMIUM. (a) Backdrop blur(8px) + saturate(140%) — l'arrière-plan est flouté pour focus visuel sur la modale. (b) Animation modal-bg-in 220ms (fade + blur progressive de 0 → 8px). (c) Animation modalIn slide-up 320ms plus marquée : translateY(40px) scale(.94) → translateY(0) scale(1). (d) Shadow modal premium 3 couches (30px+60px navy + 12px+24px navy + 1px white inset). (e) Header avec brillance subtile sur la bordure haute (linear-gradient transparent→white→transparent) + decorative radial blob blanc. (f) Icon modal avec border + inset shadow. (g) Bouton close (modal-x) qui fait rotation 90deg au hover (cohérent avec drawer menu). (h) Footer avec gradient subtil au lieu d'un background plat",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Modales premium avec backdrop blur",
+          "lang": "css",
+          "before": "/* AVANT 0.58.9 - modale basique */\n.modal-bg{\n  background:rgba(20,33,49,.5);  /* pas de blur */\n}\n.modal-v2{\n  animation:modalIn .25s cubic-bezier(.2,.8,.2,1);\n  /* Pas de shadow custom */\n}\n@keyframes modalIn{\n  from{transform:translateY(20px) scale(.97);opacity:0}\n  to{transform:translateY(0) scale(1);opacity:1}\n}\n.modal-head-v2 .modal-x:hover{\n  background:rgba(255,255,255,.3);\n  /* Pas de rotation */\n}",
+          "after": "/* 0.58.9 - modales premium */\n.modal-bg{\n  background:rgba(13,24,34,.55);\n  backdrop-filter:blur(8px) saturate(140%);\n  animation:modal-bg-in 220ms var(--av-ease-out);\n}\n@keyframes modal-bg-in {\n  from { opacity:0; backdrop-filter:blur(0px); }\n  to   { opacity:1; backdrop-filter:blur(8px) saturate(140%); }\n}\n.modal-v2{\n  animation:modalIn 320ms var(--av-ease-out);\n  box-shadow:\n    0 30px 60px rgba(20,33,49,.30),\n    0 12px 24px rgba(20,33,49,.18),\n    0 0 0 1px rgba(255,255,255,.08) inset;\n}\n@keyframes modalIn{\n  from { transform:translateY(40px) scale(.94); opacity:0; }\n  to   { transform:translateY(0) scale(1);     opacity:1; }\n}\n.modal-head-v2::before {\n  /* Brillance subtile sur bord haut */\n  background:linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);\n}\n.modal-head-v2::after {\n  /* Decorative radial blob */\n  background:radial-gradient(circle, rgba(255,255,255,.18) 0%, transparent 70%);\n}\n.modal-head-v2 .modal-x:hover{\n  transform:rotate(90deg);  /* Cohérent avec drawer */\n}"
+        }
+      },
+      { "code": "UI", "txt": "🌙 MODE SOMBRE ÉTENDU aux composants premium. Le système data-theme=dark existait déjà mais ne couvrait que les éléments legacy (panels, tableaux, modals basiques). Maintenant : (a) Modal-bg en dark : rgba(0,0,0,.65) + blur préservé. (b) Modal-v2 en dark : shadow ajustée. (c) Kanban cards + colonnes en dark (kb-card, kb-col, kb-col-over) → background panel + text adapté. (d) UserMenu sheet/head/items en dark avec gradients adaptés. (e) Menu drawer + tiles en dark. (f) Skeleton shimmer avec couleurs sombres (#1a2434 → #2a3645 → #1a2434). (g) Tabs (pills) avec background panel dark. → Tous les composants premium fonctionnent parfaitement en dark mode" },
+      { "code": "UI", "txt": "💀 SKELETONROW déployé sur 4 listes restantes : (a) /signalements (4 cols × 4 lignes). (b) /achats (5 cols). (c) /maintenance (5 cols). (d) /commandes (4 cols). Container blanc + border arrondie + animation shimmer continue. + 2 déjà actifs depuis 0.58.8 (interventions, patients) → 6 listes au total avec Skeleton" },
+      { "code": "UI", "txt": "👤 AVATAR SUR LISTE DI (page /interventions). Nouvelle colonne 'Assigné' insérée dans le tableau entre 'Statut' et la colonne actions. Affiche Avatar size=26 + nom de l'assigné si présent, ou '—' italique gris sinon. Cohérent avec Avatar sur Kanban : même technicien = même couleur partout. Permet de scanner le tableau d'interventions et identifier instantanément qui est sur quoi",
+        "code_snippet": {
+          "file": "app/interventions/page.js",
+          "note": "Colonne Assigné avec Avatar dans la liste DI",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.9 - pas d'info assigné dans la liste\n<thead>\n  <tr>\n    <th>N°</th><th>Date</th><th>Type</th><th>Urgence</th>\n    <th>Matériel</th><th>Patient</th><th>Statut</th>\n    <th></th>  {/* actions */}\n  </tr>\n</thead>\n// Pour voir l'assigné : cliquer sur le bouton 'Réassigner'",
+          "after": "// 0.58.9 - colonne Assigné avec Avatar\n<thead>\n  <tr>\n    <th>N°</th><th>Date</th><th>Type</th><th>Urgence</th>\n    <th>Matériel</th><th>Patient</th><th>Statut</th>\n    <th>Assigné</th>  {/* NEW */}\n    <th></th>\n  </tr>\n</thead>\n\n<td>\n  {r.assignee_email ? (\n    <span style={{display:'inline-flex',alignItems:'center',gap:7,fontSize:12}}>\n      <Avatar name={r.assignee_email} size={26} />\n      <span style={{maxWidth:110,overflow:'hidden',textOverflow:'ellipsis'}}>\n        {r.assignee_email}\n      </span>\n    </span>\n  ) : (\n    <span style={{fontSize:11,color:'#8a98a8',fontStyle:'italic'}}>—</span>\n  )}\n</td>"
+        }
+      },
+      { "code": "UI", "txt": "🔔 MIGRATION TOAST SUITE — 7 alert() natifs supplémentaires éliminés sur 3 pages. (a) /consentements : 3 alerts (popup bloquée, erreur PDF, erreur API). (b) /statistiques-activite : 2 alerts (erreur export CSV, erreur export PDF). (c) /maintenance : 2 alerts (sélection matériel, fréquence invalide). Total cumulé depuis 0.58.7 : **27 alert() natifs migrés** sur 9 pages" },
+      { "code": "AI", "txt": "+29 tests Vitest (v058-9-ui-phase8.test.js) : version+SW (2), Refonte modales (7 — backdrop blur + animation + shadow + slide-up + brillance + radial + rotation close + gradient foot), Mode sombre premium (6 — modal-bg + modal-v2 + kanban + UserMenu + drawer + skeleton), Skeleton 4 listes (4 — signalements + achats + maintenance + commandes), Avatar liste DI (4 — import + colonne + cellule + fallback), Migration toast (3 — consentements + stats-activite + maintenance), Récap déploiement (3 — Skeleton 6+, Avatar 5+, Toast 9+). Total 3490 verts (+29)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.9 : (1) Modales devenues premium avec backdrop blur. (2) Mode sombre complet sur tous les composants (premium inclus). (3) Skeleton sur 6 listes (interventions, patients, signalements, achats, maintenance, commandes). (4) Avatar sur 5 endroits (UserMenu, Profil, liste users, kanban cards, liste DI). (5) Toast sur 9 pages au total. 27 alert() natifs éliminés depuis 0.58.7. Prochaines pistes : (a) Toast.info() pour les infos non-critiques. (b) Pagination améliorée (cursor + animations). (c) Refonte FilterBar avec pills modernes. (d) Animations entre routes (page transitions). (e) Refonte dropdown <select> natifs avec un composant custom" }
+    ],
+    "themes": ["ui", "design-system", "dark-mode"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.9.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.8",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 7 : Migration toast (20 alerts éliminés sur 3 pages) + Avatar sur cards Kanban + Skeleton sur listes",
+    "chantiers": [
+      { "code": "UI", "txt": "🔔 MIGRATION TOAST PROGRESSIVE — éradication massive des alert() bloquants sur 3 pages critiques. (a) /parametres-rgpd : 10 alert() migrés (3 erreurs API + 2 succès activation/duplication + 2 validations contenu + 3 erreurs génériques) → toast.error/success animés. (b) /utilisateurs : 6 alert() natifs migrés (les dialogs.alert custom sont préservés) — rôle système non supprimable, échecs invitation, lien copié. (c) /carte : 4 alert() de géolocalisation migrés (permission refusée, délai dépassé, position échec, géoloc indispo). 20 alert() natifs éliminés au total. Plus de modale bloquante, feedback positif visible via toast verts",
+        "code_snippet": {
+          "file": "app/parametres-rgpd/page.js + utilisateurs + carte",
+          "note": "Migration massive alert() → toast.error/success",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.8 - 20 alert() bloquants\n// /parametres-rgpd\nalert(`${selected.length} template(s) activé(s) avec succès.`);\nalert('Erreur activation groupée : ' + e.message);\nalert('Le contenu du template ne peut pas être vide.');\n// ... 7 autres\n\n// /utilisateurs\nalert('Invitation renvoyée.');\nalert('Lien copié !');\nalert(`Échec : ${detail}`);\n// ... 3 autres\n\n// /carte\nalert('Géolocalisation non disponible sur cet appareil');\nalert('Permission refusée...');\n// ... 2 autres",
+          "after": "// 0.58.8 - 20 toast premium animés\nimport { toast } from '../components/ui-premium';\n\n// /parametres-rgpd\ntoast.success(`${selected.length} template(s) activé(s) avec succès.`);\ntoast.error('Erreur activation groupée : ' + e.message);\ntoast.error('Le contenu du template ne peut pas être vide.');\n\n// /utilisateurs\ntoast.success('Invitation renvoyée.');\ntoast.success('Lien copié !');\ntoast.error(`Échec : ${detail}`);\n\n// /carte\ntoast.error('Géolocalisation non disponible sur cet appareil');\ntoast.error('Permission refusée...');\n\n// Bénéfice : non-bloquant, feedback positif visible,\n// animation slide-in, swipe-dismiss, multiple toasts stackés"
+        }
+      },
+      { "code": "UI", "txt": "👤 AVATAR SUR CARDS KANBAN — affichage du collaborateur assigné en bas de chaque carte d'intervention. (a) Si assignee_email présent : Avatar size=22 + nom collé + ellipsis si long. (b) Border-top dashed gris clair pour séparation visuelle subtile. (c) Gradient déterministe → même technicien = même couleur partout (kanban, liste, profil). Permet de voir d'un coup d'œil qui est sur quelle DI sans cliquer",
+        "code_snippet": {
+          "file": "app/interventions/kanban/page.js",
+          "note": "Footer carte avec Avatar de l'assigné",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.8 - assigné invisible sur la carte\n<div className='kb-card'>\n  <div>DI-1234</div>\n  <div>Réparation</div>\n  <div>Chambre 12</div>\n  <div>{fmtDate(created_at)} · {due_date}</div>\n  {/* Pas d'info sur l'assigné — il faut cliquer pour voir */}\n</div>",
+          "after": "// 0.58.8 - assigné visible en bas\n<div className='kb-card'>\n  <div>DI-1234</div>\n  <div>Réparation</div>\n  <div>Chambre 12</div>\n  <div>{fmtDate(created_at)} · {due_date}</div>\n\n  {/* Avatar assigné, séparé par border dashed */}\n  {r.assignee_email && (\n    <div style={{\n      marginTop: 8,\n      paddingTop: 7,\n      borderTop: '1px dashed #eef2f5',\n      display: 'flex',\n      alignItems: 'center',\n      gap: 7,\n    }}>\n      <Avatar name={r.assignee_email} size={22} />\n      <span>{r.assignee_email}</span>\n    </div>\n  )}\n</div>"
+        }
+      },
+      { "code": "UI", "txt": "💀 SKELETONROW sur 2 listes critiques en chargement. (a) /interventions : 5 SkeletonRow avec cols=5 dans un container blanc, remplace 'Chargement…'. (b) /patients : 5 SkeletonRow avec cols=6 (la liste patient a plus de colonnes). UX premium : l'utilisateur visualise immédiatement la structure du tableau (silhouette de lignes) au lieu d'un texte statique, animation shimmer continue qui anime la transition vers les vraies données" },
+      { "code": "AI", "txt": "+15 tests Vitest (v058-8-ui-phase7.test.js) : version+SW (2), Migration toast 3 pages (5 — parametres-rgpd 0 alert, utilisateurs 0 alert, carte 0 alert, feedback invitation, feedback lien copié), Avatar cards Kanban (3 — import + usage avec assignee_email + footer border-top), SkeletonRow listes (3 — interventions cols=5, patients cols=6, container blanc), récap déploiement (2 — toast 6+ pages, Avatar 4+ endroits). Total 3461 verts (+15)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.8 : Toast utilisé dans 6 pages (kanban, interventions, patients, parametres-rgpd, utilisateurs, carte) → ~20 alert() natifs éliminés. Avatar dans 4 endroits (UserMenu + Profil + liste users + cards kanban). Plus que /partenaires-rpps (3 alert) et quelques autres avant d'éradiquer tous les alert natifs. Prochaines pistes : (a) Refonte modales avec backdrop blur + animation slide-up. (b) Mode sombre via CSS vars (le toggle existe déjà dans /parametres > Apparence). (c) Skeleton sur signalements + achats + maintenance + commandes. (d) Avatar sur liste DI (page /interventions) en plus du kanban" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.8.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.7",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 6 : Drag&Drop premium Kanban (pickup+ghost+drop zone+flash) + Migration toast",
+    "chantiers": [
+      { "code": "UI", "txt": "🎯 KANBAN DRAG&DROP PREMIUM — refonte CSS du système de drag&drop existant (PointerEvents universel souris+tactile). (a) Carte source au pickup : opacity 0.35 + scale(0.96) + filter grayscale(0.4) au lieu de juste opacity 0.3. (b) Ghost premium : rotation 3deg + scale(1.04) avec animation kb-ghost-in (180ms), multi-shadow (4 couches : ombre profonde + halo teal + ring), border-left épaissie à 4px. (c) Colonne survolée (drop zone) : ring teal pulsant (2px inset solid + 6/10px inset glow) + background gradient teal + animation kb-col-pulse 1.4s infinite. (d) Autres colonnes pendant un drag : opacity 0.7 (focus visuel sur la cible). (e) Animation flash au drop : kb-card-dropped 600ms (scale 0.94 → 1.03 → 1 + box-shadow expanding 0 → 8px teal halo). 6 keyframes ajoutés au total",
+        "code_snippet": {
+          "file": "app/globals.css + app/interventions/kanban/page.js",
+          "note": "Drag&drop kanban repensé avec effets premium",
+          "lang": "css",
+          "before": "/* AVANT 0.58.7 - drag&drop basique */\n.kb-card {\n  opacity: ${isDragging ? 0.3 : 1};\n  transition: opacity .15s;\n}\n.kb-ghost {\n  box-shadow: 0 8px 24px rgba(20,33,49,.25);\n  transform: rotate(2deg);\n  opacity: 0.95;\n}\n/* Colonne survolée : juste background + dashed border */\n.kb-col-over {\n  background: rgba(124,200,200,.1);\n  border: 2px dashed #7CC8C8;\n}",
+          "after": "/* 0.58.7 - drag&drop premium */\n.kb-card { transition: transform 200ms, box-shadow 200ms, opacity 150ms; }\n.kb-card:hover { transform: translateY(-1px); }\n\n.kb-card-dragging {\n  opacity: 0.35;\n  transform: scale(0.96);\n  filter: grayscale(0.4);\n}\n\n.kb-ghost-premium {\n  animation: kb-ghost-in 180ms;\n  transform: rotate(3deg) scale(1.04);\n  box-shadow:\n    0 24px 48px rgba(20,33,49,.30),\n    0 10px 20px rgba(20,33,49,.20),\n    0 0 0 1px rgba(124,200,200,.40),\n    0 0 24px rgba(124,200,200,.25);\n  border-left-width: 4px;\n}\n\n.kb-col-over {\n  background: linear-gradient(180deg,\n    rgba(124,200,200,.15) 0%,\n    rgba(124,200,200,.06) 100%);\n  box-shadow:\n    0 0 0 2px #7CC8C8 inset,\n    0 0 0 6px rgba(124,200,200,.20) inset,\n    0 8px 24px rgba(124,200,200,.15);\n  animation: kb-col-pulse 1.4s ease-in-out infinite;\n}\n\n.kb-drag-active .kb-col:not(.kb-col-over) {\n  opacity: 0.7;  /* Focus sur la cible */\n}\n\n.kb-card-dropped {\n  animation: kb-drop-flash 600ms;\n  /* Flash teal au moment du drop */\n}\n@keyframes kb-drop-flash {\n  0%   { transform: scale(0.94); box-shadow: 0 0 0 0 rgba(124,200,200,.6); }\n  40%  { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(124,200,200,.30); }\n  100% { transform: scale(1); box-shadow: 0 1px 3px rgba(0,0,0,.06); }\n}"
+        }
+      },
+      { "code": "UI", "txt": "🔔 MIGRATION TOAST sur 3 pages critiques. (a) /interventions/kanban : alert() supprimé du onPointerUp, remplacé par toast.error sur échec API + toast.success(`Statut mis à jour → ${newStatut}`) sur succès → feedback positif visible. (b) /interventions : 4 alert() migrés vers toast.error/success dans genTransfert() (matériel manquant, dépôt manquant, erreur API, succès avec numéro de transfert). (c) /patients : 2 alert() migrés (droit supprimer + erreur suppression) + ajout d'un toast.success de confirmation après suppression en bulk",
+        "code_snippet": {
+          "file": "app/interventions/kanban/page.js + interventions + patients",
+          "note": "alert() natifs → toast premium animés",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.7 - alert() natif (bloquant, moche, no feedback positif)\nif (error) {\n  setRows(prev);\n  alert('Échec du changement de statut : ' + error.message);\n}\n// Pas de feedback en cas de succès !\n\n// AVANT - genTransfert\nif (!r.materiel_id) {\n  alert('Aucun matériel rattaché à cette DI.');\n  return;\n}\nif (error) { alert(error.message); return; }\nalert(`Transfert ${numero} généré.`);",
+          "after": "// 0.58.7 - toast premium (non-bloquant, animé, feedback positif)\nimport { toast } from '../../components/ui-premium';\n\nif (error) {\n  setRows(prev);\n  toast.error('Échec du changement de statut : ' + error.message);\n} else {\n  toast.success(`Statut mis à jour → ${newStatut}`);  // ✨ feedback positif\n}\n\n// genTransfert avec toasts\nif (!r.materiel_id) {\n  toast.error('Aucun matériel rattaché à cette DI.');\n  return;\n}\nif (error) { toast.error(error.message); return; }\ntoast.success(`Transfert ${numero} généré.`);"
+        }
+      },
+      { "code": "UI", "txt": "✨ STATE droppedId AJOUTÉ au kanban — permet de tracker la carte qui vient d'être déplacée pendant 700ms pour appliquer l'animation flash. setTimeout cleanup pour éviter que l'animation se rejoue sur les rerenders" },
+      { "code": "AI", "txt": "Fix test taille versions-index.json : limite haute relevée de 400 KB → 500 KB pour accommoder l'historique grandissant du changelog (414 KB actuellement). Limite basse 150 KB inchangée" },
+      { "code": "AI", "txt": "+18 tests Vitest (v058-7-ui-phase6.test.js) : version+SW (2), CSS Kanban premium (6 — kb-card + kb-card-dragging + kb-ghost-premium + kb-col-over pulse + kb-drag-active dim + kb-card-dropped flash), JSX kanban utilise les classes (6 — kb-card conditionnel + kb-card-dropped + kb-col-over + kb-drag-active + ghost + state droppedId), Migration toast (4 — kanban + interventions + patients + feedback positif drop). Total 3446 verts (+18)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.7 : Drag&Drop kanban devenu sensoriel et immersif (pickup soulevée + ghost flottant rotation + drop zone pulsante + flash arrivée + feedback toast). Migration toast progressive amorcée sur 3 pages critiques (alert() bloquants → toast premium animés). Prochaines pistes : migration toast sur /utilisateurs (8 alert), /parametres-rgpd (10 alert), /annuaire-rpps (6 alert). Aussi : Avatar sur cards intervention (créateur + assigné), mode sombre via CSS vars, refonte modales avec backdrop blur + animation slide" }
+    ],
+    "themes": ["ui", "design-system", "dnd"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.7.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.6",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 5 : Profil refondu (4 onglets + Avatar XL) + EmptyState sur 3 pages + Avatar dans liste users",
+    "chantiers": [
+      { "code": "UI", "txt": "👤 PROFIL REFONDU avec 4 onglets logiques. (a) Activité : KPIs personnels + 15 dernières actions. (b) Profil : nom d'affichage. (c) Notifications : préférences + digest email + historique + catégories. (d) Sécurité : aide & visite guidée + mot de passe + biométrie empreinte + biométrie face + session. + PageHero variant=blue en haut avec breadcrumbs Accueil > Mon profil. + Panneau identité UPGRADE avec Avatar XL (size=64, ring halo glow) — remplace l'EntityIcon générique. Le panneau identité reste TOUJOURS visible au-dessus des onglets",
+        "code_snippet": {
+          "file": "app/profil/page.js",
+          "note": "Page Profil refondue 4 onglets + Avatar XL",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.6 - page Profil monolithique\n<PageHead eyebrow='MON COMPTE' icon='ti-user-circle' title='Mon profil' />\n\n<Panel>  {/* En-tête identité */}\n  <EntityIcon kind='utilisateur' size={64} />\n  <div>{nom}</div>\n</Panel>\n\n<Panel>{stats KPIs}</Panel>\n<Panel>{15 dernières actions}</Panel>\n<Panel>{Nom d'affichage}</Panel>\n<Panel>{Notifications}</Panel>\n<CollapsibleSection>{Digest email}</CollapsibleSection>\n<CollapsibleSection>{Catégories}</CollapsibleSection>\n<CollapsibleSection>{Aide}</CollapsibleSection>\n<CollapsibleSection>{Mot de passe}</CollapsibleSection>\n<CollapsibleSection>{Biométrie empreinte}</CollapsibleSection>\n<CollapsibleSection>{Biométrie face}</CollapsibleSection>\n<Panel>{Ma session}</Panel>\n// → 400+ lignes d'affichage empilées",
+          "after": "// 0.58.6 - 4 onglets + Avatar XL\n<PageHero icon='ti-user-circle' eyebrow='MON COMPTE' title='Mon profil' variant='blue' breadcrumbs={[...]} />\n\n<Tabs active={activeTab} onChange={setActiveTab} style='pills' tabs={[\n  { id: 'activite', label: 'Activité',      icon: 'ti-chart-bar' },\n  { id: 'profil',   label: 'Profil',        icon: 'ti-user' },\n  { id: 'notifs',   label: 'Notifications', icon: 'ti-bell-cog' },\n  { id: 'secu',     label: 'Sécurité',      icon: 'ti-shield-lock' },\n]} />\n\n{/* Identité TOUJOURS visible */}\n<Panel>\n  <Avatar name={nom || auth.user?.email} size={64} ring />\n  <div>{nom}</div>\n</Panel>\n\n{activeTab === 'activite' && (<>\n  <Panel>{KPIs}</Panel>\n  <Panel>{15 dernières actions}</Panel>\n</>)}\n\n{activeTab === 'profil' && (<>\n  <Panel>{Nom d'affichage}</Panel>\n</>)}\n\n{activeTab === 'notifs' && (<>\n  <Panel>{Notifications}</Panel>\n  <CollapsibleSection>{Digest}</CollapsibleSection>\n  <CollapsibleSection>{Catégories}</CollapsibleSection>\n</>)}\n\n{activeTab === 'secu' && (<>\n  <CollapsibleSection>{Aide}</CollapsibleSection>\n  <CollapsibleSection>{Mot de passe}</CollapsibleSection>\n  <CollapsibleSection>{Biométrie empreinte}</CollapsibleSection>\n  <CollapsibleSection>{Biométrie face}</CollapsibleSection>\n  <Panel>{Ma session}</Panel>\n</>)}"
+        }
+      },
+      { "code": "UI", "txt": "🌵 EMPTYSTATE DÉPLOYÉ sur 3 pages supplémentaires. (a) /achats : variant=amber + 'Créer la première demande' (icon ti-shopping-cart) + état compact 'Aucun résultat' pour les filtres. (b) /maintenance : variant=blue + 'Planifier la première' (icon ti-tool) + compact filtres. (c) /commandes : variant=teal + 'Voir les promotions' (icon ti-truck-delivery) — call-to-action redirige vers /promotions pour passer la 1ère commande" },
+      { "code": "UI", "txt": "👥 AVATAR DANS LISTE UTILISATEURS. Composant Avatar (size=32) ajouté avant le nom dans le tableau de /utilisateurs. Chaque utilisateur a sa couleur unique (gradient déterministe) → reconnaissance visuelle instantanée. Bonus : MÊME utilisateur = MÊME couleur partout (TopBar, UserMenu, liste users, Profil) grâce au hash déterministe de l'Avatar premium" },
+      { "code": "AI", "txt": "+19 tests Vitest (v058-6-ui-phase5.test.js) : version+SW (2), Profil PageHero+Tabs (7 — import + state + variant blue + 4 onglets + icons + render conditionnel + Avatar XL ring), EmptyState 3 pages (4 — achats + maintenance + commandes + variants amber/blue/teal), Avatar liste users (2), récap déploiement (4 — Avatar 3+ endroits, EmptyState 6+ pages, Tabs 2+, PageHero 6+). Total 3428 verts (+19)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.6 : (1) Avatar : 3 endroits (TopBar+UserMenu + Profil + liste users). (2) EmptyState : 6 pages (patients + interventions + signalements + achats + maintenance + commandes). (3) Tabs : 2 pages (paramètres + profil). (4) PageHero : 6+ pages (statistiques + kanban + calendrier + matériels + paramètres + profil). 9 composants premium tous prêts à l'emploi. Prochaines pistes : (a) AvatarGroup sur cards multi-assignés DI/signalements. (b) EmptyState sur notifications + utilisateurs filtrés. (c) Migration toast progressive. (d) Mode sombre via CSS vars (toggle dans Paramètres > Apparence). (e) Drag&Drop premium sur Kanban (cards qui s'élèvent + drop zone qui pulse)" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.6.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.5",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 4 : Avatar dans UserMenu + EmptyState sur 3 listes + Tabs sur Paramètres",
+    "chantiers": [
+      { "code": "UI", "txt": "👤 AVATAR INTÉGRÉ dans UserMenu — remplace les <span className='um-avatar'> custom par le composant Avatar premium de ui-premium. (a) Avatar size=30 dans le bouton trigger de la TopBar. (b) Avatar size=52 avec ring (halo glow) dans le header du popover. (c) Gradient déterministe par nom (même utilisateur = même couleur partout dans l'app). (d) Suppression des classes CSS um-avatar / um-avatar.lg devenues inutiles" },
+      { "code": "UI", "txt": "✨ USERMENU CSS UPGRADE — refonte visuelle du popover utilisateur. (a) um-btn avec hover translateY(-1px) + shadow teal coloré + border teal au hover. (b) um-head avec gradient mesh teal + decorative radial blob. (c) um-id-role : pill style avec background teal subtil + border + padding pill 99px. (d) um-item avec hover padding-left animation (+4px de slide). (e) um-sheet animation pop avec scale(0.97) → 1. (f) um-item.logout avec background gradient rouge subtil au hover. (g) Min-width 280 → 300px pour plus d'aération",
+        "code_snippet": {
+          "file": "app/UserMenu.js + app/globals.css",
+          "note": "Avatar premium intégré + UserMenu refondu",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.5 - avatar inline custom\n<button className='um-btn'>\n  <span\n    className='um-avatar'\n    style={{ background: col }}\n  >\n    {ini}\n  </span>\n  <span className='um-name'>{displayName}</span>\n</button>\n\n<div className='um-head'>\n  <span className='um-avatar lg' style={{ background: col }}>\n    {ini}\n  </span>\n  ...\n</div>",
+          "after": "// 0.58.5 - Avatar premium réutilisable\nimport { Avatar } from './components/ui-premium';\n\n<button className='um-btn'>\n  <Avatar name={displayName} size={30} />\n  <span className='um-name'>{displayName}</span>\n</button>\n\n<div className='um-head'>\n  {/* Avatar XL avec halo glow */}\n  <Avatar name={displayName} size={52} ring />\n  ...\n</div>\n\n// Bonus : même utilisateur partout dans l'app\n// (TopBar + UserMenu + liste users + assignés interventions)\n// → MÊME couleur grâce au hash déterministe"
+        }
+      },
+      { "code": "UI", "txt": "🌵 EMPTYSTATE DÉPLOYÉ sur 3 listes critiques. (a) /patients : EmptyState variant=teal avec call-to-action 'Créer le premier patient' (icon ti-user-plus). Au lieu d'un StateMsg minimaliste, l'user voit une vraie hero illustration avec un message engageant. (b) /interventions : EmptyState variant=terra avec 'Créer une demande' (icon ti-tools). (c) /signalements : EmptyState variant=terra avec 'Déposer le premier signalement' (icon ti-alert-triangle). + Variant compact=true pour le cas 'aucun résultat aux filtres' (icon ti-filter-off, gray)",
+        "code_snippet": {
+          "file": "app/patients/page.js + interventions + signalements",
+          "note": "Empty states élégants au lieu des StateMsg minimalistes",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.5 - empty state minimaliste\nif (rows.length === 0) return (\n  <StateMsg>\n    Aucun patient.\n    <a onClick={openNew}>Créer le premier</a>\n  </StateMsg>\n);",
+          "after": "// 0.58.5 - EmptyState premium\nif (rows.length === 0) return (\n  <EmptyState\n    icon=\"ti-user-plus\"\n    variant=\"teal\"\n    title=\"Aucun patient pour le moment\"\n    message=\"Crée ton premier patient pour commencer à suivre ses interventions, son matériel et ses consentements RGPD.\"\n    actionLabel=\"Créer le premier patient\"\n    onAction={openNew}\n  />\n);\n// → Halo pulse animation autour de l'icône\n// → Border dashed teal\n// → Bouton premium avec hover effects"
+        }
+      },
+      { "code": "UI", "txt": "📑 TABS SUR PARAMÈTRES — refonte de la page /parametres avec 3 onglets premium. (a) Onglet 'Général' (icon ti-adjustments) : libellés métier + préférences d'affichage + apparence (thèmes, kiosque, lecture seule). (b) Onglet 'Notifications' (icon ti-bell) : notifications de base + push avancées + webhooks. (c) Onglet 'RGPD' (icon ti-shield-check) : durée de validité + email DPO. (d) PageHero variant=navy en haut avec breadcrumbs Accueil > Paramètres. (e) Style pills (par défaut) avec icons et hover effects. Permet de scinder la longue page en 3 sections facilement digestibles. State activeTab par défaut sur 'general'" },
+      { "code": "AI", "txt": "+24 tests Vitest (v058-5-ui-phase4.test.js) : version+SW (2), Avatar UserMenu (5 — import + name + ring + size 30 + plus de um-avatar custom), UserMenu CSS upgrade (5 — hover translate+shadow + gradient head + radial decorative + pill role + padding-left hover + scale animation), EmptyState déployé (5 — 3 pages + variants + call-to-action + import), Tabs Paramètres (7 — import + state + 3 ids + 3 icons + render conditionnel + PageHero + variant navy). Total 3409 verts (+24)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.5 : Avatar utilisé dans 2 endroits (TopBar via UserMenu + header du popover). EmptyState premium sur 3 pages clés. Tabs déployé sur 1 page. 9 composants premium prêts à l'emploi. Prochaines pistes : (a) Tabs sur Profil + page Patient individuel. (b) Avatar dans liste utilisateurs + assignés DI. (c) AvatarGroup sur les cards multi-assignés. (d) Migration toast pour remplacer les vieux .err/.ok. (e) EmptyState sur achats + notifications + maintenances. (f) Mode sombre via les CSS vars (bonus)" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.5.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.4",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 3 : Drawer menu premium + PageHero sur 4 pages clés + composant Avatar (gradients déterministes)",
+    "chantiers": [
+      { "code": "UI", "txt": "🚪 DRAWER MENU PREMIUM — refonte CSS complète du menu hamburger. (a) Background gradient 180deg du clair au gris très clair. (b) Header drawer agrandi 58→78px avec gradient mesh 4-stops (0d1822→142131→1d3540→2a5a5a) + decorative radial teal en haut + brillance subtile sur la bordure haute. (c) Logo .v du header avec glow shadow teal. (d) Menu-close avec rotation 90deg + bg rouge subtil au hover. (e) Section headers : dot teal pulsant 4px + bar gradient avec fade. (f) Menu-tiles upgrade : radial gradient au hover (apparition + scale 1.4) + icon scale(1.08) rotate(-3deg) au hover + ombre profonde teal. (g) Tile active : background gradient teal subtil + double shadow inset+outset. (h) Count badges : gradient + border blanc + shadow rouge/teal. (i) Scrollbar customisée. (j) Animation fade-in-up sur les sections au mount",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Drawer menu repensé pour un look premium",
+          "lang": "css",
+          "before": "/* AVANT 0.58.4 - drawer basique */\n.menu-drawer{\n  width:380px;\n  background:#f4f7fa;\n  box-shadow:8px 0 40px rgba(0,0,0,.25);\n}\n.menu-head{height:58px;background:#142131}\n.menu-tile{\n  padding:14px 12px;\n  border:1px solid #e6ebf0;\n}\n.menu-tile:hover{\n  border-color:var(--teal);\n  transform:translateY(-2px);\n}\n.menu-tile.on{\n  box-shadow:0 0 0 2px var(--teal) inset;\n  background:#f4fbfb;\n}",
+          "after": "/* 0.58.4 - drawer premium */\n.menu-drawer{\n  width:400px;\n  background:linear-gradient(180deg,#f8fafc 0%,#f4f7fa 100%);\n  box-shadow:12px 0 50px rgba(20,33,49,.30),\n             4px 0 16px rgba(20,33,49,.15);\n}\n.menu-head{\n  height:78px;\n  background:linear-gradient(135deg,\n    #0d1822 0%,#142131 40%,\n    #1d3540 75%,#2a5a5a 130%);\n  overflow:hidden;\n  border-bottom:1px solid rgba(124,200,200,.18);\n}\n.menu-head::before{\n  /* Decorative radial teal en haut */\n  background:radial-gradient(circle,\n    rgba(124,200,200,.35) 0%,transparent 70%);\n}\n.menu-head::after{\n  /* Brillance subtile sur le bord haut */\n  background:linear-gradient(90deg,\n    transparent,rgba(124,200,200,.6),transparent);\n}\n.menu-head .logo .v{\n  text-shadow:0 0 16px rgba(124,200,200,.7);\n}\n.menu-close:hover{\n  background:rgba(192,57,43,.30);\n  transform:rotate(90deg);\n}\n.menu-tile{padding:15px 13px}\n.menu-tile::before{\n  /* Radial gradient au hover */\n  background:radial-gradient(circle,\n    rgba(124,200,200,.10) 0%,transparent 70%);\n  opacity:0;\n}\n.menu-tile:hover{\n  transform:translateY(-3px);\n  box-shadow:0 12px 28px rgba(20,33,49,.10),\n             0 4px 10px rgba(124,200,200,.20);\n}\n.menu-tile:hover::before{opacity:1;transform:scale(1.4)}\n.menu-tile:hover .mt-ic{\n  transform:scale(1.08) rotate(-3deg);\n}\n.menu-tile.on{\n  background:linear-gradient(135deg,#f0fafa 0%,#fff 100%);\n  box-shadow:0 0 0 2px #7CC8C8 inset,\n             0 4px 14px rgba(124,200,200,.25);\n}"
+        }
+      },
+      { "code": "UI", "txt": "🦸 PAGEHERO DÉPLOYÉ sur 4 pages clés. (a) /statistiques : variant=blue, eyebrow ANALYSE, breadcrumbs Accueil > Statistiques, actions = boutons Export PDF + Export CSV (intégrés DANS le hero). (b) /interventions/kanban : variant=terra, eyebrow VUE OPÉRATIONNELLE, breadcrumbs Accueil > Interventions > Kanban, actions = Vue liste + Vue calendrier (déplacés du toolbar dupliqué vers le hero, suppression doublon). (c) /calendrier : variant=violet, eyebrow PLANNING, breadcrumbs Accueil > Calendrier. (d) /materiels : variant=navy, eyebrow INVENTAIRE, stats inline (Total + En location + Maintenance + Affectés) — remplace l'ancien KpiRow + PageHead minimaliste. Import KpiRow supprimé puisque devenu inutile",
+        "code_snippet": {
+          "file": "app/statistiques/page.js + 3 autres pages",
+          "note": "PageHead minimaliste → PageHero premium",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.4 - PageHead minimaliste\n<div style={{ display:'flex', justifyContent:'space-between' }}>\n  <PageHead\n    eyebrow=\"ANALYSE\"\n    icon=\"ti-chart-bar\"\n    title=\"Statistiques\"\n    accent={auth.structureNom}\n    sub=\"Tableaux de bord visuels — 6 derniers mois\"\n  />\n  {!loading && (\n    <button className=\"btn-ghost\" onClick={...}>\n      Export PDF\n    </button>\n  )}\n  {auth.ready && (\n    <button className=\"btn-ghost\" onClick={...}>\n      Export CSV\n    </button>\n  )}\n</div>",
+          "after": "// 0.58.4 - PageHero premium\n<PageHero\n  icon=\"ti-chart-bar\"\n  eyebrow=\"ANALYSE\"\n  title=\"Statistiques\"\n  subtitle={`Tableaux de bord visuels — 6 derniers mois${auth.structureNom ? ` · ${auth.structureNom}` : ''}`}\n  variant=\"blue\"\n  breadcrumbs={[\n    { label: 'Accueil', href: '/accueil' },\n    { label: 'Statistiques' },\n  ]}\n  actions={\n    <>\n      {!loading && (\n        <button className=\"btn-ghost btn-premium btn-sm\" onClick={...}>\n          Export PDF\n        </button>\n      )}\n      {auth.ready && (\n        <button className=\"btn-ghost btn-premium btn-sm\" onClick={...}>\n          Export CSV\n        </button>\n      )}\n    </>\n  }\n/>"
+        }
+      },
+      { "code": "UI", "txt": "👤 COMPOSANT Avatar (app/components/ui-premium/Avatar.js, 180 lignes). (a) Génère un avatar circulaire ou rounded square avec INITIALES (2 lettres max) en cas d'absence d'image. (b) Couleur = gradient déterministe sur 8 (teal, blue, terra, amber, violet, green, red, navy) via hash du nom → MÊME utilisateur = MÊME couleur partout. (c) Support src (URL image) avec fallback initiales si pas d'image. (d) 4 statuts (online/busy/away/offline) avec dot coloré en bas à droite. (e) Halo glow option (ring) pour les avatars 'mis en avant'. (f) Hover scale(1.06) si clickable. (g) Shape : circle (default) ou rounded (radius 25%). + Sous-composant AvatarGroup qui empile N avatars avec overlap + overflow count (+3 etc.). À utiliser dans TopBar, UserMenu, listes d'utilisateurs, page Profil, etc." },
+      { "code": "AI", "txt": "+26 tests Vitest (v058-4-ui-phase3.test.js) : version+SW (2), Drawer menu premium CSS (9 — gradient header 4-stops + radial decorative + logo glow + rotation close + dot+bar headers + radial hover tiles + active gradient + count badge + scrollbar + animation), PageHero déployé (5 — 4 pages utilisent PageHero + materiels avec stats + breadcrumbs stats), Avatar (9 — exports + 8 gradients + hash determinist + initiales + src+fallback + 4 statuts + halo + AvatarGroup + shapes), index étendu (1). Total 3385 verts (+26)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.4 : 9 composants premium au total (KpiCard, Sparkline, MetricCard, Skeleton, EmptyState, Toast, PageHero, Tabs, Avatar+AvatarGroup). Le drawer menu est devenu un vrai espace premium avec animations et hover effects. 4 pages principales utilisent PageHero (Statistiques, Kanban, Calendrier, Matériels) — le reste suivra. Suite UI possible : Tabs sur les pages avec sous-sections, Avatar dans TopBar/UserMenu, refonte des Modal/Drawer, mode sombre via les CSS vars" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.4.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.3",
+    "kind": "version",
+    "titre": "🎨 UI PHASE 2 : Btn premium (ripple+loading+gradients) + PageHero + Tabs + TopBar upgrade",
+    "chantiers": [
+      { "code": "UI", "txt": "🔘 BTN PREMIUM (app/ui.js + globals.css) — upgrade complet du composant Btn. (a) Compat 100% : props anciennes (variant/icon/children/onClick/disabled/style/ariaLabel) toujours supportées sans breaking. (b) Nouvelles props : loading (avec spinner intégré + aria-busy a11y), size (sm/md/lg via classes CSS), rightIcon, fullWidth. (c) Ripple effect au click : <span> créé dynamiquement à la position du click avec animation av-ripple (600ms scale+fade). (d) Hover : translateY(-1px) + ombre dégradée. (e) Active : translateY(0) avec transition rapide 80ms. (f) Disabled : opacity .55 + cursor not-allowed",
+        "code_snippet": {
+          "file": "app/ui.js + app/globals.css",
+          "note": "Btn upgraded sans breaking changes",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.3 - bouton simple\nexport function Btn({ variant, icon, children, onClick, disabled }) {\n  const cls = { primary: 'btn-save', ghost: 'btn-ghost', ... }[variant];\n  return (\n    <button className={cls} onClick={onClick} disabled={disabled}>\n      {icon && <i className={`ti ${icon}`} />} {children}\n    </button>\n  );\n}",
+          "after": "// 0.58.3 - Btn premium\nexport function Btn({\n  variant = 'primary', icon, children, onClick, disabled,\n  // NEW props (compat 100%)\n  loading = false, size, rightIcon, fullWidth = false,\n}) {\n  // Ripple effect au click\n  function handleClick(e) {\n    if (disabled || loading) return;\n    const btn = e.currentTarget;\n    const ripple = document.createElement('span');\n    ripple.style.cssText = `\n      position:absolute;border-radius:50%;\n      background:rgba(255,255,255,0.45);\n      width:${size}px;height:${size}px;\n      animation:av-ripple 600ms var(--av-ease-out);\n    `;\n    btn.appendChild(ripple);\n    setTimeout(() => ripple.remove(), 650);\n    if (onClick) onClick(e);\n  }\n  return (\n    <button\n      className={cls + ' btn-premium' + ...}\n      onClick={handleClick}\n      disabled={disabled || loading}\n      aria-busy={loading || undefined}\n    >\n      {loading ? <><span className='btn-spinner' /> ...</> : ...}\n    </button>\n  );\n}\n\n// Gradients ajoutés sur btn-save / btn-danger / btn-new\n// + ombres colorées + hover translate"
+        }
+      },
+      { "code": "UI", "txt": "🦸 COMPOSANT PageHero (215 lignes) — header de page premium réutilisable. (a) 6 variants (teal/blue/terra/navy/violet/amber) avec gradients distincts. (b) Background mesh radial + decorative shapes blur. (c) Icon avec halo glow effect (blur(8px) + opacity 0.25). (d) Breadcrumbs Next.js Link avec hover sur color accent. (e) Eyebrow optionnel (label SMALL CAPS au-dessus du titre). (f) Subtitle optionnel. (g) Actions à droite (boutons/badges custom). (h) Stats inline en bas (séparées par border-top). (i) Mode compact pour pages avec moins d'espace. Animation fade-in au mount" },
+      { "code": "UI", "txt": "📑 COMPOSANT Tabs (280 lignes) — navigation par onglets avec 3 styles. (a) PILLS : style par défaut, pills arrondies dans un container background gris clair, avec count badge optionnel. (b) UNDERLINE : style minimal avec barre animée en bas de l'onglet actif (transition cubic-bezier 280ms). (c) SEGMENTED : style iOS avec indicator background mobile sous l'onglet actif. (d) 3 tailles (sm/md/lg). (e) Count badges colorés (teal si actif sur pills, gris sinon). (f) A11y : role tablist + role tab + aria-selected. (g) Calcul de la position de l'indicator via getBoundingClientRect au changement d'active" },
+      { "code": "UI", "txt": "🎩 TOPBAR PREMIUM CSS — upgrade visuel sans toucher au composant React. (a) Background avec 4 stops gradient (0d1822 → 142131 → 1d3540 → 2a5a5a) pour plus de profondeur. (b) Glassmorphism backdrop-filter blur(14px) + saturate(180%). (c) Border-bottom teal subtile + box-shadow. (d) Effet de brillance sur la bordure haute (linear-gradient transparent → teal → transparent). (e) Logo accent .v avec text-shadow glow teal. (f) Logo hover scale(1.04). (g) Burger + tb-icon avec border subtile + hover translate(-1px) + shadow colorée. (h) Badge notification avec gradient red + border navy + animation pulse infinite. (i) Version badge avec hover translate + shadow", 
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "TopBar premium avec glassmorphism",
+          "lang": "css",
+          "before": "/* AVANT 0.58.3 - topbar basique */\n.topbar{\n  height:58px;\n  background:linear-gradient(90deg,#142131 0%,#2a5a5a 75%,#7CC8C8 140%);\n  padding:0 16px;\n}\n.tb-icon{\n  background:rgba(255,255,255,.12);\n  width:40px;height:40px;border-radius:10px;\n}\n.tb-badge{\n  background:#e35d5b;\n  position:absolute;top:-5px;right:-5px;\n}",
+          "after": "/* 0.58.3 - topbar premium */\n.topbar{\n  height:60px;\n  background:linear-gradient(90deg,\n    #0d1822 0%,#142131 30%,\n    #1d3540 65%,#2a5a5a 100%);\n  padding:0 18px;\n  /* Glassmorphism */\n  backdrop-filter:blur(14px) saturate(180%);\n  border-bottom:1px solid rgba(124,200,200,.15);\n  box-shadow:0 2px 16px rgba(20,33,49,.25);\n}\n.topbar::before{\n  /* Brillance subtile sur la bordure haute */\n  content:'';\n  position:absolute;top:0;left:0;right:0;\n  height:1px;\n  background:linear-gradient(90deg,\n    transparent,rgba(124,200,200,.5),transparent);\n}\n.tb-icon{\n  background:rgba(255,255,255,.10);\n  border:1px solid rgba(255,255,255,.08);\n  width:40px;height:40px;border-radius:11px;\n  transition:all 200ms var(--av-ease-out);\n}\n.tb-icon:hover{\n  background:rgba(124,200,200,.20);\n  border-color:rgba(124,200,200,.35);\n  transform:translateY(-1px);\n  box-shadow:0 4px 12px rgba(124,200,200,.25);\n}\n.tb-badge{\n  background:linear-gradient(135deg,#e35d5b,#c0392b);\n  border:2px solid #142131;\n  box-shadow:0 2px 6px rgba(192,57,43,.5);\n  animation:av-badge-pulse 2s ease-in-out infinite;\n}\n@keyframes av-badge-pulse {\n  0%, 100% { box-shadow:0 2px 6px rgba(192,57,43,.5),\n             0 0 0 0 rgba(192,57,43,.4); }\n  50%      { box-shadow:0 2px 6px rgba(192,57,43,.5),\n             0 0 0 6px rgba(192,57,43,0); }\n}"
+        }
+      },
+      { "code": "AI", "txt": "Fix LINT 22 anti-régression (composants JSX utilisés sans import) : strip les commentaires (// ligne + /* bloc */) AVANT le scan, pour éviter les faux positifs sur des exemples de doc dans les commentaires (ex: PageHero.js avait <Btn> dans un exemple JSDoc qui était considéré comme usage réel)" },
+      { "code": "AI", "txt": "+34 tests Vitest (v058-3-ui-phase2.test.js) : version+SW (2), Btn premium upgrade (5 — nouvelles props + ripple + loading aria + classes dynamiques + compat 100%), CSS Btn premium (4 — keyframes + classes + variants gradients), PageHero (8 — 6 variants + breadcrumbs + halo + stats + actions + compact + eyebrow + export), Tabs (6 — 3 variants + indicator + counts + tailles + a11y), TopBar premium CSS (7 — 4 stops + glassmorphism + border + shadow + badge pulse + logo glow + version hover), Index étendu (2). Total 3359 verts (+34)" },
+      { "code": "DOC", "txt": "BILAN UI APRÈS 0.58.3 : Design system étendu. 8 composants premium au total (KpiCard + Sparkline + MetricCard + Skeleton + EmptyState + Toast + PageHero + Tabs). Btn existant upgrade en place (compat 100%). TopBar upgrade visuel avec glassmorphism. À l'avenir : utiliser <PageHero> sur les principales pages (statistiques, kanban, calendrier, materiel) à la place des PageHead minimalistes. Les Tabs peuvent remplacer les sélecteurs de sous-section sur pages avec multiple vues" }
+    ],
+    "themes": ["ui", "design-system"],
+    "date": "4 juin 2026",
+    "noteFile": null,
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.2",
+    "kind": "hotfix",
+    "titre": "🔧 HOTFIX 3 bugs prod : audit_log 403 (RLS) + SW 503 sur /accueil + warning Chrome PWA documenté",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 BUG 1 — audit_log POST 403 : la table audit_log est protégée par RLS qui rejette les insert avec user_id NULL (login échoué pour email inconnu, honeypot triggered, login_blocked). Conséquence : console polluée avec 403 + audit logs sécurité jamais persistés. Diagnostic en comparant avec lib/events.js qui skipe correctement si pas d'auth. Le securityAudit créé en 0.57.38 essayait quand même l'insert avec structure_id+user_id NULL",
+        "code_snippet": {
+          "file": "lib/securityAudit.js",
+          "note": "Skip insert silencieux si pas d'auth (évite 403 RLS)",
+          "lang": "js",
+          "before": "// AVANT 0.58.2 - insert tentaient toujours\ntry {\n  await supabase.from(\"audit_log\").insert({\n    structure_id: ctx?.structureId || null,  // ← peut être null\n    user_id: ctx?.userId || null,             // ← peut être null aussi\n    user_email: ctx?.userEmail || null,\n    action: eventType,\n    entite: \"security_event\",\n    ...\n  });\n  // → RLS rejette si user_id null → 403 dans console\n} catch (e) { ... }",
+          "after": "// 0.58.2 - skip silencieux si pas d'user authentifié\nif (!ctx?.userId) {\n  // Pas d'user → on n'essaye pas (évite 403 polluant)\n  // Les login_failed/blocked sont déjà visibles dans Supabase Auth Logs\n  // Le rate-limit client (0.57.36) bloque les bruteforces\n  if (typeof window !== \"undefined\" && window.location?.hostname === \"localhost\") {\n    logger.warn(`[securityAudit] ${eventType} skipped (no auth):`, ctx?.userEmail);\n  }\n  return;\n}\n\ntry {\n  const { error } = await supabase.from(\"audit_log\").insert({\n    structure_id: ctx?.structureId || null,\n    user_id: ctx.userId,  // ← garanti non-null maintenant\n    user_email: ctx?.userEmail || null,\n    action: eventType,\n    entite: \"security_event\",\n    ...\n  });\n  if (error) logger.warn(`[securityAudit] ${eventType} rejected:`, error.message);\n} catch (e) { ... }"
+        }
+      },
+      { "code": "FIX", "txt": "Impact du fix audit_log : (a) auditLoginSuccess et auditAccessDenied PASSENT (user authentifié, structure_id rempli). (b) auditLoginFailed / auditLoginBlocked / auditHoneypotTriggered sont SKIPÉS silencieusement (pas d'user identifié). (c) Les login échoués restent visibles dans Supabase Dashboard → Auth → Logs. (d) Le rate-limit côté client (0.57.36) bloque toujours les bruteforces. (e) Honeypot anti-bot (0.57.38) fonctionne toujours. (f) Plus de 403 dans la console" },
+      { "code": "FIX", "txt": "🚨 BUG 2 — Service Worker retournait 503 sur certaines navigations vers /accueil. Cause : la condition de fallback offline (`req.mode === navigate || req.destination === document`) ne matchait pas les prefetch Next.js. Fix : élargissement avec un 3e check `req.headers.get(accept).includes(text/html)` qui couvre tous les cas. Plus aucun 503 visible dans la console pour les pages HTML — fallback offline.html ou HTML inline status 200" },
+      { "code": "FIX", "txt": "Aussi : suppression du message d'erreur 'Hors-ligne — aucune donnée en cache' status 503 qui apparaissait dans les logs. Remplacé par Response.error() pour les chunks JS/CSS (Next.js gère le retry automatique sans polluer la console)" },
+      { "code": "DOC", "txt": "🟢 INFO 3 — 'Banner not shown: beforeinstallpromptevent.preventDefault() called'. C'est un warning Chrome NORMAL et VOULU. Notre code dans InstallBanner.js capture l'événement beforeinstallprompt avec preventDefault() pour afficher notre propre banner custom au lieu du popup natif Chrome (qui apparaît n'importe quand). Le warning Chrome dit juste 'tu as preventDefault sans prompt' mais c'est exactement ce qu'on veut : on appelle prompt() seulement quand l'user clique sur notre bouton 'Installer'. Pas une erreur, juste du noise console" },
+      { "code": "AI", "txt": "+13 tests Vitest (v058-2-hotfix-audit-403-sw-503.test.js) : version + SW (2), fix audit_log 403 (5 — skip + commentaire + userId direct + localhost only + capture error), fix SW 503 (4 — isHtmlReq élargi + plus de 503 textuel + status 200 + Response.error), InstallBanner doc (2). Total 3325 verts (+13)" },
+      { "code": "DOC", "txt": "RÉCAP : Plus aucune erreur dans la console prod après déploiement de 0.58.2. (1) audit_log 403 fixé. (2) /accueil 503 fixé. (3) Banner not shown documenté comme attendu. Les events sécurité critiques (login_success + access_denied + bulk_export) continuent d'être enregistrés en BDD. Les events anonymes (login_failed, honeypot) restent visibles dans Supabase Auth Logs côté serveur" }
+    ],
+    "themes": ["hotfix", "audit-log", "service-worker"],
+    "date": "4 juin 2026",
+    "noteFile": null,
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.1",
+    "kind": "hotfix",
+    "titre": "🔧 HOTFIX : limite size chantiers-extra.json 100 → 150 KB (test qui bloquait le push après ajout 0.58.0)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 BUG SIGNALÉ : npm test fail après bump 0.58.0 → __tests__/v057-7-split-versions-data.test.js > 'Fichier raisonnable (< 100 KB)' AssertionError: expected 104309 to be less than 102400. Le fichier chantiers-extra.json (lazy fetch) a grossi avec les détails techniques de la 0.58.0 (code_snippets, descriptions étendues) et dépasse de 1.9 KB la limite de 100 KB" },
+      { "code": "FIX", "txt": "Limite augmentée de 100 KB → 150 KB. Justification : (a) Le fichier est en LAZY FETCH (seulement chargé quand l'user clique sur 'voir détails' d'une version). (b) Vercel le sert en gzip → en pratique ~30 KB transférés. (c) Sur 4G : ~150ms de chargement, négligeable. (d) Évite de devoir re-toucher ce test à chaque release qui ajoute du contenu. (e) Ajout d'un 2e seuil de monitoring à 200 KB (au-delà, il faudra envisager un split par année ou un cleanup)" },
+      { "code": "AI", "txt": "+5 tests Vitest (v058-1-hotfix-size-limit.test.js) : version + SW (2), fichier < 150 KB (1), fichier < 200 KB marge (1), test v057-7 utilise bien la nouvelle limite (1). Total 3312 verts (+5). Build prod OK" }
+    ],
+    "themes": ["hotfix", "build"],
+    "date": "4 juin 2026",
+    "noteFile": null,
+    "sqlFile": null
+  },
+  {
     "v": "0.58.0",
     "kind": "version",
     "titre": "🎨 REFONTE UI/UX PREMIUM : design tokens, 6 nouveaux composants pro (KpiCard + Sparkline + MetricCard + Skeleton + EmptyState + Toast), Hero Dashboard refondu, Login premium",

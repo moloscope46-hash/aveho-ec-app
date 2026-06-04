@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
 import { relativeTime } from "../lib/format";
+// 0.58.13 : Drawer pour panel notifications côté droit
+import { Drawer } from "./components/ui-premium";
 
 const TYPES = {
   systeme:    { ic: "ti-info-circle",     color: "#185FA5" },
@@ -147,38 +149,158 @@ export default function NotifBell({ structureId, userId }) {
           80% { transform: rotate(4deg); }
         }
       `}</style>
-      {open && (
-        <div className="notif-panel">
-          <div className="notif-head">
-            <b>Notifications</b>
-            {nonLues > 0 && <button className="notif-readall" onClick={readAll}>Tout marquer lu</button>}
+      {/* 0.58.13 : Refonte panel notifications avec Drawer côté droit */}
+      <Drawer
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Notifications"
+        subtitle={nonLues > 0 ? `${nonLues} non lue${nonLues > 1 ? "s" : ""}` : "Tout est à jour"}
+        icon="ti-bell"
+        color="#142131"
+        side="right"
+        size="sm"
+        footer={nonLues > 0 ? (
+          <button
+            onClick={readAll}
+            style={{
+              padding: "9px 18px",
+              borderRadius: 10,
+              border: "1px solid var(--av-g200, #e3e9ee)",
+              background: "var(--av-g0, #fff)",
+              color: "var(--av-g700, #4a5868)",
+              fontFamily: "inherit",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <i className="ti ti-checks" />
+            Tout marquer comme lu
+          </button>
+        ) : null}
+      >
+        {items.length === 0 ? (
+          <div style={{
+            padding: "40px 20px",
+            textAlign: "center",
+            color: "var(--av-g500, #8a98a8)",
+            fontSize: 13.5,
+          }}>
+            <i className="ti ti-bell-off" style={{ fontSize: 36, opacity: 0.5, display: "block", marginBottom: 12 }} />
+            Aucune notification
           </div>
-          <div className="notif-list">
-            {items.length === 0
-              ? <div className="notif-empty">Aucune notification</div>
-              : items.map((n) => {
-                  const t = TYPES[n.type] || TYPES.systeme;
-                  return (
-                      <div key={n.id} className={`notif-item${n.lue ? "" : " unread"}`} onClick={() => clickNotif(n)} title={new Date(n.created_at).toLocaleString("fr-FR")} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); clickNotif(n); } }}>
-                        <span className="notif-ic" style={{ background: t.color + "22", color: t.color }} aria-hidden="true">
-                          <i className={`ti ${t.ic}`} />
-                        </span>
-                        <div className="notif-body">
-                          <div className="notif-titre">{n.titre}</div>
-                          {n.message && <div className="notif-msg">{n.message}</div>}
-                          <div className="notif-date">{relativeTime(n.created_at)}</div>
-                        </div>
-                        {n.user_id === userId && (
-                          <button className="notif-del-btn" onClick={(e) => del(e, n)} title="Supprimer cette notification" aria-label="Supprimer cette notification" style={{ background: "transparent", border: "none", padding: 4, cursor: "pointer", color: "#8a98a8" }}>
-                            <i className="ti ti-x" aria-hidden="true" />
-                          </button>
-                        )}
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {items.map((n) => {
+              const t = TYPES[n.type] || TYPES.systeme;
+              return (
+                <div
+                  key={n.id}
+                  className={`notif-item${n.lue ? "" : " unread"}`}
+                  onClick={() => clickNotif(n)}
+                  title={new Date(n.created_at).toLocaleString("fr-FR")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); clickNotif(n); } }}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 12,
+                    padding: "12px 14px",
+                    borderRadius: 10,
+                    background: n.lue ? "transparent" : "linear-gradient(90deg, rgba(124,200,200,.08) 0%, transparent 100%)",
+                    border: n.lue ? "1px solid var(--av-g200, #e3e9ee)" : "1px solid rgba(124,200,200,.30)",
+                    cursor: "pointer",
+                    transition: "all 200ms",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(20,33,49,.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: t.color + "22",
+                      color: t.color,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 18,
+                      flexShrink: 0,
+                    }}
+                    aria-hidden="true"
+                  >
+                    <i className={`ti ${t.ic}`} />
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontWeight: n.lue ? 500 : 700,
+                      fontSize: 13.5,
+                      color: "var(--av-navy, #142131)",
+                      marginBottom: 3,
+                    }}>
+                      {n.titre}
+                    </div>
+                    {n.message && (
+                      <div style={{
+                        fontSize: 12.5,
+                        color: "var(--av-g700, #4a5868)",
+                        lineHeight: 1.4,
+                        marginBottom: 4,
+                      }}>
+                        {n.message}
                       </div>
-                  );
-                })}
+                    )}
+                    <div style={{
+                      fontSize: 11,
+                      color: "var(--av-g500, #8a98a8)",
+                      fontWeight: 500,
+                    }}>
+                      {relativeTime(n.created_at)}
+                    </div>
+                  </div>
+                  {n.user_id === userId && (
+                    <button
+                      onClick={(e) => del(e, n)}
+                      title="Supprimer cette notification"
+                      aria-label="Supprimer cette notification"
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: 4,
+                        cursor: "pointer",
+                        color: "#8a98a8",
+                        flexShrink: 0,
+                        borderRadius: 6,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#fee";
+                        e.currentTarget.style.color = "#c0392b";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.color = "#8a98a8";
+                      }}
+                    >
+                      <i className="ti ti-x" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </div>
-      )}
+        )}
+      </Drawer>
     </div>
   );
 }

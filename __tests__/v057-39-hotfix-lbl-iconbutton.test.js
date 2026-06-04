@@ -118,8 +118,13 @@ describe("0.57.39 - LINT anti-régression CRITIQUE : composants utilisés = comp
       }
 
       // Composants JSX utilisés (uniquement les noms qu'on sait reconnaître)
+      // 0.58.3 : strip les commentaires (// ligne + /* bloc */) AVANT scan
+      // pour éviter les faux positifs sur des exemples de doc dans les commentaires
+      const codeOnly = src
+        .replace(/\/\*[\s\S]*?\*\//g, "")     // /* ... */
+        .replace(/^\s*\/\/.*$/gm, "");         // // ...
       const used = new Set();
-      for (const m of src.matchAll(/<([A-Z]\w+)\b/g)) {
+      for (const m of codeOnly.matchAll(/<([A-Z]\w+)\b/g)) {
         if (ALL_KNOWN.has(m[1])) used.add(m[1]);
       }
 

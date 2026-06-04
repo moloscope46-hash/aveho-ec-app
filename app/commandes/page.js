@@ -8,6 +8,7 @@ import { fmtEur, fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Statut, StateMsg } from "../ui";
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { logger } from "../../lib/logger";
 
@@ -61,8 +62,22 @@ export default function Commandes() {
           { label: "Total", value: cmds.reduce((s2, c) => s2 + Number(c.total || 0), 0).toLocaleString("fr-FR", { style: "currency", currency: "EUR" }), icon: "ti-cash", color: "#7a6fb0" },
         ]} />
         <Panel>
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : cmds.length === 0 ? <StateMsg>Aucune commande. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => router.push("/promotions")}>Voir les promotions</a></StateMsg>
+          {loading ? (
+            /* 0.58.9 : SkeletonRow x 4 */
+            <div style={{ background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12, padding: 6 }}>
+              {[0,1,2,3].map((i) => <SkeletonRow key={i} cols={4} />)}
+            </div>
+          )
+            : cmds.length === 0 ? (
+              <EmptyState
+                icon="ti-truck-delivery"
+                variant="teal"
+                title="Aucune commande pour le moment"
+                message="Découvre les promotions du moment pour passer ta première commande auprès du fournisseur."
+                actionLabel="Voir les promotions"
+                onAction={() => router.push("/promotions")}
+              />
+            )
             : (
               <table>
                 <thead><tr><th>N°</th><th>Date</th><th>Magasin</th><th style={{ textAlign: "right" }}>Total</th><th>Statut</th><th></th></tr></thead>

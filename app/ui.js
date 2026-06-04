@@ -70,25 +70,75 @@ export function Badge({ kind, children, color, ic }) {
 }
 
 // Bouton typé : variant = "primary" (par défaut) | "ghost" | "danger" | "new"
-export function Btn({ variant = "primary", icon, children, onClick, disabled, type = "button", style, ariaLabel }) {
+export function Btn({
+  variant = "primary",
+  icon,
+  children,
+  onClick,
+  disabled,
+  type = "button",
+  style,
+  ariaLabel,
+  // 0.58.3 : nouvelles props (compat 100% : si pas utilisées, comportement inchangé)
+  loading = false,
+  size,
+  rightIcon,
+  fullWidth = false,
+}) {
   const cls = {
     primary: "btn-save",
     ghost: "btn-ghost",
     danger: "btn-danger",
     new: "btn-new",
   }[variant] || "btn-save";
-  // Alpha 0.44.0 — a11y : si bouton icon-only sans aria-label explicite, utiliser children comme texte de fallback
+
+  // 0.58.3 : a11y → accessible name
   const accessibleName = ariaLabel || (typeof children === "string" ? null : "Action");
+
+  // 0.58.3 : Ripple effect au click (style Material moderne)
+  function handleClick(e) {
+    if (disabled || loading) return;
+    // Crée un ripple à la position du click
+    const btn = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement("span");
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.cssText = `
+      position:absolute;border-radius:50%;
+      background:rgba(255,255,255,0.45);
+      pointer-events:none;
+      width:${size}px;height:${size}px;
+      left:${e.clientX - rect.left - size/2}px;
+      top:${e.clientY - rect.top - size/2}px;
+      transform:scale(0);
+      animation:av-ripple 600ms var(--av-ease-out);
+    `;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 650);
+    if (onClick) onClick(e);
+  }
+
   return (
-    <button 
-      type={type} 
-      className={cls} 
-      onClick={onClick} 
-      disabled={disabled} 
-      style={style}
+    <button
+      type={type}
+      className={cls + " btn-premium" + (fullWidth ? " btn-full" : "") + (size === "sm" ? " btn-sm" : size === "lg" ? " btn-lg" : "")}
+      onClick={handleClick}
+      disabled={disabled || loading}
+      style={{ position: "relative", overflow: "hidden", ...style }}
       aria-label={accessibleName || undefined}
+      aria-busy={loading || undefined}
     >
-      {icon && <i className={`ti ${icon}`} aria-hidden="true" />} {children}
+      {loading ? (
+        <>
+          <span className="btn-spinner" aria-hidden="true" />
+          {typeof children === "string" ? "Chargement…" : children}
+        </>
+      ) : (
+        <>
+          {icon && <i className={`ti ${icon}`} aria-hidden="true" />} {children}
+          {rightIcon && <i className={`ti ${rightIcon}`} aria-hidden="true" style={{ marginLeft: 4 }} />}
+        </>
+      )}
     </button>
   );
 }
@@ -194,7 +244,22 @@ export function StateMsg({ children }) {
 //  - clique sur fond ou X pour fermer
 //  - sur mobile : bottom-sheet automatique (via CSS @media)
 // =============================================================
-export function Modal({ open, onClose, title, kind, icon, color, footer, children, size = "md" }) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  subtitle,           // 0.58.11 : sous-titre optionnel sous le titre principal
+  kind,
+  icon,
+  color,
+  iconBg,             // 0.58.11 : couleur de fond du badge icon (par défaut auto-derivée)
+  iconColor,          // 0.58.11 : couleur de l'icon (par défaut blanc)
+  headerActions,      // 0.58.11 : slot React pour des actions à droite du title (avant le X)
+  footer,
+  children,
+  size = "md",
+  variant = "default" // 0.58.11 : "default" | "minimal" (sans header coloré) | "danger" (header rouge)
+}) {
   // Alpha 0.18.0 : a11y — focus trap + ESC + role=dialog
   const dialogRef = React.useRef(null);
   React.useEffect(() => {
@@ -225,10 +290,13 @@ export function Modal({ open, onClose, title, kind, icon, color, footer, childre
 
   if (!open) return null;
   const e = kind ? ENTITY[kind] : null;
-  const c = color || (e ? e.color : "#142131");
+  // 0.58.11 : variant danger force la couleur rouge
+  const c = variant === "danger" ? "#C9867F" : (color || (e ? e.color : "#142131"));
   const i = icon || (e ? e.ic : "ti-circle");
-  const widths = { sm: 380, md: 520, lg: 720 };
+  const widths = { sm: 380, md: 520, lg: 720, xl: 920 };
   const titleId = "modal-title-" + (title || "x").replace(/\W+/g, "-").toLowerCase();
+  // 0.58.11 : variant minimal = pas de header coloré
+  const showHeader = variant !== "minimal";
   return (
     <div className="modal-bg" onClick={(ev) => ev.target.classList.contains("modal-bg") && onClose && onClose()}>
       <div
@@ -239,11 +307,61 @@ export function Modal({ open, onClose, title, kind, icon, color, footer, childre
         aria-modal="true"
         aria-labelledby={titleId}
       >
-        <div className="modal-head-v2" style={{ background: c }}>
-          <span className="modal-ic" aria-hidden="true"><i className={`ti ${i}`} /></span>
-          <span className="modal-title" id={titleId}>{title}</span>
-          <button className="modal-x" onClick={onClose} aria-label="Fermer la fenêtre"><i className="ti ti-x" aria-hidden="true" /></button>
-        </div>
+        {showHeader && (
+          <div className="modal-head-v2" style={{ background: c }}>
+            <span
+              className="modal-ic"
+              aria-hidden="true"
+              style={iconBg ? { background: iconBg, color: iconColor || "#fff" } : (iconColor ? { color: iconColor } : null)}
+            >
+              <i className={`ti ${i}`} />
+            </span>
+            <span className="modal-title-wrap" style={{ flex: 1, minWidth: 0 }}>
+              <span className="modal-title" id={titleId} style={{ display: "block", fontWeight: 700 }}>{title}</span>
+              {subtitle && (
+                <span className="modal-subtitle" style={{
+                  display: "block",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  opacity: 0.85,
+                  marginTop: 2,
+                }}>{subtitle}</span>
+              )}
+            </span>
+            {headerActions && (
+              <span className="modal-head-actions" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginRight: 4 }}>
+                {headerActions}
+              </span>
+            )}
+            <button className="modal-x" onClick={onClose} aria-label="Fermer la fenêtre"><i className="ti ti-x" aria-hidden="true" /></button>
+          </div>
+        )}
+        {/* Variante minimal : un petit close button flottant en haut à droite */}
+        {!showHeader && (
+          <button
+            className="modal-x-floating"
+            onClick={onClose}
+            aria-label="Fermer la fenêtre"
+            style={{
+              position: "absolute",
+              top: 12, right: 12,
+              width: 32, height: 32,
+              background: "rgba(20,33,49,.06)",
+              border: "1px solid rgba(20,33,49,.08)",
+              color: "#4a5868",
+              borderRadius: 8,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 16,
+              transition: "all 200ms",
+              zIndex: 2,
+            }}
+          >
+            <i className="ti ti-x" aria-hidden="true" />
+          </button>
+        )}
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>

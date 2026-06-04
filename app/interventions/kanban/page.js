@@ -12,6 +12,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../../ui";
+import { PageHero, toast, Avatar } from "../../components/ui-premium";
 import { fmtDate } from "../../../lib/format";
 import DIPreview from "../../DIPreview";
 
@@ -37,6 +38,8 @@ export default function KanbanDIPage() {
   const [dragId, setDragId] = useState(null);
   const [overCol, setOverCol] = useState(null);
   const [ghostPos, setGhostPos] = useState(null); // {x, y} pour positionner le ghost
+  // 0.58.7 : ID de la carte qui vient d'être droppée (pour animation flash)
+  const [droppedId, setDroppedId] = useState(null);
   const dragRef = useRef({ startX: 0, startY: 0, started: false, offsetX: 0, offsetY: 0, cardW: 0, cardH: 0 });
 
   async function load() {
@@ -106,12 +109,19 @@ export default function KanbanDIPage() {
     // Optimistic UI
     const prev = rows;
     setRows(rows.map((r) => r.id === id ? { ...r, statut: newStatut } : r));
+    // 0.58.7 : flash animation sur la carte qui vient d'arriver
+    setDroppedId(id);
+    setTimeout(() => setDroppedId(null), 700);
     const { error } = await supabase.from("interventions")
       .update({ statut: newStatut, updated_at: new Date().toISOString() })
       .eq("id", id);
     if (error) {
       setRows(prev);
-      alert("Échec du changement de statut : " + (error.message || "erreur inconnue"));
+      // 0.58.7 : toast.error remplace alert()
+      toast.error("Échec du changement de statut : " + (error.message || "erreur inconnue"));
+    } else {
+      // 0.58.7 : feedback positif
+      toast.success(`Statut mis à jour → ${newStatut}`);
     }
   }
 
@@ -136,12 +146,28 @@ export default function KanbanDIPage() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead eyebrow="VUE OPÉRATIONNELLE" icon="ti-layout-kanban" title="Kanban" accent="DI"
-          sub="Glisse une carte d'une colonne à l'autre pour changer son statut (souris ou tactile)" />
+        {/* 0.58.4 : PageHero premium remplace PageHead minimaliste */}
+        <PageHero
+          icon="ti-layout-kanban"
+          eyebrow="VUE OPÉRATIONNELLE"
+          title="Kanban des interventions"
+          subtitle="Glisse une carte d'une colonne à l'autre pour changer son statut"
+          variant="terra"
+          breadcrumbs={[
+            { label: "Accueil", href: "/accueil" },
+            { label: "Interventions", href: "/interventions" },
+            { label: "Kanban" },
+          ]}
+          actions={
+            <>
+              <Btn variant="ghost" icon="ti-list" size="sm" onClick={() => router.push("/interventions")}>Vue liste</Btn>
+              <Btn variant="ghost" icon="ti-calendar" size="sm" onClick={() => router.push("/calendrier")}>Vue calendrier</Btn>
+            </>
+          }
+        />
 
         <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
-          <Btn variant="ghost" icon="ti-list" onClick={() => router.push("/interventions")}>Vue liste</Btn>
-          <Btn variant="ghost" icon="ti-calendar" onClick={() => router.push("/calendrier")}>Vue calendrier</Btn>
+          {/* 0.58.4 : Btn "Vue liste" + "Vue calendrier" déplacés dans le PageHero ci-dessus */}
           {/* Alpha 0.17.1 : toggle de tri */}
           <span style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center", fontSize: 12, color: "#6c7a89" }}>
             <span style={{ fontWeight: 600 }}>Trier :</span>
@@ -157,7 +183,7 @@ export default function KanbanDIPage() {
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
           <div
             style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, minHeight: 400, touchAction: dragId ? "none" : "auto" }}
-            className="kanban-grid"
+            className={`kanban-grid${dragId ? " kb-drag-active" : ""}`}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
           >
@@ -176,9 +202,10 @@ export default function KanbanDIPage() {
               return (
                 <div key={col.statut}
                   data-kanban-col={col.statut}
+                  className={`kb-col${isOver ? " kb-col-over" : ""}`}
                   style={{
-                    background: isOver ? col.couleur + "1a" : "#f4f7fa",
-                    border: `2px ${isOver ? "dashed" : "solid"} ${isOver ? col.couleur : "#e3e9ee"}`,
+                    background: "#f4f7fa",
+                    border: `2px solid #e3e9ee`,
                     borderRadius: 12, padding: 12, transition: "background .2s, border .2s",
                   }}>
                   {/* En-tête colonne */}
@@ -200,16 +227,15 @@ export default function KanbanDIPage() {
                         return (
                           <div key={r.id}
                             data-kanban-card={r.id}
+                            className={`kb-card${isDragging ? " kb-card-dragging" : ""}${droppedId === r.id ? " kb-card-dropped" : ""}`}
                             onPointerDown={(e) => onPointerDown(e, r.id)}
                             onClick={() => { if (!dragRef.current.started) router.push("/interventions"); }}
                             style={{
                               background: "#fff", padding: 10, borderRadius: 8,
                               cursor: auth.can("ecrire") ? "grab" : "pointer",
                               boxShadow: "0 1px 3px rgba(0,0,0,.06)", borderLeft: `3px solid ${urgColor}`,
-                              opacity: isDragging ? 0.3 : 1,
                               touchAction: "none",
                               userSelect: "none",
-                              transition: "opacity .15s",
                             }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
                               <span style={{ fontSize: 12, fontWeight: 700, color: "#142131" }}>
@@ -235,6 +261,24 @@ export default function KanbanDIPage() {
                                 );
                               })()}
                             </div>
+                            {/* 0.58.8 : Avatar de l'assigné en bas de carte */}
+                            {r.assignee_email && (
+                              <div style={{
+                                marginTop: 8,
+                                paddingTop: 7,
+                                borderTop: "1px dashed #eef2f5",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 7,
+                                fontSize: 11,
+                                color: "#6c7a89",
+                              }}>
+                                <Avatar name={r.assignee_email} size={22} />
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                                  {r.assignee_email}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -246,20 +290,19 @@ export default function KanbanDIPage() {
           </div>
         )}
 
-        {/* Ghost — carte qui suit le pointeur pendant le drag */}
+        {/* Ghost — carte qui suit le pointeur pendant le drag (PREMIUM 0.58.7) */}
         {dragId && dragCard && ghostPos && (
-          <div style={{
-            position: "fixed",
-            left: ghostPos.x, top: ghostPos.y,
-            width: dragRef.current.cardW,
-            background: "#fff", padding: 10, borderRadius: 8,
-            boxShadow: "0 8px 24px rgba(20,33,49,.25)",
-            borderLeft: `3px solid ${COULEUR_URGENCE[dragCard.urgence] || "#185FA5"}`,
-            pointerEvents: "none",
-            zIndex: 1000,
-            opacity: 0.95,
-            transform: "rotate(2deg)",
-          }}>
+          <div
+            className="kb-ghost-premium"
+            style={{
+              position: "fixed",
+              left: ghostPos.x, top: ghostPos.y,
+              width: dragRef.current.cardW,
+              background: "#fff", padding: 10, borderRadius: 8,
+              borderLeft: `4px solid ${COULEUR_URGENCE[dragCard.urgence] || "#185FA5"}`,
+              pointerEvents: "none",
+              zIndex: 1000,
+            }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: "#142131" }}>{dragCard.numero}</span>
               {dragCard.urgence && <span style={{ fontSize: 9, fontWeight: 700, color: COULEUR_URGENCE[dragCard.urgence] || "#185FA5", textTransform: "uppercase" }}>{dragCard.urgence}</span>}

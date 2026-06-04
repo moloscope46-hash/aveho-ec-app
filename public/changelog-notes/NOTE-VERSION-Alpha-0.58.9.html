@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.9 — Modales premium + Dark mode + Skeleton + Avatar liste DI</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#0d1822 0%,#142131 50%,#243044 100%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(122,111,176,.20) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:var(--teal)}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--teal)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* MODAL PREVIEW */
+.modal-demo-wrap{position:relative;height:380px;background:linear-gradient(135deg,#e3e9ee 0%,#cfd8e0 100%);border-radius:14px;overflow:hidden;margin:14px 0}
+.modal-bg-demo{position:absolute;inset:0;background:rgba(13,24,34,.55);backdrop-filter:blur(8px) saturate(140%);display:flex;align-items:center;justify-content:center}
+.modal-demo{width:380px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px rgba(20,33,49,.30),0 12px 24px rgba(20,33,49,.18),0 0 0 1px rgba(255,255,255,.08) inset}
+.modal-head-demo{display:flex;align-items:center;gap:12px;padding:18px 22px;color:#fff;background:#185FA5;position:relative;overflow:hidden}
+.modal-head-demo::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)}
+.modal-head-demo::after{content:"";position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,.18) 0%,transparent 70%);border-radius:50%}
+.modal-head-demo > *{position:relative;z-index:1}
+.modal-ic-demo{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:inset 0 -2px 4px rgba(0,0,0,.12)}
+.modal-title-demo{flex:1;font-weight:700;font-size:16px}
+.modal-x-demo{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:center;color:#fff}
+.modal-body-demo{padding:22px 24px;font-size:13.5px;color:#4a5868;line-height:1.6}
+.modal-foot-demo{padding:14px 22px 18px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;background:linear-gradient(180deg,#fafbfc 0%,#f4f7fa 100%)}
+.btn-foot{padding:8px 16px;border-radius:10px;font-weight:600;font-size:13;border:none;cursor:pointer}
+.btn-foot.ghost{background:#ECEEF0;color:#5a6776}
+.btn-foot.save{background:linear-gradient(135deg,#7CC8C8 0%,#5db5b5 100%);color:#142131;box-shadow:0 2px 6px rgba(124,200,200,.3)}
+
+/* DARK MODE DEMO */
+.dark-demo{background:#0e1620;border-radius:16px;padding:22px;color:#e8edf2;margin:14px 0}
+.dark-card{background:#1a2434;border:1px solid #2a3645;border-radius:11px;padding:14px 16px;margin:10px 0}
+.dark-card-h{font-size:13px;color:#7CC8C8;font-weight:700;letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
+.dark-card p{margin:0;font-size:13;color:#9aa7b4}
+.dark-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* AVATAR LISTE DI */
+.list-mock{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:6px;margin:14px 0;font-size:13}
+.list-row{display:grid;grid-template-columns:80px 100px 1fr 90px 200px 60px;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #eef2f5}
+.list-row:last-child{border-bottom:none}
+.list-row.h{background:var(--navy);color:#fff;font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;border-radius:6px 6px 0 0}
+.list-row .col-nb{font-weight:700;color:#142131}
+.list-row .col-statut{font-size:11px;padding:3px 10px;border-radius:8px;font-weight:600;text-align:center}
+.list-row .col-statut.cours{background:#fff3e0;color:#e67e22}
+.list-row .col-statut.urg{background:#fee;color:#c0392b}
+.list-row .col-statut.res{background:#e8f7e8;color:#2e6f33}
+.list-row .col-assignee{display:flex;align-items:center;gap:7px;font-size:12;color:#4a5868}
+.av-26{width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10.5px;text-shadow:0 1px 2px rgba(0,0,0,.2);box-shadow:0 1px 2px rgba(20,33,49,.1),inset 0 -1px 2px rgba(0,0,0,.1);flex-shrink:0}
+.av-26.t{background:linear-gradient(135deg,#7CC8C8 0%,#2a5a5a 100%)}
+.av-26.b{background:linear-gradient(135deg,#185FA5 0%,#4a8dd4 100%)}
+.av-26.tr{background:linear-gradient(135deg,#C9867F 0%,#b06d65 100%)}
+.av-26.v{background:linear-gradient(135deg,#7a6fb0 0%,#5db5b5 100%)}
+
+/* SKELETON DEMO */
+@keyframes av-shimmer-demo {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.skeleton-demo{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:6px;margin:14px 0}
+.skel-row{display:flex;gap:12px;align-items:center;padding:10px 12px}
+.skel-bar{height:14px;border-radius:6px;background:linear-gradient(90deg,#f4f7fa 0%,#e3e9ee 50%,#f4f7fa 100%);background-size:1000px 100%;animation:av-shimmer-demo 1.6s linear infinite}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 8 — MEGA RELEASE</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.9 — Modales premium + Dark mode + Skeleton + Avatar liste DI<small>5 chantiers UI/UX en une release · Backdrop blur · Mode sombre complet · 4 listes skeleton · Colonne assigné · Toast suite</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.9-alpha</code></span>
+    <span><b>Tests :</b> 3490 Vitest (+29)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">5</div><div class="top-kpi-lbl">Chantiers UI</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">+4</div><div class="top-kpi-lbl">Listes Skeleton (6 total)</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">+7</div><div class="top-kpi-lbl">Alerts migrés (27 total)</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+29</div><div class="top-kpi-lbl">Tests Vitest (3490)</div></div>
+</div>
+
+<h2>🪟 Refonte modales premium</h2>
+
+<div class="panel">
+<p style="margin:0">L'arrière-plan des modales est maintenant <strong>flouté (blur 8px + saturate 140%)</strong> pour focus visuel total sur le contenu. Animation slide-up plus marquée (40px), shadow multi-couches, brillance sur le header, decorative radial.</p>
+</div>
+
+<div class="modal-demo-wrap">
+  <div class="modal-bg-demo">
+    <div class="modal-demo">
+      <div class="modal-head-demo">
+        <div class="modal-ic-demo">⚙</div>
+        <div class="modal-title-demo">Confirmer l'action</div>
+        <div class="modal-x-demo">✕</div>
+      </div>
+      <div class="modal-body-demo">
+        L'arrière-plan est <strong>flouté</strong> et <strong>désaturé</strong> pour focus visuel. La modale glisse en douceur depuis le bas avec animation 320ms.
+      </div>
+      <div class="modal-foot-demo">
+        <button class="btn-foot ghost">Annuler</button>
+        <button class="btn-foot save">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<table>
+<tr><th>Élément</th><th>Effet</th></tr>
+<tr><td><b>Backdrop</b></td><td>blur(8px) + saturate(140%) — animation modal-bg-in 220ms</td></tr>
+<tr><td><b>Modale</b></td><td>Slide-up 40px + scale 0.94→1 sur 320ms (au lieu de 20px+0.97 en 250ms)</td></tr>
+<tr><td><b>Shadow</b></td><td>3 couches : 30+60px navy + 12+24px navy + 1px white inset</td></tr>
+<tr><td><b>Header</b></td><td>Brillance subtile sur bord haut + decorative radial blob blanc</td></tr>
+<tr><td><b>Icon</b></td><td>Border + inset shadow (effet bouton premium)</td></tr>
+<tr><td><b>Close (×)</b></td><td>Rotation 90deg au hover (cohérent avec drawer)</td></tr>
+<tr><td><b>Footer</b></td><td>Gradient subtil 180deg #fafbfc → #f4f7fa</td></tr>
+</table>
+
+<h2>🌙 Mode sombre étendu aux composants premium</h2>
+
+<div class="panel">
+<p style="margin:0">Le système dark <code>data-theme=dark</code> existait déjà (toggle dans <code>/parametres > Apparence</code>) mais ne couvrait que les éléments legacy. Maintenant <strong>tous les composants premium fonctionnent en dark mode</strong> : modales, Kanban, UserMenu, drawer, Skeleton, Tabs.</p>
+</div>
+
+<div class="dark-demo">
+  <div style="font-size:11px;color:#7CC8C8;font-weight:700;letter-spacing:1px;margin-bottom:10px">📊 ACCUEIL · MODE SOMBRE</div>
+  <div class="dark-grid">
+    <div class="dark-card">
+      <div class="dark-card-h">⏳ EN COURS · 3</div>
+      <p>DI-1234 · Réparation pompe</p>
+      <p>DI-1235 · Maintenance</p>
+    </div>
+    <div class="dark-card">
+      <div class="dark-card-h">✅ RÉSOLUES · 12</div>
+      <p>DI-1230 · Calibrage</p>
+      <p>DI-1228 · Révision</p>
+    </div>
+  </div>
+</div>
+
+<table>
+<tr><th>Composant</th><th>Adaptation dark</th></tr>
+<tr><td><b>Modal-bg</b></td><td>rgba(0,0,0,.65) + blur préservé</td></tr>
+<tr><td><b>Kanban cards/colonnes</b></td><td>background #243044 + text adapté + shadow profondes</td></tr>
+<tr><td><b>UserMenu sheet/head</b></td><td>aveho-panel + gradient sombre</td></tr>
+<tr><td><b>Menu drawer + tiles</b></td><td>Gradient #0e1620→#162032</td></tr>
+<tr><td><b>Skeleton shimmer</b></td><td>#1a2434 → #2a3645 → #1a2434</td></tr>
+<tr><td><b>Tabs (pills)</b></td><td>Background panel dark</td></tr>
+</table>
+
+<h2>💀 Skeleton sur 4 listes restantes</h2>
+
+<div class="skeleton-demo">
+  <div class="skel-row"><div class="skel-bar" style="flex:.8"></div><div class="skel-bar" style="flex:1.5"></div><div class="skel-bar" style="flex:2"></div><div class="skel-bar" style="flex:1"></div></div>
+  <div class="skel-row"><div class="skel-bar" style="flex:.8"></div><div class="skel-bar" style="flex:1.5"></div><div class="skel-bar" style="flex:2"></div><div class="skel-bar" style="flex:1"></div></div>
+  <div class="skel-row"><div class="skel-bar" style="flex:.8"></div><div class="skel-bar" style="flex:1.5"></div><div class="skel-bar" style="flex:2"></div><div class="skel-bar" style="flex:1"></div></div>
+  <div class="skel-row"><div class="skel-bar" style="flex:.8"></div><div class="skel-bar" style="flex:1.5"></div><div class="skel-bar" style="flex:2"></div><div class="skel-bar" style="flex:1"></div></div>
+</div>
+
+<table>
+<tr><th>Page</th><th>Cols × Rows</th></tr>
+<tr><td><code>/signalements</code></td><td>4 × 4</td></tr>
+<tr><td><code>/achats</code></td><td>5 × 4</td></tr>
+<tr><td><code>/maintenance</code></td><td>5 × 4</td></tr>
+<tr><td><code>/commandes</code></td><td>4 × 4</td></tr>
+</table>
+
+<p>+ 2 déjà actifs depuis 0.58.8 (interventions, patients) → <b>6 listes au total avec Skeleton</b></p>
+
+<h2>👤 Avatar sur liste DI (/interventions)</h2>
+
+<div class="panel">
+<p style="margin:0">Nouvelle colonne <strong>"Assigné"</strong> insérée dans le tableau /interventions avec Avatar size=26 + nom. Permet de scanner visuellement qui est sur quoi sans cliquer "Réassigner".</p>
+</div>
+
+<div class="list-mock">
+  <div class="list-row h">
+    <div>N°</div>
+    <div>DATE</div>
+    <div>TYPE</div>
+    <div>STATUT</div>
+    <div>ASSIGNÉ</div>
+    <div></div>
+  </div>
+  <div class="list-row">
+    <div class="col-nb">DI-1234</div>
+    <div>4 juin</div>
+    <div>Réparation pompe perfusion</div>
+    <div class="col-statut cours">En cours</div>
+    <div class="col-assignee">
+      <div class="av-26 tr">HM</div>
+      <span>Hugo Martin</span>
+    </div>
+    <div></div>
+  </div>
+  <div class="list-row">
+    <div class="col-nb">DI-1238</div>
+    <div>4 juin</div>
+    <div>Panne urgente clim</div>
+    <div class="col-statut urg">Urgente</div>
+    <div class="col-assignee">
+      <div class="av-26 t">CM</div>
+      <span>Cédric Mignot</span>
+    </div>
+    <div></div>
+  </div>
+  <div class="list-row">
+    <div class="col-nb">DI-1240</div>
+    <div>3 juin</div>
+    <div>Maintenance préventive</div>
+    <div class="col-statut cours">En cours</div>
+    <div class="col-assignee">
+      <span style="font-size:11px;color:#8a98a8;font-style:italic">—</span>
+    </div>
+    <div></div>
+  </div>
+  <div class="list-row">
+    <div class="col-nb">DI-1230</div>
+    <div>2 juin</div>
+    <div>Calibrage</div>
+    <div class="col-statut res">Résolue</div>
+    <div class="col-assignee">
+      <div class="av-26 v">JB</div>
+      <span>Julien Bertrand</span>
+    </div>
+    <div></div>
+  </div>
+</div>
+
+<h2>🔔 Migration toast suite (+7 alerts éliminés)</h2>
+
+<table>
+<tr><th>Page</th><th>Alerts migrés</th><th>Détail</th></tr>
+<tr><td><code>/consentements</code></td><td>3</td><td>Popup bloquée · erreur PDF · erreur API</td></tr>
+<tr><td><code>/statistiques-activite</code></td><td>2</td><td>Erreur export CSV · erreur export PDF</td></tr>
+<tr><td><code>/maintenance</code></td><td>2</td><td>Sélection matériel · fréquence invalide</td></tr>
+</table>
+
+<div class="panel ok">
+<p style="margin:0"><strong>Total cumulé depuis 0.58.7 : 27 alert() natifs éliminés sur 9 pages</strong></p>
+</div>
+
+<h2>📊 Bilan UI/UX complet (0.58.0 → 0.58.9)</h2>
+
+<table>
+<tr><th>Composant premium</th><th>Pages déployées</th><th>Total</th></tr>
+<tr><td><code>PageHero</code></td><td>statistiques · kanban · calendrier · matériels · paramètres · profil</td><td><b>6</b></td></tr>
+<tr><td><code>EmptyState</code></td><td>patients · interventions · signalements · achats · maintenance · commandes</td><td><b>6</b></td></tr>
+<tr><td><code>Avatar</code></td><td>UserMenu (×2) · Profil · liste users · cards Kanban · <b>liste DI</b></td><td><b>5 endroits</b></td></tr>
+<tr><td><code>Tabs</code></td><td>paramètres · profil</td><td><b>2</b></td></tr>
+<tr><td><code>Toast</code></td><td>kanban · interventions · patients · parametres-rgpd · utilisateurs · carte · <b>consentements · statistiques-activite · maintenance</b></td><td><b>9</b></td></tr>
+<tr><td><code>SkeletonRow</code></td><td>interventions · patients · <b>signalements · achats · maintenance · commandes</b></td><td><b>6</b></td></tr>
+<tr><td><code>Modal</code> premium</td><td><b>NEW</b> : Backdrop blur partout</td><td>Global</td></tr>
+<tr><td><b>Dark mode</b></td><td><b>NEW</b> : 6 nouveaux composants premium</td><td>Global</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.9
+npm install --legacy-peer-deps
+npm test                              # 3490 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.9 - Modales premium + Dark mode + Skeleton 4 listes + Avatar DI + Toast suite"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>toast.info()</b> pour les infos non-critiques (vs error/success)</li>
+<li><b>Pagination améliorée</b> : cursor-based + animations entre pages</li>
+<li><b>Refonte FilterBar</b> avec pills modernes (au lieu de boutons basiques)</li>
+<li><b>Animations entre routes</b> (page transitions) avec next/transition</li>
+<li><b>Refonte dropdown</b> <code>&lt;select&gt;</code> natifs avec un composant custom</li>
+<li><b>Migration toast suite</b> : consent-verifications (2), statistiques (1), statistiques-rgpd (1), changelog (1), audit (1), admin-perf (1) — pour atteindre 0 alert natif</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.9 · 4 juin 2026 · 3490 Vitest · UI Phase 8 MEGA (Modales + Dark + Skeleton + Avatar + Toast)</footer>
+</div></body></html>

@@ -102,3 +102,75 @@ export function SkeletonGrid({ count = 4, cols = 4 }) {
     </div>
   );
 }
+
+// =============================================================
+//  0.58.11 : nouveaux variants Skeleton
+// =============================================================
+
+/**
+ * SkeletonCard — Card autonome avec icon + titre + valeur + sparkline
+ * (mimique d'un KpiCard ou d'une card métrique)
+ */
+export function SkeletonCard({ height = 130, showSparkline = false }) {
+  return (
+    <div style={{
+      background: "var(--av-g0)",
+      border: "1px solid var(--av-g200)",
+      borderRadius: "var(--av-r-lg)",
+      padding: 18,
+      minHeight: height,
+      display: "flex",
+      flexDirection: "column",
+      gap: 10,
+    }}>
+      {/* Icon + label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Skeleton variant="circle" size={32} />
+        <Skeleton w="55%" h={11} />
+      </div>
+      {/* Valeur principale */}
+      <Skeleton w="45%" h={28} />
+      {/* Détail */}
+      <Skeleton w="70%" h={11} />
+      {/* Sparkline éventuel */}
+      {showSparkline && (
+        <Skeleton w="100%" h={32} style={{ marginTop: "auto" }} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * SkeletonAvatar — Avatar circulaire + nom + sous-titre optionnel
+ * Idéal pour les listes d'utilisateurs / contacts.
+ */
+export function SkeletonAvatar({ size = 32, showName = true, showSub = false }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <Skeleton variant="circle" size={size} />
+      {showName && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+          <Skeleton w="55%" h={12} />
+          {showSub && <Skeleton w="35%" h={10} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * SkeletonKpi — Rangée de N cards KPI alignées (mimique de KpiRow)
+ */
+export function SkeletonKpi({ count = 4 }) {
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: `repeat(${count}, 1fr)`,
+      gap: 12,
+    }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonCard key={i} height={100} />
+      ))}
+    </div>
+  );
+}

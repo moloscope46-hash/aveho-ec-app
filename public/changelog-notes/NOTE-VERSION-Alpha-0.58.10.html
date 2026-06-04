@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.10 — ZÉRO alert + FilterBar pills + Select + PageTransition</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#142131 0%,#3d2f5e 50%,#7a6fb0 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(191,181,221,.20) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#dcd5ef;font-weight:700;background:rgba(122,111,176,.22);border:1px solid rgba(191,181,221,.40);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#bfb5dd;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(191,181,221,.5)}70%{box-shadow:0 0 0 10px rgba(191,181,221,0)}100%{box-shadow:0 0 0 0 rgba(191,181,221,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#bfb5dd}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#dcd5ef;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#dcd5ef}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7a6fb0,#7CC8C8)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#f3effa,#faf8ff);border-color:#d6c9ec;border-left:4px solid var(--violet)}
+.panel.win{background:linear-gradient(135deg,#eef9f7,#f4faf9);border-color:#bfe6e6;border-left:4px solid var(--teal);font-size:15px}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--violet);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--violet)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* FILTERBAR DEMO */
+.fb-demo{display:inline-flex;gap:6px;align-items:center;padding:5px;background:linear-gradient(180deg,#fafbfc,#f4f7fa);border:1px solid #e3e9ee;border-radius:99px;margin:14px 0;flex-wrap:wrap}
+.fb-label{font-size:11px;color:#6c7a89;font-weight:700;padding:0 12px 0 14px;letter-spacing:.5px;text-transform:uppercase}
+.fb-chip{cursor:pointer;border:1px solid transparent;font-size:12px;font-weight:600;padding:7px 14px;border-radius:99px;background:transparent;color:#6c7a89;display:inline-flex;align-items:center;gap:5px}
+.fb-chip:hover:not(.on){color:#142131;background:#fff;border-color:#e3e9ee;transform:translateY(-1px);box-shadow:0 2px 4px rgba(20,33,49,.04)}
+.fb-chip.on{color:#fff;background:linear-gradient(135deg,#7CC8C8,#5db5b5);box-shadow:0 4px 10px rgba(124,200,200,.40),0 2px 4px rgba(124,200,200,.30);transform:translateY(-1px)}
+.fb-cnt{margin-left:3px;font-weight:600;padding:1px 7px;border-radius:99px;font-size:10.5px;background:rgba(255,255,255,.20)}
+.fb-chip:not(.on) .fb-cnt{background:#eef1f4;color:#6c7a89}
+
+/* SELECT DEMO */
+.sel-demo{width:280px;padding:9px 14px;background:#fff;border:1.5px solid #e3e9ee;border-radius:10px;font-size:13.5px;font-weight:500;color:#142131;display:inline-flex;align-items:center;gap:8px;cursor:pointer;margin:8px 0;font-family:inherit}
+.sel-demo.open{border-color:#7CC8C8;box-shadow:0 0 0 3px rgba(124,200,200,.20)}
+.sel-demo .sel-flex{flex:1}
+.sel-demo i.ch{font-size:14px;color:#8a98a8;transition:transform .2s}
+.sel-demo.open i.ch{transform:rotate(180deg)}
+.sel-dd{width:280px;background:#fff;border:1px solid #e3e9ee;border-radius:12px;box-shadow:0 20px 40px rgba(20,33,49,.18),0 8px 16px rgba(20,33,49,.10);overflow:hidden;margin-top:6px}
+.sel-search{padding:10px 12px;border-bottom:1px solid #f4f7fa;position:relative}
+.sel-search input{width:100%;padding:7px 12px 7px 32px;background:#f4f7fa;border:1px solid #e3e9ee;border-radius:8px;font-size:13;font-family:inherit;outline:none}
+.sel-search::before{content:"🔍";position:absolute;left:22px;top:50%;transform:translateY(-50%);font-size:11px}
+.sel-opt{padding:10px 12px;font-size:13;color:#142131;cursor:pointer;display:flex;align-items:center;gap:10px;border-radius:8px;margin:4px}
+.sel-opt:hover{background:linear-gradient(90deg,rgba(124,200,200,.14) 0%,transparent 100%)}
+.sel-opt.selected{font-weight:600;background:linear-gradient(90deg,rgba(124,200,200,.18) 0%,transparent 100%)}
+.sel-opt i.ic{font-size:16;color:#185FA5}
+.sel-opt.selected i.ic{color:#7CC8C8}
+.sel-opt .desc{font-size:11.5px;color:#8a98a8;font-weight:400;margin-top:2px}
+.sel-opt i.chk{font-size:15;color:#7CC8C8;margin-left:auto}
+
+/* TOAST DEMO */
+.toast-stack{display:flex;flex-direction:column;gap:10px;margin:14px 0;max-width:380px;margin-left:auto}
+.toast-mock{padding:14px 18px;border-radius:12px;color:#fff;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13;box-shadow:0 12px 30px rgba(20,33,49,.25)}
+.toast-mock.success{background:linear-gradient(135deg,#5aa05a,#3e8540)}
+.toast-mock.error{background:linear-gradient(135deg,#c0392b,#a93026)}
+.toast-mock.info{background:linear-gradient(135deg,#185FA5,#1370c2)}
+.toast-mock.warning{background:linear-gradient(135deg,#EF9F27,#c8801f);color:#fff}
+.toast-mock.neutral{background:linear-gradient(135deg,#4a5868,#2c3a4a);color:#fff}
+
+/* PAGINATION DEMO */
+.pag-demo{display:flex;justify-content:space-between;align-items:center;padding:16px 4px 8px;border-top:1px solid #eef1f4;margin:14px 0;gap:14px;flex-wrap:wrap}
+.pag-info{font-size:13px;color:#6c7a89;display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.pag-info b{color:#142131;font-weight:700;padding:1px 7px;background:rgba(124,200,200,.12);border-radius:99px;border:1px solid rgba(124,200,200,.25);font-size:12px}
+.pag-btns{display:flex;gap:6px}
+.pag-btn{background:#fff;border:1.5px solid #e3e9ee;color:#4a5868;width:36px;height:36px;border-radius:10px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pag-btn:hover{border-color:#7CC8C8;background:rgba(124,200,200,.08);color:#142131;transform:translateY(-1px);box-shadow:0 2px 6px rgba(124,200,200,.15)}
+.pag-btn.active{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;border-color:transparent;box-shadow:0 4px 10px rgba(124,200,200,.35)}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 9 — POLISH FINAL</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.10 — ZÉRO alert natif + FilterBar pills + Select + PageTransition<small>6 chantiers · 0 alert restant (41 éliminés) · Nouveau composant Select · Animation entre routes · Pagination premium</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.10-alpha</code></span>
+    <span><b>Tests :</b> 3521 Vitest (+31)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi v"><div class="top-kpi-val">0</div><div class="top-kpi-lbl">alert natif restant</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">41</div><div class="top-kpi-lbl">alerts migrés cumulés</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Composant Select (10 total)</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+31</div><div class="top-kpi-lbl">Tests Vitest (3521)</div></div>
+</div>
+
+<div class="panel win">
+🏆 <strong>Étape franchie</strong> : <strong>ZÉRO alert() natif</strong> dans toute l'app (vérifié par test scan automatique). 41 alerts éliminés au total depuis 0.58.7. Tous remplacés par des toasts premium animés non-bloquants.
+</div>
+
+<h2>🔔 toast.neutral() + récap toast complets</h2>
+
+<div class="panel">
+<p style="margin:0">5 helpers disponibles maintenant. Le nouveau <code>toast.neutral()</code> a une durée réduite (2500ms) pour les infos non-critiques comme "Lien copié".</p>
+</div>
+
+<div class="toast-stack">
+  <div class="toast-mock success">✓ Sauvegardé avec succès</div>
+  <div class="toast-mock info">ℹ️ Vérification en cours…</div>
+  <div class="toast-mock warning">⚠️ Action irréversible</div>
+  <div class="toast-mock error">✕ Erreur réseau</div>
+  <div class="toast-mock neutral">📋 Lien copié</div>
+</div>
+
+<pre>// Helpers disponibles
+toast.success(title, message);
+toast.info(title, message);
+toast.warning(title, message);
+toast.error(title, message);
+toast.neutral(title, message);  // NEW : duration 2500ms</pre>
+
+<h2>📍 FilterBar refonte pills modernes</h2>
+
+<div class="panel">
+<p style="margin:0">Le composant React reste identique (compat 100%), c'est <strong>le CSS qui a été refondu</strong>. Container pill arrondi 99px + chips animées au hover + chip active avec gradient teal et shadow multi-couches.</p>
+</div>
+
+<div class="fb-demo">
+  <span class="fb-label">Filtrer</span>
+  <button class="fb-chip on">📋 Toutes <span class="fb-cnt">24</span></button>
+  <button class="fb-chip">⏳ En cours <span class="fb-cnt">5</span></button>
+  <button class="fb-chip">⚠️ Urgentes <span class="fb-cnt">2</span></button>
+  <button class="fb-chip">✅ Résolues <span class="fb-cnt">17</span></button>
+</div>
+
+<table>
+<tr><th>Élément</th><th>Avant</th><th>Après</th></tr>
+<tr><td>Container</td><td>Pas de container</td><td>Pill arrondi 99px + gradient + border</td></tr>
+<tr><td>Chip inactive</td><td>Background gris plat</td><td>Transparent + hover blanc + shadow + translate</td></tr>
+<tr><td>Chip active</td><td>Teal flat</td><td>Gradient 135° + shadow 4px+10px + inner shadow</td></tr>
+<tr><td>Compteur</td><td>Opacité 0.7</td><td>Pill background dans la pill (matrioshka)</td></tr>
+</table>
+
+<h2>🎯 Composant Select custom premium</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau composant <code>Select</code> qui remplace les <code>&lt;select&gt;</code> natifs moches. 310 lignes, prêt à l'emploi avec recherche, keyboard nav, animations.</p>
+</div>
+
+<div class="sel-demo open">
+  <i style="color:#185FA5">⏳</i>
+  <span class="sel-flex">En cours</span>
+  <i class="ch">▼</i>
+</div>
+
+<div class="sel-dd">
+  <div class="sel-search">
+    <input placeholder="Rechercher…" />
+  </div>
+  <div class="sel-opt">
+    <i class="ic">➕</i>
+    <div style="flex:1">
+      <div>Nouvelle</div>
+    </div>
+  </div>
+  <div class="sel-opt selected">
+    <i class="ic">⏳</i>
+    <div style="flex:1">
+      <div>En cours</div>
+      <div class="desc">DI prise en charge par un technicien</div>
+    </div>
+    <i class="chk">✓</i>
+  </div>
+  <div class="sel-opt">
+    <i class="ic" style="color:#5aa05a">✓</i>
+    <div style="flex:1">
+      <div>Résolue</div>
+    </div>
+  </div>
+</div>
+
+<pre>&lt;Select
+  value={statut}
+  onChange={setStatut}
+  options={[
+    { value: 'Nouvelle', label: 'Nouvelle', icon: 'ti-plus' },
+    {
+      value: 'En cours',
+      label: 'En cours',
+      icon: 'ti-clock',
+      desc: 'DI prise en charge par un technicien'
+    },
+    { value: 'Résolue', label: 'Résolue', icon: 'ti-check', iconColor: '#5aa05a' },
+  ]}
+  searchable    // active la recherche live
+  placeholder='Choisir un statut…'
+/&gt;</pre>
+
+<table>
+<tr><th>Feature</th><th>Détail</th></tr>
+<tr><td><b>3 variants</b></td><td>default · ghost · filled</td></tr>
+<tr><td><b>3 tailles</b></td><td>sm · md · lg</td></tr>
+<tr><td><b>Recherche</b></td><td><code>searchable=true</code> → input avec icon + filter live</td></tr>
+<tr><td><b>Animation</b></td><td>av-select-pop 200ms (fade + translateY + scale)</td></tr>
+<tr><td><b>Keyboard</b></td><td>↑↓ navigation · Enter sélection · Esc ferme · Space ouvre</td></tr>
+<tr><td><b>Click outside</b></td><td>Ferme automatiquement</td></tr>
+<tr><td><b>Options riches</b></td><td>icon + label + desc + iconColor custom</td></tr>
+<tr><td><b>A11y</b></td><td>role listbox/option + aria-selected/expanded/haspopup</td></tr>
+</table>
+
+<h2>🔀 PageTransition entre routes</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau composant client qui détecte le changement de pathname via <code>usePathname()</code> de next/navigation et déclenche une <strong>animation fade + slide-up 280ms</strong> sur chaque transition de route. Intégré globalement dans <code>app/layout.js</code>.</p>
+</div>
+
+<pre>// app/components/PageTransition.js
+import { usePathname } from 'next/navigation';
+
+export default function PageTransition({ children }) {
+  const pathname = usePathname();
+  return (
+    &lt;div
+      key={pathname}
+      style={{
+        animation: 'av-page-enter 280ms cubic-bezier(.2, .8, .2, 1)',
+      }}
+    &gt;
+      {children}
+    &lt;/div&gt;
+  );
+}
+
+// app/globals.css
+@keyframes av-page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}</pre>
+
+<p>✅ <strong>Zéro dépendance ajoutée</strong> (pas de framer-motion). CSS pur + state React.</p>
+
+<h2>📄 Pagination premium</h2>
+
+<div class="panel">
+<p style="margin:0">Boutons avec hover translateY + shadow teal + page active avec gradient. Info de page en pill teal.</p>
+</div>
+
+<div class="pag-demo">
+  <div class="pag-info">Page <b>2</b> sur <b>5</b> · <b>50</b> résultats au total</div>
+  <div class="pag-btns">
+    <div class="pag-btn">‹</div>
+    <div class="pag-btn">1</div>
+    <div class="pag-btn active">2</div>
+    <div class="pag-btn">3</div>
+    <div class="pag-btn">4</div>
+    <div class="pag-btn">5</div>
+    <div class="pag-btn">›</div>
+  </div>
+</div>
+
+<h2>📊 Bilan UI/UX complet (0.58.0 → 0.58.10)</h2>
+
+<table>
+<tr><th>Composant premium</th><th>Pages déployées</th><th>Total</th></tr>
+<tr><td><code>PageHero</code></td><td>statistiques · kanban · calendrier · matériels · paramètres · profil</td><td><b>6</b></td></tr>
+<tr><td><code>EmptyState</code></td><td>patients · interventions · signalements · achats · maintenance · commandes</td><td><b>6</b></td></tr>
+<tr><td><code>Avatar</code></td><td>UserMenu (×2) · Profil · liste users · Kanban · liste DI</td><td><b>5 endroits</b></td></tr>
+<tr><td><code>Tabs</code></td><td>paramètres · profil</td><td><b>2</b></td></tr>
+<tr><td><code>Toast</code></td><td>+ 5 helpers (success/info/warning/error/neutral)</td><td><b>15+ pages</b></td></tr>
+<tr><td><code>SkeletonRow</code></td><td>6 listes</td><td><b>6</b></td></tr>
+<tr><td><b>Modal premium</b></td><td>Backdrop blur global</td><td>Global</td></tr>
+<tr><td><b>Dark mode</b></td><td>Tous composants premium</td><td>Global</td></tr>
+<tr><td><b>FilterBar pills</b></td><td><b>NEW</b> : refonte CSS pills modernes</td><td>Global</td></tr>
+<tr><td><code>Select</code></td><td><b>NEW</b> : composant prêt à l'emploi</td><td>—</td></tr>
+<tr><td><code>PageTransition</code></td><td><b>NEW</b> : animation entre toutes les routes</td><td>Global</td></tr>
+<tr><td><b>Pagination premium</b></td><td><b>NEW</b> : boutons + page active gradient</td><td>Global</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.10
+npm install --legacy-peer-deps
+npm test                              # 3521 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.10 - 0 alert natif + FilterBar pills + Select + PageTransition + Pagination"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Migrer les &lt;select&gt; natifs</b> vers le nouveau composant <code>Select</code> (parametres, profil, modals interventions)</li>
+<li><b>Refonte Modal API</b> : slot 'header' avec icon coloré customisable</li>
+<li><b>Animations entre tabs</b> : slide horizontal au lieu de fade</li>
+<li><b>DatePicker custom</b> (remplacer input type=date natif)</li>
+<li><b>Combobox</b> : multi-select avec tags (extension du Select)</li>
+<li><b>Skeleton variants</b> : SkeletonCard, SkeletonAvatar pour les cards d'accueil</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.10 · 4 juin 2026 · 3521 Vitest · UI Phase 9 (0 alert · FilterBar · Select · PageTransition · Pagination)</footer>
+</div></body></html>

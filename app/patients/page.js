@@ -17,6 +17,7 @@ import TopBar from "../TopBar";
 import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
+import { EmptyState, toast, SkeletonRow } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import ConsentementRGPD from "../ConsentementRGPD";
 import PatientPreview from "../PatientPreview";
@@ -377,7 +378,12 @@ export default function Patients() {
               )}
             </div>
           )}
-          {loading ? <StateMsg>Chargement…</StateMsg>
+          {loading ? (
+            /* 0.58.8 : SkeletonRow x 5 au lieu du "Chargement…" */
+            <div style={{ background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12, padding: 6 }}>
+              {[0,1,2,3,4].map((i) => <SkeletonRow key={i} cols={6} />)}
+            </div>
+          )
             : (() => {
                 // Appliquer les filtres avancés sur la liste rows
                 const filtered = rows.filter((r) => {
@@ -398,8 +404,25 @@ export default function Patients() {
                   return true;
                 });
                 if (filtered.length === 0) {
-                  if (rows.length === 0) return <StateMsg>Aucun patient. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={openNew}>Créer le premier</a></StateMsg>;
-                  return <StateMsg>Aucun patient ne correspond aux filtres.</StateMsg>;
+                  if (rows.length === 0) return (
+                    <EmptyState
+                      icon="ti-user-plus"
+                      variant="teal"
+                      title="Aucun patient pour le moment"
+                      message="Crée ton premier patient pour commencer à suivre ses interventions, son matériel et ses consentements RGPD."
+                      actionLabel="Créer le premier patient"
+                      onAction={openNew}
+                    />
+                  );
+                  return (
+                    <EmptyState
+                      icon="ti-filter-off"
+                      variant="gray"
+                      title="Aucun résultat"
+                      message="Aucun patient ne correspond aux filtres actuels. Essaie de les ajuster ou de les réinitialiser."
+                      compact
+                    />
+                  );
                 }
                 return (
                   <>
@@ -451,7 +474,7 @@ export default function Patients() {
                           </button>
                           <button
                             onClick={async () => {
-                              if (!auth.can("supprimer")) { alert("Vous n'avez pas le droit de supprimer."); return; }
+                              if (!auth.can("supprimer")) { toast.error("Vous n'avez pas le droit de supprimer."); return; }
                               if (!window.confirm(`Supprimer définitivement ${selectedIds.size} ${lbl("patients", "patient").toLowerCase()}${selectedIds.size > 1 ? "s" : ""} ?\n\nCette action est irréversible.`)) return;
                               setBulkBusy(true);
                               try {
@@ -462,8 +485,9 @@ export default function Patients() {
                                 if (error) throw error;
                                 setSelectedIds(new Set());
                                 await load();
+                                toast.success(`${selectedIds.size} patient(s) supprimé(s).`);
                               } catch (e) {
-                                alert("Erreur suppression : " + e.message);
+                                toast.error("Erreur suppression : " + e.message);
                               } finally { setBulkBusy(false); }
                             }}
                             disabled={bulkBusy || !auth.can("supprimer")}

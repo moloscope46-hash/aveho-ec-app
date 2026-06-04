@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.12 — TimePicker + Migration 5 selects + Toast undo + Dialog + Drawer</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#142131 0%,#185FA5 55%,#7CC8C8 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(122,111,176,.20) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--teal)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* TimePicker demo */
+.tp-demo{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid #7CC8C8;border-radius:10px;font-size:13.5;font-weight:500;color:#142131;cursor:pointer;min-width:220px;margin:10px 0;box-shadow:0 0 0 3px rgba(124,200,200,.20)}
+.tp-demo i.clock{color:#185FA5;font-size:16}
+.tp-demo .flex{flex:1}
+.tp-demo .chev{color:#8a98a8;font-size:14;transform:rotate(180deg)}
+.tp-drop{width:220px;background:#fff;border:1px solid #e3e9ee;border-radius:12px;box-shadow:0 20px 40px rgba(20,33,49,.18);max-height:180px;overflow-y:auto;padding:4px;margin-bottom:14px}
+.tp-slot{padding:9px 12px;font-size:13;color:#142131;cursor:pointer;display:flex;align-items:center;gap:10px;border-radius:8px;font-variant-numeric:tabular-nums}
+.tp-slot:hover{background:rgba(124,200,200,.08)}
+.tp-slot.selected{background:linear-gradient(90deg,rgba(124,200,200,.18) 0%,transparent 100%);font-weight:600}
+.tp-slot.selected i.c{color:#7CC8C8}
+.tp-slot i{color:#8a98a8;font-size:13}
+
+/* Toast undo demo */
+.toast-mock{padding:12px 14px;border-radius:12px;color:#142131;background:#fff;border:1px solid #5aa05a30;border-left:4px solid #5aa05a;display:flex;align-items:start;gap:11px;font-size:13.5;box-shadow:0 10px 25px rgba(20,33,49,.15);max-width:380px;margin:14px 0}
+.toast-mock .ic-wrap{width:30px;height:30px;border-radius:8px;background:#eef9ef;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#5aa05a;font-size:18}
+.toast-mock .body{flex:1}
+.toast-mock .body .t{font-weight:700;font-size:13.5;color:#142131;margin-bottom:8px}
+.toast-action-pill{display:inline-flex;align-items:center;gap:5px;background:#5aa05a15;color:#5aa05a;border:1px solid #5aa05a40;padding:5px 12px;border-radius:99px;font-weight:700;font-size:11.5;letter-spacing:.2px;cursor:pointer}
+.toast-action-pill:hover{background:#5aa05a25;transform:translateY(-1px);box-shadow:0 2px 6px #5aa05a40}
+
+/* Dialog confirm preview */
+.dialog-confirm-preview{position:relative;background:linear-gradient(135deg,#e3e9ee 0%,#cfd8e0 100%);border-radius:14px;padding:30px;margin:14px 0;display:flex;justify-content:center}
+.dialog-inner{width:360px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px rgba(20,33,49,.30)}
+.dialog-head{display:flex;align-items:center;gap:12px;padding:18px 22px;color:#fff;background:#C9867F;position:relative;overflow:hidden}
+.dialog-head .ic{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:19}
+.dialog-head .t{font-weight:700;font-size:15;flex:1}
+.dialog-head .x{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.10);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16}
+.dialog-body{padding:22px 24px;font-size:13.5;color:#4a5868;line-height:1.55}
+.dialog-preview-block{margin-top:14px;padding:12px 14px;background:#f4f7fa;border:1px dashed #e3e9ee;border-radius:10px;font-size:12.5;color:#4a5868}
+.dialog-foot{padding:14px 22px 18px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;background:linear-gradient(180deg,#fafbfc,#f4f7fa)}
+.dialog-foot button{padding:8px 16px;border-radius:10px;font-weight:600;font-size:13;border:none;cursor:pointer;font-family:inherit}
+.dialog-foot .ghost{background:#fff;border:1px solid #e3e9ee;color:#4a5868}
+.dialog-foot .danger{background:linear-gradient(135deg,#C9867F,#b06d65);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(201,134,127,.40)}
+
+/* Drawer demo */
+.drawer-demo-wrap{position:relative;background:linear-gradient(135deg,#e3e9ee 0%,#cfd8e0 100%);border-radius:14px;height:380px;margin:14px 0;overflow:hidden;display:flex;justify-content:flex-end}
+.drawer-bg-fake{position:absolute;inset:0;background:rgba(13,24,34,.55);backdrop-filter:blur(6px) saturate(140%)}
+.drawer-inner{position:relative;width:380px;background:#fff;display:flex;flex-direction:column;box-shadow:-30px 0 60px rgba(20,33,49,.30)}
+.drawer-head{padding:18px 22px;background:#142131;color:#fff;display:flex;align-items:center;gap:12px;position:relative;overflow:hidden}
+.drawer-head .ic{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:19;flex-shrink:0}
+.drawer-head .t{font-weight:700;font-size:15}
+.drawer-head .st{font-size:12;opacity:.85;margin-top:2px}
+.drawer-head .x{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16}
+.drawer-body{flex:1;padding:20px 22px;font-size:13;color:#4a5868}
+.drawer-body .field{margin-bottom:14px}
+.drawer-body .field label{display:block;font-size:11px;font-weight:700;letter-spacing:.5px;color:#8a98a8;text-transform:uppercase;margin-bottom:5px}
+.drawer-body .field .input{padding:9px 12px;background:#f4f7fa;border:1px solid #e3e9ee;border-radius:8px;color:#142131}
+.drawer-foot{padding:14px 22px 18px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;background:linear-gradient(180deg,#fafbfc,#f4f7fa)}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 11 — POLISH MAX</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.12 — 5 chantiers : TimePicker + Migration selects + Toast undo + Dialog + Drawer<small>3 nouveaux composants premium · Modal Nouvelle DI 100% modernisé · API impérative pour confirm/prompt/alert · Panneau latéral coulissant</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.12-alpha</code></span>
+    <span><b>Tests :</b> 3605 Vitest (+38)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">+3</div><div class="top-kpi-lbl">Composants (14 total)</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">5</div><div class="top-kpi-lbl">Selects migrés (modal DI)</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Toast helper (6 total)</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+38</div><div class="top-kpi-lbl">Tests Vitest (3605)</div></div>
+</div>
+
+<h2>⏰ TimePicker custom</h2>
+
+<div class="panel">
+<p style="margin:0">Complément du <code>DatePicker</code> pour les heures de RDV/intervention. Dropdown avec créneaux générés automatiquement selon le <code>step</code> (15/30/60 min). Auto-scroll vers la valeur sélectionnée.</p>
+</div>
+
+<div class="tp-demo">
+  <i class="clock">🕐</i>
+  <span class="flex">14:30</span>
+  <i class="chev">▼</i>
+</div>
+
+<div class="tp-drop">
+  <div class="tp-slot"><i>🕐</i>14:00</div>
+  <div class="tp-slot"><i>🕐</i>14:15</div>
+  <div class="tp-slot selected"><i class="c">🕐</i>14:30 <span style="margin-left:auto;color:#7CC8C8">✓</span></div>
+  <div class="tp-slot"><i>🕐</i>14:45</div>
+  <div class="tp-slot"><i>🕐</i>15:00</div>
+  <div class="tp-slot"><i>🕐</i>15:15</div>
+</div>
+
+<pre>&lt;TimePicker
+  value={time}
+  onChange={setTime}
+  step={15}             // créneaux toutes les 15 min
+  minTime='08:00'       // horaires bureau
+  maxTime='19:00'
+  size='md'
+/&gt;</pre>
+
+<h2>🎯 Migration 5 selects du modal Nouvelle DI</h2>
+
+<div class="panel">
+<p style="margin:0">Le modal de création d'intervention avait 5 <code>&lt;select&gt;</code> natifs et 1 input date. Tout migré vers <code>Select</code> + <code>DatePicker</code>. Les selects matériel et patient ont <code>searchable</code> activé (listes souvent longues : 200+ matériels, 100+ patients).</p>
+</div>
+
+<table>
+<tr><th>Champ</th><th>Avant</th><th>Après</th><th>Bonus</th></tr>
+<tr><td>Type de demande</td><td>&lt;select&gt; natif</td><td>Select + ti-tag</td><td>—</td></tr>
+<tr><td>Échéance souhaitée</td><td>&lt;input type='date'&gt;</td><td>DatePicker</td><td>Format FR</td></tr>
+<tr><td>Matériel concerné</td><td>&lt;select&gt; natif</td><td>Select + ti-tool</td><td><b>searchable</b></td></tr>
+<tr><td>Patient concerné</td><td>&lt;select&gt; natif</td><td>Select + ti-user</td><td><b>searchable</b></td></tr>
+<tr><td>Dépôt</td><td>&lt;select&gt; natif</td><td>Select + ti-building-warehouse</td><td>—</td></tr>
+<tr><td>Zone</td><td>&lt;select&gt; natif</td><td>Select + ti-map-pin</td><td>—</td></tr>
+</table>
+
+<p style="font-size:13px;color:#6c7a89;font-style:italic">→ Plus aucun <code>&lt;select&gt;</code> natif dans <code>/interventions/page.js</code>. Taper 3 lettres filtre instantanément la liste de matériels.</p>
+
+<h2>↩️ Toast undo + action button stylisé</h2>
+
+<div class="panel">
+<p style="margin:0">Action button refondu en <strong>pill</strong> (border-radius 99px) avec icon <code>ti-arrow-back-up</code>, hover translateY + box-shadow. Plus de simple lien underline. Nouveau helper <code>toast.undo()</code> avec durée 6s pour laisser le temps de réagir.</p>
+</div>
+
+<div class="toast-mock">
+  <div class="ic-wrap">✓</div>
+  <div class="body">
+    <div class="t">Patient supprimé</div>
+    <button class="toast-action-pill">↶ Annuler</button>
+  </div>
+  <div style="color:#8a98a8;font-size:14;width:22;height:22;display:flex;align-items:center;justify-content:center">✕</div>
+</div>
+
+<pre>// 6 helpers disponibles
+toast.success(title, message);
+toast.info(title, message);
+toast.warning(title, message);
+toast.error(title, message);
+toast.neutral(title, message);   // 2500ms
+toast.undo(title, onUndo);       // 6000ms + pill 'Annuler'
+
+// Exemple complet
+const snapshot = { ...p };
+await deletePatient(p.id);
+toast.undo('Patient supprimé', async () => {
+  await restorePatient(snapshot);
+  toast.success('Restauration effectuée');
+});</pre>
+
+<h2>💬 Composant Dialog (confirm/prompt/alert)</h2>
+
+<div class="panel">
+<p style="margin:0">API <strong>impérative</strong> qui retourne une <code>Promise</code> — au-dessus de Modal mais ergonomique. Plus besoin de boilerplate useState pour les confirmations simples.</p>
+</div>
+
+<div class="dialog-confirm-preview">
+  <div class="dialog-inner">
+    <div class="dialog-head">
+      <div class="ic">⚠</div>
+      <div class="t">Supprimer ce patient ?</div>
+      <div class="x">✕</div>
+    </div>
+    <div class="dialog-body">
+      Cette action est irréversible.
+      <div class="dialog-preview-block">
+        M. Jean Dupont — Chambre 12 — N° dossier 1234
+      </div>
+    </div>
+    <div class="dialog-foot">
+      <button class="ghost">Annuler</button>
+      <button class="danger">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<h3>3 méthodes</h3>
+
+<table>
+<tr><th>Méthode</th><th>Signature</th><th>Retour</th></tr>
+<tr><td><code>Dialog.confirm</code></td><td>{title, message, danger, preview}</td><td><code>Promise&lt;boolean&gt;</code></td></tr>
+<tr><td><code>Dialog.prompt</code></td><td>{title, message, defaultValue, placeholder, validate, multiline}</td><td><code>Promise&lt;string&#124;null&gt;</code></td></tr>
+<tr><td><code>Dialog.alert</code></td><td>{title, message, variant: info/success/warning/danger}</td><td><code>Promise&lt;void&gt;</code></td></tr>
+</table>
+
+<pre>// AVANT - boilerplate verbeux
+const [showConfirm, setShowConfirm] = useState(false);
+const [pendingPatient, setPendingPatient] = useState(null);
+function askDelete(p) { setPendingPatient(p); setShowConfirm(true); }
+&lt;Modal open={showConfirm} ...&gt;...&lt;/Modal&gt;
+
+// APRÈS - impératif
+const ok = await Dialog.confirm({
+  title: 'Supprimer ce patient ?',
+  message: 'Cette action est irréversible.',
+  danger: true,
+  preview: `${p.nom} ${p.prenom} — Chambre ${p.chambre}`,
+});
+if (ok) {
+  await deletePatient(p.id);
+  toast.undo('Patient supprimé', () => restore(p));
+}
+
+// Prompt avec validation
+const reason = await Dialog.prompt({
+  title: 'Motif de rejet',
+  placeholder: 'Expliquer pourquoi…',
+  validate: (v) => v.length &lt; 10 ? 'Au moins 10 caractères' : null,
+  multiline: true,    // textarea + Cmd/Ctrl+Enter pour valider
+});</pre>
+
+<h2>📐 Drawer Side</h2>
+
+<div class="panel">
+<p style="margin:0">Panneau latéral coulissant — alternative au Modal pour les longs formulaires ou vues de détails. Glisse depuis la droite (ou gauche) avec backdrop blur. 4 tailles disponibles.</p>
+</div>
+
+<div class="drawer-demo-wrap">
+  <div class="drawer-bg-fake"></div>
+  <div class="drawer-inner">
+    <div class="drawer-head">
+      <div class="ic">✏</div>
+      <div style="flex:1">
+        <div class="t">Modifier le patient</div>
+        <div class="st">#1234 — M. Dupont</div>
+      </div>
+      <div class="x">✕</div>
+    </div>
+    <div class="drawer-body">
+      <div class="field"><label>Nom</label><div class="input">Dupont</div></div>
+      <div class="field"><label>Prénom</label><div class="input">Jean</div></div>
+      <div class="field"><label>Chambre</label><div class="input">12</div></div>
+      <div class="field"><label>Date de naissance</label><div class="input">12 mars 1948</div></div>
+      <div class="field"><label>Numéro de Sécurité Sociale</label><div class="input">1 48 03 75 016 042</div></div>
+    </div>
+    <div class="drawer-foot">
+      <button style="padding:8px 16px;border-radius:10px;background:#fff;border:1px solid #e3e9ee;color:#4a5868;font-weight:600;font-size:13">Annuler</button>
+      <button style="padding:8px 16px;border-radius:10px;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;border:none;font-weight:700;font-size:13;box-shadow:0 4px 10px rgba(124,200,200,.4)">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<table>
+<tr><th>Size</th><th>Width</th><th>Usage</th></tr>
+<tr><td>sm</td><td>360px</td><td>Notifications, mini-actions</td></tr>
+<tr><td>md</td><td>480px</td><td>Formulaires standards</td></tr>
+<tr><td>lg</td><td>640px</td><td>Formulaires longs (édition patient/matériel)</td></tr>
+<tr><td>xl</td><td>800px</td><td>Vues complexes (détail intervention avec historique)</td></tr>
+</table>
+
+<pre>&lt;Drawer
+  open={open}
+  onClose={close}
+  title='Modifier le patient'
+  subtitle={`#${p.numero_dossier} — ${p.nom} ${p.prenom}`}
+  icon='ti-user-edit'
+  side='right'        // 'right' ou 'left'
+  size='lg'           // 640px
+  footer={
+    &lt;&gt;
+      &lt;button className='btn-ghost' onClick={close}&gt;Annuler&lt;/button&gt;
+      &lt;button className='btn-save' onClick={save}&gt;Enregistrer&lt;/button&gt;
+    &lt;/&gt;
+  }
+&gt;
+  &lt;form&gt;...&lt;/form&gt;
+&lt;/Drawer&gt;</pre>
+
+<h2>📊 Bilan composants premium (14 au total)</h2>
+
+<table>
+<tr><th>#</th><th>Composant</th><th>Depuis</th></tr>
+<tr><td>1</td><td><code>KpiCard</code></td><td>0.58.0</td></tr>
+<tr><td>2</td><td><code>Sparkline</code></td><td>0.58.0</td></tr>
+<tr><td>3</td><td><code>MetricCard</code></td><td>0.58.0</td></tr>
+<tr><td>4</td><td><code>Skeleton</code> (+6 variants : Text/Row/Grid/Card/Avatar/Kpi)</td><td>0.58.0 → 0.58.11</td></tr>
+<tr><td>5</td><td><code>EmptyState</code></td><td>0.58.0</td></tr>
+<tr><td>6</td><td><code>Toast</code> (6 helpers : success/info/warning/error/neutral/<b>undo</b>)</td><td>0.58.0 → <b>0.58.12</b></td></tr>
+<tr><td>7</td><td><code>PageHero</code></td><td>0.58.3</td></tr>
+<tr><td>8</td><td><code>Tabs</code> (+<code>TabPanel</code>)</td><td>0.58.3 → 0.58.11</td></tr>
+<tr><td>9</td><td><code>Avatar</code> + <code>AvatarGroup</code></td><td>0.58.4</td></tr>
+<tr><td>10</td><td><code>Select</code> custom</td><td>0.58.10</td></tr>
+<tr><td>11</td><td><code>DatePicker</code> custom</td><td>0.58.11</td></tr>
+<tr><td>12</td><td><code>Combobox</code> multi-select tags</td><td>0.58.11</td></tr>
+<tr><td>13</td><td><b><code>TimePicker</code> custom</b></td><td><b>0.58.12</b></td></tr>
+<tr><td>14</td><td><b><code>Dialog</code> (confirm/prompt/alert)</b></td><td><b>0.58.12</b></td></tr>
+<tr><td>15</td><td><b><code>Drawer</code> Side</b></td><td><b>0.58.12</b></td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.12
+npm install --legacy-peer-deps
+npm test                              # 3605 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.12 - TimePicker + Migration 5 selects modal DI + Toast undo + Dialog + Drawer Side"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>RangePicker</b> : sélection plage de dates avec presets (7j / 30j / 3 mois / année)</li>
+<li><b>Stepper</b> : wizard multi-étapes pour onboarding/setup avec barre de progression</li>
+<li><b>Toolbar contextuelle</b> : action bar qui apparaît quand des items sont sélectionnés en bulk (multi-suppression, multi-assignation...)</li>
+<li><b>Refonte Notifications panel</b> avec le composant Drawer (transition de l'actuel dropdown vers un panneau latéral plus confortable)</li>
+<li><b>Migrer <code>dialogs.alert()</code> legacy</b> vers <code>Dialog.alert()</code> premium (rétrocompatible)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.12 · 4 juin 2026 · 3605 Vitest · UI Phase 11 (TimePicker + Migration selects + Toast undo + Dialog + Drawer)</footer>
+</div></body></html>

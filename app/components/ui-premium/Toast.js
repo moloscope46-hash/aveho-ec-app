@@ -119,15 +119,25 @@ export function showToast({ type = "info", title, message, duration = 4000, acti
         ${actionLabel ? `
           <button data-toast-action style="
             margin-top:8px;
-            background:transparent;
+            background:${cfg.color}15;
             color:${cfg.color};
-            border:none;
-            padding:0;
-            font-weight:600;
-            font-size:12.5px;
+            border:1px solid ${cfg.color}40;
+            padding:5px 12px;
+            border-radius:99px;
+            font-weight:700;
+            font-size:11.5px;
             cursor:pointer;
-            text-decoration:underline;
-          ">${escapeHtml(actionLabel)}</button>
+            font-family:inherit;
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            transition:all 150ms ease;
+            letter-spacing:.2px;
+          " onmouseover="this.style.background='${cfg.color}25';this.style.transform='translateY(-1px)';this.style.boxShadow='0 2px 6px ${cfg.color}40';"
+             onmouseout="this.style.background='${cfg.color}15';this.style.transform='translateY(0)';this.style.boxShadow='none';">
+            <i class="ti ti-arrow-back-up" style="font-size:13px;"></i>
+            ${escapeHtml(actionLabel)}
+          </button>
         ` : ""}
       </div>
       <button data-toast-close style="
@@ -183,4 +193,16 @@ export const toast = {
   info:    (title, message, opts) => showToast({ type: "info", title, message, ...opts }),
   warning: (title, message, opts) => showToast({ type: "warning", title, message, ...opts }),
   error:   (title, message, opts) => showToast({ type: "error", title, message, ...opts }),
+  // 0.58.10 : helper neutre pour les infos non-critiques
+  neutral: (title, message, opts) => showToast({ type: "info", title, message, duration: 2500, ...opts }),
+  // 0.58.12 : helper undo — toast.undo("Patient supprimé", () => restorePatient(p))
+  //   Affiche un toast success avec un bouton "Annuler" et durée étendue (6s).
+  undo: (title, onUndo, opts) => showToast({
+    type: "success",
+    title,
+    duration: 6000,           // plus long pour laisser le temps de réagir
+    actionLabel: "Annuler",
+    onAction: onUndo,
+    ...opts,
+  }),
 };

@@ -10,6 +10,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { fmtDate } from "../../lib/format";
 import { logEvent } from "../../lib/events";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
@@ -381,9 +382,31 @@ function AchatsInner() {
             {auth.can("ecrire") && <Btn variant="new" icon="ti-plus" onClick={openNew}>Nouvelle demande d'achat</Btn>}
             {fStatut && <Btn variant="ghost" icon="ti-x" onClick={() => setFStatut("")}>Effacer filtre</Btn>}
           </div>
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : rows.length === 0 ? <StateMsg>Aucune demande d'achat. <a style={{ color: "#2a5a5a", fontWeight: 600, cursor: "pointer" }} onClick={openNew}>Créer la première</a></StateMsg>
-            : filtered.length === 0 ? <StateMsg>Aucune demande dans ce statut.</StateMsg>
+          {loading ? (
+            /* 0.58.9 : SkeletonRow x 4 */
+            <div style={{ background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12, padding: 6 }}>
+              {[0,1,2,3].map((i) => <SkeletonRow key={i} cols={5} />)}
+            </div>
+          )
+            : rows.length === 0 ? (
+              <EmptyState
+                icon="ti-shopping-cart"
+                variant="amber"
+                title="Aucune demande d'achat"
+                message="Crée ta première demande d'achat pour commander du matériel ou des consommables auprès du fournisseur."
+                actionLabel="Créer la première demande"
+                onAction={openNew}
+              />
+            )
+            : filtered.length === 0 ? (
+              <EmptyState
+                icon="ti-filter-off"
+                variant="gray"
+                title="Aucun résultat"
+                message="Aucune demande d'achat dans ce statut."
+                compact
+              />
+            )
             : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {filtered.map((c) => {

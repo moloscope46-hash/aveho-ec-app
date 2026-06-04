@@ -7,6 +7,7 @@ import { fmtDate, relativeTime, activityDotColor } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, FilterBar, IconButton } from "../ui";
+import { Avatar, EmptyState, toast } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
 import { dialogs } from "../dialogs";
@@ -151,7 +152,7 @@ export default function Utilisateurs() {
     setRoleModal(null); await loadAll();
   }
   async function delRole(r) {
-    if (r.systeme) { alert("Rôle système non supprimable."); return; }
+    if (r.systeme) { toast.error("Rôle système non supprimable."); return; }
     if (!await dialogs.confirm({ title: "Supprimer ce rôle ?", variant: "danger" })) return;
     await supabase.from("roles").delete().eq("id", r.id); await loadAll();
   }
@@ -350,7 +351,7 @@ export default function Utilisateurs() {
             mail_tentatives: (i.mail_tentatives || 0) + 1,
           }).eq("id", i.id);
         } catch {}
-        alert(`Échec : ${detail}`);
+        toast.error(`Échec : ${detail}`);
         await loadAll();
         return;
       }
@@ -361,7 +362,7 @@ export default function Utilisateurs() {
             mail_tentatives: (i.mail_tentatives || 0) + 1,
           }).eq("id", i.id);
         } catch {}
-        alert(`Échec : ${data.error || "raison inconnue"}`);
+        toast.error(`Échec : ${data.error || "raison inconnue"}`);
         await loadAll();
         return;
       }
@@ -373,10 +374,10 @@ export default function Utilisateurs() {
           mail_tentatives: (i.mail_tentatives || 0) + 1,
         }).eq("id", i.id);
       } catch {}
-      alert("Invitation renvoyée.");
+      toast.success("Invitation renvoyée.");
       await loadAll();
     } catch (e) {
-      alert("Échec : la fonction d'envoi d'email n'est pas configurée.\n" + (e?.message || ""));
+      toast.error("Échec : la fonction d'envoi d'email n'est pas configurée.\n" + (e?.message || ""));
     }
   }
 
@@ -632,7 +633,9 @@ export default function Utilisateurs() {
                         return (
                           <tr key={m.user_id} style={m.archive ? { opacity:.55 } : null}>
                             <td>
-                              <button onClick={()=>openUserInfo(m)} title="Voir les infos détaillées" style={{ background:"transparent", border:"none", padding:0, cursor:"pointer", fontFamily:"inherit", color:"#142131", fontWeight:600, textAlign:"left", display:"flex", alignItems:"center", gap:8 }}>
+                              <button onClick={()=>openUserInfo(m)} title="Voir les infos détaillées" style={{ background:"transparent", border:"none", padding:0, cursor:"pointer", fontFamily:"inherit", color:"#142131", fontWeight:600, textAlign:"left", display:"flex", alignItems:"center", gap:10 }}>
+                                {/* 0.58.6 : Avatar premium (gradient déterministe) */}
+                                <Avatar name={m.nom_affiche || m.user_id} size={32} />
                                 {/* Alpha 0.17.0 : pastille d'activité */}
                                 <span title={lastActivity[m.user_id]?.derniere_activite ? `Dernière activité ${relativeTime(lastActivity[m.user_id].derniere_activite)}` : "Aucune activité enregistrée"}
                                   style={{ width:8, height:8, borderRadius:"50%", background:activityDotColor(lastActivity[m.user_id]?.derniere_activite), flexShrink:0, display:"inline-block" }} />
@@ -1207,7 +1210,7 @@ export default function Utilisateurs() {
                   className="btn-save"
                   onClick={() => {
                     navigator.clipboard.writeText(createdInviteLink.link);
-                    alert("Lien copié !");
+                    toast.success("Lien copié !");
                   }}
                   title="Copier le lien"
                 >

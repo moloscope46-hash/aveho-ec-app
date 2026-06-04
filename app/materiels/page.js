@@ -6,7 +6,8 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Statut, Modal, Btn } from "../ui";
-import { KpiRow } from "../kpis";
+import { PageHero } from "../components/ui-premium";
+// 0.58.4 : KpiRow remplacé par les stats inline dans PageHero
 import Crud from "../crud";
 import { safeInsert, safeDelete } from "../../lib/safeWrite";
 import { logger } from "../../lib/logger";
@@ -78,13 +79,24 @@ export default function Materiels() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead small title="Parc matériel" sub="Exemplaires physiques — série, parc, lot" />
-        <KpiRow tiles={[
-          { label: "Matériels", value: items.length, icon: "ti-armchair-2", color: "#142131" },
-          { label: "En location", value: items.filter((m) => m.etat === "En location").length, icon: "ti-home-check", color: "#5aa05a" },
-          { label: "Maintenance", value: items.filter((m) => m.etat === "Maintenance").length, icon: "ti-tool", color: "#EF9F27" },
-          { label: "Affectés patient", value: items.filter((m) => m.patient_id).length, icon: "ti-user", color: "#7a6fb0" },
-        ]} />
+        {/* 0.58.4 : PageHero premium avec stats inline */}
+        <PageHero
+          icon="ti-armchair-2"
+          eyebrow="INVENTAIRE"
+          title="Parc matériel"
+          subtitle="Exemplaires physiques — série, parc, lot"
+          variant="navy"
+          breadcrumbs={[
+            { label: "Accueil", href: "/accueil" },
+            { label: "Matériels" },
+          ]}
+          stats={[
+            { label: "Total", value: items.length },
+            { label: "En location", value: items.filter((m) => m.etat === "En location").length },
+            { label: "Maintenance", value: items.filter((m) => m.etat === "Maintenance").length },
+            { label: "Affectés", value: items.filter((m) => m.patient_id).length },
+          ]}
+        />
         {/* 0.55.11 (AI) : Export CSV matériels */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
           <button

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.6 — Profil refondu + EmptyState x3 + Avatar liste</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#142131 0%,#185FA5 100%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,134,127,.18) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:var(--teal)}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#f3effa,#faf8ff);border-color:#d6c9ec;border-left:4px solid var(--violet)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--blue)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+.top-kpi.a{background:linear-gradient(135deg,#fff5e1,#fff);border-color:#f0d59f}.top-kpi.a .top-kpi-val{color:#7a4f15}
+
+/* PROFIL PREVIEW */
+.tabs-mock{display:inline-flex;gap:4px;padding:4px;background:#f4f7fa;border-radius:99px;border:1px solid #e3e9ee;margin:14px 0;flex-wrap:wrap}
+.tab-mock{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:transparent;color:#6c7a89;border:none;border-radius:99px;font-weight:500;font-size:13;cursor:pointer;transition:background .2s,color .2s}
+.tab-mock.active{background:#fff;color:#142131;font-weight:600;box-shadow:0 1px 3px rgba(20,33,49,.06)}
+.tab-mock i{font-size:14px}
+
+.identity-mock{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px;display:flex;align-items:center;gap:18px;margin:14px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.id-avatar-xl{position:relative;width:64px;height:64px;flex-shrink:0}
+.id-avatar-xl::before{content:"";position:absolute;inset:-3px;background:linear-gradient(135deg,#7CC8C8 0%,#2a5a5a 100%);border-radius:50%;opacity:.3;filter:blur(6px)}
+.id-avatar-xl-inner{position:relative;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#7CC8C8 0%,#2a5a5a 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;text-shadow:0 1px 2px rgba(0,0,0,.2);border:2px solid rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(20,33,49,.15)}
+.id-info-mock{flex:1}
+.id-info-mock .name{font-size:18px;font-weight:700;color:#142131}
+.id-info-mock .mail{font-size:13px;color:#6c7a89;margin-top:2px}
+.id-info-mock .meta{font-size:12px;color:#8a98a8;margin-top:6px}
+
+/* EMPTY STATES */
+.empty-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:14px 0}
+.empty-card{background:#fff;border:1px dashed #d3d9e0;border-radius:14px;padding:24px 16px;text-align:center}
+.empty-card .ic-wrap{width:54px;height:54px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.empty-card.amber .ic-wrap{background:rgba(239,159,39,.12);border:2px dashed #EF9F27;color:#EF9F27}
+.empty-card.blue .ic-wrap{background:rgba(24,95,165,.10);border:2px dashed #185FA5;color:#185FA5}
+.empty-card.teal .ic-wrap{background:rgba(124,200,200,.15);border:2px dashed #7CC8C8;color:#2a5a5a}
+.empty-card .title{font-size:14px;font-weight:700;color:#142131;margin-bottom:5px}
+.empty-card .msg{font-size:12px;color:#6c7a89;margin-bottom:10px;line-height:1.4}
+.empty-card .btn{padding:7px 14px;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:12;cursor:pointer}
+.empty-card.amber .btn{background:#EF9F27}
+.empty-card.blue .btn{background:#185FA5}
+.empty-card.teal .btn{background:#7CC8C8;color:#142131}
+
+/* Avatar liste preview */
+.users-mock{background:#fff;border:1px solid var(--g200);border-radius:14px;padding:14px;margin:14px 0}
+.users-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eef2f5;font-size:13.5px}
+.users-row:last-child{border-bottom:none}
+.av-sm{width:32px;height:32px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13;text-shadow:0 1px 2px rgba(0,0,0,.2);box-shadow:0 1px 2px rgba(20,33,49,.1),inset 0 -2px 4px rgba(0,0,0,.1);flex-shrink:0}
+.av-sm.t{background:linear-gradient(135deg,#7CC8C8 0%,#2a5a5a 100%)}
+.av-sm.b{background:linear-gradient(135deg,#185FA5 0%,#4a8dd4 100%)}
+.av-sm.tr{background:linear-gradient(135deg,#C9867F 0%,#b06d65 100%)}
+.av-sm.a{background:linear-gradient(135deg,#EF9F27 0%,#C9867F 100%)}
+.av-sm.v{background:linear-gradient(135deg,#7a6fb0 0%,#5db5b5 100%)}
+.users-row .dot{width:8px;height:8px;border-radius:50%;background:#5aa05a;flex-shrink:0}
+.users-row .name{font-weight:600;color:#142131;flex:1}
+.users-row .role{font-size:11px;color:#6c7a89;background:#f4f7fa;padding:3px 9px;border-radius:99px}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 5 — DEPLOYMENT</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.6 — Profil refondu + 3 listes upgradées<small>4 onglets sur Profil · Avatar XL · EmptyState achats/maintenance/commandes · Avatar liste users</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.6-alpha</code></span>
+    <span><b>Tests :</b> 3428 Vitest (+19)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi b"><div class="top-kpi-val">4</div><div class="top-kpi-lbl">Onglets Profil</div></div>
+  <div class="top-kpi a"><div class="top-kpi-val">+3</div><div class="top-kpi-lbl">EmptyState (6 au total)</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Avatar (3 endroits)</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+19</div><div class="top-kpi-lbl">Tests Vitest (3428)</div></div>
+</div>
+
+<h2>👤 Profil refondu avec 4 onglets</h2>
+
+<div class="panel">
+<p style="margin:0">La page <code>/profil</code> faisait 366 lignes empilées avec 11 sections distinctes. Refonte en <strong>4 onglets logiques</strong> + <strong>panneau identité avec Avatar XL</strong> (size=64 avec halo glow) toujours visible au-dessus.</p>
+</div>
+
+<div class="tabs-mock">
+  <button class="tab-mock active"><i>📊</i> Activité</button>
+  <button class="tab-mock"><i>👤</i> Profil</button>
+  <button class="tab-mock"><i>🔔</i> Notifications</button>
+  <button class="tab-mock"><i>🛡️</i> Sécurité</button>
+</div>
+
+<div class="identity-mock">
+  <div class="id-avatar-xl">
+    <div class="id-avatar-xl-inner">CM</div>
+  </div>
+  <div class="id-info-mock">
+    <div class="name">Cédric Mignot</div>
+    <div class="mail">cedric@aveho.fr</div>
+    <div class="meta">Collectivité : <b>Hôpital Cédric</b> · Rôle : <b>Chef de Produit</b></div>
+  </div>
+</div>
+
+<table>
+<tr><th>Onglet</th><th>Sections</th></tr>
+<tr><td><b>📊 Activité</b></td><td>KPIs personnels (DI créées, urgentes, clôturées…) · 15 dernières actions</td></tr>
+<tr><td><b>👤 Profil</b></td><td>Nom d'affichage</td></tr>
+<tr><td><b>🔔 Notifications</b></td><td>Mes notifications · Récap email automatique · Historique des envois · Catégories de notifications</td></tr>
+<tr><td><b>🛡️ Sécurité</b></td><td>Aide & visite guidée · Mot de passe · Empreinte digitale · Reconnaissance faciale · Ma session</td></tr>
+</table>
+
+<h2>🌵 EmptyState sur 3 pages supplémentaires</h2>
+
+<div class="empty-row">
+  <div class="empty-card amber">
+    <div class="ic-wrap">🛒</div>
+    <div class="title">Aucune demande d'achat</div>
+    <div class="msg">Crée ta première demande pour commander du matériel.</div>
+    <button class="btn">Créer la première demande</button>
+  </div>
+  <div class="empty-card blue">
+    <div class="ic-wrap">🔧</div>
+    <div class="title">Aucune maintenance planifiée</div>
+    <div class="msg">Planifie ta première maintenance pour suivre l'entretien régulier.</div>
+    <button class="btn">Planifier la première</button>
+  </div>
+  <div class="empty-card teal">
+    <div class="ic-wrap">🚚</div>
+    <div class="title">Aucune commande</div>
+    <div class="msg">Découvre les promotions du moment pour passer ta première commande.</div>
+    <button class="btn">Voir les promotions</button>
+  </div>
+</div>
+
+<table>
+<tr><th>Page</th><th>Variant</th><th>Call-to-action</th></tr>
+<tr><td><code>/achats</code></td><td>🟡 amber</td><td>Créer la première demande</td></tr>
+<tr><td><code>/maintenance</code></td><td>🔵 blue</td><td>Planifier la première</td></tr>
+<tr><td><code>/commandes</code></td><td>🟢 teal</td><td>Voir les promotions (→ <code>/promotions</code>)</td></tr>
+</table>
+
+<h2>👥 Avatar dans liste utilisateurs</h2>
+
+<div class="panel">
+<p style="margin:0">Le tableau <code>/utilisateurs</code> avait juste le nom et un dot d'activité. Maintenant <strong>chaque utilisateur a son Avatar avec gradient déterministe</strong> (size=32) → reconnaissance visuelle instantanée. Bonus clé : <strong>même utilisateur = même couleur partout</strong> (TopBar, UserMenu, liste users, Profil).</p>
+</div>
+
+<div class="users-mock">
+  <div class="users-row">
+    <div class="av-sm t">CM</div>
+    <div class="dot"></div>
+    <div class="name">Cédric Mignot</div>
+    <div class="role">Chef de Produit</div>
+  </div>
+  <div class="users-row">
+    <div class="av-sm b">HM</div>
+    <div class="dot"></div>
+    <div class="name">Hugo Martin</div>
+    <div class="role">Développeur</div>
+  </div>
+  <div class="users-row">
+    <div class="av-sm tr">YA</div>
+    <div class="dot" style="background:#EF9F27"></div>
+    <div class="name">Yassir Aouaj</div>
+    <div class="role">Chargé d'affaires</div>
+  </div>
+  <div class="users-row">
+    <div class="av-sm a">CD</div>
+    <div class="dot"></div>
+    <div class="name">Corentin David</div>
+    <div class="role">Développeur</div>
+  </div>
+  <div class="users-row">
+    <div class="av-sm v">JB</div>
+    <div class="dot" style="background:#c0c5cc"></div>
+    <div class="name">Julien Bertrand</div>
+    <div class="role">Tech Lead</div>
+  </div>
+</div>
+
+<h2>📊 Bilan déploiement UI/UX (0.58.0 → 0.58.6)</h2>
+
+<table>
+<tr><th>Composant</th><th>Pages déployées</th><th>Nombre</th></tr>
+<tr><td><code>PageHero</code></td><td>statistiques · kanban · calendrier · matériels · paramètres · <b>profil</b></td><td><b>6</b></td></tr>
+<tr><td><code>EmptyState</code></td><td>patients · interventions · signalements · <b>achats</b> · <b>maintenance</b> · <b>commandes</b></td><td><b>6</b></td></tr>
+<tr><td><code>Avatar</code></td><td>UserMenu (×2) · Profil · <b>liste utilisateurs</b></td><td><b>3 endroits</b></td></tr>
+<tr><td><code>Tabs</code></td><td>paramètres · <b>profil</b></td><td><b>2</b></td></tr>
+<tr><td><code>KpiCard</code> + <code>Sparkline</code> + <code>Skeleton</code></td><td>HeroDashboard accueil</td><td>1 (intégré)</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.6
+npm install --legacy-peer-deps
+npm test                              # 3428 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.6 - Profil 4 onglets + Avatar XL + EmptyState x3 + Avatar liste"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>AvatarGroup</b> sur les cards multi-assignés DI / signalements</li>
+<li><b>EmptyState</b> sur notifications, utilisateurs vides (cas filtrés)</li>
+<li><b>Migration toast progressive</b> : remplacer les <code>.err</code>/<code>.ok</code> sur des forms critiques par <code>toast.error()</code>/<code>toast.success()</code></li>
+<li><b>Drag&Drop premium</b> sur Kanban : cards qui s'élèvent (translateY+shadow) au pickup, drop zone qui pulse en teal</li>
+<li><b>Mode sombre</b> via les CSS vars (toggle dark/light dans Paramètres > Apparence)</li>
+<li><b>Avatar sur les cards d'intervention</b> : afficher le créateur + assigné</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.6 · 4 juin 2026 · 3428 Vitest · 9 composants premium · UI Phase 5</footer>
+</div></body></html>

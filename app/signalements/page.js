@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn} from "../ui";
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { fmtDate } from "../../lib/format";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";
@@ -275,9 +276,31 @@ export default function SignalementsPage() {
             {(fStatut || fType || fCategorie) && <Btn variant="ghost" icon="ti-x" onClick={() => { setFStatut(""); setFType(""); setFCategorie(""); }}>Effacer filtres</Btn>}
           </div>
 
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : rows.length === 0 ? <StateMsg>Aucun signalement pour l'instant. <a style={{ color: "#2a5a5a", fontWeight: 600, cursor: "pointer" }} onClick={openNew}>Déposer le premier</a></StateMsg>
-            : filtered.length === 0 ? <StateMsg>Aucun signalement ne correspond à ces filtres.</StateMsg>
+          {loading ? (
+            /* 0.58.9 : SkeletonRow x 4 */
+            <div style={{ background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12, padding: 6 }}>
+              {[0,1,2,3].map((i) => <SkeletonRow key={i} cols={4} />)}
+            </div>
+          )
+            : rows.length === 0 ? (
+              <EmptyState
+                icon="ti-alert-triangle"
+                variant="terra"
+                title="Aucun signalement"
+                message="Aucun problème signalé pour le moment. Dépose un signalement si tu rencontres un souci avec le matériel ou les interventions."
+                actionLabel="Déposer le premier signalement"
+                onAction={openNew}
+              />
+            )
+            : filtered.length === 0 ? (
+              <EmptyState
+                icon="ti-filter-off"
+                variant="gray"
+                title="Aucun résultat"
+                message="Aucun signalement ne correspond à ces filtres."
+                compact
+              />
+            )
             : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {filtered.map((r) => {

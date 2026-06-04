@@ -10,6 +10,7 @@ import { useAuth } from "../../lib/useAuth";
 import { useCart } from "../useCart";
 import TopBar from "../TopBar";
 import { PageHead, Panel } from "../ui";
+import { toast } from "../components/ui-premium";
 import pkg from "../../package.json";
 // 0.57.11 : versions-index.js ne contient plus QUE THEME_LABELS (2 KB).
 // VERSIONS_INDEX (272 KB) est lazy-fetché depuis /changelog-data/versions-index.json
@@ -303,7 +304,7 @@ export default function ChangelogPage() {
       setTimeout(() => setZipProgress(""), 2000);
     } catch (e) {
       logger.error("[Zip] erreur :", e);
-      alert("Erreur lors de la création du zip : " + e.message);
+      toast.error("Erreur lors de la création du zip : " + e.message);
       setZipProgress("");
     } finally {
       setZipBusy(false);

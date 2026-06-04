@@ -8,6 +8,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
+// 0.58.5 : Avatar premium remplace les um-avatar custom
+import { Avatar } from "./components/ui-premium";
 
 // Couleurs déterministes à partir d'un user_id ou d'un nom
 const PALETTE = ["#7CC8C8", "#185FA5", "#C9867F", "#7a6fb0", "#5aa05a", "#EF9F27", "#5a8f8f", "#e35d5b"];
@@ -121,7 +123,8 @@ export default function UserMenu({ auth }) {
   return (
     <div className="um-root" ref={ref}>
       <button className={`um-btn${open ? " open" : ""}`} onClick={() => setOpen(!open)} aria-label="Menu utilisateur">
-        <span className="um-avatar" style={{ background: col }}>{ini}</span>
+        {/* 0.58.5 : Avatar premium (gradient déterministe par nom) */}
+        <Avatar name={displayName} size={30} />
         <span className="um-name">{displayName}</span>
         <i className="ti ti-chevron-down um-chev" />
       </button>
@@ -131,7 +134,8 @@ export default function UserMenu({ auth }) {
           <div className="um-backdrop" onClick={() => setOpen(false)} />
           <div className="um-sheet">
             <div className="um-head">
-              <span className="um-avatar lg" style={{ background: col }}>{ini}</span>
+              {/* 0.58.5 : Avatar XL avec halo glow dans le header du menu */}
+              <Avatar name={displayName} size={52} ring />
               <div className="um-id">
                 <div className="um-id-name">{displayName}</div>
                 <div className="um-id-mail">{userEmail}</div>

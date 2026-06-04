@@ -17,6 +17,7 @@ import TopBar from "../TopBar";
 import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
+import { toast } from "../components/ui-premium";
 import { Heatmap } from "../Charts";
 import { logger } from "../../lib/logger";
 
@@ -274,7 +275,7 @@ export default function AuditPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert("Erreur export CSV : " + e.message);
+      toast.error("Erreur export CSV : " + e.message);
     } finally {
       setCsvBusy(false);
     }

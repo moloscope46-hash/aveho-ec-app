@@ -9,6 +9,8 @@ import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
+import { EmptyState, toast, SkeletonRow, Avatar, Select, DatePicker, BulkToolbar } from "../components/ui-premium";
+import { Dialog } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import DIPreview from "../DIPreview";
 import PatientPreview from "../PatientPreview";
@@ -46,6 +48,85 @@ export default function Interventions() {
 
   // Alpha 0.27.0 : indicateur lecture depuis cache offline
   const [staleData, setStaleData] = useState(false);
+
+  // 0.58.14 : multi-sélection bulk
+  const [selected, setSelected] = useState(new Set());
+  function toggleSelected(id) {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function clearSelected() { setSelected(new Set()); }
+  async function bulkClose() {
+    const ok = await Dialog.confirm({
+      title: `Marquer ${selected.size} intervention${selected.size > 1 ? "s" : ""} comme résolue${selected.size > 1 ? "s" : ""} ?`,
+      message: "Le statut sera mis à 'Clôturée' pour toutes les DI sélectionnées.",
+    });
+    if (!ok) return;
+    try {
+      const { error } = await supabase
+        .from("interventions")
+        .update({ statut: "Clôturée" })
+        .in("id", Array.from(selected));
+      if (error) throw error;
+      toast.success(`${selected.size} intervention${selected.size > 1 ? "s clôturées" : " clôturée"}`);
+      clearSelected();
+      load();
+    } catch (e) {
+      toast.error("Erreur clôture groupée : " + e.message);
+    }
+  }
+  async function bulkExportCsv() {
+    try {
+      const ids = Array.from(selected);
+      const subset = rows.filter(r => ids.includes(r.id));
+      const headers = ["N°", "Date", "Type", "Urgence", "Statut", "Assigné"];
+      const lines = [headers.join(";")];
+      for (const r of subset) {
+        lines.push([
+          r.numero || "",
+          r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "",
+          (r.type || "").replace(/;/g, ","),
+          r.urgence || "",
+          r.statut || "",
+          (r.assignee_email || "—").replace(/;/g, ","),
+        ].join(";"));
+      }
+      const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `interventions-bulk-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`${selected.size} intervention${selected.size > 1 ? "s exportées" : " exportée"}`);
+    } catch (e) {
+      toast.error("Erreur export CSV : " + e.message);
+    }
+  }
+  async function bulkDelete() {
+    const ok = await Dialog.confirm({
+      title: `Supprimer ${selected.size} intervention${selected.size > 1 ? "s" : ""} ?`,
+      message: "Cette action est irréversible.",
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      const { error } = await supabase
+        .from("interventions")
+        .delete()
+        .in("id", Array.from(selected));
+      if (error) throw error;
+      toast.success(`${selected.size} intervention${selected.size > 1 ? "s supprimées" : " supprimée"}`);
+      clearSelected();
+      load();
+    } catch (e) {
+      toast.error("Erreur suppression groupée : " + e.message);
+    }
+  }
 
   async function load() {
     const etabKey = auth.etabId || "all";
@@ -129,9 +210,9 @@ export default function Interventions() {
 
   // génère un transfert depuis une DI (ex : reprise matériel -> dépôt général)
   async function genTransfert(r) {
-    if (!r.materiel_id) { alert("Aucun matériel rattaché à cette DI."); return; }
+    if (!r.materiel_id) { toast.error("Aucun matériel rattaché à cette DI."); return; }
     const depGeneral = refs.depots[0];
-    if (!depGeneral) { alert("Aucun dépôt disponible."); return; }
+    if (!depGeneral) { toast.error("Aucun dépôt disponible."); return; }
     const numero = "TRF-" + Math.floor(1000 + Math.random() * 9000);
     const matLabel = refs.materiels.find((m) => m.value === r.materiel_id)?.label || "Matériel";
     const srcLabel = r.patients ? `Ch. ${r.patients.chambre || "?"} — ${r.patients.nom}` : "Emplacement";
@@ -141,10 +222,10 @@ export default function Interventions() {
       dst_type: "depot", dst_id: depGeneral.value, dst_label: depGeneral.label,
       contenu: "materiel", materiel_id: r.materiel_id, libelle: matLabel, quantite: 1, created_by: auth.user.id,
     }).select().single();
-    if (error) { alert(error.message); return; }
+    if (error) { toast.error(error.message); return; }
     await safeUpdate(supabase, "interventions", { transfert_id: trf.id }, { id: r.id }, { userId: auth.user?.id });
     await load();
-    alert(`Transfert ${numero} généré (reprise vers ${depGeneral.label}).`);
+    toast.success(`Transfert ${numero} généré (reprise vers ${depGeneral.label}).`);
   }
 
   // Alpha 0.6 : ouvrir la modale d'assignation
@@ -205,23 +286,77 @@ export default function Interventions() {
             <button className="btn-new" onClick={() => { setErr(""); setModal(true); }} disabled={!auth.structureId}><i className="ti ti-plus" /> Nouvelle demande</button>
             <button className="btn-ghost" onClick={() => router.push("/interventions/kanban")}><i className="ti ti-layout-kanban" /> Vue Kanban</button>
             <div className="di-filters">
-              <select value={fStatut} onChange={(e) => setFStatut(e.target.value)}>
-                <option value="">Tous les statuts</option>{STATUTS.map((s) => <option key={s}>{s}</option>)}
-              </select>
-              <select value={fType} onChange={(e) => setFType(e.target.value)}>
-                <option value="">Tous les types</option>{TYPES.map((t) => <option key={t}>{t}</option>)}
-              </select>
+              {/* 0.58.11 : Select premium sur les filtres */}
+              <Select
+                value={fStatut}
+                onChange={setFStatut}
+                size="sm"
+                options={[
+                  { value: "", label: "Tous les statuts", icon: "ti-list" },
+                  ...STATUTS.map((s) => ({ value: s, label: s, icon: "ti-progress-check" })),
+                ]}
+              />
+              <Select
+                value={fType}
+                onChange={setFType}
+                size="sm"
+                options={[
+                  { value: "", label: "Tous les types", icon: "ti-category" },
+                  ...TYPES.map((t) => ({ value: t, label: t, icon: "ti-tag" })),
+                ]}
+              />
             </div>
           </div>
 
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : visible.length === 0 ? <StateMsg>Aucune demande. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => setModal(true)}>Créer une demande</a></StateMsg>
+          {loading ? (
+            /* 0.58.8 : SkeletonRow x 5 au lieu du "Chargement…" */
+            <div style={{ background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12, padding: 6 }}>
+              {[0,1,2,3,4].map((i) => <SkeletonRow key={i} cols={5} />)}
+            </div>
+          )
+            : visible.length === 0 ? (
+              <EmptyState
+                icon="ti-tools"
+                variant="terra"
+                title="Aucune demande d'intervention"
+                message="Crée ta première demande pour démarrer le suivi des interventions sur ton parc matériel."
+                actionLabel="Créer une demande"
+                onAction={() => setModal(true)}
+              />
+            )
             : (
               <div className="panel-table"><table>
-                <thead><tr><th>N°</th><th>Date</th><th>Type</th><th>Urgence</th><th>Matériel (série/parc/lot)</th><th>Patient</th><th>Statut</th><th></th></tr></thead>
+                <thead><tr>
+                  <th style={{ width: 32, textAlign: "center", padding: "8px 6px" }}>
+                    <input
+                      type="checkbox"
+                      checked={visible.length > 0 && visible.every(r => selected.has(r.id))}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelected(new Set(visible.map(r => r.id)));
+                        } else {
+                          clearSelected();
+                        }
+                      }}
+                      aria-label="Tout sélectionner"
+                      style={{ cursor: "pointer", width: 16, height: 16 }}
+                    />
+                  </th>
+                  <th>N°</th><th>Date</th><th>Type</th><th>Urgence</th><th>Matériel (série/parc/lot)</th><th>Patient</th><th>Statut</th><th>Assigné</th><th></th>
+                </tr></thead>
                 <tbody>
                   {visible.map((r) => (
-                    <tr key={r.id}>
+                    <tr key={r.id} style={selected.has(r.id) ? { background: "rgba(124,200,200,.08)" } : null}>
+                      <td style={{ textAlign: "center", padding: "8px 6px" }}>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(r.id)}
+                          onChange={() => toggleSelected(r.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          aria-label={`Sélectionner ${r.numero}`}
+                          style={{ cursor: "pointer", width: 16, height: 16 }}
+                        />
+                      </td>
                       <td style={{ fontWeight: 600 }}>
                         {/* Alpha 0.39.0 : preview au hover */}
                         <DIPreview
@@ -249,6 +384,17 @@ export default function Interventions() {
                         ) : "—"}
                       </td>
                       <td><span className={`statut ${stCls(r.statut)}`}>{r.statut}</span></td>
+                      {/* 0.58.9 : Avatar de l'assigné dans une colonne dédiée */}
+                      <td>
+                        {r.assignee_email ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12, color: "#4a5868" }} title={r.assignee_email}>
+                            <Avatar name={r.assignee_email} size={26} />
+                            <span style={{ maxWidth: 110, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.assignee_email}</span>
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 11, color: "#8a98a8", fontStyle: "italic" }}>—</span>
+                        )}
+                      </td>
                       <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                         {next(r.statut) && <button className="btn-mini" onClick={() => advance(r)} title={`Passer à « ${next(r.statut)} »`}><i className="ti ti-arrow-right" /> {next(r.statut)}</button>}
                         {auth.can("ecrire") && <button className="btn-mini" style={{ marginLeft: 6 }} onClick={() => openAssign(r)} title="Assigner à un utilisateur"><i className="ti ti-user-check" /> {r.assignee_id ? "Réassigner" : "Assigner"}</button>}
@@ -271,7 +417,13 @@ export default function Interventions() {
             <div className="modal-body">
               {err && <div className="err">{err}</div>}
               <div className="fld"><label>Type de demande</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
+                {/* 0.58.12 : Select premium avec icons */}
+                <Select
+                  value={form.type}
+                  onChange={(v) => setForm({ ...form, type: v })}
+                  fullWidth
+                  options={TYPES.map((t) => ({ value: t, label: t, icon: "ti-tag" }))}
+                />
               </div>
               <div className="fld-row">
                 <div className="fld"><label>Niveau d'urgence</label>
@@ -280,33 +432,70 @@ export default function Interventions() {
                     <button className={form.urgence === "Urgent" ? "on" : ""} onClick={() => setForm({ ...form, urgence: "Urgent" })}>Urgent</button>
                   </div>
                 </div>
-                {/* Alpha 0.17.0 : échéance optionnelle */}
+                {/* 0.58.12 : DatePicker premium au lieu de input natif */}
                 <div className="fld"><label>Échéance souhaitée</label>
-                  <input type="date" value={form.due_date || ""} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
+                  <DatePicker
+                    value={form.due_date || ""}
+                    onChange={(v) => setForm({ ...form, due_date: v })}
+                    fullWidth
+                    placeholder="Choisir une date…"
+                  />
                 </div>
               </div>
               <div className="fld-row">
+                {/* 0.58.12 : Select premium avec searchable pour matériel (souvent long) */}
                 <div className="fld"><label>Matériel concerné</label>
-                  <select value={form.materiel_id || ""} onChange={(e) => setForm({ ...form, materiel_id: e.target.value })}>
-                    <option value="">— Aucun —</option>{refs.materiels.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
+                  <Select
+                    value={form.materiel_id || ""}
+                    onChange={(v) => setForm({ ...form, materiel_id: v })}
+                    fullWidth
+                    searchable
+                    placeholder="— Aucun —"
+                    options={[
+                      { value: "", label: "— Aucun —", icon: "ti-circle-dashed" },
+                      ...refs.materiels.map((m) => ({ value: m.value, label: m.label, icon: "ti-tool" })),
+                    ]}
+                  />
                 </div>
+                {/* 0.58.12 : Select premium avec searchable pour patient (liste souvent longue) */}
                 <div className="fld"><label>Patient concerné</label>
-                  <select value={form.patient_id || ""} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
-                    <option value="">— Aucun —</option>{refs.patients.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-                  </select>
+                  <Select
+                    value={form.patient_id || ""}
+                    onChange={(v) => setForm({ ...form, patient_id: v })}
+                    fullWidth
+                    searchable
+                    placeholder="— Aucun —"
+                    options={[
+                      { value: "", label: "— Aucun —", icon: "ti-circle-dashed" },
+                      ...refs.patients.map((p) => ({ value: p.value, label: p.label, icon: "ti-user" })),
+                    ]}
+                  />
                 </div>
               </div>
               <div className="fld-row">
                 <div className="fld"><label>Dépôt (emplacement)</label>
-                  <select value={form.depot_id || ""} onChange={(e) => setForm({ ...form, depot_id: e.target.value })}>
-                    <option value="">— Aucun —</option>{refs.depots.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                  </select>
+                  <Select
+                    value={form.depot_id || ""}
+                    onChange={(v) => setForm({ ...form, depot_id: v })}
+                    fullWidth
+                    placeholder="— Aucun —"
+                    options={[
+                      { value: "", label: "— Aucun —", icon: "ti-circle-dashed" },
+                      ...refs.depots.map((d) => ({ value: d.value, label: d.label, icon: "ti-building-warehouse" })),
+                    ]}
+                  />
                 </div>
                 <div className="fld"><label>Zone</label>
-                  <select value={form.zone_id || ""} onChange={(e) => setForm({ ...form, zone_id: e.target.value })}>
-                    <option value="">— Aucune —</option>{refs.zones.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
-                  </select>
+                  <Select
+                    value={form.zone_id || ""}
+                    onChange={(v) => setForm({ ...form, zone_id: v })}
+                    fullWidth
+                    placeholder="— Aucune —"
+                    options={[
+                      { value: "", label: "— Aucune —", icon: "ti-circle-dashed" },
+                      ...refs.zones.map((z) => ({ value: z.value, label: z.label, icon: "ti-map-pin" })),
+                    ]}
+                  />
                 </div>
               </div>
               <div className="fld"><label>Description</label>
@@ -357,6 +546,19 @@ export default function Interventions() {
             </div>
           )}
       </Modal>
+
+      {/* 0.58.14 : BulkToolbar contextuelle multi-sélection */}
+      <BulkToolbar
+        count={selected.size}
+        onClear={clearSelected}
+        itemName="intervention"
+        itemNamePlural="interventions"
+        actions={[
+          { id: "close",  label: "Marquer résolue", icon: "ti-circle-check", onClick: bulkClose },
+          { id: "export", label: "Exporter CSV",   icon: "ti-download",     onClick: bulkExportCsv },
+          { id: "delete", label: "Supprimer",      icon: "ti-trash",        onClick: bulkDelete, variant: "danger" },
+        ]}
+      />
     </div>
   );
 }

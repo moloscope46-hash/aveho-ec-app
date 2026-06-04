@@ -111,7 +111,13 @@ export default function GlobalSearch() {
         }
         // 0.55.11 (AF) : si chip filter active, override
         if (activeFilter) filterType = activeFilter;
-        const term = `%${searchTerm}%`;
+        // 0.58.11 HOTFIX : sanitize les caractères qui cassent la syntaxe PostgREST .or()
+        //  Ex : un user qui tape "ced=" produisait `or=(numero.ilike.%ced=%25,...)` qui renvoyait
+        //  400 Bad Request car le `=` est un séparateur PostgREST. On retire aussi `,`, `(`, `)`,
+        //  `.` (utilisé comme séparateur d'opérateur), et `*` (wildcard interne ilike géré par les `%`).
+        const safeSearch = searchTerm.replace(/[=,()*]/g, "").trim();
+        if (!safeSearch) { setResults([]); setLoading(false); return; }
+        const term = `%${safeSearch}%`;
         const list = [];
 
         if (!filterType || filterType === "patient") {

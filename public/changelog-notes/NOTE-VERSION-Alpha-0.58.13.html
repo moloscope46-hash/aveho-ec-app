@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.13 — RangePicker + Stepper + BulkToolbar + NotifBell Drawer + dialogs legacy</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#0d1822 0%,#185FA5 50%,#7CC8C8 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(122,111,176,.20) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--teal)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* RangePicker demo */
+.rp-demo-wrap{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid #7CC8C8;border-radius:10px;box-shadow:0 0 0 3px rgba(124,200,200,.20);min-width:340px;margin:14px 0}
+.rp-demo-wrap i.icn{color:#185FA5;font-size:16}
+.rp-demo-wrap .flex{flex:1;font-size:13.5;font-weight:500;color:#142131}
+.rp-demo-wrap .clear{width:22px;height:22px;border-radius:6px;background:#f4f7fa;display:inline-flex;align-items:center;justify-content:center;font-size:11;color:#8a98a8}
+.rp-demo-wrap i.ch{color:#8a98a8;font-size:14;transform:rotate(180deg)}
+.rp-dropdown{display:flex;background:#fff;border:1px solid #e3e9ee;border-radius:12px;box-shadow:0 20px 40px rgba(20,33,49,.18);min-width:460px;overflow:hidden;margin-bottom:14px}
+.rp-presets{padding:8px;background:#f4f7fa;border-right:1px solid #e3e9ee;min-width:180px}
+.rp-presets .h{font-size:10;font-weight:700;letter-spacing:.5px;color:#6c7a89;text-transform:uppercase;padding:8px 10px 6px}
+.rp-presets button{display:block;width:100%;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12.5;color:#142131;text-align:left;cursor:pointer;font-weight:500}
+.rp-presets button:hover{background:rgba(124,200,200,.14)}
+.rp-presets button i{color:#7CC8C8;font-size:13;margin-right:6}
+.rp-custom{padding:16px;min-width:280px;flex:1}
+.rp-custom .h{font-size:10;font-weight:700;letter-spacing:.5px;color:#6c7a89;text-transform:uppercase;margin-bottom:10}
+.rp-row{display:flex;gap:10px}
+.rp-fld{flex:1}
+.rp-fld label{display:block;font-size:11;font-weight:600;color:#6c7a89;margin-bottom:4}
+.rp-fld input{width:100%;padding:8px 10px;border:1px solid #e3e9ee;border-radius:8px;font-size:13;font-family:inherit}
+.rp-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14}
+.rp-actions button{padding:7px 14px;border-radius:8px;font-size:12;font-weight:600;font-family:inherit;cursor:pointer;border:none}
+.rp-actions .ghost{background:#fff;border:1px solid #e3e9ee;color:#4a5868}
+.rp-actions .primary{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;font-weight:700;box-shadow:0 2px 6px rgba(124,200,200,.30)}
+
+/* Stepper demo */
+.stepper{display:flex;align-items:flex-start;gap:0;width:100%;padding:8px 4px 14px;margin:14px 0}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step .connector{position:absolute;top:15px;left:50%;right:-50%;height:2px;background:#e3e9ee;z-index:0}
+.step.done .connector{background:linear-gradient(90deg,#7CC8C8,#5db5b5)}
+.step .circle{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13;font-weight:700;position:relative;z-index:1}
+.step.done .circle{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;box-shadow:0 2px 6px rgba(124,200,200,.30)}
+.step.current .circle{background:linear-gradient(135deg,#142131,#243044);color:#fff;box-shadow:0 0 0 4px rgba(20,33,49,.10),0 4px 10px rgba(20,33,49,.20)}
+.step.future .circle{background:#f4f7fa;color:#8a98a8;border:1.5px solid #e3e9ee}
+.step .lbl{margin-top:8;font-size:13;text-align:center;line-height:1.3}
+.step.done .lbl, .step.current .lbl{font-weight:700;color:#142131}
+.step.future .lbl{font-weight:500;color:#8a98a8}
+.step .sub{font-size:11;color:#8a98a8;margin-top:2;font-weight:400}
+.step-footer{display:flex;justify-content:space-between;align-items:center;gap:10;margin-top:20;padding-top:16;border-top:1px solid #e3e9ee}
+.step-footer button{padding:9px 18px;border-radius:10px;font-family:inherit;font-size:13;font-weight:600;cursor:pointer}
+.step-footer .prev{background:#fff;border:1px solid #e3e9ee;color:#4a5868}
+.step-footer .next{border:none;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;font-weight:700;box-shadow:0 4px 10px rgba(124,200,200,.40)}
+.step-footer .mid{font-size:12;color:#8a98a8;font-weight:500}
+.step-footer .mid b{color:#142131;font-weight:700}
+
+/* BulkToolbar demo */
+.bulk-demo-wrap{position:relative;background:linear-gradient(135deg,#e3e9ee 0%,#cfd8e0 100%);border-radius:14px;padding:50px 30px;margin:14px 0;display:flex;justify-content:center}
+.bulk-bar{background:linear-gradient(135deg,#142131,#243044);color:#fff;padding:10px 12px 10px 16px;border-radius:99px;box-shadow:0 20px 50px rgba(20,33,49,.50),0 8px 20px rgba(20,33,49,.30),0 0 0 1px rgba(255,255,255,.06) inset;display:inline-flex;align-items:center;gap:4}
+.bulk-count{display:inline-flex;align-items:center;gap:10;padding:0 14px 0 6}
+.bulk-badge{display:inline-flex;align-items:center;justify-content:center;min-width:30;height:30;border-radius:99px;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;font-size:13;font-weight:800;padding:0 9px;box-shadow:0 2px 8px rgba(124,200,200,.40);letter-spacing:.5px}
+.bulk-lbl{font-size:13;font-weight:600}
+.bulk-sep{width:1px;height:24;background:rgba(255,255,255,.15)}
+.bulk-action{background:transparent;border:none;color:#fff;font-size:12.5;font-weight:600;padding:8px 12px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6}
+.bulk-action:hover{background:rgba(255,255,255,.10)}
+.bulk-action.danger{color:#f5b6b0}
+.bulk-action.danger:hover{background:rgba(201,134,127,.20);color:#ffd5d0}
+.bulk-close{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.10);color:#fff;width:32;height:32;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;font-size:14;cursor:pointer;margin-left:2}
+
+/* NotifBell drawer demo */
+.notif-drawer-wrap{position:relative;background:linear-gradient(135deg,#e3e9ee 0%,#cfd8e0 100%);border-radius:14px;height:480px;margin:14px 0;overflow:hidden;display:flex;justify-content:flex-end}
+.notif-drawer-bg{position:absolute;inset:0;background:rgba(13,24,34,.55);backdrop-filter:blur(6px) saturate(140%)}
+.notif-drawer{position:relative;width:360px;background:#fff;display:flex;flex-direction:column;box-shadow:-30px 0 60px rgba(20,33,49,.30)}
+.notif-head{padding:18px 22px;background:#142131;color:#fff;display:flex;align-items:center;gap:12;position:relative;overflow:hidden;flex-shrink:0}
+.notif-head .ic{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.20);display:flex;align-items:center;justify-content:center;font-size:19}
+.notif-head .t{font-weight:700;font-size:15}
+.notif-head .st{font-size:12;opacity:.85;margin-top:2}
+.notif-head .x{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16}
+.notif-body{flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:8}
+.notif-item-d{display:flex;align-items:flex-start;gap:12;padding:12px 14px;border-radius:10px}
+.notif-item-d.unread{background:linear-gradient(90deg,rgba(124,200,200,.08),transparent);border:1px solid rgba(124,200,200,.30)}
+.notif-item-d.read{border:1px solid #e3e9ee}
+.notif-item-d .ic{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:18;flex-shrink:0}
+.notif-item-d.di .ic{background:rgba(227,93,91,.13);color:#e35d5b}
+.notif-item-d.invite .ic{background:rgba(122,111,176,.13);color:#7a6fb0}
+.notif-item-d.systeme .ic{background:rgba(24,95,165,.13);color:#185FA5}
+.notif-item-d .body{flex:1}
+.notif-item-d .titre{font-size:13.5;color:#142131;margin-bottom:3}
+.notif-item-d.unread .titre{font-weight:700}
+.notif-item-d.read .titre{font-weight:500}
+.notif-item-d .msg{font-size:12.5;color:#4a5868;line-height:1.4;margin-bottom:4}
+.notif-item-d .date{font-size:11;color:#8a98a8;font-weight:500}
+.notif-foot{padding:14px 22px 18px;border-top:1px solid #eef1f4;background:linear-gradient(180deg,#fafbfc,#f4f7fa);flex-shrink:0}
+.notif-foot button{padding:9px 18px;border-radius:10px;border:1px solid #e3e9ee;background:#fff;color:#4a5868;font-size:13;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 12 — MEGA RELEASE</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.13 — 5 chantiers : RangePicker + Stepper + BulkToolbar + Refonte NotifBell + Migration dialogs<small>3 nouveaux composants premium · Panel notif transformé en Drawer · 28 usages dialogs.alert legacy adoptent auto le design premium</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.13-alpha</code></span>
+    <span><b>Tests :</b> 3647 Vitest (+42)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">+3</div><div class="top-kpi-lbl">Composants (17 total)</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">28</div><div class="top-kpi-lbl">dialogs.alert migrés</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">1</div><div class="top-kpi-lbl">Panel notif → Drawer</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+42</div><div class="top-kpi-lbl">Tests Vitest (3647)</div></div>
+</div>
+
+<h2>📅 RangePicker (plage de dates avec presets)</h2>
+
+<div class="panel">
+<p style="margin:0">Sélecteur de plage avec <strong>2 colonnes</strong> : 5 presets cliquables à gauche + inputs from/to custom à droite. Plus besoin de configurer manuellement "30 derniers jours" → 1 clic.</p>
+</div>
+
+<div class="rp-demo-wrap">
+  <i class="icn">📊</i>
+  <span class="flex">04 juin 2026 → 04 juil. 2026</span>
+  <span class="clear">✕</span>
+  <i class="ch">▼</i>
+</div>
+
+<div class="rp-dropdown">
+  <div class="rp-presets">
+    <div class="h">Presets</div>
+    <button><i>⚡</i>7 derniers jours</button>
+    <button><i>⚡</i>30 derniers jours</button>
+    <button><i>⚡</i>3 derniers mois</button>
+    <button><i>⚡</i>6 derniers mois</button>
+    <button><i>⚡</i>Cette année</button>
+  </div>
+  <div class="rp-custom">
+    <div class="h">Plage personnalisée</div>
+    <div class="rp-row">
+      <div class="rp-fld">
+        <label>Du</label>
+        <input type="date" value="2026-06-04" />
+      </div>
+      <div class="rp-fld">
+        <label>Au</label>
+        <input type="date" value="2026-07-04" />
+      </div>
+    </div>
+    <div class="rp-actions">
+      <button class="ghost">Effacer</button>
+      <button class="primary">Appliquer</button>
+    </div>
+  </div>
+</div>
+
+<pre>const [range, setRange] = useState({ from: '', to: '' });
+
+&lt;RangePicker
+  value={range}
+  onChange={setRange}
+/&gt;
+
+// Usage typique dans /statistiques :
+{range.from && range.to && (
+  &lt;StatsByRange from={range.from} to={range.to} /&gt;
+)}</pre>
+
+<h2>🎯 Stepper (wizard multi-étapes)</h2>
+
+<div class="panel">
+<p style="margin:0">Barre de progression horizontale avec <strong>3 états</strong> : done (teal + check + shadow), current (navy + glow 4px), future (gris). + 2 sub-exports prêts à l'emploi : <code>Stepper.Body</code> (animation slide) + <code>Stepper.Footer</code> (prev/next/submit standardisés).</p>
+</div>
+
+<div class="stepper">
+  <div class="step done">
+    <div class="connector"></div>
+    <div class="circle">✓</div>
+    <div class="lbl">Informations</div>
+    <div class="sub">Identité</div>
+  </div>
+  <div class="step done">
+    <div class="connector"></div>
+    <div class="circle">✓</div>
+    <div class="lbl">Adresse</div>
+    <div class="sub">Domicile</div>
+  </div>
+  <div class="step current">
+    <div class="connector"></div>
+    <div class="circle">3</div>
+    <div class="lbl">Couverture</div>
+    <div class="sub">AMO + AMC</div>
+  </div>
+  <div class="step future">
+    <div class="circle">4</div>
+    <div class="lbl">Validation</div>
+    <div class="sub">Récap</div>
+  </div>
+</div>
+
+<div class="step-footer">
+  <button class="prev">← Précédent</button>
+  <div class="mid">Étape <b>3</b> sur <b>4</b></div>
+  <button class="next">Suivant →</button>
+</div>
+
+<pre>&lt;Stepper active={step} onStepClick={setStep} steps={steps} /&gt;
+
+&lt;Stepper.Body active={step}&gt;
+  {step === 0 && &lt;FormInfos /&gt;}
+  {step === 1 && &lt;FormAdresse /&gt;}
+  {step === 2 && &lt;FormCouverture /&gt;}
+  {step === 3 && &lt;Recap /&gt;}
+&lt;/Stepper.Body&gt;
+
+&lt;Stepper.Footer
+  active={step}
+  total={steps.length}
+  onPrev={() => setStep(step - 1)}
+  onNext={() => setStep(step + 1)}
+  onSubmit={handleSubmit}
+  busy={loading}
+/&gt;
+// → bouton submit en gradient vert success sur la dernière étape</pre>
+
+<h2>🛠️ BulkToolbar (multi-sélection contextuelle)</h2>
+
+<div class="panel">
+<p style="margin:0">Action bar fixed en bas d'écran qui apparaît automatiquement quand des items sont sélectionnés. Pill arrondi gradient navy avec compteur badge teal, actions horizontales, support variant danger en rouge tendre.</p>
+</div>
+
+<div class="bulk-demo-wrap">
+  <div class="bulk-bar">
+    <div class="bulk-count">
+      <span class="bulk-badge">12</span>
+      <span class="bulk-lbl">patients sélectionnés</span>
+    </div>
+    <div class="bulk-sep"></div>
+    <button class="bulk-action">👤 Assigner</button>
+    <button class="bulk-action">⬇ Exporter</button>
+    <button class="bulk-action danger">🗑 Supprimer</button>
+    <div class="bulk-sep"></div>
+    <button class="bulk-close">✕</button>
+  </div>
+</div>
+
+<pre>const [selected, setSelected] = useState(new Set());
+
+&lt;BulkToolbar
+  count={selected.size}
+  onClear={() => setSelected(new Set())}
+  itemName='patient'
+  itemNamePlural='patients'
+  actions={[
+    { id: 'assign', label: 'Assigner',  icon: 'ti-user-check', onClick: bulkAssign },
+    { id: 'export', label: 'Exporter',  icon: 'ti-download',   onClick: bulkExport },
+    { id: 'delete', label: 'Supprimer', icon: 'ti-trash',      onClick: bulkDelete, variant: 'danger' },
+  ]}
+/&gt;</pre>
+
+<h2>📬 Refonte NotifBell : panel → Drawer</h2>
+
+<div class="panel">
+<p style="margin:0">L'ancien dropdown <code>notif-panel</code> collé à la cloche était peu confortable. Maintenant : <strong>Drawer side='right' size='sm' (360px)</strong> qui glisse depuis la droite avec backdrop blur. Header avec subtitle dynamique, footer sticky pour "Tout marquer lu", cards de notifs refondues.</p>
+</div>
+
+<div class="notif-drawer-wrap">
+  <div class="notif-drawer-bg"></div>
+  <div class="notif-drawer">
+    <div class="notif-head">
+      <div class="ic">🔔</div>
+      <div style="flex:1">
+        <div class="t">Notifications</div>
+        <div class="st">3 non lues</div>
+      </div>
+      <div class="x">✕</div>
+    </div>
+    <div class="notif-body">
+      <div class="notif-item-d unread di">
+        <div class="ic">🔧</div>
+        <div class="body">
+          <div class="titre">DI-1238 urgente assignée</div>
+          <div class="msg">Hugo Martin t'a assigné la réparation pompe perfusion</div>
+          <div class="date">il y a 5 min</div>
+        </div>
+      </div>
+      <div class="notif-item-d unread invite">
+        <div class="ic">✉</div>
+        <div class="body">
+          <div class="titre">Nouvelle invitation</div>
+          <div class="msg">Marie Dubois t'invite à rejoindre l'EHPAD Les Tilleuls</div>
+          <div class="date">il y a 1 h</div>
+        </div>
+      </div>
+      <div class="notif-item-d unread systeme">
+        <div class="ic">ℹ</div>
+        <div class="body">
+          <div class="titre">Mise à jour Aveho 0.58.13</div>
+          <div class="msg">Nouvelle version déployée avec RangePicker + Stepper + Drawer</div>
+          <div class="date">il y a 3 h</div>
+        </div>
+      </div>
+      <div class="notif-item-d read di">
+        <div class="ic">🔧</div>
+        <div class="body">
+          <div class="titre">DI-1234 résolue</div>
+          <div class="msg">Cédric Mignot a marqué l'intervention comme résolue</div>
+          <div class="date">hier</div>
+        </div>
+      </div>
+    </div>
+    <div class="notif-foot">
+      <button>✓ Tout marquer comme lu</button>
+    </div>
+  </div>
+</div>
+
+<h2>🔄 Migration dialogs.alert legacy → Dialog premium (rétrocompatible)</h2>
+
+<div class="panel">
+<p style="margin:0">Le système legacy <code>dialogs.alert()</code> et <code>dialogs.confirm()</code> était utilisé <strong>28 fois dans 10 fichiers</strong>. Plutôt que de tout refactorer, on l'a fait <strong>déléguer en interne</strong> vers le nouveau composant Dialog premium. Tous les usages bénéficient automatiquement du nouveau design (backdrop blur, animations slide-up, header coloré) sans toucher au code appelant.</p>
+</div>
+
+<pre>// 0.58.13 - délégation auto vers Dialog premium
+function tryNewDialog(method, options) {
+  if (typeof window === 'undefined') return null;
+  try {
+    return import('./components/ui-premium/Dialog').then((mod) => {
+      const D = mod.Dialog || mod.default;
+      return D[method](options);
+    });
+  } catch { return null; }
+}
+
+export const dialogs = {
+  alert(options) {
+    const opts = typeof options === 'string' ? { message: options } : (options || {});
+    const variantMap = { primary: 'info', danger: 'danger', warning: 'warning', success: 'success' };
+    const newAttempt = tryNewDialog('alert', {
+      title: opts.title || 'Information',
+      message: opts.message,
+      variant: variantMap[opts.variant] || 'info',
+    });
+    if (newAttempt) return newAttempt;
+    // Fallback legacy si import échoue (SSR ou erreur)
+    return new Promise((resolve) => { resolveAlert = resolve; setAlertGlobal(opts); });
+  },
+  confirm(options) { /* idem, délègue à Dialog.confirm() */ },
+};</pre>
+
+<table>
+<tr><th>Fichier</th><th>dialogs.alert/confirm</th></tr>
+<tr><td><code>app/utilisateurs/page.js</code></td><td>multiple usages → auto-modernisé</td></tr>
+<tr><td><code>app/collectivite/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/partenaires-rpps/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/etablissement/fiche/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/achats/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/layout.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/annonces/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/etablissements/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td><code>app/templates-signalements/page.js</code></td><td>auto-modernisé</td></tr>
+<tr><td colspan="2" style="text-align:center;font-style:italic">28 usages bénéficient automatiquement du nouveau design</td></tr>
+</table>
+
+<h2>📊 Bilan composants premium (17 au total)</h2>
+
+<table>
+<tr><th>#</th><th>Composant</th><th>Depuis</th></tr>
+<tr><td>1-3</td><td>KpiCard · Sparkline · MetricCard</td><td>0.58.0</td></tr>
+<tr><td>4</td><td>Skeleton (+6 variants : Text/Row/Grid/Card/Avatar/Kpi)</td><td>0.58.0 → 0.58.11</td></tr>
+<tr><td>5</td><td>EmptyState</td><td>0.58.0</td></tr>
+<tr><td>6</td><td>Toast (6 helpers : success/info/warning/error/neutral/undo)</td><td>0.58.0 → 0.58.12</td></tr>
+<tr><td>7</td><td>PageHero</td><td>0.58.3</td></tr>
+<tr><td>8</td><td>Tabs (+TabPanel)</td><td>0.58.3 → 0.58.11</td></tr>
+<tr><td>9</td><td>Avatar + AvatarGroup</td><td>0.58.4</td></tr>
+<tr><td>10</td><td>Select</td><td>0.58.10</td></tr>
+<tr><td>11</td><td>DatePicker</td><td>0.58.11</td></tr>
+<tr><td>12</td><td>Combobox multi-select tags</td><td>0.58.11</td></tr>
+<tr><td>13</td><td>TimePicker</td><td>0.58.12</td></tr>
+<tr><td>14</td><td>Dialog (confirm/prompt/alert)</td><td>0.58.12</td></tr>
+<tr><td>15</td><td>Drawer Side</td><td>0.58.12</td></tr>
+<tr><td>16</td><td><b>RangePicker</b></td><td><b>0.58.13</b></td></tr>
+<tr><td>17</td><td><b>Stepper (+Body +Footer)</b></td><td><b>0.58.13</b></td></tr>
+<tr><td>18</td><td><b>BulkToolbar</b></td><td><b>0.58.13</b></td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.13
+npm install --legacy-peer-deps
+npm test                              # 3647 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.13 - RangePicker + Stepper + BulkToolbar + NotifBell Drawer + dialogs legacy migration"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Migrer /interventions</b> vers BulkToolbar pour assignation/clôture groupée</li>
+<li><b>Stepper</b> pour onboarding nouveau collaborateur (rôle + permissions + invitations + premier accès)</li>
+<li><b>RangePicker</b> dans /statistiques pour filtrer la période d'analyse</li>
+<li><b>ProgressBar</b> : barre de progression linéaire (uploads de fichiers, exports lourds)</li>
+<li><b>Tooltip premium</b> : au hover, avec arrow + délai paramétrable + max-width</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.13 · 4 juin 2026 · 3647 Vitest · UI Phase 12 (RangePicker + Stepper + BulkToolbar + NotifBell Drawer + Migration dialogs)</footer>
+</div></body></html>

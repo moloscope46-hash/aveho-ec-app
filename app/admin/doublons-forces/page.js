@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "../../components/ui-premium";
 import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/doublons-forces/page.js (Alpha 0.56.7)
@@ -758,7 +759,7 @@ function HistoriqueRow({ h, supabase, onRollback }) {
         p_raison: raison || null,
       });
       if (error) {
-        alert("Erreur rollback : " + error.message);
+        toast.error("Erreur rollback : " + error.message);
       } else {
         onRollback();
       }

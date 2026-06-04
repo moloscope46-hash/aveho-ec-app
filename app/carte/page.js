@@ -12,6 +12,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
+import { toast } from "../components/ui-premium";
 import { getStoredPosition} from "../GeolocPrompt";
 import { logger } from "../../lib/logger";
 import { fetchWithAuth } from "../../lib/fetchWithAuth";
@@ -1070,7 +1071,7 @@ export default function CartePage() {
   function centerOnMe(forceFresh = true) {
     if (!mapInstanceRef.current) return;
     if (!navigator.geolocation) {
-      alert("Géolocalisation non disponible sur cet appareil");
+      toast.error("Géolocalisation non disponible sur cet appareil");
       return;
     }
     setGeolocLoading(true);
@@ -1096,11 +1097,11 @@ export default function CartePage() {
       (err) => {
         setGeolocLoading(false);
         if (err.code === 1) {
-          alert("Permission refusée. Active la géolocalisation dans les paramètres de ton navigateur :\n\n• Chrome : icône cadenas → Géolocalisation → Autoriser\n• Edge : icône cadenas → Permissions du site\n• Mobile : Paramètres → Apps → Navigateur → Autorisations");
+          toast.error("Permission refusée. Active la géolocalisation dans les paramètres de ton navigateur.");
         } else if (err.code === 3) {
-          alert("Délai dépassé. Sur PC Windows, vérifie que la géolocalisation est activée dans Paramètres → Confidentialité → Localisation.");
+          toast.error("Délai dépassé. Vérifie que la géolocalisation est activée dans les paramètres système.");
         } else {
-          alert("Impossible de récupérer ta position : " + err.message);
+          toast.error("Impossible de récupérer ta position : " + err.message);
         }
       },
       {

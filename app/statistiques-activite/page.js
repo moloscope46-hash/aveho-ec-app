@@ -17,6 +17,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
+import { toast } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { BarChart, Heatmap, Gauge, TrendBadge } from "../Charts";
 import { Modal } from "../ui";
@@ -202,7 +203,7 @@ export default function StatistiquesActivite() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert("Erreur export CSV : " + (e.message || e));
+      toast.error("Erreur export CSV : " + (e.message || e));
     } finally {
       setCsvBusy(false);
     }
@@ -384,7 +385,7 @@ export default function StatistiquesActivite() {
       const isoDate = new Date().toISOString().slice(0, 10);
       doc.save(`rapport-activite-${slug}-${isoDate}.pdf`);
     } catch (e) {
-      alert("Erreur lors de l'export PDF : " + (e.message || "inconnue"));
+      toast.error("Erreur lors de l'export PDF : " + (e.message || "inconnue"));
     } finally {
       setExportBusy(false);
     }

@@ -16,6 +16,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, FilterBar } from "../ui";
+import { toast } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { fmtDate, relativeTime } from "../../lib/format";
 
@@ -55,7 +56,7 @@ export default function ConsentVerificationsPage() {
         .order("verification_date", { ascending: false });
       if (error) throw error;
       if (!data || data.length === 0) {
-        alert("Aucune vérification à exporter.");
+        toast.info("Aucune vérification à exporter.");
         return;
       }
 
@@ -114,7 +115,7 @@ export default function ConsentVerificationsPage() {
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 30000);
     } catch (e) {
-      alert("Erreur export : " + (e.message || "inconnue"));
+      toast.error("Erreur export : " + (e.message || "inconnue"));
     } finally {
       setExportBusy(false);
     }

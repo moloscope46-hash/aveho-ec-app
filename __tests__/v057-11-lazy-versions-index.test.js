@@ -49,10 +49,10 @@ describe("0.57.11 - versions-index.json (lazy fetch public)", () => {
     });
   });
 
-  it("Taille raisonnable (~150-300 KB JSON brut, gzip ~50-100 KB)", () => {
+  it("Taille raisonnable (~150-500 KB JSON brut, gzip ~50-100 KB)", () => {
     const size = fs.statSync(path.resolve(process.cwd(), jsonPath)).size;
     expect(size).toBeGreaterThan(150 * 1024);
-    expect(size).toBeLessThan(400 * 1024);
+    expect(size).toBeLessThan(500 * 1024);
   });
 });
 

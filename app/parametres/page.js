@@ -1,12 +1,14 @@
 "use client";
 // Page Paramètres — Préférences d'affichage et libellés personnalisés de la collectivité.
 // Stockés dans le champ `parametres` (JSON) de la table `structures`.
+// 0.58.5 : refonte avec Tabs (3 onglets) + PageHero
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn} from "../ui";
+import { PageHero, Tabs, Select } from "../components/ui-premium";
 import { useTheme } from "../../lib/useTheme";
 import { useKiosque } from "../../lib/useKiosque";
 import NotificationOptIn from "../NotificationOptIn";
@@ -21,6 +23,8 @@ export default function Parametres() {
   const [params, setParams] = useState({});
   const [loading, setLoading] = useState(true);
   const [savedMsg, setSavedMsg] = useState("");
+  // 0.58.5 : 3 onglets pour mieux organiser les paramètres
+  const [activeTab, setActiveTab] = useState("general");
 
   async function load() {
     if (!auth.structureId) return;
@@ -57,9 +61,39 @@ export default function Parametres() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead eyebrow="ADMINISTRATION" icon="ti-settings" title="Paramètres" accent="collectivité" sub={auth.structureNom} />
+        {/* 0.58.5 : PageHero + Tabs */}
+        <PageHero
+          icon="ti-settings"
+          eyebrow="ADMINISTRATION"
+          title="Paramètres"
+          subtitle={auth.structureNom || "Préférences de la collectivité"}
+          variant="navy"
+          breadcrumbs={[
+            { label: "Accueil", href: "/accueil" },
+            { label: "Paramètres" },
+          ]}
+        />
+
+        {!loading && (
+          <div style={{ marginBottom: 20 }}>
+            <Tabs
+              active={activeTab}
+              onChange={setActiveTab}
+              style="pills"
+              tabs={[
+                { id: "general",  label: "Général",       icon: "ti-adjustments" },
+                { id: "notifs",   label: "Notifications", icon: "ti-bell" },
+                { id: "rgpd",     label: "RGPD",          icon: "ti-shield-check" },
+              ]}
+            />
+          </div>
+        )}
+
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
           <>
+            {/* === ONGLET GÉNÉRAL === */}
+            {activeTab === "general" && (
+            <div key="general" className="av-tab-content">
             {/* Libellés métier personnalisés */}
             <Panel style={{ marginBottom: 18 }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>Libellés métier</h2>
@@ -95,19 +129,30 @@ export default function Parametres() {
               <div className="fld-row">
                 <div className="fld">
                   <label>Devise</label>
-                  <select value={params.devise || "EUR"} onChange={(e) => setP("devise", e.target.value)}>
-                    <option value="EUR">Euro (€)</option>
-                    <option value="CHF">Franc suisse (CHF)</option>
-                    <option value="USD">Dollar US ($)</option>
-                  </select>
+                  {/* 0.58.11 : Select premium au lieu de <select> natif */}
+                  <Select
+                    value={params.devise || "EUR"}
+                    onChange={(v) => setP("devise", v)}
+                    fullWidth
+                    options={[
+                      { value: "EUR", label: "Euro (€)", icon: "ti-currency-euro" },
+                      { value: "CHF", label: "Franc suisse (CHF)", icon: "ti-currency-franc" },
+                      { value: "USD", label: "Dollar US ($)", icon: "ti-currency-dollar" },
+                    ]}
+                  />
                 </div>
                 <div className="fld">
                   <label>Format des dates</label>
-                  <select value={params.format_date || "fr-FR"} onChange={(e) => setP("format_date", e.target.value)}>
-                    <option value="fr-FR">Français (28/05/2026)</option>
-                    <option value="en-US">Anglais (05/28/2026)</option>
-                    <option value="iso">ISO (2026-05-28)</option>
-                  </select>
+                  <Select
+                    value={params.format_date || "fr-FR"}
+                    onChange={(v) => setP("format_date", v)}
+                    fullWidth
+                    options={[
+                      { value: "fr-FR", label: "Français (28/05/2026)", icon: "ti-calendar" },
+                      { value: "en-US", label: "Anglais (05/28/2026)", icon: "ti-calendar" },
+                      { value: "iso", label: "ISO (2026-05-28)", icon: "ti-calendar" },
+                    ]}
+                  />
                 </div>
               </div>
               <div className="fld">
@@ -213,7 +258,11 @@ export default function Parametres() {
                 </label>
               </div>
             </Panel>
+            </div>)}
 
+            {/* === ONGLET NOTIFICATIONS === */}
+            {activeTab === "notifs" && (
+            <div key="notifs" className="av-tab-content">
             {/* Notifications */}
             <Panel style={{ marginBottom: 18 }}>
               <h2 style={{ margin: "0 0 16px", fontSize: 17 }}>Notifications</h2>
@@ -236,7 +285,11 @@ export default function Parametres() {
                 </label>
               </div>
             </Panel>
+            </div>)}
 
+            {/* === ONGLET RGPD === */}
+            {activeTab === "rgpd" && (
+            <div key="rgpd" className="av-tab-content">
             {/* Alpha 0.17.1 : notifications push + webhooks */}
             <Panel style={{ marginBottom: 18 }}>
               <h2 style={{ margin:"0 0 12px", fontSize:18, color:"#142131" }}>
@@ -281,7 +334,10 @@ export default function Parametres() {
                 <b><i className="ti ti-bulb" /> Rappel CNIL :</b> La durée de conservation du consentement explicite est libre, mais il est recommandé de demander un renouvellement périodique pour s'assurer que l'accord reste éclairé et à jour. 3 ans est un compromis usuel pour le secteur santé à domicile.
               </div>
             </Panel>
+            </div>)}
 
+            {/* === ONGLET NOTIFICATIONS (partie 2 : avancées) === */}
+            {activeTab === "notifs" && (
             <Panel>
               <h2 style={{ margin:"0 0 12px", fontSize:18, color:"#142131" }}>
                 <i className="ti ti-bell" style={{ color:"#7CC8C8", marginRight:6 }} /> Notifications avancées
@@ -293,6 +349,7 @@ export default function Parametres() {
               <NotificationOptIn auth={auth} />
               <WebhookConfig auth={auth} />
             </Panel>
+            )}
 
             <div style={{ textAlign: "right" }}>
               <Btn variant="primary" icon="ti-device-floppy" onClick={save}>Enregistrer les préférences</Btn>

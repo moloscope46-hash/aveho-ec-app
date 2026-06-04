@@ -146,17 +146,60 @@ function setAlertGlobal(opts) {
   listenersAlert.forEach(l => l(opts));
 }
 
+// 0.58.13 : Migration progressive vers <Dialog /> premium
+//   - dialogs.alert(string) ou dialogs.alert({ title, message, variant })
+//     délègue maintenant à Dialog.alert() du nouveau composant ui-premium.
+//   - dialogs.confirm({ title, message, variant }) délègue à Dialog.confirm().
+//   - Rétrocompatible 100% : tous les appels existants fonctionnent à l'identique
+//     mais bénéficient automatiquement du nouveau design premium
+//     (backdrop blur, animations, header coloré avec icon adapté).
+//   - Le fallback singleton (setConfirmGlobal / setAlertGlobal) est conservé
+//     en cas d'erreur d'import dynamique (SSR ou contexte particulier).
+function tryNewDialog(method, options) {
+  if (typeof window === "undefined") return null;
+  try {
+    // Dynamic import pour éviter les soucis SSR + cycle
+    return import("./components/ui-premium/Dialog").then((mod) => {
+      const D = mod.Dialog || mod.default;
+      return D[method](options);
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
 export const dialogs = {
   confirm(options) {
+    // Premium : Dialog.confirm() avec mêmes propriétés
+    const newAttempt = tryNewDialog("confirm", {
+      title: options?.title || "Confirmation",
+      message: options?.message,
+      danger: options?.variant === "danger",
+      confirmLabel: options?.confirmLabel,
+      cancelLabel: options?.cancelLabel,
+    });
+    if (newAttempt) return newAttempt;
+    // Fallback legacy
     return new Promise((resolve) => {
       resolveConfirm = resolve;
       setConfirmGlobal(options || {});
     });
   },
   alert(options) {
+    // Normaliser : si string passé, l'utiliser comme message
+    const opts = typeof options === "string" ? { message: options } : (options || {});
+    // Mapping variant legacy → variant Dialog premium
+    const variantMap = { primary: "info", danger: "danger", warning: "warning", success: "success" };
+    const newAttempt = tryNewDialog("alert", {
+      title: opts.title || "Information",
+      message: opts.message,
+      variant: variantMap[opts.variant] || "info",
+    });
+    if (newAttempt) return newAttempt;
+    // Fallback legacy
     return new Promise((resolve) => {
       resolveAlert = resolve;
-      setAlertGlobal(typeof options === "string" ? { message: options } : (options || {}));
+      setAlertGlobal(opts);
     });
   },
 };

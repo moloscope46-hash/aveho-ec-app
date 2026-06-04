@@ -2,12 +2,14 @@
 // Page Profil — Permet à l'utilisateur connecté de modifier son nom d'affichage,
 // son mot de passe, et ses préférences personnelles (notifs reçues, etc.).
 // Alpha 0.29.0 : dashboard "mes stats" + préférences notifications par user
+// 0.58.6 : refonte UI avec PageHero + Tabs (4 onglets) + Avatar premium
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn, EntityIcon, CollapsibleSection } from "../ui";
+import { PageHero, Tabs, Avatar, KpiCard } from "../components/ui-premium";
 import { resetOnboarding } from "../OnboardingTour";
 import NotifCategories from "../NotifCategories";
 import { KpiRow } from "../kpis";
@@ -32,6 +34,8 @@ export default function Profil() {
   // Alpha 0.29.0 : stats utilisateur
   const [stats, setStats] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
+  // 0.58.6 : 4 onglets pour mieux organiser la page Profil
+  const [activeTab, setActiveTab] = useState("activite");
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -130,14 +134,42 @@ export default function Profil() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead eyebrow="MON COMPTE" icon="ti-user-circle" title="Mon profil" sub={auth.user?.email} />
+        {/* 0.58.6 : PageHero premium */}
+        <PageHero
+          icon="ti-user-circle"
+          eyebrow="MON COMPTE"
+          title="Mon profil"
+          subtitle={auth.user?.email}
+          variant="blue"
+          breadcrumbs={[
+            { label: "Accueil", href: "/accueil" },
+            { label: "Mon profil" },
+          ]}
+        />
+
+        {!loading && (
+          <div style={{ marginBottom: 20 }}>
+            <Tabs
+              active={activeTab}
+              onChange={setActiveTab}
+              style="pills"
+              tabs={[
+                { id: "activite", label: "Activité",      icon: "ti-chart-bar" },
+                { id: "profil",   label: "Profil",        icon: "ti-user" },
+                { id: "notifs",   label: "Notifications", icon: "ti-bell-cog" },
+                { id: "secu",     label: "Sécurité",      icon: "ti-shield-lock" },
+              ]}
+            />
+          </div>
+        )}
 
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
           <>
-            {/* En-tête identité */}
+            {/* En-tête identité avec Avatar premium - toujours visible */}
             <Panel style={{ marginBottom: 18 }}>
               <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-                <EntityIcon kind="utilisateur" size={64} />
+                {/* 0.58.6 : Avatar premium avec halo glow remplace EntityIcon */}
+                <Avatar name={nom || auth.user?.email} size={64} ring />
                 <div style={{ flex: 1, minWidth: 200 }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: "#142131" }}>{nom || auth.user?.email}</div>
                   <div style={{ fontSize: 13, color: "#6c7a89" }}>{auth.user?.email}</div>
@@ -151,6 +183,9 @@ export default function Profil() {
 
             {err && <div className="err" style={{ marginBottom: 14 }}>{err}</div>}
 
+            {/* === ONGLET ACTIVITÉ === */}
+            {activeTab === "activite" && (
+            <div key="activite" className="av-tab-content">
             {/* Alpha 0.29.0 : Dashboard "Mes stats" */}
             {stats && (
               <Panel style={{ marginBottom: 18 }}>
@@ -198,7 +233,11 @@ export default function Profil() {
                 </div>
               </Panel>
             )}
+            </div>)}
 
+            {/* === ONGLET PROFIL === */}
+            {activeTab === "profil" && (
+            <div key="profil" className="av-tab-content">
             {/* Nom d'affichage */}
             <Panel style={{ marginBottom: 18 }}>
               <h2 style={{ margin: "0 0 16px", fontSize: 17 }}>Nom d'affichage</h2>
@@ -213,7 +252,11 @@ export default function Profil() {
                 <Btn variant="primary" icon="ti-device-floppy" onClick={saveNom}>Enregistrer</Btn>
               </div>
             </Panel>
+            </div>)}
 
+            {/* === ONGLET NOTIFICATIONS === */}
+            {activeTab === "notifs" && (
+            <div key="notifs" className="av-tab-content">
             {/* Alpha 0.29.0 : Préférences notif par user (déplacé depuis /parametres) */}
             <Panel style={{ marginBottom: 18 }}>
               <h2 style={{ margin:"0 0 14px", fontSize:17, color:"#142131" }}>
@@ -251,7 +294,11 @@ export default function Profil() {
             >
               <NotifCategories auth={auth} />
             </CollapsibleSection>
+            </div>)}
 
+            {/* === ONGLET SÉCURITÉ === */}
+            {activeTab === "secu" && (
+            <div key="secu" className="av-tab-content">
             {/* Alpha 0.46.0 : Aide & onboarding */}
             <CollapsibleSection 
               title="Aide & visite guidée" 
@@ -329,6 +376,7 @@ export default function Profil() {
                 {auth.role && <div><b>Permissions :</b> {Array.isArray(auth.role.permissions_json) ? auth.role.permissions_json.join(", ") : "—"}</div>}
               </div>
             </Panel>
+            </div>)}
           </>
         )}
       </div>

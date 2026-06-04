@@ -8,6 +8,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
+import { PageHero } from "../components/ui-premium";
 import { logger } from "../../lib/logger";
 
 const MOIS = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -147,8 +148,18 @@ export default function CalendrierInterventions() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead eyebrow="PLANNING" icon="ti-calendar" title="Calendrier" accent="interventions"
-          sub="Vue mensuelle des DI — positionnées sur leur date d'échéance ou de création" />
+        {/* 0.58.4 : PageHero premium */}
+        <PageHero
+          icon="ti-calendar"
+          eyebrow="PLANNING"
+          title="Calendrier des interventions"
+          subtitle="Vue mensuelle des DI — positionnées sur leur date d'échéance ou de création"
+          variant="violet"
+          breadcrumbs={[
+            { label: "Accueil", href: "/accueil" },
+            { label: "Calendrier" },
+          ]}
+        />
         <Panel>
           {/* Toolbar navigation */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>

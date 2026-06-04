@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.11 — HOTFIX recherche + Migration Select + Modal API + TabPanel + Skeleton + DatePicker + Combobox</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#1c2440 0%,#3d2f5e 45%,#7CC8C8 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,134,127,.20) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.22);border:1px solid rgba(124,200,200,.40);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+.panel.hotfix{background:linear-gradient(135deg,#fef3e6,#fff9f1);border-color:#f5d4a8;border-left:4px solid var(--amber)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--teal)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.a{background:linear-gradient(135deg,#fef3e6,#fff);border-color:#f5d4a8}.top-kpi.a .top-kpi-val{color:#c8801f}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* Tag pop demo */
+@keyframes av-tag-pop-demo {
+  from { opacity: 0; transform: scale(0.7) translateY(-2px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+.tag-demo-stack{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:9px 12px;background:#fff;border:1.5px solid #7CC8C8;border-radius:10px;box-shadow:0 0 0 3px rgba(124,200,200,.20);margin:14px 0}
+.tag-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 4px 3px 9px;background:linear-gradient(135deg,rgba(124,200,200,.15),rgba(124,200,200,.08));border:1px solid rgba(124,200,200,.35);border-radius:99px;font-size:12;font-weight:500;color:#142131;animation:av-tag-pop-demo 240ms ease-out}
+.tag-pill .x{width:18px;height:18px;border-radius:99px;background:rgba(255,255,255,.7);border:none;color:#6c7a89;font-size:10;display:inline-flex;align-items:center;justify-content:center}
+
+/* Date picker demo */
+.dp-demo{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1.5px solid #e3e9ee;border-radius:10px;font-size:13.5;font-weight:500;color:#142131;cursor:pointer;min-width:260px;margin:8px 0}
+.dp-demo.focused{border-color:#7CC8C8;box-shadow:0 0 0 3px rgba(124,200,200,.20)}
+.dp-demo i.cal{color:#185FA5;font-size:16}
+.dp-demo .flex{flex:1}
+.dp-demo .clear{width:22px;height:22px;border-radius:6px;background:#f4f7fa;display:inline-flex;align-items:center;justify-content:center;font-size:11;color:#8a98a8}
+
+/* Skeleton variants demo */
+@keyframes shimmer-demo { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
+.skel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+.skel-card{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:18px;min-height:130px;display:flex;flex-direction:column;gap:10px}
+.skel-bar{height:14px;border-radius:6px;background:linear-gradient(90deg,#f4f7fa 0%,#e3e9ee 50%,#f4f7fa 100%);background-size:1000px 100%;animation:shimmer-demo 1.6s linear infinite}
+.skel-circle{width:32px;height:32px;border-radius:50%;background:linear-gradient(90deg,#f4f7fa 0%,#e3e9ee 50%,#f4f7fa 100%);background-size:1000px 100%;animation:shimmer-demo 1.6s linear infinite}
+.skel-h28{height:28px;border-radius:6px;background:linear-gradient(90deg,#f4f7fa 0%,#e3e9ee 50%,#f4f7fa 100%);background-size:1000px 100%;animation:shimmer-demo 1.6s linear infinite}
+
+/* Modal preview */
+.modal-preview-wrap{position:relative;background:linear-gradient(135deg,#e3e9ee 0%,#cfd8e0 100%);border-radius:14px;padding:30px;margin:14px 0;display:flex;justify-content:center}
+.modal-preview{width:380px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px rgba(20,33,49,.30),0 12px 24px rgba(20,33,49,.18),0 0 0 1px rgba(255,255,255,.08) inset;position:relative}
+.modal-preview .head{display:flex;align-items:center;gap:12px;padding:18px 22px;color:#fff;background:#C9867F;position:relative;overflow:hidden}
+.modal-preview .head::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)}
+.modal-preview .head::after{content:"";position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(255,255,255,.18) 0%,transparent 70%);border-radius:50%}
+.modal-preview .head > *{position:relative;z-index:1}
+.modal-preview .ic{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:19}
+.modal-preview .titlewrap{flex:1;min-width:0}
+.modal-preview .t{font-size:15;font-weight:700}
+.modal-preview .st{font-size:12;font-weight:500;opacity:.85;margin-top:2px;color:rgba(255,255,255,.85)}
+.modal-preview .ha{display:inline-flex;gap:6px;margin-right:4px}
+.modal-preview .ha button{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.10);color:#fff;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13;cursor:pointer}
+.modal-preview .x{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.10);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16}
+.modal-preview .body{padding:22px 24px;font-size:13.5;color:#4a5868;line-height:1.6}
+.modal-preview .foot{padding:14px 22px 18px;border-top:1px solid #eef1f4;display:flex;justify-content:flex-end;gap:10px;background:linear-gradient(180deg,#fafbfc 0%,#f4f7fa 100%)}
+.modal-preview .foot button{padding:8px 16px;border-radius:10px;font-weight:600;font-size:13;border:none;cursor:pointer}
+.modal-preview .foot .ghost{background:#ECEEF0;color:#5a6776}
+.modal-preview .foot .danger{background:#C9867F;color:#fff}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 10 — POLISH MAX</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.11 — HOTFIX recherche + 6 chantiers UI<small>2 nouveaux composants (DatePicker, Combobox) · 3 Skeleton variants · Modal API étendue · Animations tabs · Migration <code>&lt;select&gt;</code></small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.11-alpha</code></span>
+    <span><b>Tests :</b> 3567 Vitest (+46)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi a"><div class="top-kpi-val">1</div><div class="top-kpi-lbl">HOTFIX prod</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">+2</div><div class="top-kpi-lbl">Composants (12 total)</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">+3</div><div class="top-kpi-lbl">Skeleton variants</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+46</div><div class="top-kpi-lbl">Tests Vitest (3567)</div></div>
+</div>
+
+<h2>🐛 HOTFIX GlobalSearch</h2>
+
+<div class="panel hotfix">
+<p style="margin:0"><strong>Bug observé en prod</strong> dans tes logs : taper <code>ced=</code> dans la barre de recherche envoyait <code>or=(numero.ilike.%ced=%25,type.ilike.%ced=%25)</code> à Supabase → <strong>400 Bad Request</strong> car le <code>=</code> est interprété comme séparateur PostgREST. Le fix sanitize les caractères qui cassent <code>.or()</code> : <code>=</code>, virgule, parenthèses, étoile.</p>
+</div>
+
+<pre>// 0.58.11 - sanitize avant query PostgREST
+if (activeFilter) filterType = activeFilter;
+const safeSearch = searchTerm.replace(/[=,()*]/g, '').trim();
+if (!safeSearch) { setResults([]); setLoading(false); return; }
+const term = `%${safeSearch}%`;</pre>
+
+<h2>🎯 Migration <code>&lt;select&gt;</code> natifs → Select premium</h2>
+
+<table>
+<tr><th>Page</th><th>Selects migrés</th><th>Détail</th></tr>
+<tr><td><code>/parametres</code></td><td><b>2</b></td><td>Devise (EUR/CHF/USD) avec icons ti-currency-* + Format dates (FR/EN/ISO) avec ti-calendar</td></tr>
+<tr><td><code>/interventions</code></td><td><b>2</b></td><td>Filtres "Tous les statuts" + "Tous les types" en haut de la liste (size=sm)</td></tr>
+</table>
+
+<p style="font-size:13px;color:#6c7a89;font-style:italic">Bénéfice : design cohérent avec la charte Aveho au lieu du style natif OS qui change selon Windows/Mac/Mobile. Focus ring teal, animations pop, support keyboard et a11y identique partout.</p>
+
+<h2>🪟 Refonte Modal API</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveaux props : <code>subtitle</code>, <code>iconBg</code>, <code>iconColor</code>, <code>headerActions</code> (slot React), <code>variant</code> ('default' / 'minimal' / 'danger'), taille <code>xl</code> (920px). 100% rétrocompatible.</p>
+</div>
+
+<div class="modal-preview-wrap">
+  <div class="modal-preview">
+    <div class="head">
+      <div class="ic">⚠</div>
+      <div class="titlewrap">
+        <div class="t">Confirmer la suppression</div>
+        <div class="st">Cette action est définitive</div>
+      </div>
+      <div class="ha">
+        <button title="Partager">↗</button>
+      </div>
+      <div class="x">✕</div>
+    </div>
+    <div class="body">
+      Variant <b>danger</b> avec gradient terra, <b>subtitle</b> sous le titre, <b>headerActions</b> avec bouton Partager. Tout customisable en restant rétrocompatible.
+    </div>
+    <div class="foot">
+      <button class="ghost">Annuler</button>
+      <button class="danger">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<pre>&lt;Modal
+  open={open}
+  onClose={close}
+  title='Confirmer la suppression'
+  subtitle='Cette action est définitive'
+  variant='danger'           // header rouge terra forcé
+  size='lg'
+  headerActions={&lt;button onClick={share}&gt;↗ Partager&lt;/button&gt;}
+  footer={&lt;&gt;...&lt;/&gt;}
+&gt;
+  Contenu de la modale
+&lt;/Modal&gt;</pre>
+
+<h2>📑 Animations slide horizontal entre tabs</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau composant <code>&lt;TabPanel active={activeTab}&gt;</code> + class utility <code>.av-tab-content</code> + keyframe <code>av-tab-slide-in</code> : opacity 0 + translateX(20px) → opacity 1 + translateX(0) sur 280ms. <strong>Intégré dans /parametres (3 tabs) et /profil (4 tabs)</strong>.</p>
+</div>
+
+<pre>// CSS
+@keyframes av-tab-slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// Usage
+{activeTab === 'general' && (
+  &lt;div key='general' className='av-tab-content'&gt;
+    &lt;Panel&gt;...&lt;/Panel&gt;
+  &lt;/div&gt;
+)}</pre>
+
+<h2>💀 3 nouveaux Skeleton variants</h2>
+
+<table>
+<tr><th>Variant</th><th>Usage</th></tr>
+<tr><td><code>SkeletonCard</code></td><td>Card autonome (icon + label + valeur + détail + sparkline opt.) — mimique KpiCard</td></tr>
+<tr><td><code>SkeletonAvatar</code></td><td>Avatar circle + nom + sous-titre opt. — listes users/contacts</td></tr>
+<tr><td><code>SkeletonKpi</code></td><td>Rangée de N cards alignées — mimique KpiRow</td></tr>
+</table>
+
+<h3>SkeletonKpi (count=4)</h3>
+<div class="skel-grid">
+  <div class="skel-card">
+    <div style="display:flex;align-items:center;gap:10px"><div class="skel-circle"></div><div class="skel-bar" style="flex:1;max-width:55%"></div></div>
+    <div class="skel-h28" style="max-width:45%"></div>
+    <div class="skel-bar" style="max-width:70%"></div>
+  </div>
+  <div class="skel-card">
+    <div style="display:flex;align-items:center;gap:10px"><div class="skel-circle"></div><div class="skel-bar" style="flex:1;max-width:55%"></div></div>
+    <div class="skel-h28" style="max-width:45%"></div>
+    <div class="skel-bar" style="max-width:70%"></div>
+  </div>
+  <div class="skel-card">
+    <div style="display:flex;align-items:center;gap:10px"><div class="skel-circle"></div><div class="skel-bar" style="flex:1;max-width:55%"></div></div>
+    <div class="skel-h28" style="max-width:45%"></div>
+    <div class="skel-bar" style="max-width:70%"></div>
+  </div>
+  <div class="skel-card">
+    <div style="display:flex;align-items:center;gap:10px"><div class="skel-circle"></div><div class="skel-bar" style="flex:1;max-width:55%"></div></div>
+    <div class="skel-h28" style="max-width:45%"></div>
+    <div class="skel-bar" style="max-width:70%"></div>
+  </div>
+</div>
+
+<h2>📅 DatePicker custom</h2>
+
+<div class="panel">
+<p style="margin:0">Wrapper sur <code>&lt;input type='date'&gt;</code> natif avec design premium. <strong>Affichage français long lisible</strong> (<code>4 juin 2026</code> au lieu de <code>2026-06-04</code>). Icon calendrier + clear button × hover rouge.</p>
+</div>
+
+<div class="dp-demo focused">
+  <i class="cal">📅</i>
+  <span class="flex">4 juin 2026</span>
+  <span class="clear">✕</span>
+</div>
+
+<pre>&lt;DatePicker
+  value={birthday}
+  onChange={setBirthday}
+  label='Date de naissance'
+  min='1900-01-01'
+  max='2030-12-31'
+  size='md'
+/&gt;</pre>
+
+<h2>🏷️ Combobox multi-select avec tags</h2>
+
+<div class="panel">
+<p style="margin:0">Sélection multiple d'options avec tags pills cliquables, gradient teal, × hover rouge, animation <code>av-tag-pop</code> 200ms à l'ajout. Recherche live + maxTags optionnel.</p>
+</div>
+
+<div class="tag-demo-stack">
+  <span class="tag-pill">⚠️ Urgent <button class="x">✕</button></span>
+  <span class="tag-pill">💧 Perfusion <button class="x">✕</button></span>
+  <span class="tag-pill">♿ VPH <button class="x">✕</button></span>
+  <i style="margin-left:auto;color:#8a98a8;font-size:14">▼</i>
+</div>
+
+<pre>const [tags, setTags] = useState(['urgent', 'perfusion']);
+
+&lt;Combobox
+  values={tags}
+  onChange={setTags}
+  options={[
+    { value: 'urgent', label: 'Urgent', icon: 'ti-alert-triangle', iconColor: '#c0392b' },
+    { value: 'perfusion', label: 'Perfusion', icon: 'ti-droplet' },
+    { value: 'vph', label: 'VPH', icon: 'ti-wheelchair' },
+  ]}
+  placeholder='Choisir des tags…'
+  searchable
+  maxTags={3}
+/&gt;</pre>
+
+<h2>📊 Bilan composants premium (12 au total)</h2>
+
+<table>
+<tr><th>#</th><th>Composant</th><th>Depuis</th></tr>
+<tr><td>1</td><td><code>KpiCard</code></td><td>0.58.0</td></tr>
+<tr><td>2</td><td><code>Sparkline</code></td><td>0.58.0</td></tr>
+<tr><td>3</td><td><code>MetricCard</code></td><td>0.58.0</td></tr>
+<tr><td>4</td><td><code>Skeleton</code> (+SkeletonText, Row, Grid, <b>Card, Avatar, Kpi</b>)</td><td>0.58.0 / <b>0.58.11</b></td></tr>
+<tr><td>5</td><td><code>EmptyState</code></td><td>0.58.0</td></tr>
+<tr><td>6</td><td><code>Toast</code> (5 helpers : success/info/warning/error/neutral)</td><td>0.58.0 / 0.58.10</td></tr>
+<tr><td>7</td><td><code>PageHero</code></td><td>0.58.3</td></tr>
+<tr><td>8</td><td><code>Tabs</code> (+<code>TabPanel</code> avec slide animation)</td><td>0.58.3 / <b>0.58.11</b></td></tr>
+<tr><td>9</td><td><code>Avatar</code> + <code>AvatarGroup</code></td><td>0.58.4</td></tr>
+<tr><td>10</td><td><code>Select</code> custom</td><td>0.58.10</td></tr>
+<tr><td>11</td><td><b><code>DatePicker</code> custom</b></td><td><b>0.58.11</b></td></tr>
+<tr><td>12</td><td><b><code>Combobox</code> multi-select tags</b></td><td><b>0.58.11</b></td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.11
+npm install --legacy-peer-deps
+npm test                              # 3567 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.11 - HOTFIX search + Migration Select + Modal API + TabPanel + Skeleton variants + DatePicker + Combobox"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>TimePicker</b> (heures de RDV/intervention, complément du DatePicker)</li>
+<li><b>Migrer les <code>&lt;select&gt;</code> restants</b> : modals interventions ont 5 selects (materiel, patient, depot, zone, type) qui bénéficieraient de la recherche live</li>
+<li><b>Toast action button</b> : <code>toast.success('Supprimé', { action: 'Annuler', onAction: undo })</code> pour permettre l'undo</li>
+<li><b>Composant Dialog</b> amélioré au-dessus de Modal (confirm avec preview, prompt avec validation, etc.)</li>
+<li><b>Drawer Side</b> : panneau latéral coulissant (alternative à Modal pour les longs formulaires)</li>
+</ul>
+</div>
+
+<h2>⚠️ À investiguer côté backend (pas dans cette release)</h2>
+<div class="panel hotfix">
+<p style="margin:0 0 10px"><strong>Erreurs observées en prod dans tes logs</strong> qui méritent une session dédiée :</p>
+<ul style="margin:0">
+<li><b>403 audit_log</b> : RLS Supabase à vérifier</li>
+<li><b>400 RPC patient_dashboard_*, fusionner_doublon, rollback_fusion</b> : fonctions probablement non déployées ou signatures changées</li>
+<li><b>404 add_user_to_etablissement</b> : RPC manquante</li>
+<li><b>405 /api/ocr/bulletin-situation, /api/patients/from-ocr</b> : routes POST appelées en GET ?</li>
+<li><b>20× CSP report-only violations</b> : à analyser ce qui violait</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.11 · 4 juin 2026 · 3567 Vitest · UI Phase 10 (HOTFIX + Migration Select + Modal API + TabPanel + Skeleton variants + DatePicker + Combobox)</footer>
+</div></body></html>

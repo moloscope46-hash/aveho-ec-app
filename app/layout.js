@@ -8,6 +8,8 @@ import GlobalSearch from "./GlobalSearch";
 import AlertToastContainer from "./components/AlertToast";
 import { DialogsHost } from "./dialogs";
 import GlobalErrorCapture from "./GlobalErrorCapture";
+// 0.58.10 : transition douce entre routes (fade + slide-up)
+import PageTransition from "./components/PageTransition";
 // 0.57.8 : Composants non critiques pour le LCP regroupés dans un Client
 // Component pour permettre next/dynamic ssr: false (interdit dans les
 // Server Components depuis Next 15). Économise du JS sur le bundle initial.
@@ -83,7 +85,8 @@ export default function RootLayout({ children }) {
         <LectureSeuleBadge />
         <GlobalSearch />
         <AlertToastContainer />
-        {children}
+        {/* 0.58.10 : transition douce entre routes */}
+        <PageTransition>{children}</PageTransition>
         <InstallPWA />
         {/* Alpha 0.46.0 : host global pour dialogs.confirm() / dialogs.alert() */}
         <DialogsHost />

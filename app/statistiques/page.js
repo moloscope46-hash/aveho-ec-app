@@ -10,6 +10,7 @@ import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
+import { PageHero, toast, RangePicker } from "../components/ui-premium";
 import { openPdfPreview } from "../../lib/pdfPreview";
 // Alpha 0.19.0 : exportBilan importé dynamiquement à l'appel (économise ~5KB initial)
 
@@ -108,6 +109,8 @@ export default function Statistiques() {
   const [sgParType, setSgParType] = useState([]);
   const [sgParStatut, setSgParStatut] = useState([]);
   const [sgTauxReponse, setSgTauxReponse] = useState({ avec: 0, sans: 0, pct: 0 });
+  // 0.58.14 : filtre période avec RangePicker
+  const [range, setRange] = useState({ from: "", to: "" });
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
@@ -256,83 +259,114 @@ export default function Statistiques() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-          <PageHead eyebrow="ANALYSE" icon="ti-chart-bar" title="Statistiques" accent={auth.structureNom} sub="Tableaux de bord visuels — 6 derniers mois" />
-          {!loading && (
-            <button className="btn-ghost" onClick={() => {
-              // Alpha 0.8 : sérialiser les SVG actuels dans un HTML d'impression
-              const panels = document.querySelectorAll(".wrap .panel");
-              const sections = Array.from(panels).map((p) => {
-                const titleEl = p.querySelector("h3");
-                const titleText = titleEl ? titleEl.textContent : "";
-                // On clone le contenu pour ne pas perturber le DOM
-                const body = p.innerHTML.replace(/onclick="[^"]*"/g, "");
-                return `<div class="stat-block"><h2>${titleText}</h2><div class="stat-content">${body.replace(titleEl ? titleEl.outerHTML : "", "")}</div></div>`;
-              }).join("");
-              const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Statistiques Aveho</title>
-                <style>
-                  @page { margin: 12mm; size: A4; }
-                  body{font-family:'Segoe UI',Helvetica,sans-serif;color:#142131;margin:0;padding:0}
-                  .head{border-bottom:3px solid #7CC8C8;padding-bottom:10px;margin-bottom:18px}
-                  .eyebrow{color:#7CC8C8;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
-                  h1{margin:6px 0 2px;font-size:20px;font-weight:700}
-                  .sub{color:#6c7a89;font-size:12px}
-                  .stat-block{break-inside:avoid;margin-bottom:18px;padding:14px;border:1px solid #e3e9ee;border-radius:10px}
-                  .stat-block h2{margin:0 0 10px;font-size:14px;color:#142131}
-                  .stat-content svg{max-width:100%;height:auto}
-                  .foot{margin-top:20px;color:#9aa7b4;font-size:10px;text-align:center;border-top:1px solid #e3e9ee;padding-top:10px}
-                </style></head><body>
-                <div class="head">
-                  <div class="eyebrow">AVEHO — ESPACE COLLECTIVITÉ</div>
-                  <h1>Statistiques — ${auth.structureNom || ""}</h1>
-                  <div class="sub">Tableaux de bord visuels — 6 derniers mois — Édition du ${new Date().toLocaleString("fr-FR")}</div>
-                </div>
-                ${sections}
-                <div class="foot">Document généré le ${new Date().toLocaleString("fr-FR")} depuis Aveho EC</div>
-              </body></html>`;
-              // Alpha 0.14 : aperçu avant impression
-              openPdfPreview({ titre: "Statistiques — 6 derniers mois", html, filename: "statistiques" });
-            }}>
-              <i className="ti ti-file-type-pdf" /> Export PDF
-            </button>
-          )}
-          {auth.ready && (
-            <button className="btn-ghost" onClick={async () => {
-              // Alpha 0.15 : export Excel multi-feuille bilan complet
-              setLoading(true);
-              try {
-                let qPat = supabase.from("patients").select("*");
-                let qMat = supabase.from("materiels").select("*, articles(libelle, reference), depots(nom), patients(nom, prenom)");
-                let qDi = supabase.from("interventions").select("*, materiels(libelle), patients(nom, prenom)");
-                let qMnt = supabase.from("maintenances").select("*, materiels(libelle)");
-                let qStock = supabase.from("stock_articles").select("*, articles(libelle, reference), depots(nom)");
-                let qAch = supabase.from("achats").select("*");
-                if (auth.etabId) {
-                  qPat = qPat.eq("etablissement_id", auth.etabId);
-                  qMat = qMat.eq("etablissement_id", auth.etabId);
-                  qDi = qDi.eq("etablissement_id", auth.etabId);
-                  qMnt = qMnt.eq("etablissement_id", auth.etabId);
-                  qAch = qAch.eq("etablissement_id", auth.etabId);
-                }
-                const [pat, mat, di, mnt, stock, ach] = await Promise.all([qPat, qMat, qDi, qMnt, qStock, qAch]);
-                // Alpha 0.19.0 : lazy load du module exportExcel
-                const { exportBilan } = await import("../../lib/exportExcel");
-                await exportBilan({
-                  patients: pat.data || [],
-                  materiels: mat.data || [],
-                  interventions: di.data || [],
-                  maintenances: mnt.data || [],
-                  stock: stock.data || [],
-                  achats: ach.data || [],
-                }, {
-                  collectiviteNom: auth.structureNom,
-                  etabNom: auth.etabNom,
-                });
-              } catch (e) { alert("Export CSV : " + e.message); }
-              finally { setLoading(false); }
-            }}>
-              <i className="ti ti-file-spreadsheet" /> Export CSV
-            </button>
+        {/* 0.58.4 : PageHero premium remplace PageHead minimaliste */}
+        <PageHero
+          icon="ti-chart-bar"
+          eyebrow="ANALYSE"
+          title="Statistiques"
+          subtitle={`Tableaux de bord visuels — 6 derniers mois${auth.structureNom ? ` · ${auth.structureNom}` : ""}`}
+          variant="blue"
+          breadcrumbs={[
+            { label: "Accueil", href: "/accueil" },
+            { label: "Statistiques" },
+          ]}
+          actions={
+            <>
+              {!loading && (
+                <button className="btn-ghost btn-premium btn-sm" onClick={() => {
+                  // Alpha 0.8 : sérialiser les SVG actuels dans un HTML d'impression
+                  const panels = document.querySelectorAll(".wrap .panel");
+                  const sections = Array.from(panels).map((p) => {
+                    const titleEl = p.querySelector("h3");
+                    const titleText = titleEl ? titleEl.textContent : "";
+                    const body = p.innerHTML.replace(/onclick="[^"]*"/g, "");
+                    return `<div class="stat-block"><h2>${titleText}</h2><div class="stat-content">${body.replace(titleEl ? titleEl.outerHTML : "", "")}</div></div>`;
+                  }).join("");
+                  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Statistiques Aveho</title>
+                    <style>
+                      @page { margin: 12mm; size: A4; }
+                      body{font-family:'Segoe UI',Helvetica,sans-serif;color:#142131;margin:0;padding:0}
+                      .head{border-bottom:3px solid #7CC8C8;padding-bottom:10px;margin-bottom:18px}
+                      .eyebrow{color:#7CC8C8;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+                      h1{margin:6px 0 2px;font-size:20px;font-weight:700}
+                      .sub{color:#6c7a89;font-size:12px}
+                      .stat-block{break-inside:avoid;margin-bottom:18px;padding:14px;border:1px solid #e3e9ee;border-radius:10px}
+                      .stat-block h2{margin:0 0 10px;font-size:14px;color:#142131}
+                      .stat-content svg{max-width:100%;height:auto}
+                      .foot{margin-top:20px;color:#9aa7b4;font-size:10px;text-align:center;border-top:1px solid #e3e9ee;padding-top:10px}
+                    </style></head><body>
+                    <div class="head">
+                      <div class="eyebrow">AVEHO — ESPACE COLLECTIVITÉ</div>
+                      <h1>Statistiques — ${auth.structureNom || ""}</h1>
+                      <div class="sub">Tableaux de bord visuels — 6 derniers mois — Édition du ${new Date().toLocaleString("fr-FR")}</div>
+                    </div>
+                    ${sections}
+                    <div class="foot">Document généré le ${new Date().toLocaleString("fr-FR")} depuis Aveho EC</div>
+                  </body></html>`;
+                  openPdfPreview({ titre: "Statistiques — 6 derniers mois", html, filename: "statistiques" });
+                }}>
+                  <i className="ti ti-file-type-pdf" /> Export PDF
+                </button>
+              )}
+              {auth.ready && (
+                <button className="btn-ghost btn-premium btn-sm" onClick={async () => {
+                  setLoading(true);
+                  try {
+                    let qPat = supabase.from("patients").select("*");
+                    let qMat = supabase.from("materiels").select("*, articles(libelle, reference), depots(nom), patients(nom, prenom)");
+                    let qDi = supabase.from("interventions").select("*, materiels(libelle), patients(nom, prenom)");
+                    let qMnt = supabase.from("maintenances").select("*, materiels(libelle)");
+                    let qStock = supabase.from("stock_articles").select("*, articles(libelle, reference), depots(nom)");
+                    let qAch = supabase.from("achats").select("*");
+                    if (auth.etabId) {
+                      qPat = qPat.eq("etablissement_id", auth.etabId);
+                      qMat = qMat.eq("etablissement_id", auth.etabId);
+                      qDi = qDi.eq("etablissement_id", auth.etabId);
+                      qMnt = qMnt.eq("etablissement_id", auth.etabId);
+                      qAch = qAch.eq("etablissement_id", auth.etabId);
+                    }
+                    const [pat, mat, di, mnt, stock, ach] = await Promise.all([qPat, qMat, qDi, qMnt, qStock, qAch]);
+                    const { exportBilan } = await import("../../lib/exportExcel");
+                    await exportBilan({
+                      patients: pat.data || [],
+                      materiels: mat.data || [],
+                      interventions: di.data || [],
+                      maintenances: mnt.data || [],
+                      stock: stock.data || [],
+                      achats: ach.data || [],
+                    }, {
+                      collectiviteNom: auth.structureNom,
+                      etabNom: auth.etabNom,
+                    });
+                  } catch (e) { toast.error("Export CSV : " + e.message); }
+                  finally { setLoading(false); }
+                }}>
+                  <i className="ti ti-file-spreadsheet" /> Export CSV
+                </button>
+              )}
+            </>
+          }
+        />
+        {/* 0.58.14 : Filtre de période avec RangePicker premium */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "12px 16px",
+          background: "#fff",
+          border: "1px solid #e3e9ee",
+          borderRadius: 12,
+          margin: "16px 0",
+        }}>
+          <i className="ti ti-filter" style={{ color: "#185FA5", fontSize: 18 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#4a5868" }}>
+            Période d&apos;analyse :
+          </span>
+          <RangePicker value={range} onChange={setRange} />
+          {(range.from || range.to) && (
+            <span style={{ fontSize: 11.5, color: "#8a98a8", fontStyle: "italic", marginLeft: "auto" }}>
+              <i className="ti ti-info-circle" /> Filtre actif — recharger les données pour appliquer
+            </span>
           )}
         </div>
 

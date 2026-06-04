@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.4 — Drawer premium + PageHero + Avatar</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{
+  position:relative;
+  background:linear-gradient(135deg,#142131 0%,#1d2d42 30%,#3d2f5e 60%,#7a6fb0 130%);
+  color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;
+  box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden;
+}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.3) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(201,134,127,.18) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfb5dd;font-weight:700;background:rgba(122,111,176,.18);border:1px solid rgba(122,111,176,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#bfb5dd;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(191,181,221,.5)}70%{box-shadow:0 0 0 10px rgba(191,181,221,0)}100%{box-shadow:0 0 0 0 rgba(191,181,221,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#bfb5dd}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#dcd5ef;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#dcd5ef}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7a6fb0,#7CC8C8)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px;letter-spacing:-.01em}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.tip{background:linear-gradient(135deg,#f3effa,#faf8ff);border-color:#d6c9ec;border-left:4px solid var(--violet)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--violet)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+
+/* DRAWER PREVIEW */
+.drawer-preview{
+  display:grid;grid-template-columns:380px 1fr;gap:20px;
+  margin:20px 0;
+}
+.drawer-mock{
+  background:linear-gradient(180deg,#f8fafc 0%,#f4f7fa 100%);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 12px 30px rgba(20,33,49,.15),4px 0 16px rgba(20,33,49,.10);
+  border:1px solid var(--g200);
+}
+.drawer-mock-head{
+  height:78px;
+  background:linear-gradient(135deg,#0d1822 0%,#142131 40%,#1d3540 75%,#2a5a5a 130%);
+  color:#fff;
+  padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;
+  overflow:hidden;
+}
+.drawer-mock-head::before{content:"";position:absolute;top:-60px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(124,200,200,.35) 0%,transparent 70%);border-radius:50%}
+.drawer-mock-head::after{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(124,200,200,.6),transparent)}
+.drawer-mock-head .lg{font-size:22px;font-weight:600;letter-spacing:2.5px;position:relative;z-index:1}
+.drawer-mock-head .lg .vv{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+.drawer-mock-head .close{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.1);color:#fff;width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;position:relative;z-index:1}
+.drawer-mock-body{padding:18px}
+.drawer-mock-sect{margin-bottom:18px}
+.drawer-mock-sect-h{font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#7a8694;margin:0 6px 10px;display:flex;align-items:center;gap:8px}
+.drawer-mock-sect-h::before{content:"";width:4px;height:4px;border-radius:50%;background:#7CC8C8;box-shadow:0 0 6px rgba(124,200,200,.6)}
+.drawer-mock-sect-h .bar{flex:1;height:1px;background:linear-gradient(90deg,#e1e7ec 0%,transparent 100%)}
+.drawer-mock-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.drawer-mock-tile{position:relative;background:#fff;border:1px solid #e6ebf0;border-radius:14px;padding:15px 13px;display:flex;flex-direction:column;gap:10px;overflow:hidden;cursor:pointer;transition:transform 200ms,box-shadow 200ms}
+.drawer-mock-tile:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(20,33,49,.10),0 4px 10px rgba(124,200,200,.20);border-color:#7CC8C8}
+.drawer-mock-tile.on{background:linear-gradient(135deg,#f0fafa 0%,#fff 100%);box-shadow:0 0 0 2px #7CC8C8 inset,0 4px 14px rgba(124,200,200,.25)}
+.dmt-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;box-shadow:0 2px 6px rgba(20,33,49,.08)}
+.dmt-lbl{font-size:13px;font-weight:600;color:#142131}
+.dmt-cnt{position:absolute;top:11px;right:11px;background:linear-gradient(135deg,#e35d5b,#c0392b);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 4px rgba(192,57,43,.4);border:1.5px solid #fff}
+
+/* PageHero preview */
+.hero-preview{
+  background:linear-gradient(135deg,#142131 0%,#185FA5 100%);
+  border-radius:18px;padding:22px 26px;
+  position:relative;overflow:hidden;color:#fff;
+  margin:14px 0;
+}
+.hero-preview::before{content:"";position:absolute;top:-60px;right:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%}
+.hero-preview > *{position:relative;z-index:1}
+.hp-bc{font-size:12px;color:rgba(255,255,255,.65);margin-bottom:10px}
+.hp-row{display:flex;align-items:center;gap:16px}
+.hp-ic{width:50px;height:50px;background:linear-gradient(135deg,#7CC8C8,rgba(255,255,255,.15));border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(124,200,200,.4);box-shadow:0 0 14px rgba(124,200,200,.3)}
+.hp-title{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0;color:#fff}
+.hp-eye{font-size:10px;font-weight:700;letter-spacing:2px;color:#7CC8C8;margin-bottom:3px;text-transform:uppercase}
+.hp-stats{display:flex;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.hp-stat-lbl{font-size:10.5px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.hp-stat-val{font-size:20px;font-weight:700;color:#fff}
+
+/* Avatar showcase */
+.avatar-showcase{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#f4f7fa,#fff);border-radius:14px;margin:14px 0;border:1px solid var(--g200)}
+.av-demo{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;text-shadow:0 1px 2px rgba(0,0,0,.2);box-shadow:0 1px 2px rgba(20,33,49,.1),inset 0 -2px 4px rgba(0,0,0,.1);position:relative}
+.av-demo.t{background:linear-gradient(135deg,#7CC8C8 0%,#2a5a5a 100%)}
+.av-demo.b{background:linear-gradient(135deg,#185FA5 0%,#4a8dd4 100%)}
+.av-demo.tr{background:linear-gradient(135deg,#C9867F 0%,#b06d65 100%)}
+.av-demo.a{background:linear-gradient(135deg,#EF9F27 0%,#C9867F 100%)}
+.av-demo.v{background:linear-gradient(135deg,#7a6fb0 0%,#5db5b5 100%)}
+.av-demo.g{background:linear-gradient(135deg,#5aa05a 0%,#7CC8C8 100%)}
+.av-demo.r{background:linear-gradient(135deg,#c0392b 0%,#C9867F 100%)}
+.av-demo.n{background:linear-gradient(135deg,#142131 0%,#2a5a5a 100%)}
+.av-demo .status-dot{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;border:2px solid #fff}
+.status-dot.online{background:#5aa05a}.status-dot.busy{background:#EF9F27}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 3 — DEPLOYMENT</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.4 — Drawer premium + PageHero déployé<small>Avatar avec gradient déterministe — 9 composants premium au total</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.4-alpha</code></span>
+    <span><b>Tests :</b> 3385 Vitest (+26)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi v"><div class="top-kpi-val">1</div><div class="top-kpi-lbl">Drawer refondu</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">4</div><div class="top-kpi-lbl">Pages avec PageHero</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Composant Avatar</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">9</div><div class="top-kpi-lbl">Composants premium</div></div>
+</div>
+
+<h2>🚪 Drawer menu premium</h2>
+<div class="panel">
+<p style="margin:0">Refonte CSS complète du menu hamburger. Header agrandi avec gradient mesh 4-stops, dot pulsant sur les sections, tiles avec radial gradient au hover + icon qui scale & rotate, scrollbar customisée, animations fade-in-up. Aperçu :</p>
+</div>
+
+<div class="drawer-preview">
+  <div class="drawer-mock">
+    <div class="drawer-mock-head">
+      <div class="lg">a<span class="vv">v</span>eho</div>
+      <div class="close">✕</div>
+    </div>
+    <div class="drawer-mock-body">
+      <div class="drawer-mock-sect">
+        <div class="drawer-mock-sect-h">Opérationnel<span class="bar"></span></div>
+        <div class="drawer-mock-tiles">
+          <div class="drawer-mock-tile on">
+            <div class="dmt-ic" style="background:linear-gradient(135deg,#7CC8C8,#2a5a5a)">🏠</div>
+            <div class="dmt-lbl">Accueil</div>
+          </div>
+          <div class="drawer-mock-tile">
+            <div class="dmt-ic" style="background:linear-gradient(135deg,#C9867F,#b06d65)">🔧</div>
+            <div class="dmt-lbl">Interventions</div>
+            <div class="dmt-cnt">5</div>
+          </div>
+          <div class="drawer-mock-tile">
+            <div class="dmt-ic" style="background:linear-gradient(135deg,#185FA5,#4a8dd4)">📅</div>
+            <div class="dmt-lbl">Calendrier</div>
+          </div>
+          <div class="drawer-mock-tile">
+            <div class="dmt-ic" style="background:linear-gradient(135deg,#7a6fb0,#5db5b5)">📋</div>
+            <div class="dmt-lbl">Maintenance</div>
+            <div class="dmt-cnt" style="background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131">12</div>
+          </div>
+        </div>
+      </div>
+      <div class="drawer-mock-sect">
+        <div class="drawer-mock-sect-h">Analyse<span class="bar"></span></div>
+        <div class="drawer-mock-tiles">
+          <div class="drawer-mock-tile">
+            <div class="dmt-ic" style="background:linear-gradient(135deg,#185FA5,#4a8dd4)">📊</div>
+            <div class="dmt-lbl">Statistiques</div>
+          </div>
+          <div class="drawer-mock-tile">
+            <div class="dmt-ic" style="background:linear-gradient(135deg,#EF9F27,#C9867F)">📈</div>
+            <div class="dmt-lbl">Rapports</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <h3 style="margin-top:0">Améliorations</h3>
+    <ul style="font-size:13.5px;line-height:1.65;color:#4a5868">
+    <li>Header gradient 4-stops + decorative radial teal</li>
+    <li>Logo .v avec glow shadow</li>
+    <li>Bouton close rotation 90° au hover + bg rouge</li>
+    <li>Section headers avec dot pulsant + bar gradient</li>
+    <li>Tiles : icon scale(1.08) + rotate(-3°) au hover</li>
+    <li>Tile active : double shadow inset + outset</li>
+    <li>Count badge gradient + border blanc</li>
+    <li>Scrollbar custom 8px</li>
+    <li>Animation fade-in-up des sections</li>
+    </ul>
+  </div>
+</div>
+
+<h2>🦸 PageHero déployé sur 4 pages clés</h2>
+
+<table>
+<tr><th>Page</th><th>Variant</th><th>Stats inline ?</th><th>Actions intégrées ?</th></tr>
+<tr><td><code>/statistiques</code></td><td>🔵 blue</td><td>—</td><td>✅ Export PDF + Export CSV</td></tr>
+<tr><td><code>/interventions/kanban</code></td><td>🟠 terra</td><td>—</td><td>✅ Vue liste + Vue calendrier</td></tr>
+<tr><td><code>/calendrier</code></td><td>🟣 violet</td><td>—</td><td>—</td></tr>
+<tr><td><code>/materiels</code></td><td>⚫ navy</td><td>✅ 4 stats (Total + Location + Maintenance + Affectés)</td><td>—</td></tr>
+</table>
+
+<h3>Aperçu (variant=blue) :</h3>
+<div class="hero-preview">
+  <div class="hp-bc">Accueil &nbsp;›&nbsp; <strong style="color:#fff">Statistiques</strong></div>
+  <div class="hp-row">
+    <div class="hp-ic">📊</div>
+    <div>
+      <div class="hp-eye">ANALYSE</div>
+      <h2 class="hp-title">Statistiques</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:4px">Tableaux de bord visuels — 6 derniers mois · Hôpital Cédric</div>
+    </div>
+  </div>
+  <div class="hp-stats">
+    <div><div class="hp-stat-lbl">Interventions</div><div class="hp-stat-val">124</div></div>
+    <div><div class="hp-stat-lbl">Patients</div><div class="hp-stat-val">87</div></div>
+    <div><div class="hp-stat-lbl">Commandes</div><div class="hp-stat-val">42</div></div>
+  </div>
+</div>
+
+<h2>👤 Composant Avatar</h2>
+
+<div class="panel">
+<p style="margin:0">Génère un avatar circulaire ou rounded avec INITIALES (2 lettres max) en cas d'absence d'image. Couleur = <b>gradient déterministe</b> sur 8 (teal/blue/terra/amber/violet/green/red/navy) via hash du nom → <b>même utilisateur = même couleur partout dans l'app</b>.</p>
+</div>
+
+<div class="avatar-showcase">
+  <div class="av-demo t">CM</div>
+  <div class="av-demo b">YA<div class="status-dot online"></div></div>
+  <div class="av-demo tr">HM</div>
+  <div class="av-demo a">CD</div>
+  <div class="av-demo v">JB<div class="status-dot busy"></div></div>
+  <div class="av-demo g">IA</div>
+  <div class="av-demo r">HL</div>
+  <div class="av-demo n">FB</div>
+</div>
+
+<h3>API</h3>
+<pre>// Simple
+&lt;Avatar name="Cédric Mignot" size={48} /&gt;
+
+// Avec statut
+&lt;Avatar name="Hugo Martin" size={40} status="online" /&gt;
+
+// Avec image + halo glow
+&lt;Avatar src="/photo.jpg" name="Yassir" size={48} ring /&gt;
+
+// Group d'avatars avec overflow
+&lt;AvatarGroup
+  users={[
+    { name: "Cédric Mignot" },
+    { name: "Hugo Martin" },
+    { name: "Yassir Aouaj" },
+    { name: "Corentin David" },
+    { name: "Julien Bertrand" },
+  ]}
+  max={3}
+  size={32}
+/&gt;
+// Affiche : 3 avatars empilés + bulle "+2"</pre>
+
+<h3>4 statuts disponibles</h3>
+<ul>
+<li><b>online</b> 🟢 vert (#5aa05a)</li>
+<li><b>busy</b> 🟠 orange (#EF9F27)</li>
+<li><b>away</b> 🟤 terra (#C9867F)</li>
+<li><b>offline</b> ⚪ gris (#8a98a8)</li>
+</ul>
+
+<h2>📊 Bilan composants premium (9 au total)</h2>
+
+<table>
+<tr><th>Composant</th><th>Version</th><th>Description</th></tr>
+<tr><td><code>KpiCard</code></td><td>0.58.0</td><td>Card KPI avec count-up + sparkline + trend</td></tr>
+<tr><td><code>Sparkline</code></td><td>0.58.0</td><td>SVG mini-chart animé</td></tr>
+<tr><td><code>MetricCard</code></td><td>0.58.0</td><td>Progress bar avec shimmer + breakdown</td></tr>
+<tr><td><code>Skeleton</code></td><td>0.58.0</td><td>Loader shimmer + variants</td></tr>
+<tr><td><code>EmptyState</code></td><td>0.58.0</td><td>État vide élégant avec halo pulse</td></tr>
+<tr><td><code>Toast</code></td><td>0.58.0</td><td>Notifications modernes (toast.success/error)</td></tr>
+<tr><td><code>PageHero</code></td><td>0.58.3</td><td>Header de page premium (6 variants)</td></tr>
+<tr><td><code>Tabs</code></td><td>0.58.3</td><td>Onglets (pills / underline / segmented)</td></tr>
+<tr><td><code>Avatar</code> + <code>AvatarGroup</code></td><td><b>0.58.4</b></td><td>Avatar gradient déterministe + statuts</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.4
+npm install --legacy-peer-deps
+npm test                              # 3385 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.4 - Drawer premium + PageHero sur 4 pages + Avatar"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Avatar dans TopBar</b> : remplacer l'icône user-circle par <code>&lt;Avatar name={auth.user.nom}&gt;</code></li>
+<li><b>Avatar dans UserMenu</b> : header du menu user avec avatar XL + name + role</li>
+<li><b>Avatar dans listes d'utilisateurs</b> : page /utilisateurs, /collaborateurs</li>
+<li><b>AvatarGroup</b> sur les cards de signalements / interventions multi-assignés</li>
+<li><b>Tabs</b> sur les pages avec sous-sections (parametres, profil, etc.)</li>
+<li><b>Migration toast</b> : remplacer les vieux <code>.err</code> / <code>.ok</code> par <code>toast.error()</code> / <code>toast.success()</code></li>
+<li><b>EmptyState</b> sur les listes vides (DI, achats, signalements, patients)</li>
+<li><b>Mode sombre</b> via les CSS vars (toggle dark/light dans Settings)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.4 · 4 juin 2026 · 3385 Vitest · 9 composants premium · 22 LINT actifs</footer>
+</div></body></html>

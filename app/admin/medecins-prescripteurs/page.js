@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "../../components/ui-premium";
 import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/medecins-prescripteurs/page.js (Alpha 0.56.5)
@@ -53,7 +54,7 @@ function MedecinsPrescripteursPageInner() {
 
   async function verifyNow(m) {
     if (!m.rpps) {
-      alert("Ce médecin n'a pas de RPPS — impossible de vérifier automatiquement");
+      toast.error("Ce médecin n'a pas de RPPS — impossible de vérifier automatiquement");
       return;
     }
     setVerifyingId(m.id);
@@ -92,10 +93,10 @@ function MedecinsPrescripteursPageInner() {
         }).eq("id", m.id);
         await loadAll();
       } else {
-        alert(`Vérification : ${data.message || data.status}`);
+        toast.info(`Vérification : ${data.message || data.status}`);
       }
     } catch (e) {
-      alert("Erreur de vérification : " + e.message);
+      toast.error("Erreur de vérification : " + e.message);
     } finally {
       setVerifyingId(null);
     }

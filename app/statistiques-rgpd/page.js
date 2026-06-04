@@ -17,6 +17,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal } from "../ui";
+import { toast } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { BarChart, StackedBarChart, DonutChart, Gauge, TrendBadge, Heatmap } from "../Charts";
 import { FINALITES } from "../../lib/rgpd";
@@ -345,7 +346,7 @@ export default function StatistiquesRgpd() {
       const isoDate = new Date().toISOString().slice(0, 10);
       doc.save(`rapport-rgpd-${slug}-${isoDate}.pdf`);
     } catch (e) {
-      alert("Erreur lors de l'export PDF : " + (e.message || "inconnue"));
+      toast.error("Erreur lors de l'export PDF : " + (e.message || "inconnue"));
     } finally {
       setExportBusy(false);
     }

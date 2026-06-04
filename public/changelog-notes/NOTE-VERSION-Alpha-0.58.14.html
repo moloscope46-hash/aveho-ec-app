@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.14 — ProgressBar + Tooltip + Bulk interventions + Range stats + Wizard onboarding</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#0d1822 0%,#185FA5 45%,#7CC8C8 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(122,111,176,.20) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:#7CC8C8}
+h1{font-size:30px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bfe6e6;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--blue);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--teal)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.v{background:linear-gradient(135deg,#f3effa,#fff);border-color:#d6c9ec}.top-kpi.v .top-kpi-val{color:var(--violet)}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+
+/* ProgressBar demos */
+.pb-demo{margin:10px 0 18px}
+.pb-lbl{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12.5px;font-weight:600;color:#4a5868}
+.pb-pct{color:#142131;font-weight:700;font-size:12px}
+.pb-track{width:100%;height:8px;background:#f4f7fa;border:1px solid #e3e9ee;border-radius:99px;overflow:hidden;position:relative}
+.pb-track.lg{height:12px}
+.pb-track.sm{height:4px}
+.pb-fill{height:100%;border-radius:99px;position:relative;box-shadow:0 0 8px rgba(124,200,200,.4)}
+.pb-fill.teal{background:linear-gradient(90deg,#7CC8C8,#5db5b5);width:67%}
+.pb-fill.success{background:linear-gradient(90deg,#5aa05a,#3e8540);width:92%;box-shadow:0 0 8px rgba(90,160,90,.4)}
+.pb-fill.danger{background:linear-gradient(90deg,#C9867F,#b06d65);width:25%;box-shadow:0 0 8px rgba(201,134,127,.4)}
+.pb-fill.navy{background:linear-gradient(90deg,#142131,#243044);width:55%;box-shadow:0 0 8px rgba(20,33,49,.3)}
+.pb-fill::before{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.25),transparent);border-radius:99px 99px 0 0}
+.pb-indet{width:40%;background:linear-gradient(90deg,#7CC8C8,#5db5b5);height:100%;border-radius:99px;position:absolute;animation:av-progress-indet 1.4s cubic-bezier(.65,0,.35,1) infinite;box-shadow:0 0 12px rgba(124,200,200,.4)}
+@keyframes av-progress-indet{0%{left:-40%}100%{left:100%}}
+
+/* Tooltip demo */
+.tt-demo-wrap{background:linear-gradient(135deg,#e3e9ee,#cfd8e0);border-radius:14px;padding:60px 30px;margin:14px 0;display:flex;justify-content:center;align-items:center;gap:80px;position:relative}
+.tt-trigger{width:42px;height:42px;border-radius:10px;background:#fff;border:1px solid #e3e9ee;display:inline-flex;align-items:center;justify-content:center;font-size:18px;color:#185FA5;position:relative}
+.tt-popup{position:absolute;background:#142131;color:#fff;padding:7px 11px;border-radius:8px;font-size:12px;font-weight:500;line-height:1.45;box-shadow:0 10px 25px rgba(20,33,49,.30),0 4px 8px rgba(20,33,49,.20);white-space:nowrap}
+.tt-popup.top{bottom:50px;left:50%;transform:translateX(-50%)}
+.tt-popup.top::after{content:"";position:absolute;bottom:-5px;left:50%;margin-left:-6px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #142131}
+.tt-popup.bot{top:50px;left:50%;transform:translateX(-50%)}
+.tt-popup.bot::after{content:"";position:absolute;top:-5px;left:50%;margin-left:-6px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:6px solid #142131}
+
+/* BulkToolbar bulk interventions demo */
+.bulk-table-wrap{background:#fff;border:1px solid #e3e9ee;border-radius:12px;overflow:hidden;margin:14px 0}
+.bulk-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.bulk-table th{background:#142131;color:#fff;padding:9px 12px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.bulk-table td{padding:9px 12px;border-bottom:1px solid #f4f7fa}
+.bulk-table tr.sel{background:rgba(124,200,200,.08)}
+.bulk-table input[type=checkbox]{cursor:pointer;width:14px;height:14px}
+.bulk-bar-demo{position:relative;background:linear-gradient(135deg,#e3e9ee,#cfd8e0);border-radius:12px;padding:50px 30px 30px;margin:18px 0 14px;display:flex;justify-content:center}
+.bulk-bar{background:linear-gradient(135deg,#142131,#243044);color:#fff;padding:10px 12px 10px 16px;border-radius:99px;box-shadow:0 20px 50px rgba(20,33,49,.50),0 8px 20px rgba(20,33,49,.30),0 0 0 1px rgba(255,255,255,.06) inset;display:inline-flex;align-items:center;gap:4}
+.bulk-badge{display:inline-flex;align-items:center;justify-content:center;min-width:30;height:30;border-radius:99px;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;font-size:13;font-weight:800;padding:0 9px;box-shadow:0 2px 8px rgba(124,200,200,.40)}
+.bulk-count{padding:0 14px 0 6;display:inline-flex;align-items:center;gap:10}
+.bulk-lbl{font-size:13;font-weight:600}
+.bulk-sep{width:1px;height:24;background:rgba(255,255,255,.15)}
+.bulk-act{background:transparent;border:none;color:#fff;font-size:12.5;font-weight:600;padding:8px 12px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6}
+.bulk-act.danger{color:#f5b6b0}
+
+/* Onboarding wizard demo */
+.wiz{background:#fff;border:1px solid #e3e9ee;border-radius:14px;padding:22px;margin:14px 0}
+.wiz-steps{display:flex;align-items:flex-start;gap:0;width:100%;padding:8px 4px 14px;margin-bottom:18px}
+.step-d{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+.step-d .connector{position:absolute;top:15px;left:50%;right:-50%;height:2px;background:#e3e9ee;z-index:0}
+.step-d.done .connector{background:linear-gradient(90deg,#7CC8C8,#5db5b5)}
+.step-d .c{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13;font-weight:700;position:relative;z-index:1}
+.step-d.done .c{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;box-shadow:0 2px 6px rgba(124,200,200,.30)}
+.step-d.cur .c{background:linear-gradient(135deg,#142131,#243044);color:#fff;box-shadow:0 0 0 4px rgba(20,33,49,.10)}
+.step-d.fut .c{background:#f4f7fa;color:#8a98a8;border:1.5px solid #e3e9ee}
+.step-d .l{margin-top:8;font-size:13;text-align:center}
+.step-d.done .l,.step-d.cur .l{font-weight:700;color:#142131}
+.step-d.fut .l{font-weight:500;color:#8a98a8}
+.step-d .s{font-size:11;color:#8a98a8;margin-top:2}
+.wiz-card{padding:18px;background:#fff;border:1px solid #e3e9ee;border-radius:12px;display:flex;flex-direction:column;gap:14px}
+.wiz-head{display:flex;align-items:center;gap:14;padding-bottom:14;border-bottom:1px solid #f4f7fa}
+.wiz-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.wiz-name{font-weight:700;font-size:15;color:#142131}
+.wiz-email{font-size:12.5;color:#6c7a89;margin-top:2}
+.wiz-row{display:flex;align-items:flex-start;gap:10}
+.wiz-row i.bi{font-size:18;width:24;color:#185FA5;margin-top:2}
+.wiz-row i.gn{color:#5aa05a}
+.wiz-lab{font-size:11;font-weight:700;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px}
+.wiz-val{font-size:13.5;color:#142131;font-weight:600;margin-top:2}
+.wiz-tags{margin-top:6;display:flex;flex-wrap:wrap;gap:5}
+.wiz-tag{font-size:11.5;padding:3px 9px;background:rgba(124,200,200,.15);border:1px solid rgba(124,200,200,.30);border-radius:99px;color:#142131;font-weight:500}
+.wiz-info{padding:10px 14px;background:linear-gradient(135deg,#e7f0fa,#fff);border:1px solid #bdd9ef;border-radius:10px;font-size:12.5;color:#185FA5;display:flex;align-items:center;gap:8;margin-top:8}
+
+/* Range demo */
+.range-bar{display:flex;align-items:center;gap:12;padding:12px 16px;background:#fff;border:1px solid #e3e9ee;border-radius:12px;margin:14px 0}
+.range-bar i.fil{color:#185FA5;font-size:18}
+.range-bar .lab{font-size:13;font-weight:600;color:#4a5868}
+.range-tr{display:inline-flex;align-items:center;gap:10;padding:10px 14px;background:#fff;border:1.5px solid #7CC8C8;border-radius:10px;box-shadow:0 0 0 3px rgba(124,200,200,.20);min-width:340px;font-size:13.5;font-weight:500;color:#142131}
+.range-tr i.cs{color:#185FA5}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 13 — INTÉGRATIONS</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.14 — ProgressBar + Tooltip + Bulk interventions + Range stats + Wizard onboarding<small>2 nouveaux composants premium · /interventions bulk-select · /statistiques avec filtre période · Page /onboarding 4 étapes</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.14-alpha</code></span>
+    <span><b>Tests :</b> 3695 Vitest (+48)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">+2</div><div class="top-kpi-lbl">Composants (19 total)</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">3</div><div class="top-kpi-lbl">Intégrations en prod</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Nouvelle page /onboarding</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+48</div><div class="top-kpi-lbl">Tests Vitest (3695)</div></div>
+</div>
+
+<h2>📊 ProgressBar (barre de progression linéaire)</h2>
+
+<div class="panel">
+<p style="margin:0">Composant linéaire avec gradient + glow, 4 variants et mode <strong>indeterminate</strong> pour les chargements sans pourcentage connu. Brillance subtile au sommet de la barre. Transition 300ms cubic-bezier.</p>
+</div>
+
+<div class="pb-demo">
+  <div class="pb-lbl"><span>Upload du document…</span><span class="pb-pct">67%</span></div>
+  <div class="pb-track"><div class="pb-fill teal"></div></div>
+</div>
+<div class="pb-demo">
+  <div class="pb-lbl"><span>Génération du PDF…</span><span style="color:#8a98a8;font-style:italic;font-size:11.5">en cours…</span></div>
+  <div class="pb-track" style="overflow:hidden;position:relative;height:8px"><div class="pb-indet"></div></div>
+</div>
+<div class="pb-demo">
+  <div class="pb-lbl"><span>Export complet (large)</span><span class="pb-pct">92%</span></div>
+  <div class="pb-track lg"><div class="pb-fill success"></div></div>
+</div>
+<div class="pb-demo">
+  <div class="pb-lbl"><span>Erreurs détectées</span><span class="pb-pct">25%</span></div>
+  <div class="pb-track"><div class="pb-fill danger"></div></div>
+</div>
+
+<pre>// Upload avec %
+&lt;ProgressBar value={uploadProgress} label='Upload en cours…' showPercent /&gt;
+
+// Export lourd avec mode indeterminate
+&lt;ProgressBar indeterminate label='Génération du PDF…' variant='success' /&gt;
+
+// Validation (taille large + couleur danger)
+&lt;ProgressBar value={errorPct} size='lg' variant='danger' label='Erreurs détectées' showPercent /&gt;</pre>
+
+<h2>💬 Tooltip premium</h2>
+
+<div class="panel">
+<p style="margin:0">Tooltip au hover/focus avec <strong>auto-flip si débord viewport</strong>. 4 positions, délai paramétrable, maxWidth configurable, arrow CSS pure. Show sur focus aussi (a11y clavier).</p>
+</div>
+
+<div class="tt-demo-wrap">
+  <div class="tt-trigger">🗑
+    <div class="tt-popup top">Supprimer cet item</div>
+  </div>
+  <div class="tt-trigger">ℹ
+    <div class="tt-popup bot">Cmd+K pour la recherche globale</div>
+  </div>
+</div>
+
+<pre>&lt;Tooltip content='Supprimer cet item' position='top' delay={300}&gt;
+  &lt;button&gt;
+    &lt;i className='ti ti-trash' /&gt;
+  &lt;/button&gt;
+&lt;/Tooltip&gt;
+
+// Avec contenu riche
+&lt;Tooltip
+  content={&lt;&gt;&lt;b&gt;Astuce&lt;/b&gt;&lt;br /&gt;Cmd+K pour la recherche&lt;/&gt;}
+  position='bottom'
+  maxWidth={280}
+&gt;
+  &lt;i className='ti ti-info-circle' /&gt;
+&lt;/Tooltip&gt;</pre>
+
+<h2>🛠️ Multi-sélection dans /interventions</h2>
+
+<div class="panel">
+<p style="margin:0">Nouvelle colonne checkbox + state <code>selected: Set&lt;id&gt;</code>. La BulkToolbar apparaît dès 1 sélection. 3 actions : <strong>Marquer résolue</strong> (Dialog.confirm + update), <strong>Exporter CSV</strong> (BOM UTF-8), <strong>Supprimer</strong> (Dialog.confirm danger).</p>
+</div>
+
+<div class="bulk-table-wrap">
+  <table class="bulk-table">
+    <thead>
+      <tr>
+        <th style="width:32px;text-align:center"><input type="checkbox" checked /></th>
+        <th>N°</th><th>Date</th><th>Type</th><th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="sel"><td style="text-align:center"><input type="checkbox" checked /></td><td><b>DI-1238</b></td><td>04 juin</td><td>Panne / réparation</td><td>Nouvelle</td></tr>
+      <tr class="sel"><td style="text-align:center"><input type="checkbox" checked /></td><td><b>DI-1237</b></td><td>03 juin</td><td>Maintenance préventive</td><td>En cours</td></tr>
+      <tr><td style="text-align:center"><input type="checkbox" /></td><td><b>DI-1236</b></td><td>02 juin</td><td>Livraison</td><td>Clôturée</td></tr>
+      <tr class="sel"><td style="text-align:center"><input type="checkbox" checked /></td><td><b>DI-1235</b></td><td>02 juin</td><td>Panne / réparation</td><td>Planifiée</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="bulk-bar-demo">
+  <div class="bulk-bar">
+    <div class="bulk-count">
+      <span class="bulk-badge">3</span>
+      <span class="bulk-lbl">interventions sélectionnées</span>
+    </div>
+    <div class="bulk-sep"></div>
+    <button class="bulk-act">✓ Marquer résolue</button>
+    <button class="bulk-act">⬇ Exporter CSV</button>
+    <button class="bulk-act danger">🗑 Supprimer</button>
+  </div>
+</div>
+
+<h2>📅 Filtre période dans /statistiques</h2>
+
+<div class="panel">
+<p style="margin:0">Nouvelle barre de filtre période juste après le PageHero, avec RangePicker premium. Les KPI et graphs pourront utiliser <code>range.from</code> et <code>range.to</code> dans une prochaine itération.</p>
+</div>
+
+<div class="range-bar">
+  <i class="fil">🔍</i>
+  <span class="lab">Période d'analyse :</span>
+  <div class="range-tr">
+    <i class="cs">📊</i>
+    <span style="flex:1">04 mars 2026 → 04 juin 2026</span>
+    <i style="color:#8a98a8">▼</i>
+  </div>
+</div>
+
+<h2>👤 Wizard onboarding nouveau collaborateur</h2>
+
+<div class="panel">
+<p style="margin:0">Nouvelle page <code>/onboarding</code> avec wizard 4 étapes via Stepper : <strong>Identité</strong> (validation email regex live) · <strong>Rôle</strong> (Select premium + card desc) · <strong>Permissions</strong> (Combobox tags) · <strong>Récap</strong> (envoi via supabase.functions.invoke).</p>
+</div>
+
+<div class="wiz">
+  <div class="wiz-steps">
+    <div class="step-d done"><div class="connector"></div><div class="c">✓</div><div class="l">Identité</div><div class="s">Nom & email</div></div>
+    <div class="step-d done"><div class="connector"></div><div class="c">✓</div><div class="l">Rôle</div><div class="s">Profil</div></div>
+    <div class="step-d done"><div class="connector"></div><div class="c">✓</div><div class="l">Permissions</div><div class="s">Droits</div></div>
+    <div class="step-d cur"><div class="c">4</div><div class="l">Invitation</div><div class="s">Récap & envoi</div></div>
+  </div>
+
+  <div class="wiz-card">
+    <div class="wiz-head">
+      <div class="wiz-av">JD</div>
+      <div style="flex:1">
+        <div class="wiz-name">Jean DUPONT</div>
+        <div class="wiz-email">jean.dupont@ehpad-tilleuls.fr</div>
+      </div>
+    </div>
+    <div class="wiz-row">
+      <i class="bi">👤</i>
+      <div style="flex:1">
+        <div class="wiz-lab">Rôle</div>
+        <div class="wiz-val">Manager</div>
+      </div>
+    </div>
+    <div class="wiz-row">
+      <i class="bi gn">🛡</i>
+      <div style="flex:1">
+        <div class="wiz-lab">Permissions (5)</div>
+        <div class="wiz-tags">
+          <span class="wiz-tag">Patients — lecture</span>
+          <span class="wiz-tag">Patients — modification</span>
+          <span class="wiz-tag">Matériel — lecture</span>
+          <span class="wiz-tag">Interventions — gestion</span>
+          <span class="wiz-tag">Statistiques — accès</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wiz-info">
+    ✉ Un email d'activation sera envoyé à <b style="margin-left:4px">jean.dupont@ehpad-tilleuls.fr</b>
+  </div>
+</div>
+
+<pre>const [step, setStep] = useState(0);
+
+&lt;Stepper active={step} onStepClick={setStep} steps={STEPS} /&gt;
+
+&lt;Stepper.Body active={step}&gt;
+  {step === 0 && &lt;FormIdentite /&gt;}      {/* nom + email + Avatar preview */}
+  {step === 1 && &lt;FormRole /&gt;}          {/* Select premium + card desc */}
+  {step === 2 && &lt;FormPermissions /&gt;}   {/* Combobox tags */}
+  {step === 3 && &lt;RecapInvitation /&gt;}   {/* card complète + send */}
+&lt;/Stepper.Body&gt;
+
+&lt;Stepper.Footer
+  active={step}
+  total={STEPS.length}
+  onPrev={() =&gt; setStep(step - 1)}
+  onNext={() =&gt; setStep(step + 1)}
+  onSubmit={handleSubmit}
+  nextDisabled={!canGoNext()}
+  busy={busy}
+  submitLabel="Envoyer l'invitation"
+/&gt;</pre>
+
+<h2>📊 Bilan composants premium (19 au total)</h2>
+
+<table>
+<tr><th>#</th><th>Composant</th><th>Depuis</th></tr>
+<tr><td>1-3</td><td>KpiCard · Sparkline · MetricCard</td><td>0.58.0</td></tr>
+<tr><td>4</td><td>Skeleton (+6 variants)</td><td>0.58.0 → 0.58.11</td></tr>
+<tr><td>5</td><td>EmptyState</td><td>0.58.0</td></tr>
+<tr><td>6</td><td>Toast (6 helpers : success/info/warning/error/neutral/undo)</td><td>0.58.0 → 0.58.12</td></tr>
+<tr><td>7</td><td>PageHero</td><td>0.58.3</td></tr>
+<tr><td>8</td><td>Tabs (+TabPanel)</td><td>0.58.3 → 0.58.11</td></tr>
+<tr><td>9</td><td>Avatar + AvatarGroup</td><td>0.58.4</td></tr>
+<tr><td>10</td><td>Select</td><td>0.58.10</td></tr>
+<tr><td>11</td><td>DatePicker</td><td>0.58.11</td></tr>
+<tr><td>12</td><td>Combobox</td><td>0.58.11</td></tr>
+<tr><td>13</td><td>TimePicker</td><td>0.58.12</td></tr>
+<tr><td>14</td><td>Dialog (confirm/prompt/alert)</td><td>0.58.12</td></tr>
+<tr><td>15</td><td>Drawer Side</td><td>0.58.12</td></tr>
+<tr><td>16</td><td>RangePicker</td><td>0.58.13</td></tr>
+<tr><td>17</td><td>Stepper (+Body +Footer)</td><td>0.58.13</td></tr>
+<tr><td>18</td><td>BulkToolbar</td><td>0.58.13</td></tr>
+<tr><td>19</td><td><b>ProgressBar</b></td><td><b>0.58.14</b></td></tr>
+<tr><td>20</td><td><b>Tooltip</b></td><td><b>0.58.14</b></td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.14
+npm install --legacy-peer-deps
+npm test                              # 3695 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.14 - ProgressBar + Tooltip + BulkToolbar interventions + RangePicker stats + Wizard onboarding"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Brancher RangePicker /statistiques</b> sur les queries Supabase (filtre temporel actif)</li>
+<li><b>Ajouter le lien</b> "Inviter un collaborateur" depuis <code>/utilisateurs</code> vers <code>/onboarding</code></li>
+<li><b>Tooltip partout</b> : boutons icons sans label, dates relatives, status pills, raccourcis clavier</li>
+<li><b>ProgressBar</b> dans les exports lourds (/statistiques PDF, /interventions bulk CSV avec >100 lignes)</li>
+<li><b>Composant Code Block premium</b> pour afficher du JSON dans /admin</li>
+<li><b>Drawer pour les longs formulaires</b> (édition patient, détail intervention)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.14 · 4 juin 2026 · 3695 Vitest · UI Phase 13 (ProgressBar + Tooltip + BulkToolbar interventions + RangePicker stats + Wizard onboarding)</footer>
+</div></body></html>

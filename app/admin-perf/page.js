@@ -12,6 +12,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
+import { toast } from "../components/ui-premium";
 import { useConfirm } from "../dialogs";
 import { logger } from "../../lib/logger";
 
@@ -64,7 +65,7 @@ export default function AdminPerfPage() {
       await supabase.rpc("reset_query_stats");
       await load();
     } catch (e) {
-      alert("Erreur reset : " + e.message);
+      toast.error("Erreur reset : " + e.message);
     } finally {
       setBusyReset(false);
     }

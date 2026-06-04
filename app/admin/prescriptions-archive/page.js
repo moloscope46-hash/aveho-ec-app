@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "../../components/ui-premium";
 import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/prescriptions-archive/page.js (Alpha 0.56.8)
@@ -80,10 +81,10 @@ function PrescriptionsArchivePageInner() {
         setResults(data.results || []);
         setTotalEstime(data.total_estime || 0);
       } else {
-        alert("Erreur recherche : " + (data.error || "inconnue"));
+        toast.error("Erreur recherche : " + (data.error || "inconnue"));
       }
     } catch (e) {
-      alert("Erreur réseau : " + e.message);
+      toast.error("Erreur réseau : " + e.message);
     } finally {
       setSearching(false);
     }
@@ -100,7 +101,7 @@ function PrescriptionsArchivePageInner() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert("Erreur export : " + (err.error || res.status));
+        toast.error("Erreur export : " + (err.error || res.status));
         return;
       }
       const blob = await res.blob();
@@ -113,7 +114,7 @@ function PrescriptionsArchivePageInner() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      alert("Erreur réseau : " + e.message);
+      toast.error("Erreur réseau : " + e.message);
     } finally {
       setExporting(false);
     }

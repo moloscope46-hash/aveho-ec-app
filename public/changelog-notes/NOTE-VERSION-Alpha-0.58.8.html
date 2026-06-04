@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.8 — Migration toast + Avatar Kanban + Skeleton</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0;--g100:#f4f7fa;--g200:#e3e9ee;--g500:#8a98a8;--g700:#4a5868}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;background:#f4f7fa;color:#2a3a48;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:36px 28px 60px}
+
+header.cover{position:relative;background:linear-gradient(135deg,#142131 0%,#2e6f33 60%,#5aa05a 130%);color:#fff;border-radius:24px;padding:48px 40px;margin-bottom:36px;box-shadow:0 30px 60px rgba(20,33,49,.35);overflow:hidden}
+header.cover::before{content:"";position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(124,200,200,.4) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover::after{content:"";position:absolute;bottom:-80px;left:200px;width:300px;height:300px;background:radial-gradient(circle,rgba(90,160,90,.25) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+header.cover > *{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bff5c0;font-weight:700;background:rgba(90,160,90,.18);border:1px solid rgba(90,160,90,.35);padding:6px 14px;border-radius:20px;margin-bottom:18px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#5aa05a;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(90,160,90,.5)}70%{box-shadow:0 0 0 10px rgba(90,160,90,0)}100%{box-shadow:0 0 0 0 rgba(90,160,90,0)}}
+.logo{font-size:32px;font-weight:600;letter-spacing:2px;margin-bottom:4px}
+.logo .v{color:var(--teal)}
+h1{font-size:32px;font-weight:700;margin:14px 0 8px;letter-spacing:-.02em;line-height:1.15}
+h1 small{font-size:15px;font-weight:500;color:#bff5c0;display:block;margin-top:6px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12px;color:#bff5c0}
+.meta b{color:#fff}
+.meta code{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:3px 10px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:22px;color:var(--navy);margin:40px 0 16px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#7CC8C8)}
+h3{font-size:15px;color:var(--navy);margin:20px 0 10px}
+
+.panel{background:#fff;border:1px solid var(--g200);border-radius:16px;padding:22px 26px;margin:16px 0;box-shadow:0 2px 6px rgba(20,33,49,.04)}
+.panel.ok{background:linear-gradient(135deg,#eef9ef,#f4faf4);border-color:#bfe2bf;border-left:4px solid var(--green)}
+.panel.tip{background:linear-gradient(135deg,#fcf2f0,#fff8f6);border-color:#e8c7c2;border-left:4px solid var(--terra)}
+
+code{font-family:'Consolas','Menlo',monospace;background:var(--g100);color:var(--green);padding:2px 6px;border-radius:4px;font-size:12.5px}
+pre{background:#142131;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12.5px;line-height:1.55;border-left:3px solid var(--green)}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin:24px 0}
+.top-kpi{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:18px 16px;text-align:center}
+.top-kpi-val{font-size:32px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1}
+.top-kpi-lbl{font-size:11px;color:#6c7a89;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:600}
+.top-kpi.g{background:linear-gradient(135deg,#eef9ef,#fff);border-color:#bfe2bf}.top-kpi.g .top-kpi-val{color:#2e6f33}
+.top-kpi.t{background:linear-gradient(135deg,#eef9f7,#fff);border-color:#bfe6e6}.top-kpi.t .top-kpi-val{color:#2a5a5a}
+.top-kpi.b{background:linear-gradient(135deg,#e9f3fc,#fff);border-color:#bdd9ef}.top-kpi.b .top-kpi-val{color:var(--blue)}
+.top-kpi.tr{background:linear-gradient(135deg,#fcf2f0,#fff);border-color:#e8c7c2}.top-kpi.tr .top-kpi-val{color:var(--terra)}
+
+/* Toast preview */
+.toast-stack{display:flex;flex-direction:column;gap:10px;margin:14px 0;max-width:380px;margin-left:auto}
+.toast-mock{padding:14px 18px;border-radius:12px;color:#fff;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13;box-shadow:0 12px 30px rgba(20,33,49,.25)}
+.toast-mock.success{background:linear-gradient(135deg,#5aa05a,#3e8540)}
+.toast-mock.error{background:linear-gradient(135deg,#c0392b,#a93026)}
+.toast-mock i{font-size:18px}
+
+/* Card kanban preview avec Avatar */
+.kb-card-demo{background:#fff;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:3px solid #c0392b;max-width:300px;margin:14px auto;font-size:13}
+.kb-card-demo .nb{font-weight:700;color:#142131;font-size:12}
+.kb-card-demo .ty{font-size:12px;color:#2a3a48;margin-top:3px}
+.kb-card-demo .target{font-size:11px;color:#6c7a89;margin-top:2px}
+.kb-card-demo .dates{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:#8a98a8}
+.kb-card-demo .assignee{margin-top:8px;padding-top:7px;border-top:1px dashed #eef2f5;display:flex;align-items:center;gap:7px;font-size:11px;color:#6c7a89}
+.av-22{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:9px;text-shadow:0 1px 2px rgba(0,0,0,.2);box-shadow:0 1px 2px rgba(20,33,49,.1),inset 0 -1px 2px rgba(0,0,0,.1);flex-shrink:0}
+.av-22.t{background:linear-gradient(135deg,#7CC8C8 0%,#2a5a5a 100%)}
+.av-22.b{background:linear-gradient(135deg,#185FA5 0%,#4a8dd4 100%)}
+.av-22.tr{background:linear-gradient(135deg,#C9867F 0%,#b06d65 100%)}
+
+/* Skeleton preview */
+@keyframes av-shimmer-demo {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.skeleton-demo{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:6px;margin:14px 0}
+.skel-row{display:flex;gap:12px;align-items:center;padding:10px 12px}
+.skel-bar{height:14px;border-radius:6px;background:linear-gradient(90deg,#f4f7fa 0%,#e3e9ee 50%,#f4f7fa 100%);background-size:1000px 100%;animation:av-shimmer-demo 1.6s linear infinite}
+.skel-bar.w20{flex:1;max-width:20%}
+.skel-bar.w30{flex:1.5}
+.skel-bar.w15{flex:.7;max-width:15%}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+table td{padding:9px 12px;border-bottom:1px solid var(--g200)}
+table tr:nth-child(even){background:#f9fbfc}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--g200);font-size:11.5px;color:#6c7a89;text-align:center}
+
+ul{padding-left:20px}li{margin:5px 0}
+</style></head><body><div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>UI PHASE 7 — TOAST MIGRATION</div>
+  <div class="logo">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.8 — 20 alerts éliminés + Avatar Kanban + Skeleton<small>3 pages migrées toast · Avatar sur cards intervention · SkeletonRow sur listes</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.8-alpha</code></span>
+    <span><b>Tests :</b> 3461 Vitest (+15)</span>
+  </div>
+</header>
+
+<h2>🎯 L'essentiel</h2>
+<div class="top-kpis">
+  <div class="top-kpi g"><div class="top-kpi-val">20</div><div class="top-kpi-lbl">alert() éliminés</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Pages avec toast</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">+1</div><div class="top-kpi-lbl">Avatar Kanban</div></div>
+  <div class="top-kpi tr"><div class="top-kpi-val">2</div><div class="top-kpi-lbl">Listes avec Skeleton</div></div>
+</div>
+
+<h2>🔔 Migration toast progressive (suite)</h2>
+
+<div class="panel">
+<p style="margin:0"><strong>20 alert() natifs bloquants éliminés</strong> sur 3 pages critiques. Plus de modale système qui interrompt l'utilisateur — toasts animés non-bloquants avec swipe-dismiss + feedback positif visible.</p>
+</div>
+
+<table>
+<tr><th>Page</th><th>alert() migrés</th><th>Détail</th></tr>
+<tr><td><code>/parametres-rgpd</code></td><td><b>10</b></td><td>Activation groupée templates · duplication multi-établissements · validation contenu · erreurs API</td></tr>
+<tr><td><code>/utilisateurs</code></td><td><b>6</b></td><td>Rôle système non supprimable · échecs invitation · invitation renvoyée · lien copié · fonction email indispo</td></tr>
+<tr><td><code>/carte</code></td><td><b>4</b></td><td>Géolocalisation indispo · permission refusée · délai dépassé · erreur position</td></tr>
+</table>
+
+<h3>Aperçu : toasts stackés (succès + erreur)</h3>
+<div class="toast-stack">
+  <div class="toast-mock success"><i>✓</i> 5 template(s) activé(s) avec succès.</div>
+  <div class="toast-mock success"><i>✓</i> Invitation renvoyée.</div>
+  <div class="toast-mock success"><i>✓</i> Lien copié !</div>
+  <div class="toast-mock error"><i>✕</i> Échec : la fonction d'envoi d'email n'est pas configurée.</div>
+</div>
+
+<h2>👤 Avatar sur cards Kanban</h2>
+
+<div class="panel">
+<p style="margin:0">Sur le Kanban, chaque carte d'intervention affiche maintenant <strong>l'Avatar du collaborateur assigné</strong> en bas — séparé par une border dashed gris clair. Permet de voir d'un coup d'œil qui est sur quelle DI <strong>sans cliquer pour ouvrir le détail</strong>.</p>
+</div>
+
+<div class="kb-card-demo">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="nb">DI-1238</span>
+    <span style="font-size:9px;font-weight:700;color:#c0392b;text-transform:uppercase">URGENTE</span>
+  </div>
+  <div class="ty">Réparation pompe perfusion</div>
+  <div class="target">Chambre 12 — M. Dupont</div>
+  <div class="dates">
+    <span>4 juin</span>
+    <span style="color:#185FA5"><i>📅</i> 6 juin</span>
+  </div>
+  <!-- Avatar assigné -->
+  <div class="assignee">
+    <div class="av-22 tr">HM</div>
+    <span>Hugo Martin</span>
+  </div>
+</div>
+
+<div class="kb-card-demo" style="border-left-color:#EF9F27">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="nb">DI-1240</span>
+    <span style="font-size:9px;font-weight:700;color:#EF9F27;text-transform:uppercase">NORMALE</span>
+  </div>
+  <div class="ty">Maintenance préventive</div>
+  <div class="target">Salle de soins 3</div>
+  <div class="dates">
+    <span>4 juin</span>
+  </div>
+  <div class="assignee">
+    <div class="av-22 t">CM</div>
+    <span>Cédric Mignot</span>
+  </div>
+</div>
+
+<p style="font-size:12.5px;color:#6c7a89;text-align:center;font-style:italic">↑ Avatar size=22 + nom (ellipsis si long) + border-top dashed</p>
+
+<h2>💀 SkeletonRow sur listes en chargement</h2>
+
+<div class="panel">
+<p style="margin:0">Pendant le fetch des listes <code>/interventions</code> et <code>/patients</code>, on affichait juste un texte "Chargement…". Maintenant <strong>5 SkeletonRow avec animation shimmer</strong> qui montrent la silhouette du tableau → l'utilisateur visualise déjà la structure et la transition vers les vraies données est fluide.</p>
+</div>
+
+<div class="skeleton-demo">
+  <div class="skel-row">
+    <div class="skel-bar w15"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w30"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w15"></div>
+  </div>
+  <div class="skel-row">
+    <div class="skel-bar w15"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w30"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w15"></div>
+  </div>
+  <div class="skel-row">
+    <div class="skel-bar w15"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w30"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w15"></div>
+  </div>
+  <div class="skel-row">
+    <div class="skel-bar w15"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w30"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w15"></div>
+  </div>
+  <div class="skel-row">
+    <div class="skel-bar w15"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w30"></div>
+    <div class="skel-bar w20"></div>
+    <div class="skel-bar w15"></div>
+  </div>
+</div>
+
+<table>
+<tr><th>Page</th><th>SkeletonRow cols</th></tr>
+<tr><td><code>/interventions</code></td><td>5 lignes × 5 colonnes</td></tr>
+<tr><td><code>/patients</code></td><td>5 lignes × 6 colonnes (plus de champs)</td></tr>
+</table>
+
+<h2>📊 Bilan UI/UX complet (0.58.0 → 0.58.8)</h2>
+
+<table>
+<tr><th>Composant premium</th><th>Pages déployées</th><th>Total</th></tr>
+<tr><td><code>PageHero</code></td><td>statistiques · kanban · calendrier · matériels · paramètres · profil</td><td><b>6</b></td></tr>
+<tr><td><code>EmptyState</code></td><td>patients · interventions · signalements · achats · maintenance · commandes</td><td><b>6</b></td></tr>
+<tr><td><code>Avatar</code></td><td>UserMenu (×2) · Profil · liste users · <b>cards Kanban</b></td><td><b>4 endroits</b></td></tr>
+<tr><td><code>Tabs</code></td><td>paramètres · profil</td><td><b>2</b></td></tr>
+<tr><td><code>Toast</code></td><td>kanban · interventions · patients · <b>parametres-rgpd · utilisateurs · carte</b></td><td><b>6</b></td></tr>
+<tr><td><code>SkeletonRow</code></td><td><b>interventions · patients</b></td><td><b>2</b></td></tr>
+<tr><td><code>KpiCard</code> + <code>Sparkline</code> + <code>Skeleton</code></td><td>HeroDashboard accueil</td><td>1</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#fff;color:#142131;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.8
+npm install --legacy-peer-deps
+npm test                              # 3461 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.8 - Migration toast (20 alerts) + Avatar Kanban + Skeleton"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes UI</h2>
+<div class="panel tip">
+<ul>
+<li><b>Refonte modales</b> : backdrop blur(20px) + animation slide-up + dismiss au swipe-down</li>
+<li><b>Mode sombre</b> via CSS vars (le toggle existe déjà dans <code>/parametres > Apparence</code>)</li>
+<li><b>Skeleton suite</b> : signalements + achats + maintenance + commandes</li>
+<li><b>Avatar sur liste DI</b> (page <code>/interventions</code>) en plus du kanban</li>
+<li><b>Migration toast suite</b> : /partenaires-rpps (3), /collectivite (?), /templates-signalements (2)</li>
+<li><b>Toast.info()</b> pour les infos non-critiques (vs error/success)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.8 · 4 juin 2026 · 3461 Vitest · UI Phase 7 (Migration toast massive + Avatar Kanban + Skeleton)</footer>
+</div></body></html>

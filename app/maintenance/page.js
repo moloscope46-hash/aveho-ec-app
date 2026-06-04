@@ -9,6 +9,7 @@ import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
+import { EmptyState, SkeletonRow, toast} from "../components/ui-premium";
 import { fmtDate } from "../../lib/format";
 import { logEvent } from "../../lib/events";
 import { openPdfPreview } from "../../lib/pdfPreview";
@@ -326,8 +327,8 @@ export default function MaintenancePage() {
   }
 
   async function saveRecur() {
-    if (!recurForm.materiel_id) { alert("Sélectionner un matériel."); return; }
-    if (!recurForm.frequence_jours || recurForm.frequence_jours < 1) { alert("Fréquence invalide."); return; }
+    if (!recurForm.materiel_id) { toast.error("Sélectionner un matériel."); return; }
+    if (!recurForm.frequence_jours || recurForm.frequence_jours < 1) { toast.error("Fréquence invalide."); return; }
     // Calcul prochaine_due si dernière_realisee renseignée
     let prochaine = recurForm.prochaine_due;
     if (recurForm.derniere_realisee && !prochaine) {
@@ -525,9 +526,31 @@ export default function MaintenancePage() {
               </button>
             </div>
           </div>
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : rows.length === 0 ? <StateMsg>Aucune maintenance planifiée. <a style={{ color: "#2a5a5a", fontWeight: 600, cursor: "pointer" }} onClick={openNew}>Planifier la première</a></StateMsg>
-            : filtered.length === 0 ? <StateMsg>Aucune maintenance pour ce statut.</StateMsg>
+          {loading ? (
+            /* 0.58.9 : SkeletonRow x 4 */
+            <div style={{ background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12, padding: 6 }}>
+              {[0,1,2,3].map((i) => <SkeletonRow key={i} cols={5} />)}
+            </div>
+          )
+            : rows.length === 0 ? (
+              <EmptyState
+                icon="ti-tool"
+                variant="blue"
+                title="Aucune maintenance planifiée"
+                message="Planifie ta première maintenance pour suivre l'entretien régulier de ton parc matériel (révisions, contrôles, étalonnages)."
+                actionLabel="Planifier la première"
+                onAction={openNew}
+              />
+            )
+            : filtered.length === 0 ? (
+              <EmptyState
+                icon="ti-filter-off"
+                variant="gray"
+                title="Aucun résultat"
+                message="Aucune maintenance pour ce statut."
+                compact
+              />
+            )
             : vueMode === "calendrier" ? (
               /* Alpha 0.43.0 : vue calendrier mensuelle */
               <CalendrierMaintenance 

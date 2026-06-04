@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.58.0";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.58.14";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -189,7 +189,14 @@ async function networkFirst(req, cacheName) {
     if (cached) return cached;
     // Alpha 0.47.0 : pour les routes HTML, fallback sur /offline qui est cachée
     // Alpha 0.48.1 : pointe vers /offline.html (HTML pur sans chunks Next)
-    if (req.mode === "navigate" || req.destination === "document") {
+    // 0.58.2 : élargi pour aussi matcher les requêtes Accept: text/html (prefetch Next)
+    //         → évite les 503 transitoires sur /accueil et autres pages
+    const isHtmlReq =
+      req.mode === "navigate" ||
+      req.destination === "document" ||
+      (req.headers.get("accept") || "").includes("text/html");
+
+    if (isHtmlReq) {
       const offlinePage = await cache.match("/offline.html");
       if (offlinePage) return offlinePage;
       // 0.55.21 : si /offline.html pas encore caché, on renvoie un HTML inline
@@ -204,7 +211,9 @@ async function networkFirst(req, cacheName) {
         { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
       );
     }
-    return new Response("Hors-ligne — aucune donnée en cache.", { status: 503, statusText: "Offline" });
+    // 0.58.2 : pour les chunks JS/CSS qui n'ont pas de cache, retourner un opaque error
+    // plutôt qu'un 503 visible dans la console (Next.js gère le retry automatique)
+    return Response.error();
   }
 }
 
