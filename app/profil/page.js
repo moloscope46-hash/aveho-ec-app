@@ -9,7 +9,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn, EntityIcon, CollapsibleSection } from "../ui";
-import { PageHero, Tabs, Avatar, KpiCard } from "../components/ui-premium";
+import { PageHero, Tabs, Avatar, KpiCard, NeonButton } from "../components/ui-premium";
 import { resetOnboarding } from "../OnboardingTour";
 import NotifCategories from "../NotifCategories";
 import { KpiRow } from "../kpis";
@@ -251,7 +251,10 @@ export default function Profil() {
                 </div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <Btn variant="primary" icon="ti-device-floppy" onClick={saveNom}>Enregistrer</Btn>
+                {/* 0.58.21 : migration vers NeonButton premium */}
+                <NeonButton variant="teal" icon="ti-device-floppy" onClick={saveNom}>
+                  Enregistrer
+                </NeonButton>
               </div>
             </Panel>
             </div>)}
@@ -345,7 +348,9 @@ export default function Profil() {
                 <i className="ti ti-shield-lock" /> Au moins 12 caractères, 1 majuscule, 1 chiffre, 1 caractère spécial. Tu seras déconnecté(e) après changement.
               </p>
               <div style={{ textAlign: "right" }}>
-                <Btn variant="primary" icon="ti-lock" onClick={savePwd} disabled={!pwd || !pwd2}>Modifier le mot de passe</Btn>
+                <NeonButton variant="blue" icon="ti-lock" onClick={savePwd} disabled={!pwd || !pwd2}>
+                  Modifier le mot de passe
+                </NeonButton>
               </div>
             </CollapsibleSection>
 
@@ -458,74 +463,26 @@ function CacheResetButton() {
 
   if (!confirming) {
     return (
-      <button
+      <NeonButton
+        variant="amber"
+        icon="ti-refresh"
         onClick={() => setConfirming(true)}
-        style={{
-          background: "linear-gradient(135deg, #EF9F27 0%, #d6831d 100%)",
-          color: "#fff",
-          border: "none",
-          padding: "10px 18px",
-          borderRadius: 10,
-          fontSize: 13,
-          fontWeight: 700,
-          fontFamily: "inherit",
-          cursor: "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          boxShadow: "0 4px 12px rgba(239,159,39,.30)",
-          transition: "transform 150ms, box-shadow 200ms",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-1px)";
-          e.currentTarget.style.boxShadow = "0 6px 16px rgba(239,159,39,.45), 0 0 32px rgba(239,159,39,.20)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 4px 12px rgba(239,159,39,.30)";
-        }}
       >
-        <i className="ti ti-refresh" />
         Vider le cache et recharger
-      </button>
+      </NeonButton>
     );
   }
 
   return (
     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-      <button
+      <NeonButton
+        variant={busy ? "terra" : "teal"}
+        icon={busy ? "ti-loader-2" : "ti-check"}
         onClick={handleReset}
         disabled={busy}
-        style={{
-          background: busy
-            ? "linear-gradient(135deg, #C9867F 0%, #b06d65 100%)"
-            : "linear-gradient(135deg, #5aa05a 0%, #2e6f33 100%)",
-          color: "#fff",
-          border: "none",
-          padding: "10px 18px",
-          borderRadius: 10,
-          fontSize: 13,
-          fontWeight: 700,
-          fontFamily: "inherit",
-          cursor: busy ? "wait" : "pointer",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          boxShadow: "0 4px 12px rgba(90,160,90,.30)",
-        }}
       >
-        {busy ? (
-          <>
-            <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} />
-            Nettoyage en cours…
-          </>
-        ) : (
-          <>
-            <i className="ti ti-check" />
-            Confirmer : vider et recharger
-          </>
-        )}
-      </button>
+        {busy ? "Nettoyage en cours…" : "Confirmer : vider et recharger"}
+      </NeonButton>
       {!busy && (
         <button
           onClick={() => setConfirming(false)}

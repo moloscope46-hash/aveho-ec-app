@@ -63,6 +63,14 @@ const VARIANTS = {
     color: "#7CC8C8",  // accent teal pour la bordure scan
     textColor: "#fff",
   },
+  // 0.58.21 : variant aurora multi-couleur Aveho (teal → blue → violet → terra)
+  aurora: {
+    grad: "linear-gradient(135deg, #7CC8C8 0%, #185FA5 35%, #7a6fb0 70%, #C9867F 100%)",
+    gradHover: "linear-gradient(135deg, #8fd6d6 0%, #2270b8 35%, #8d82bf 70%, #d6968e 100%)",
+    glow: "0 0 0 4px rgba(124,200,200,.18), 0 12px 32px rgba(24,95,165,.35), 0 0 60px rgba(124,200,200,.30), 0 0 100px rgba(122,111,176,.18)",
+    color: "#7CC8C8",
+    textColor: "#fff",
+  },
 };
 
 const SIZES = {
@@ -80,6 +88,8 @@ export default function NeonButton({
   type = "button",
   scan = true,         // afficher le border scan-line
   fullWidth = false,
+  // 0.58.21 : prop icon optionnelle pour préfixer le label
+  icon,
   ariaLabel,
   style: customStyle,
   ...rest
@@ -177,6 +187,17 @@ export default function NeonButton({
         gap: 8,
         textShadow: `0 1px 2px rgba(20,33,49,.3)`,
       }}>
+        {/* 0.58.21 : icon optionnelle préfixant le label */}
+        {icon && (
+          <i
+            className={`ti ${icon}`}
+            style={{
+              fontSize: sz.iconSize,
+              animation: icon === "ti-loader-2" ? "av-neon-spin 1s linear infinite" : undefined,
+            }}
+            aria-hidden="true"
+          />
+        )}
         {children}
       </span>
 

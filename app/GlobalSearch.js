@@ -3,8 +3,17 @@
 //  GlobalSearch (Alpha 0.14)
 //  Palette unifiée Cmd+K / Ctrl+K. Recherche dans patients,
 //  matériels, DI, signalements. Navigation clavier ↑↓ Enter Échap.
+//
+//  0.58.21 : REFONTE VISUELLE PREMIUM
+//   - Glassmorphism backdrop (blur 30px saturate 180%)
+//   - Animation scale-up + fade entrée (avec spring physics)
+//   - Border conic-gradient scan permanent
+//   - Header avec icon search avec glow teal
+//   - Chips filtres avec hover lift + glow
+//   - Rendu via Portal (échappe aux containing blocks)
 // =============================================================
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
 
@@ -33,6 +42,9 @@ export default function GlobalSearch() {
   const [history, setHistory] = useState([]); // Alpha 0.35.0 : historique
   const [activeFilter, setActiveFilter] = useState(null);  // 0.55.11 : chip filtre visuel
   const inputRef = useRef(null);
+  // 0.58.21 : guard hydratation pour Portal
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Alpha 0.35.0 : charger l'historique depuis localStorage à l'ouverture
   useEffect(() => {
@@ -269,35 +281,35 @@ export default function GlobalSearch() {
     }
   }
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(20,33,49,.7)",
-      zIndex: 9998, display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: "10vh",
-    }} onClick={() => setOpen(false)}>
-      <div onClick={(e) => e.stopPropagation()} style={{
-        background: "#fff", borderRadius: 14, width: "90%", maxWidth: 640,
-        boxShadow: "0 30px 80px rgba(0,0,0,.4)", overflow: "hidden",
-      }}>
-        <div style={{ padding: "14px 18px", borderBottom: "1px solid #e3e9ee", display: "flex", alignItems: "center", gap: 12 }}>
-          <i className="ti ti-search" style={{ color: "#7CC8C8", fontSize: 20 }} />
+  // 0.58.21 : Portal vers document.body + glassmorphism premium
+  return createPortal((
+    <div
+      className="av-cmdk-overlay"
+      onClick={() => setOpen(false)}
+    >
+      <div
+        className="av-cmdk-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Border conic scan permanent */}
+        <div className="av-cmdk-scan" aria-hidden="true" />
+
+        <div className="av-cmdk-inner">
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(124,200,200,.15)", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+          <i className="ti ti-search av-cmdk-icon" />
           <input ref={inputRef} type="text" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKeyInput}
             placeholder="Rechercher  ·  p: patient · m: matériel · c: consent · f: fournisseur…"
-            style={{ flex: 1, border: "none", outline: "none", fontSize: 16, fontFamily: "inherit", color: "#142131" }} />
-          <kbd style={{ background: "#f4f7fa", padding: "2px 8px", borderRadius: 4, border: "1px solid #e3e9ee", fontSize: 11, color: "#6c7a89" }}>Échap</kbd>
+            className="av-cmdk-input"
+            />
+          <kbd className="av-cmdk-kbd">Échap</kbd>
         </div>
         {/* 0.55.11 (AF) : chips filtres visuels par catégorie */}
-        <div style={{ padding: "8px 16px", borderBottom: "1px solid #e3e9ee", display: "flex", flexWrap: "wrap", gap: 5, background: "#f9fbfc" }}>
+        <div style={{ padding: "10px 18px", borderBottom: "1px solid rgba(124,200,200,.12)", display: "flex", flexWrap: "wrap", gap: 6, background: "rgba(255,255,255,.04)" }}>
           <button
             onClick={() => setActiveFilter(null)}
-            style={{
-              background: !activeFilter ? "#142131" : "#fff",
-              color: !activeFilter ? "#fff" : "#6c7a89",
-              border: `1px solid ${!activeFilter ? "#142131" : "#d9dfe5"}`,
-              padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
-              cursor: "pointer", fontFamily: "inherit",
-            }}
+            className={`av-cmdk-chip ${!activeFilter ? "active" : ""}`}
           >
             Tout
           </button>
@@ -305,16 +317,15 @@ export default function GlobalSearch() {
             <button
               key={key}
               onClick={() => setActiveFilter(activeFilter === key ? null : key)}
+              className={`av-cmdk-chip ${activeFilter === key ? "active" : ""}`}
               style={{
-                background: activeFilter === key ? t.color : "#fff",
+                "--chip-color": t.color,
+                background: activeFilter === key ? t.color : "transparent",
                 color: activeFilter === key ? "#fff" : t.color,
-                border: `1px solid ${t.color}`,
-                padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit",
-                display: "inline-flex", alignItems: "center", gap: 4,
+                borderColor: t.color,
               }}
             >
-              <i className={`ti ${t.icon}`} style={{ fontSize: 10 }} /> {t.lbl}
+              <i className={`ti ${t.icon}`} style={{ fontSize: 11 }} /> {t.lbl}
             </button>
           ))}
         </div>
@@ -414,12 +425,13 @@ export default function GlobalSearch() {
             </div>
           )}
         </div>
-        <div style={{ padding: "10px 18px", borderTop: "1px solid #e3e9ee", fontSize: 11, color: "#8a98a8", display: "flex", gap: 14 }}>
-          <span><kbd style={{ background: "#f4f7fa", padding: "1px 6px", borderRadius: 3, border: "1px solid #e3e9ee", fontSize: 10 }}>↑↓</kbd> naviguer</span>
-          <span><kbd style={{ background: "#f4f7fa", padding: "1px 6px", borderRadius: 3, border: "1px solid #e3e9ee", fontSize: 10 }}>↵</kbd> ouvrir</span>
-          <span style={{ marginLeft: "auto" }}>Raccourci global : <kbd style={{ background: "#f4f7fa", padding: "1px 6px", borderRadius: 3, border: "1px solid #e3e9ee", fontSize: 10 }}>⌘ K</kbd></span>
+        <div style={{ padding: "10px 18px", borderTop: "1px solid rgba(124,200,200,.12)", fontSize: 11, color: "rgba(191,230,230,.7)", display: "flex", gap: 14, background: "rgba(255,255,255,.03)" }}>
+          <span><kbd className="av-cmdk-kbd-mini">↑↓</kbd> naviguer</span>
+          <span><kbd className="av-cmdk-kbd-mini">↵</kbd> ouvrir</span>
+          <span style={{ marginLeft: "auto" }}>Raccourci global : <kbd className="av-cmdk-kbd-mini">⌘ K</kbd></span>
+        </div>
         </div>
       </div>
     </div>
-  );
+  ), document.body);
 }
