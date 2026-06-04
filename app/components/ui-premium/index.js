@@ -44,5 +44,9 @@ export { default as CodeBlock } from "./CodeBlock";
 export { useDropdownPosition, dropdownPositionStyle } from "./useDropdownPosition";
 // 0.58.17 : NeonButton (gradient + scan-line + ripple + glow)
 export { default as NeonButton } from "./NeonButton";
+// 0.58.20 : ConicCard (scan-line conic permanent)
+export { default as ConicCard } from "./ConicCard";
+// 0.58.20 : ParticlesBackground (canvas constellation teal)
+export { default as ParticlesBackground } from "./ParticlesBackground";
 // 0.58.11 : Combobox multi-select avec tags
 export { default as Combobox } from "./Combobox";

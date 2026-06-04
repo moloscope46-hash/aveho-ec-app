@@ -19,6 +19,8 @@ import DigestPreferences from "../DigestPreferences";
 import DigestHistory from "../DigestHistory";
 import PasswordInput from "../PasswordInput";
 import BiometricSection from "../BiometricSection";
+// 0.58.20 : factory reset cache front
+import { fullCacheReset } from "../../lib/cacheReset";
 
 export default function Profil() {
   const supabase = createClient();
@@ -376,6 +378,20 @@ export default function Profil() {
                 {auth.role && <div><b>Permissions :</b> {Array.isArray(auth.role.permissions_json) ? auth.role.permissions_json.join(", ") : "—"}</div>}
               </div>
             </Panel>
+
+            {/* 0.58.20 : panneau "Vider le cache" pour résoudre les bugs de cache navigateur/SW */}
+            <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #fff8ec 0%, #fffcf3 100%)", borderColor: "#f0d59f", borderLeft: "4px solid #EF9F27" }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#7a4f15", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-refresh-alert" /> Problème d'affichage ?
+              </h2>
+              <p style={{ fontSize: 12.5, color: "#7a4f15", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Si la nouvelle interface ne s'affiche pas correctement (vieille TopBar, KPIs non animés, etc.) après une mise à jour, c'est probablement un problème de cache navigateur ou Service Worker. Cliquez ci-dessous pour forcer un nettoyage complet et recharger.
+              </p>
+              <CacheResetButton />
+              <p style={{ fontSize: 11, color: "#8a98a8", margin: "10px 0 0", fontStyle: "italic" }}>
+                ✓ Votre session reste active (vous n'avez pas besoin de vous reconnecter)
+              </p>
+            </Panel>
             </div>)}
           </>
         )}
@@ -411,4 +427,128 @@ function entiteIcon(entite) {
     consentement: "ti-shield-lock",
   };
   return map[entite] || "ti-circle";
+}
+
+// =============================================================
+//  0.58.20 : Bouton de reset cache complet (utilise lib/cacheReset)
+// =============================================================
+function CacheResetButton() {
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  async function handleReset() {
+    setBusy(true);
+    try {
+      // Petit délai visuel pour que l'user comprenne ce qui se passe
+      await new Promise((r) => setTimeout(r, 200));
+      // fullCacheReset reload automatiquement à la fin
+      await fullCacheReset({ reload: true, keepAuth: true });
+    } catch (e) {
+      console.error("Cache reset failed:", e);
+      setBusy(false);
+      // 0.58.20 : dialogs.alert au lieu de window.alert() natif (charte UI)
+      const { dialogs } = await import("../dialogs");
+      dialogs.alert?.({
+        title: "Nettoyage impossible",
+        message: "Une erreur est survenue. Essayez Ctrl+Shift+R pour un rafraîchissement forcé du navigateur.",
+        variant: "danger",
+      });
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        onClick={() => setConfirming(true)}
+        style={{
+          background: "linear-gradient(135deg, #EF9F27 0%, #d6831d 100%)",
+          color: "#fff",
+          border: "none",
+          padding: "10px 18px",
+          borderRadius: 10,
+          fontSize: 13,
+          fontWeight: 700,
+          fontFamily: "inherit",
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          boxShadow: "0 4px 12px rgba(239,159,39,.30)",
+          transition: "transform 150ms, box-shadow 200ms",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-1px)";
+          e.currentTarget.style.boxShadow = "0 6px 16px rgba(239,159,39,.45), 0 0 32px rgba(239,159,39,.20)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(239,159,39,.30)";
+        }}
+      >
+        <i className="ti ti-refresh" />
+        Vider le cache et recharger
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <button
+        onClick={handleReset}
+        disabled={busy}
+        style={{
+          background: busy
+            ? "linear-gradient(135deg, #C9867F 0%, #b06d65 100%)"
+            : "linear-gradient(135deg, #5aa05a 0%, #2e6f33 100%)",
+          color: "#fff",
+          border: "none",
+          padding: "10px 18px",
+          borderRadius: 10,
+          fontSize: 13,
+          fontWeight: 700,
+          fontFamily: "inherit",
+          cursor: busy ? "wait" : "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          boxShadow: "0 4px 12px rgba(90,160,90,.30)",
+        }}
+      >
+        {busy ? (
+          <>
+            <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite" }} />
+            Nettoyage en cours…
+          </>
+        ) : (
+          <>
+            <i className="ti ti-check" />
+            Confirmer : vider et recharger
+          </>
+        )}
+      </button>
+      {!busy && (
+        <button
+          onClick={() => setConfirming(false)}
+          style={{
+            background: "transparent",
+            color: "#6c7a89",
+            border: "1px solid #cfd8e0",
+            padding: "10px 14px",
+            borderRadius: 10,
+            fontSize: 12.5,
+            fontWeight: 600,
+            fontFamily: "inherit",
+            cursor: "pointer",
+          }}
+        >
+          Annuler
+        </button>
+      )}
+      <style jsx>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
 }

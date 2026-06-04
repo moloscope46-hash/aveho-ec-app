@@ -120,6 +120,46 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.20",
+    "kind": "version",
+    "titre": "🔄 BUNDLE : Bouton 'Vider le cache' + ConicCard + ParticlesBackground sur /accueil",
+    "chantiers": [
+      { "code": "UI", "txt": "🔄 LIB CACHERESET + BOUTON 'VIDER LE CACHE' dans /profil. Pour résoudre les bugs où la nouvelle UI ne s'affiche pas après une maj (cache navigateur ou SW qui sert encore les anciens chunks). (a) Nouveau module **lib/cacheReset.js** avec 5 fonctions : `unregisterAllServiceWorkers()` (désinscrit tous les SW), `clearAllCaches()` (vide la CacheStorage API), `clearLocalStorageExceptAuth()` (préserve les clés sb-* Supabase pour ne pas déconnecter l'user), `clearSessionStorage()`, et `fullCacheReset({reload, keepAuth})` qui orchestre tout + reload avec cache-busting (`?_cache_reset=timestamp`). (b) Panneau **'Problème d'affichage ?'** dans l'onglet Sécurité du profil avec bouton 'Vider le cache et recharger' (style amber). Confirmation à 2 étapes (clic → confirme) pour éviter les accidents. (c) Préserve la session : l'user n'a PAS besoin de se reconnecter après le reset",
+        "code_snippet": {
+          "file": "lib/cacheReset.js + app/profil/page.js",
+          "note": "Factory reset front",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.20 - aucun moyen UI de vider le cache\n// L'utilisateur devait :\n// 1. Ouvrir DevTools (F12)\n// 2. Application → Service Workers → Unregister\n// 3. Storage → Clear site data\n// 4. Ctrl+Shift+R\n// → trop technique pour la plupart des users",
+          "after": "// 0.58.20 - Bouton dans /profil onglet Sécurité\nimport { fullCacheReset } from '../../lib/cacheReset';\n\n<Panel style={{ borderLeft: '4px solid #EF9F27' }}>\n  <h2>Problème d'affichage ?</h2>\n  <CacheResetButton />\n</Panel>\n\n// Au clic :\nawait fullCacheReset({\n  reload: true,        // reload après clear\n  keepAuth: true,      // préserve session Supabase (sb-* clés)\n});\n\n// Procédure :\n// 1. Désinscrit tous les SW (navigator.serviceWorker.getRegistrations)\n// 2. Vide CacheStorage (caches.keys() + caches.delete())\n// 3. Vide localStorage SAUF sb-*\n// 4. Vide sessionStorage\n// 5. Reload avec ?_cache_reset=timestamp pour cache-buster"
+        }
+      },
+      { "code": "UI", "txt": "💫 NOUVEAU COMPOSANT CONICCARD (app/components/ui-premium/ConicCard.js, 200 lignes). Alternative premium à KpiCard avec une **bordure conic-gradient qui tourne en permanence** (effet 'scanner' hitech), au lieu du tilt 3D. (a) 6 variants : teal, blue, violet, terra, amber, **aurora** (multi-couleur 4 couleurs Aveho qui tournent). (b) 3 vitesses : slow (12s), normal (4s), fast (2s). (c) 3 sizes : sm, md, lg. (d) Conic-gradient avec mask-composite:exclude → ne peint QUE la bordure (border-only). (e) Decorative glow blob arrière. (f) Hover lift -3px + glow renforcé. Idéal pour mettre en valeur 1 ou 2 KPIs phares (mode 'spotlight') au lieu d'animer toutes les cards comme KpiCard fait",
+        "code_snippet": {
+          "file": "app/components/ui-premium/ConicCard.js (NEW)",
+          "note": "Card avec scan-line permanent",
+          "lang": "jsx",
+          "before": "// Pour mettre en valeur un KPI phare, KpiCard ne tilte qu'au hover\n<KpiCard icon='ti-tools' label='Interventions' value={142} />\n// → discret tant qu'on hover pas",
+          "after": "// 0.58.20 - ConicCard pour spotlight permanent\nimport { ConicCard } from '@/components/ui-premium';\n\n<ConicCard\n  icon='ti-tools'\n  label='Interventions ouvertes'\n  value={142}\n  sub='↑ +12% vs mois dernier'\n  variant='aurora'    // multi-couleur Aveho\n  speed='normal'      // 4s pour le scan\n  onClick={() => router.push('/interventions')}\n/>\n\n// La bordure conic-gradient tourne en continu — attire l'œil\n// même sans interaction. Parfait pour le KPI 'star' de la page."
+        }
+      },
+      { "code": "UI", "txt": "✨ COMPOSANT PARTICLESBACKGROUND (app/components/ui-premium/ParticlesBackground.js, 150 lignes). Canvas léger qui dessine ~30 particules teal flottantes avec connexions automatiques entre particules proches (effet **constellation hitech**). (a) Canvas full-size, requestAnimationFrame loop. (b) Particules avec vitesse aléatoire, rebondissent sur les bords. (c) Connexions linéaires entre particules à moins de 140px (lineDistance configurable). (d) Opacité des lignes proportionnelle à la distance. (e) **Optimisations** : respect `prefers-reduced-motion` (skip animation), pause si tab non visible (visibilitychange), skip mobile par défaut pour économiser batterie (showOnMobile=false). (f) Cleanup propre au unmount. Branché sur **/accueil** : rendu en `position: fixed` en background derrière tout le contenu (zIndex 0, pointer-events: none)",
+        "code_snippet": {
+          "file": "app/components/ui-premium/ParticlesBackground.js (NEW) + app/accueil/page.js",
+          "note": "Constellation teal en arrière-plan",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.20 - bg-dark statique\n<div className='bg-dark'>\n  <TopBar />\n  <div className='wrap'>\n    {/* contenu */}\n  </div>\n</div>",
+          "after": "// 0.58.20 - particules canvas en background\nimport { ParticlesBackground } from '../components/ui-premium';\n\n<div className='bg-dark' style={{ position: 'relative', isolation: 'isolate' }}>\n  {/* Canvas particules en fond */}\n  <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>\n    <ParticlesBackground count={30} speed={0.3} linkDistance={140} />\n  </div>\n  <TopBar />\n  <div className='wrap' style={{ position: 'relative', zIndex: 1 }}>\n    {/* contenu au-dessus */}\n  </div>\n</div>\n\n// Le canvas :\n// - 30 particules teal qui flottent\n// - Connexions entre particules proches (constellation)\n// - 60fps via requestAnimationFrame\n// - Pause si tab non visible\n// - Skip sur mobile (économie batterie)\n// - Respect prefers-reduced-motion"
+        }
+      },
+      { "code": "AI", "txt": "+35 tests Vitest (v058-20-cache-reset-bundle.test.js) : version+SW (2), lib/cacheReset (6 — use client + 5 exports + helpers SW/Caches/LS/SS + cache-busting reload + options), /profil bouton (6 — import + Panel + composant CacheResetButton + 2-step confirm + fullCacheReset options + loader state), ConicCard (7 — use client + 6 variants + aurora multi-color + 3 speeds + mask exclusion + animation perm + sizes + export), ParticlesBackground (9 — use client + props + canvas RAF + prefers-reduced + skip mobile + pause visibilitychange + connections + cleanup + export), /accueil intégration (3 — import + Particles fixed + wrap zIndex 1), Récap 24 composants (1). Total 3887 verts (+35)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.20 : 24 composants premium (ajout ConicCard + ParticlesBackground). Le bouton 'Vider le cache' dans /profil permet à n'importe quel utilisateur non technique de résoudre les bugs de cache navigateur en 2 clics, sans avoir besoin de DevTools. Les particules sur /accueil ajoutent une ambiance hitech subtile et performante (canvas optimisé, skip mobile). Le ConicCard offre une alternative wow pour mettre en valeur des KPIs phares. Prochaines pistes : (a) **Cmd+K palette** refonte glass premium (refonte de GlobalSearch). (b) **Page connexion redesignée** fullscreen avec NeonButton géant. (c) **Migration progressive** btn-save/btn-mini → NeonButton sur les pages clés. (d) Application de ConicCard sur /accueil pour 1-2 KPIs phares" }
+    ],
+    "themes": ["ui", "design-system", "ux"],
+    "date": "4 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.20.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.19",
     "kind": "version",
     "titre": "📱 MOBILE FIX CRITIQUE : Menu burger + popups + drawers invisibles en bas de page (containing block PageTransition)",

@@ -14,6 +14,8 @@ import MultiEtabSummary from "../MultiEtabSummary";
 import MesValidationsEnAttente from "../MesValidationsEnAttente";
 // 0.58.0 : refonte UI premium
 import HeroDashboard from "./HeroDashboard";
+// 0.58.20 : particules teal flottantes en arrière-plan
+import { ParticlesBackground } from "../components/ui-premium";
 
 export default function Accueil() {
   const supabase = createClient();
@@ -214,10 +216,19 @@ export default function Accueil() {
   ];
 
   return (
-    <div className="bg-dark">
+    <div className="bg-dark" style={{ position: "relative", isolation: "isolate" }}>
+      {/* 0.58.20 : Particules teal en arrière-plan (canvas) — derrière le contenu */}
+      <div style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: "none",
+      }}>
+        <ParticlesBackground count={30} speed={0.3} linkDistance={140} />
+      </div>
       <OnboardingTour />
       <TopBar cartCount={cart.count} auth={auth} />
-      <div className="wrap">
+      <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
           <PageHead eyebrow="ESPACE COLLECTIVITÉ" title="Bonjour, bienvenue sur votre" accent="espace"
             sub={auth.structureNom ? `Vous êtes connecté pour ${auth.structureNom}` : "Rattachez votre compte à une structure pour commander."} />

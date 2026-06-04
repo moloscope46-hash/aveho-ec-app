@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.20 — Bundle Cache Reset + ConicCard + Particles</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0}
+@property --scan-angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:#0a1420}
+body{
+  background:
+    url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='g' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Cpath d='M40 0H0V40' fill='none' stroke='%237CC8C8' stroke-opacity='0.08' stroke-width='1'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3C/svg%3E"),
+    radial-gradient(1400px 800px at 70% -10%, #1a3540 0%, #0d1b28 50%, #050a14 100%);
+  background-size: 40px 40px, 100% 100%;
+  min-height:100vh;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:40px 28px 80px;position:relative}
+
+/* Canvas particules en background */
+canvas.particles-bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.6}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes scan-rotate{ to{ --scan-angle: 360deg; } }
+@keyframes bg-shift{0%,100%{background-position:0% 50%,0% 50%,0% 50%}50%{background-position:100% 50%,100% 50%,100% 50%}}
+@keyframes aurora{0%,100%{transform:translate(0,0) rotate(0deg)}33%{transform:translate(30px,-20px) rotate(120deg)}66%{transform:translate(-20px,30px) rotate(240deg)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+header.cover{
+  position:relative;
+  background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.55),rgba(124,200,200,.4));
+  backdrop-filter:blur(30px) saturate(220%);
+  -webkit-backdrop-filter:blur(30px) saturate(220%);
+  border:1px solid rgba(124,200,200,.28);
+  border-radius:28px;padding:48px 40px;margin-bottom:36px;
+  box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);
+  overflow:hidden;isolation:isolate;z-index:1;
+}
+header.cover::before{content:"";position:absolute;inset:0;background:radial-gradient(at 15% 20%, rgba(124,200,200,.35) 0px, transparent 50%),radial-gradient(at 85% 30%, rgba(122,111,176,.25) 0px, transparent 50%),radial-gradient(at 50% 80%, rgba(24,95,165,.22) 0px, transparent 60%);background-size:200% 200%;animation:bg-shift 18s ease-in-out infinite;pointer-events:none;z-index:0}
+header.cover::after{content:"";position:absolute;top:-100px;right:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(124,200,200,.5) 0%, transparent 65%);filter:blur(40px);animation:aurora 18s ease-in-out infinite;pointer-events:none;z-index:0}
+header.cover > *{position:relative;z-index:1}
+
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px;backdrop-filter:blur(20px);box-shadow:0 0 24px rgba(124,200,200,.25)}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:30px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.18;color:#fff}
+h1 small{font-size:14.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:23px;color:#fff;margin:44px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5);box-shadow:0 0 12px rgba(124,200,200,.5)}
+h3{font-size:16px;color:#bfe6e6;margin:22px 0 10px;font-weight:600;position:relative;z-index:1}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30);position:relative;z-index:1}
+.panel.ok{background:linear-gradient(135deg,rgba(90,160,90,.18),rgba(20,33,49,.6));border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a}
+.panel.warn{background:linear-gradient(135deg,rgba(239,159,39,.18),rgba(20,33,49,.6));border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.5px;line-height:1.6;border-left:3px solid #7CC8C8;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 24px rgba(124,200,200,.08) inset;position:relative;z-index:1}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:26px 0;position:relative;z-index:1}
+.top-kpi{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.2);border-radius:14px;padding:20px 16px;text-align:center;backdrop-filter:blur(20px);position:relative;overflow:hidden;isolation:isolate}
+.top-kpi::before{content:"";position:absolute;top:-40px;right:-40px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle, var(--c, #7CC8C8) 0%, transparent 70%);opacity:.25;filter:blur(20px)}
+.top-kpi-val{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff;position:relative;z-index:1}
+.top-kpi-lbl{font-size:11px;color:#8aa0b0;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;font-weight:600;position:relative;z-index:1}
+.top-kpi.t{--c:#7CC8C8}.top-kpi.b{--c:#185FA5}.top-kpi.v{--c:#7a6fb0}.top-kpi.g{--c:#5aa05a}.top-kpi.a{--c:#EF9F27}
+
+/* DEMO ConicCard avec scan-line permanent */
+.conic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin:18px 0;position:relative;z-index:1}
+.conic-card{position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(124,200,200,.20);border-radius:16px;padding:20px;backdrop-filter:blur(20px);overflow:hidden;isolation:isolate;color:#fff}
+.conic-card::before{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--scan-angle,0deg),transparent 0deg,var(--c,#7CC8C8) 50deg,transparent 100deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;-webkit-mask-composite:xor;animation:scan-rotate 4s linear infinite;pointer-events:none;opacity:.85}
+.conic-card.aurora::before{background:conic-gradient(from var(--scan-angle,0deg),#7CC8C8 0deg,#185FA5 90deg,#7a6fb0 180deg,#C9867F 270deg,#7CC8C8 360deg);opacity:.65}
+.conic-card.blue{--c:#185FA5}.conic-card.violet{--c:#7a6fb0}.conic-card.terra{--c:#C9867F}.conic-card.amber{--c:#EF9F27}
+.conic-card .icn{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--c,#7CC8C8),rgba(255,255,255,.18));display:inline-flex;align-items:center;justify-content:center;font-size:18px;color:#fff;margin-bottom:12px;box-shadow:0 4px 12px rgba(124,200,200,.30),inset 0 1px 0 rgba(255,255,255,.30)}
+.conic-card .lbl{font-size:11.5px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px}
+.conic-card .val{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1}
+.conic-card .sub{font-size:11.5px;color:rgba(124,200,200,.85);margin-top:8px}
+
+/* DEMO bouton vider cache */
+.demo-reset{background:rgba(255,255,255,.06);border:1px solid rgba(239,159,39,.30);border-radius:14px;padding:20px 22px;margin:14px 0;border-left:4px solid #EF9F27;position:relative;z-index:1}
+.demo-reset h3{margin:0 0 8px;font-size:15px;color:#f5c87a;display:flex;align-items:center;gap:8px}
+.demo-reset p{font-size:12.5px;color:#bfd4e0;margin:0 0 14px;line-height:1.6}
+.btn-reset{background:linear-gradient(135deg,#EF9F27,#d6831d);color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(239,159,39,.30),0 0 0 4px rgba(239,159,39,.10)}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;position:relative;z-index:1}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center;position:relative;z-index:1}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+
+<canvas class="particles-bg" id="particles"></canvas>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE · 0.58.20</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.20 — Bouton "Vider le cache" + ConicCard + Particles<small>Procédure factory reset front sans DevTools · Scan-line conic permanent · Constellation teal en background /accueil</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.20-alpha</code></span>
+    <span><b>Tests :</b> 3887 Vitest (+35)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">+2</div><div class="top-kpi-lbl">Composants (24 total)</div></div>
+  <div class="top-kpi a"><div class="top-kpi-val">1</div><div class="top-kpi-lbl">Bouton Vider cache</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">30</div><div class="top-kpi-lbl">Particules canvas</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+35</div><div class="top-kpi-lbl">Tests Vitest (3887)</div></div>
+</div>
+
+<p style="text-align:center;font-size:13px;color:#bfe6e6;opacity:.85;margin:18px 0 0;position:relative;z-index:1">↑ Regarde le fond — il y a des particules teal qui flottent (démo live)</p>
+
+<h2>🔄 Bouton "Vider le cache" dans /profil</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px"><b>Pourquoi ?</b> Plusieurs sessions où la nouvelle UI ne s'affiche pas après une mise à jour (cache navigateur ou Service Worker qui sert encore les anciens chunks). Avant, fallait DevTools → unregister SW → clear storage → hard refresh. <b>Trop technique</b> pour la majorité des users.</p>
+<p style="margin:8px 0 0"><b>Maintenant :</b> Panneau dans /profil onglet Sécurité avec bouton dédié. <b>2 clics</b> suffisent.</p>
+</div>
+
+<div class="demo-reset">
+  <h3>⚠ Problème d'affichage ?</h3>
+  <p>Si la nouvelle interface ne s'affiche pas correctement (vieille TopBar, KPIs non animés, etc.) après une mise à jour, c'est probablement un problème de cache navigateur ou Service Worker. Cliquez ci-dessous pour forcer un nettoyage complet et recharger.</p>
+  <button class="btn-reset">🔄 Vider le cache et recharger</button>
+  <p style="margin:10px 0 0;font-size:11px;color:#8aa0b0;font-style:italic">✓ Votre session reste active (vous n'avez pas besoin de vous reconnecter)</p>
+</div>
+
+<pre>// 0.58.20 - lib/cacheReset.js
+import { fullCacheReset } from '@/lib/cacheReset';
+
+await fullCacheReset({
+  reload: true,        // reload après clear
+  keepAuth: true,      // préserve session Supabase (sb-* clés)
+});
+
+// Procédure orchestrée :
+// 1. unregisterAllServiceWorkers()   → désinscrit tous les SW
+// 2. clearAllCaches()                → vide CacheStorage API
+// 3. clearLocalStorageExceptAuth()   → vide localStorage SAUF sb-*
+// 4. clearSessionStorage()           → vide entièrement
+// 5. window.location.href = ...?_cache_reset=timestamp  ← cache-buster</pre>
+
+<h2>💫 ConicCard premium</h2>
+
+<div class="panel">
+<p style="margin:0">Alternative à KpiCard avec <b>bordure conic-gradient qui tourne en permanence</b> (pas seulement au hover). 6 variants couleur dont <code>aurora</code> multi-couleur. Idéal pour mettre en valeur 1-2 KPIs phares.</p>
+</div>
+
+<div class="conic-grid">
+  <div class="conic-card">
+    <div class="icn">🔧</div>
+    <div class="lbl">Interventions ouvertes</div>
+    <div class="val">142</div>
+    <div class="sub">↑ +12% vs mois dernier</div>
+  </div>
+  <div class="conic-card blue">
+    <div class="icn">👤</div>
+    <div class="lbl">Patients actifs</div>
+    <div class="val">87</div>
+    <div class="sub">↑ +5 nouveaux</div>
+  </div>
+  <div class="conic-card violet">
+    <div class="icn">📦</div>
+    <div class="lbl">Stock matériel</div>
+    <div class="val">312</div>
+    <div class="sub">Niveau OK</div>
+  </div>
+  <div class="conic-card aurora">
+    <div class="icn">⭐</div>
+    <div class="lbl">KPI Aurora</div>
+    <div class="val">98%</div>
+    <div class="sub">Satisfaction globale</div>
+  </div>
+</div>
+
+<pre>import { ConicCard } from '@/components/ui-premium';
+
+&lt;ConicCard
+  icon="ti-tools"
+  label="Interventions ouvertes"
+  value={142}
+  sub="↑ +12% vs mois dernier"
+  variant="aurora"    // teal | blue | violet | terra | amber | aurora
+  speed="normal"      // slow (12s) | normal (4s) | fast (2s)
+  onClick={() => router.push('/interventions')}
+/&gt;</pre>
+
+<h2>✨ ParticlesBackground sur /accueil</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px">Canvas léger avec <b>30 particules teal qui flottent</b> + connexions entre particules proches (effet constellation). En arrière-plan permanent sur /accueil.</p>
+<p style="margin:8px 0 0;font-size:12px;color:rgba(255,255,255,.7)"><b>Optimisations :</b> requestAnimationFrame · pause si tab non visible · skip mobile par défaut (économie batterie) · respect prefers-reduced-motion · cleanup propre au unmount</p>
+</div>
+
+<p style="text-align:center;font-size:12px;color:#bfe6e6;opacity:.85;position:relative;z-index:1">↑↑ La démo live tourne sur cette page entière depuis le début</p>
+
+<pre>// 0.58.20 - branché sur /accueil
+import { ParticlesBackground } from '../components/ui-premium';
+
+&lt;div className="bg-dark" style={{ position: 'relative', isolation: 'isolate' }}&gt;
+  &lt;div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}&gt;
+    &lt;ParticlesBackground count={30} speed={0.3} linkDistance={140} /&gt;
+  &lt;/div&gt;
+  &lt;TopBar /&gt;
+  &lt;div className="wrap" style={{ position: 'relative', zIndex: 1 }}&gt;
+    {/* contenu au-dessus des particules */}
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<h2>📊 Récap composants premium (24 au total)</h2>
+
+<table>
+<tr><th>#</th><th>Composant</th><th>Depuis</th></tr>
+<tr><td>1-22</td><td>KpiCard · Sparkline · MetricCard · Skeleton · EmptyState · Toast · PageHero · Tabs · Avatar · Select · DatePicker · Combobox · TimePicker · Dialog · Drawer · RangePicker · Stepper · BulkToolbar · ProgressBar · Tooltip · CodeBlock · NeonButton</td><td>0.58.0 → 0.58.17</td></tr>
+<tr><td>23</td><td><b style="color:#7CC8C8">💫 ConicCard</b></td><td><b>0.58.20</b></td></tr>
+<tr><td>24</td><td><b style="color:#7CC8C8">✨ ParticlesBackground</b></td><td><b>0.58.20</b></td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.20
+npm install --legacy-peer-deps
+npm test                              # 3887 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.20 - Bouton vider cache + ConicCard + ParticlesBackground sur /accueil"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes WOW</h2>
+<div class="panel warn">
+<ul>
+<li><b>Cmd+K palette refonte glass premium</b> (refonte de GlobalSearch avec glassmorphism + animations)</li>
+<li><b>Page connexion redesignée</b> fullscreen aurora + NeonButton géant</li>
+<li><b>Migration NeonButton</b> sur les pages clés (btn-save, btn-mini → NeonButton)</li>
+<li><b>Application de ConicCard</b> sur /accueil pour 1-2 KPIs phares</li>
+<li><b>ParticlesBackground</b> en background du PageHero (variants par couleur)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.20 · 4 juin 2026 · 3887 Vitest · BUNDLE Cache Reset + ConicCard + ParticlesBackground</footer>
+</div>
+
+<script>
+// Démo live des particules pour la note
+(function(){
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
+  const particles = [];
+  for(let i=0;i<30;i++){
+    particles.push({
+      x: Math.random()*w, y: Math.random()*h,
+      vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3,
+      r: Math.random()*1.5+0.6,
+    });
+  }
+  function tick(){
+    ctx.clearRect(0,0,w,h);
+    for(const p of particles){
+      p.x += p.vx; p.y += p.vy;
+      if(p.x<0||p.x>w) p.vx*=-1;
+      if(p.y<0||p.y>h) p.vy*=-1;
+    }
+    // Lines
+    ctx.lineWidth = 0.8;
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist<140){
+          const op = (1-dist/140)*0.4;
+          ctx.strokeStyle = `rgba(124,200,200,${op})`;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    // Dots
+    ctx.fillStyle = 'rgba(124,200,200,0.6)';
+    for(const p of particles){
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  window.addEventListener('resize',()=>{w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight});
+  tick();
+})();
+</script>
+
+</body></html>
