@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.33 — Dashboard widgets drag & drop</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-30px,40px) scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes av-spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes drag-hint{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.35),rgba(124,200,200,.25));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);overflow:hidden;animation:fadeup .7s cubic-bezier(.2,.8,.2,1)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.2;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:24px;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8);box-shadow:0 0 12px rgba(24,95,165,.5)}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.2px;line-height:1.6;border-left:3px solid #185FA5}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:28px 0}
+.top-kpi{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.2);border-radius:14px;padding:20px 16px;text-align:center;backdrop-filter:blur(20px)}
+.top-kpi-val{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff}
+.top-kpi-lbl{font-size:11px;color:#8aa0b0;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;font-weight:600}
+
+/* DEMO : mode édition */
+.demo-stage{background:linear-gradient(135deg,#f4f7fa 0%,#fff 100%);border-radius:14px;padding:20px;margin:18px 0;color:#142131;position:relative;overflow:hidden}
+
+.editor-toolbar{background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(24,95,165,.06));border:1px solid rgba(124,200,200,.35);border-radius:14px;padding:16px;margin-bottom:18px;position:relative;overflow:hidden}
+.editor-toolbar::before{content:"";position:absolute;inset:-1px;border-radius:14px;background:conic-gradient(from 0deg,transparent 0%,rgba(124,200,200,.35) 50%,transparent 100%);animation:av-spin-slow 4s linear infinite;opacity:.30;pointer-events:none}
+.editor-toolbar > *{position:relative;z-index:1}
+.editor-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.badge-edit{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#7CC8C8,#5da8a8);color:#fff;padding:5px 12px;border-radius:99px;font-size:10.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;box-shadow:0 4px 12px rgba(124,200,200,.35)}
+.help-text{font-size:13px;color:#1c5454;flex:1}
+.btn-reset{background:transparent;color:#7a4f15;border:1px solid #f0d59f;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.btn-done{background:linear-gradient(135deg,#2a7ed1,#185FA5);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:700;box-shadow:0 4px 12px rgba(24,95,165,.35);display:inline-flex;align-items:center;gap:5px}
+.hidden-row p{font-size:11px;font-weight:700;color:#1c5454;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px}
+.hidden-pills{display:flex;flex-wrap:wrap;gap:6px}
+.hidden-pill{display:inline-flex;align-items:center;gap:6px;background:#fff;padding:5px 11px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid}
+
+.widget-demo{position:relative;background:#fff;border-radius:14px;padding:18px 22px;margin-top:24px;outline-offset:4px;animation:drag-hint 2.5s ease-in-out infinite}
+.widget-demo.dashed{outline:2px dashed}
+.widget-demo.target{outline:3px dashed;transform:translateY(6px) scale(1.005);transition:transform 220ms cubic-bezier(.2,.8,.2,1)}
+.widget-demo.dragged{opacity:0.4}
+.widget-demo .label{position:absolute;top:-14px;left:16px;color:#fff;padding:4px 11px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(0,0,0,.20),0 0 0 2px #fff}
+.widget-demo .close{position:absolute;top:-10px;right:8px;background:linear-gradient(135deg,#e35d5b,#c0392b);color:#fff;border:2px solid #fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 4px 10px rgba(192,57,43,.40)}
+.widget-demo .ttl{font-weight:700;font-size:16px;margin-bottom:6px;color:#142131}
+.widget-demo .sub{font-size:12.5px;color:#6c7a89}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>DASHBOARD WIDGETS · 0.58.33</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.33 — Dashboard widgets configurables drag &amp; drop<small>Mode édition premium · Drag &amp; drop natif HTML5 · Galerie widgets cachés · Bouton réinitialiser · 0 dépendance externe</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.33-alpha</code></span>
+    <span><b>Tests :</b> ~4180 verts estimés</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi"><div class="top-kpi-val">5</div><div class="top-kpi-lbl">Widgets</div></div>
+  <div class="top-kpi"><div class="top-kpi-val">HTML5</div><div class="top-kpi-lbl">Drag &amp; Drop natif</div></div>
+  <div class="top-kpi"><div class="top-kpi-val">0</div><div class="top-kpi-lbl">Dépendance lib</div></div>
+  <div class="top-kpi"><div class="top-kpi-val">+30</div><div class="top-kpi-lbl">Tests Vitest</div></div>
+</div>
+
+<h2>🎯 Démo LIVE du mode édition</h2>
+
+<div class="panel">
+<p style="margin:0">Voici à quoi ressemble le dashboard quand tu cliques sur "Personnaliser" en haut-droite. Bordure dashed teal sur chaque widget, label flottant avec drag handle, croix rouge pour masquer, toolbar en haut avec widgets cachés.</p>
+</div>
+
+<div class="demo-stage">
+  <div class="editor-toolbar">
+    <div class="editor-row">
+      <span class="badge-edit">✎ MODE ÉDITION</span>
+      <span class="help-text">Glissez les widgets pour les réorganiser, cliquez sur la croix pour les masquer.</span>
+      <button class="btn-reset">↻ Réinitialiser</button>
+      <button class="btn-done">✓ Terminé</button>
+    </div>
+    <div class="hidden-row">
+      <p>Widgets masqués (clique pour ré-afficher) :</p>
+      <div class="hidden-pills">
+        <span class="hidden-pill" style="color:#5aa05a;border-color:#5aa05a40">🚚 Dernières commandes +</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget-demo dashed" style="outline-color:#EF9F2755">
+    <div class="label" style="background:linear-gradient(135deg,#EF9F27,#EF9F27cc)">📋 ⠿ À TRAITER</div>
+    <div class="close">✕</div>
+    <div class="ttl">À traiter</div>
+    <div class="sub">DI ouvertes, achats à valider, signalements, renouvellements RGPD, maintenances</div>
+  </div>
+
+  <div class="widget-demo target" style="outline-color:#185FA5">
+    <div class="label" style="background:linear-gradient(135deg,#185FA5,#185FA5cc)">📊 ⠿ INDICATEURS CLÉS</div>
+    <div class="close">✕</div>
+    <div class="ttl">Indicateurs clés ← drop ici</div>
+    <div class="sub">Promotions, commandes, montant à régler</div>
+  </div>
+
+  <div class="widget-demo dragged dashed" style="outline-color:#7CC8C855">
+    <div class="label" style="background:linear-gradient(135deg,#7CC8C8,#7CC8C8cc)">🗂 ⠿ RACCOURCIS MODULES (en cours de drag)</div>
+    <div class="close">✕</div>
+    <div class="ttl">Raccourcis modules</div>
+    <div class="sub">Liens rapides vers les modules principaux</div>
+  </div>
+
+  <div class="widget-demo dashed" style="outline-color:#7a6fb055">
+    <div class="label" style="background:linear-gradient(135deg,#7a6fb0,#7a6fb0cc)">🔔 ⠿ NOTIFICATIONS RÉCENTES</div>
+    <div class="close">✕</div>
+    <div class="ttl">Notifications récentes</div>
+    <div class="sub">Les 5 dernières notifications</div>
+  </div>
+</div>
+
+<h2>🛠 Architecture technique</h2>
+
+<div class="panel">
+<table>
+<tr><th>Fichier</th><th>Rôle</th></tr>
+<tr><td><code>lib/dashboardLayout.js</code> NEW</td><td>API centrale : getDashboardLayout / setDashboardLayout / resetDashboardLayout · ALL_WIDGETS / DEFAULT_ORDER / DEFAULT_ACTIVE · Event av-dashboard-layout-change · Rétrocompat 0.6</td></tr>
+<tr><td><code>app/components/DashboardEditorToolbar.js</code> NEW</td><td>Bandeau premium en haut avec badge MODE ÉDITION, liste widgets cachés pilule, boutons Réinitialiser + Terminé. Animation conic scan</td></tr>
+<tr><td><code>app/accueil/page.js</code> MODIFIÉ</td><td>State <code>draggedWidget</code> + <code>dragOverWidget</code> · handlers <code>handleDragStart/Over/Leave/Drop/End</code> · wrapper <code>wrapWithDrag</code> autour de chaque widget rendu · imports lib + toolbar</td></tr>
+</table>
+</div>
+
+<h2>💻 Code clé — drag &amp; drop natif</h2>
+
+<pre>// 0.58.33 - app/accueil/page.js (handlers drag & drop natif)
+const [draggedWidget, setDraggedWidget] = useState(null);
+const [dragOverWidget, setDragOverWidget] = useState(null);
+
+function handleDragStart(e, k) {
+  if (!editLayout) return;
+  setDraggedWidget(k);
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(e, k) {
+  if (!editLayout || !draggedWidget) return;
+  e.preventDefault();  // requis pour autoriser le drop
+  e.dataTransfer.dropEffect = 'move';
+  if (dragOverWidget !== k &amp;&amp; k !== draggedWidget) setDragOverWidget(k);
+}
+
+function handleDrop(e, targetK) {
+  if (!editLayout || !draggedWidget) return;
+  e.preventDefault();
+  if (targetK === draggedWidget) {
+    setDraggedWidget(null);
+    setDragOverWidget(null);
+    return;
+  }
+  const sourceIdx = widgetOrder.indexOf(draggedWidget);
+  const targetIdx = widgetOrder.indexOf(targetK);
+  const next = [...widgetOrder];
+  next.splice(sourceIdx, 1);                  // retire
+  next.splice(targetIdx, 0, draggedWidget);   // insère à la position du target
+  setWidgetOrder(next);
+  setDashboardLayout({ active: widgets, order: next });
+  setDraggedWidget(null);
+  setDragOverWidget(null);
+}</pre>
+
+<h2>📦 Lib dashboardLayout</h2>
+
+<pre>// 0.58.33 - lib/dashboardLayout.js (extrait)
+const STORAGE_KEY = 'aveho_dashboard';
+
+export const ALL_WIDGETS = [
+  { id: 'atraiter', label: 'À traiter', icon: 'ti-clipboard-list', color: '#EF9F27' },
+  { id: 'kpis', label: 'Indicateurs clés', icon: 'ti-chart-bar', color: '#185FA5' },
+  { id: 'raccourcis', label: 'Raccourcis modules', icon: 'ti-layout-grid', color: '#7CC8C8' },
+  { id: 'dernieres', label: 'Dernières commandes', icon: 'ti-truck-delivery', color: '#5aa05a' },
+  { id: 'notifs', label: 'Notifications récentes', icon: 'ti-bell', color: '#7a6fb0' },
+];
+
+export function getDashboardLayout() {
+  // Rétrocompat 0.6 : juste { kpis: true, ... } sans wrap
+  // Merge order : filtre inconnus + ajoute manquants à la fin
+}
+
+export function setDashboardLayout({ active, order }) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ active, order }));
+  window.dispatchEvent(new CustomEvent('av-dashboard-layout-change', { detail: { active, order } }));
+}</pre>
+
+<h2>🎁 Ce que tu vas voir</h2>
+<div class="panel">
+<ul>
+<li><b>/accueil</b> → bouton 'Personnaliser' en haut-droite</li>
+<li>Clic → <b>MODE ÉDITION s'active</b> avec toolbar premium en haut + bordures dashed sur chaque widget</li>
+<li>Chaque widget a un <b>label flottant</b> en haut-gauche (icône + drag handle + nom du widget en couleur métier)</li>
+<li>Chaque widget a une <b>croix rouge</b> en haut-droite (avec animation scale au hover)</li>
+<li><b>Glisse</b> un widget vers un autre = reorder fluide avec opacity 0.4 sur le source + translateY sur le target</li>
+<li>Clic croix = widget masqué + apparaît dans <b>"Widgets masqués"</b> de la toolbar</li>
+<li>Clic pilule widget masqué = réactivé instantanément</li>
+<li>Clic 'Réinitialiser' = dialog confirm puis restore des défauts</li>
+<li>Clic 'Terminé' = ferme l'édition, retour mode lecture</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Extraire le zip 0.58.33 par-dessus
+npm install --legacy-peer-deps
+npm test                # ~4180 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.33 - Dashboard widgets configurables drag &amp; drop natif HTML5 + DashboardEditorToolbar + lib/dashboardLayout"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.34)</h2>
+<div class="panel">
+<ul>
+<li>Page dédiée 'Architecture' par établissement (organigramme équipes + services en arbre visuel)</li>
+<li>Mode présentation : option 'masquer notifs' (comme focus mode 0.58.30)</li>
+<li>Cmd+K : section 'Récents' premium avec mini-timeline</li>
+<li>Ajouter de nouveaux widgets : météo locale, citation du jour, mini-calendrier, liens favoris</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.33 · 5 juin 2026 · DASHBOARD WIDGETS DRAG &amp; DROP</footer>
+</div>
+
+</body></html>

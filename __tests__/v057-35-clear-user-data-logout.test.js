@@ -200,9 +200,12 @@ describe("0.57.35 - LINT anti-régression : pas de PII patient en localStorage",
             // Variables dynamiques (cacheKey, KEY) → on skip (le préfixe est dans la variable)
             if (key.includes("$")) continue;
             // Whitelist : préfixes connus + clés sans PII
+            // 0.58.34 : ajout préfixe 'av-' (av-tour-, av-focus-mode, av-presentation-mode,
+            //   av-shortcuts-config, av-focus-hide-notifs, av-dashboard-layout-change, etc.)
             const isPurgeable =
               key.startsWith("aveho:") ||
               key.startsWith("aveho_") ||
+              key.startsWith("av-") ||
               key.startsWith("ville:") ||
               key.startsWith("etab-photo-");
             if (!isPurgeable) violations.push(`${full}: "${key}"`);

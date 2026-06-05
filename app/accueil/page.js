@@ -18,6 +18,13 @@ import MesValidationsEnAttente from "../MesValidationsEnAttente";
 import HeroDashboard from "./HeroDashboard";
 // 0.58.20 : particules teal flottantes en arrière-plan
 import { ParticlesBackground } from "../components/ui-premium";
+// 0.58.33 : dashboard widgets configurables drag & drop
+import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
+import {
+  getDashboardLayout, setDashboardLayout, resetDashboardLayout,
+  DEFAULT_ACTIVE, DEFAULT_ORDER, ALL_WIDGETS,
+} from "../../lib/dashboardLayout";
+import { dialogs } from "../dialogs";
 
 // 0.58.27 : steps du tour produit premium "Découvrir les nouveautés"
 const PREMIUM_TOUR_STEPS = [
@@ -156,35 +163,72 @@ export default function Accueil() {
     },
   });
 
-  // Charger les widgets actifs depuis localStorage
+  // 0.58.33 : Charger les widgets actifs depuis lib/dashboardLayout (drag & drop)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("aveho_dashboard");
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.active) setWidgets({ ...widgets, ...data.active });
-        if (Array.isArray(data.order)) setWidgetOrder(data.order);
-        // Rétrocompat ancien format (0.6) : juste les actives
-        if (!data.active && !data.order) setWidgets({ ...widgets, ...data });
-      }
-    } catch (_) {}
+    const { active, order } = getDashboardLayout();
+    setWidgets(active);
+    setWidgetOrder(order);
+    // Listen events for sync
+    function onLayoutChange(e) {
+      if (e?.detail?.active) setWidgets(e.detail.active);
+      if (e?.detail?.order) setWidgetOrder(e.detail.order);
+    }
+    window.addEventListener("av-dashboard-layout-change", onLayoutChange);
+    return () => window.removeEventListener("av-dashboard-layout-change", onLayoutChange);
   }, []);
-  function saveWidgets(active, order) {
-    try { localStorage.setItem("aveho_dashboard", JSON.stringify({ active, order })); } catch (_) {}
-  }
+
   function toggleWidget(k) {
     const next = { ...widgets, [k]: !widgets[k] };
-    setWidgets(next); saveWidgets(next, widgetOrder);
+    setWidgets(next);
+    setDashboardLayout({ active: next, order: widgetOrder });
   }
-  function moveWidget(k, direction) {
-    // direction = -1 (haut) ou +1 (bas)
-    const i = widgetOrder.indexOf(k);
-    if (i < 0) return;
-    const j = i + direction;
-    if (j < 0 || j >= widgetOrder.length) return;
+
+  // 0.58.33 : drag & drop natif HTML5
+  const [draggedWidget, setDraggedWidget] = useState(null);
+  const [dragOverWidget, setDragOverWidget] = useState(null);
+
+  function handleDragStart(e, k) {
+    if (!editLayout) return;
+    setDraggedWidget(k);
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", k); } catch {}
+  }
+
+  function handleDragOver(e, k) {
+    if (!editLayout || !draggedWidget) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverWidget !== k && k !== draggedWidget) setDragOverWidget(k);
+  }
+
+  function handleDragLeave() {
+    setDragOverWidget(null);
+  }
+
+  function handleDrop(e, targetK) {
+    if (!editLayout || !draggedWidget) return;
+    e.preventDefault();
+    if (targetK === draggedWidget) {
+      setDraggedWidget(null);
+      setDragOverWidget(null);
+      return;
+    }
+    const sourceIdx = widgetOrder.indexOf(draggedWidget);
+    const targetIdx = widgetOrder.indexOf(targetK);
+    if (sourceIdx < 0 || targetIdx < 0) return;
     const next = [...widgetOrder];
-    [next[i], next[j]] = [next[j], next[i]];
-    setWidgetOrder(next); saveWidgets(widgets, next);
+    // Retire le source et insère à la position du target
+    next.splice(sourceIdx, 1);
+    next.splice(targetIdx, 0, draggedWidget);
+    setWidgetOrder(next);
+    setDashboardLayout({ active: widgets, order: next });
+    setDraggedWidget(null);
+    setDragOverWidget(null);
+  }
+
+  function handleDragEnd() {
+    setDraggedWidget(null);
+    setDragOverWidget(null);
   }
 
   useEffect(() => {
@@ -286,33 +330,26 @@ export default function Accueil() {
 
         {/* Panneau de personnalisation (visible si editLayout) */}
         {editLayout && (
-          <Panel style={{ background: "#eaf7f7", borderColor: "#bfe6e6", marginBottom: 18 }}>
-            <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>Widgets affichés sur l'accueil</h3>
-            <p style={{ fontSize: 12, color: "#6c7a89", margin: "0 0 12px" }}>Cochez les widgets à afficher et utilisez les flèches pour les réorganiser.</p>
-            {widgetOrder.map((k, idx) => {
-              const labels = {
-                kpis: "Indicateurs clés (promotions, commandes, montant à régler)",
-                raccourcis: "Raccourcis vers les modules",
-                dernieres: "Dernières commandes",
-                notifs: "Notifications récentes",
-                atraiter: "À traiter (DI, achats, signalements, renouvellements RGPD, maintenances)",
-              };
-              return (
-                <div key={k} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: "#fff", border: "1px solid #cfe0e0", borderRadius: 8, marginBottom: 6 }}>
-                  <label style={{ flex: 1, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                    <input type="checkbox" checked={widgets[k]} onChange={() => toggleWidget(k)} />
-                    {labels[k]}
-                  </label>
-                  <button onClick={() => moveWidget(k, -1)} disabled={idx === 0} title="Monter" style={{ background: "transparent", border: "1px solid #cfe0e0", borderRadius: 6, width: 28, height: 28, cursor: idx === 0 ? "not-allowed" : "pointer", opacity: idx === 0 ? 0.4 : 1 }}>
-                    <i className="ti ti-chevron-up" />
-                  </button>
-                  <button onClick={() => moveWidget(k, +1)} disabled={idx === widgetOrder.length - 1} title="Descendre" style={{ background: "transparent", border: "1px solid #cfe0e0", borderRadius: 6, width: 28, height: 28, cursor: idx === widgetOrder.length - 1 ? "not-allowed" : "pointer", opacity: idx === widgetOrder.length - 1 ? 0.4 : 1 }}>
-                    <i className="ti ti-chevron-down" />
-                  </button>
-                </div>
-              );
-            })}
-          </Panel>
+          <DashboardEditorToolbar
+            active={widgets}
+            order={widgetOrder}
+            onToggleWidget={toggleWidget}
+            onClose={() => setEditLayout(false)}
+            onResetConfirm={async () => {
+              const ok = await dialogs.confirm({
+                title: "Réinitialiser le dashboard ?",
+                message: "Cela rétablit l'ordre et l'affichage par défaut de tous les widgets.",
+                confirmLabel: "Réinitialiser",
+                cancelLabel: "Annuler",
+                variant: "warning",
+              });
+              if (ok) {
+                setWidgets(DEFAULT_ACTIVE);
+                setWidgetOrder(DEFAULT_ORDER);
+                resetDashboardLayout();
+              }
+            }}
+          />
         )}
 
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
@@ -332,8 +369,83 @@ export default function Accueil() {
               if (!widgets[k]) return null;
               // 0.58.0 : ces 2 widgets sont déjà dans HeroDashboard
               if (k === "kpis" || k === "atraiter") return null;
-              if (k === "raccourcis") return (
-                <Panel key="raccourcis" style={{ marginTop: 18 }}>
+
+              // 0.58.33 : wrapper drag & drop applique sur chaque widget rendu
+              const meta = ALL_WIDGETS.find(w => w.id === k) || { color: "#185FA5", label: k };
+              const isDragged = draggedWidget === k;
+              const isDragOver = dragOverWidget === k && draggedWidget !== k;
+              const wrapWithDrag = (content) => (
+                <div
+                  key={k}
+                  data-widget-id={k}
+                  draggable={editLayout}
+                  onDragStart={(e) => handleDragStart(e, k)}
+                  onDragOver={(e) => handleDragOver(e, k)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, k)}
+                  onDragEnd={handleDragEnd}
+                  style={{
+                    position: "relative",
+                    marginTop: 18,
+                    opacity: isDragged ? 0.4 : 1,
+                    transform: isDragOver ? "translateY(6px) scale(1.005)" : "translateY(0) scale(1)",
+                    transition: "transform 220ms cubic-bezier(.2,.8,.2,1), opacity 150ms",
+                    outline: editLayout ? (isDragOver ? `3px dashed ${meta.color}` : `2px dashed ${meta.color}55`) : "none",
+                    outlineOffset: editLayout ? 4 : 0,
+                    borderRadius: 14,
+                    cursor: editLayout ? (isDragged ? "grabbing" : "grab") : "default",
+                  }}
+                >
+                  {/* 0.58.33 : drag label + close button en mode édition */}
+                  {editLayout && (
+                    <>
+                      <div style={{
+                        position: "absolute", top: -14, left: 16,
+                        background: `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`,
+                        color: "#fff",
+                        padding: "4px 11px", borderRadius: 6,
+                        fontSize: 10.5, fontWeight: 700,
+                        letterSpacing: 0.6, textTransform: "uppercase",
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        boxShadow: `0 4px 12px ${meta.color}55, 0 0 0 2px #fff`,
+                        zIndex: 2,
+                        pointerEvents: "none",
+                        fontFamily: "inherit",
+                      }}>
+                        <i className={`ti ${meta.icon}`} />
+                        <i className="ti ti-grip-vertical" style={{ fontSize: 13, opacity: 0.8 }} />
+                        {meta.label}
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleWidget(k); }}
+                        aria-label={`Masquer ${meta.label}`}
+                        title={`Masquer ${meta.label}`}
+                        style={{
+                          position: "absolute", top: -10, right: 8,
+                          background: "linear-gradient(135deg, #e35d5b, #c0392b)",
+                          color: "#fff",
+                          border: "2px solid #fff",
+                          width: 28, height: 28, borderRadius: "50%",
+                          cursor: "pointer", padding: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 13, fontFamily: "inherit",
+                          boxShadow: "0 4px 10px rgba(192,57,43,0.40)",
+                          zIndex: 2,
+                          transition: "transform 150ms",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.15)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+                      >
+                        <i className="ti ti-x" />
+                      </button>
+                    </>
+                  )}
+                  {content}
+                </div>
+              );
+
+              if (k === "raccourcis") return wrapWithDrag(
+                <Panel style={{ marginTop: 0 }}>
                   <h2 style={{ margin: "0 0 14px", fontSize: 17 }}>Accès rapide</h2>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
                     {raccourcis.map((r) => (
@@ -362,8 +474,8 @@ export default function Accueil() {
                   </div>
                 </Panel>
               );
-              if (k === "dernieres") return (
-                <Panel key="dernieres" style={{ marginTop: 18 }}>
+              if (k === "dernieres") return wrapWithDrag(
+                <Panel style={{ marginTop: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                     <h2 style={{ margin: 0, fontSize: 18 }}>Dernières commandes</h2>
                     <a style={{ color: "#2a5a5a", fontWeight: 600, fontSize: 13 }} onClick={() => router.push("/commandes")}>Tout voir →</a>
@@ -386,8 +498,8 @@ export default function Accueil() {
                   )}
                 </Panel>
               );
-              if (k === "notifs" && recentNotifs.length > 0) return (
-                <Panel key="notifs" style={{ marginTop: 18 }}>
+              if (k === "notifs" && recentNotifs.length > 0) return wrapWithDrag(
+                <Panel style={{ marginTop: 0 }}>
                   <h2 style={{ margin: "0 0 12px", fontSize: 17 }}>Notifications récentes</h2>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {recentNotifs.map((n) => (
@@ -402,41 +514,6 @@ export default function Accueil() {
                   </div>
                 </Panel>
               );
-              if (k === "atraiter") {
-                const items = [
-                  { lbl: "DI ouvertes", value: atraiter.di, icon: "ti-tools", color: "#185FA5", to: "/interventions" },
-                  { lbl: "Achats à valider", value: atraiter.achats, icon: "ti-shopping-cart", color: "#EF9F27", to: "/achats" },
-                  { lbl: "Maintenances à faire", value: atraiter.maint, icon: "ti-tool", color: "#1c5454", to: "/maintenance" },
-                  { lbl: "Signalements nouveaux", value: atraiter.signalements, icon: "ti-message", color: "#7a6fb0", to: "/signalements" },
-                  { lbl: "Renouvellements RGPD (30j)", value: atraiter.renouv, icon: "ti-shield-check", color: "#c0392b", to: "/statistiques-rgpd" },
-                ].filter(x => x.value > 0);
-                if (items.length === 0) return null;
-                return (
-                  <Panel key="atraiter" style={{ marginTop: 18, borderLeft: "4px solid #EF9F27" }}>
-                    <h2 style={{ margin: "0 0 14px", fontSize: 17 }}>
-                      <i className="ti ti-bell" style={{ color: "#EF9F27", marginRight: 6 }} /> À traiter
-                    </h2>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-                      {items.map((it) => (
-                        <button key={it.lbl} onClick={() => router.push(it.to)} style={{
-                          display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-                          border: "1px solid #e3e9ee", borderRadius: 12, background: "#fff", cursor: "pointer",
-                          fontFamily: "inherit", textAlign: "left", transition: "background .15s",
-                        }} onMouseOver={(e) => e.currentTarget.style.background = "#f4f7fa"}
-                           onMouseOut={(e) => e.currentTarget.style.background = "#fff"}>
-                          <span style={{ background: it.color + "22", color: it.color, width: 36, height: 36, borderRadius: 8, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
-                            <i className={`ti ${it.icon}`} />
-                          </span>
-                          <div>
-                            <div style={{ fontSize: 20, fontWeight: 700, color: "#142131", lineHeight: 1 }}>{it.value}</div>
-                            <div style={{ fontSize: 11, color: "#6c7a89", marginTop: 2 }}>{it.lbl}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </Panel>
-                );
-              }
               return null;
             })}
           </>

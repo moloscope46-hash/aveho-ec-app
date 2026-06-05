@@ -8,7 +8,7 @@
 //  - Modal de création FINESS : import direct depuis la base nationale
 //  - Tri par n'importe quelle colonne (nom, type, ville, capacité)
 // =============================================================
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
@@ -40,7 +40,16 @@ const TYPE_COULEURS = {
   "Autre": "#8a98a8",
 };
 
+// 0.58.34 : wrapper Suspense pour useSearchParams() (requis Next 15 SSG bail-out)
 export default function EtablissementsListPage() {
+  return (
+    <Suspense fallback={null}>
+      <EtablissementsListPageInner />
+    </Suspense>
+  );
+}
+
+function EtablissementsListPageInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
