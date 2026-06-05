@@ -54,7 +54,29 @@ export default function FichePatient() {
           supabase.from("materiels").select("id, libelle, num_serie, num_parc, num_lot, etat, articles(libelle)").eq("patient_id", patId),
           supabase.from("interventions").select("*, materiels(id,libelle,num_serie,num_parc)").eq("patient_id", patId).order("created_at", { ascending: false }),
           supabase.from("audit_log").select("*").or(`details->>patient_id.eq.${patId}`).order("created_at", { ascending: false }).limit(20),
-          supabase.from("consentements_rgpd").select("id, date_signature, a_consenti, date_expiration").eq("patient_id", patId).order("date_signature", { ascending: false }),
+          // 0.58.36 : query défensive (fallback si colonnes manquantes en base — 400 reporté)
+          (async () => {
+            try {
+              const r = await supabase
+                .from("consentements_rgpd")
+                .select("id, date_signature, a_consenti, date_expiration")
+                .eq("patient_id", patId)
+                .order("date_signature", { ascending: false });
+              if (r.error) throw r.error;
+              return r;
+            } catch {
+              try {
+                const r = await supabase
+                  .from("consentements_rgpd")
+                  .select("id, date_signature")
+                  .eq("patient_id", patId)
+                  .order("date_signature", { ascending: false });
+                return r;
+              } catch {
+                return { data: [] };
+              }
+            }
+          })(),
         ]);
         setPat(p || null);
         const etqIds = (links || []).map((l) => l.etiquette_id);

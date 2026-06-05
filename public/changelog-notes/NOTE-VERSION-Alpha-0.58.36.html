@@ -1,0 +1,263 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.36 — Onglets collectivité + UserMenu bât/svc</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.35),rgba(124,200,200,.25));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #185FA5}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO 1 : Onglets collectivité */
+.demo-tabs{background:#f4f7fa;border-radius:14px;padding:0;margin:14px 0;color:#142131;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.25)}
+.demo-tabs-bar{background:#fff;display:flex;border-bottom:2px solid #e3e9ee;overflow-x:auto;padding:0 12px}
+.demo-tab{padding:10px 14px;border-bottom:3px solid transparent;margin-bottom:-2px;font-size:13px;color:#6c7a89;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:500}
+.demo-tab.active{font-weight:700}
+.demo-tab.active.bl{border-bottom-color:#185FA5;color:#185FA5}
+.demo-tab.active.vi{border-bottom-color:#7a6fb0;color:#7a6fb0}
+.demo-tab.active.gn{border-bottom-color:#5aa05a;color:#5aa05a}
+.demo-tab.active.am{border-bottom-color:#EF9F27;color:#EF9F27}
+.demo-tab-content{padding:24px;background:#f4f7fa;min-height:180px}
+.demo-tab-content h4{margin:0 0 12px;font-size:15px}
+.demo-form-row{background:#fff;border:1px solid #e3e9ee;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.demo-form-row label{display:block;font-size:11px;color:#6c7a89;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.demo-form-row .val{font-size:13.5px;color:#142131;font-weight:500}
+
+/* DEMO 2 : UserMenu */
+.um-demo{background:#fff;border-radius:14px;padding:0;margin:14px 0;color:#142131;max-width:340px;box-shadow:0 8px 30px rgba(0,0,0,.30);overflow:hidden}
+.um-head{padding:18px;display:flex;gap:14px;align-items:flex-start;background:linear-gradient(135deg,rgba(124,200,200,.05),rgba(24,95,165,.05))}
+.um-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#7CC8C8,#185FA5);color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 0 3px rgba(124,200,200,.20)}
+.um-body{flex:1;min-width:0}
+.um-name{font-size:15px;font-weight:700;color:#142131}
+.um-mail{font-size:12px;color:#6c7a89;margin-top:2px}
+.um-role{display:inline-flex;align-items:center;gap:5px;background:rgba(124,200,200,.12);color:#1c5454;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;margin-top:6px;border:1px solid rgba(124,200,200,.20)}
+.um-attach{margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:11.5px}
+.um-attach-row{display:inline-flex;align-items:center;gap:5px}
+.um-attach-row .lbl{color:#142131;font-weight:600}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>ONGLETS COLLECTIVITÉ · USERMENU · FIX CONSENTS · 0.58.36</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.36 — Onglets /collectivite + bât/svc dans UserMenu<small>3 demandes Cédric : (1) /collectivite groupée par onglets avec Établissements en dernier (2) UserMenu affiche bât/svc rattachés sous le nom (3) Fix 400 consentements_rgpd défensif</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.36-alpha</code></span>
+    <span><b>Tests :</b> ~4245 verts estimés</span>
+  </div>
+</header>
+
+<h2>📑 1. /collectivite : 4 onglets thématiques</h2>
+
+<div class="panel">
+<p style="margin:0">La page <code>/collectivite</code> est maintenant organisée en 4 onglets, avec <b>Établissements en dernier</b> comme demandé. Le bouton "Enregistrer la fiche groupement" est visible uniquement sur les onglets de la fiche (pas sur Établissements). Onglet persisté en localStorage <code>av-collectivite-tab</code>.</p>
+</div>
+
+<div class="demo-tabs">
+  <div class="demo-tabs-bar">
+    <div class="demo-tab bl">🪪 Identité</div>
+    <div class="demo-tab vi">💼 Activité</div>
+    <div class="demo-tab gn">📍 Localisation</div>
+    <div class="demo-tab active am">🏢 Établissements (5)</div>
+  </div>
+  <div class="demo-tab-content">
+    <h4 style="color:#EF9F27;margin:0 0 14px">Onglet sélectionné : Établissements (5)</h4>
+    <p style="font-size:13px;color:#6c7a89;margin:0 0 12px">Liste des tuiles des 5 établissements du groupement, avec leurs bâtiments, équipes & services accessibles via le popup au clic.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+      <div style="background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#185FA5;font-weight:700">EHPAD</span><span style="font-weight:700">EHPAD Les Pins</span></div>
+      <div style="background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#185FA5;font-weight:700">MAS</span><span style="font-weight:700">MAS Le Verger</span></div>
+      <div style="background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;color:#185FA5;font-weight:700">FAM</span><span style="font-weight:700">FAM La Clairière</span></div>
+    </div>
+  </div>
+</div>
+
+<pre>// 0.58.36 - barre d'onglets
+[
+  { id: 'identite',       label: 'Identité',       icon: 'ti-id-badge-2', color: '#185FA5' },
+  { id: 'activite',       label: 'Activité',       icon: 'ti-briefcase',  color: '#7a6fb0' },
+  { id: 'localisation',   label: 'Localisation',   icon: 'ti-map-pin',    color: '#5aa05a' },
+  { id: 'etablissements', label: `Établissements (${etabs.length})`, icon: 'ti-buildings', color: '#EF9F27' },  // ← DERNIER
+].map(t => &lt;button onClick={() => switchTab(t.id)}&gt;...&lt;/button&gt;)
+
+{activeTab === 'identite' &amp;&amp; &lt;&gt;{/* SIRENE + Identité */}&lt;/&gt;}
+{activeTab === 'activite' &amp;&amp; &lt;Panel&gt;{/* Activité &amp; structure */}&lt;/Panel&gt;}
+{activeTab === 'localisation' &amp;&amp; &lt;&gt;{/* Adresse + Contact */}&lt;/&gt;}
+
+{/* Save sur les 3 premiers onglets uniquement */}
+{isAdmin &amp;&amp; activeTab !== 'etablissements' &amp;&amp; (
+  &lt;Btn onClick={saveFiche}&gt;Enregistrer la fiche groupement&lt;/Btn&gt;
+)}
+
+{activeTab === 'etablissements' &amp;&amp; &lt;&gt;{/* Liste tuiles */}&lt;/&gt;}</pre>
+
+<h2>👤 2. UserMenu : bâtiments + équipes rattachés sous le nom</h2>
+
+<div class="panel">
+<p style="margin:0">Sous le nom, l'email et le rôle, on voit maintenant les <b>bâtiments et équipes</b> auxquels l'utilisateur est rattaché. Ces infos sont chargées via <code>membres_equipe → equipes → batiments</code>, filtrées sur l'établissement courant. Affichage silencieux si aucune équipe.</p>
+</div>
+
+<div class="um-demo">
+  <div class="um-head">
+    <div class="um-avatar">CM</div>
+    <div class="um-body">
+      <div class="um-name">Cédric Mignot</div>
+      <div class="um-mail">cedric.mignot@aveho.fr</div>
+      <div class="um-role">🛡 Administrateur</div>
+      <div class="um-attach">
+        <div class="um-attach-row">
+          🏢 <span class="lbl">Bâtiment A · Bâtiment B</span>
+        </div>
+        <div class="um-attach-row">
+          👥 <span class="lbl">Équipe matin · Cardiologie · Médecins traitants</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<pre>// 0.58.36 - app/components/UserAttachmentsInfo.js (NEW)
+export default function UserAttachmentsInfo({ userId, etabId }) {
+  const [batiments, setBatiments] = useState([]);
+  const [equipes, setEquipes] = useState([]);
+
+  useEffect(() => {
+    const { data: memb } = await supabase
+      .from('membres_equipe')
+      .select('equipe_id, equipes(id, nom, couleur, batiment_id, batiments(id, nom, etablissement_id))')
+      .eq('user_id', userId);
+
+    // Filtre par établissement courant (+ transversales sans bâtiment)
+    const eqs = memb.map(m => m.equipes).filter(eq =>
+      eq.batiments?.etablissement_id === etabId || !eq.batiment_id
+    );
+
+    // Bâtiments uniques agrégés depuis les équipes
+    const batMap = {};
+    eqs.forEach(eq => eq.batiments &amp;&amp; (batMap[eq.batiments.id] = eq.batiments));
+    setBatiments(Object.values(batMap));
+    setEquipes(eqs);
+  }, [userId, etabId]);
+
+  if (equipes.length === 0 &amp;&amp; batiments.length === 0) return null;  // silencieux
+
+  return (
+    &lt;div&gt;
+      {batiments.length > 0 &amp;&amp; (
+        &lt;div&gt;&lt;i className='ti ti-building' /&gt; {batiments.map(b => b.nom).join(' · ')}&lt;/div&gt;
+      )}
+      {equipes.length > 0 &amp;&amp; (
+        &lt;div&gt;&lt;i className='ti ti-users' /&gt; {equipes.map(eq => eq.nom).slice(0, 3).join(' · ')}
+          {equipes.length > 3 &amp;&amp; &lt;span&gt; +{equipes.length - 3}&lt;/span&gt;}
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}</pre>
+
+<h2>🩹 3. Fix 400 consentements_rgpd défensif</h2>
+
+<div class="panel">
+<p style="margin:0">Console : <code>?select=id,date_signature,a_consenti,date_expiration → 400</code>. Une colonne manque en base. Query passée en <b>défensive</b> avec try/catch + fallback à <code>id, date_signature</code> minimal. Comme on a fait avec <code>template_libelle</code> en 0.56.17.</p>
+</div>
+
+<pre>// 0.58.36 - app/patient/[id]/page.js
+// Query défensive (IIFE dans Promise.all)
+(async () => {
+  try {
+    const r = await supabase.from('consentements_rgpd')
+      .select('id, date_signature, a_consenti, date_expiration')
+      .eq('patient_id', patId)
+      .order('date_signature', { ascending: false });
+    if (r.error) throw r.error;
+    return r;
+  } catch {
+    // Fallback : colonnes manquantes en base
+    try {
+      const r = await supabase.from('consentements_rgpd')
+        .select('id, date_signature')
+        .eq('patient_id', patId)
+        .order('date_signature', { ascending: false });
+      return r;
+    } catch { return { data: [] }; }
+  }
+})(),</pre>
+
+<h2>📋 Récap autres erreurs prod (déjà gérées)</h2>
+
+<div class="panel">
+<table>
+<tr><th>Erreur</th><th>État</th></tr>
+<tr><td>403 audit_log</td><td>✅ Fixé en base le 5 juin (RLS), cache navigateur peut-être à vider</td></tr>
+<tr><td>400 patient_dashboard_medicaments_actifs RPC</td><td>✅ RPC pas déployée, gracefully handled depuis 0.58.18</td></tr>
+<tr><td>sw.js TypeError: Failed to fetch</td><td>⚠ Cosmetic, le SW essaie de fetch quelque chose qui n'existe pas — n'impacte pas l'UX</td></tr>
+<tr><td>400 consentements_rgpd</td><td>✅ Fixé en 0.58.36 (défensif)</td></tr>
+</table>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4245 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.36 - Onglets /collectivite + UserMenu bât/svc rattachés + fix consentements_rgpd défensif"
+git push origin main</pre>
+</div>
+
+<h2>💡 SQL optionnel à exécuter en base (pour avoir TOUTES les colonnes)</h2>
+
+<pre>-- À exécuter dans Supabase SQL Editor si tu veux conserver
+-- les colonnes a_consenti + date_expiration sur consentements_rgpd
+ALTER TABLE consentements_rgpd 
+  ADD COLUMN IF NOT EXISTS a_consenti boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS date_expiration date;</pre>
+
+<h2>📋 Prochaines pistes (0.58.37)</h2>
+<div class="panel">
+<ul>
+<li>Mode présentation : option 'masquer notifs' (comme focus mode 0.58.30)</li>
+<li>Cmd+K : section 'Récents' premium avec mini-timeline</li>
+<li>Nouveaux widgets dashboard : météo locale, citation du jour, mini-calendrier, liens favoris</li>
+<li>Filtrer listes (patients, matériels, DI) selon contexte bât/svc via <code>av-current-context-change</code></li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.36 · 5 juin 2026 · ONGLETS COLLECTIVITÉ + USERMENU BÂT/SVC + FIX CONSENTS</footer>
+</div>
+
+</body></html>

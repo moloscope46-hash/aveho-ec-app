@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
 // 0.58.5 : Avatar premium remplace les um-avatar custom
 import { Avatar } from "./components/ui-premium";
+// 0.58.36 : info bât/svc rattachés à l'utilisateur sous son nom
+import UserAttachmentsInfo from "./components/UserAttachmentsInfo";
 
 // Couleurs déterministes à partir d'un user_id ou d'un nom
 const PALETTE = ["#7CC8C8", "#185FA5", "#C9867F", "#7a6fb0", "#5aa05a", "#EF9F27", "#5a8f8f", "#e35d5b"];
@@ -140,6 +142,8 @@ export default function UserMenu({ auth }) {
                 <div className="um-id-name">{displayName}</div>
                 <div className="um-id-mail">{userEmail}</div>
                 <div className="um-id-role"><i className="ti ti-shield-check" /> {roleNom}</div>
+                {/* 0.58.36 : bât/svc rattachés à l'utilisateur via les équipes */}
+                <UserAttachmentsInfo userId={auth?.user?.id} etabId={auth?.etabId} />
               </div>
             </div>
 

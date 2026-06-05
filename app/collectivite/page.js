@@ -37,6 +37,20 @@ export default function GroupementPage() {
   const [popupLoading, setPopupLoading] = useState(false);
   // 0.58.35 : onglet actif du popup établissement (bats | equipes)
   const [popupTab, setPopupTab] = useState("bats");
+  // 0.58.36 : onglets de la page /collectivite (identite | activite | localisation | etablissements)
+  const [activeTab, setActiveTab] = useState("identite");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("av-collectivite-tab");
+      if (saved && ["identite", "activite", "localisation", "etablissements"].includes(saved)) {
+        setActiveTab(saved);
+      }
+    } catch {}
+  }, []);
+  function switchTab(t) {
+    setActiveTab(t);
+    try { localStorage.setItem("av-collectivite-tab", t); } catch {}
+  }
 
   const isAdmin = auth.role?.nom === "Administrateur" || (auth.can && auth.can("gerer_roles"));
 
@@ -204,8 +218,56 @@ export default function GroupementPage() {
 
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
           <>
-            {/* Bloc Import SIRENE */}
-            {isAdmin && (
+            {/* 0.58.36 : barre d'onglets premium */}
+            <div style={{
+              display: "flex",
+              gap: 4,
+              marginBottom: 18,
+              borderBottom: "2px solid #e3e9ee",
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+              flexWrap: "nowrap",
+            }} className="av-collectivite-tabs" role="tablist">
+              {[
+                { id: "identite",      label: "Identité",      icon: "ti-id-badge-2", color: "#185FA5" },
+                { id: "activite",      label: "Activité",      icon: "ti-briefcase",  color: "#7a6fb0" },
+                { id: "localisation",  label: "Localisation",  icon: "ti-map-pin",    color: "#5aa05a" },
+                { id: "etablissements", label: `Établissements (${etabs.length})`, icon: "ti-buildings", color: "#EF9F27" },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  role="tab"
+                  aria-selected={activeTab === t.id}
+                  onClick={() => switchTab(t.id)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: activeTab === t.id ? `3px solid ${t.color}` : "3px solid transparent",
+                    marginBottom: -2,
+                    padding: "10px 14px",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    fontSize: 13,
+                    fontWeight: activeTab === t.id ? 700 : 500,
+                    color: activeTab === t.id ? t.color : "#6c7a89",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    transition: "all 150ms",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                >
+                  <i className={`ti ${t.icon}`} />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Onglet IDENTITÉ : SIRENE + Identité */}
+            {activeTab === "identite" && (<>
+              {/* Bloc Import SIRENE */}
+              {isAdmin && (
               <Panel style={{ marginBottom: 18, background: "linear-gradient(135deg, #fff8ec 0%, #fff 100%)", borderColor: "#f0d59f", position: "relative", zIndex: 50 }}>
                 <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>
                   <i className="ti ti-building-store" style={{ color: "#EF9F27", marginRight: 6 }} /> 
@@ -251,8 +313,10 @@ export default function GroupementPage() {
                 </Fld>
               </div>
             </Panel>
+            </>)}
 
-            {/* Bloc Activité */}
+            {/* Onglet ACTIVITÉ */}
+            {activeTab === "activite" && (
             <Panel style={{ marginBottom: 14 }}>
               <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
                 <i className="ti ti-briefcase" style={{ color: "#7a6fb0", marginRight: 6 }} /> Activité & structure
@@ -291,8 +355,10 @@ export default function GroupementPage() {
                 </Fld>
               </div>
             </Panel>
+            )}
 
-            {/* Bloc Adresse */}
+            {/* Onglet LOCALISATION : Adresse + Contact */}
+            {activeTab === "localisation" && (<>
             <Panel style={{ marginBottom: 14 }}>
               <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
                 <i className="ti ti-map-pin" style={{ color: "#5aa05a", marginRight: 6 }} /> Adresse du siège
@@ -318,7 +384,6 @@ export default function GroupementPage() {
               </div>
             </Panel>
 
-            {/* Bloc Contact */}
             <Panel style={{ marginBottom: 14 }}>
               <h3 style={{ margin: "0 0 12px", fontSize: 15 }}>
                 <i className="ti ti-phone" style={{ color: "#EF9F27", marginRight: 6 }} /> Contact
@@ -338,8 +403,10 @@ export default function GroupementPage() {
                 <textarea value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} style={{ ...inputStyle, fontFamily: "inherit", resize: "vertical" }} disabled={!isAdmin} />
               </Fld>
             </Panel>
+            </>)}
 
-            {isAdmin && (
+            {/* Bouton Save : visible sur tous les onglets de fiche groupement (sauf etablissements) */}
+            {isAdmin && activeTab !== "etablissements" && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 24 }}>
                 <Btn variant="primary" icon="ti-device-floppy" onClick={saveFiche} disabled={busy}>
                   {busy ? "Enregistrement…" : "Enregistrer la fiche groupement"}
@@ -347,6 +414,8 @@ export default function GroupementPage() {
               </div>
             )}
 
+            {/* Onglet ÉTABLISSEMENTS : en dernier (0.58.36) */}
+            {activeTab === "etablissements" && (<>
             {/* Liste des établissements en cards */}
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <PageHead
@@ -472,6 +541,7 @@ export default function GroupementPage() {
                 <Panel><StateMsg>Aucun établissement rattaché au groupement. Utilise le bouton ci-dessus pour en créer un.</StateMsg></Panel>
               )}
             </div>
+            </>)}
           </>
         )}
 
