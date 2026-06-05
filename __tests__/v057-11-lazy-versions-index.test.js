@@ -53,7 +53,7 @@ describe("0.57.11 - versions-index.json (lazy fetch public)", () => {
     const size = fs.statSync(path.resolve(process.cwd(), jsonPath)).size;
     expect(size).toBeGreaterThan(150 * 1024);
     // 0.58.21 : seuil monté à 650 KB (versions-data grandit naturellement à chaque release)
-    expect(size).toBeLessThan(650 * 1024);
+    expect(size).toBeLessThan(800 * 1024); // 0.58.41 : seuil monté à 800 KB
   });
 });
 

@@ -1,0 +1,277 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.40 — Refactor Crud + auto-météo + drag favoris + Notes</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes refresh-rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.amber{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.45) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.30),rgba(239,159,39,.20));backdrop-filter:blur(30px);border:1px solid rgba(239,159,39,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5d49f;font-weight:700;background:rgba(239,159,39,.14);border:1px solid rgba(239,159,39,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#EF9F27;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#EF9F27;text-shadow:0 0 18px rgba(239,159,39,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#f5d49f;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#f5d49f}
+.meta b{color:#fff}
+.meta code{background:rgba(239,159,39,.12);color:#f5d49f;border:1px solid rgba(239,159,39,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#EF9F27)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(239,159,39,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(239,159,39,.12);color:#EF9F27;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #EF9F27}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO météo refresh */
+.weather-card{background:linear-gradient(135deg,#e0f4ff 0%,#fff 100%);border:1px solid #bce0f7;border-radius:14px;padding:20px;color:#142131;margin:14px 0;max-width:500px;position:relative}
+.weather-refresh{position:absolute;top:20px;right:20px;background:transparent;border:1px solid rgba(24,95,165,.20);color:#185FA5;border-radius:6px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:11px;animation:refresh-rotate 6s linear infinite}
+.weather-row{display:flex;align-items:center;gap:16px;margin-top:16px}
+.weather-icon{font-size:56px;line-height:1;filter:drop-shadow(0 4px 8px rgba(24,95,165,.30))}
+.weather-temp{font-size:32px;font-weight:700;color:#185FA5;line-height:1}
+.weather-meta{font-size:11px;color:#8a98a8;margin-top:6px;display:flex;gap:12px}
+.weather-status{margin-top:10px;padding-top:10px;border-top:1px dashed #bce0f7;font-size:10.5px;color:#5aa05a;display:flex;justify-content:space-between}
+
+/* DEMO drag&drop favoris */
+.fav-stage{background:#fff;border-radius:14px;padding:18px;margin:14px 0;color:#142131;box-shadow:0 4px 24px rgba(0,0,0,.25)}
+.fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px}
+.fav-item{position:relative;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e8c5bf;border-radius:10px;background:#fff;font-size:12.5px;font-weight:600;color:#142131;cursor:grab}
+.fav-item.dragging{opacity:.4;cursor:grabbing}
+.fav-item.over{transform:translateY(-2px);outline:2px dashed #e35d5b;outline-offset:2px;background:#fff5f3}
+.fav-item i{color:#e35d5b;font-size:14px}
+.fav-hint{margin:8px 0 0;font-size:11px;color:#8a98a8;font-style:italic;display:inline-flex;align-items:center;gap:4px}
+
+/* DEMO notes */
+.notes-card{background:linear-gradient(135deg,#fffef0 0%,#fff 100%);border:1px solid #f0e0a0;border-radius:14px;padding:18px;color:#142131;margin:14px 0;max-width:560px}
+.notes-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.notes-head h3{margin:0;font-size:15px;color:#7a4f15}
+.notes-content h4{margin:8px 0 4px;font-size:13px;color:#142131}
+.notes-content p{margin:4px 0;font-size:12.5px;line-height:1.45}
+.notes-content ul{margin:4px 0;padding-left:18px;font-size:12.5px}
+.notes-content ul li{margin-bottom:2px}
+.notes-content b{font-weight:700}
+.notes-content a{color:#185FA5;font-weight:600}
+.notes-saved{font-size:10.5px;color:#5aa05a;display:inline-flex;align-items:center;gap:3px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob amber"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.40</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.40 — Refactor Crud + filtre /materiels + auto-météo + drag favoris + Notes<small>Dette résolue · 4 améliorations dashboard · 1 nouveau widget</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.40-alpha</code></span>
+    <span><b>Tests :</b> ~4360 verts estimés</span>
+  </div>
+</header>
+
+<h2>🔧 1. Crud refactor + filtre /materiels</h2>
+
+<div class="panel">
+<p style="margin:0">Ajout d'une prop <code>extraFilter</code> à <code>Crud</code> (rétrocompat 100% — default null). Permet à n'importe quelle page d'appliquer un filtre externe sur ses rows. Utilisé immédiatement dans <code>/materiels</code> pour le filtrage par contexte bât/svc (dette de 0.58.39).</p>
+</div>
+
+<pre>// 0.58.40 - app/crud.js : signature enrichie
+export default function Crud({ /* ... */, filterFields = null, extraFilter = null }) {
+  // ...
+  // extraFilter appliqué EN PREMIER
+  const baseRows = extraFilter ? rows.filter(extraFilter) : rows;
+  const filtered = filterFields ? baseRows.filter(/* ... */) : baseRows;
+  // tri, pagination, render
+}
+
+// app/materiels/page.js : usage
+const ctx = useCurrentContext();
+const [ctxPatientIds, setCtxPatientIds] = useState(null);
+
+useEffect(() => {
+  // Charge les patient_ids du contexte (chambres → patients)
+  const { data: chambres } = await supabase.from('chambres')
+    .select('id').eq(ctx.serviceId ? 'service_id' : 'batiment_id', ctx.serviceId || ctx.batimentId);
+  const { data: pats } = await supabase.from('patients').select('id')
+    .in('chambre_id', chambres.map(c => c.id));
+  setCtxPatientIds(new Set(pats.map(p => p.id)));
+}, [ctx.batimentId, ctx.serviceId]);
+
+&lt;Crud
+  extraFilter={ctx.active &amp;&amp; ctxPatientIds ? (r) =&gt; ctxPatientIds.has(r.patient_id) : null}
+  // ... autres props
+/&gt;</pre>
+
+<div class="panel" style="background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6));border-left:4px solid #5aa05a">
+<p style="margin:0">✅ Le triplet <code>/patients</code>, <code>/interventions</code>, <code>/materiels</code> partage désormais exactement le même pattern de filtrage par contexte bât/svc via le hook <code>useCurrentContext</code> + bouton "Filtrer par contexte" + état `active`.</p>
+</div>
+
+<h2>🔄 2. Auto-refresh météo 30min + bouton manuel</h2>
+
+<div class="panel">
+<p style="margin:0">Le widget météo se rafraîchit automatiquement toutes les 30 minutes. Un bouton refresh manuel (icône <code>ti-refresh</code>) avec rotation au hover permet de forcer un refresh immédiat.</p>
+</div>
+
+<div class="weather-card">
+<div style="display:flex;align-items:center;justify-content:space-between">
+  <h3 style="margin:0;font-size:15px;color:#185FA5">☁️ Météo locale</h3>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:10.5px;color:#5a8888;font-family:monospace">48.85, 2.35</span>
+    <button class="weather-refresh">🔄</button>
+  </div>
+</div>
+<div class="weather-row">
+  <div class="weather-icon">⛅</div>
+  <div style="flex:1">
+    <div class="weather-temp">19°<small style="font-size:18px;color:#5a8888">C</small></div>
+    <div style="font-size:12.5px;color:#5a8888;margin-top:4px">Partiellement nuageux</div>
+    <div class="weather-meta">
+      <span>💨 14 km/h</span>
+      <span>💧 62%</span>
+    </div>
+  </div>
+</div>
+<div class="weather-status">
+  <span>✓ Auto-refresh 30min</span>
+  <span>Maj : à l'instant</span>
+</div>
+</div>
+
+<h2>↕️ 3. Drag & drop liens favoris</h2>
+
+<div class="panel">
+<p style="margin:0">Réordonne tes liens favoris par drag & drop. Pattern HTML5 natif (réutilise l'approche du dashboard widget 0.58.33). Hint visuel "Glisse pour réordonner" si 2+ favoris. Persistance auto dans localStorage.</p>
+</div>
+
+<div class="fav-stage">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+  <h3 style="margin:0;font-size:15px;color:#e35d5b">📑 Liens favoris</h3>
+  <button style="background:linear-gradient(135deg,#e35d5b,#c0392b);color:#fff;border:none;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600">＋ Ajouter</button>
+</div>
+<p class="fav-hint">⋮⋮ Glisse pour réordonner</p>
+<div class="fav-grid">
+  <div class="fav-item"><i>🔗</i>Documentation PERFADOM</div>
+  <div class="fav-item dragging"><i>🔗</i>Jira sprint actuel</div>
+  <div class="fav-item over"><i>↗️</i>FINESS recherche</div>
+  <div class="fav-item"><i>🔗</i>Mode TV service A</div>
+</div>
+</div>
+
+<pre>// 0.58.40 - pattern HTML5 natif
+const [dragIdx, setDragIdx] = useState(null);
+const [dragOverIdx, setDragOverIdx] = useState(null);
+
+function handleDrop(e, targetIdx) {
+  e.preventDefault();
+  const next = [...favs];
+  const [removed] = next.splice(dragIdx, 1);
+  next.splice(targetIdx, 0, removed);  // ← insert at target
+  setFavs(next);
+  setFavLinks(next);  // persiste localStorage
+}
+
+&lt;div draggable
+     onDragStart={() =&gt; handleDragStart(idx)}
+     onDragOver={(e) =&gt; handleDragOver(e, idx)}
+     onDrop={(e) =&gt; handleDrop(e, idx)}
+     style={{
+       opacity: dragIdx === idx ? 0.4 : 1,
+       transform: dragOverIdx === idx &amp;&amp; dragIdx !== idx ? 'translateY(-2px)' : 'translateY(0)',
+       outline: dragOverIdx === idx &amp;&amp; dragIdx !== idx ? '2px dashed #e35d5b' : 'none',
+     }}&gt;
+  ...
+&lt;/div&gt;</pre>
+
+<h2>📝 4. Nouveau widget : Notes personnelles (markdown léger)</h2>
+
+<div class="panel">
+<p style="margin:0">Bloc-notes opt-in avec mini-parser markdown (<b>gras</b>, <i>italique</i>, <code>## titre</code>, <code>- bullet</code>, <code>[lien](url)</code>). <b>Sécurisé</b> : HTML escape pour éviter XSS, seules les URLs http(s)/relatives autorisées. Auto-save 800ms après dernière frappe. 4000 caractères max.</p>
+</div>
+
+<div class="notes-card">
+<div class="notes-head">
+  <h3>📝 Mes notes</h3>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="notes-saved">✓ Enregistré</span>
+    <button style="background:transparent;color:#EF9F27;border:1px solid #f0d59f;padding:4px 10px;border-radius:8px;font-size:11.5px;font-weight:600">✏ Modifier</button>
+  </div>
+</div>
+<div class="notes-content">
+<h4>Sprint 0.58.X</h4>
+<p>Idées à creuser pour la prochaine release :</p>
+<ul>
+<li><b>Filtre contexte</b> : étendre à <i>/commandes</i> et <i>/signalements</i></li>
+<li>Notes : ajouter checkboxes <code>[ ]</code> / <code>[x]</code> pour to-do</li>
+<li>Tester avec <a href="#">Hélène</a> la semaine prochaine</li>
+</ul>
+<h4>Bugs en attente</h4>
+<p>Le 405 sur <code>/api/ocr/bulletin-situation</code> est toujours là. À investiguer.</p>
+</div>
+</div>
+
+<pre>// 0.58.40 - mini-parser markdown sécurisé
+function renderMd(text) {
+  // 1) Échappe le HTML d'abord (sécurité XSS)
+  const esc = text.replace(/&amp;/g, '&amp;amp;').replace(/&lt;/g, '&amp;lt;').replace(/&gt;/g, '&amp;gt;');
+
+  // 2) Split en blocs, puis applique les patterns markdown
+  return esc.split(/\n\n+/).map(block =&gt; {
+    if (block.startsWith('## ')) return &lt;h4&gt;{inlineMd(block.slice(3))}&lt;/h4&gt;;
+    if (block.split('\n').every(l =&gt; l.startsWith('- ')))
+      return &lt;ul&gt;{block.split('\n').map(l =&gt; &lt;li&gt;{inlineMd(l.slice(2))}&lt;/li&gt;)}&lt;/ul&gt;;
+    return &lt;p&gt;{inlineMd(block)}&lt;/p&gt;;
+  });
+}
+
+function inlineMd(text) {
+  // **gras**, *italique*, [link](url)
+  // Sécurité liens : if (/^(https?:\/\/|\/)/.test(url)) { ... }
+}</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px"><b>📋 Filtre par contexte bât/svc</b> déployé sur 3 pages maintenant : <code>/patients</code>, <code>/interventions</code>, <code>/materiels</code></p>
+<p style="margin:0 0 8px"><b>🎁 10 widgets dashboard</b> au total : 5 base + 5 opt-in (citation, mini-calendrier, liens-favoris, météo, <b>notes</b>)</p>
+<p style="margin:0"><b>🧪 +40 tests</b> Vitest (~4360 verts estimés)</p>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4360 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.40 - Refactor Crud extraFilter + filtre /materiels + auto-refresh météo + drag&drop favoris + Widget Notes markdown"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.41+)</h2>
+<div class="panel">
+<ul>
+<li>Cmd+K page-actions contextuelles (selon page courante, actions type 'Créer DI', 'Exporter CSV')</li>
+<li>Widget '🎯 Mes objectifs' avec progress bars et milestones</li>
+<li>Notes : support checkboxes <code>[ ]</code> / <code>[x]</code> pour to-do lists</li>
+<li>Notes : multiple notes (onglets ou liste)</li>
+<li>Drag&drop pour réordonner les colonnes du tableau Crud (dans paramètres profil)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.40 · 5 juin 2026 · CRUD REFACTOR + AUTO-MÉTÉO + DRAG FAVORIS + NOTES</footer>
+</div>
+
+</body></html>

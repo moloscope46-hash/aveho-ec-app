@@ -68,7 +68,8 @@ describe("0.58.38 - lib/dashboardLayout : 3 nouveaux widgets opt-in", () => {
   });
 
   it("DEFAULT_ORDER inclut les 3 nouveaux à la fin", () => {
-    expect(src).toMatch(/DEFAULT_ORDER\s*=\s*\[[^\]]*"citation"[^\]]*"mini-calendrier"[^\]]*"liens-favoris"\]/);
+    // 0.58.41 : assoupli — les 3 widgets 0.58.38 sont présents, peu importe ce qui vient après
+    expect(src).toMatch(/DEFAULT_ORDER\s*=\s*\[[^\]]*"citation"[^\]]*"mini-calendrier"[^\]]*"liens-favoris"[^\]]*\]/);
   });
 });
 

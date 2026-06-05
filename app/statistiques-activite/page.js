@@ -3,6 +3,10 @@
 //  Page Statistiques Activité — Dashboard "qui fait quoi"
 //  Alpha 0.31.0
 //
+//  0.58.41 : wrapper Suspense Inner pour éviter le bail-out SSG Vercel
+//  (createClient() au top du composant nécessite les env vars runtime)
+// =============================================================
+//
 //  Pour les admins / managers. Affiche :
 //   - Top demandeurs (DI, achats, transferts) avec podium
 //   - Activité par établissement
@@ -11,7 +15,7 @@
 //   - Top actions (matrice action × entité)
 //   - Export PDF
 // =============================================================
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
@@ -24,7 +28,17 @@ import { Modal } from "../ui";
 import { relativeTime} from "../../lib/format";
 import { logger } from "../../lib/logger";
 
+// 0.58.41 : wrapper Suspense pour empêcher le SSG bail-out Vercel
+//  (createClient au top du composant requiert les env vars runtime)
 export default function StatistiquesActivite() {
+  return (
+    <Suspense fallback={null}>
+      <StatistiquesActiviteInner />
+    </Suspense>
+  );
+}
+
+function StatistiquesActiviteInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();

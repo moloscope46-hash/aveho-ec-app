@@ -22,7 +22,8 @@ import { ParticlesBackground } from "../components/ui-premium";
 import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
 // 0.58.38 : 3 nouveaux widgets opt-in (citation, mini-calendrier, liens-favoris)
 // 0.58.39 : + widget météo (Open-Meteo + géolocalisation)
-import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget } from "../components/DashboardWidgets";
+// 0.58.40 : + widget Notes personnelles (markdown léger)
+import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget } from "../components/DashboardWidgets";
 import {
   getDashboardLayout, setDashboardLayout, resetDashboardLayout,
   DEFAULT_ACTIVE, DEFAULT_ORDER, ALL_WIDGETS,
@@ -522,6 +523,7 @@ export default function Accueil() {
               if (k === "mini-calendrier") return wrapWithDrag(<MiniCalendrierWidget />);
               if (k === "liens-favoris") return wrapWithDrag(<LiensFavorisWidget />);
               if (k === "meteo") return wrapWithDrag(<WeatherWidget />);
+              if (k === "notes") return wrapWithDrag(<NotesWidget />);
               return null;
             })}
           </>

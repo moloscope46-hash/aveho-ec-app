@@ -2,7 +2,7 @@
 // Page Paramètres — Préférences d'affichage et libellés personnalisés de la collectivité.
 // Stockés dans le champ `parametres` (JSON) de la table `structures`.
 // 0.58.5 : refonte avec Tabs (3 onglets) + PageHero
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
@@ -14,7 +14,17 @@ import { useKiosque } from "../../lib/useKiosque";
 import NotificationOptIn from "../NotificationOptIn";
 import WebhookConfig from "../WebhookConfig";
 
+// 0.58.41 : wrapper Suspense pour empêcher le SSG bail-out Vercel
+//  (createClient au top du composant requiert les env vars runtime)
 export default function Parametres() {
+  return (
+    <Suspense fallback={null}>
+      <ParametresInner />
+    </Suspense>
+  );
+}
+
+function ParametresInner() {
   const supabase = createClient();
   const auth = useAuth();
   const { theme, mode, autoMode, toggle: toggleTheme, setMode: setThemeMode, setAuto } = useTheme();

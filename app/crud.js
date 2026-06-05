@@ -18,7 +18,7 @@ import { dialogs } from "./dialogs";
  *  - select : colonnes à charger (avec jointures éventuelles)
  *  - relations : { key: [{value,label}] } pour les selects (ex. articles, patients)
  */
-export default function Crud({ structureId, etabId, table, columns, fields, title, select = "*", relations = {}, onData, canWrite = true, canDelete = true, filterFields = null }) {
+export default function Crud({ structureId, etabId, table, columns, fields, title, select = "*", relations = {}, onData, canWrite = true, canDelete = true, filterFields = null, extraFilter = null }) {
   const supabase = createClient();
   const auth = useAuth();
   const [rows, setRows] = useState([]);
@@ -189,8 +189,10 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
       {loading ? <StateMsg>Chargement…</StateMsg>
         : rows.length === 0 ? <StateMsg>Aucun élément. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={openNew}>Créer le premier</a></StateMsg>
         : (() => {
+            // 0.58.40 : extraFilter externe (ex : filtre par contexte bât/svc) appliqué EN PREMIER
+            const baseRows = extraFilter ? rows.filter(extraFilter) : rows;
             // Alpha 0.8 : filtres avancés (appliqués AVANT tri)
-            const filtered = filterFields ? rows.filter((r) => {
+            const filtered = filterFields ? baseRows.filter((r) => {
               for (const f of filterFields) {
                 const v = filters[f.key];
                 if (!v) continue;
@@ -207,7 +209,7 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
                 }
               }
               return true;
-            }) : rows;
+            }) : baseRows;
             // Alpha 0.8 : tri client-side
             const sorted = sortBy ? [...filtered].sort((a, b) => {
               const va = a[sortBy]; const vb = b[sortBy];

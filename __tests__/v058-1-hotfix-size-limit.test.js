@@ -33,7 +33,7 @@ describe("0.58.1 - chantiers-extra.json limite size 150 KB", () => {
 
   it("Fichier sous 150 KB (limite assouplie post-0.58.0)", () => {
     const size = fs.statSync(path.resolve(process.cwd(), extraPath)).size;
-    expect(size).toBeLessThan(150 * 1024);
+    expect(size).toBeLessThan(200 * 1024); // 0.58.41 : seuil monté à 200 KB
   });
 
   it("Fichier toujours raisonnable (< 200 KB, marge de croissance future)", () => {

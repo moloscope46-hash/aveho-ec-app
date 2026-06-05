@@ -243,10 +243,32 @@ function setFavLinks(arr) {
 export function LiensFavorisWidget() {
   const [favs, setFavs] = useState([]);
   const [mounted, setMounted] = useState(false);
+  // 0.58.40 : drag&drop pour réordonner
+  const [dragIdx, setDragIdx] = useState(null);
+  const [dragOverIdx, setDragOverIdx] = useState(null);
   useEffect(() => {
     setFavs(getFavLinks());
     setMounted(true);
   }, []);
+
+  // 0.58.40 : Handlers drag&drop natif HTML5
+  function handleDragStart(idx) { setDragIdx(idx); }
+  function handleDragOver(e, idx) { e.preventDefault(); setDragOverIdx(idx); }
+  function handleDragLeave() { setDragOverIdx(null); }
+  function handleDragEnd() { setDragIdx(null); setDragOverIdx(null); }
+  function handleDrop(e, targetIdx) {
+    e.preventDefault();
+    if (dragIdx === null || dragIdx === targetIdx) {
+      setDragIdx(null); setDragOverIdx(null);
+      return;
+    }
+    const next = [...favs];
+    const [removed] = next.splice(dragIdx, 1);
+    next.splice(targetIdx, 0, removed);
+    setFavs(next);
+    setFavLinks(next);
+    setDragIdx(null); setDragOverIdx(null);
+  }
 
   async function addFav() {
     if (favs.length >= FAV_MAX) {
@@ -316,6 +338,12 @@ export function LiensFavorisWidget() {
           <i className="ti ti-plus" /> Ajouter
         </button>
       </div>
+      {/* 0.58.40 : hint drag&drop si 2+ favoris */}
+      {favs.length >= 2 && (
+        <p style={{ margin: "0 0 10px", fontSize: 11, color: "#8a98a8", fontStyle: "italic", display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <i className="ti ti-grip-vertical" style={{ fontSize: 13 }} /> Glisse pour réordonner
+        </p>
+      )}
       {favs.length === 0 ? (
         <div style={{
           padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 13,
@@ -327,7 +355,25 @@ export function LiensFavorisWidget() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 8 }}>
           {favs.map((f, idx) => (
-            <div key={idx} style={{ position: "relative" }}>
+            <div
+              key={idx}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragEnd={handleDragEnd}
+              style={{
+                position: "relative",
+                opacity: dragIdx === idx ? 0.4 : 1,
+                transform: dragOverIdx === idx && dragIdx !== idx ? "translateY(-2px)" : "translateY(0)",
+                transition: "all 150ms",
+                cursor: dragIdx === idx ? "grabbing" : "grab",
+                outline: dragOverIdx === idx && dragIdx !== idx ? "2px dashed #e35d5b" : "none",
+                outlineOffset: 2,
+                borderRadius: 10,
+              }}
+            >
               <a
                 href={f.url}
                 onClick={(e) => {
@@ -432,6 +478,14 @@ const WMO = {
 
 export function WeatherWidget() {
   const [state, setState] = useState({ status: "init", data: null, geo: null, error: null });
+  // 0.58.40 : auto-refresh toutes les 30min
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    // Auto-refresh toutes les 30min : déclenche un re-fetch
+    const interval = setInterval(() => setRefreshTick(t => t + 1), 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -476,13 +530,13 @@ export function WeatherWidget() {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
         if (!alive) return;
-        setState({ status: "ok", data: json.current, geo, error: null });
+        setState({ status: "ok", data: json.current, geo, error: null, lastFetch: Date.now() });
       } catch (err) {
         if (alive) setState({ status: "error", data: null, geo, error: err?.message || "Erreur API" });
       }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [refreshTick]);  // 0.58.40 : se redéclenche au refresh tick
 
   return (
     <Panel style={{ marginTop: 0, background: "linear-gradient(135deg, #e0f4ff 0%, #fff 100%)", borderColor: "#bce0f7" }}>
@@ -490,11 +544,37 @@ export function WeatherWidget() {
         <h2 style={{ margin: 0, fontSize: 15, color: "#185FA5" }}>
           <i className="ti ti-cloud" style={{ marginRight: 6, color: "#2a7ed1" }} /> Météo locale
         </h2>
-        {state.status === "ok" && state.geo && (
-          <span style={{ fontSize: 10.5, color: "#5a8888", fontFamily: "Consolas, monospace" }}>
-            {state.geo.lat.toFixed(2)}, {state.geo.lng.toFixed(2)}
-          </span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {state.status === "ok" && state.geo && (
+            <span style={{ fontSize: 10.5, color: "#5a8888", fontFamily: "Consolas, monospace" }}>
+              {state.geo.lat.toFixed(2)}, {state.geo.lng.toFixed(2)}
+            </span>
+          )}
+          {/* 0.58.40 : bouton refresh manuel */}
+          <button
+            onClick={() => setRefreshTick(t => t + 1)}
+            aria-label="Rafraîchir la météo"
+            title="Rafraîchir maintenant (auto toutes les 30min)"
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(24,95,165,.20)",
+              color: "#185FA5",
+              borderRadius: 6,
+              width: 24, height: 24,
+              cursor: "pointer",
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 11,
+              transition: "all 150ms",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(24,95,165,.10)"; e.currentTarget.style.transform = "rotate(45deg)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.transform = "rotate(0deg)"; }}
+          >
+            <i className="ti ti-refresh" />
+          </button>
+        </div>
       </div>
 
       {state.status === "init" && (
@@ -543,6 +623,217 @@ export function WeatherWidget() {
           to { transform: rotate(360deg); }
         }
       `}</style>
+    </Panel>
+  );
+}
+
+// ============================================================
+//  NotesWidget — notes personnelles (0.58.40)
+//
+//  Bloc-notes personnel stocké en localStorage (av-personal-notes).
+//  Support markdown léger : **gras**, *italique*, [link](url),
+//   - bullets, ## headings, ligne vide = paragraphe.
+//  Modes : preview (rendu rich) + edit (textarea).
+//  Auto-save 1s après dernière frappe.
+// ============================================================
+
+const NOTES_STORAGE_KEY = "av-personal-notes";
+const NOTES_MAX_LEN = 4000;
+
+function getNotes() {
+  if (typeof window === "undefined") return "";
+  try { return localStorage.getItem(NOTES_STORAGE_KEY) || ""; } catch { return ""; }
+}
+function setNotes(text) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(NOTES_STORAGE_KEY, text.slice(0, NOTES_MAX_LEN)); } catch {}
+}
+
+// Mini-renderer markdown (sécurisé — pas d'injection HTML libre)
+function renderMd(text) {
+  if (!text) return null;
+  // Escape HTML pour éviter XSS, puis remplace les patterns sûrs
+  const esc = text
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Lignes
+  const blocks = esc.split(/\n\n+/);
+  return blocks.map((block, i) => {
+    const trimmed = block.trim();
+    if (!trimmed) return null;
+    // Heading ## (sur tout le block)
+    if (trimmed.startsWith("## ")) {
+      return <h4 key={i} style={{ margin: "8px 0 4px", fontSize: 13, color: "#142131" }}>{inlineMd(trimmed.slice(3))}</h4>;
+    }
+    // Liste bulletée : chaque ligne commence par "- "
+    const lines = trimmed.split("\n");
+    const allBullets = lines.every(l => l.trim().startsWith("- "));
+    if (allBullets && lines.length >= 1) {
+      return (
+        <ul key={i} style={{ margin: "4px 0", paddingLeft: 18, fontSize: 12.5 }}>
+          {lines.map((l, j) => <li key={j} style={{ marginBottom: 2 }}>{inlineMd(l.replace(/^- /, ""))}</li>)}
+        </ul>
+      );
+    }
+    // Paragraphe normal (lignes séparées par <br>)
+    return (
+      <p key={i} style={{ margin: "4px 0", fontSize: 12.5, lineHeight: 1.45 }}>
+        {lines.map((l, j) => (
+          <span key={j}>
+            {inlineMd(l)}
+            {j < lines.length - 1 && <br />}
+          </span>
+        ))}
+      </p>
+    );
+  });
+}
+
+// Inline : **gras**, *italique*, [link](url)
+function inlineMd(text) {
+  // Split sur les patterns, en gardant les délimiteurs
+  // Simple approche : sériel parsing
+  const parts = [];
+  let i = 0;
+  while (i < text.length) {
+    // **gras**
+    if (text[i] === "*" && text[i + 1] === "*") {
+      const end = text.indexOf("**", i + 2);
+      if (end !== -1) { parts.push(<b key={i}>{text.slice(i + 2, end)}</b>); i = end + 2; continue; }
+    }
+    // *italique*
+    if (text[i] === "*") {
+      const end = text.indexOf("*", i + 1);
+      if (end !== -1) { parts.push(<i key={i} style={{ fontStyle: "italic" }}>{text.slice(i + 1, end)}</i>); i = end + 1; continue; }
+    }
+    // [link](url)
+    if (text[i] === "[") {
+      const closeBr = text.indexOf("]", i + 1);
+      if (closeBr !== -1 && text[closeBr + 1] === "(") {
+        const closePar = text.indexOf(")", closeBr + 2);
+        if (closePar !== -1) {
+          const label = text.slice(i + 1, closeBr);
+          const url = text.slice(closeBr + 2, closePar);
+          // Sécurité : seules les URLs http(s) ou relatives
+          if (/^(https?:\/\/|\/)/.test(url)) {
+            parts.push(
+              <a key={i} href={url} target={url.startsWith("http") ? "_blank" : undefined}
+                 rel={url.startsWith("http") ? "noopener noreferrer" : undefined}
+                 style={{ color: "#185FA5", fontWeight: 600 }}>
+                {label}
+              </a>
+            );
+            i = closePar + 1; continue;
+          }
+        }
+      }
+    }
+    // Texte normal — accumule jusqu'au prochain pattern
+    let j = i;
+    while (j < text.length && text[j] !== "*" && text[j] !== "[") j++;
+    parts.push(text.slice(i, j));
+    i = j;
+  }
+  return <>{parts}</>;
+}
+
+export function NotesWidget() {
+  const [text, setText] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(""); // "" | "saving" | "saved"
+
+  useEffect(() => {
+    setText(getNotes());
+    setMounted(true);
+  }, []);
+
+  // Auto-save debounce 800ms
+  useEffect(() => {
+    if (!mounted || !editing) return;
+    setSaveStatus("saving");
+    const t = setTimeout(() => {
+      setNotes(text);
+      setSaveStatus("saved");
+      const t2 = setTimeout(() => setSaveStatus(""), 1200);
+      return () => clearTimeout(t2);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [text, mounted, editing]);
+
+  if (!mounted) return null;
+
+  return (
+    <Panel style={{ marginTop: 0, background: "linear-gradient(135deg, #fffef0 0%, #fff 100%)", borderColor: "#f0e0a0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <h2 style={{ margin: 0, fontSize: 15, color: "#7a4f15" }}>
+          <i className="ti ti-notes" style={{ marginRight: 6, color: "#EF9F27" }} /> Mes notes
+        </h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {saveStatus === "saving" && <span style={{ fontSize: 10.5, color: "#8a98a8" }}><i className="ti ti-loader ti-spin" /> Enregistrement…</span>}
+          {saveStatus === "saved" && <span style={{ fontSize: 10.5, color: "#5aa05a" }}><i className="ti ti-check" /> Enregistré</span>}
+          <button
+            onClick={() => setEditing(!editing)}
+            style={{
+              background: editing ? "linear-gradient(135deg, #5aa05a, #4a8a4a)" : "transparent",
+              color: editing ? "#fff" : "#EF9F27",
+              border: editing ? "none" : "1px solid #f0d59f",
+              padding: "4px 10px",
+              borderRadius: 8,
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <i className={`ti ${editing ? "ti-check" : "ti-pencil"}`} />
+            {editing ? "Terminer" : "Modifier"}
+          </button>
+        </div>
+      </div>
+
+      {editing ? (
+        <>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, NOTES_MAX_LEN))}
+            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;[texte](https://lien)"
+            style={{
+              width: "100%",
+              minHeight: 140,
+              maxHeight: 300,
+              padding: "10px 12px",
+              border: "1px solid #f0d59f",
+              borderRadius: 10,
+              fontFamily: "inherit",
+              fontSize: 12.5,
+              lineHeight: 1.5,
+              background: "#fff",
+              color: "#142131",
+              resize: "vertical",
+              outline: "none",
+            }}
+            autoFocus
+          />
+          <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#8a98a8", display: "flex", justifyContent: "space-between" }}>
+            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, [lien](url)</span>
+            <span>{text.length} / {NOTES_MAX_LEN}</span>
+          </p>
+        </>
+      ) : (
+        <div style={{ minHeight: 60 }}>
+          {text.trim() ? (
+            renderMd(text)
+          ) : (
+            <p style={{ margin: 0, padding: "20px 12px", textAlign: "center", color: "#8a98a8", fontSize: 12.5, fontStyle: "italic" }}>
+              <i className="ti ti-notes-off" style={{ fontSize: 24, display: "block", marginBottom: 6, color: "#f0d59f" }} />
+              Aucune note. Clique sur "Modifier" pour commencer à écrire.
+            </p>
+          )}
+        </div>
+      )}
     </Panel>
   );
 }

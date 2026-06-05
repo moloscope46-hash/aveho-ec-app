@@ -5,7 +5,7 @@
 //  filtres par statut, recherche, accès à l'image de signature,
 //  et archivage manuel.
 // =============================================================
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
@@ -19,7 +19,17 @@ import { fmtDate, relativeTime } from "../../lib/format";
 import { dialogs } from "../dialogs";
 // 0.57.10 : imports retirés (logger non utilisés)
 
+// 0.58.41 : wrapper Suspense pour empêcher le SSG bail-out Vercel
+//  (createClient au top du composant requiert les env vars runtime)
 export default function ConsentementsPage() {
+  return (
+    <Suspense fallback={null}>
+      <ConsentementsPageInner />
+    </Suspense>
+  );
+}
+
+function ConsentementsPageInner() {
   const supabase = createClient();
   const router = useRouter();
   const auth = useAuth();

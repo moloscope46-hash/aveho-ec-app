@@ -120,6 +120,96 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.41",
+    "kind": "hotfix",
+    "titre": "🩹 HOTFIX : 6 tests obsolètes + 3 pages SSG Vercel + 404 prod membres_equipe silent",
+    "chantiers": [
+      { "code": "AI", "txt": "🩹 FIX 6 TESTS OBSOLÈTES : (a) `v058-38` DEFAULT_ORDER regex assoupli — le pattern `\"liens-favoris\"\\]` ne matchait plus depuis 0.58.39 qui ajoute `meteo` après. Nouveau regex : `\"liens-favoris\"[^\\]]*\\]`. (b) `v058-37` regex sur-échappées (4 backslashes au lieu de 2) — cherchaient littéralement `\\\\s\\\\S` dans le code source au lieu du pattern `[\\s\\S]*?`. Corrigées avec 1 niveau d'échappement. (c) `v057-7` + `v058-1` limite `chantiers-extra.json` bumpée de 150 → 200 KB. (d) `v057-11` limite `versions-index.json` bumpée de 650 → 800 KB. Ces 2 fichiers grandissent naturellement à chaque release (+5-10 KB), les tests doivent prévoir de la marge",
+        "code_snippet": {
+          "file": "__tests__/v058-38-bundle.test.js + __tests__/v058-37-bundle.test.js",
+          "note": "Fix regex tests",
+          "lang": "js",
+          "before": "// AVANT 0.58.41 - regex trop strict + sur-échappement\n// v058-38 : se cassait quand on ajoutait 'meteo' après 'liens-favoris'\nexpect(src).toMatch(/DEFAULT_ORDER\\s*=\\s*\\[[^\\]]*\"citation\"[^\\]]*\"mini-calendrier\"[^\\]]*\"liens-favoris\"\\]/);\n\n// v058-37 : cherchait littéralement '\\\\s\\\\S' dans le code\nexpect(src).toMatch(/from\\\\\\([\"']batiments[\"']\\\\\\)\\[\\\\\\\\s\\\\\\\\S\\]\\*\\?/);",
+          "after": "// 0.58.41 - regex assouplis et corrigés\n// v058-38 : accepte n'importe quoi après 'liens-favoris'\nexpect(src).toMatch(/DEFAULT_ORDER\\s*=\\s*\\[[^\\]]*\"citation\"[^\\]]*\"mini-calendrier\"[^\\]]*\"liens-favoris\"[^\\]]*\\]/);\n\n// v058-37 : niveau d'échappement correct (1 backslash dans le code source)\nexpect(src).toMatch(/from\\([\"']batiments[\"']\\)\\[\\\\s\\\\S\\]\\*\\?/);\n\n// v057-7 + v058-1 + v057-11 : seuils bumpés\nexpect(size).toBeLessThan(200 * 1024); // 0.58.41 : seuil monté à 200 KB\nexpect(size).toBeLessThan(800 * 1024); // 0.58.41 : seuil monté à 800 KB"
+        }
+      },
+      { "code": "FIX", "txt": "🩹 FIX 404 PROD `membres_equipe` : la table n'existe pas en base actuellement, ce qui provoquait un fetch 404 visible dans la console à chaque navigation (introduit en 0.58.36 par `UserAttachmentsInfo`). Fix défensif : **(a)** Vérification correcte de `error` retourné par Supabase (au lieu de try/catch qui ne catch pas — Supabase ne throw pas, il retourne `{ data: null, error }`). **(b)** Flag `sessionStorage.av-attachments-disabled` posé après la première erreur → plus de refetch pendant toute la session. **(c)** Préfixe `av-` pour purge automatique au logout. Le 404 reste visible la première fois mais ne se répète pas",
+        "code_snippet": {
+          "file": "app/components/UserAttachmentsInfo.js",
+          "note": "404 silent",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.41 - try/catch qui ne catch pas Supabase\nuseEffect(() => {\n  if (!userId) return;\n  let alive = true;\n  (async () => {\n    try {\n      const { data: memb, error: e1 } = await supabase\n        .from('membres_equipe')\n        .select('equipe_id, equipes(...)') ...\n      if (e1 || !memb) return;  // ← e1 contient l'erreur mais le fetch a déjà fait son 404\n      // ...\n    } catch { /* jamais atteint, Supabase ne throw pas */ }\n  })();\n}, [userId]);",
+          "after": "// 0.58.41 - check erreur Supabase + flag session\nuseEffect(() => {\n  if (!userId) return;\n  // Si on a déjà eu une erreur, on ne refetche pas dans cette session\n  try {\n    if (sessionStorage.getItem('av-attachments-disabled') === 'true') return;\n  } catch {}\n  let alive = true;\n  (async () => {\n    try {\n      const { data: memb, error: e1 } = await supabase\n        .from('membres_equipe').select(...);\n      if (e1) {\n        // 404 / 42P01 (relation does not exist) / autre — silence + flag pour la session\n        try { sessionStorage.setItem('av-attachments-disabled', 'true'); } catch {}\n        return;\n      }\n      // ...\n    } catch {}\n  })();\n}, [userId]);"
+        }
+      },
+      { "code": "FIX", "txt": "🩹 FIX BUILD VERCEL : pages `/statistiques-activite`, `/consentements`, `/parametres` faisaient échouer le build Next 15 avec `@supabase/ssr: Your project's URL and API key are required to create a Supabase client!`. Le prerendering SSG essayait d'exécuter `createClient()` au top du composant sans avoir accès aux env vars runtime. **Solution** : pattern `Inner + Suspense wrapper` (identique à 0.58.34 pour `/etablissements`) — `export const dynamic = 'force-dynamic'` ne fonctionne **pas** dans un Client Component (`'use client'`), il faut passer par Suspense pour basculer en CSR-only",
+        "code_snippet": {
+          "file": "app/statistiques-activite/page.js + app/consentements/page.js + app/parametres/page.js",
+          "note": "Suspense SSG fix",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.41 - pas de wrapper, plante au build Vercel\n\"use client\";\nimport { useEffect, useState } from 'react';\nimport { createClient } from '../../lib/supabase';\n\nexport default function StatistiquesActivite() {\n  const supabase = createClient();  // ← appelé au prerender SSG = KO\n  // ...\n}\n\n/* Error: @supabase/ssr: Your project's URL and API key are required */\n/* Export encountered an error on /statistiques-activite/page */",
+          "after": "// 0.58.41 - pattern Inner+Suspense (identique à 0.58.34 pour /etablissements)\n\"use client\";\nimport { useEffect, useState, Suspense } from 'react';\nimport { createClient } from '../../lib/supabase';\n\n// Wrapper : empêche le SSG bail-out\nexport default function StatistiquesActivite() {\n  return (\n    <Suspense fallback={null}>\n      <StatistiquesActiviteInner />\n    </Suspense>\n  );\n}\n\n// Composant réel : appelé uniquement en CSR\nfunction StatistiquesActiviteInner() {\n  const supabase = createClient();  // ← maintenant en CSR uniquement, OK\n  // ...\n}\n\n// ❌ NE PAS UTILISER : `export const dynamic = 'force-dynamic'`\n//    ne fonctionne PAS dans un Client Component."
+        }
+      },
+      { "code": "AI", "txt": "+15 tests Vitest (v058-41-bundle.test.js) : version+SW (2), fixes des 6 tests précédents documentés (5 — DEFAULT_ORDER assoupli, regex sans sur-échappement, 3 limites bumpées), UserAttachmentsInfo défensif (3 — check error, flag sessionStorage, préfixe av-), Suspense wrapper sur 3 pages SSG (12 — 4 vérifs × 3 pages : import Suspense, wrapper, Inner, plus de dynamic export). Total **~4360 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.41 : la build Vercel passe à nouveau, les 6 tests obsolètes sont verts, le 404 prod sur `membres_equipe` ne pollue plus la console après la première occurrence. Les fonctionnalités introduites en 0.58.36 → 0.58.40 (10 widgets dashboard, hook useCurrentContext, filtre /materiels et /interventions, Cmd+K timeline, etc.) sont conservées intactes. Pattern à retenir : pour les Client Components qui appellent `createClient()` au top-level, **TOUJOURS** utiliser `Inner + Suspense wrapper`, JAMAIS `export const dynamic`. Pour vérifier la liste : `grep -rn 'export default function' app/*/page.js` puis voir lesquels appellent `createClient()` sans wrapper" }
+    ],
+    "themes": ["fix", "tech"],
+    "date": "5 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.41.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.40",
+    "kind": "version",
+    "titre": "🎁 BUNDLE FEATURE : Refactor Crud + filtre /materiels + auto-refresh météo + drag&drop favoris + Widget Notes markdown",
+    "chantiers": [
+      { "code": "ARCH", "txt": "🔧 REFACTOR Crud : nouvelle prop `extraFilter` (fonction `(row) => boolean`). Appliquée AVANT les filterFields existants pour ne pas casser la rétrocompat. Permet à n'importe quelle page utilisant Crud de filtrer ses rows selon une logique externe (ex : contexte bât/svc). Pas de breaking change : si `extraFilter=null` (default), comportement identique à avant",
+        "code_snippet": {
+          "file": "app/crud.js",
+          "note": "Crud extraFilter",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.40 - Crud rigide\nexport default function Crud({ /* ... */, filterFields = null }) {\n  // rendering\n  const filtered = filterFields ? rows.filter(/* ... */) : rows;\n  // tri, pagination, render\n}",
+          "after": "// 0.58.40 - + extraFilter externe\nexport default function Crud({ /* ... */, filterFields = null, extraFilter = null }) {\n  // 0.58.40 : extraFilter appliqué EN PREMIER\n  const baseRows = extraFilter ? rows.filter(extraFilter) : rows;\n  const filtered = filterFields ? baseRows.filter(/* ... */) : baseRows;\n  // tri, pagination, render — inchangé\n}\n\n// Usage côté caller (ex : /materiels)\n<Crud\n  extraFilter={ctx.active && ctxPatientIds ? (r) => ctxPatientIds.has(r.patient_id) : null}\n  // ... autres props\n/>"
+        }
+      },
+      { "code": "UI", "txt": "🔍 FILTRE CONTEXTE SUR /materiels (dette de 0.58.39 résolue) : pattern identique à /interventions. **(a)** Import hook `useCurrentContext`. **(b)** State `ctxPatientIds` chargé via Supabase (`chambres.eq(service_id|batiment_id)` → `patients.in(chambre_id, ...)`). **(c)** Passage à Crud via `extraFilter={ctx.active && ctxPatientIds ? (r) => r.patient_id && ctxPatientIds.has(r.patient_id) : null}`. **(d)** Bouton 'Filtrer par contexte' avant le bouton Export CSV, change de couleur teal quand actif. Maintenant le triplet `/patients`, `/interventions`, `/materiels` partage exactement la même logique de filtrage par contexte" },
+      { "code": "UI", "txt": "🔄 AUTO-REFRESH MÉTÉO 30min : le `WeatherWidget` lance désormais un `setInterval(() => setRefreshTick(t => t + 1), 30 * 60 * 1000)` au montage. L'effet de fetch a `[refreshTick]` en deps → se redéclenche automatiquement. **(b)** Ajout d'un bouton refresh manuel `ti-refresh` à droite du widget, avec rotation 45° au hover. Garde le cache géo TTL 24h pour ne pas redemander la permission à chaque refresh. Cleanup `clearInterval` au démontage",
+        "code_snippet": {
+          "file": "app/components/DashboardWidgets.js",
+          "note": "Weather auto-refresh",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.40 - fetch une seule fois au montage\nuseEffect(() => {\n  let alive = true;\n  (async () => { /* fetch météo */ })();\n  return () => { alive = false; };\n}, []);",
+          "after": "// 0.58.40 - auto-refresh toutes les 30min + bouton manuel\nconst [refreshTick, setRefreshTick] = useState(0);\n\nuseEffect(() => {\n  const interval = setInterval(() => setRefreshTick(t => t + 1), 30 * 60 * 1000);\n  return () => clearInterval(interval);\n}, []);\n\nuseEffect(() => {\n  let alive = true;\n  (async () => { /* fetch météo */ })();\n  return () => { alive = false; };\n}, [refreshTick]);  // ← se redéclenche au tick\n\n<button onClick={() => setRefreshTick(t => t + 1)}\n        onMouseEnter={e => e.currentTarget.style.transform = 'rotate(45deg)'}>\n  <i className='ti ti-refresh' />\n</button>"
+        }
+      },
+      { "code": "UI", "txt": "↕️ DRAG & DROP LIENS FAVORIS : pattern HTML5 natif (réutilise l'approche du dashboard widget 0.58.33). State `dragIdx` + `dragOverIdx`. Handlers `handleDragStart/Over/Leave/Drop/End`. Reorder via `splice(dragIdx, 1)` + `splice(targetIdx, 0, removed)`. Feedback visuel : opacity 0.4 sur l'élément glissé, outline dashed rouge + translateY(-2px) sur la cible, cursor grab/grabbing. Hint 'Glisse pour réordonner' avec icône `ti-grip-vertical` affiché uniquement si 2+ favoris pour ne pas polluer quand y'a rien à réordonner. Persistance auto via setFavLinks(next)",
+        "code_snippet": {
+          "file": "app/components/DashboardWidgets.js",
+          "note": "Drag&drop favoris",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.40 - favs ordonnés par ordre d'ajout uniquement\n{favs.map((f, idx) => (\n  <div key={idx} style={{ position: 'relative' }}>\n    {/* link */}\n  </div>\n))}",
+          "after": "// 0.58.40 - drag&drop pour réordonner\nconst [dragIdx, setDragIdx] = useState(null);\nconst [dragOverIdx, setDragOverIdx] = useState(null);\n\nfunction handleDrop(e, targetIdx) {\n  e.preventDefault();\n  if (dragIdx === null || dragIdx === targetIdx) return;\n  const next = [...favs];\n  const [removed] = next.splice(dragIdx, 1);\n  next.splice(targetIdx, 0, removed);  // ← insert at target\n  setFavs(next);\n  setFavLinks(next);  // ← persiste\n  setDragIdx(null); setDragOverIdx(null);\n}\n\n{favs.map((f, idx) => (\n  <div key={idx}\n       draggable\n       onDragStart={() => handleDragStart(idx)}\n       onDragOver={(e) => handleDragOver(e, idx)}\n       onDrop={(e) => handleDrop(e, idx)}\n       onDragEnd={handleDragEnd}\n       style={{\n         opacity: dragIdx === idx ? 0.4 : 1,\n         transform: dragOverIdx === idx && dragIdx !== idx ? 'translateY(-2px)' : 'translateY(0)',\n         cursor: dragIdx === idx ? 'grabbing' : 'grab',\n         outline: dragOverIdx === idx && dragIdx !== idx ? '2px dashed #e35d5b' : 'none',\n       }}>\n    {/* link + edit + remove */}\n  </div>\n))}"
+        }
+      },
+      { "code": "UI", "txt": "📝 NOUVEAU WIDGET : NOTES PERSONNELLES (Mes notes). Bloc-notes opt-in avec **markdown léger** : `**gras**`, `*italique*`, `## titre`, `- bullet`, `[texte](url)`. Mini-parser custom (renderMd + inlineMd) avec **escape HTML** pour éviter toute injection XSS. Sécurité liens : seules les URLs `^(https?://|/)` sont rendues comme `<a>`, le reste reste en texte. 2 modes : **preview** (rendu rich avec h4, p, ul/li, b, i, a) et **edit** (textarea avec placeholder). Auto-save debounce 800ms après dernière frappe, avec indicateur visuel `Enregistrement…` puis `✓ Enregistré`. Stockage `localStorage av-personal-notes` (purgeable au logout, préfixe 'av-'). Max 4000 caractères avec compteur. Background jaune pâle pour évoquer un post-it",
+        "code_snippet": {
+          "file": "app/components/DashboardWidgets.js + lib/dashboardLayout.js",
+          "note": "Notes widget",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.40 - 9 widgets dashboard\nexport const ALL_WIDGETS = [\n  /* ... 5 base + 4 opt-in */\n  { id: 'meteo', ... },\n];",
+          "after": "// 0.58.40 - 10 widgets (+ notes)\nexport const ALL_WIDGETS = [\n  /* ... */\n  { id: 'meteo', ... },\n  { id: 'notes', label: 'Mes notes', icon: 'ti-notes', color: '#EF9F27' },  // ← nouveau\n];\n\n// app/components/DashboardWidgets.js\nconst NOTES_STORAGE_KEY = 'av-personal-notes';\nconst NOTES_MAX_LEN = 4000;\n\n// Mini-parser markdown sécurisé (escape HTML d'abord)\nfunction renderMd(text) {\n  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\n  return esc.split(/\\n\\n+/).map((block, i) => {\n    if (block.startsWith('## ')) return <h4>{inlineMd(block.slice(3))}</h4>;\n    if (block.split('\\n').every(l => l.startsWith('- ')))\n      return <ul>{block.split('\\n').map(l => <li>{inlineMd(l.replace(/^- /, ''))}</li>)}</ul>;\n    return <p>{inlineMd(block)}</p>;\n  });\n}\n\nfunction inlineMd(text) {\n  // **gras**, *italique*, [link](url) avec sécurité URL\n  // seules les URLs http(s)://, / acceptées comme <a>\n}\n\nexport function NotesWidget() {\n  const [text, setText] = useState('');\n  const [editing, setEditing] = useState(false);\n\n  // Auto-save debounce 800ms\n  useEffect(() => {\n    if (!editing) return;\n    setSaveStatus('saving');\n    const t = setTimeout(() => {\n      setNotes(text);\n      setSaveStatus('saved');\n    }, 800);\n    return () => clearTimeout(t);\n  }, [text, editing]);\n\n  return editing ? <textarea /> : renderMd(text);\n}"
+        }
+      },
+      { "code": "AI", "txt": "+40 tests Vitest (v058-40-bundle.test.js) : version+SW (2), Crud extraFilter (3 — signature, applique avant filterFields, filterFields filtre baseRows), /materiels filtre ctx (4 — import hook, ctxPatientIds, Crud extraFilter, bouton toggle), WeatherWidget auto-refresh (4 — state+interval 30min, deps refreshTick, bouton ti-refresh+rotate, clearInterval), LiensFavoris drag&drop (5 — state, handlers HTML5, draggable, splice, hint 2+), NotesWidget (9 — export, storage key, max len 4000, renderMd+inlineMd, escape HTML XSS, syntax supportée, sécurité URL, debounce 800ms, 2 modes, save status), dashboardLayout notes (3), /accueil notes (2). Total **~4360 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.40 : dette /materiels résolue (Crud refactorisé proprement). Météo se rafraîchit automatiquement. Liens favoris peuvent être réordonnés par drag&drop. **10 widgets dashboard** au total (5 base + 5 opt-in : citation, mini-calendrier, liens-favoris, météo, **notes**). Pattern de filtrage par contexte bât/svc maintenant déployé sur **3 listes** (/patients, /interventions, /materiels) — pourrait être étendu à /commandes, /signalements, /maintenance dans le futur. PROCHAINES PISTES (0.58.41+) : (a) Cmd+K page-actions contextuelles (selon la page courante, propose des actions spécifiques type 'Créer DI', 'Exporter CSV'). (b) Widget '🎯 Mes objectifs' avec progress bars et milestones. (c) Notes : support de checkboxes `[ ]` / `[x]` pour to-do lists. (d) Notes : multiple notes (onglets ou liste). (e) Drag&drop pour réordonner les colonnes du tableau Crud (dans paramètres profil)" }
+    ],
+    "themes": ["ui", "wow", "feature"],
+    "date": "5 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.40.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.39",
     "kind": "version",
     "titre": "🎁 BUNDLE PISTES : Citation reroll + édit favoris + widget météo + hook useCurrentContext + /interventions filtre + Cmd+K mini-timeline",

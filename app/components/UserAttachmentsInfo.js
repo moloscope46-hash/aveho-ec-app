@@ -19,15 +19,27 @@ export default function UserAttachmentsInfo({ userId, etabId }) {
 
   useEffect(() => {
     if (!userId) return;
+    // 0.58.41 : si on a déjà eu une erreur sur membres_equipe (table absente en base),
+    //  on ne refetche pas pendant toute la session. Évite de polluer la console à chaque nav.
+    try {
+      if (sessionStorage.getItem("av-attachments-disabled") === "true") return;
+    } catch {}
     let alive = true;
     (async () => {
       try {
         // 1) Trouve les équipes de l'user via membres_equipe
+        // 0.58.41 : la table membres_equipe peut ne pas exister en base (404). On vérifie l'erreur
+        //  Supabase au lieu de relier sur un try/catch (Supabase ne throw pas, il retourne {error})
         const { data: memb, error: e1 } = await supabase
           .from("membres_equipe")
           .select("equipe_id, equipes(id, nom, couleur, batiment_id, batiments(id, nom, etablissement_id))")
           .eq("user_id", userId);
-        if (e1 || !memb) return;
+        if (e1) {
+          // 0.58.41 : 404 / 42P01 / 42703 / autre — silence total + flag pour la session
+          try { sessionStorage.setItem("av-attachments-disabled", "true"); } catch {}
+          return;
+        }
+        if (!memb) return;
 
         // 2) Filtre par établissement courant si défini (pour éviter de tout afficher)
         const rawEqs = (memb || []).map(m => m.equipes).filter(Boolean);

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+// 0.58.40 : hook réutilisable pour le contexte bât/svc (introduit 0.58.39)
+import { useCurrentContext } from "../../lib/useCurrentContext";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Statut, Modal, Btn } from "../ui";
@@ -25,6 +27,34 @@ export default function Materiels() {
   const [tagModal, setTagModal] = useState(null);  // matériel ouvert pour gestion tags
   // Alpha 0.13 : filtres combinés dépôt
   const [depots, setDepots] = useState([]);
+  // 0.58.40 : filtre par contexte bât/svc courant (via hook useCurrentContext)
+  const ctx = useCurrentContext();
+  const [ctxPatientIds, setCtxPatientIds] = useState(null);
+  useEffect(() => {
+    if (!ctx.batimentId && !ctx.serviceId) {
+      setCtxPatientIds(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        // Chambres du contexte → patient_ids assignés
+        let query = supabase.from("chambres").select("id, service_id, batiment_id");
+        if (ctx.serviceId) query = query.eq("service_id", ctx.serviceId);
+        else if (ctx.batimentId) query = query.eq("batiment_id", ctx.batimentId);
+        const { data: chambres } = await query;
+        if (!alive || !chambres) return;
+        const chambreIds = chambres.map(c => c.id);
+        if (chambreIds.length === 0) { setCtxPatientIds(new Set()); return; }
+        const { data: pats } = await supabase.from("patients").select("id").in("chambre_id", chambreIds);
+        if (!alive) return;
+        setCtxPatientIds(new Set((pats || []).map(p => p.id)));
+      } catch {
+        if (alive) setCtxPatientIds(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, [ctx.batimentId, ctx.serviceId]);
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -98,7 +128,33 @@ export default function Materiels() {
           ]}
         />
         {/* 0.55.11 (AI) : Export CSV matériels */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, alignItems: "center" }}>
+          {/* 0.58.40 : toggle filtre par contexte bât/svc (apparait si contexte défini) */}
+          {(ctx.batimentId || ctx.serviceId) && (
+            <button
+              onClick={ctx.toggle}
+              title="Filtre selon le bâtiment/service courant choisi dans la TopBar"
+              style={{
+                borderColor: ctx.active ? "#7CC8C8" : "#e3e9ee",
+                background: ctx.active ? "rgba(124,200,200,.12)" : "#fff",
+                color: ctx.active ? "#1c5454" : "#6c7a89",
+                border: "1px solid",
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 12.5,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontWeight: 600,
+              }}
+            >
+              <i className={`ti ${ctx.active ? "ti-eye" : "ti-eye-off"}`} />
+              {ctx.active ? "Contexte ON" : "Filtrer par contexte"}
+              {ctx.active && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
+            </button>
+          )}
           <button
             onClick={async () => {
               const { exportRows } = await import("../../lib/exportExcel");
@@ -140,6 +196,7 @@ export default function Materiels() {
           table="materiels"
           title="Nouveau matériel"
           relations={rel}
+          extraFilter={ctx.active && ctxPatientIds ? (r) => r.patient_id && ctxPatientIds.has(r.patient_id) : null}
           columns={[
             { key: "libelle", label: "Article", render: (r) => (
               <>

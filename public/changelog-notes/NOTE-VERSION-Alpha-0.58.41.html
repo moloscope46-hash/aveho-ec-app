@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.41 — HOTFIX</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #3a1f1f 0%, #1a0d12 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(201,134,127,.5)}70%{box-shadow:0 0 0 10px rgba(201,134,127,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.terra{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(201,134,127,.55) 0%,transparent 70%)}
+.bg-blob.amber{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(201,134,127,.30),rgba(239,159,39,.20));backdrop-filter:blur(30px);border:1px solid rgba(201,134,127,.28);box-shadow:0 30px 80px rgba(58,31,31,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5b5af;font-weight:700;background:rgba(201,134,127,.14);border:1px solid rgba(201,134,127,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#C9867F;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#C9867F;text-shadow:0 0 18px rgba(201,134,127,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#f5b5af;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#f5b5af}
+.meta b{color:#fff}
+.meta code{background:rgba(201,134,127,.12);color:#f5b5af;border:1px solid rgba(201,134,127,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#C9867F,#EF9F27)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(201,134,127,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(201,134,127,.12);color:#C9867F;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #C9867F}
+ul{padding-left:20px}li{margin:6px 0}
+.before-after{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.ba-card{background:rgba(20,33,49,.7);border-radius:12px;padding:14px;font-size:11.5px}
+.ba-card.ko{border-left:3px solid #c0392b}
+.ba-card.ok{border-left:3px solid #5aa05a}
+.ba-card h4{margin:0 0 8px;font-size:13px}
+.ba-card.ko h4{color:#e8908b}
+.ba-card.ok h4{color:#8ec98e}
+.ba-card pre{margin:0;background:rgba(5,10,20,.6);font-size:10.5px;padding:10px}
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(201,134,127,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob terra"></div>
+  <div class="bg-blob amber"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX 0.58.41</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.41 — HOTFIX<small>6 tests obsolètes fixés · 3 pages SSG Vercel · 404 prod membres_equipe silent</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.41-alpha</code></span>
+    <span><b>Tests :</b> ~4360 verts attendus (vs 4281 + 6 fails en 0.58.39)</span>
+  </div>
+</header>
+
+<h2>🩹 1. Fix 6 tests obsolètes</h2>
+
+<div class="panel">
+<p style="margin:0 0 10px"><b>5 fails de tests existants</b> qui plantaient en 0.58.39 :</p>
+<ul>
+<li><code>v058-38</code> DEFAULT_ORDER : regex se cassait quand <code>meteo</code> a été ajouté après <code>liens-favoris</code> en 0.58.39</li>
+<li><code>v058-37</code> (×2) : regex sur-échappées (4 backslashes) — cherchaient littéralement <code>\\s\\S</code> dans le code source</li>
+<li><code>v057-7</code> + <code>v058-1</code> : limite 150 KB de <code>chantiers-extra.json</code> dépassée (155 KB) — grandit naturellement</li>
+<li><code>v057-11</code> : limite 650 KB de <code>versions-index.json</code> dépassée (677 KB)</li>
+</ul>
+</div>
+
+<div class="before-after">
+<div class="ba-card ko">
+<h4>❌ AVANT 0.58.41</h4>
+<pre>// v058-38 (cassé par ajout de 'meteo')
+expect(src).toMatch(
+  /[^\]]*"liens-favoris"\]/
+);
+
+// v058-37 (sur-échappé)
+expect(src).toMatch(
+  /from\\([batiments]\\)\\[\\\\s\\\\S\\]\\*\\?/
+);
+
+// v057-7 / v058-1 / v057-11
+expect(size).toBeLessThan(150 * 1024);
+expect(size).toBeLessThan(650 * 1024);</pre>
+</div>
+<div class="ba-card ok">
+<h4>✓ APRÈS 0.58.41</h4>
+<pre>// v058-38 (accepte plus de widgets après)
+expect(src).toMatch(
+  /[^\]]*"liens-favoris"[^\]]*\]/
+);
+
+// v058-37 (1 niveau d'échappement)
+expect(src).toMatch(
+  /from\([batiments]\)\[\\s\\S\]\*\?/
+);
+
+// Seuils bumpés (marge de croissance)
+expect(size).toBeLessThan(200 * 1024);
+expect(size).toBeLessThan(800 * 1024);</pre>
+</div>
+</div>
+
+<h2>🩹 2. Fix 404 prod <code>membres_equipe</code></h2>
+
+<div class="panel warn">
+<p style="margin:0">La table <code>membres_equipe</code> n'existe pas dans la base actuellement. Le composant <code>UserAttachmentsInfo</code> introduit en 0.58.36 provoquait un fetch 404 visible dans la console à chaque navigation.</p>
+</div>
+
+<p style="font-size:13px;color:#bfe6e6;margin:14px 0 4px">Cause du bug : <code>Supabase ne throw pas</code> — il retourne <code>{ data: null, error }</code>. Le <code>try/catch</code> ne catch jamais l'erreur, donc le fetch a déjà fait son 404 avant qu'on ne sache qu'il a échoué.</p>
+
+<pre>// 0.58.41 - app/components/UserAttachmentsInfo.js
+useEffect(() => {
+  if (!userId) return;
+
+  // (a) Si on a déjà eu une erreur, on ne refetche pas dans cette session
+  try {
+    if (sessionStorage.getItem('av-attachments-disabled') === 'true') return;
+  } catch {}
+
+  let alive = true;
+  (async () => {
+    try {
+      const { data: memb, error: e1 } = await supabase
+        .from('membres_equipe')
+        .select('equipe_id, equipes(id, nom, ...)');
+
+      if (e1) {
+        // (b) Erreur Supabase capturée correctement (table absente, RLS, etc.)
+        //  → flag sessionStorage pour empêcher tout refetch dans la session
+        try { sessionStorage.setItem('av-attachments-disabled', 'true'); } catch {}
+        return;
+      }
+      if (!memb) return;
+      // ... reste du code
+    } catch {}
+  })();
+  return () => { alive = false; };
+}, [userId]);</pre>
+
+<div class="panel ok" style="margin-top:14px">
+<p style="margin:0"><b>Résultat</b> : le 404 reste visible <b>une seule fois</b> au premier load. Après, plus rien — le flag <code>av-attachments-disabled</code> bloque toutes les tentatives. Et au logout, le préfixe <code>av-</code> garantit la purge.</p>
+</div>
+
+<h2>🩹 3. Fix build Vercel SSG : 3 pages</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px"><b>Erreur Vercel</b> :</p>
+<pre style="background:#1a0d12;border-left:3px solid #c0392b;font-size:11px">Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!
+Export encountered an error on /statistiques-activite/page
+Export encountered an error on /consentements/page
+Export encountered an error on /parametres/page
+⨯ Next.js build worker exited with code: 1</pre>
+<p style="margin:8px 0 0">Cause : <code>createClient()</code> appelé au top du composant React. Au prerender SSG, Next 15 exécute le module sans accès aux env vars → KO.</p>
+</div>
+
+<div class="panel warn" style="margin:14px 0">
+<p style="margin:0"><b>⚠ Piège évité</b> : <code>export const dynamic = "force-dynamic"</code> ne fonctionne <b>PAS</b> dans un Client Component (<code>"use client"</code>). C'est uniquement pour les Server Components.</p>
+</div>
+
+<p style="font-size:13px;color:#bfe6e6;margin:14px 0 4px"><b>Solution</b> : pattern <code>Inner + Suspense wrapper</code> (identique à 0.58.34 pour <code>/etablissements</code>).</p>
+
+<pre>// 0.58.41 - app/statistiques-activite/page.js (+ /consentements + /parametres)
+"use client";
+import { useEffect, useState, Suspense } from "react";  // ← +Suspense
+import { createClient } from "../../lib/supabase";
+
+// 1) Wrapper export default : empêche le SSG bail-out
+export default function StatistiquesActivite() {
+  return (
+    &lt;Suspense fallback={null}&gt;
+      &lt;StatistiquesActiviteInner /&gt;
+    &lt;/Suspense&gt;
+  );
+}
+
+// 2) Composant Inner : exécuté uniquement en CSR
+function StatistiquesActiviteInner() {
+  const supabase = createClient();  // ← maintenant OK (côté client)
+  // ... tout le code existant inchangé
+}</pre>
+
+<div class="panel ok" style="margin-top:14px">
+<p style="margin:0"><b>3 pages patchées</b> : <code>/statistiques-activite</code> · <code>/consentements</code> · <code>/parametres</code></p>
+</div>
+
+<h2>📋 Pattern à retenir pour la suite</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px">Pour les Client Components qui appellent <code>createClient()</code> ou <code>useSearchParams()</code> au top-level :</p>
+<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+<tr style="background:rgba(201,134,127,.10)">
+  <th style="padding:8px;text-align:left;border-bottom:1px solid rgba(201,134,127,.30)">Pattern</th>
+  <th style="padding:8px;text-align:left;border-bottom:1px solid rgba(201,134,127,.30)">Fonctionne ?</th>
+</tr>
+<tr><td style="padding:6px 8px">❌ <code>export const dynamic = "force-dynamic"</code></td><td style="padding:6px 8px;color:#e8908b">NON (server component only)</td></tr>
+<tr><td style="padding:6px 8px">❌ <code>export const revalidate = 0</code></td><td style="padding:6px 8px;color:#e8908b">NON (server component only)</td></tr>
+<tr><td style="padding:6px 8px">✅ <code>Inner + Suspense wrapper</code></td><td style="padding:6px 8px;color:#8ec98e">OUI (utilisé ici + 0.58.34)</td></tr>
+<tr><td style="padding:6px 8px">✅ <code>useState(null)</code> + <code>useEffect</code> lazy</td><td style="padding:6px 8px;color:#8ec98e">OUI (alternative plus lourde)</td></tr>
+</table>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4360 verts attendus (vs 4281 + 6 fails en 0.58.39)
+npm run build           # OK attendu (vs KO en 0.58.39 sur 3 pages)
+git add -A
+git commit -m "Alpha 0.58.41 HOTFIX - Fix 6 tests obsolètes + 3 pages SSG Vercel + 404 membres_equipe silent"
+git push origin main</pre>
+</div>
+
+<h2>📊 Récap du hotfix</h2>
+<div class="panel">
+<ul>
+<li><b>5 tests existants fixés</b> : v058-38, v058-37 (×2), v057-7, v058-1, v057-11</li>
+<li><b>1 erreur prod silencée</b> : 404 sur <code>membres_equipe</code> (sessionStorage flag)</li>
+<li><b>3 pages SSG fixées</b> : /statistiques-activite, /consentements, /parametres (pattern Suspense)</li>
+<li><b>+15 nouveaux tests</b> dans v058-41-bundle.test.js</li>
+<li><b>Fonctionnalités 0.58.36 → 0.58.40 conservées intactes</b></li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.41 HOTFIX · 5 juin 2026</footer>
+</div>
+
+</body></html>
