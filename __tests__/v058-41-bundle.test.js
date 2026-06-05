@@ -33,10 +33,9 @@ describe("0.58.41 - Fix tests obsolètes (regex assouplis)", () => {
 
   it("v058-37 regex sans sur-échappement (utilise \\s\\S directement)", () => {
     const src = fs.readFileSync(path.resolve(process.cwd(), "__tests__/v058-37-bundle.test.js"), "utf-8");
-    // 0.58.42 : assoupli — v058-37 doit contenir \\s\\S (2 backslashes) pour matcher le littéral [\s\S]*? de v058-35,
-    // mais surtout PAS la forme sur-échappée à 4 backslashes (\\\\s\\\\S). On référence toujours batiments en multiline.
-    expect(src).not.toMatch(/\\\\\\\\s\\\\\\\\S/);
-    expect(src).toMatch(/batiments[\s\S]*?\\\[\\\\s\\\\S\\\]/);
+    // L'ancienne regex avait 4 backslashes (\\\\s\\\\S), la nouvelle en a 1 (\\s\\S)
+    expect(src).not.toMatch(/\\\\s\\\\S/);
+    expect(src).toMatch(/from\\\(\["'\]batiments\["'\]\\\)\\\[\\\\s\\\\S/);
   });
 
   it("v057-7 chantiers-extra : limite bumpée à 200 KB", () => {

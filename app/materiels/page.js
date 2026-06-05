@@ -5,6 +5,8 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 // 0.58.40 : hook réutilisable pour le contexte bât/svc (introduit 0.58.39)
 import { useCurrentContext } from "../../lib/useCurrentContext";
+// 0.58.43 : hook pour écouter les page-actions du Cmd+K
+import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Statut, Modal, Btn } from "../ui";
@@ -105,6 +107,46 @@ export default function Materiels() {
   const artLabel = Object.fromEntries(rel.article_id.map((o) => [o.value, o.label]));
   const patLabel = Object.fromEntries(rel.patient_id.map((o) => [o.value, o.label]));
 
+  // 0.58.43 : export CSV factorisé (auparavant inline dans le bouton) pour appel depuis Cmd+K
+  async function exportMaterielsCsv() {
+    try {
+      // Si le filtre contexte est actif, on n'exporte que les matériels du contexte
+      const data = (ctx.active && ctxPatientIds)
+        ? (items || []).filter(r => r.patient_id && ctxPatientIds.has(r.patient_id))
+        : (items || []);
+      const { exportRows } = await import("../../lib/exportExcel");
+      await exportRows(data, {
+        filename: `materiels_${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Matériels",
+        columns: {
+          "Libellé": "libelle",
+          "Article": (r) => artLabel[r.article_id] || "",
+          "Patient affecté": (r) => patLabel[r.patient_id] || "",
+          "N° série": "num_serie",
+          "N° parc": "num_parc",
+          "N° lot": "num_lot",
+          "État": "etat",
+          "Marque": "marque",
+          "Modèle": "modele",
+          "Date acquisition": (r) => r.date_acquisition || "",
+        },
+      });
+    } catch (e) {
+      console.error("Export CSV matériels :", e);
+    }
+  }
+  // 0.58.43 : page-actions du Cmd+K
+  usePageAction("open-new", () => {
+    // Trigger natif Crud (le bouton "Nouveau matériel" du composant) via query param
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("new", "1");
+      window.location.href = url.toString();
+    }
+  });
+  usePageAction("export-csv", () => exportMaterielsCsv());
+  usePageAction("toggle-ctx-filter", () => ctx.toggle());
+
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
@@ -156,25 +198,7 @@ export default function Materiels() {
             </button>
           )}
           <button
-            onClick={async () => {
-              const { exportRows } = await import("../../lib/exportExcel");
-              await exportRows(items || [], {
-                filename: `materiels_${new Date().toISOString().slice(0,10)}`,
-                sheetName: "Matériels",
-                columns: {
-                  "Libellé": "libelle",
-                  "Article": (r) => artLabel[r.article_id] || "",
-                  "Patient affecté": (r) => patLabel[r.patient_id] || "",
-                  "N° série": "num_serie",
-                  "N° parc": "num_parc",
-                  "N° lot": "num_lot",
-                  "État": "etat",
-                  "Marque": "marque",
-                  "Modèle": "modele",
-                  "Date acquisition": (r) => r.date_acquisition || "",
-                },
-              });
-            }}
+            onClick={exportMaterielsCsv}
             style={{
               background: "#fff", color: "#1c5454",
               border: "1px solid #1c5454",

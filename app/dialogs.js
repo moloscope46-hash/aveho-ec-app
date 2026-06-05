@@ -202,6 +202,27 @@ export const dialogs = {
       setAlertGlobal(opts);
     });
   },
+  // 0.58.44 : exposer Dialog.prompt() premium via le singleton dialogs
+  //  Fix l'erreur "L.dialogs.prompt is not a function" sur LiensFavoris, Notes, Objectifs
+  prompt(options) {
+    const opts = options || {};
+    const newAttempt = tryNewDialog("prompt", {
+      title: opts.title || "Saisie",
+      message: opts.message,
+      defaultValue: opts.defaultValue || "",
+      placeholder: opts.placeholder || "",
+      okLabel: opts.okLabel,
+      cancelLabel: opts.cancelLabel,
+    });
+    if (newAttempt) return newAttempt;
+    // Fallback : window.prompt natif si Dialog premium indispo (très rare, ex : SSR ou crash import)
+    if (typeof window !== "undefined" && window.prompt) {
+      const msg = [opts.title, opts.message].filter(Boolean).join("\n");
+      const v = window.prompt(msg || "Valeur :", opts.defaultValue || "");
+      return Promise.resolve(v);
+    }
+    return Promise.resolve(null);
+  },
 };
 
 // =============================================================

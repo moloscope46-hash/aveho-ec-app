@@ -23,7 +23,8 @@ import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
 // 0.58.38 : 3 nouveaux widgets opt-in (citation, mini-calendrier, liens-favoris)
 // 0.58.39 : + widget météo (Open-Meteo + géolocalisation)
 // 0.58.40 : + widget Notes personnelles (markdown léger)
-import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget } from "../components/DashboardWidgets";
+// 0.58.43 : + widget Mes objectifs (progress bars + milestones)
+import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget, ObjectifsWidget } from "../components/DashboardWidgets";
 import {
   getDashboardLayout, setDashboardLayout, resetDashboardLayout,
   DEFAULT_ACTIVE, DEFAULT_ORDER, ALL_WIDGETS,
@@ -80,6 +81,13 @@ export default function Accueil() {
   });
   const [widgetOrder, setWidgetOrder] = useState(["atraiter", "kpis", "raccourcis", "dernieres", "notifs"]);
   const [editLayout, setEditLayout] = useState(false);
+  // 0.58.44 : state pour la bannière d'invitation widgets (dismissable, persiste en localStorage)
+  const [bannerDismissed, setBannerDismissed] = useState(true);  // true par défaut = caché en SSR
+  useEffect(() => {
+    try {
+      setBannerDismissed(localStorage.getItem("av-widgets-banner-dismissed") === "true");
+    } catch { setBannerDismissed(false); }
+  }, []);
   const [recentNotifs, setRecentNotifs] = useState([]);
   // Alpha 0.41.0 : compteurs opérationnels pour le widget "À traiter"
   const [atraiter, setAtraiter] = useState({ di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 });
@@ -321,10 +329,89 @@ export default function Accueil() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
           <PageHead eyebrow="ESPACE COLLECTIVITÉ" title="Bonjour, bienvenue sur votre" accent="espace"
             sub={auth.structureNom ? `Vous êtes connecté pour ${auth.structureNom}` : "Rattachez votre compte à une structure pour commander."} />
-          <button className="btn-ghost" onClick={() => setEditLayout(!editLayout)}>
-            <i className={`ti ${editLayout ? "ti-check" : "ti-layout-dashboard"}`} /> {editLayout ? "Terminer" : "Personnaliser"}
-          </button>
+          {/* 0.58.44 : badge sur le bouton si des widgets bonus sont dispos */}
+          {(() => {
+            const hiddenOptIn = ALL_WIDGETS.filter(w => !widgets[w.id]).length;
+            return (
+              <button className="btn-ghost" onClick={() => setEditLayout(!editLayout)} style={{ position: "relative" }}>
+                <i className={`ti ${editLayout ? "ti-check" : "ti-layout-dashboard"}`} /> {editLayout ? "Terminer" : "Personnaliser"}
+                {!editLayout && hiddenOptIn > 0 && (
+                  <span style={{
+                    position: "absolute", top: -6, right: -6,
+                    background: "linear-gradient(135deg, #EF9F27, #d28818)",
+                    color: "#fff", fontSize: 10, fontWeight: 700,
+                    minWidth: 18, height: 18, borderRadius: 9, padding: "0 5px",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 2px 6px rgba(239,159,39,.40)",
+                    border: "2px solid #fff",
+                  }} title={`${hiddenOptIn} widget${hiddenOptIn > 1 ? "s" : ""} bonus disponible${hiddenOptIn > 1 ? "s" : ""}`}>
+                    {hiddenOptIn}
+                  </span>
+                )}
+              </button>
+            );
+          })()}
         </div>
+
+        {/* 0.58.44 : bannière d'invitation à découvrir les widgets opt-in (dismissable) */}
+        {(() => {
+          const hiddenOptIn = ALL_WIDGETS.filter(w => !widgets[w.id]);
+          if (editLayout || bannerDismissed || hiddenOptIn.length === 0) return null;
+          return (
+            <div style={{
+              background: "linear-gradient(135deg, rgba(239,159,39,.10), rgba(124,200,200,.08))",
+              border: "1px solid rgba(239,159,39,.30)",
+              borderRadius: 12,
+              padding: "10px 14px",
+              margin: "14px 0 0",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontSize: 13,
+              flexWrap: "wrap",
+            }}>
+              <span style={{ fontSize: 18 }}>🎁</span>
+              <span style={{ flex: 1, color: "#142131" }}>
+                <b>{hiddenOptIn.length} widget{hiddenOptIn.length > 1 ? "s" : ""} bonus disponible{hiddenOptIn.length > 1 ? "s" : ""}</b> :{" "}
+                <span style={{ color: "#5a6878", fontSize: 12 }}>
+                  {hiddenOptIn.slice(0, 6).map((w, i) => (
+                    <span key={w.id} style={{ display: "inline-flex", alignItems: "center", gap: 3, marginRight: 8 }}>
+                      <i className={`ti ${w.icon}`} style={{ color: w.color }} />
+                      {w.label}{i < Math.min(hiddenOptIn.length, 6) - 1 ? "," : ""}
+                    </span>
+                  ))}
+                </span>
+              </span>
+              <button
+                onClick={() => setEditLayout(true)}
+                style={{
+                  background: "linear-gradient(135deg, #EF9F27, #d28818)",
+                  color: "#fff", border: "none", padding: "5px 12px",
+                  borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 4,
+                  boxShadow: "0 2px 6px rgba(239,159,39,.30)",
+                }}
+              >
+                <i className="ti ti-sparkles" /> Découvrir
+              </button>
+              <button
+                onClick={() => {
+                  try { localStorage.setItem("av-widgets-banner-dismissed", "true"); } catch {}
+                  setBannerDismissed(true);
+                }}
+                aria-label="Masquer cette invitation"
+                style={{
+                  background: "transparent", border: "none", color: "#8a98a8",
+                  cursor: "pointer", padding: 4, fontSize: 14,
+                  display: "inline-flex", alignItems: "center",
+                }}
+                title="Masquer cette invitation"
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Alpha 0.49.0 : vue multi-établissements si user en a > 1 */}
         <MultiEtabSummary auth={auth} onSwitchEtab={(id) => auth.setEtab?.(id)} />
@@ -524,6 +611,7 @@ export default function Accueil() {
               if (k === "liens-favoris") return wrapWithDrag(<LiensFavorisWidget />);
               if (k === "meteo") return wrapWithDrag(<WeatherWidget />);
               if (k === "notes") return wrapWithDrag(<NotesWidget />);
+              if (k === "objectifs") return wrapWithDrag(<ObjectifsWidget />);
               return null;
             })}
           </>

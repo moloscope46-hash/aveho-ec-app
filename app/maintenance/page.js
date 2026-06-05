@@ -7,7 +7,7 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 // 0.58.42 : filtre par contexte bâtiment/service (hook réutilisable depuis 0.58.39)
 import { useCurrentContext } from "../../lib/useCurrentContext";
-// 0.58.42 : hook pour écouter les page-actions du Cmd+K
+// 0.58.43 : hook pour écouter les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
@@ -157,9 +157,6 @@ export default function MaintenancePage() {
     })();
     return () => { alive = false; };
   }, [ctx.batimentId, ctx.serviceId]);
-  // 0.58.42 : page-actions du Cmd+K (openNew est hoisté plus bas)
-  usePageAction("open-new", () => openNew());
-  usePageAction("toggle-ctx-filter", () => ctx.toggle());
   // Alpha 0.41.0 : stats par type
   const [statsParType, setStatsParType] = useState([]);
   // Alpha 0.43.0 : mode d'affichage (liste / calendrier)
@@ -269,6 +266,40 @@ export default function MaintenancePage() {
     setForm({ ...r, statut: "Faite", date_realisee: new Date().toISOString().slice(0, 10) });
     setModal(r); setErr("");
   }
+
+  // 0.58.43 : export CSV des maintenances (filtrées par fStatut + contexte)
+  async function exportMaintenancesCsv() {
+    try {
+      let data = rows;
+      if (fStatut) data = data.filter(row => statutEffectif(row) === fStatut);
+      if (ctx.active && ctxMaterielIds) {
+        data = data.filter(row => row.materiel_id && ctxMaterielIds.has(row.materiel_id));
+      }
+      const { exportRows } = await import("../../lib/exportExcel");
+      await exportRows(data || [], {
+        filename: `maintenances_${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Maintenances",
+        columns: {
+          "Type": "type",
+          "Date prévue": (r) => r.date_prevue || "",
+          "Date réalisée": (r) => r.date_realisee || "",
+          "Statut": (r) => statutEffectif(r),
+          "Matériel": (r) => r.materiels?.libelle || "",
+          "N° série": (r) => r.materiels?.num_serie || "",
+          "N° parc": (r) => r.materiels?.num_parc || "",
+          "N° lot": (r) => r.materiels?.num_lot || "",
+          "Commentaire": "commentaire",
+        },
+      });
+    } catch (e) {
+      console.error("Export CSV maintenances :", e);
+    }
+  }
+
+  // 0.58.43 : page-actions du Cmd+K
+  usePageAction("open-new", () => openNew());
+  usePageAction("export-csv", () => exportMaintenancesCsv());
+  usePageAction("toggle-ctx-filter", () => ctx.toggle());
 
   async function save() {
     if (!form.materiel_id) { setErr("Sélectionner un matériel."); return; }
@@ -543,6 +574,8 @@ export default function MaintenancePage() {
             {/* 0.58.25 : NeonButton variant=blue pour Planifier une maintenance */}
             {auth.can("ecrire") && <NeonButton variant="blue" icon="ti-plus" onClick={openNew}>Planifier une maintenance</NeonButton>}
             <Btn variant="ghost" icon="ti-file-type-pdf" onClick={() => exportPdfMaintenance(filtered, auth)}>Export PDF planning</Btn>
+            {/* 0.58.43 : Export CSV des maintenances filtrées */}
+            <Btn variant="ghost" icon="ti-file-spreadsheet" onClick={exportMaintenancesCsv}>Export CSV</Btn>
             {fStatut && <Btn variant="ghost" icon="ti-x" onClick={() => setFStatut("")}>Effacer filtre</Btn>}
             {/* 0.58.42 : toggle filtre contexte bât/svc (apparait si contexte défini) */}
             {(ctx.batimentId || ctx.serviceId) && (

@@ -477,9 +477,11 @@ const WMO = {
 };
 
 export function WeatherWidget() {
-  const [state, setState] = useState({ status: "init", data: null, geo: null, error: null });
+  const [state, setState] = useState({ status: "init", data: null, geo: null, locationName: null, forecast: null, error: null });
   // 0.58.40 : auto-refresh toutes les 30min
   const [refreshTick, setRefreshTick] = useState(0);
+  // 0.58.44 : toggle pour afficher les prévisions des 3 prochains jours
+  const [showForecast, setShowForecast] = useState(false);
 
   useEffect(() => {
     // Auto-refresh toutes les 30min : déclenche un re-fetch
@@ -492,12 +494,14 @@ export function WeatherWidget() {
     (async () => {
       // 1) Tente de récupérer la géoloc cachée
       let geo = null;
+      let cachedLocationName = null;
       try {
         const raw = localStorage.getItem(GEO_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
           if (parsed.ts && Date.now() - parsed.ts < GEO_TTL_MS) {
             geo = { lat: parsed.lat, lng: parsed.lng };
+            cachedLocationName = parsed.locationName || null;
           }
         }
       } catch {}
@@ -505,7 +509,7 @@ export function WeatherWidget() {
       // 2) Sinon, demande la géoloc browser
       if (!geo) {
         if (typeof navigator === "undefined" || !navigator.geolocation) {
-          if (alive) setState({ status: "error", data: null, geo: null, error: "Géolocalisation indisponible" });
+          if (alive) setState({ status: "error", data: null, geo: null, locationName: null, forecast: null, error: "Géolocalisation indisponible" });
           return;
         }
         try {
@@ -516,39 +520,126 @@ export function WeatherWidget() {
               { timeout: 8000, maximumAge: 30 * 60 * 1000 },
             );
           });
-          try { localStorage.setItem(GEO_STORAGE_KEY, JSON.stringify({ ...geo, ts: Date.now() })); } catch {}
         } catch (err) {
-          if (alive) setState({ status: "error", data: null, geo: null, error: err?.message || "Permission refusée" });
+          if (alive) setState({ status: "error", data: null, geo: null, locationName: null, forecast: null, error: err?.message || "Permission refusée" });
           return;
         }
       }
 
-      // 3) Appelle l'API Open-Meteo
+      // 3) Géocodage inverse pour avoir le nom de la ville (BAN API française, gratuite, sans clé)
+      //    On le fait avant la météo, mais on n'attend pas le résultat (parallèle)
+      let locationName = cachedLocationName;
+      let geocodePromise = null;
+      if (!locationName) {
+        geocodePromise = (async () => {
+          try {
+            // BAN : couvre la France. Pour les autres pays, fallback Open-Meteo geocoding API
+            const banUrl = `https://api-adresse.data.gouv.fr/reverse/?lon=${geo.lng}&lat=${geo.lat}`;
+            const r = await fetch(banUrl);
+            if (r.ok) {
+              const json = await r.json();
+              const feature = json?.features?.[0];
+              if (feature?.properties) {
+                const p = feature.properties;
+                return p.city || p.name || p.postcode || null;
+              }
+            }
+            // Fallback Open-Meteo geocoding (mondial)
+            const omUrl = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${geo.lat}&longitude=${geo.lng}&language=fr&count=1`;
+            const r2 = await fetch(omUrl);
+            if (r2.ok) {
+              const json2 = await r2.json();
+              const res = json2?.results?.[0];
+              if (res) return res.name + (res.country ? ` (${res.country})` : "");
+            }
+          } catch {}
+          return null;
+        })();
+      }
+
+      // 4) Appelle l'API Open-Meteo enrichie
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lng}&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=auto`;
+        // 0.58.44 : on demande beaucoup plus de données (current + daily 3j + ressenti + min/max + lever/coucher + pluie + visibilité + pression)
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lng}` +
+          `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,pressure_msl,cloud_cover,visibility` +
+          `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset,uv_index_max,wind_speed_10m_max` +
+          `&timezone=auto&forecast_days=4`;
         const r = await fetch(url);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
         if (!alive) return;
-        setState({ status: "ok", data: json.current, geo, error: null, lastFetch: Date.now() });
+        // Récupère le nom de la ville si on l'attend
+        if (geocodePromise) {
+          locationName = await geocodePromise;
+        }
+        // Cache la géoloc + locationName
+        try { localStorage.setItem(GEO_STORAGE_KEY, JSON.stringify({ ...geo, locationName, ts: Date.now() })); } catch {}
+        setState({
+          status: "ok",
+          data: json.current,
+          geo,
+          locationName,
+          forecast: json.daily,
+          error: null,
+          lastFetch: Date.now(),
+        });
       } catch (err) {
-        if (alive) setState({ status: "error", data: null, geo, error: err?.message || "Erreur API" });
+        if (alive) setState({ status: "error", data: null, geo, locationName: null, forecast: null, error: err?.message || "Erreur API" });
       }
     })();
     return () => { alive = false; };
   }, [refreshTick]);  // 0.58.40 : se redéclenche au refresh tick
 
+  // 0.58.44 : helper pour la direction du vent (cardinal)
+  function windDirCardinal(deg) {
+    if (deg == null) return "";
+    const dirs = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+    return dirs[Math.round(deg / 45) % 8];
+  }
+  // 0.58.44 : formatte heure depuis ISO string
+  function formatTime(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; }
+  }
+  // 0.58.44 : formatte jour court (Lun, Mar, Mer)
+  function formatDayShort(iso) {
+    if (!iso) return "";
+    try { return new Date(iso).toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", ""); } catch { return ""; }
+  }
+
   return (
     <Panel style={{ marginTop: 0, background: "linear-gradient(135deg, #e0f4ff 0%, #fff 100%)", borderColor: "#bce0f7" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 15, color: "#185FA5" }}>
-          <i className="ti ti-cloud" style={{ marginRight: 6, color: "#2a7ed1" }} /> Météo locale
+        <h2 style={{ margin: 0, fontSize: 15, color: "#185FA5", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <i className="ti ti-cloud" style={{ color: "#2a7ed1" }} />
+          {/* 0.58.44 : affiche le nom du lieu dans le titre */}
+          {state.status === "ok" && state.locationName ? (
+            <>Météo · <span style={{ color: "#142131" }}>{state.locationName}</span></>
+          ) : "Météo locale"}
         </h2>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {state.status === "ok" && state.geo && (
-            <span style={{ fontSize: 10.5, color: "#5a8888", fontFamily: "Consolas, monospace" }}>
+            <span style={{ fontSize: 10, color: "#5a8888", fontFamily: "Consolas, monospace", opacity: 0.7 }} title={`Coordonnées GPS : ${state.geo.lat.toFixed(4)}, ${state.geo.lng.toFixed(4)}`}>
               {state.geo.lat.toFixed(2)}, {state.geo.lng.toFixed(2)}
             </span>
+          )}
+          {/* 0.58.44 : toggle prévisions */}
+          {state.status === "ok" && state.forecast && (
+            <button
+              onClick={() => setShowForecast(s => !s)}
+              aria-label="Voir les prévisions"
+              title={showForecast ? "Masquer prévisions" : "Voir prévisions 3 jours"}
+              style={{
+                background: showForecast ? "rgba(24,95,165,.15)" : "transparent",
+                border: "1px solid rgba(24,95,165,.20)",
+                color: "#185FA5",
+                borderRadius: 6, width: 24, height: 24, cursor: "pointer", padding: 0,
+                display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11,
+                transition: "all 150ms",
+              }}
+            >
+              <i className="ti ti-calendar" />
+            </button>
           )}
           {/* 0.58.40 : bouton refresh manuel */}
           <button
@@ -594,22 +685,173 @@ export function WeatherWidget() {
       {state.status === "ok" && state.data && (() => {
         const code = state.data.weather_code;
         const wmo = WMO[code] || { e: "🌡", l: "Conditions" };
+        const dailyMax = state.forecast?.temperature_2m_max?.[0];
+        const dailyMin = state.forecast?.temperature_2m_min?.[0];
+        const precipSum = state.forecast?.precipitation_sum?.[0];
+        const uv = state.forecast?.uv_index_max?.[0];
+        const sunrise = state.forecast?.sunrise?.[0];
+        const sunset = state.forecast?.sunset?.[0];
+        const visKm = state.data.visibility != null ? Math.round(state.data.visibility / 1000) : null;
+        const apparent = state.data.apparent_temperature;
+        const dirCard = windDirCardinal(state.data.wind_direction_10m);
+
+        // 0.58.44 : couleur UV
+        const uvColor = uv == null ? "#8a98a8" : (uv <= 2 ? "#5aa05a" : uv <= 5 ? "#EF9F27" : uv <= 7 ? "#e35d5b" : "#7a3030");
+        const uvLabel = uv == null ? "" : (uv <= 2 ? "Faible" : uv <= 5 ? "Modéré" : uv <= 7 ? "Élevé" : "Très élevé");
+
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ fontSize: 56, lineHeight: 1, filter: "drop-shadow(0 4px 8px rgba(24,95,165,.30))" }}>
-              {wmo.e}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 32, fontWeight: 700, color: "#185FA5", lineHeight: 1 }}>
-                {Math.round(state.data.temperature_2m)}°<span style={{ fontSize: 18, color: "#5a8888" }}>C</span>
+          <>
+            {/* Bloc principal : emoji + temp + résumé */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
+              <div style={{ fontSize: 64, lineHeight: 1, filter: "drop-shadow(0 4px 12px rgba(24,95,165,.30))" }}>
+                {wmo.e}
               </div>
-              <div style={{ fontSize: 12.5, color: "#5a8888", marginTop: 4 }}>{wmo.l}</div>
-              <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 6, display: "flex", gap: 12 }}>
-                <span><i className="ti ti-wind" /> {Math.round(state.data.wind_speed_10m)} km/h</span>
-                <span><i className="ti ti-droplet" /> {state.data.relative_humidity_2m}%</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 36, fontWeight: 700, color: "#185FA5", lineHeight: 1 }}>
+                  {Math.round(state.data.temperature_2m)}°<span style={{ fontSize: 18, color: "#5a8888" }}>C</span>
+                </div>
+                <div style={{ fontSize: 13, color: "#5a8888", marginTop: 4, fontWeight: 600 }}>{wmo.l}</div>
+                {/* 0.58.44 : ressenti */}
+                {apparent != null && Math.abs(apparent - state.data.temperature_2m) >= 1 && (
+                  <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 3 }}>
+                    Ressenti <b style={{ color: "#5a8888" }}>{Math.round(apparent)}°C</b>
+                  </div>
+                )}
               </div>
+              {/* 0.58.44 : min/max du jour à droite */}
+              {(dailyMax != null || dailyMin != null) && (
+                <div style={{ textAlign: "right", borderLeft: "1px solid #bce0f7", paddingLeft: 12 }}>
+                  <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2, textTransform: "uppercase", letterSpacing: 0.5 }}>Aujourd'hui</div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <i className="ti ti-arrow-up" style={{ color: "#e35d5b", fontSize: 12 }} />
+                    <b style={{ fontSize: 14, color: "#e35d5b" }}>{Math.round(dailyMax)}°</b>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 2 }}>
+                    <i className="ti ti-arrow-down" style={{ color: "#2a7ed1", fontSize: 12 }} />
+                    <b style={{ fontSize: 14, color: "#2a7ed1" }}>{Math.round(dailyMin)}°</b>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+
+            {/* 0.58.44 : grille d'infos détaillées (8 valeurs) */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: 6,
+              padding: "10px 0",
+              borderTop: "1px solid #bce0f7",
+              borderBottom: state.data.precipitation > 0 || precipSum > 0 ? "none" : "1px solid #bce0f7",
+            }}>
+              <div title="Vitesse du vent" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-wind" /> Vent</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#185FA5" }}>
+                  {Math.round(state.data.wind_speed_10m)}<span style={{ fontSize: 10, color: "#8a98a8", fontWeight: 500 }}> km/h</span>
+                </div>
+                {dirCard && <div style={{ fontSize: 9.5, color: "#8a98a8" }}>{dirCard}</div>}
+              </div>
+              <div title="Humidité relative" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-droplet" /> Humid.</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#185FA5" }}>
+                  {state.data.relative_humidity_2m}<span style={{ fontSize: 10, color: "#8a98a8", fontWeight: 500 }}> %</span>
+                </div>
+              </div>
+              <div title="Pression atmosphérique" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-gauge" /> Pression</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#185FA5" }}>
+                  {state.data.pressure_msl ? Math.round(state.data.pressure_msl) : "—"}<span style={{ fontSize: 10, color: "#8a98a8", fontWeight: 500 }}> hPa</span>
+                </div>
+              </div>
+              <div title="Visibilité" style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-eye" /> Visib.</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#185FA5" }}>
+                  {visKm != null ? visKm : "—"}<span style={{ fontSize: 10, color: "#8a98a8", fontWeight: 500 }}> km</span>
+                </div>
+              </div>
+              {uv != null && (
+                <div title="Indice UV maximum" style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-sun" /> UV</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: uvColor }}>
+                    {Math.round(uv)}<span style={{ fontSize: 9.5, color: uvColor, fontWeight: 500, opacity: 0.7 }}> {uvLabel}</span>
+                  </div>
+                </div>
+              )}
+              {state.data.cloud_cover != null && (
+                <div title="Couverture nuageuse" style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-cloud" /> Nuages</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#185FA5" }}>
+                    {state.data.cloud_cover}<span style={{ fontSize: 10, color: "#8a98a8", fontWeight: 500 }}> %</span>
+                  </div>
+                </div>
+              )}
+              {sunrise && (
+                <div title="Lever du soleil" style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-sunrise" /> Lever</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#EF9F27" }}>{formatTime(sunrise)}</div>
+                </div>
+              )}
+              {sunset && (
+                <div title="Coucher du soleil" style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 2 }}><i className="ti ti-sunset" /> Coucher</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#C9867F" }}>{formatTime(sunset)}</div>
+                </div>
+              )}
+            </div>
+
+            {/* 0.58.44 : alerte précipitations si présentes */}
+            {(state.data.precipitation > 0 || precipSum > 0) && (
+              <div style={{
+                padding: "8px 12px",
+                background: "linear-gradient(135deg, rgba(42,126,209,.10), rgba(124,200,200,.15))",
+                borderTop: "1px solid #bce0f7",
+                borderBottom: "1px solid #bce0f7",
+                fontSize: 12,
+                color: "#185FA5",
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+              }}>
+                <span><i className="ti ti-cloud-rain" /> <b>Précipitations</b></span>
+                <span style={{ fontSize: 11 }}>
+                  {state.data.precipitation > 0 && <>en cours : <b>{state.data.precipitation.toFixed(1)} mm</b></>}
+                  {state.data.precipitation > 0 && precipSum > 0 && " · "}
+                  {precipSum > 0 && <>jour : <b>{precipSum.toFixed(1)} mm</b></>}
+                </span>
+              </div>
+            )}
+
+            {/* 0.58.44 : prévisions 3 prochains jours (toggle) */}
+            {showForecast && state.forecast && state.forecast.time && state.forecast.time.length > 1 && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #bce0f7" }}>
+                <div style={{ fontSize: 10.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
+                  <i className="ti ti-calendar" /> Prévisions 3 jours
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                  {state.forecast.time.slice(1, 4).map((iso, i) => {
+                    const fcCode = state.forecast.weather_code[i + 1];
+                    const fcWmo = WMO[fcCode] || { e: "🌡", l: "—" };
+                    const fcMax = state.forecast.temperature_2m_max[i + 1];
+                    const fcMin = state.forecast.temperature_2m_min[i + 1];
+                    return (
+                      <div key={iso} style={{
+                        textAlign: "center",
+                        padding: "8px 6px",
+                        background: "rgba(255,255,255,.6)",
+                        borderRadius: 8,
+                        border: "1px solid rgba(188,224,247,.5)",
+                      }}>
+                        <div style={{ fontSize: 11, color: "#8a98a8", fontWeight: 600, textTransform: "capitalize" }}>{formatDayShort(iso)}</div>
+                        <div style={{ fontSize: 26, lineHeight: 1, margin: "4px 0" }}>{fcWmo.e}</div>
+                        <div style={{ fontSize: 11 }}>
+                          <b style={{ color: "#e35d5b" }}>{Math.round(fcMax)}°</b>
+                          <span style={{ color: "#8a98a8", margin: "0 3px" }}>/</span>
+                          <b style={{ color: "#2a7ed1" }}>{Math.round(fcMin)}°</b>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         );
       })()}
 
@@ -1040,7 +1282,45 @@ export function NotesWidget() {
           <textarea
             value={text}
             onChange={(e) => updateActiveText(e.target.value)}
-            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;- [ ] todo&#10;- [x] fait&#10;[texte](https://lien)"
+            // 0.58.43 : raccourci Ctrl+Shift+X (et Cmd+Shift+X sur Mac) pour toggle la checkbox sur la ligne du curseur
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "x" || e.key === "X")) {
+                e.preventDefault();
+                const ta = e.target;
+                const pos = ta.selectionStart;
+                const lines = text.split("\n");
+                // Trouve la ligne où se trouve le curseur
+                let acc = 0, lineIdx = 0;
+                for (let i = 0; i < lines.length; i++) {
+                  if (pos <= acc + lines[i].length) { lineIdx = i; break; }
+                  acc += lines[i].length + 1; // +1 pour le \n
+                }
+                const line = lines[lineIdx];
+                const m = line.match(/^(\s*)(-\s*\[)([\sxX])(\]\s.*)$/);
+                if (m) {
+                  // Toggle existante : ' ' → 'x' ou 'x' → ' '
+                  const wasChecked = m[3].toLowerCase() === "x";
+                  lines[lineIdx] = m[1] + m[2] + (wasChecked ? " " : "x") + m[4];
+                } else if (line.trim().startsWith("- ")) {
+                  // Convert "- truc" en "- [ ] truc"
+                  const indent = line.match(/^(\s*)/)[1];
+                  lines[lineIdx] = `${indent}- [ ] ${line.trim().slice(2)}`;
+                } else if (line.trim()) {
+                  // Convert ligne texte en "- [ ] texte"
+                  const indent = line.match(/^(\s*)/)[1];
+                  lines[lineIdx] = `${indent}- [ ] ${line.trim()}`;
+                } else {
+                  // Ligne vide : insère un nouveau "- [ ] "
+                  lines[lineIdx] = "- [ ] ";
+                }
+                updateActiveText(lines.join("\n"));
+                // Restaure le curseur à la même position (ou ajusté)
+                setTimeout(() => {
+                  if (ta) ta.setSelectionRange(pos + 6, pos + 6); // approximation
+                }, 0);
+              }
+            }}
+            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;- [ ] todo (Ctrl+Shift+X pour cocher)&#10;- [x] fait&#10;[texte](https://lien)"
             style={{
               width: "100%",
               minHeight: 140,
@@ -1059,7 +1339,7 @@ export function NotesWidget() {
             autoFocus
           />
           <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#8a98a8", display: "flex", justifyContent: "space-between" }}>
-            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, - [ ] / [x] todo, [lien](url)</span>
+            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, - [ ] / [x] (Ctrl+Shift+X), [lien](url)</span>
             <span>{text.length} / {NOTES_MAX_LEN}</span>
           </p>
         </>
@@ -1073,6 +1353,223 @@ export function NotesWidget() {
               Aucune note dans "{activeTab?.label}". Clique sur "Modifier" pour commencer.
             </p>
           )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// ============================================================
+//  ObjectifsWidget — Mes objectifs (0.58.43)
+//
+//  Widget opt-in pour suivre des objectifs personnels avec progress
+//  bars et milestones. Storage localStorage av-personal-goals.
+//  Chaque objectif : { id, label, current, target, unit, color, milestones }
+// ============================================================
+
+const GOALS_STORAGE_KEY = "av-personal-goals";
+const GOALS_MAX = 6;
+
+function getGoals() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GOALS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.slice(0, GOALS_MAX) : [];
+  } catch { return []; }
+}
+
+function saveGoals(goals) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals.slice(0, GOALS_MAX))); } catch {}
+}
+
+// Palette de couleurs pour les objectifs
+const GOAL_COLORS = [
+  { id: "navy",  bg: "#142131", grad: "linear-gradient(90deg, #142131, #2a3850)" },
+  { id: "teal",  bg: "#7CC8C8", grad: "linear-gradient(90deg, #7CC8C8, #5da8a8)" },
+  { id: "terra", bg: "#C9867F", grad: "linear-gradient(90deg, #C9867F, #b56e67)" },
+  { id: "amber", bg: "#EF9F27", grad: "linear-gradient(90deg, #EF9F27, #d28818)" },
+  { id: "green", bg: "#5aa05a", grad: "linear-gradient(90deg, #5aa05a, #4a8a4a)" },
+  { id: "blue",  bg: "#185FA5", grad: "linear-gradient(90deg, #185FA5, #134e87)" },
+];
+
+export function ObjectifsWidget() {
+  const [goals, setGoals] = useState([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setGoals(getGoals());
+    setMounted(true);
+  }, []);
+
+  async function addGoal() {
+    if (goals.length >= GOALS_MAX) {
+      await dialogs.alert({ title: "Limite atteinte", message: `Maximum ${GOALS_MAX} objectifs.` });
+      return;
+    }
+    const label = await dialogs.prompt({
+      title: "Nouvel objectif",
+      message: "Libellé :",
+      placeholder: "Ex : Visites clients ce mois, Articles écrits...",
+    });
+    if (!label) return;
+    const targetStr = await dialogs.prompt({
+      title: "Cible",
+      message: "Valeur à atteindre :",
+      placeholder: "Ex : 20",
+    });
+    const target = parseFloat(targetStr);
+    if (!target || target <= 0) return;
+    const unit = await dialogs.prompt({
+      title: "Unité (optionnel)",
+      message: "Unité :",
+      placeholder: "Ex : visites, articles, km...",
+      defaultValue: "",
+    });
+    const colorIdx = goals.length % GOAL_COLORS.length;
+    const newGoal = {
+      id: `g-${Date.now()}`,
+      label: label.slice(0, 40),
+      current: 0,
+      target,
+      unit: (unit || "").slice(0, 20),
+      colorId: GOAL_COLORS[colorIdx].id,
+    };
+    const next = [...goals, newGoal];
+    setGoals(next);
+    saveGoals(next);
+  }
+
+  async function setCurrent(goalId) {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const v = await dialogs.prompt({
+      title: `Mettre à jour ${goal.label}`,
+      message: `Valeur actuelle (cible : ${goal.target}${goal.unit ? " " + goal.unit : ""}) :`,
+      defaultValue: String(goal.current || 0),
+    });
+    const num = parseFloat(v);
+    if (isNaN(num) || num < 0) return;
+    const next = goals.map(g => g.id === goalId ? { ...g, current: num } : g);
+    setGoals(next);
+    saveGoals(next);
+  }
+
+  async function deleteGoal(goalId) {
+    const goal = goals.find(g => g.id === goalId);
+    const ok = await dialogs.confirm({
+      title: "Supprimer l'objectif",
+      message: `Supprimer "${goal?.label}" ?`,
+      okLabel: "Supprimer",
+      okColor: "#c0392b",
+    });
+    if (!ok) return;
+    const next = goals.filter(g => g.id !== goalId);
+    setGoals(next);
+    saveGoals(next);
+  }
+
+  function quickIncrement(goalId, delta) {
+    const next = goals.map(g => g.id === goalId ? { ...g, current: Math.max(0, (g.current || 0) + delta) } : g);
+    setGoals(next);
+    saveGoals(next);
+  }
+
+  if (!mounted) return null;
+
+  return (
+    <Panel style={{ marginTop: 0, background: "linear-gradient(135deg, #f5f8fc 0%, #fff 100%)", borderColor: "#cfd8e0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 15, color: "#142131" }}>
+          <i className="ti ti-target" style={{ marginRight: 6, color: "#185FA5" }} /> Mes objectifs
+        </h2>
+        <button onClick={addGoal} disabled={goals.length >= GOALS_MAX} style={{
+          background: goals.length >= GOALS_MAX ? "#cfd8e0" : "linear-gradient(135deg, #185FA5, #134e87)",
+          color: "#fff", border: "none",
+          padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+          cursor: goals.length >= GOALS_MAX ? "not-allowed" : "pointer",
+          fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 4,
+        }}>
+          <i className="ti ti-plus" /> Ajouter
+        </button>
+      </div>
+
+      {goals.length === 0 ? (
+        <div style={{ padding: "20px 12px", textAlign: "center", color: "#8a98a8", fontSize: 12.5 }}>
+          <i className="ti ti-target-off" style={{ fontSize: 28, display: "block", marginBottom: 8, color: "#cfd8e0" }} />
+          Aucun objectif. Clique sur "Ajouter" pour en créer un.
+          <p style={{ margin: "8px 0 0", fontSize: 11, fontStyle: "italic" }}>
+            Ex : "Visites clients ce mois", "Articles écrits", "Km à vélo"...
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {goals.map((g) => {
+            const pct = g.target > 0 ? Math.min(100, Math.max(0, (g.current / g.target) * 100)) : 0;
+            const color = GOAL_COLORS.find(c => c.id === g.colorId) || GOAL_COLORS[0];
+            const isComplete = g.current >= g.target;
+            return (
+              <div key={g.id} style={{ position: "relative" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                  <span
+                    onClick={() => setCurrent(g.id)}
+                    style={{ fontSize: 12.5, fontWeight: 600, color: "#142131", cursor: "pointer" }}
+                    title="Cliquer pour modifier la valeur actuelle"
+                  >
+                    {isComplete && <i className="ti ti-check" style={{ color: "#5aa05a", marginRight: 4 }} />}
+                    {g.label}
+                  </span>
+                  <span style={{ fontSize: 11.5, color: "#5a6878", fontFamily: "Consolas, monospace" }}>
+                    <b style={{ color: isComplete ? "#5aa05a" : color.bg, fontSize: 13 }}>{g.current}</b>
+                    <span style={{ opacity: 0.6 }}> / {g.target}{g.unit ? ` ${g.unit}` : ""}</span>
+                    <span style={{ marginLeft: 6, fontWeight: 700, color: isComplete ? "#5aa05a" : color.bg }}>
+                      {Math.round(pct)}%
+                    </span>
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div style={{
+                  width: "100%", height: 10, background: "#e3e9ee", borderRadius: 5,
+                  overflow: "hidden", position: "relative",
+                }}>
+                  <div style={{
+                    width: `${pct}%`, height: "100%",
+                    background: isComplete ? "linear-gradient(90deg, #5aa05a, #4a8a4a)" : color.grad,
+                    borderRadius: 5,
+                    transition: "width 400ms ease-out",
+                    boxShadow: isComplete ? "0 0 8px rgba(90,160,90,.50)" : `0 0 6px ${color.bg}40`,
+                  }} />
+                  {/* Milestones : marqueurs aux 25%, 50%, 75% */}
+                  {[25, 50, 75].map((m) => (
+                    <div key={m} style={{
+                      position: "absolute", left: `${m}%`, top: 0, bottom: 0,
+                      width: 1, background: "rgba(255,255,255,.5)",
+                      pointerEvents: "none",
+                    }} />
+                  ))}
+                </div>
+                {/* Actions inline : +1, +5, modifier, supprimer */}
+                <div style={{ display: "flex", gap: 6, marginTop: 4, alignItems: "center" }}>
+                  <button onClick={() => quickIncrement(g.id, 1)} title="+1"
+                    style={{ background: color.bg + "22", color: color.bg, border: "none", padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+1</button>
+                  <button onClick={() => quickIncrement(g.id, 5)} title="+5"
+                    style={{ background: color.bg + "22", color: color.bg, border: "none", padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+5</button>
+                  <button onClick={() => quickIncrement(g.id, -1)} title="-1"
+                    style={{ background: "#cfd8e0", color: "#5a6878", border: "none", padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>-1</button>
+                  <button onClick={() => setCurrent(g.id)} title="Modifier la valeur"
+                    style={{ background: "transparent", color: "#5a6878", border: "none", padding: "2px 4px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                    <i className="ti ti-edit" />
+                  </button>
+                  <button onClick={() => deleteGoal(g.id)} title="Supprimer"
+                    style={{ background: "transparent", color: "#c0392b", border: "none", padding: "2px 4px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", marginLeft: "auto" }}>
+                    <i className="ti ti-trash" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </Panel>

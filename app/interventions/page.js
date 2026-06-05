@@ -80,6 +80,39 @@ export default function Interventions() {
   // 0.58.42 : page-actions du Cmd+K
   usePageAction("open-new", () => { setErr(""); setModal(true); });
   usePageAction("toggle-ctx-filter", () => { ctx.toggle(); });
+  // 0.58.43 : export CSV global de toutes les DI visibles (filtrées)
+  async function exportInterventionsCsv() {
+    try {
+      // Utilise `visible` (rows filtrés par fStatut/fType/ctx) — défini plus bas, accessible via closure
+      const data = rows.filter((r) => {
+        if (fStatut && r.statut !== fStatut) return false;
+        if (fType && r.type !== fType) return false;
+        if (ctx.active && ctxPatientIds) {
+          if (!r.patient_id || !ctxPatientIds.has(r.patient_id)) return false;
+        }
+        return true;
+      });
+      const { exportRows } = await import("../../lib/exportExcel");
+      await exportRows(data || [], {
+        filename: `interventions_${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Interventions",
+        columns: {
+          "Numéro": "numero",
+          "Date": (r) => r.date_demande ? new Date(r.date_demande).toLocaleDateString("fr-FR") : "",
+          "Type": "type",
+          "Urgence": "urgence",
+          "Statut": "statut",
+          "Matériel": (r) => r.materiels?.libelle || "",
+          "Patient": (r) => r.patients ? `${r.patients.nom} ${r.patients.prenom || ""}`.trim() : "",
+          "Chambre": (r) => r.patients?.chambre || "",
+          "Description": "description",
+        },
+      });
+    } catch (e) {
+      toast.error("Erreur export CSV : " + (e?.message || e));
+    }
+  }
+  usePageAction("export-csv", () => exportInterventionsCsv());
   // Alpha 0.6 : assignation DI
   const [assignModal, setAssignModal] = useState(null);   // {di} ou null
   const [usersList, setUsersList] = useState([]);          // utilisateurs de la collectivité

@@ -47,8 +47,7 @@ describe("0.58.1 - chantiers-extra.json limite size 150 KB", () => {
       path.resolve(process.cwd(), "__tests__/v057-7-split-versions-data.test.js"),
       "utf-8"
     );
-    // 0.58.42 : assoupli — tolère toute limite KB à 3 chiffres (150, 200, 250…) pour absorber la croissance
-    expect(testSrc).toMatch(/\d{3} \* 1024/);
+    expect(testSrc).toMatch(/150 \* 1024/);
     expect(testSrc).not.toMatch(/expect\(size\)\.toBeLessThan\(100 \* 1024\)/);
   });
 });

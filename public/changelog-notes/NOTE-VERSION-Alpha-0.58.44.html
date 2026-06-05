@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.44 — Hotfix prompt + Météo enrichie + Bannière widgets</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.35),rgba(124,200,200,.25));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #185FA5}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO Météo enrichie */
+.weather-card{background:linear-gradient(135deg,#e0f4ff 0%,#fff 100%);border:1px solid #bce0f7;border-radius:14px;padding:18px;color:#142131;margin:14px 0;max-width:560px}
+.w-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.w-title{margin:0;font-size:15px;color:#185FA5;display:inline-flex;align-items:center;gap:6px}
+.w-title b{color:#142131}
+.w-btns{display:flex;gap:6px;align-items:center}
+.w-btn{background:transparent;border:1px solid rgba(24,95,165,.20);color:#185FA5;border-radius:6px;width:24px;height:24px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.w-btn.active{background:rgba(24,95,165,.15)}
+.w-main{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.w-emoji{font-size:64px;line-height:1;filter:drop-shadow(0 4px 12px rgba(24,95,165,.30))}
+.w-temp{font-size:36px;font-weight:700;color:#185FA5;line-height:1}
+.w-temp small{font-size:18px;color:#5a8888}
+.w-cond{font-size:13px;color:#5a8888;margin-top:4px;font-weight:600}
+.w-ressenti{font-size:11px;color:#8a98a8;margin-top:3px}
+.w-mm{text-align:right;border-left:1px solid #bce0f7;padding-left:12px}
+.w-mm-lbl{font-size:11px;color:#8a98a8;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}
+.w-mm-row{display:flex;gap:8px;align-items:center}
+.w-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 0;border-top:1px solid #bce0f7;border-bottom:1px solid #bce0f7}
+.w-cell{text-align:center}
+.w-cell-lbl{font-size:11px;color:#8a98a8;margin-bottom:2px}
+.w-cell-val{font-size:13px;font-weight:700;color:#185FA5}
+.w-cell-val small{font-size:10px;color:#8a98a8;font-weight:500}
+.w-cell-sub{font-size:9.5px;color:#8a98a8}
+.w-precip{padding:8px 12px;background:linear-gradient(135deg,rgba(42,126,209,.10),rgba(124,200,200,.15));border-top:1px solid #bce0f7;border-bottom:1px solid #bce0f7;font-size:12;color:#185FA5;display:flex;align-items:center;justify-content:space-between}
+.w-fc{margin-top:10px;padding-top:10px;border-top:1px solid #bce0f7}
+.w-fc-lbl{font-size:10.5px;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.w-fc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.w-fc-day{text-align:center;padding:8px 6px;background:rgba(255,255,255,.6);border-radius:8px;border:1px solid rgba(188,224,247,.5)}
+.w-fc-day-lbl{font-size:11px;color:#8a98a8;font-weight:600;text-transform:capitalize}
+.w-fc-day-em{font-size:26px;line-height:1;margin:4px 0}
+
+/* DEMO Bannière widgets */
+.banner{background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(124,200,200,.08));border:1px solid rgba(239,159,39,.30);border-radius:12px;padding:10px 14px;margin:14px 0;display:flex;align-items:center;gap:10px;font-size:13px;color:#e8edf2;flex-wrap:wrap}
+.banner-list{color:#bfe6e6;font-size:12px}
+.banner-list span{display:inline-flex;align-items:center;gap:3px;margin-right:8px}
+.banner-btn{background:linear-gradient(135deg,#EF9F27,#d28818);color:#fff;border:none;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(239,159,39,.30)}
+.banner-x{background:transparent;border:none;color:#8a98a8;cursor:pointer;padding:4px;font-size:14px}
+
+/* Bouton Personnaliser avec badge */
+.btn-perso{position:relative;background:rgba(20,33,49,.4);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.badge{position:absolute;top:-6px;right:-6px;background:linear-gradient(135deg,#EF9F27,#d28818);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(239,159,39,.40);border:2px solid #0d1b28}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob blue"></div><div class="bg-blob teal"></div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX + UI · 0.58.44</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.44 — Fix dialogs.prompt + Météo enrichie + Bannière widgets<small>Bug prod critique corrigé · Météo avec lieu/UV/lever-coucher/prévisions 3j · Widgets bonus visibles</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.44-alpha</code></span>
+    <span><b>Tests :</b> ~4450 verts estimés</span>
+  </div>
+</header>
+
+<h2>🩹 1. Fix CRITIQUE : <code>dialogs.prompt is not a function</code></h2>
+
+<div class="panel warn">
+<p style="margin:0"><b>Bug prod confirmé</b> : tous les composants utilisant <code>dialogs.prompt</code> plantaient en prod minifiée (<code>L.dialogs.prompt is not a function</code>). Concernés : LiensFavoris (édit/ajout liens), Notes (addTab/renameTab), Objectifs (addGoal/setCurrent). Cause : le singleton <code>dialogs</code> exportait <code>confirm</code> et <code>alert</code> mais avait oublié <code>prompt</code>, alors que <code>Dialog.prompt()</code> existait déjà dans ui-premium/Dialog.js depuis longtemps.</p>
+</div>
+
+<pre>// 0.58.44 - app/dialogs.js
+export const dialogs = {
+  confirm(options) { /* ... */ },
+  alert(options) { /* ... */ },
+  // ✅ AJOUTÉ
+  prompt(options) {
+    const opts = options || {};
+    const newAttempt = tryNewDialog('prompt', {
+      title: opts.title || 'Saisie',
+      message: opts.message,
+      defaultValue: opts.defaultValue || '',
+      placeholder: opts.placeholder || '',
+      okLabel: opts.okLabel,
+      cancelLabel: opts.cancelLabel,
+    });
+    if (newAttempt) return newAttempt;
+    // Fallback : window.prompt natif si Dialog premium indispo
+    if (typeof window !== 'undefined' &amp;&amp; window.prompt) {
+      const msg = [opts.title, opts.message].filter(Boolean).join('\n');
+      const v = window.prompt(msg || 'Valeur :', opts.defaultValue || '');
+      return Promise.resolve(v);
+    }
+    return Promise.resolve(null);
+  },
+};</pre>
+
+<h2>🌤 2. Météo enrichie (lieu + UV + lever/coucher + prévisions 3j)</h2>
+
+<div class="panel">
+<p style="margin:0">Le widget Météo devient une mini-station météo complète : nom du lieu (BAN api-adresse.data.gouv.fr + fallback Open-Meteo), température + ressenti, min/max du jour, vent direction cardinale, pression, visibilité, UV coloré, couverture nuageuse, lever/coucher de soleil, précipitations, prévisions 3 jours en toggle.</p>
+</div>
+
+<div class="weather-card">
+<div class="w-head">
+  <h3 class="w-title">☁️ Météo · <b>Saint-Céré</b></h3>
+  <div class="w-btns">
+    <span style="font-size:10px;color:#5a8888;font-family:monospace;opacity:.7">44.86, 1.89</span>
+    <button class="w-btn active" title="Prévisions 3 jours">📅</button>
+    <button class="w-btn" title="Rafraîchir">🔄</button>
+  </div>
+</div>
+
+<div class="w-main">
+  <div class="w-emoji">⛅</div>
+  <div style="flex:1">
+    <div class="w-temp">19°<small>C</small></div>
+    <div class="w-cond">Partiellement nuageux</div>
+    <div class="w-ressenti">Ressenti <b style="color:#5a8888">17°C</b></div>
+  </div>
+  <div class="w-mm">
+    <div class="w-mm-lbl">Aujourd'hui</div>
+    <div class="w-mm-row">
+      <span style="color:#e35d5b">↑</span>
+      <b style="color:#e35d5b;font-size:14px">23°</b>
+    </div>
+    <div class="w-mm-row" style="margin-top:2px">
+      <span style="color:#2a7ed1">↓</span>
+      <b style="color:#2a7ed1;font-size:14px">12°</b>
+    </div>
+  </div>
+</div>
+
+<div class="w-grid">
+  <div class="w-cell"><div class="w-cell-lbl">💨 Vent</div><div class="w-cell-val">14<small> km/h</small></div><div class="w-cell-sub">SO</div></div>
+  <div class="w-cell"><div class="w-cell-lbl">💧 Humid.</div><div class="w-cell-val">62<small> %</small></div></div>
+  <div class="w-cell"><div class="w-cell-lbl">📊 Pression</div><div class="w-cell-val">1018<small> hPa</small></div></div>
+  <div class="w-cell"><div class="w-cell-lbl">👁 Visib.</div><div class="w-cell-val">15<small> km</small></div></div>
+  <div class="w-cell"><div class="w-cell-lbl">☀ UV</div><div class="w-cell-val" style="color:#EF9F27">4<small style="color:#EF9F27;opacity:.7"> Modéré</small></div></div>
+  <div class="w-cell"><div class="w-cell-lbl">☁ Nuages</div><div class="w-cell-val">45<small> %</small></div></div>
+  <div class="w-cell"><div class="w-cell-lbl">🌅 Lever</div><div class="w-cell-val" style="color:#EF9F27">06:24</div></div>
+  <div class="w-cell"><div class="w-cell-lbl">🌇 Coucher</div><div class="w-cell-val" style="color:#C9867F">21:38</div></div>
+</div>
+
+<div class="w-precip">
+  <span>🌧 <b>Précipitations</b></span>
+  <span style="font-size:11px">jour : <b>2.4 mm</b></span>
+</div>
+
+<div class="w-fc">
+  <div class="w-fc-lbl">📅 Prévisions 3 jours</div>
+  <div class="w-fc-grid">
+    <div class="w-fc-day">
+      <div class="w-fc-day-lbl">Lun</div>
+      <div class="w-fc-day-em">🌧</div>
+      <div style="font-size:11px"><b style="color:#e35d5b">18°</b> / <b style="color:#2a7ed1">10°</b></div>
+    </div>
+    <div class="w-fc-day">
+      <div class="w-fc-day-lbl">Mar</div>
+      <div class="w-fc-day-em">☀️</div>
+      <div style="font-size:11px"><b style="color:#e35d5b">24°</b> / <b style="color:#2a7ed1">13°</b></div>
+    </div>
+    <div class="w-fc-day">
+      <div class="w-fc-day-lbl">Mer</div>
+      <div class="w-fc-day-em">⛅</div>
+      <div style="font-size:11px"><b style="color:#e35d5b">22°</b> / <b style="color:#2a7ed1">11°</b></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<pre>// 0.58.44 - Géocodage inverse (BAN puis fallback Open-Meteo)
+const banUrl = `https://api-adresse.data.gouv.fr/reverse/?lon=${geo.lng}&amp;lat=${geo.lat}`;
+const feature = json?.features?.[0];
+const locationName = feature?.properties?.city;  // ex : "Saint-Céré"
+
+// Si BAN ne couvre pas (hors France), fallback Open-Meteo geocoding
+const omUrl = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${geo.lat}&amp;longitude=${geo.lng}&amp;language=fr`;
+
+// API Open-Meteo enrichie (current + daily 4 jours)
+const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&amp;longitude=${geo.lng}` +
+  `&amp;current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,` +
+  `relative_humidity_2m,precipitation,pressure_msl,cloud_cover,visibility` +
+  `&amp;daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset,` +
+  `uv_index_max,wind_speed_10m_max&amp;timezone=auto&amp;forecast_days=4`;
+
+// UV avec couleur adaptative
+const uvColor = uv &lt;= 2 ? '#5aa05a' : uv &lt;= 5 ? '#EF9F27' : uv &lt;= 7 ? '#e35d5b' : '#7a3030';
+const uvLabel = uv &lt;= 2 ? 'Faible' : uv &lt;= 5 ? 'Modéré' : uv &lt;= 7 ? 'Élevé' : 'Très élevé';
+
+// Direction du vent en cardinal
+function windDirCardinal(deg) {
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+  return dirs[Math.round(deg / 45) % 8];
+}</pre>
+
+<div class="panel warn">
+<p style="margin:0"><b>ℹ Info routière demandée</b> : pas d'API gratuite/sans clé fiable pour ça (Waze, Google Maps, TomTom et Mappy nécessitent toutes une clé payante ou un compte développeur). Bison Futé fournit juste un PDF journalier. <b>À faire</b> : si tu as une clé TomTom/Mappy, je peux brancher un widget Trafic dans une prochaine release.</p>
+</div>
+
+<h2>🎁 3. Bannière widgets bonus + badge "Personnaliser"</h2>
+
+<div class="panel">
+<p style="margin:0"><b>Pourquoi</b> : tu ne voyais pas les widgets car ils sont <b>opt-in</b> (désactivés par défaut). Maintenant ils sont visibles et accessibles via une bannière d'invitation + un badge sur le bouton.</p>
+</div>
+
+<!-- Démo badge -->
+<div style="display:flex;justify-content:flex-end;margin:14px 0">
+  <button class="btn-perso">
+    🎛 Personnaliser
+    <span class="badge">6</span>
+  </button>
+</div>
+
+<!-- Démo bannière -->
+<div class="banner">
+  <span style="font-size:18px">🎁</span>
+  <span style="flex:1;color:#e8edf2">
+    <b style="color:#fff">6 widgets bonus disponibles</b> :
+    <span class="banner-list">
+      <span><i style="color:#C9867F">"</i> Citation,</span>
+      <span><i style="color:#5a8f8f">📅</i> Mini calendrier,</span>
+      <span><i style="color:#e35d5b">🔗</i> Liens favoris,</span>
+      <span><i style="color:#2a7ed1">☁</i> Météo,</span>
+      <span><i style="color:#EF9F27">📝</i> Mes notes,</span>
+      <span><i style="color:#185FA5">🎯</i> Mes objectifs</span>
+    </span>
+  </span>
+  <button class="banner-btn">✨ Découvrir</button>
+  <button class="banner-x">✕</button>
+</div>
+
+<pre>// 0.58.44 - app/accueil/page.js
+
+// 1) Badge sur bouton "Personnaliser"
+const hiddenOptIn = ALL_WIDGETS.filter(w =&gt; !widgets[w.id]);
+
+&lt;button onClick={() =&gt; setEditLayout(!editLayout)} style={{ position: 'relative' }}&gt;
+  &lt;i className='ti ti-layout-dashboard' /&gt; Personnaliser
+  {!editLayout &amp;&amp; hiddenOptIn.length &gt; 0 &amp;&amp; (
+    &lt;span style={{
+      position: 'absolute', top: -6, right: -6,
+      background: 'linear-gradient(135deg, #EF9F27, #d28818)',
+      color: '#fff', minWidth: 18, height: 18, borderRadius: 9,
+      border: '2px solid #fff',
+    }}&gt;{hiddenOptIn.length}&lt;/span&gt;
+  )}
+&lt;/button&gt;
+
+// 2) Bannière d'invitation (dismissable)
+const [bannerDismissed, setBannerDismissed] = useState(true);
+useEffect(() =&gt; {
+  setBannerDismissed(localStorage.getItem('av-widgets-banner-dismissed') === 'true');
+}, []);
+
+{!editLayout &amp;&amp; !bannerDismissed &amp;&amp; hiddenOptIn.length &gt; 0 &amp;&amp; (
+  &lt;div&gt;
+    🎁 &lt;b&gt;{hiddenOptIn.length} widgets bonus disponibles&lt;/b&gt; :
+    {hiddenOptIn.slice(0, 6).map(w =&gt; &lt;span&gt;&lt;i className={w.icon} /&gt;{w.label}&lt;/span&gt;)}
+    &lt;button onClick={() =&gt; setEditLayout(true)}&gt;✨ Découvrir&lt;/button&gt;
+    &lt;button onClick={() =&gt; { localStorage.setItem('av-widgets-banner-dismissed', 'true'); }}&gt;✕&lt;/button&gt;
+  &lt;/div&gt;
+)}</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Fix critique</b> : dialogs.prompt() ajouté → Notes/Objectifs/LiensFavoris ne plantent plus</li>
+<li><b>Météo</b> : 8 infos détaillées + ressenti + min/max + lever/coucher + UV coloré + prévisions 3 jours</li>
+<li><b>Widgets bonus visibles</b> : badge sur Personnaliser + bannière d'invitation contextuelle</li>
+<li><b>+25 tests</b> Vitest (~4450 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4450 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.44 HOTFIX - Fix dialogs.prompt + Météo enrichie + Bannière widgets bonus"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.45+)</h2>
+<div class="panel">
+<ul>
+<li>Widget Trafic routier <b>si</b> tu obtiens une clé TomTom/Mappy</li>
+<li>Bannière météo intempéries (alertes Météo France via vigilance.meteofrance.fr)</li>
+<li>Drag&drop colonnes Crud (paramètres profil)</li>
+<li>Notes : insertion d'images via dataURL paste (Ctrl+V depuis presse-papier)</li>
+<li>Carrousel meteo : touch/swipe pour switcher entre jours</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.44 · 5 juin 2026 · DIALOGS FIX + METEO XL + WIDGETS VISIBLES</footer>
+</div>
+
+</body></html>
