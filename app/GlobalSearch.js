@@ -11,10 +11,15 @@
 //   - Header avec icon search avec glow teal
 //   - Chips filtres avec hover lift + glow
 //   - Rendu via Portal (échappe aux containing blocks)
+//
+//  0.58.25 : ACTIONS CONTEXTUELLES selon page courante
+//   - usePathname() détecte la page active
+//   - findActions() priorise les actions liées à la page
+//   - Badge "Sur cette page" sur les actions matching la route
 // =============================================================
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "../lib/supabase";
 
 const TYPES = {
@@ -33,23 +38,33 @@ const TYPES = {
 
 // 0.58.23 : Actions globales rapides (créer X, aller sur Y, etc.)
 // Apparaissent dans la palette dès que la query commence par > ou matche un keyword
+// 0.58.25 : ajout du champ `pageContext` (pattern d'URL où l'action est prioritaire)
 const ACTIONS = [
-  { id: "new-patient", lbl: "Créer un patient", icon: "ti-user-plus", color: "#185FA5", url: "/patients?new=1", keywords: ["créer", "patient", "nouveau", "ajouter"] },
-  { id: "new-intervention", lbl: "Créer une intervention", icon: "ti-tools", color: "#e35d5b", url: "/interventions?new=1", keywords: ["créer", "intervention", "di", "nouvelle"] },
-  { id: "new-signalement", lbl: "Déposer un signalement", icon: "ti-message-plus", color: "#7a6fb0", url: "/signalements?new=1", keywords: ["signalement", "déposer", "déclarer", "incident"] },
-  { id: "new-achat", lbl: "Nouvelle demande d'achat", icon: "ti-shopping-cart", color: "#EF9F27", url: "/achats?new=1", keywords: ["achat", "commande", "nouveau", "demande"] },
-  { id: "new-transfert", lbl: "Nouveau transfert de matériel", icon: "ti-arrows-exchange", color: "#5aa05a", url: "/transferts?new=1", keywords: ["transfert", "déplacement", "matériel"] },
+  { id: "new-patient", lbl: "Créer un patient", icon: "ti-user-plus", color: "#185FA5", url: "/patients?new=1", keywords: ["créer", "patient", "nouveau", "ajouter"], pageContext: /^\/patients/ },
+  { id: "new-intervention", lbl: "Créer une intervention", icon: "ti-tools", color: "#e35d5b", url: "/interventions?new=1", keywords: ["créer", "intervention", "di", "nouvelle"], pageContext: /^\/interventions/ },
+  { id: "new-signalement", lbl: "Déposer un signalement", icon: "ti-message-plus", color: "#7a6fb0", url: "/signalements?new=1", keywords: ["signalement", "déposer", "déclarer", "incident"], pageContext: /^\/signalements/ },
+  { id: "new-achat", lbl: "Nouvelle demande d'achat", icon: "ti-shopping-cart", color: "#EF9F27", url: "/achats?new=1", keywords: ["achat", "commande", "nouveau", "demande"], pageContext: /^\/(achats|commandes)/ },
+  { id: "new-transfert", lbl: "Nouveau transfert de matériel", icon: "ti-arrows-exchange", color: "#5aa05a", url: "/transferts?new=1", keywords: ["transfert", "déplacement", "matériel"], pageContext: /^\/transferts/ },
   { id: "goto-accueil", lbl: "Aller à l'accueil", icon: "ti-home", color: "#142131", url: "/accueil", keywords: ["accueil", "home", "dashboard"] },
-  { id: "goto-stats", lbl: "Voir les statistiques", icon: "ti-chart-bar", color: "#185FA5", url: "/statistiques", keywords: ["stats", "statistiques", "analyse", "tableau"] },
-  { id: "goto-calendrier", lbl: "Calendrier des interventions", icon: "ti-calendar", color: "#7a6fb0", url: "/calendrier", keywords: ["calendrier", "planning", "agenda"] },
-  { id: "goto-kanban", lbl: "Kanban des interventions", icon: "ti-layout-kanban", color: "#C9867F", url: "/interventions/kanban", keywords: ["kanban", "interventions", "vue"] },
-  { id: "goto-profil", lbl: "Mon profil", icon: "ti-user-circle", color: "#5aa05a", url: "/profil", keywords: ["profil", "compte", "moi", "settings"] },
-  { id: "goto-params", lbl: "Paramètres collectivité", icon: "ti-settings", color: "#142131", url: "/parametres", keywords: ["paramètres", "config", "admin", "settings"] },
+  { id: "goto-stats", lbl: "Voir les statistiques", icon: "ti-chart-bar", color: "#185FA5", url: "/statistiques", keywords: ["stats", "statistiques", "analyse", "tableau"], pageContext: /^\/statistiques/ },
+  { id: "goto-calendrier", lbl: "Calendrier des interventions", icon: "ti-calendar", color: "#7a6fb0", url: "/calendrier", keywords: ["calendrier", "planning", "agenda"], pageContext: /^\/calendrier/ },
+  { id: "goto-kanban", lbl: "Kanban des interventions", icon: "ti-layout-kanban", color: "#C9867F", url: "/interventions/kanban", keywords: ["kanban", "interventions", "vue"], pageContext: /^\/interventions/ },
+  { id: "goto-profil", lbl: "Mon profil", icon: "ti-user-circle", color: "#5aa05a", url: "/profil", keywords: ["profil", "compte", "moi", "settings"], pageContext: /^\/profil/ },
+  { id: "goto-params", lbl: "Paramètres collectivité", icon: "ti-settings", color: "#142131", url: "/parametres", keywords: ["paramètres", "config", "admin", "settings"], pageContext: /^\/parametres/ },
+  { id: "goto-historique", lbl: "Voir l'historique d'activité", icon: "ti-history", color: "#7a6fb0", url: "/historique", keywords: ["historique", "audit", "log", "activité"], pageContext: /^\/historique/ },
+  { id: "toggle-presentation", lbl: "Mode présentation (Ctrl+Shift+P)", icon: "ti-presentation", color: "#7a6fb0", url: "#toggle-presentation", keywords: ["présentation", "démo", "demo", "client", "zoom"] },
+  { id: "toggle-focus", lbl: "Mode focus zen (Ctrl+Shift+F)", icon: "ti-target", color: "#5aa05a", url: "#toggle-focus", keywords: ["focus", "zen", "concentration", "saisie"] },
   { id: "clear-cache", lbl: "Vider le cache (problème d'affichage)", icon: "ti-refresh", color: "#EF9F27", url: "/profil?tab=securite", keywords: ["cache", "vider", "refresh", "bug", "affichage"] },
 ];
 
 // Trouve les actions qui matchent la query
-function findActions(query) {
+// 0.58.25 : prend en compte pageContext pour prioriser les actions de la page courante
+function findActions(query, currentPath) {
+  // Si pas de query et qu'on est sur une page connue : afficher les actions contextuelles
+  if (!query && currentPath) {
+    const contextual = ACTIONS.filter(a => a.pageContext && a.pageContext.test(currentPath));
+    return contextual.slice(0, 4);
+  }
   if (!query) return [];
   const q = query.toLowerCase().trim();
   // Format > ou bien matche un keyword
@@ -57,15 +72,28 @@ function findActions(query) {
   const cleanQ = isExplicitCommand ? q.slice(1).trim() : q;
   if (!cleanQ && !isExplicitCommand) return [];
 
-  return ACTIONS.filter(a =>
+  const matches = ACTIONS.filter(a =>
     a.lbl.toLowerCase().includes(cleanQ) ||
     a.keywords.some(k => k.includes(cleanQ) || cleanQ.includes(k))
-  ).slice(0, 6);
+  );
+
+  // 0.58.25 : prioriser les actions matching la page courante
+  if (currentPath) {
+    matches.sort((a, b) => {
+      const aMatch = a.pageContext && a.pageContext.test(currentPath) ? 1 : 0;
+      const bMatch = b.pageContext && b.pageContext.test(currentPath) ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }
+
+  return matches.slice(0, 6);
 }
 
 export default function GlobalSearch() {
   const supabase = createClient();
   const router = useRouter();
+  // 0.58.25 : pathname courant pour actions contextuelles
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
@@ -365,7 +393,7 @@ export default function GlobalSearch() {
           {/* 0.58.23 : section ACTIONS GLOBALES — affichée si query matche un keyword d'action
               ou commence par > (mode commande explicite) */}
           {(() => {
-            const matchingActions = findActions(q);
+            const matchingActions = findActions(q, pathname);
             if (matchingActions.length === 0) return null;
             return (
               <div style={{
@@ -390,7 +418,23 @@ export default function GlobalSearch() {
                 {matchingActions.map((a) => (
                   <div
                     key={a.id}
-                    onClick={() => { router.push(a.url); setOpen(false); }}
+                    onClick={async () => {
+                      // 0.58.25 : actions spéciales (toggle mode présentation / focus)
+                      if (a.url === "#toggle-presentation") {
+                        const { togglePresentationMode } = await import("../lib/presentationMode");
+                        togglePresentationMode();
+                        setOpen(false);
+                        return;
+                      }
+                      if (a.url === "#toggle-focus") {
+                        const { toggleFocusMode } = await import("../lib/focusMode");
+                        toggleFocusMode();
+                        setOpen(false);
+                        return;
+                      }
+                      router.push(a.url);
+                      setOpen(false);
+                    }}
                     style={{
                       padding: "8px 10px",
                       cursor: "pointer",
@@ -524,31 +568,119 @@ export default function GlobalSearch() {
           ) : results.length === 0 ? (
             <div style={{ padding: "20px", textAlign: "center", color: "#8a98a8", fontSize: 13 }}>Aucun résultat pour <b>"{q}"</b></div>
           ) : (
-            <div>
-              {results.map((r, i) => {
-                const t = TYPES[r.type];
-                const isSel = i === sel;
-                return (
-                  <div key={`${r.type}-${r.id}`}
-                    onClick={() => { pushHistory(r); router.push(r.href); setOpen(false); }}
-                    onMouseEnter={() => setSel(i)}
-                    style={{
-                      padding: "10px 18px", cursor: "pointer",
-                      background: isSel ? "#eaf7f7" : "#fff",
-                      borderLeft: isSel ? `3px solid ${t.color}` : "3px solid transparent",
-                      display: "flex", alignItems: "center", gap: 12,
-                    }}>
-                    <span style={{ width: 28, height: 28, borderRadius: 8, background: t.color + "22", color: t.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <i className={`ti ${t.icon}`} />
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#142131", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.titre}</div>
-                      {r.sub && <div style={{ fontSize: 11, color: "#8a98a8" }}>{r.sub}</div>}
+            // 0.58.27 : layout flex avec preview panel à droite
+            <div style={{ display: "flex", gap: 0 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {results.map((r, i) => {
+                  const t = TYPES[r.type];
+                  const isSel = i === sel;
+                  return (
+                    <div key={`${r.type}-${r.id}`}
+                      onClick={() => { pushHistory(r); router.push(r.href); setOpen(false); }}
+                      onMouseEnter={() => setSel(i)}
+                      style={{
+                        padding: "10px 18px", cursor: "pointer",
+                        background: isSel ? "rgba(124,200,200,.10)" : "transparent",
+                        borderLeft: isSel ? `3px solid ${t.color}` : "3px solid transparent",
+                        display: "flex", alignItems: "center", gap: 12,
+                        transition: "background 120ms",
+                      }}>
+                      <span style={{ width: 28, height: 28, borderRadius: 8, background: t.color + "22", color: t.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <i className={`ti ${t.icon}`} />
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,.95)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.titre}</div>
+                        {r.sub && <div style={{ fontSize: 11, color: "rgba(191,230,230,.6)" }}>{r.sub}</div>}
+                      </div>
+                      <span style={{ fontSize: 10, color: t.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px" }}>{t.lbl}</span>
                     </div>
-                    <span style={{ fontSize: 10, color: t.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px" }}>{t.lbl}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+
+              {/* 0.58.27 : Preview panel à droite pour le résultat sélectionné */}
+              {results[sel] && (
+                <div style={{
+                  width: 280,
+                  flexShrink: 0,
+                  borderLeft: "1px solid rgba(124,200,200,.15)",
+                  background: "linear-gradient(180deg, rgba(20,33,49,.50) 0%, rgba(13,24,34,.50) 100%)",
+                  padding: "16px 18px",
+                  animation: "av-cmdk-preview-in 200ms cubic-bezier(.2,.8,.2,1)",
+                }}>
+                  {(() => {
+                    const r = results[sel];
+                    const t = TYPES[r.type];
+                    return (
+                      <>
+                        <div style={{
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          letterSpacing: 1.5,
+                          color: t.color,
+                          textTransform: "uppercase",
+                          marginBottom: 10,
+                        }}>
+                          <i className={`ti ${t.icon}`} style={{ marginRight: 4 }} />
+                          Aperçu {t.lbl}
+                        </div>
+                        <div style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: "#fff",
+                          lineHeight: 1.3,
+                          marginBottom: 10,
+                          wordBreak: "break-word",
+                        }}>
+                          {r.titre}
+                        </div>
+                        {r.sub && (
+                          <div style={{
+                            fontSize: 12,
+                            color: "rgba(191,230,230,.75)",
+                            lineHeight: 1.5,
+                            marginBottom: 14,
+                          }}>
+                            {r.sub}
+                          </div>
+                        )}
+                        {/* Métadonnées additionnelles si dispo */}
+                        {r.meta && (
+                          <div style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 6,
+                            paddingTop: 12,
+                            borderTop: "1px dashed rgba(124,200,200,.15)",
+                          }}>
+                            {Object.entries(r.meta).map(([k, v]) => (
+                              <div key={k} style={{ fontSize: 11, color: "rgba(191,230,230,.7)" }}>
+                                <span style={{ color: "rgba(124,200,200,.6)" }}>{k}:</span>{" "}
+                                <b style={{ color: "#fff" }}>{v}</b>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {/* CTA */}
+                        <div style={{
+                          marginTop: 16,
+                          padding: "8px 12px",
+                          background: `linear-gradient(135deg, ${t.color}33, ${t.color}11)`,
+                          border: `1px solid ${t.color}44`,
+                          borderRadius: 8,
+                          fontSize: 11.5,
+                          color: t.color,
+                          fontWeight: 700,
+                          textAlign: "center",
+                        }}>
+                          <i className="ti ti-arrow-right" style={{ marginRight: 4 }} />
+                          Appuyez sur ↵ pour ouvrir
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           )}
         </div>

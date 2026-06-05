@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.27 — Bundle WOW UX²</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #244a55 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-30px,40px) scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes preview-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes shake-sm{0%,100%{transform:rotate(0)}20%{transform:rotate(-6deg)}40%{transform:rotate(5deg)}60%{transform:rotate(-3deg)}80%{transform:rotate(2deg)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.amber{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(239,159,39,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.65) 0%,transparent 70%);animation-delay:-6s}
+.bg-blob.violet{top:35%;right:20%;width:400px;height:400px;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation-delay:-12s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(239,159,39,.35),rgba(124,200,200,.30));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);overflow:hidden;animation:fadeup .7s cubic-bezier(.2,.8,.2,1)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:30px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.18;color:#fff}
+h1 small{font-size:14.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:24px;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#EF9F27,#7CC8C8);box-shadow:0 0 12px rgba(239,159,39,.5)}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30)}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.2px;line-height:1.6;border-left:3px solid #7CC8C8;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 24px rgba(124,200,200,.08) inset}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:28px 0}
+.top-kpi{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.2);border-radius:14px;padding:20px 16px;text-align:center;backdrop-filter:blur(20px);position:relative;overflow:hidden;isolation:isolate}
+.top-kpi::before{content:"";position:absolute;top:-40px;right:-40px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle, var(--c, #7CC8C8) 0%, transparent 70%);opacity:.25;filter:blur(20px)}
+.top-kpi-val{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff;position:relative;z-index:1}
+.top-kpi-lbl{font-size:11px;color:#8aa0b0;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;font-weight:600;position:relative;z-index:1}
+.top-kpi.a{--c:#EF9F27}.top-kpi.t{--c:#7CC8C8}.top-kpi.v{--c:#7a6fb0}.top-kpi.b{--c:#185FA5}
+
+/* NotifBell preview demo */
+.notif-demo-wrap{position:relative;display:inline-block;margin:18px 0}
+.notif-btn-fake{background:rgba(20,33,49,.7);border:1px solid rgba(124,200,200,.25);width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;position:relative;animation:shake-sm 1.5s ease-in-out infinite}
+.notif-badge-fake{position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#EF9F27,#d6831d);color:#fff;font-size:9.5px;font-weight:800;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #0d1b28}
+.notif-preview-fake{position:relative;width:380px;background:linear-gradient(180deg,rgba(20,33,49,.98) 0%,rgba(13,24,34,.98) 100%);backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.25);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.5),0 0 60px rgba(124,200,200,.15);overflow:hidden;margin-top:14px;margin-left:0;color:#fff;animation:fadeup .3s ease-out}
+.notif-preview-head{padding:12px 16px;border-bottom:1px solid rgba(124,200,200,.15);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(24,95,165,.06));font-size:13.5px;font-weight:700}
+.notif-preview-head i{color:#7CC8C8;font-size:16px}
+.notif-pill-amber{background:linear-gradient(135deg,#EF9F27,#d6831d);color:#fff;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:800;margin-left:auto}
+.notif-item{padding:10px 16px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid rgba(124,200,200,.10);position:relative;cursor:pointer}
+.notif-item:hover{background:rgba(255,255,255,.04)}
+.notif-item .dot{position:absolute;left:6px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:#185FA5;box-shadow:0 0 8px rgba(24,95,165,.6)}
+.notif-item .dot.red{background:#e35d5b;box-shadow:0 0 8px rgba(227,93,91,.6)}
+.notif-item .ico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;font-size:13px}
+.notif-item .ico.blue{background:linear-gradient(135deg,#185FA5,#185FA5cc);box-shadow:0 4px 10px rgba(24,95,165,.33)}
+.notif-item .ico.red{background:linear-gradient(135deg,#e35d5b,#e35d5bcc);box-shadow:0 4px 10px rgba(227,93,91,.33)}
+.notif-item .ico.violet{background:linear-gradient(135deg,#7a6fb0,#7a6fb0cc);box-shadow:0 4px 10px rgba(122,111,176,.33)}
+.notif-item .content{flex:1;min-width:0}
+.notif-item .titre{font-size:12.5px;font-weight:700;color:#fff;margin-bottom:2px}
+.notif-item .titre.lu{color:rgba(220,230,235,.8);font-weight:500}
+.notif-item .msg{font-size:11.5px;color:rgba(191,230,230,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-item .time{font-size:10.5px;color:rgba(191,230,230,.45);margin-top:2px}
+.notif-footer{padding:10px 16px;background:rgba(124,200,200,.06);text-align:center;font-size:12px;font-weight:700;color:#7CC8C8;cursor:pointer}
+.notif-footer:hover{background:rgba(124,200,200,.12)}
+
+/* Cmd+K preview demo */
+.cmdk-demo{position:relative;background:rgba(20,33,49,.95);border-radius:14px;padding:0;border:1px solid rgba(124,200,200,.20);box-shadow:0 32px 80px rgba(0,0,0,.50);backdrop-filter:blur(30px);margin:18px 0;overflow:hidden}
+.cmdk-input{padding:14px 18px;border-bottom:1px solid rgba(124,200,200,.15);color:rgba(191,230,230,.8);font-size:14px}
+.cmdk-body{display:flex;min-height:200px}
+.cmdk-list{flex:1}
+.cmdk-list .item{padding:10px 18px;display:flex;align-items:center;gap:12px;cursor:pointer;border-left:3px solid transparent;transition:background .12s}
+.cmdk-list .item.sel{background:rgba(124,200,200,.10);border-left-color:#185FA5}
+.cmdk-list .item:hover{background:rgba(255,255,255,.04)}
+.cmdk-list .item .ic{width:28px;height:28px;border-radius:8px;background:rgba(24,95,165,.22);color:#185FA5;display:flex;align-items:center;justify-content:center;font-size:13px}
+.cmdk-list .item .ti{flex:1;color:#fff;font-size:13.5px;font-weight:600}
+.cmdk-list .item .ti .sub{font-size:11px;color:rgba(191,230,230,.6);font-weight:500;margin-top:2px}
+.cmdk-list .item .tg{font-size:10px;color:#185FA5;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.cmdk-preview{width:280px;flex-shrink:0;border-left:1px solid rgba(124,200,200,.15);background:linear-gradient(180deg,rgba(20,33,49,.50),rgba(13,24,34,.50));padding:16px 18px;color:#fff}
+.cmdk-preview .eb{font-size:9.5px;font-weight:800;letter-spacing:1.5px;color:#185FA5;text-transform:uppercase;margin-bottom:10px}
+.cmdk-preview .tt{font-size:16px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:10px}
+.cmdk-preview .sb{font-size:12px;color:rgba(191,230,230,.75);line-height:1.5;margin-bottom:14px}
+.cmdk-preview .mt{padding-top:12px;border-top:1px dashed rgba(124,200,200,.15);display:flex;flex-direction:column;gap:6px}
+.cmdk-preview .mt > div{font-size:11px;color:rgba(191,230,230,.7)}
+.cmdk-preview .mt span{color:rgba(124,200,200,.6)}
+.cmdk-preview .mt b{color:#fff}
+.cmdk-preview .cta{margin-top:16px;padding:8px 12px;background:linear-gradient(135deg,rgba(24,95,165,.20),rgba(24,95,165,.08));border:1px solid rgba(24,95,165,.27);border-radius:8px;font-size:11.5px;color:#185FA5;font-weight:700;text-align:center}
+
+/* Watermark demo */
+.watermark-demo{position:relative;background:#f4f7fa;border-radius:14px;padding:60px 30px;margin:18px 0;min-height:200px;color:#142131}
+.watermark-img{position:absolute;bottom:20px;right:24px;opacity:.35;font-family:'Quicksand',sans-serif;font-size:32px;font-weight:600;letter-spacing:3px;filter:drop-shadow(0 2px 8px rgba(20,33,49,.40))}
+.watermark-img .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.6),0 0 12px rgba(124,200,200,.4)}
+
+/* Tour steps */
+.tour-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}
+.tour-step{background:rgba(20,33,49,.5);border:1px solid rgba(124,200,200,.18);border-radius:12px;padding:14px 16px;color:#fff}
+.tour-step .n{display:inline-flex;width:24px;height:24px;border-radius:99px;background:linear-gradient(135deg,#7CC8C8,#185FA5);color:#fff;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-bottom:8px}
+.tour-step .t{font-size:13.5px;font-weight:700;margin-bottom:4px}
+.tour-step .d{font-size:11.5px;color:rgba(191,230,230,.65);line-height:1.4}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+kbd{background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 8px;border-radius:4px;font-family:'Consolas',monospace;font-weight:700;font-size:11.5px;border:1px solid rgba(124,200,200,.25)}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob amber"></div>
+  <div class="bg-blob teal"></div>
+  <div class="bg-blob violet"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE WOW UX² · 0.58.27</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.27 — 4 chantiers UX premium<small>NotifBell preview hover · Tour produit 5 steps · Watermark logo Aveho · Cmd+K preview panel</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.27-alpha</code></span>
+    <span><b>Tests :</b> ~4078 estimés (build/test en local)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi a"><div class="top-kpi-val">4</div><div class="top-kpi-lbl">Chantiers UX</div></div>
+  <div class="top-kpi t"><div class="top-kpi-val">5</div><div class="top-kpi-lbl">Steps tour premium</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">3</div><div class="top-kpi-lbl">Hover preview</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">+24</div><div class="top-kpi-lbl">Tests Vitest</div></div>
+</div>
+
+<div class="panel warn">
+<p style="margin:0"><b>⚠ À noter :</b> sandbox npm bloqué (403). Le code est complet, les 24 tests écrits, mais <b>build + tests à exécuter en local côté Cédric</b>.</p>
+</div>
+
+<h2>🔔 NotifBell : preview hover 3 dernières notifs — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Au survol de la cloche (350ms de délai), affichage des 3 dernières notifications dans un panel glassmorphism premium. Hover sur le preview maintient l'affichage (anti-flicker).</p>
+</div>
+
+<div class="notif-demo-wrap">
+  <div class="notif-btn-fake">
+    🔔
+    <span class="notif-badge-fake">3</span>
+  </div>
+  <div class="notif-preview-fake">
+    <div class="notif-preview-head">
+      <i class="ti ti-bell"></i>
+      <span>Notifications</span>
+      <span class="notif-pill-amber">3 non lues</span>
+    </div>
+    <div class="notif-item">
+      <span class="dot"></span>
+      <span class="ico blue">🔧</span>
+      <div class="content">
+        <div class="titre">Nouvelle intervention assignée</div>
+        <div class="msg">DI-2026-1455 · M. Dupont · maintenance programmée</div>
+        <div class="time">il y a 5 minutes</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <span class="dot red"></span>
+      <span class="ico red">⚠</span>
+      <div class="content">
+        <div class="titre">Signalement urgent</div>
+        <div class="msg">SIG-2026-0098 · fuite réfrigérant</div>
+        <div class="time">il y a 12 minutes</div>
+      </div>
+    </div>
+    <div class="notif-item">
+      <span class="dot"></span>
+      <span class="ico violet">📧</span>
+      <div class="content">
+        <div class="titre lu">Invitation acceptée</div>
+        <div class="msg">corentin.david a rejoint la structure</div>
+        <div class="time">il y a 1 heure</div>
+      </div>
+    </div>
+    <div class="notif-footer">Voir toutes les notifications (12) →</div>
+  </div>
+</div>
+
+<h2>🎓 Tour produit premium /accueil — 5 STEPS CUSTOM</h2>
+
+<div class="panel">
+<p style="margin:0">Le bouton <b>"Rejouer la visite guidée"</b> dans /profil redirige vers <code>/accueil?tour=premium</code> et lance ce tour de 5 étapes utilisant le nouveau composant OnboardingTour premium (0.58.26).</p>
+</div>
+
+<div class="tour-steps">
+  <div class="tour-step">
+    <div class="n">1</div>
+    <div class="t">🔍 Recherche universelle Cmd+K</div>
+    <div class="d">Ctrl+K pour la palette + tapez > pour les actions rapides</div>
+  </div>
+  <div class="tour-step">
+    <div class="n">2</div>
+    <div class="t">💫 Vos KPIs en mode mission control</div>
+    <div class="d">Scan-line conic sur les KPIs urgents (DI, Achats, Signalements, RGPD)</div>
+  </div>
+  <div class="tour-step">
+    <div class="n">3</div>
+    <div class="t">🔔 Notifications avec preview</div>
+    <div class="d">Survolez la cloche pour voir les 3 dernières sans clic</div>
+  </div>
+  <div class="tour-step">
+    <div class="n">4</div>
+    <div class="t">🎥 Mode présentation pour vos démos</div>
+    <div class="d">Ctrl+Shift+P : zoom + animations slow + ombres renforcées + watermark</div>
+  </div>
+  <div class="tour-step">
+    <div class="n">5</div>
+    <div class="t">🧘 Mode focus zen pour la saisie</div>
+    <div class="d">Ctrl+Shift+F : cache topbar/notifs + centre le contenu</div>
+  </div>
+</div>
+
+<h2>🎨 Mode présentation : watermark logo Aveho — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Quand l'utilisateur active le mode présentation (Ctrl+Shift+P), un watermark logo Aveho discret apparaît en bas à droite. Opacité 0.35 par défaut, 0.55 au hover, 0.25 sur mobile.</p>
+</div>
+
+<div class="watermark-demo">
+  <h3 style="margin:0 0 10px;color:#142131">Contenu de la page en mode démo</h3>
+  <p style="margin:0;color:#6c7a89">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ce contenu représente une page de l'app en mode présentation.</p>
+  <div class="watermark-img">a<span class="v">v</span>eho</div>
+</div>
+
+<h2>⚡ Cmd+K : preview panel pour résultat sélectionné — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Refonte du layout : liste à gauche + <b>preview panel 280px à droite</b> avec eyebrow type, titre, sous-titre, métadonnées et CTA "Appuyez sur ↵ pour ouvrir".</p>
+</div>
+
+<div class="cmdk-demo">
+  <div class="cmdk-input">🔍 dupont</div>
+  <div class="cmdk-body">
+    <div class="cmdk-list">
+      <div class="item sel">
+        <span class="ic">👤</span>
+        <div class="ti">
+          M. Dupont Jean
+          <div class="sub">né le 15/03/1958 · IPP 4720</div>
+        </div>
+        <span class="tg">PATIENT</span>
+      </div>
+      <div class="item">
+        <span class="ic">🔧</span>
+        <div class="ti">
+          DI-2026-1455
+          <div class="sub">Patient Dupont · maintenance programmée</div>
+        </div>
+        <span class="tg" style="color:#e35d5b">INTERVENTION</span>
+      </div>
+      <div class="item">
+        <span class="ic">📦</span>
+        <div class="ti">
+          MAT-AT-2024-08-2147
+          <div class="sub">Dupont · concentrateur O2 · livré</div>
+        </div>
+        <span class="tg" style="color:#EF9F27">MATÉRIEL</span>
+      </div>
+    </div>
+    <div class="cmdk-preview">
+      <div class="eb"><i class="ti ti-user"></i> Aperçu PATIENT</div>
+      <div class="tt">M. Dupont Jean</div>
+      <div class="sb">né le 15/03/1958 · 68 ans · IPP 4720</div>
+      <div class="mt">
+        <div><span>Adresse:</span> <b>23 rue des Lilas, 46400 Saint-Céré</b></div>
+        <div><span>Téléphone:</span> <b>06 12 34 56 78</b></div>
+        <div><span>Prescripteur:</span> <b>Dr Martin</b></div>
+        <div><span>Mat. actif:</span> <b>3 équipements</b></div>
+      </div>
+      <div class="cta">→ Appuyez sur ↵ pour ouvrir</div>
+    </div>
+  </div>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.27
+npm install --legacy-peer-deps
+npm test                              # ~4078 verts attendus
+npm run build                         # OK attendu
+git add -A
+git commit -m "Alpha 0.58.27 - Bundle WOW UX² : NotifBell preview + Tour premium 5 steps + Watermark logo + Cmd+K preview panel"
+git push origin main</pre>
+</div>
+
+<h2>🎁 Ce que tu vas voir en prod</h2>
+<div class="panel">
+<ul>
+<li><b>Hover sur la cloche</b> → preview des 3 dernières notifs (350ms delay)</li>
+<li><b>/profil → bouton "Rejouer la visite"</b> → lance le tour premium 5 steps sur /accueil</li>
+<li><b>Ctrl+Shift+P (mode présentation)</b> → watermark logo Aveho discret en bas à droite</li>
+<li><b>Cmd+K</b> → preview panel à droite avec détails enrichis du résultat sélectionné</li>
+</ul>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.28)</h2>
+<div class="panel">
+<ul>
+<li><b>Dashboard widgets configurables drag &amp; drop</b> (gros chantier, seul restant des 7 initiaux)</li>
+<li><b>Skeleton appliqué</b> sur /parametres et /profil (TabPanel loading)</li>
+<li><b>Animation KpiCard ConicCard</b> : transition value avec counter animé de 0 à la valeur</li>
+<li><b>Cmd+K résultats : aperçu d'image</b> pour les matériels avec photo</li>
+<li><b>Mode présentation : raccourcis clavier visuels</b> (afficher Ctrl+Shift+P en bas pendant le mode)</li>
+<li><b>NotifBell preview : marquer comme lu inline</b> depuis le preview</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.27 · 5 juin 2026 · BUNDLE WOW UX² : 4 chantiers</footer>
+</div>
+
+</body></html>

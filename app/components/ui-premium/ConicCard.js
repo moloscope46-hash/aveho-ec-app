@@ -27,7 +27,40 @@
 //    - aurora : scan multi-couleur (rotation des 4 couleurs Aveho)
 // =============================================================
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+
+/**
+ * 0.58.28 : Hook count-up animation (extrait pour réutilisation)
+ * Anime de 0 vers la valeur cible avec easeOutCubic.
+ */
+function useCountUp(target, duration = 1000) {
+  const [val, setVal] = useState(0);
+  const rafRef = useRef(null);
+  const startRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof target !== "number" || target === 0) {
+      setVal(target || 0);
+      return;
+    }
+    cancelAnimationFrame(rafRef.current);
+    startRef.current = null;
+    const animate = (ts) => {
+      if (!startRef.current) startRef.current = ts;
+      const elapsed = ts - startRef.current;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setVal(Math.round(target * eased));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      }
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return val;
+}
 
 const VARIANTS = {
   teal:   { accent: "#7CC8C8", glow: "rgba(124,200,200,.40)", bg: "rgba(124,200,200,.06)" },
@@ -54,6 +87,9 @@ export default function ConicCard({
   const v = VARIANTS[variant] || VARIANTS.teal;
   const dur = SPEEDS[speed] || SPEEDS.normal;
   const [hovered, setHovered] = useState(false);
+  // 0.58.28 : animation count-up (hook au top level, safe React)
+  const animatedValue = useCountUp(typeof value === "number" ? value : 0);
+  const displayValue = typeof value === "number" ? animatedValue : value;
 
   const sz = {
     sm: { padding: 14, iconSize: 32, valueFont: 22, labelFont: 11, subFont: 11 },
@@ -171,7 +207,7 @@ export default function ConicCard({
           </div>
         </div>
 
-        {/* Value */}
+        {/* Value — 0.58.28 : animation count-up de 0 vers value */}
         <div style={{
           fontSize: sz.valueFont,
           fontWeight: 700,
@@ -179,8 +215,9 @@ export default function ConicCard({
           letterSpacing: "-0.02em",
           lineHeight: 1.1,
           marginBottom: sub ? 6 : 0,
+          fontVariantNumeric: "tabular-nums",
         }}>
-          {value}
+          {typeof value === "number" ? displayValue : value}
         </div>
 
         {/* Sub */}

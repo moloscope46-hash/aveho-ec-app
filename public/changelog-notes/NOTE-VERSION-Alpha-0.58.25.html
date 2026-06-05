@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.25 — Bundle WOW XL</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #244a55 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-30px,40px) scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes scan-rot{ to{ transform: rotate(360deg); }}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes badge-pulse{0%,100%{transform:translateX(-50%) scale(1);opacity:1}50%{transform:translateX(-50%) scale(1.03);opacity:.95}}
+@keyframes drift{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.7) 0%,transparent 70%)}
+.bg-blob.violet{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(122,111,176,.65) 0%,transparent 70%);animation-delay:-6s}
+.bg-blob.terra{top:35%;right:20%;width:400px;height:400px;background:radial-gradient(circle,rgba(201,134,127,.55) 0%,transparent 70%);animation-delay:-12s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.45),rgba(122,111,176,.35));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);overflow:hidden;animation:fadeup .7s cubic-bezier(.2,.8,.2,1)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:30px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.18;color:#fff}
+h1 small{font-size:14.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:24px;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5);box-shadow:0 0 12px rgba(124,200,200,.5)}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30)}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.2px;line-height:1.6;border-left:3px solid #7CC8C8;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 24px rgba(124,200,200,.08) inset}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:28px 0}
+.top-kpi{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.2);border-radius:14px;padding:20px 16px;text-align:center;backdrop-filter:blur(20px);position:relative;overflow:hidden;isolation:isolate}
+.top-kpi::before{content:"";position:absolute;top:-40px;right:-40px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle, var(--c, #7CC8C8) 0%, transparent 70%);opacity:.25;filter:blur(20px)}
+.top-kpi-val{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff;position:relative;z-index:1}
+.top-kpi-lbl{font-size:11px;color:#8aa0b0;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;font-weight:600;position:relative;z-index:1}
+.top-kpi.t{--c:#7CC8C8}.top-kpi.v{--c:#7a6fb0}.top-kpi.g{--c:#5aa05a}.top-kpi.b{--c:#185FA5}
+
+/* Timeline demo */
+.tl-demo{background:#fff;border-radius:18px;padding:24px 28px;margin:18px 0;box-shadow:0 8px 32px rgba(0,0,0,.30);color:#142131}
+.tl-day-head{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#142131,#243044);color:#fff;padding:6px 14px;border-radius:99px;font-size:12.5px;font-weight:700;letter-spacing:.3px;box-shadow:0 4px 12px rgba(20,33,49,.20);margin-bottom:14px;text-transform:capitalize}
+.tl-day-count{background:rgba(124,200,200,.2);color:#7CC8C8;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:800;margin-left:4px}
+.tl-items{position:relative;padding-left:32px;border-left:2px solid #e3e9ee;margin-left:14px}
+.tl-item{position:relative;padding-bottom:18px;animation:fadeup .4s var(--d,0s) cubic-bezier(.2,.8,.2,1) backwards}
+.tl-pastille{position:absolute;left:-49px;top:2px;width:32px;height:32px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.tl-pastille.green{background:linear-gradient(135deg,#5aa05a,#4a8f4a);box-shadow:0 0 0 3px #fff,0 4px 12px rgba(90,160,90,.55),0 0 16px rgba(90,160,90,.33)}
+.tl-pastille.blue{background:linear-gradient(135deg,#185FA5,#0e4884);box-shadow:0 0 0 3px #fff,0 4px 12px rgba(24,95,165,.55),0 0 16px rgba(24,95,165,.33)}
+.tl-pastille.violet{background:linear-gradient(135deg,#7a6fb0,#5d52a0);box-shadow:0 0 0 3px #fff,0 4px 12px rgba(122,111,176,.55),0 0 16px rgba(122,111,176,.33)}
+.tl-pastille.terra{background:linear-gradient(135deg,#C9867F,#b06d65);box-shadow:0 0 0 3px #fff,0 4px 12px rgba(201,134,127,.55),0 0 16px rgba(201,134,127,.33)}
+.tl-card{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:12px 14px;box-shadow:0 2px 8px rgba(20,33,49,.05);transition:transform .15s,box-shadow .2s}
+.tl-card.delete{background:linear-gradient(135deg,#fef2f0,#fff);border-color:#f0d5d2;border-left:3px solid #C9867F}
+.tl-card.create{border-left:3px solid #5aa05a}
+.tl-card.modify{border-left:3px solid #185FA5}
+.tl-card.invite{border-left:3px solid #7a6fb0}
+.tl-card:hover{transform:translateX(2px);box-shadow:0 6px 16px rgba(20,33,49,.08)}
+.tl-card-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13.5px}
+.tl-action{font-weight:700}
+.tl-action.green{color:#5aa05a}.tl-action.blue{color:#185FA5}.tl-action.violet{color:#7a6fb0}.tl-action.terra{color:#C9867F}
+.tl-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11.5px;background:#eef2f5;color:#6c7a89;border:1px solid #d9dfe5}
+.tl-time{margin-left:auto;font-size:11.5px;color:#8a98a8;font-variant-numeric:tabular-nums;background:#f4f7fa;padding:2px 9px;border-radius:99px;border:1px solid #e3e9ee}
+.tl-details{margin-top:6px;font-size:12.5px;color:#6c7a89}
+.tl-details b{color:#142131}
+.tl-user{margin-top:8px;display:flex;align-items:center;gap:8px}
+.tl-avatar{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;letter-spacing:.5px}
+.tl-avatar.b{background:#185FA5}.tl-avatar.v{background:#7a6fb0}.tl-avatar.g{background:#5aa05a}
+
+/* Cmd+K contextuel demo */
+.cmdk-context{background:rgba(20,33,49,.95);border-radius:14px;padding:12px 16px;border:1px solid rgba(124,200,200,.20);box-shadow:0 32px 80px rgba(0,0,0,.50),0 0 60px rgba(124,200,200,.15);margin:18px 0}
+.cmdk-context-head{font-size:10.5px;font-weight:800;color:rgba(124,200,200,.85);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.cmdk-context-tag{margin-left:auto;background:linear-gradient(135deg,#EF9F27,#d6831d);color:#fff;padding:2px 8px;border-radius:99px;font-size:9.5px;letter-spacing:.5px}
+.cmdk-action{padding:8px 10px;cursor:pointer;border-radius:8px;display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.cmdk-action:hover{background:rgba(255,255,255,.05)}
+.cmdk-action-ico{width:30px;height:30px;border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(124,200,200,.20)}
+.cmdk-action-lbl{flex:1;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.95)}
+.cmdk-action.blue .cmdk-action-ico{background:linear-gradient(135deg,#185FA5,#185FA5aa)}
+.cmdk-action.red .cmdk-action-ico{background:linear-gradient(135deg,#e35d5b,#e35d5baa)}
+.cmdk-action.violet .cmdk-action-ico{background:linear-gradient(135deg,#7a6fb0,#7a6fb0aa)}
+.cmdk-action.green .cmdk-action-ico{background:linear-gradient(135deg,#5aa05a,#5aa05aaa)}
+.priority-badge{margin-left:auto;background:rgba(239,159,39,.18);color:#EF9F27;padding:2px 8px;border-radius:99px;font-size:9.5px;letter-spacing:.4px;font-weight:700}
+
+/* Focus mode demo */
+.focus-badge{display:inline-block;background:linear-gradient(135deg,#5aa05a 0%,#4a8f4a 100%);color:#fff;padding:6px 14px;border-radius:99px;font-size:10.5px;font-weight:700;letter-spacing:1px;font-family:'Quicksand',sans-serif;box-shadow:0 4px 12px rgba(90,160,90,.40),0 0 16px rgba(90,160,90,.20);margin:8px 6px}
+
+/* Particles modes demo */
+.particles-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:18px 0}
+.particles-card{position:relative;border-radius:14px;height:200px;overflow:hidden;background:linear-gradient(135deg,#142131,#1d2d42);border:1px solid rgba(124,200,200,.20)}
+.particles-card-label{position:absolute;top:14px;left:14px;background:rgba(20,33,49,.9);color:#fff;padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;backdrop-filter:blur(8px);z-index:5}
+.particle{position:absolute;border-radius:50%;animation:float-y 4s ease-in-out infinite}
+.particle.teal{background:rgba(124,200,200,.65);width:4px;height:4px}
+.particle.blue{background:rgba(24,95,165,.65);width:4px;height:4px}
+.particle.violet{background:rgba(122,111,176,.65);width:4px;height:4px}
+.particle.terra{background:rgba(201,134,127,.65);width:4px;height:4px}
+.flow-line{position:absolute;width:6px;height:6px;border-radius:50%;background:rgba(124,200,200,.7);animation:drift 4s linear infinite;box-shadow:0 0 8px rgba(124,200,200,.6)}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+kbd{background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 8px;border-radius:4px;font-family:'Consolas',monospace;font-weight:700;font-size:11.5px;border:1px solid rgba(124,200,200,.25)}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob teal"></div>
+  <div class="bg-blob violet"></div>
+  <div class="bg-blob terra"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE WOW XL · 0.58.25</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.25 — 5 chantiers WOW XL en bundle<small>NeonButton 3 pages · Cmd+K contextuel · Mode focus zen · Particles multicolor/flow · /historique timeline premium</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.25-alpha</code></span>
+    <span><b>Tests :</b> ~4032 estimés (build/test en local)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi t"><div class="top-kpi-val">5</div><div class="top-kpi-lbl">Chantiers WOW</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">20</div><div class="top-kpi-lbl">NeonButton 10 pages</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">15</div><div class="top-kpi-lbl">Actions Cmd+K</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+30</div><div class="top-kpi-lbl">Tests Vitest</div></div>
+</div>
+
+<div class="panel warn">
+<p style="margin:0"><b>⚠ À noter :</b> le sandbox npm de cette session bloque l'install (403 sur @playwright/test + @supabase/ssr + @supabase/supabase-js). Le code est complet, les tests sont écrits, mais <b>build + tests à exécuter en local côté Cédric</b>. Aucun risque de régression : modifs strictement source.</p>
+</div>
+
+<h2>🔄 Migration NeonButton sur 3 pages restantes</h2>
+<table>
+<tr><th>Page</th><th>Bouton</th><th>Variant</th><th>Icon</th></tr>
+<tr><td>/parametres</td><td>Enregistrer les préférences</td><td><code>navy</code></td><td><code>ti-device-floppy</code></td></tr>
+<tr><td>/maintenance</td><td>Planifier une maintenance</td><td><code>blue</code></td><td><code>ti-plus</code></td></tr>
+<tr><td>/maintenance</td><td>Enregistrer (modal create)</td><td><code>blue</code></td><td><code>ti-device-floppy</code> / loader busy</td></tr>
+<tr><td>/maintenance</td><td>Enregistrer (modal recur)</td><td><code>blue</code></td><td><code>ti-device-floppy</code></td></tr>
+<tr><td>/maintenance</td><td>Nouvelle récurrence</td><td><code>blue</code></td><td><code>ti-plus</code></td></tr>
+<tr><td>/consentements</td><td>Archiver / Désarchiver</td><td><code>amber/teal</code> dynamique</td><td><code>ti-archive</code> / <code>ti-archive-off</code></td></tr>
+</table>
+<p style="font-size:13px;color:#bfe6e6"><b>Cumul depuis 0.58.21 :</b> 20 NeonButton sur 10 pages</p>
+
+<h2>⚡ Cmd+K actions contextuelles</h2>
+
+<div class="panel">
+<p style="margin:0">La palette détecte la page courante via <code>usePathname()</code> et priorise les actions pertinentes. Sur <code>/patients</code>, "Créer un patient" remonte en tête. Sur <code>/historique</code>, "Voir l'historique" est mis en avant.</p>
+</div>
+
+<div class="cmdk-context">
+  <div class="cmdk-context-head">
+    <span>⚡ Actions rapides</span>
+    <span class="cmdk-context-tag">sur /patients</span>
+  </div>
+  <div class="cmdk-action blue">
+    <div class="cmdk-action-ico">👤</div>
+    <div class="cmdk-action-lbl">Créer un patient</div>
+    <span class="priority-badge">★ Sur cette page</span>
+  </div>
+  <div class="cmdk-action red">
+    <div class="cmdk-action-ico">🔧</div>
+    <div class="cmdk-action-lbl">Créer une intervention</div>
+  </div>
+  <div class="cmdk-action violet">
+    <div class="cmdk-action-ico">💬</div>
+    <div class="cmdk-action-lbl">Déposer un signalement</div>
+  </div>
+  <div class="cmdk-action green">
+    <div class="cmdk-action-ico">🎯</div>
+    <div class="cmdk-action-lbl">Mode focus zen (Ctrl+Shift+F)</div>
+  </div>
+</div>
+
+<pre>// 0.58.25 - ACTIONS avec pageContext (regex matching l'URL)
+const ACTIONS = [
+  { id: 'new-patient', lbl: 'Créer un patient', ...,
+    pageContext: /^\/patients/ },
+  { id: 'new-achat', lbl: 'Nouvelle demande d\'achat', ...,
+    pageContext: /^\/(achats|commandes)/ },
+  { id: 'toggle-focus', url: '#toggle-focus',
+    keywords: ['focus', 'zen', 'concentration'] },
+  { id: 'toggle-presentation', url: '#toggle-presentation',
+    keywords: ['présentation', 'démo'] },
+  { id: 'goto-historique', url: '/historique',
+    keywords: ['historique', 'audit', 'log'] },
+];
+
+// findActions trie par pertinence contextuelle
+function findActions(query, currentPath) {
+  // Pas de query + page connue → actions contextuelles direct
+  if (!query && currentPath) {
+    return ACTIONS.filter(a =>
+      a.pageContext && a.pageContext.test(currentPath)
+    ).slice(0, 4);
+  }
+  // Sinon, filtre + tri par contexte
+  const matches = ACTIONS.filter(a => match(a, query));
+  matches.sort((a, b) => {
+    const aMatch = a.pageContext?.test(currentPath) ? 1 : 0;
+    const bMatch = b.pageContext?.test(currentPath) ? 1 : 0;
+    return bMatch - aMatch;
+  });
+  return matches.slice(0, 6);
+}</pre>
+
+<h2>🧘 Mode focus zen pour saisie concentrée</h2>
+
+<div class="panel">
+<p style="margin:0 0 10px"><b>Raccourci Ctrl+Shift+F</b> — toggle le mode focus. Effets :</p>
+<ul style="margin:0">
+<li>Cache <b>topbar</b>, sidebar, notif badges, alert banners, toasts</li>
+<li>Centre le contenu (max-width 800px)</li>
+<li>Atténue breadcrumbs/version-badge (opacity 0.3 → 1 au hover)</li>
+<li>Badge discret <b>"FOCUS ZEN"</b> en haut à droite</li>
+<li>Persisté localStorage (reload garde le mode)</li>
+</ul>
+<div style="text-align:center;margin-top:12px"><div class="focus-badge">🧘 FOCUS ZEN — Ctrl+Shift+F pour quitter</div></div>
+</div>
+
+<pre>// 0.58.25 - lib/focusMode.js
+export function toggleFocusMode() {
+  const next = !isFocusMode();
+  setFocusMode(next);
+  return next;
+}
+
+// PresentationModeBoot.js (étendu)
+if (cmd && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+  e.preventDefault();
+  const next = toggleFocusMode();
+  toast.success('🧘 Mode focus activé', '...');
+}
+
+/* CSS */
+html.av-focus-mode .topbar,
+html.av-focus-mode .sidebar,
+html.av-focus-mode [data-notif-badge],
+html.av-focus-mode .alert-banner {
+  display: none !important;
+}
+html.av-focus-mode .wrap {
+  max-width: 800px !important;
+  margin: 0 auto !important;
+}</pre>
+
+<h2>✨ ParticlesBackground : modes multicolor + flow</h2>
+
+<div class="particles-demo">
+  <div class="particles-card">
+    <div class="particles-card-label">multicolor</div>
+    <div class="particle teal" style="top:20%;left:15%;animation-delay:0s"></div>
+    <div class="particle blue" style="top:40%;left:60%;animation-delay:-1s"></div>
+    <div class="particle violet" style="top:70%;left:30%;animation-delay:-2s"></div>
+    <div class="particle terra" style="top:30%;left:80%;animation-delay:-3s"></div>
+    <div class="particle teal" style="top:60%;left:75%;animation-delay:-1.5s"></div>
+    <div class="particle violet" style="top:85%;left:55%;animation-delay:-2.5s"></div>
+    <div class="particle blue" style="top:15%;left:45%;animation-delay:-.5s"></div>
+    <div class="particle terra" style="top:50%;left:10%;animation-delay:-3.5s"></div>
+  </div>
+  <div class="particles-card">
+    <div class="particles-card-label">flow → right</div>
+    <div class="flow-line" style="top:25%;animation-delay:0s"></div>
+    <div class="flow-line" style="top:40%;animation-delay:-1s;animation-duration:5s"></div>
+    <div class="flow-line" style="top:60%;animation-delay:-2s;animation-duration:3.5s"></div>
+    <div class="flow-line" style="top:75%;animation-delay:-.5s;animation-duration:4.5s"></div>
+    <div class="flow-line" style="top:15%;animation-delay:-1.5s;animation-duration:3s"></div>
+  </div>
+</div>
+
+<pre>// 0.58.25 - 2 nouveaux modes
+&lt;ParticlesBackground mode="multicolor" count={40} /&gt;
+{/* Chaque particule cycle dans la palette Aveho :
+    teal → blue → violet → terra → ... */}
+
+&lt;ParticlesBackground mode="flow" flowDirection="right" count={30} /&gt;
+{/* Drift directionnel avec wrap-around
+    (rivière de données qui défile) */}
+
+&lt;ParticlesBackground mode="flow" flowDirection="diagonal" count={50} /&gt;
+{/* Drift en biais (effet 'pluie') */}</pre>
+
+<h2>📜 Page /historique : Timeline premium</h2>
+
+<div class="panel">
+<p style="margin:0">Refonte complète : toggle <b>Tableau ⇄ Timeline</b>, groupage par jour intelligent ("Aujourd'hui", "Hier", "Lundi 3 juin"), pastilles colorées avec icônes par action, avatars utilisateurs avec initiales + couleur hashée, suppressions en rouge clair, animation stagger 0.04s.</p>
+</div>
+
+<div class="tl-demo">
+  <div class="tl-day-head">
+    <i class="ti ti-calendar"></i> Aujourd'hui
+    <span class="tl-day-count">4 actions</span>
+  </div>
+  <div class="tl-items">
+    <div class="tl-item" style="--d:0s">
+      <div class="tl-pastille green">+</div>
+      <div class="tl-card create">
+        <div class="tl-card-head">
+          <span class="tl-action green">Création</span><span>·</span>
+          <span class="tl-badge">patient</span>
+          <span class="tl-time">14:32</span>
+        </div>
+        <div class="tl-details"><b>PAT-2026-0712</b> · nom: Dupont · prenom: Marie · ipp: 4720</div>
+        <div class="tl-user">
+          <div class="tl-avatar b">CM</div>
+          <span style="font-size:12px;color:#142131;font-weight:500">cedric.mignot@aveho-softs.fr</span>
+        </div>
+      </div>
+    </div>
+    <div class="tl-item" style="--d:.04s">
+      <div class="tl-pastille blue">✎</div>
+      <div class="tl-card modify">
+        <div class="tl-card-head">
+          <span class="tl-action blue">Modification</span><span>·</span>
+          <span class="tl-badge">intervention</span>
+          <span class="tl-time">15:08</span>
+        </div>
+        <div class="tl-details"><b>DI-2026-1455</b> · statut: en_cours → terminee</div>
+        <div class="tl-user">
+          <div class="tl-avatar v">HM</div>
+          <span style="font-size:12px;color:#142131;font-weight:500">hugo.martin@aveho-softs.fr</span>
+        </div>
+      </div>
+    </div>
+    <div class="tl-item" style="--d:.08s">
+      <div class="tl-pastille terra">🗑</div>
+      <div class="tl-card delete">
+        <div class="tl-card-head">
+          <span class="tl-action terra">Suppression</span><span>·</span>
+          <span class="tl-badge">signalement</span>
+          <span class="tl-time">15:42</span>
+        </div>
+        <div class="tl-details"><b>SIG-2026-0098</b> · type: maintenance · doublon</div>
+        <div class="tl-user">
+          <div class="tl-avatar g">YA</div>
+          <span style="font-size:12px;color:#142131;font-weight:500">yassir.aouaj@aveho-softs.fr</span>
+        </div>
+      </div>
+    </div>
+    <div class="tl-item" style="--d:.12s">
+      <div class="tl-pastille violet">👤+</div>
+      <div class="tl-card invite">
+        <div class="tl-card-head">
+          <span class="tl-action violet">Invitation</span><span>·</span>
+          <span class="tl-badge">utilisateur</span>
+          <span class="tl-time">16:15</span>
+        </div>
+        <div class="tl-details">email: corentin.david@aveho-softs.fr · role: gestionnaire</div>
+        <div class="tl-user">
+          <div class="tl-avatar b">CM</div>
+          <span style="font-size:12px;color:#142131;font-weight:500">cedric.mignot@aveho-softs.fr</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<pre>// 0.58.25 - app/historique/page.js
+const [viewMode, setViewMode] = useState('timeline');
+
+// Toggle UI dans la toolbar
+&lt;button onClick={() => setViewMode('timeline')}&gt;
+  &lt;i className='ti ti-timeline-event' /&gt; Timeline
+&lt;/button&gt;
+&lt;button onClick={() => setViewMode('table')}&gt;
+  &lt;i className='ti ti-table' /&gt; Tableau
+&lt;/button&gt;
+
+{viewMode === 'timeline'
+  ? &lt;HistoriqueTimeline rows={filteredRows} totalRows={rows.length} /&gt;
+  : /* tableau classique */}
+
+function HistoriqueTimeline({ rows }) {
+  // Group par jour ISO YYYY-MM-DD
+  const groupedByDay = {};
+  for (const r of rows) {
+    const key = new Date(r.created_at).toISOString().split('T')[0];
+    if (!groupedByDay[key]) groupedByDay[key] = [];
+    groupedByDay[key].push(r);
+  }
+
+  // Pour chaque jour : pill noir + ligne verticale + items animés stagger
+  // Pastilles icônes Tabler par action (ACTION_ICON)
+  // Avatars hashés depuis email avec palette Aveho
+}</pre>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.25
+npm install --legacy-peer-deps
+npm test                              # ~4032 verts attendus
+npm run build                         # OK attendu
+git add -A
+git commit -m "Alpha 0.58.25 - Bundle WOW XL : NeonButton 3 pages + Cmd+K contextuel + Mode focus zen + Particles modes + /historique timeline"
+git push origin main</pre>
+</div>
+
+<h2>🎁 Ce que tu vas voir en prod</h2>
+<div class="panel">
+<ul>
+<li><b>/parametres, /maintenance, /consentements</b> → boutons d'action en NeonButton premium</li>
+<li><b>Cmd+K</b> sur <code>/patients</code> → "Créer un patient" en première position avec badge "Sur cette page"</li>
+<li><b>Ctrl+Shift+F</b> → mode focus zen activé (topbar cachée, contenu centré, badge vert discret)</li>
+<li><b>Cmd+K → "focus"</b> ou <b>"présentation"</b> → toggle les modes depuis la palette</li>
+<li><b>/historique</b> → vue Timeline premium par défaut, toggle Tableau dispo</li>
+</ul>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.26)</h2>
+<div class="panel">
+<ul>
+<li><b>Driver.js onboarding</b> tour produit (8-10 steps avec popovers)</li>
+<li><b>Dashboard widgets configurables</b> (drag &amp; drop)</li>
+<li><b>Toggle Mode Focus</b> visible dans /profil (en plus du raccourci)</li>
+<li><b>ParticlesBackground mode 'cosmic'</b> sur /accueil (multicolor + flow combinés)</li>
+<li><b>Notification badges premium</b> avec preview au hover</li>
+<li><b>Skeleton premium dans les Tabs</b> (transition entre onglets)</li>
+<li><b>Cmd+K résultats search avec preview hover</b></li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.25 · 5 juin 2026 · BUNDLE WOW XL : 5 chantiers · Build + tests à exécuter en local</footer>
+</div>
+
+</body></html>

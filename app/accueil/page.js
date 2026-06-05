@@ -10,12 +10,48 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Statut, StateMsg } from "../ui";
 import OnboardingTour from "../OnboardingTour";
+// 0.58.27 : tour produit premium "Découvrir les nouveautés" (en plus du legacy)
+import PremiumOnboardingTour from "../components/OnboardingTour";
 import MultiEtabSummary from "../MultiEtabSummary";
 import MesValidationsEnAttente from "../MesValidationsEnAttente";
 // 0.58.0 : refonte UI premium
 import HeroDashboard from "./HeroDashboard";
 // 0.58.20 : particules teal flottantes en arrière-plan
 import { ParticlesBackground } from "../components/ui-premium";
+
+// 0.58.27 : steps du tour produit premium "Découvrir les nouveautés"
+const PREMIUM_TOUR_STEPS = [
+  {
+    target: ".av-cmdk-trigger, [data-tour='cmdk'], .topbar input[type='search'], .topbar input",
+    title: "🔍 Recherche universelle Cmd+K",
+    content: "Appuyez sur Ctrl+K (ou ⌘K) partout dans l'app pour ouvrir la palette de recherche. Vous pouvez chercher patients/DI/matériels, et taper > pour accéder aux actions rapides (créer patient, vider cache, etc.).",
+    position: "bottom",
+  },
+  {
+    target: ".kpi-tile, .av-conic-card",
+    title: "💫 Vos KPIs en mode mission control",
+    content: "Vos indicateurs clés (DI à traiter, Achats à valider, Signalements urgents, RGPD) apparaissent en cards avec scan-line conic permanent quand ils nécessitent votre attention. Le scan rapide signale les urgences.",
+    position: "bottom",
+  },
+  {
+    target: ".notif-btn, .notif-wrap",
+    title: "🔔 Notifications avec preview",
+    content: "Survolez la cloche pour voir les 3 dernières notifications sans ouvrir le panneau complet. Cliquez sur une notif pour ouvrir le détail.",
+    position: "bottom",
+  },
+  {
+    target: "body",
+    title: "🎥 Mode présentation pour vos démos",
+    content: "Appuyez sur Ctrl+Shift+P pour activer le mode présentation : zoom léger + animations ralenties + ombres renforcées. Parfait pour des démos clients fluides. Toggle aussi disponible dans /profil → Sécurité.",
+    position: "bottom",
+  },
+  {
+    target: "body",
+    title: "🧘 Mode focus zen pour la saisie",
+    content: "Appuyez sur Ctrl+Shift+F pour cacher la topbar, les notifs et les distractions pendant que vous saisissez. Idéal pour les longs formulaires.",
+    position: "bottom",
+  },
+];
 
 export default function Accueil() {
   const supabase = createClient();
@@ -224,9 +260,14 @@ export default function Accueil() {
         zIndex: 0,
         pointerEvents: "none",
       }}>
-        <ParticlesBackground count={30} speed={0.3} linkDistance={140} />
+        {/* 0.58.26 : mode multicolor (palette Aveho cyclant) pour effet 'cosmic' sur /accueil */}
+        <ParticlesBackground count={40} speed={0.25} linkDistance={150} mode="multicolor" />
       </div>
       <OnboardingTour />
+      {/* 0.58.27 : tour produit premium "Découvrir les nouveautés"
+          - storageKey différente du legacy (av-tour-premium-058)
+          - se déclenche après le legacy (autoStart=false par défaut, on l'active si flag URL ?tour=premium) */}
+      <PremiumTourTrigger />
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap" style={{ position: "relative", zIndex: 1 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
@@ -402,5 +443,43 @@ export default function Accueil() {
         )}
       </div>
     </div>
+  );
+}
+
+// =============================================================
+//  0.58.27 : Trigger du tour premium "Découvrir les nouveautés"
+//
+//  Lance automatiquement si URL contient ?tour=premium (depuis profil)
+//  ou si le legacy onboarding est terminé ET le premium pas encore vu
+//  (pour ne pas spammer un nouvel utilisateur déjà en plein tour legacy).
+// =============================================================
+function PremiumTourTrigger() {
+  const [shouldStart, setShouldStart] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const forceStart = params.get("tour") === "premium";
+    if (forceStart) {
+      // Reset le storage pour permettre de re-jouer
+      try { localStorage.removeItem("av-tour-premium-058"); } catch {}
+      // Nettoie l'URL
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("tour");
+        window.history.replaceState({}, "", url);
+      } catch {}
+      setShouldStart(true);
+    }
+  }, []);
+
+  if (!shouldStart) return null;
+
+  return (
+    <PremiumOnboardingTour
+      steps={PREMIUM_TOUR_STEPS}
+      storageKey="av-tour-premium-058"
+      autoStart={true}
+    />
   );
 }

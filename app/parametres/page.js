@@ -8,7 +8,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn} from "../ui";
-import { PageHero, Tabs, Select } from "../components/ui-premium";
+import { PageHero, Tabs, TabPanel, Select, NeonButton } from "../components/ui-premium";
 import { useTheme } from "../../lib/useTheme";
 import { useKiosque } from "../../lib/useKiosque";
 import NotificationOptIn from "../NotificationOptIn";
@@ -91,7 +91,8 @@ export default function Parametres() {
           </div>
         )}
 
-        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
+        {/* 0.58.28 : Skeleton premium pendant le chargement (au lieu de StateMsg) */}
+        {loading ? <TabPanel active="loading" loading={true}>{null}</TabPanel> : (
           <>
             {/* === ONGLET GÉNÉRAL === */}
             {activeTab === "general" && (
@@ -354,7 +355,10 @@ export default function Parametres() {
             )}
 
             <div style={{ textAlign: "right" }}>
-              <Btn variant="primary" icon="ti-device-floppy" onClick={save}>Enregistrer les préférences</Btn>
+              {/* 0.58.25 : NeonButton variant=navy pour Enregistrer les préférences */}
+              <NeonButton variant="navy" icon="ti-device-floppy" onClick={save}>
+                Enregistrer les préférences
+              </NeonButton>
             </div>
           </>
         )}

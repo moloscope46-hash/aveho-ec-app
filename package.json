@@ -1,6 +1,6 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.58.24-alpha",
+  "version": "0.58.28-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,7 +16,6 @@
     "test:visual:update": "playwright test tests/e2e/visual-regression.spec.js --update-snapshots"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.0",
     "@tabler/icons-webfont": "^2.47.0",
     "glob": "^13.0.6",
@@ -25,11 +24,12 @@
     "leaflet": "^1.9.4",
     "next": "^15.5.19",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "@supabase/ssr": "^0.5.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.0",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "@playwright/test": "^1.48.0"
   },
   "browserslist": [
     "last 2 Chrome major versions",

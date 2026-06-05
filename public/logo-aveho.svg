@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <linearGradient id="aveho-logo-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#142131"/>
+      <stop offset="100%" stop-color="#1a2d44"/>
+    </linearGradient>
+    <filter id="aveho-glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Texte "aveho" en Quicksand-like -->
+  <text x="100" y="42"
+        text-anchor="middle"
+        font-family="'Quicksand', 'Segoe UI', sans-serif"
+        font-size="38"
+        font-weight="600"
+        letter-spacing="3"
+        fill="url(#aveho-logo-grad)">
+    a<tspan fill="#7CC8C8" filter="url(#aveho-glow)">v</tspan>eho
+  </text>
+</svg>

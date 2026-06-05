@@ -12,7 +12,7 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, FilterBar } from "../ui";
-import { toast } from "../components/ui-premium";
+import { toast, NeonButton } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { fmtDate, relativeTime } from "../../lib/format";
 
@@ -362,9 +362,13 @@ ${consentementToHtml(c.texte_consentement)}
                   <i className="ti ti-refresh" /> Demander renouvellement
                 </button>
               )}
-              <button className="btn-save" onClick={() => toggleArchive(viewModal)} style={{ background: viewModal.archive ? "#5aa05a" : "#8a98a8" }}>
-                <i className={`ti ${viewModal.archive ? "ti-archive-off" : "ti-archive"}`} /> {viewModal.archive ? "Désarchiver" : "Archiver"}
-              </button>
+              <NeonButton
+                variant={viewModal.archive ? "amber" : "teal"}
+                icon={viewModal.archive ? "ti-archive-off" : "ti-archive"}
+                onClick={() => toggleArchive(viewModal)}
+              >
+                {viewModal.archive ? "Désarchiver" : "Archiver"}
+              </NeonButton>
             </div>
           </div>
         </div>

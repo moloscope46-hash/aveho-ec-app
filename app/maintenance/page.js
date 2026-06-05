@@ -9,7 +9,7 @@ import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
-import { EmptyState, SkeletonRow, toast} from "../components/ui-premium";
+import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-premium";
 import { fmtDate } from "../../lib/format";
 import { logEvent } from "../../lib/events";
 import { openPdfPreview } from "../../lib/pdfPreview";
@@ -493,7 +493,8 @@ export default function MaintenancePage() {
 
         <Panel>
           <div className="di-toolbar">
-            {auth.can("ecrire") && <Btn variant="new" icon="ti-plus" onClick={openNew}>Planifier une maintenance</Btn>}
+            {/* 0.58.25 : NeonButton variant=blue pour Planifier une maintenance */}
+            {auth.can("ecrire") && <NeonButton variant="blue" icon="ti-plus" onClick={openNew}>Planifier une maintenance</NeonButton>}
             <Btn variant="ghost" icon="ti-file-type-pdf" onClick={() => exportPdfMaintenance(filtered, auth)}>Export PDF planning</Btn>
             {fStatut && <Btn variant="ghost" icon="ti-x" onClick={() => setFStatut("")}>Effacer filtre</Btn>}
             {/* Alpha 0.43.0 : toggle vue */}
@@ -603,7 +604,9 @@ export default function MaintenancePage() {
         title={modal?.id ? "Modifier la maintenance" : "Planifier une maintenance"}
         footer={<>
           <Btn variant="ghost" onClick={() => setModal(null)} disabled={busy}>Annuler</Btn>
-          <Btn variant="primary" onClick={save} disabled={busy}>{busy ? "…" : "Enregistrer"}</Btn>
+          <NeonButton variant="blue" icon={busy ? "ti-loader-2" : "ti-device-floppy"} onClick={save} disabled={busy}>
+            {busy ? "Enregistrement…" : "Enregistrer"}
+          </NeonButton>
         </>}
       >
         {err && <div className="err">{err}</div>}
@@ -674,7 +677,9 @@ export default function MaintenancePage() {
         size="lg"
         footer={<>
           <Btn variant="ghost" onClick={() => setRecurModal(null)}>Annuler</Btn>
-          <Btn variant="primary" onClick={saveRecur}>Enregistrer</Btn>
+          <NeonButton variant="blue" icon="ti-device-floppy" onClick={saveRecur}>
+            Enregistrer
+          </NeonButton>
         </>}
       >
         <p style={{ fontSize: 12.5, color: "#6c7a89", margin: "0 0 14px" }}>
@@ -928,7 +933,7 @@ function RecurrencesPanel({ recurrences, materiels, openNew, openEdit, markDone,
   return (
     <Panel>
       <div className="di-toolbar">
-        {canWrite && <Btn variant="new" icon="ti-plus" onClick={openNew}>Nouvelle récurrence</Btn>}
+        {canWrite && <NeonButton variant="blue" icon="ti-plus" onClick={openNew}>Nouvelle récurrence</NeonButton>}
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#6c7a89" }}>
           <i className="ti ti-info-circle" /> Les récurrences génèrent automatiquement des rappels à la prochaine échéance.
         </span>

@@ -4,12 +4,13 @@
 // Alpha 0.29.0 : dashboard "mes stats" + préférences notifications par user
 // 0.58.6 : refonte UI avec PageHero + Tabs (4 onglets) + Avatar premium
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn, EntityIcon, CollapsibleSection } from "../ui";
-import { PageHero, Tabs, Avatar, KpiCard, NeonButton } from "../components/ui-premium";
+import { PageHero, Tabs, TabPanel, Avatar, KpiCard, NeonButton } from "../components/ui-premium";
 import { resetOnboarding } from "../OnboardingTour";
 import NotifCategories from "../NotifCategories";
 import { KpiRow } from "../kpis";
@@ -23,6 +24,8 @@ import BiometricSection from "../BiometricSection";
 import { fullCacheReset } from "../../lib/cacheReset";
 // 0.58.24 : toggle mode présentation depuis le profil
 import { isPresentationMode, togglePresentationMode } from "../../lib/presentationMode";
+// 0.58.26 : toggle mode focus zen depuis le profil
+import { isFocusMode, toggleFocusMode } from "../../lib/focusMode";
 
 export default function Profil() {
   const supabase = createClient();
@@ -167,7 +170,8 @@ export default function Profil() {
           </div>
         )}
 
-        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
+        {/* 0.58.28 : Skeleton premium pendant le chargement (au lieu de StateMsg) */}
+        {loading ? <TabPanel active="loading" loading={true}>{null}</TabPanel> : (
           <>
             {/* En-tête identité avec Avatar premium - toujours visible */}
             <Panel style={{ marginBottom: 18 }}>
@@ -400,6 +404,31 @@ export default function Profil() {
               </p>
             </Panel>
 
+            {/* 0.58.26 : toggle Mode focus zen (en plus du Ctrl+Shift+F) */}
+            <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #f0f9f0 0%, #ffffff 100%)", borderColor: "#c2dec2", borderLeft: "4px solid #5aa05a" }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#2e6f33", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-target" /> Mode focus zen
+              </h2>
+              <p style={{ fontSize: 12.5, color: "#3d6f3d", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Pour les sessions de saisie concentrée : cache la topbar, la sidebar, les notifications et autres distractions. Centre le contenu pour une lecture/saisie sereine. Un badge "🧘 FOCUS ZEN" apparaît en haut à droite.
+              </p>
+              <FocusModeToggle />
+              <p style={{ fontSize: 11, color: "#5a7d5a", margin: "10px 0 0", fontStyle: "italic" }}>
+                💡 Raccourci : <kbd style={{ background: "#dfeddf", padding: "2px 7px", borderRadius: 4, fontSize: 11 }}>Ctrl+Shift+F</kbd> (ou <kbd style={{ background: "#dfeddf", padding: "2px 7px", borderRadius: 4, fontSize: 11 }}>⌘+Shift+F</kbd> sur Mac) pour activer partout dans l'app
+              </p>
+            </Panel>
+
+            {/* 0.58.26 : Rejouer la visite guidée onboarding */}
+            <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #e7f0fa 0%, #ffffff 100%)", borderColor: "#b8d0e8", borderLeft: "4px solid #185FA5" }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#0e4884", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-route" /> Visite guidée
+              </h2>
+              <p style={{ fontSize: 12.5, color: "#185FA5", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Vous voulez (re)découvrir les fonctionnalités principales ? Relancez la visite guidée qui s'affiche à la première connexion. Le tour vous présente la topbar, les KPIs, la palette Cmd+K et plus.
+              </p>
+              <ReplayTourButton />
+            </Panel>
+
             {/* 0.58.20 : panneau "Vider le cache" pour résoudre les bugs de cache navigateur/SW */}
             <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #fff8ec 0%, #fffcf3 100%)", borderColor: "#f0d59f", borderLeft: "4px solid #EF9F27" }}>
               <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#7a4f15", display: "flex", alignItems: "center", gap: 8 }}>
@@ -479,6 +508,55 @@ function PresentationModeToggle() {
       onClick={handleToggle}
     >
       {isOn ? "Désactiver le mode présentation" : "Activer le mode présentation"}
+    </NeonButton>
+  );
+}
+
+// =============================================================
+//  0.58.26 : Toggle Mode Focus zen (lié à lib/focusMode)
+// =============================================================
+function FocusModeToggle() {
+  const [isOn, setIsOn] = useState(false);
+
+  useEffect(() => {
+    setIsOn(isFocusMode());
+    function onChange(e) {
+      setIsOn(e?.detail?.on ?? isFocusMode());
+    }
+    window.addEventListener("av-focus-mode-change", onChange);
+    return () => window.removeEventListener("av-focus-mode-change", onChange);
+  }, []);
+
+  function handleToggle() {
+    const next = toggleFocusMode();
+    setIsOn(next);
+  }
+
+  return (
+    <NeonButton
+      variant={isOn ? "amber" : "teal"}
+      icon={isOn ? "ti-target-off" : "ti-target"}
+      onClick={handleToggle}
+    >
+      {isOn ? "Désactiver le mode focus" : "Activer le mode focus zen"}
+    </NeonButton>
+  );
+}
+
+// =============================================================
+//  0.58.26 : Relancer la visite guidée (reset localStorage + redirect)
+// =============================================================
+function ReplayTourButton() {
+  const router = useRouter();
+  function handleReplay() {
+    // 0.58.27 : redirige vers /accueil?tour=premium pour déclencher le nouveau tour premium
+    // Le legacy reste accessible via reset complet, mais on privilégie l'expérience premium
+    try { localStorage.removeItem("av-tour-premium-058"); } catch {}
+    router.push("/accueil?tour=premium");
+  }
+  return (
+    <NeonButton variant="blue" icon="ti-route" onClick={handleReplay}>
+      Rejouer la visite guidée
     </NeonButton>
   );
 }

@@ -25,10 +25,21 @@ export default function ParticlesBackground({
   speed = 0.3,
   linkDistance = 140,
   showOnMobile = false,
+  // 0.58.25 : modes spéciaux
+  mode = "default",   // "default" | "multicolor" | "flow"
+  flowDirection = "diagonal", // "right" | "down" | "diagonal" (mode flow)
 }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const particlesRef = useRef([]);
+
+  // 0.58.25 : palette multicolor Aveho
+  const MULTICOLORS = [
+    "rgba(124, 200, 200, 0.65)",  // teal
+    "rgba(24, 95, 165, 0.55)",    // blue
+    "rgba(122, 111, 176, 0.55)",  // violet
+    "rgba(201, 134, 127, 0.55)",  // terra
+  ];
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,13 +72,37 @@ export default function ParticlesBackground({
     resize();
 
     // Initialiser les particules
-    particlesRef.current = Array.from({ length: count }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * speed,
-      vy: (Math.random() - 0.5) * speed,
-      r: Math.random() * 1.5 + 0.6,
-    }));
+    // 0.58.25 : si mode=multicolor, chaque particule a sa propre couleur
+    //           si mode=flow, drift directionnel au lieu de bounce
+    particlesRef.current = Array.from({ length: count }, (_, i) => {
+      let vx, vy;
+      if (mode === "flow") {
+        // Drift directionnel
+        if (flowDirection === "right") {
+          vx = speed * (0.6 + Math.random() * 0.6);  // toujours vers la droite
+          vy = (Math.random() - 0.5) * speed * 0.3;
+        } else if (flowDirection === "down") {
+          vx = (Math.random() - 0.5) * speed * 0.3;
+          vy = speed * (0.6 + Math.random() * 0.6);
+        } else {
+          // diagonal
+          vx = speed * (0.4 + Math.random() * 0.5);
+          vy = speed * (0.3 + Math.random() * 0.4);
+        }
+      } else {
+        vx = (Math.random() - 0.5) * speed;
+        vy = (Math.random() - 0.5) * speed;
+      }
+      return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx,
+        vy,
+        r: Math.random() * 1.5 + 0.6,
+        // 0.58.25 : couleur dédiée par particule en mode multicolor
+        c: mode === "multicolor" ? MULTICOLORS[i % MULTICOLORS.length] : null,
+      };
+    });
 
     let isVisible = true;
     function onVisibility() { isVisible = !document.hidden; }
@@ -85,12 +120,20 @@ export default function ParticlesBackground({
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
-        // Bounce on edges
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
-        // Clamp
-        p.x = Math.max(0, Math.min(width, p.x));
-        p.y = Math.max(0, Math.min(height, p.y));
+        // 0.58.25 : mode flow → wrap around au lieu de bounce
+        if (mode === "flow") {
+          if (p.x > width + 10) p.x = -10;
+          if (p.x < -10) p.x = width + 10;
+          if (p.y > height + 10) p.y = -10;
+          if (p.y < -10) p.y = height + 10;
+        } else {
+          // Bounce on edges
+          if (p.x < 0 || p.x > width) p.vx *= -1;
+          if (p.y < 0 || p.y > height) p.vy *= -1;
+          // Clamp
+          p.x = Math.max(0, Math.min(width, p.x));
+          p.y = Math.max(0, Math.min(height, p.y));
+        }
       }
 
       // Draw connections (lines between close particles)
@@ -113,11 +156,21 @@ export default function ParticlesBackground({
       }
 
       // Draw particles
-      ctx.fillStyle = color;
-      for (const p of particles) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
+      // 0.58.25 : mode multicolor → chaque particule a sa couleur dédiée
+      if (mode === "multicolor") {
+        for (const p of particles) {
+          ctx.fillStyle = p.c || color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        ctx.fillStyle = color;
+        for (const p of particles) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
 
       // Glow effect (subtle)
@@ -137,7 +190,7 @@ export default function ParticlesBackground({
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
     };
-  }, [count, color, lineColor, speed, linkDistance, showOnMobile]);
+  }, [count, color, lineColor, speed, linkDistance, showOnMobile, mode, flowDirection]);
 
   return (
     <canvas

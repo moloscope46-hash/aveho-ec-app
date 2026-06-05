@@ -278,8 +278,11 @@ export default function Tabs({
 //  Joue une animation slide horizontal 280ms à chaque changement.
 //  Le sens du slide est calculé automatiquement (vers la droite si
 //  on va vers un tab "plus loin" dans la liste).
+//
+//  0.58.26 : prop `loading` qui affiche un skeleton shimmer premium
+//  pendant le chargement du contenu du tab.
 // =============================================================
-export function TabPanel({ active, id, children }) {
+export function TabPanel({ active, id, children, loading = false }) {
   // L'animation utilise la key={active} pour forcer un re-mount visuel
   // → CSS keyframe av-tab-slide-in déclenché à chaque changement
   return (
@@ -292,7 +295,52 @@ export function TabPanel({ active, id, children }) {
         willChange: "opacity, transform",
       }}
     >
-      {children}
+      {loading ? <TabPanelSkeleton /> : children}
+    </div>
+  );
+}
+
+// 0.58.26 : Skeleton générique pour les TabPanel (shimmer Aveho)
+function TabPanelSkeleton() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: "8px 0" }}>
+      {/* Header skel : titre + sous-titre */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="av-skel-line" style={{ width: "45%", height: 24 }} />
+        <div className="av-skel-line" style={{ width: "70%", height: 13 }} />
+      </div>
+
+      {/* Form-like : 3 paires label + input */}
+      {[0, 1, 2].map((i) => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <div className="av-skel-line" style={{ width: 120, height: 10 }} />
+          <div className="av-skel-line" style={{ width: "100%", height: 36, borderRadius: 8 }} />
+        </div>
+      ))}
+
+      {/* Grid 2 KPI mini-cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {[0, 1].map((i) => (
+          <div key={i} style={{
+            background: "var(--av-g50, #f4f7fa)",
+            borderRadius: 10,
+            padding: 14,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}>
+            <div className="av-skel-line" style={{ width: 80, height: 10 }} />
+            <div className="av-skel-line" style={{ width: "60%", height: 22 }} />
+            <div className="av-skel-line" style={{ width: "40%", height: 10 }} />
+          </div>
+        ))}
+      </div>
+
+      {/* Footer : 2 boutons */}
+      <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+        <div className="av-skel-line" style={{ width: 110, height: 36, borderRadius: 10 }} />
+        <div className="av-skel-line" style={{ width: 90, height: 36, borderRadius: 10 }} />
+      </div>
     </div>
   );
 }
