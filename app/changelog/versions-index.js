@@ -11,7 +11,7 @@
 //
 //  STATS au moment de la génération :
 //   - VERSIONS_INDEX (JSON public) : 595.3 KB lazy
-//   - Extra (chantiers > 5)        : 142.7 KB lazy
+//   - Extra (chantiers > 5)        : 144.5 KB lazy
 //   - Versions : 225
 // =============================================================
 

@@ -161,6 +161,15 @@ export const ALL_VERSIONS = [
         }
       },
       { "code": "AI", "txt": "+30 tests Vitest (v058-31-bundle.test.js) : version+SW (2), SireneSearch portal (6 — import + refs + recalc + portal + zIndex 99999 + click-out), /collectivite (5 — filter + router + bouton créer + 2 actions + click stop), /etablissements auto-open (3 — useSearchParams + detect + cleanup), lib/shortcutsConfig (6 — exports + defaults + storage + 8 colors + 28 icons + event), FloatingActionBar refonte (6 — import + position + hamburger + listener + stagger + translateX), /profil panel (8 — imports + composant + editingIdx + 4 champs + maps + reset + panel parent). Total **~4150 verts estimés** (build/test à exécuter en local — sandbox npm bloqué)" },
+      { "code": "BUG", "txt": "🩹 FIX 3 RÉGRESSIONS DE TESTS HISTORIQUES (signalées par Cédric sur 0.58.30). **(a)** Test `v055-15-sql-modal` exigeait pattern `aveho-(PATCH-vers|supabase-securite-[A-Z]+)-X.Y.Z.sql` mais le fichier était nommé `SQL-FIX-audit_log-rls-0.58.24.sql` (hors pattern). **Fix** : renommé en `aveho-PATCH-vers-0.58.24.sql` + copié dans `public/changelog-sql/` + référence mise à jour dans versions-data. **(b)** Test `v057-24-bulles-csp-report` vérifiait que chaque sqlFile référencé existe physiquement. Conséquence directe du fix (a). **(c)** Test `v057-35-clear-user-data-logout` détecte que `OnboardingTour.js` utilise une clé `av-tour-` non purgée au logout. **Fix** : ajout du préfixe `av-` à `SENSITIVE_LS_PREFIXES` dans `lib/clearUserData.js` — couvre aussi tous les `av-focus-mode`, `av-presentation-mode`, `av-shortcuts-config`, `av-focus-hide-notifs`, etc. (purge complète au logout)",
+        "code_snippet": {
+          "file": "lib/clearUserData.js + public/changelog-sql/aveho-PATCH-vers-0.58.24.sql + versions-data.js",
+          "note": "3 fixes anti-régression",
+          "lang": "diff",
+          "before": "// AVANT 0.58.31\n// lib/clearUserData.js\nconst SENSITIVE_LS_PREFIXES = [\n  'aveho:',\n  'aveho_',\n  'ville:',\n  'etab-photo-',\n  'sb-',\n];\n\n// versions-data.js (0.58.24)\n{ sqlFile: 'SQL-FIX-audit_log-rls-0.58.24.sql' }  // pattern KO\n\n// scripts/SQL-FIX-audit_log-rls-0.58.24.sql  (pas dans public/)",
+          "after": "// 0.58.31 - 3 fixes\n// lib/clearUserData.js : ajout préfixe 'av-'\nconst SENSITIVE_LS_PREFIXES = [\n  'aveho:',\n  'aveho_',\n  'av-',          // ← AJOUT : av-tour-, av-focus-mode, av-presentation-mode,\n                  //   av-shortcuts-config, av-focus-hide-notifs\n  'ville:',\n  'etab-photo-',\n  'sb-',\n];\n\n// versions-data.js (0.58.24)\n{ sqlFile: 'aveho-PATCH-vers-0.58.24.sql' }  // pattern OK\n\n// public/changelog-sql/aveho-PATCH-vers-0.58.24.sql  (copié depuis scripts/)"
+        }
+      },
       { "code": "DOC", "txt": "BILAN APRÈS 0.58.31 : grosse session de fixes UX demandés par Cédric sur la fiche groupement + refonte majeure des 3 raccourcis. Tous les points listés sont implémentés : (1) z-index Sirene fix ✓ (2) partenaires enlevés ✓ (3) icône équipe sur tuiles ✓ (4) bouton créer établissement ✓ (5) menu haut-gauche au lieu du pied de page ✓ (6) config /profil avec URL+icône+couleur ✓. La page /etablissement?etab={id} existe déjà et affichera le plan + arbre 5 niveaux + équipes/services pour cet établissement. PROCHAINES PISTES (0.58.32) : (a) **Dashboard widgets configurables drag & drop** 🚧 (toujours en attente). (b) Page dédiée 'Architecture' par établissement (organigramme équipes + services en arbre visuel). (c) Mode présentation : option 'masquer notifs' (comme focus). (d) Cmd+K : section 'Récents' premium avec mini-timeline" }
     ],
     "themes": ["ui", "bugfix", "refacto", "wow"],
@@ -483,7 +492,7 @@ export const ALL_VERSIONS = [
     "themes": ["bugfix", "ui", "ux", "prod"],
     "date": "5 juin 2026",
     "noteFile": "NOTE-VERSION-Alpha-0.58.24.html",
-    "sqlFile": "SQL-FIX-audit_log-rls-0.58.24.sql"
+    "sqlFile": "aveho-PATCH-vers-0.58.24.sql"
   },
   {
     "v": "0.58.23",
