@@ -2945,3 +2945,103 @@ body.is-compact .chip-row button {
   100% { background-position: -200% 0; }
 }
 .av-drawer-skel { animation: av-fade-in 0.3s var(--av-ease-out); }
+
+/* =============================================================
+   0.58.23 — EmptyState illustration SVG animations
+   ============================================================= */
+@keyframes av-float-doc {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-6px) rotate(2deg); }
+}
+@keyframes av-bar-rise {
+  0%   { transform: scaleY(0.3); }
+  50%  { transform: scaleY(1); }
+  100% { transform: scaleY(0.3); }
+}
+@keyframes av-skel-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.8; }
+}
+@keyframes av-float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* 0.58.23 : BulkToolbar progress shimmer */
+@keyframes av-bulk-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* =============================================================
+   0.58.23 — Mode PRÉSENTATION (démos clients)
+   ============================================================= */
+
+html.av-presentation-mode {
+  /* Zoom léger pour meilleure lisibilité projection */
+  font-size: 17.5px;
+}
+
+html.av-presentation-mode body {
+  /* Animations ralenties 1.5x via global animation-duration boost */
+}
+
+/* Ralentit toutes les animations (sauf celles essentielles) */
+html.av-presentation-mode *,
+html.av-presentation-mode *::before,
+html.av-presentation-mode *::after {
+  animation-duration: 1.5s !important;
+}
+
+/* Sauf les keyframes critiques qui doivent rester rapides */
+html.av-presentation-mode .topbar,
+html.av-presentation-mode .menu-drawer,
+html.av-presentation-mode .av-cmdk-modal,
+html.av-presentation-mode .modal {
+  /* Garde les animations d'entrée à leur vitesse normale pour l'UX */
+}
+
+/* Renforcement des ombres et glow */
+html.av-presentation-mode .panel,
+html.av-presentation-mode .kpi-tile,
+html.av-presentation-mode .av-conic-card {
+  box-shadow:
+    0 12px 32px rgba(20, 33, 49, 0.18),
+    0 4px 12px rgba(20, 33, 49, 0.10),
+    0 0 24px rgba(124, 200, 200, 0.12) !important;
+}
+
+/* Cache les éléments parasites en démo */
+html.av-presentation-mode .version-badge,
+html.av-presentation-mode .debug-only,
+html.av-presentation-mode [data-debug] {
+  display: none !important;
+}
+
+/* Badge "MODE PRÉSENTATION" visible en haut */
+html.av-presentation-mode::after {
+  content: "🎥 MODE PRÉSENTATION";
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  background: linear-gradient(135deg, #EF9F27 0%, #d6831d 100%);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-family: 'Quicksand', sans-serif;
+  box-shadow:
+    0 8px 24px rgba(239, 159, 39, 0.45),
+    0 0 32px rgba(239, 159, 39, 0.25);
+  pointer-events: none;
+  animation: av-presentation-badge-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes av-presentation-badge-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+  50%      { transform: translateX(-50%) scale(1.03); opacity: 0.95; }
+}

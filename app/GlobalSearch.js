@@ -31,6 +31,38 @@ const TYPES = {
   fournisseur: { icon: "ti-truck-loading", color: "#8c2a23", lbl: "Fournisseur" },
 };
 
+// 0.58.23 : Actions globales rapides (créer X, aller sur Y, etc.)
+// Apparaissent dans la palette dès que la query commence par > ou matche un keyword
+const ACTIONS = [
+  { id: "new-patient", lbl: "Créer un patient", icon: "ti-user-plus", color: "#185FA5", url: "/patients?new=1", keywords: ["créer", "patient", "nouveau", "ajouter"] },
+  { id: "new-intervention", lbl: "Créer une intervention", icon: "ti-tools", color: "#e35d5b", url: "/interventions?new=1", keywords: ["créer", "intervention", "di", "nouvelle"] },
+  { id: "new-signalement", lbl: "Déposer un signalement", icon: "ti-message-plus", color: "#7a6fb0", url: "/signalements?new=1", keywords: ["signalement", "déposer", "déclarer", "incident"] },
+  { id: "new-achat", lbl: "Nouvelle demande d'achat", icon: "ti-shopping-cart", color: "#EF9F27", url: "/achats?new=1", keywords: ["achat", "commande", "nouveau", "demande"] },
+  { id: "new-transfert", lbl: "Nouveau transfert de matériel", icon: "ti-arrows-exchange", color: "#5aa05a", url: "/transferts?new=1", keywords: ["transfert", "déplacement", "matériel"] },
+  { id: "goto-accueil", lbl: "Aller à l'accueil", icon: "ti-home", color: "#142131", url: "/accueil", keywords: ["accueil", "home", "dashboard"] },
+  { id: "goto-stats", lbl: "Voir les statistiques", icon: "ti-chart-bar", color: "#185FA5", url: "/statistiques", keywords: ["stats", "statistiques", "analyse", "tableau"] },
+  { id: "goto-calendrier", lbl: "Calendrier des interventions", icon: "ti-calendar", color: "#7a6fb0", url: "/calendrier", keywords: ["calendrier", "planning", "agenda"] },
+  { id: "goto-kanban", lbl: "Kanban des interventions", icon: "ti-layout-kanban", color: "#C9867F", url: "/interventions/kanban", keywords: ["kanban", "interventions", "vue"] },
+  { id: "goto-profil", lbl: "Mon profil", icon: "ti-user-circle", color: "#5aa05a", url: "/profil", keywords: ["profil", "compte", "moi", "settings"] },
+  { id: "goto-params", lbl: "Paramètres collectivité", icon: "ti-settings", color: "#142131", url: "/parametres", keywords: ["paramètres", "config", "admin", "settings"] },
+  { id: "clear-cache", lbl: "Vider le cache (problème d'affichage)", icon: "ti-refresh", color: "#EF9F27", url: "/profil?tab=securite", keywords: ["cache", "vider", "refresh", "bug", "affichage"] },
+];
+
+// Trouve les actions qui matchent la query
+function findActions(query) {
+  if (!query) return [];
+  const q = query.toLowerCase().trim();
+  // Format > ou bien matche un keyword
+  const isExplicitCommand = q.startsWith(">");
+  const cleanQ = isExplicitCommand ? q.slice(1).trim() : q;
+  if (!cleanQ && !isExplicitCommand) return [];
+
+  return ACTIONS.filter(a =>
+    a.lbl.toLowerCase().includes(cleanQ) ||
+    a.keywords.some(k => k.includes(cleanQ) || cleanQ.includes(k))
+  ).slice(0, 6);
+}
+
 export default function GlobalSearch() {
   const supabase = createClient();
   const router = useRouter();
@@ -330,12 +362,107 @@ export default function GlobalSearch() {
           ))}
         </div>
         <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          {/* 0.58.23 : section ACTIONS GLOBALES — affichée si query matche un keyword d'action
+              ou commence par > (mode commande explicite) */}
+          {(() => {
+            const matchingActions = findActions(q);
+            if (matchingActions.length === 0) return null;
+            return (
+              <div style={{
+                padding: "12px 16px 6px",
+                borderBottom: "1px dashed rgba(124,200,200,.15)",
+                background: "linear-gradient(135deg, rgba(124,200,200,.05), rgba(24,95,165,.04))",
+              }}>
+                <div style={{
+                  fontSize: 10.5,
+                  fontWeight: 800,
+                  color: "rgba(124,200,200,.85)",
+                  textTransform: "uppercase",
+                  letterSpacing: 1.2,
+                  marginBottom: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}>
+                  <i className="ti ti-bolt" style={{ color: "#EF9F27", fontSize: 13 }} />
+                  Actions rapides
+                </div>
+                {matchingActions.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => { router.push(a.url); setOpen(false); }}
+                    style={{
+                      padding: "8px 10px",
+                      cursor: "pointer",
+                      borderRadius: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      transition: "background 120ms, transform 150ms",
+                      marginBottom: 4,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = a.color + "1a";
+                      e.currentTarget.style.transform = "translateX(2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.transform = "translateX(0)";
+                    }}
+                  >
+                    <span style={{
+                      width: 30, height: 30, borderRadius: 8,
+                      background: `linear-gradient(135deg, ${a.color}, ${a.color}aa)`,
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      boxShadow: `0 4px 12px ${a.color}33`,
+                    }}>
+                      <i className={`ti ${a.icon}`} style={{ fontSize: 14 }} />
+                    </span>
+                    <span style={{
+                      flex: 1,
+                      fontSize: 13.5,
+                      fontWeight: 600,
+                      color: "rgba(255,255,255,.95)",
+                    }}>
+                      {a.lbl}
+                    </span>
+                    <i className="ti ti-arrow-right" style={{
+                      fontSize: 14,
+                      color: a.color,
+                      opacity: 0.7,
+                    }} />
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
           {loading ? (
             <div style={{ padding: "20px", textAlign: "center", color: "#8a98a8", fontSize: 13 }}>Recherche…</div>
           ) : q.length < 2 ? (
             <div style={{ padding: "20px", color: "#8a98a8", fontSize: 13 }}>
               <p style={{ textAlign: "center", margin: "0 0 14px" }}>Tape au moins 2 caractères pour rechercher</p>
               <div style={{ paddingTop: 14, borderTop: "1px dashed #e3e9ee" }}>
+                {/* 0.58.23 : astuce mode commande > */}
+                <div style={{
+                  padding: "10px 12px",
+                  background: "linear-gradient(135deg, rgba(239,159,39,.10), rgba(124,200,200,.06))",
+                  border: "1px solid rgba(239,159,39,.25)",
+                  borderRadius: 8,
+                  marginBottom: 14,
+                  fontSize: 12,
+                  color: "rgba(191,230,230,.85)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                  <i className="ti ti-bolt" style={{ color: "#EF9F27", fontSize: 14 }} />
+                  <span>Tapez <kbd style={{ background: "rgba(239,159,39,.25)", color: "#EF9F27", padding: "2px 8px", borderRadius: 4, fontFamily: "Consolas, monospace", fontWeight: 700 }}>&gt;</kbd> pour les <b>actions rapides</b> (créer patient, intervention…)</span>
+                </div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: ".5px", margin: "0 0 8px" }}>Filtres rapides</p>
                 <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 12 }}>
                   <div><kbd style={{ background: "#185FA522", color: "#185FA5", padding: "1px 6px", borderRadius: 3, fontSize: 11, fontWeight: 700 }}>p:</kbd> patients</div>

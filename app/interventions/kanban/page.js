@@ -153,6 +153,8 @@ export default function KanbanDIPage() {
           title="Kanban des interventions"
           subtitle="Glisse une carte d'une colonne à l'autre pour changer son statut"
           variant="terra"
+          particles
+          particlesCount={20}
           breadcrumbs={[
             { label: "Accueil", href: "/accueil" },
             { label: "Interventions", href: "/interventions" },

@@ -284,10 +284,13 @@ export default function Statistiques() {
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
         {/* 0.58.4 : PageHero premium remplace PageHead minimaliste */}
+        {/* 0.58.23 : particules canvas bleues en background du hero */}
         <PageHero
           icon="ti-chart-bar"
           eyebrow="ANALYSE"
           title="Statistiques"
+          particles
+          particlesCount={25}
           subtitle={(() => {
             // 0.58.15 : subtitle dynamique selon la plage active
             if (range.from || range.to) {

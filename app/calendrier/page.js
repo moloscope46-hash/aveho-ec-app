@@ -155,6 +155,8 @@ export default function CalendrierInterventions() {
           title="Calendrier des interventions"
           subtitle="Vue mensuelle des DI — positionnées sur leur date d'échéance ou de création"
           variant="violet"
+          particles
+          particlesCount={20}
           breadcrumbs={[
             { label: "Accueil", href: "/accueil" },
             { label: "Calendrier" },

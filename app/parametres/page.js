@@ -68,6 +68,8 @@ export default function Parametres() {
           title="Paramètres"
           subtitle={auth.structureNom || "Préférences de la collectivité"}
           variant="navy"
+          particles
+          particlesCount={20}
           breadcrumbs={[
             { label: "Accueil", href: "/accueil" },
             { label: "Paramètres" },

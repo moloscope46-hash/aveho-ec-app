@@ -29,6 +29,8 @@ import AdresseAutocomplete from "../AdresseAutocomplete";
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
+// 0.58.23 : NeonButton premium pour boutons d'action
+import { NeonButton } from "../components/ui-premium";
 export default function Patients() {
   const supabase = createClient();
   const router = useRouter();
@@ -299,7 +301,17 @@ export default function Patients() {
         {staleData && <StaleDataBanner />}
         <Panel>
           <div className="di-toolbar">
-            {auth.can("ecrire") && <button className="btn-new" onClick={openNew} disabled={!auth.etabId}><i className="ti ti-plus" /> {lbl("patient", "Patient") === "Patient" ? "Nouveau patient" : `Nouveau ${lbl("patient", "Patient").toLowerCase()}`}</button>}
+            {auth.can("ecrire") && (
+              /* 0.58.23 : NeonButton variant=teal pour "Nouveau patient" */
+              <NeonButton
+                variant="teal"
+                icon="ti-plus"
+                onClick={openNew}
+                disabled={!auth.etabId}
+              >
+                {lbl("patient", "Patient") === "Patient" ? "Nouveau patient" : `Nouveau ${lbl("patient", "Patient").toLowerCase()}`}
+              </NeonButton>
+            )}
             <button className="btn-ghost" onClick={() => setShowFilters(!showFilters)}>
               <i className={`ti ${showFilters ? "ti-filter-off" : "ti-filter"}`} /> Filtres avancés
               {(filters.q || filters.service || filters.chambre || filters.etat || filters.etiquette) && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
@@ -691,7 +703,9 @@ export default function Patients() {
             </div>
             <div className="modal-foot">
               <button className="btn-ghost" onClick={() => setModal(null)}>Annuler</button>
-              <button className="btn-save" onClick={save} disabled={busy}>{busy ? "…" : "Enregistrer"}</button>
+              <NeonButton variant="teal" icon={busy ? "ti-loader-2" : "ti-device-floppy"} onClick={save} disabled={busy}>
+                {busy ? "Enregistrement…" : "Enregistrer"}
+              </NeonButton>
             </div>
           </div>
         </div>

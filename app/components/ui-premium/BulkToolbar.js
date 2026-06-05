@@ -30,6 +30,8 @@ export default function BulkToolbar({
   itemName = "élément",
   itemNamePlural,         // pluriel custom, sinon `${itemName}s`
   ariaLabel,
+  // 0.58.23 : barre de progression intégrée
+  progress = null,        // null | { current: number, total: number, label?: string }
 }) {
   // Mémorisation du dernier count > 0 pour éviter le flash "0" pendant l'animation de sortie
   const [displayCount, setDisplayCount] = useState(count);
@@ -102,6 +104,64 @@ export default function BulkToolbar({
           {plural} sélectionné{displayCount > 1 ? "s" : ""}
         </span>
       </div>
+
+      {/* 0.58.23 : Barre de progression intégrée pour les opérations bulk en cours */}
+      {progress && progress.total > 0 && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "0 14px",
+          minWidth: 160,
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+            <div style={{
+              fontSize: 11.5,
+              fontWeight: 600,
+              color: "rgba(191, 230, 230, 0.85)",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 8,
+            }}>
+              <span>{progress.label || "Traitement..."}</span>
+              <span style={{ fontVariantNumeric: "tabular-nums", color: "#7CC8C8" }}>
+                {progress.current}/{progress.total}
+              </span>
+            </div>
+            <div style={{
+              height: 4,
+              background: "rgba(255, 255, 255, 0.10)",
+              borderRadius: 99,
+              overflow: "hidden",
+              position: "relative",
+            }}>
+              <div style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: `${Math.min(100, (progress.current / progress.total) * 100)}%`,
+                background: "linear-gradient(90deg, #7CC8C8 0%, #185FA5 100%)",
+                borderRadius: 99,
+                transition: "width 250ms ease-out",
+                boxShadow: "0 0 8px rgba(124, 200, 200, 0.6)",
+              }} />
+              {/* Effet shimmer */}
+              <div style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: `${Math.min(100, (progress.current / progress.total) * 100)}%`,
+                background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)",
+                backgroundSize: "200% 100%",
+                animation: "av-bulk-shimmer 1.6s linear infinite",
+                borderRadius: 99,
+              }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Séparateur */}
       <div style={{

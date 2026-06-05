@@ -10,6 +10,8 @@ import { DialogsHost } from "./dialogs";
 import GlobalErrorCapture from "./GlobalErrorCapture";
 // 0.58.10 : transition douce entre routes (fade + slide-up)
 import PageTransition from "./components/PageTransition";
+// 0.58.23 : Mode présentation pour démos clients (Ctrl+Shift+P)
+import PresentationModeBoot from "./PresentationModeBoot";
 // 0.57.8 : Composants non critiques pour le LCP regroupés dans un Client
 // Component pour permettre next/dynamic ssr: false (interdit dans les
 // Server Components depuis Next 15). Économise du JS sur le bundle initial.
@@ -85,6 +87,8 @@ export default function RootLayout({ children }) {
         <LectureSeuleBadge />
         <GlobalSearch />
         <AlertToastContainer />
+        {/* 0.58.23 : init mode présentation + shortcut Ctrl+Shift+P */}
+        <PresentationModeBoot />
         {/* 0.58.10 : transition douce entre routes */}
         <PageTransition>{children}</PageTransition>
         <InstallPWA />

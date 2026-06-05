@@ -15,6 +15,8 @@ import RppsSearch from "../components/RppsSearch";
 import Modal from "../components/Modal";
 import AddressAutocomplete from "../AddressAutocomplete";
 import { logger } from "../../lib/logger";
+// 0.58.23 : NeonButton premium
+import { NeonButton } from "../components/ui-premium";
 const MODULES = [
   { k: "patients", l: "Patients" }, { k: "etablissement", l: "Établissement" },
   { k: "materiels", l: "Matériel" }, { k: "articles", l: "Articles" },
@@ -735,7 +737,12 @@ export default function Utilisateurs() {
 
             {tab === "roles" && (
               <Panel>
-                <div className="di-toolbar"><button className="btn-new" onClick={() => openRole(null)}><i className="ti ti-plus" /> Nouveau rôle</button></div>
+                <div className="di-toolbar">
+                  {/* 0.58.23 : NeonButton variant=violet pour "Nouveau rôle" */}
+                  <NeonButton variant="violet" icon="ti-plus" onClick={() => openRole(null)}>
+                    Nouveau rôle
+                  </NeonButton>
+                </div>
                 <div className="panel-table"><table>
                   <thead><tr><th>Rôle</th><th>Description</th><th>Modules autorisés</th><th></th></tr></thead>
                   <tbody>
@@ -758,7 +765,12 @@ export default function Utilisateurs() {
             {tab === "invitations" && (
               <Panel>
                 <div className="di-toolbar" style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:12 }}>
-                  {auth.can("inviter") && <button className="btn-new" onClick={() => { setErr(""); setInviteModal(true); }}><i className="ti ti-user-plus" /> Créer un utilisateur</button>}
+                  {auth.can("inviter") && (
+                    /* 0.58.23 : NeonButton variant=teal pour "Créer un utilisateur" */
+                    <NeonButton variant="teal" icon="ti-user-plus" onClick={() => { setErr(""); setInviteModal(true); }}>
+                      Créer un utilisateur
+                    </NeonButton>
+                  )}
                   {/* 0.58.15 : raccourci vers la page d'onboarding guidé */}
                   {auth.can("inviter") && (
                     <a
@@ -906,7 +918,9 @@ export default function Utilisateurs() {
             </div>
             <div className="modal-foot">
               <button className="btn-ghost" onClick={() => setRoleModal(null)}>Annuler</button>
-              <button className="btn-save" onClick={saveRole}>Enregistrer</button>
+              <NeonButton variant="violet" icon="ti-device-floppy" onClick={saveRole}>
+                Enregistrer
+              </NeonButton>
             </div>
           </div>
         </div>

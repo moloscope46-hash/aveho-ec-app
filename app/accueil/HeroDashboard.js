@@ -271,20 +271,24 @@ export default function HeroDashboard({ auth, kpis, atraiter, loading, onNavigat
                 />
               )}
               {atraiter.signalements > 0 && (
-                <KpiCard
+                /* 0.58.23 : ConicCard variant=terra pour Signalements (urgent visuel) */
+                <ConicCard
                   label="Signalements"
                   value={atraiter.signalements}
                   icon="ti-alert-triangle"
                   variant="terra"
+                  speed="fast"
                   onClick={() => go("/signalements")}
                 />
               )}
               {atraiter.renouv > 0 && (
-                <KpiCard
+                /* 0.58.23 : ConicCard variant=violet pour RGPD à renouveler */
+                <ConicCard
                   label="RGPD à renouveler"
                   value={atraiter.renouv}
                   icon="ti-shield-check"
                   variant="violet"
+                  speed="normal"
                   onClick={() => go("/statistiques-rgpd")}
                 />
               )}
