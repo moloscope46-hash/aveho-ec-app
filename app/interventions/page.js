@@ -337,7 +337,7 @@ export default function Interventions() {
           )
             : visible.length === 0 ? (
               <EmptyState
-                icon="ti-tools"
+                illustration="clipboard"
                 variant="terra"
                 title="Aucune demande d'intervention"
                 message="Crée ta première demande pour démarrer le suivi des interventions sur ton parc matériel."

@@ -287,7 +287,7 @@ export default function SignalementsPage() {
           )
             : rows.length === 0 ? (
               <EmptyState
-                icon="ti-alert-triangle"
+                illustration="inbox"
                 variant="terra"
                 title="Aucun signalement"
                 message="Aucun problème signalé pour le moment. Dépose un signalement si tu rencontres un souci avec le matériel ou les interventions."
@@ -297,7 +297,7 @@ export default function SignalementsPage() {
             )
             : filtered.length === 0 ? (
               <EmptyState
-                icon="ti-filter-off"
+                illustration="search"
                 variant="gray"
                 title="Aucun résultat"
                 message="Aucun signalement ne correspond à ces filtres."

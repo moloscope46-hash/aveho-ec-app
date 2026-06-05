@@ -393,7 +393,7 @@ function AchatsInner() {
           )
             : rows.length === 0 ? (
               <EmptyState
-                icon="ti-shopping-cart"
+                illustration="folder"
                 variant="amber"
                 title="Aucune demande d'achat"
                 message="Crée ta première demande d'achat pour commander du matériel ou des consommables auprès du fournisseur."
@@ -403,7 +403,7 @@ function AchatsInner() {
             )
             : filtered.length === 0 ? (
               <EmptyState
-                icon="ti-filter-off"
+                illustration="search"
                 variant="gray"
                 title="Aucun résultat"
                 message="Aucune demande d'achat dans ce statut."

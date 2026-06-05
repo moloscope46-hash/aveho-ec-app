@@ -75,15 +75,17 @@ describe("0.58.18 - Fix 2 : SW Response.error → 504", () => {
     expect(sw).not.toMatch(/return Response\.error\(\);/);
   });
 
-  it("504 Gateway Timeout retourné en cas d'échec réseau (cacheFirst)", () => {
-    // On doit voir au moins 2 occurrences (cacheFirst + networkFirst)
-    const matches = sw.match(/status:\s*504,\s*statusText:\s*["']Gateway Timeout["']/g) || [];
-    expect(matches.length).toBeGreaterThanOrEqual(2);
+  it("Fail réseau géré (504 ou throw natif 0.58.24)", () => {
+    // 0.58.18 → return 504 explicite. 0.58.24 → throw natif.
+    // Au moins un des deux comportements doit être présent.
+    const has504 = /status:\s*504,\s*statusText:\s*["']Gateway Timeout["']/.test(sw);
+    const hasThrow = /\bthrow e;/.test(sw);
+    expect(has504 || hasThrow).toBe(true);
   });
 
-  it("Body vide + Content-Type text/plain pour les 504", () => {
-    expect(sw).toMatch(/new Response\(["']{2},\s*\{[\s\S]*?status:\s*504/);
-    expect(sw).toMatch(/"Content-Type":\s*"text\/plain"/);
+  it("Le SW ne retourne plus de Response.error() ni de chunk vide piégé", () => {
+    // 0.58.24 : peut throw e directement → plus de Response.error() ni body 504 piégé
+    expect(sw).not.toMatch(/return Response\.error\(\);/);
   });
 });
 

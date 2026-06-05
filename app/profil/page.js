@@ -21,6 +21,8 @@ import PasswordInput from "../PasswordInput";
 import BiometricSection from "../BiometricSection";
 // 0.58.20 : factory reset cache front
 import { fullCacheReset } from "../../lib/cacheReset";
+// 0.58.24 : toggle mode présentation depuis le profil
+import { isPresentationMode, togglePresentationMode } from "../../lib/presentationMode";
 
 export default function Profil() {
   const supabase = createClient();
@@ -384,6 +386,20 @@ export default function Profil() {
               </div>
             </Panel>
 
+            {/* 0.58.24 : toggle Mode présentation (en plus du Ctrl+Shift+P) */}
+            <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #f3eef9 0%, #ffffff 100%)", borderColor: "#d7c9eb", borderLeft: "4px solid #7a6fb0" }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#3d2f5e", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-presentation" /> Mode présentation
+              </h2>
+              <p style={{ fontSize: 12.5, color: "#5a4889", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Active le mode démo pour vos présentations clients : zoom léger, animations ralenties, ombres renforcées. Un badge "🎥 MODE PRÉSENTATION" apparaît en bas de l'écran.
+              </p>
+              <PresentationModeToggle />
+              <p style={{ fontSize: 11, color: "#8a78aa", margin: "10px 0 0", fontStyle: "italic" }}>
+                💡 Raccourci : <kbd style={{ background: "#e8e0f3", padding: "2px 7px", borderRadius: 4, fontSize: 11 }}>Ctrl+Shift+P</kbd> (ou <kbd style={{ background: "#e8e0f3", padding: "2px 7px", borderRadius: 4, fontSize: 11 }}>⌘+Shift+P</kbd> sur Mac) pour activer partout dans l'app
+              </p>
+            </Panel>
+
             {/* 0.58.20 : panneau "Vider le cache" pour résoudre les bugs de cache navigateur/SW */}
             <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #fff8ec 0%, #fffcf3 100%)", borderColor: "#f0d59f", borderLeft: "4px solid #EF9F27" }}>
               <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#7a4f15", display: "flex", alignItems: "center", gap: 8 }}>
@@ -432,6 +448,39 @@ function entiteIcon(entite) {
     consentement: "ti-shield-lock",
   };
   return map[entite] || "ti-circle";
+}
+
+// =============================================================
+//  0.58.24 : Toggle Mode Présentation (lié à lib/presentationMode)
+// =============================================================
+function PresentationModeToggle() {
+  const [isOn, setIsOn] = useState(false);
+
+  useEffect(() => {
+    // Init depuis localStorage
+    setIsOn(isPresentationMode());
+    // Écoute les changements (déclenché aussi par le shortcut Ctrl+Shift+P)
+    function onChange(e) {
+      setIsOn(e?.detail?.on ?? isPresentationMode());
+    }
+    window.addEventListener("av-presentation-mode-change", onChange);
+    return () => window.removeEventListener("av-presentation-mode-change", onChange);
+  }, []);
+
+  function handleToggle() {
+    const next = togglePresentationMode();
+    setIsOn(next);
+  }
+
+  return (
+    <NeonButton
+      variant={isOn ? "amber" : "violet"}
+      icon={isOn ? "ti-presentation-analytics" : "ti-presentation"}
+      onClick={handleToggle}
+    >
+      {isOn ? "Désactiver le mode présentation" : "Activer le mode présentation"}
+    </NeonButton>
+  );
 }
 
 // =============================================================

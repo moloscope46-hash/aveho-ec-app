@@ -120,6 +120,55 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.24",
+    "kind": "version",
+    "titre": "🔧 BUG FIXES PROD : 504 SW silencé + 403 audit_log géré + EmptyState illustrations sur 6 pages + Toggle Mode Présentation",
+    "chantiers": [
+      { "code": "BUG", "txt": "🔧 FIX BUG PROD #1 : 504 Gateway Timeout SW silencé. Le SW ne retourne plus de `Response('', { status: 504 })` quand le réseau échoue — il **re-throw l'erreur native** (`throw e`). Conséquence : un seul message d'erreur dans la console (`Failed to load resource`) au lieu du combo bruyant `504 Gateway Timeout + FetchEvent network error`. Modification dans **cacheFirst** ET **networkFirst** dans public/sw.js. Next.js gère son retry automatique sur les chunks via son loader natif",
+        "code_snippet": {
+          "file": "public/sw.js",
+          "note": "504 → throw natif",
+          "lang": "javascript",
+          "before": "// AVANT 0.58.24 - 504 explicite (bruyant dans console)\n// cacheFirst :\nreturn new Response('', {\n  status: 504,\n  statusText: 'Gateway Timeout',\n  headers: { 'Content-Type': 'text/plain' },\n});\n\n// networkFirst (idem)\nreturn new Response('', {\n  status: 504,\n  statusText: 'Gateway Timeout',\n  headers: { 'Content-Type': 'text/plain' },\n});",
+          "after": "// 0.58.24 - throw natif (silencieux)\n// cacheFirst :\ntry { ... } catch (e) {\n  // ... fallback offline HTML ...\n  throw e;  // re-throw, browser logge naturellement\n}\n\n// networkFirst (idem)\ntry { ... } catch (e) {\n  // retry + cache fallback + HTML offline ...\n  throw e;  // re-throw au lieu de 504 explicite\n}"
+        }
+      },
+      { "code": "BUG", "txt": "🔧 FIX BUG PROD #2 : 403 audit_log RLS géré côté code + SQL de fix. **Côté code (lib/events.js)** : try/catch silencieux qui détecte le 403 RLS (`error.code === '42501'` ou message contenant 'forbidden|policy|RLS'), affiche UNE SEULE FOIS un warning console diagnostic via `window._audit_log_warned_`. **Côté base (scripts/SQL-FIX-audit_log-rls-0.58.24.sql)** : drop des anciennes policies INSERT + create policy `audit_log_insert_v2` avec check `user_id = auth.uid()` AND `EXISTS membres_structures` pour l'appartenance à la structure. À exécuter dans Supabase SQL Editor",
+        "code_snippet": {
+          "file": "lib/events.js + scripts/SQL-FIX-audit_log-rls-0.58.24.sql",
+          "note": "Silent 403 + SQL fix",
+          "lang": "javascript",
+          "before": "// AVANT 0.58.24 - try/catch mais Supabase JS log quand même\ntry {\n  await supabase.from('audit_log').insert({...});\n} catch (e) {\n  logger.warn('logEvent - audit échoué :', e);\n}",
+          "after": "// 0.58.24 - silent 403 RLS avec diagnostic une seule fois\ntry {\n  const { error } = await supabase.from('audit_log').insert({...});\n  if (error) {\n    // Spécifiquement pour 403 RLS : log discret (warn) sans stack\n    if (error.code === '42501' || /forbidden|policy|RLS/i.test(error.message || '')) {\n      if (typeof window !== 'undefined' && !window._audit_log_warned_) {\n        window._audit_log_warned_ = true;\n        console.warn(\n          '[audit_log] RLS bloque les inserts. ' +\n          'Exécutez scripts/SQL-FIX-audit_log-rls-0.58.24.sql en base.'\n        );\n      }\n    } else {\n      logger.warn('logEvent - audit échoué :', error.message);\n    }\n  }\n} catch (e) {\n  logger.warn('logEvent - audit exception :', e?.message || e);\n}\n\n/* SQL FIX */\nDROP POLICY IF EXISTS 'audit_log_insert' ON audit_log;\nDROP POLICY IF EXISTS 'audit_log_insert_authenticated' ON audit_log;\n\nCREATE POLICY 'audit_log_insert_v2' ON audit_log\nFOR INSERT TO authenticated\nWITH CHECK (\n  user_id = auth.uid()\n  AND EXISTS (\n    SELECT 1 FROM membres_structures\n    WHERE membres_structures.user_id = auth.uid()\n      AND membres_structures.structure_id = audit_log.structure_id\n      AND (membres_structures.archive IS NULL OR membres_structures.archive = false)\n  )\n);\n\nALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;"
+        }
+      },
+      { "code": "UI", "txt": "🎨 APPLICATION EMPTYSTATE ILLUSTRATIONS SUR 6 PAGES (7 EmptyState modifiés). Les empty states qui utilisaient `icon='ti-...'` passent en `illustration='...'` avec les SVG animées livrées en 0.58.23 : (a) **/patients** : illustration=**users** (liste vide) + illustration=**search** (filtres). (b) **/interventions** : illustration=**clipboard**. (c) **/achats** : illustration=**folder** (liste vide) + illustration=**search** (filtres). (d) **/signalements** : illustration=**inbox** (liste vide) + illustration=**search** (filtres). (e) **/maintenance** : illustration=**chart** (liste vide) + illustration=**search** (filtres). (f) **/commandes** : illustration=**folder**. Total : 7 EmptyState modifiés sur 6 pages",
+        "code_snippet": {
+          "file": "app/patients/page.js + 5 autres pages",
+          "note": "icon → illustration",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.24 - icon Tabler simple\n<EmptyState\n  icon='ti-user-plus'\n  variant='teal'\n  title='Aucun patient pour le moment'\n  message='...'\n  actionLabel='Créer le premier patient'\n  onAction={openNew}\n/>",
+          "after": "// 0.58.24 - illustration SVG animée\n<EmptyState\n  illustration='users'     // ← 6 dispo : inbox|search|folder|clipboard|chart|users\n  variant='teal'\n  title='Aucun patient pour le moment'\n  message='...'\n  actionLabel='Créer le premier patient'\n  onAction={openNew}\n/>\n\n// Mapping par page :\n// /patients     → users / search\n// /interventions → clipboard\n// /achats       → folder / search\n// /signalements → inbox / search\n// /maintenance  → chart / search\n// /commandes    → folder"
+        }
+      },
+      { "code": "UI", "txt": "🎥 TOGGLE MODE PRÉSENTATION DANS /PROFIL (en plus du raccourci Ctrl+Shift+P). Nouveau panel violet 'Mode présentation' dans l'onglet Sécurité (après 'Ma session'). Composant **PresentationModeToggle** qui : (a) lit l'état initial via `isPresentationMode()` au mount. (b) Écoute l'event `av-presentation-mode-change` pour rester en sync avec le shortcut. (c) Bouton NeonButton qui bascule entre variant=**violet** icon=ti-presentation (off) et variant=**amber** icon=ti-presentation-analytics (on). (d) Mention du raccourci Ctrl+Shift+P / Cmd+Shift+P en bas du panel",
+        "code_snippet": {
+          "file": "app/profil/page.js",
+          "note": "Toggle UI + sync",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.24 - Mode présentation uniquement via raccourci clavier",
+          "after": "// 0.58.24 - Toggle visible dans /profil\nimport { isPresentationMode, togglePresentationMode } from '../../lib/presentationMode';\n\nfunction PresentationModeToggle() {\n  const [isOn, setIsOn] = useState(false);\n  useEffect(() => {\n    setIsOn(isPresentationMode());\n    // Sync avec le shortcut Ctrl+Shift+P qui dispatch cet event\n    function onChange(e) { setIsOn(e?.detail?.on ?? isPresentationMode()); }\n    window.addEventListener('av-presentation-mode-change', onChange);\n    return () => window.removeEventListener('av-presentation-mode-change', onChange);\n  }, []);\n\n  return (\n    <NeonButton\n      variant={isOn ? 'amber' : 'violet'}\n      icon={isOn ? 'ti-presentation-analytics' : 'ti-presentation'}\n      onClick={() => setIsOn(togglePresentationMode())}\n    >\n      {isOn ? 'Désactiver le mode présentation' : 'Activer le mode présentation'}\n    </NeonButton>\n  );\n}\n\n// Dans /profil onglet Sécurité, après 'Ma session' :\n<Panel style={{ borderLeft: '4px solid #7a6fb0' }}>\n  <h2>🎥 Mode présentation</h2>\n  <p>Active le mode démo : zoom léger, animations slow, ombres renforcées</p>\n  <PresentationModeToggle />\n  <p>💡 Raccourci : <kbd>Ctrl+Shift+P</kbd></p>\n</Panel>"
+        }
+      },
+      { "code": "AI", "txt": "+18 tests Vitest (v058-24-fixes-prod.test.js) + 2 ajustements anciens : version+SW (2), Fix SW 504 → throw natif (2), Fix audit_log 403 silent (3 — code 42501 + warning unique + SQL file), EmptyState illustrations 6 pages (6 — chaque page vérifiée), Toggle Mode Présentation profil (5 — imports + composant + state + event listener + NeonButton + mention Ctrl+Shift+P). Ajustements : v058-18-hotfix-prod (504 → throw natif accepté), v058-2-hotfix-audit-403 (3 options acceptées : Response.error|504|throw). Total **4002 verts** (+18 nets)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.24 : focus sur la qualité prod. Les 2 bugs prod récurrents (504 SW + 403 audit_log) sont désormais traités : SW silencieux + audit_log géré avec SQL de fix livré. **ACTION REQUISE EN BASE** : exécuter `scripts/SQL-FIX-audit_log-rls-0.58.24.sql` dans le SQL Editor Supabase pour résoudre définitivement les 403. Le code continue à fonctionner sans (les inserts audit_log échouent silencieusement). EmptyState illustrations appliquées partout pour une expérience visuelle premium constante. Toggle Mode Présentation accessible aux non-techniques (pas besoin de connaître le raccourci clavier). PROCHAINES PISTES : (a) Driver.js onboarding tour produit. (b) Migration NeonButton sur les modales restantes (/parametres, /maintenance, /consentements). (c) Cmd+K actions contextuelles. (d) Dashboard widgets configurables. (e) Stack viewer pour les events audit_log (page /historique premium)" }
+    ],
+    "themes": ["bugfix", "ui", "ux", "prod"],
+    "date": "5 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.24.html",
+    "sqlFile": "SQL-FIX-audit_log-rls-0.58.24.sql"
+  },
+  {
     "v": "0.58.23",
     "kind": "version",
     "titre": "🚀 MEGA BUNDLE WOW : NeonButton 2 pages + ConicCard signalements/RGPD + PageHero particles 4 pages + EmptyState 6 SVG + BulkToolbar progress + Cmd+K actions + MODE PRÉSENTATION",

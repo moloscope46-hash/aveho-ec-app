@@ -70,7 +70,7 @@ export default function Commandes() {
           )
             : cmds.length === 0 ? (
               <EmptyState
-                icon="ti-truck-delivery"
+                illustration="folder"
                 variant="teal"
                 title="Aucune commande pour le moment"
                 message="Découvre les promotions du moment pour passer ta première commande auprès du fournisseur."

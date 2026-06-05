@@ -534,7 +534,7 @@ export default function MaintenancePage() {
           )
             : rows.length === 0 ? (
               <EmptyState
-                icon="ti-tool"
+                illustration="chart"
                 variant="blue"
                 title="Aucune maintenance planifiée"
                 message="Planifie ta première maintenance pour suivre l'entretien régulier de ton parc matériel (révisions, contrôles, étalonnages)."
@@ -544,7 +544,7 @@ export default function MaintenancePage() {
             )
             : filtered.length === 0 ? (
               <EmptyState
-                icon="ti-filter-off"
+                illustration="search"
                 variant="gray"
                 title="Aucun résultat"
                 message="Aucune maintenance pour ce statut."

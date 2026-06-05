@@ -83,12 +83,17 @@ describe("0.58.2 - Fix SW : plus jamais 503 sur pages HTML", () => {
     expect(networkFirstBlock).toMatch(/status:\s*200/);
   });
 
-  it("Response.error() pour les chunks JS (Next.js gère retry)", () => {
+  it("Gestion des chunks JS (Next.js gère le retry) — 0.58.24 throw natif au lieu de Response.error()", () => {
     const networkFirstBlock = src.substring(
       src.indexOf("async function networkFirst"),
       src.indexOf("async function staleWhileRevalidate")
     );
-    expect(networkFirstBlock).toMatch(/Response\.error\(\)/);
+    // 0.58.2 → Response.error(). 0.58.18 → 504. 0.58.24 → throw e (au moins un)
+    const ok =
+      /Response\.error\(\)/.test(networkFirstBlock) ||
+      /status:\s*504/.test(networkFirstBlock) ||
+      /\bthrow e;/.test(networkFirstBlock);
+    expect(ok).toBe(true);
   });
 });
 

@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.58.23";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.58.24";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -155,13 +155,10 @@ async function cacheFirst(req, cacheName) {
       );
     }
     // Alpha 0.52.7 : pas de bruit en console pour les chunks manquants
-    // 0.58.18 : 504 propre au lieu de Response.error() qui fait apparaître
-    // un "FetchEvent ... network error response" dans la console
-    return new Response("", {
-      status: 504,
-      statusText: "Gateway Timeout",
-      headers: { "Content-Type": "text/plain" },
-    });
+    // 0.58.24 : on re-throw l'erreur native (au lieu de fabriquer une 504)
+    // pour que la console montre une seule erreur (Failed to load) au lieu
+    // du combo "504 + Failed to load resource".
+    throw e;
   }
 }
 
@@ -217,16 +214,11 @@ async function networkFirst(req, cacheName) {
         { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
       );
     }
-    // 0.58.18 : ne PLUS renvoyer Response.error() qui apparaît dans la
-    // console comme "FetchEvent for ... network error response". Pour les
-    // chunks JS/CSS non-html, retourner une 504 vraie avec un body vide
-    // qui sera interprétée correctement par Next.js (qui retry tout seul)
-    // sans logguer l'erreur "promise resolved with error response object".
-    return new Response("", {
-      status: 504,
-      statusText: "Gateway Timeout",
-      headers: { "Content-Type": "text/plain" },
-    });
+    // 0.58.24 : pas de 504 forcé qui pollue la console — on relance simplement
+    // l'erreur réseau native. Le navigateur loggera "Failed to load resource"
+    // une seule fois (au lieu du 504 explicite + ce log). Next.js gère son retry
+    // tout seul via Next's automatic chunk retry.
+    throw e;
   }
 }
 

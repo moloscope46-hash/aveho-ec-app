@@ -418,7 +418,7 @@ export default function Patients() {
                 if (filtered.length === 0) {
                   if (rows.length === 0) return (
                     <EmptyState
-                      icon="ti-user-plus"
+                      illustration="users"
                       variant="teal"
                       title="Aucun patient pour le moment"
                       message="Crée ton premier patient pour commencer à suivre ses interventions, son matériel et ses consentements RGPD."
@@ -428,7 +428,7 @@ export default function Patients() {
                   );
                   return (
                     <EmptyState
-                      icon="ti-filter-off"
+                      illustration="search"
                       variant="gray"
                       title="Aucun résultat"
                       message="Aucun patient ne correspond aux filtres actuels. Essaie de les ajuster ou de les réinitialiser."
