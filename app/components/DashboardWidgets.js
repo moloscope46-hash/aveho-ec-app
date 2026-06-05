@@ -637,26 +637,65 @@ export function WeatherWidget() {
 //  Auto-save 1s après dernière frappe.
 // ============================================================
 
-const NOTES_STORAGE_KEY = "av-personal-notes";
+// 0.58.42 : refonte pour supporter multi-onglets (jusqu'à 4 notes)
+const NOTES_STORAGE_KEY = "av-personal-notes-v2"; // v2 pour migration depuis ancien format string
+const NOTES_LEGACY_KEY = "av-personal-notes"; // ancien format (string simple)
 const NOTES_MAX_LEN = 4000;
+const NOTES_MAX_TABS = 4;
+const NOTES_DEFAULT_LABEL = "Note";
 
-function getNotes() {
-  if (typeof window === "undefined") return "";
-  try { return localStorage.getItem(NOTES_STORAGE_KEY) || ""; } catch { return ""; }
+// Format v2 : { tabs: [{ id, label, text }], activeId }
+function getNotesData() {
+  if (typeof window === "undefined") return { tabs: [{ id: "default", label: NOTES_DEFAULT_LABEL, text: "" }], activeId: "default" };
+  try {
+    // Tentative v2
+    const raw = localStorage.getItem(NOTES_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.tabs && Array.isArray(parsed.tabs) && parsed.tabs.length > 0) {
+        return {
+          tabs: parsed.tabs.slice(0, NOTES_MAX_TABS),
+          activeId: parsed.activeId || parsed.tabs[0].id,
+        };
+      }
+    }
+    // Fallback v1 (string simple) → migration
+    const legacy = localStorage.getItem(NOTES_LEGACY_KEY);
+    if (legacy) {
+      return { tabs: [{ id: "default", label: NOTES_DEFAULT_LABEL, text: legacy }], activeId: "default" };
+    }
+  } catch {}
+  return { tabs: [{ id: "default", label: NOTES_DEFAULT_LABEL, text: "" }], activeId: "default" };
 }
-function setNotes(text) {
+
+function setNotesData(data) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(NOTES_STORAGE_KEY, text.slice(0, NOTES_MAX_LEN)); } catch {}
+  try {
+    // Tronque chaque texte à NOTES_MAX_LEN
+    const safe = {
+      tabs: data.tabs.slice(0, NOTES_MAX_TABS).map(t => ({
+        id: t.id,
+        label: (t.label || NOTES_DEFAULT_LABEL).slice(0, 30),
+        text: (t.text || "").slice(0, NOTES_MAX_LEN),
+      })),
+      activeId: data.activeId,
+    };
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(safe));
+  } catch {}
 }
 
 // Mini-renderer markdown (sécurisé — pas d'injection HTML libre)
-function renderMd(text) {
+function renderMd(text, onToggleCheckbox) {
   if (!text) return null;
   // Escape HTML pour éviter XSS, puis remplace les patterns sûrs
   const esc = text
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   // Lignes
   const blocks = esc.split(/\n\n+/);
+  let globalLineIdx = 0; // index global pour identifier les checkboxes uniquement
+  // Compteur ré-init basé sur l'esc original car les lignes vides ne sont pas comptées dans esc
+  // Mais pour onToggleCheckbox on a besoin de la position dans le texte source (text non-esc)
+  // Simplification : on retrouve la position de chaque checkbox dans le texte original (non escaped)
   return blocks.map((block, i) => {
     const trimmed = block.trim();
     if (!trimmed) return null;
@@ -664,8 +703,48 @@ function renderMd(text) {
     if (trimmed.startsWith("## ")) {
       return <h4 key={i} style={{ margin: "8px 0 4px", fontSize: 13, color: "#142131" }}>{inlineMd(trimmed.slice(3))}</h4>;
     }
-    // Liste bulletée : chaque ligne commence par "- "
     const lines = trimmed.split("\n");
+    // 0.58.42 : check si toutes les lignes sont des checkboxes (- [ ] ou - [x])
+    const allCheckboxes = lines.every(l => /^-\s*\[[\sxX]\]\s/.test(l.trim()));
+    if (allCheckboxes && lines.length >= 1) {
+      return (
+        <ul key={i} style={{ margin: "4px 0", paddingLeft: 4, fontSize: 12.5, listStyle: "none" }}>
+          {lines.map((l, j) => {
+            const m = l.trim().match(/^-\s*\[([\sxX])\]\s(.*)$/);
+            if (!m) return null;
+            const checked = m[1].toLowerCase() === "x";
+            const content = m[2];
+            const lineIdx = globalLineIdx++;
+            return (
+              <li key={j} style={{ marginBottom: 4, display: "flex", alignItems: "flex-start", gap: 6 }}>
+                <span
+                  onClick={() => onToggleCheckbox && onToggleCheckbox(lineIdx)}
+                  style={{
+                    cursor: onToggleCheckbox ? "pointer" : "default",
+                    width: 14, height: 14, borderRadius: 3,
+                    border: `2px solid ${checked ? "#5aa05a" : "#d4c896"}`,
+                    background: checked ? "#5aa05a" : "transparent",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0, marginTop: 2,
+                    transition: "all 150ms",
+                  }}
+                >
+                  {checked && <i className="ti ti-check" style={{ fontSize: 10, color: "#fff" }} />}
+                </span>
+                <span style={{
+                  flex: 1,
+                  color: checked ? "#8a98a8" : "#142131",
+                  textDecoration: checked ? "line-through" : "none",
+                }}>
+                  {inlineMd(content)}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    }
+    // Liste bulletée classique
     const allBullets = lines.every(l => l.trim().startsWith("- "));
     if (allBullets && lines.length >= 1) {
       return (
@@ -737,28 +816,115 @@ function inlineMd(text) {
 }
 
 export function NotesWidget() {
-  const [text, setText] = useState("");
+  const [data, setData] = useState({ tabs: [{ id: "default", label: NOTES_DEFAULT_LABEL, text: "" }], activeId: "default" });
   const [editing, setEditing] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [saveStatus, setSaveStatus] = useState(""); // "" | "saving" | "saved"
 
   useEffect(() => {
-    setText(getNotes());
+    setData(getNotesData());
     setMounted(true);
   }, []);
+
+  // Active tab
+  const activeTab = data.tabs.find(t => t.id === data.activeId) || data.tabs[0];
+  const text = activeTab?.text || "";
 
   // Auto-save debounce 800ms
   useEffect(() => {
     if (!mounted || !editing) return;
     setSaveStatus("saving");
     const t = setTimeout(() => {
-      setNotes(text);
+      setNotesData(data);
       setSaveStatus("saved");
       const t2 = setTimeout(() => setSaveStatus(""), 1200);
       return () => clearTimeout(t2);
     }, 800);
     return () => clearTimeout(t);
-  }, [text, mounted, editing]);
+  }, [data, mounted, editing]);
+
+  function updateActiveText(newText) {
+    setData(prev => ({
+      ...prev,
+      tabs: prev.tabs.map(t => t.id === prev.activeId ? { ...t, text: newText.slice(0, NOTES_MAX_LEN) } : t),
+    }));
+  }
+
+  // 0.58.42 : toggle checkbox dans le texte source par index global (position dans le texte)
+  function toggleCheckbox(targetIdx) {
+    const lines = text.split("\n");
+    let cbIdx = -1;
+    const updated = lines.map(line => {
+      const m = line.match(/^(\s*-\s*\[)([\sxX])(\]\s.*)$/);
+      if (m) {
+        cbIdx++;
+        if (cbIdx === targetIdx) {
+          const wasChecked = m[2].toLowerCase() === "x";
+          return m[1] + (wasChecked ? " " : "x") + m[3];
+        }
+      }
+      return line;
+    });
+    updateActiveText(updated.join("\n"));
+    // Force save immédiat pour les checkboxes (UX)
+    setEditing(true);
+  }
+
+  async function addTab() {
+    if (data.tabs.length >= NOTES_MAX_TABS) {
+      await dialogs.alert({ title: "Limite atteinte", message: `Maximum ${NOTES_MAX_TABS} notes.` });
+      return;
+    }
+    const label = await dialogs.prompt({
+      title: "Nouvelle note",
+      message: "Titre de la note :",
+      placeholder: "Ex : Idées, Sprint en cours, To-do...",
+    });
+    if (!label) return;
+    const newId = `note-${Date.now()}`;
+    setData(prev => ({
+      tabs: [...prev.tabs, { id: newId, label: label.slice(0, 30), text: "" }],
+      activeId: newId,
+    }));
+    setEditing(true);
+  }
+
+  async function renameTab(tabId) {
+    const tab = data.tabs.find(t => t.id === tabId);
+    if (!tab) return;
+    const label = await dialogs.prompt({
+      title: "Renommer la note",
+      message: "Nouveau titre :",
+      defaultValue: tab.label,
+    });
+    if (!label) return;
+    setData(prev => ({
+      ...prev,
+      tabs: prev.tabs.map(t => t.id === tabId ? { ...t, label: label.slice(0, 30) } : t),
+    }));
+  }
+
+  async function deleteTab(tabId) {
+    if (data.tabs.length <= 1) {
+      await dialogs.alert({ title: "Impossible", message: "Au moins une note doit rester." });
+      return;
+    }
+    const tab = data.tabs.find(t => t.id === tabId);
+    const ok = await dialogs.confirm({
+      title: "Supprimer la note",
+      message: `Supprimer "${tab?.label}" et son contenu ?`,
+      okLabel: "Supprimer",
+      okColor: "#c0392b",
+    });
+    if (!ok) return;
+    setData(prev => {
+      const newTabs = prev.tabs.filter(t => t.id !== tabId);
+      return {
+        tabs: newTabs,
+        activeId: prev.activeId === tabId ? newTabs[0].id : prev.activeId,
+      };
+    });
+  }
 
   if (!mounted) return null;
 
@@ -794,12 +960,87 @@ export function NotesWidget() {
         </div>
       </div>
 
+      {/* 0.58.42 : barre d'onglets pour multi-notes */}
+      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10, borderBottom: "1px solid #f0e0a0", paddingBottom: 6, overflowX: "auto" }}>
+        {data.tabs.map(tab => {
+          const isActive = tab.id === data.activeId;
+          return (
+            <div
+              key={tab.id}
+              onClick={() => setData(prev => ({ ...prev, activeId: tab.id }))}
+              style={{
+                padding: "4px 10px",
+                borderRadius: "8px 8px 0 0",
+                fontSize: 11.5,
+                fontWeight: isActive ? 700 : 500,
+                cursor: "pointer",
+                background: isActive ? "#EF9F27" : "transparent",
+                color: isActive ? "#fff" : "#7a4f15",
+                border: isActive ? "1px solid #EF9F27" : "1px solid transparent",
+                borderBottom: isActive ? "1px solid #EF9F27" : "none",
+                whiteSpace: "nowrap",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                transition: "all 150ms",
+                position: "relative",
+                marginBottom: -7,
+              }}
+              title={isActive ? "Cliquez sur ✏ pour renommer ou × pour supprimer" : tab.label}
+            >
+              <span>{tab.label}</span>
+              {isActive && data.tabs.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); renameTab(tab.id); }}
+                  aria-label="Renommer"
+                  style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: 10, display: "inline-flex", alignItems: "center" }}
+                >
+                  <i className="ti ti-pencil" />
+                </button>
+              )}
+              {isActive && data.tabs.length > 1 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); deleteTab(tab.id); }}
+                  aria-label="Supprimer"
+                  style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", padding: 0, fontSize: 11, display: "inline-flex", alignItems: "center" }}
+                >
+                  <i className="ti ti-x" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {data.tabs.length < NOTES_MAX_TABS && (
+          <button
+            onClick={addTab}
+            aria-label="Ajouter une note"
+            title="Ajouter une note"
+            style={{
+              background: "transparent",
+              color: "#EF9F27",
+              border: "1px dashed #f0d59f",
+              padding: "3px 8px",
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 3,
+            }}
+          >
+            <i className="ti ti-plus" /> Nouvelle
+          </button>
+        )}
+      </div>
+
       {editing ? (
         <>
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value.slice(0, NOTES_MAX_LEN))}
-            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;[texte](https://lien)"
+            onChange={(e) => updateActiveText(e.target.value)}
+            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;- [ ] todo&#10;- [x] fait&#10;[texte](https://lien)"
             style={{
               width: "100%",
               minHeight: 140,
@@ -818,18 +1059,18 @@ export function NotesWidget() {
             autoFocus
           />
           <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#8a98a8", display: "flex", justifyContent: "space-between" }}>
-            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, [lien](url)</span>
+            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, - [ ] / [x] todo, [lien](url)</span>
             <span>{text.length} / {NOTES_MAX_LEN}</span>
           </p>
         </>
       ) : (
         <div style={{ minHeight: 60 }}>
           {text.trim() ? (
-            renderMd(text)
+            renderMd(text, toggleCheckbox)
           ) : (
             <p style={{ margin: 0, padding: "20px 12px", textAlign: "center", color: "#8a98a8", fontSize: 12.5, fontStyle: "italic" }}>
               <i className="ti ti-notes-off" style={{ fontSize: 24, display: "block", marginBottom: 6, color: "#f0d59f" }} />
-              Aucune note. Clique sur "Modifier" pour commencer à écrire.
+              Aucune note dans "{activeTab?.label}". Clique sur "Modifier" pour commencer.
             </p>
           )}
         </div>

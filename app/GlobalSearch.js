@@ -40,11 +40,18 @@ const TYPES = {
 // Apparaissent dans la palette dès que la query commence par > ou matche un keyword
 // 0.58.25 : ajout du champ `pageContext` (pattern d'URL où l'action est prioritaire)
 const ACTIONS = [
+  // === Création (page-specific) ===
   { id: "new-patient", lbl: "Créer un patient", icon: "ti-user-plus", color: "#185FA5", url: "/patients?new=1", keywords: ["créer", "patient", "nouveau", "ajouter"], pageContext: /^\/patients/ },
   { id: "new-intervention", lbl: "Créer une intervention", icon: "ti-tools", color: "#e35d5b", url: "/interventions?new=1", keywords: ["créer", "intervention", "di", "nouvelle"], pageContext: /^\/interventions/ },
   { id: "new-signalement", lbl: "Déposer un signalement", icon: "ti-message-plus", color: "#7a6fb0", url: "/signalements?new=1", keywords: ["signalement", "déposer", "déclarer", "incident"], pageContext: /^\/signalements/ },
   { id: "new-achat", lbl: "Nouvelle demande d'achat", icon: "ti-shopping-cart", color: "#EF9F27", url: "/achats?new=1", keywords: ["achat", "commande", "nouveau", "demande"], pageContext: /^\/(achats|commandes)/ },
   { id: "new-transfert", lbl: "Nouveau transfert de matériel", icon: "ti-arrows-exchange", color: "#5aa05a", url: "/transferts?new=1", keywords: ["transfert", "déplacement", "matériel"], pageContext: /^\/transferts/ },
+  // 0.58.42 : actions de création contextuelles supplémentaires
+  { id: "new-materiel", lbl: "Ajouter un matériel", icon: "ti-armchair-2", color: "#185FA5", url: "/materiels?new=1", keywords: ["matériel", "ajouter", "nouveau", "inventaire"], pageContext: /^\/materiels/ },
+  { id: "new-maintenance", lbl: "Planifier une maintenance", icon: "ti-tools", color: "#185FA5", url: "/maintenance?new=1", keywords: ["maintenance", "planifier", "préventif"], pageContext: /^\/maintenance/ },
+  { id: "new-depot", lbl: "Créer un dépôt", icon: "ti-building-warehouse", color: "#5aa05a", url: "/depots?new=1", keywords: ["dépôt", "créer", "stockage"], pageContext: /^\/depots/ },
+
+  // === Navigation globale (toujours dispo) ===
   { id: "goto-accueil", lbl: "Aller à l'accueil", icon: "ti-home", color: "#142131", url: "/accueil", keywords: ["accueil", "home", "dashboard"] },
   { id: "goto-stats", lbl: "Voir les statistiques", icon: "ti-chart-bar", color: "#185FA5", url: "/statistiques", keywords: ["stats", "statistiques", "analyse", "tableau"], pageContext: /^\/statistiques/ },
   { id: "goto-calendrier", lbl: "Calendrier des interventions", icon: "ti-calendar", color: "#7a6fb0", url: "/calendrier", keywords: ["calendrier", "planning", "agenda"], pageContext: /^\/calendrier/ },
@@ -52,9 +59,31 @@ const ACTIONS = [
   { id: "goto-profil", lbl: "Mon profil", icon: "ti-user-circle", color: "#5aa05a", url: "/profil", keywords: ["profil", "compte", "moi", "settings"], pageContext: /^\/profil/ },
   { id: "goto-params", lbl: "Paramètres collectivité", icon: "ti-settings", color: "#142131", url: "/parametres", keywords: ["paramètres", "config", "admin", "settings"], pageContext: /^\/parametres/ },
   { id: "goto-historique", lbl: "Voir l'historique d'activité", icon: "ti-history", color: "#7a6fb0", url: "/historique", keywords: ["historique", "audit", "log", "activité"], pageContext: /^\/historique/ },
+
+  // 0.58.42 : navigation contextuelle supplémentaire
+  { id: "goto-patient-list", lbl: "Liste des patients", icon: "ti-users", color: "#185FA5", url: "/patients", keywords: ["patients", "liste"], pageContext: /^\/patient\/[^/]+$/ },
+  { id: "goto-di-list", lbl: "Liste des demandes d'intervention", icon: "ti-clipboard-list", color: "#e35d5b", url: "/interventions", keywords: ["interventions", "di", "liste"], pageContext: /^\/interventions\/(kanban|presentation)/ },
+  { id: "goto-mat-list", lbl: "Inventaire matériel", icon: "ti-armchair-2", color: "#185FA5", url: "/materiels", keywords: ["matériels", "inventaire", "liste"], pageContext: /^\/materiel\/[^/]+$/ },
+  { id: "goto-collectivite", lbl: "Vue collectivité", icon: "ti-building", color: "#7CC8C8", url: "/collectivite", keywords: ["collectivité", "établissements", "bâtiments"], pageContext: /^\/(collectivite|etablissement)/ },
+  { id: "goto-vue-globale", lbl: "Vue globale", icon: "ti-layout-dashboard", color: "#7CC8C8", url: "/vue-globale", keywords: ["vue globale", "overview", "synthèse"] },
+  { id: "goto-direction", lbl: "Tableau direction", icon: "ti-trending-up", color: "#185FA5", url: "/direction", keywords: ["direction", "pilotage", "kpi", "performance"] },
+  { id: "goto-changelog", lbl: "Notes de version", icon: "ti-list-details", color: "#7a6fb0", url: "/changelog", keywords: ["changelog", "version", "release", "notes", "nouveautés"] },
+
+  // === Modes & toggles globaux ===
   { id: "toggle-presentation", lbl: "Mode présentation (Ctrl+Shift+P)", icon: "ti-presentation", color: "#7a6fb0", url: "#toggle-presentation", keywords: ["présentation", "démo", "demo", "client", "zoom"] },
   { id: "toggle-focus", lbl: "Mode focus zen (Ctrl+Shift+F)", icon: "ti-target", color: "#5aa05a", url: "#toggle-focus", keywords: ["focus", "zen", "concentration", "saisie"] },
   { id: "clear-cache", lbl: "Vider le cache (problème d'affichage)", icon: "ti-refresh", color: "#EF9F27", url: "/profil?tab=securite", keywords: ["cache", "vider", "refresh", "bug", "affichage"] },
+
+  // 0.58.42 : page-actions contextuelles (déclenchent un event au lieu de naviguer)
+  // Le format url "#page-action:xxx" est intercepté côté GlobalSearch et émet un event window
+  { id: "export-patients-csv", lbl: "Exporter les patients en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "patients"], pageContext: /^\/patients/ },
+  { id: "export-di-csv", lbl: "Exporter les DI en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "interventions"], pageContext: /^\/interventions$/ },
+  { id: "export-mat-csv", lbl: "Exporter les matériels en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "matériels"], pageContext: /^\/materiels/ },
+  { id: "export-signal-csv", lbl: "Exporter les signalements en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "signalements"], pageContext: /^\/signalements/ },
+
+  { id: "toggle-ctx-filter", lbl: "Activer/désactiver le filtre par contexte", icon: "ti-eye", color: "#7CC8C8", url: "#page-action:toggle-ctx-filter", keywords: ["contexte", "filtre", "bâtiment", "service", "ctx"], pageContext: /^\/(patients|interventions|materiels|maintenance)/ },
+
+  { id: "open-new", lbl: "Action principale de la page", icon: "ti-plus", color: "#185FA5", url: "#page-action:open-new", keywords: ["créer", "nouveau", "ajouter"], pageContext: /^\/(patients|interventions|materiels|maintenance|signalements|achats|commandes|transferts|depots)/ },
 ];
 
 // Trouve les actions qui matchent la query
@@ -446,6 +475,17 @@ export default function GlobalSearch() {
                       if (a.url === "#toggle-focus") {
                         const { toggleFocusMode } = await import("../lib/focusMode");
                         toggleFocusMode();
+                        setOpen(false);
+                        return;
+                      }
+                      // 0.58.42 : page-action — émet un event window que la page courante peut écouter
+                      if (a.url.startsWith("#page-action:")) {
+                        const actionName = a.url.slice("#page-action:".length);
+                        try {
+                          window.dispatchEvent(new CustomEvent("av-page-action", {
+                            detail: { action: actionName, path: pathname },
+                          }));
+                        } catch {}
                         setOpen(false);
                         return;
                       }

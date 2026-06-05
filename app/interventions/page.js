@@ -7,6 +7,8 @@ import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
 // 0.58.39 : hook réutilisable pour le contexte bâtiment/service de la TopBar
 import { useCurrentContext } from "../../lib/useCurrentContext";
+// 0.58.42 : hook pour écouter les page-actions du Cmd+K
+import { usePageAction } from "../../lib/usePageAction";
 import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -75,6 +77,9 @@ export default function Interventions() {
   const [form, setForm] = useState({ type: "Panne / réparation", urgence: "Normal" });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // 0.58.42 : page-actions du Cmd+K
+  usePageAction("open-new", () => { setErr(""); setModal(true); });
+  usePageAction("toggle-ctx-filter", () => { ctx.toggle(); });
   // Alpha 0.6 : assignation DI
   const [assignModal, setAssignModal] = useState(null);   // {di} ou null
   const [usersList, setUsersList] = useState([]);          // utilisateurs de la collectivité

@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+// 0.58.42 : filtre par contexte bâtiment/service (hook réutilisable depuis 0.58.39)
+import { useCurrentContext } from "../../lib/useCurrentContext";
+// 0.58.42 : hook pour écouter les page-actions du Cmd+K
+import { usePageAction } from "../../lib/usePageAction";
 import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -121,6 +125,41 @@ export default function MaintenancePage() {
   const [busy, setBusy] = useState(false);
   // Filtre statut
   const [fStatut, setFStatut] = useState("");
+  // 0.58.42 : filtre par contexte bât/svc (via matériel → patient → chambre)
+  const ctx = useCurrentContext();
+  const [ctxMaterielIds, setCtxMaterielIds] = useState(null);
+  useEffect(() => {
+    if (!ctx.batimentId && !ctx.serviceId) {
+      setCtxMaterielIds(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        // Chambres du contexte → patient_ids → matériel_ids assignés à ces patients
+        let chq = supabase.from("chambres").select("id, service_id, batiment_id");
+        if (ctx.serviceId) chq = chq.eq("service_id", ctx.serviceId);
+        else if (ctx.batimentId) chq = chq.eq("batiment_id", ctx.batimentId);
+        const { data: chambres } = await chq;
+        if (!alive || !chambres) return;
+        const chambreIds = chambres.map(c => c.id);
+        if (chambreIds.length === 0) { setCtxMaterielIds(new Set()); return; }
+        const { data: pats } = await supabase.from("patients").select("id").in("chambre_id", chambreIds);
+        if (!alive) return;
+        const patientIds = (pats || []).map(p => p.id);
+        if (patientIds.length === 0) { setCtxMaterielIds(new Set()); return; }
+        const { data: mats } = await supabase.from("materiels").select("id").in("patient_id", patientIds);
+        if (!alive) return;
+        setCtxMaterielIds(new Set((mats || []).map(m => m.id)));
+      } catch {
+        if (alive) setCtxMaterielIds(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, [ctx.batimentId, ctx.serviceId]);
+  // 0.58.42 : page-actions du Cmd+K (openNew est hoisté plus bas)
+  usePageAction("open-new", () => openNew());
+  usePageAction("toggle-ctx-filter", () => ctx.toggle());
   // Alpha 0.41.0 : stats par type
   const [statsParType, setStatsParType] = useState([]);
   // Alpha 0.43.0 : mode d'affichage (liste / calendrier)
@@ -380,7 +419,15 @@ export default function MaintenancePage() {
   if (!auth.ready) return null;
 
   // Application du filtre statut côté client (calcul du statut effectif)
-  const filtered = fStatut ? rows.filter((r) => statutEffectif(r) === fStatut) : rows;
+  const filtered = (() => {
+    let r = rows;
+    if (fStatut) r = r.filter((row) => statutEffectif(row) === fStatut);
+    // 0.58.42 : filtre par contexte bâtiment/service via matériel
+    if (ctx.active && ctxMaterielIds) {
+      r = r.filter((row) => row.materiel_id && ctxMaterielIds.has(row.materiel_id));
+    }
+    return r;
+  })();
 
   // KPIs : compte par statut effectif
   const compteStatuts = {};
@@ -497,6 +544,32 @@ export default function MaintenancePage() {
             {auth.can("ecrire") && <NeonButton variant="blue" icon="ti-plus" onClick={openNew}>Planifier une maintenance</NeonButton>}
             <Btn variant="ghost" icon="ti-file-type-pdf" onClick={() => exportPdfMaintenance(filtered, auth)}>Export PDF planning</Btn>
             {fStatut && <Btn variant="ghost" icon="ti-x" onClick={() => setFStatut("")}>Effacer filtre</Btn>}
+            {/* 0.58.42 : toggle filtre contexte bât/svc (apparait si contexte défini) */}
+            {(ctx.batimentId || ctx.serviceId) && (
+              <button
+                onClick={ctx.toggle}
+                title="Filtre selon le bâtiment/service courant choisi dans la TopBar"
+                style={{
+                  borderColor: ctx.active ? "#7CC8C8" : "#e3e9ee",
+                  background: ctx.active ? "rgba(124,200,200,.12)" : "#fff",
+                  color: ctx.active ? "#1c5454" : "#6c7a89",
+                  border: "1px solid",
+                  padding: "5px 10px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontWeight: 600,
+                }}
+              >
+                <i className={`ti ${ctx.active ? "ti-eye" : "ti-eye-off"}`} />
+                {ctx.active ? "Contexte ON" : "Filtrer par contexte"}
+                {ctx.active && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
+              </button>
+            )}
             {/* Alpha 0.43.0 : toggle vue */}
             <div style={{ marginLeft: "auto", display: "flex", gap: 4, background: "#f4f7fa", padding: 3, borderRadius: 8 }}>
               <button

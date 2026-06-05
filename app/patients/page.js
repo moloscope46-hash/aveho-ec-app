@@ -13,6 +13,8 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
 import { fmtDate } from "../../lib/format";
+// 0.58.42 : hook pour écouter les page-actions du Cmd+K
+import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
 import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
@@ -211,6 +213,30 @@ export default function Patients() {
   function openNew() {
     setForm({}); setModal({}); setErr("");
   }
+  // 0.58.42 : export CSV factorisé pour pouvoir l'appeler depuis Cmd+K
+  async function exportPatientsCsv() {
+    const { exportRows } = await import("../../lib/exportExcel");
+    await exportRows(rows || [], {
+      filename: `patients_${new Date().toISOString().slice(0,10)}`,
+      sheetName: "Patients",
+      columns: {
+        "Nom": "nom",
+        "Prénom": "prenom",
+        "Date naissance": (r) => r.date_naissance || "",
+        "Chambre": (r) => r.chambre || "",
+        "Service": (r) => r.services?.nom || "",
+        "Étage": (r) => r.etages?.nom || "",
+        "État": (r) => r.etat || "",
+        "Téléphone": (r) => r.telephone || "",
+        "Email": (r) => r.email || "",
+        "Référent": (r) => r.referent_nom || "",
+      },
+    });
+  }
+  // 0.58.42 : page-actions du Cmd+K
+  usePageAction("open-new", () => openNew());
+  usePageAction("export-csv", () => exportPatientsCsv());
+  usePageAction("toggle-ctx-filter", () => setCtxFilter(p => ({ ...p, active: !p.active })));
   function openEdit(r) {
     const lit = litDuPatient(r.id);
     setForm({ ...r, lit_id: lit?.id || "" });
@@ -354,25 +380,7 @@ export default function Patients() {
             {/* 0.55.11 (AI) : Export CSV */}
             <button
               className="btn-ghost"
-              onClick={async () => {
-                const { exportRows } = await import("../../lib/exportExcel");
-                await exportRows(rows || [], {
-                  filename: `patients_${new Date().toISOString().slice(0,10)}`,
-                  sheetName: "Patients",
-                  columns: {
-                    "Nom": "nom",
-                    "Prénom": "prenom",
-                    "Date naissance": (r) => r.date_naissance || "",
-                    "Chambre": (r) => r.chambre || "",
-                    "Service": (r) => r.services?.nom || "",
-                    "Étage": (r) => r.etages?.nom || "",
-                    "État": (r) => r.etat || "",
-                    "Téléphone": (r) => r.telephone || "",
-                    "Email": (r) => r.email || "",
-                    "Référent": (r) => r.referent_nom || "",
-                  },
-                });
-              }}
+              onClick={exportPatientsCsv}
               title="Exporter la liste en CSV (ouvrable dans Excel/Calc)"
             >
               <i className="ti ti-file-spreadsheet" /> Excel

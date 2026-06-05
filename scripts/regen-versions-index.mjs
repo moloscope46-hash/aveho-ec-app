@@ -12,13 +12,18 @@
 // =============================================================
 
 import fs from "fs/promises";
+import os from "os";
+import path from "path";
+import { pathToFileURL } from "url";
 
 // On lit versions-data.js, on enlève l'import logger inutile,
 // on l'écrit dans un tmp, puis on l'importe.
+// 0.58.42 : tmp cross-platform (os.tmpdir au lieu de /tmp codé en dur) + import via file:// URL (Windows)
 const raw = await fs.readFile("app/changelog/versions-data.js", "utf-8");
 const cleaned = raw.replace(/^import .+? from .+?logger.+?;?\n/, "");
-await fs.writeFile("/tmp/vd-regen.mjs", cleaned);
-const vd = await import("/tmp/vd-regen.mjs");
+const tmpFile = path.join(os.tmpdir(), `vd-regen-${process.pid}.mjs`);
+await fs.writeFile(tmpFile, cleaned);
+const vd = await import(pathToFileURL(tmpFile).href);
 
 const versions = vd.ALL_VERSIONS;
 

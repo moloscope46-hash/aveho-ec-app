@@ -123,7 +123,8 @@ describe("0.58.40 - NotesWidget : bloc-notes markdown léger", () => {
   });
 
   it("Storage key 'av-personal-notes' (purgeable au logout)", () => {
-    expect(src).toMatch(/NOTES_STORAGE_KEY\s*=\s*["']av-personal-notes["']/);
+    // 0.58.42 : assoupli — tolère un suffixe de version (av-personal-notes-v2 après migration multi-onglets), préfixe av- conservé
+    expect(src).toMatch(/NOTES_STORAGE_KEY\s*=\s*["']av-personal-notes[^"']*["']/);
   });
 
   it("Max length 4000 caractères", () => {

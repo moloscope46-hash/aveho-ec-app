@@ -109,7 +109,8 @@ describe("0.58.39 - lib/dashboardLayout : widget meteo ajouté", () => {
   });
 
   it("DEFAULT_ORDER inclut meteo en dernier", () => {
-    expect(src).toMatch(/DEFAULT_ORDER\s*=\s*\[[^\]]*"meteo"\]/);
+    // 0.58.42 : assoupli — meteo présent dans DEFAULT_ORDER (d'autres widgets opt-in peuvent suivre, ex. notes)
+    expect(src).toMatch(/DEFAULT_ORDER\s*=\s*\[[^\]]*"meteo"[^\]]*\]/);
   });
 });
 

@@ -1,0 +1,322 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.42</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #3a3520 0%, #1a1812 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(239,159,39,.5)}70%{box-shadow:0 0 0 10px rgba(239,159,39,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.amber{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(239,159,39,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(239,159,39,.30),rgba(124,200,200,.20));backdrop-filter:blur(30px);border:1px solid rgba(239,159,39,.28);box-shadow:0 30px 80px rgba(58,53,32,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5d49f;font-weight:700;background:rgba(239,159,39,.14);border:1px solid rgba(239,159,39,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#EF9F27;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#EF9F27;text-shadow:0 0 18px rgba(239,159,39,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#f5d49f;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#f5d49f}
+.meta b{color:#fff}
+.meta code{background:rgba(239,159,39,.12);color:#f5d49f;border:1px solid rgba(239,159,39,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#EF9F27,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(239,159,39,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(239,159,39,.12);color:#EF9F27;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #EF9F27}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO Notes multi-tabs */
+.notes-card{background:linear-gradient(135deg,#fffef0 0%,#fff 100%);border:1px solid #f0e0a0;border-radius:14px;padding:18px;color:#142131;margin:14px 0;max-width:600px}
+.notes-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.notes-head h3{margin:0;font-size:15px;color:#7a4f15}
+.notes-tabs{display:flex;align-items:center;gap:4px;margin-bottom:10px;border-bottom:1px solid #f0e0a0;padding-bottom:6px}
+.notes-tab{padding:4px 10px;border-radius:8px 8px 0 0;font-size:11.5px;font-weight:500;color:#7a4f15;border:1px solid transparent;background:transparent;display:inline-flex;align-items:center;gap:4px;cursor:pointer;margin-bottom:-7px}
+.notes-tab.active{background:#EF9F27;color:#fff;font-weight:700;border:1px solid #EF9F27}
+.notes-tab.add{background:transparent;color:#EF9F27;border:1px dashed #f0d59f;border-radius:6px;font-size:11}
+.notes-content h4{margin:8px 0 4px;font-size:13px;color:#142131}
+.notes-content p{margin:4px 0;font-size:12.5px;line-height:1.45}
+.notes-content ul.checklist{list-style:none;padding-left:4px;margin:4px 0}
+.notes-content ul.checklist li{display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;font-size:12.5px}
+.checkbox{width:14px;height:14px;border-radius:3px;border:2px solid #d4c896;background:transparent;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.checkbox.checked{background:#5aa05a;border-color:#5aa05a}
+.checkbox.checked::after{content:"✓";color:#fff;font-size:10px;font-weight:700}
+.todo-text.done{color:#8a98a8;text-decoration:line-through}
+
+/* DEMO Cmd+K */
+.cmdk-card{background:#fff;border-radius:14px;padding:0;color:#142131;max-width:520px;margin:14px 0;box-shadow:0 8px 30px rgba(0,0,0,.30);overflow:hidden}
+.cmdk-input{padding:14px 18px;border-bottom:1px solid #e3e9ee;font-size:14px;color:#8a98a8}
+.cmdk-input::before{content:"⌘ ";margin-right:6px}
+.cmdk-section{padding:10px 14px;border-bottom:1px solid #f4f7fa}
+.cmdk-section h4{margin:0 0 6px;font-size:11px;font-weight:700;color:#142131;text-transform:uppercase;letter-spacing:.5px}
+.cmdk-action{padding:8px 10px;display:flex;align-items:center;gap:12px;border-radius:8px;cursor:pointer;font-size:12.5px}
+.cmdk-action:hover{background:#eaf7f7}
+.cmdk-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.cmdk-content{flex:1}
+.cmdk-content .title{font-weight:600}
+.cmdk-content .sub{font-size:10px;color:#8a98a8;margin-top:2px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(239,159,39,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob amber"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.42</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.42 — Notes ×4 + checkboxes + filtre /maintenance + Cmd+K page-actions<small>Onglets multiples · To-do lists interactives · 30 actions Cmd+K · Hook usePageAction</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.42-alpha</code></span>
+    <span><b>Tests :</b> ~4395 verts estimés</span>
+  </div>
+</header>
+
+<h2>📝 1. Notes : multi-onglets (jusqu'à 4)</h2>
+
+<div class="panel">
+<p style="margin:0">Le widget Notes accepte maintenant <b>jusqu'à 4 notes thématiques</b>. Migration automatique depuis l'ancien format string. Renomme / supprime un onglet à la volée.</p>
+</div>
+
+<div class="notes-card">
+<div class="notes-head">
+  <h3>📝 Mes notes</h3>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:10.5px;color:#5aa05a">✓ Enregistré</span>
+    <button style="background:transparent;color:#EF9F27;border:1px solid #f0d59f;padding:4px 10px;border-radius:8px;font-size:11.5px;font-weight:600">✏ Modifier</button>
+  </div>
+</div>
+<div class="notes-tabs">
+  <div class="notes-tab">Idées</div>
+  <div class="notes-tab active">Sprint 0.58 <span style="font-size:10">✏</span> <span style="font-size:11">✕</span></div>
+  <div class="notes-tab">Bugs</div>
+  <div class="notes-tab">Roadmap</div>
+  <div class="notes-tab add">+ Nouvelle</div>
+</div>
+<div class="notes-content">
+<h4>Sprint 0.58 — En cours</h4>
+<ul class="checklist">
+<li><span class="checkbox checked"></span><span class="todo-text done">Refactor Crud avec extraFilter</span></li>
+<li><span class="checkbox checked"></span><span class="todo-text done">Widget Notes basique</span></li>
+<li><span class="checkbox checked"></span><span class="todo-text done">Multi-onglets Notes</span></li>
+<li><span class="checkbox checked"></span><span class="todo-text done">Checkboxes interactives</span></li>
+<li><span class="checkbox"></span><span class="todo-text">Étendre filtre contexte à /signalements</span></li>
+<li><span class="checkbox"></span><span class="todo-text">Widget Mes objectifs</span></li>
+</ul>
+</div>
+</div>
+
+<h2>☑️ 2. Checkboxes to-do interactives</h2>
+
+<div class="panel">
+<p style="margin:0">Syntaxe markdown : <code>- [ ] truc à faire</code> (vide) ou <code>- [x] truc fait</code> (coché). En mode preview, <b>cliquer sur une case toggle l'état</b> directement dans le texte source — pas besoin de passer en édition.</p>
+</div>
+
+<pre>// 0.58.42 - mini-parser étendu pour checkboxes
+const allCheckboxes = lines.every(l =&gt;
+  /^-\s*\[[\sxX]\]\s/.test(l.trim())
+);
+
+if (allCheckboxes) {
+  return (
+    &lt;ul style={{ listStyle: 'none' }}&gt;
+      {lines.map(l =&gt; {
+        const m = l.trim().match(/^-\s*\[([\sxX])\]\s(.*)$/);
+        const checked = m[1].toLowerCase() === 'x';
+        return (
+          &lt;li&gt;
+            &lt;span onClick={() =&gt; onToggleCheckbox(lineIdx)}
+                  style={{
+                    border: `2px solid ${checked ? '#5aa05a' : '#d4c896'}`,
+                    background: checked ? '#5aa05a' : 'transparent',
+                    cursor: 'pointer',
+                  }}&gt;
+              {checked &amp;&amp; '✓'}
+            &lt;/span&gt;
+            &lt;span style={{
+              textDecoration: checked ? 'line-through' : 'none',
+              color: checked ? '#8a98a8' : '#142131',
+            }}&gt;{content}&lt;/span&gt;
+          &lt;/li&gt;
+        );
+      })}
+    &lt;/ul&gt;
+  );
+}
+
+// Fonction toggleCheckbox : flip ' ' &lt;-&gt; 'x' à l'index N
+function toggleCheckbox(targetIdx) {
+  let cbIdx = -1;
+  const updated = text.split('\n').map(line =&gt; {
+    const m = line.match(/^(\s*-\s*\[)([\sxX])(\]\s.*)$/);
+    if (m) {
+      cbIdx++;
+      if (cbIdx === targetIdx) {
+        return m[1] + (m[2].toLowerCase() === 'x' ? ' ' : 'x') + m[3];
+      }
+    }
+    return line;
+  });
+  updateActiveText(updated.join('\n'));
+}</pre>
+
+<h2>🔍 3. Filtre contexte sur /maintenance (4e page)</h2>
+
+<div class="panel">
+<p style="margin:0">Pattern hooks étendu à <code>/maintenance</code>. Particularité : <b>3 niveaux de jointure</b> Supabase car les maintenances sont rattachées à des matériels qui sont rattachés à des patients qui sont dans des chambres :</p>
+<p style="margin:8px 0 0;font-size:13px;color:#bfe6e6;text-align:center"><code>chambres</code> → <code>patients</code> → <code>matériels</code> → <code>maintenances</code></p>
+</div>
+
+<pre>// 0.58.42 - app/maintenance/page.js
+const ctx = useCurrentContext();
+const [ctxMaterielIds, setCtxMaterielIds] = useState(null);
+
+useEffect(() =&gt; {
+  if (!ctx.batimentId &amp;&amp; !ctx.serviceId) { setCtxMaterielIds(null); return; }
+  (async () =&gt; {
+    // 1) Chambres du contexte
+    const { data: chambres } = await supabase.from('chambres').select('id')
+      .eq(ctx.serviceId ? 'service_id' : 'batiment_id', ctx.serviceId || ctx.batimentId);
+
+    // 2) Patients dans ces chambres
+    const { data: pats } = await supabase.from('patients').select('id')
+      .in('chambre_id', chambres.map(c =&gt; c.id));
+
+    // 3) Matériels assignés à ces patients
+    const { data: mats } = await supabase.from('materiels').select('id')
+      .in('patient_id', pats.map(p =&gt; p.id));
+
+    setCtxMaterielIds(new Set(mats.map(m =&gt; m.id)));
+  })();
+}, [ctx.batimentId, ctx.serviceId]);
+
+// Filtre
+const filtered = (() =&gt; {
+  let r = rows;
+  if (fStatut) r = r.filter(row =&gt; statutEffectif(row) === fStatut);
+  if (ctx.active &amp;&amp; ctxMaterielIds) {
+    r = r.filter(row =&gt; row.materiel_id &amp;&amp; ctxMaterielIds.has(row.materiel_id));
+  }
+  return r;
+})();</pre>
+
+<div class="panel ok">
+<p style="margin:0"><b>Bilan filtre contexte</b> : déployé sur <b>4 pages</b> maintenant — <code>/patients</code>, <code>/interventions</code>, <code>/materiels</code>, <code>/maintenance</code>.</p>
+</div>
+
+<h2>🎯 4. Cmd+K : page-actions contextuelles</h2>
+
+<div class="panel">
+<p style="margin:0">Cmd+K passe de <b>16 → 30 actions</b>. Nouveauté : <b>5 page-actions custom</b> avec URL <code>#page-action:xxx</code> qui déclenchent un comportement sur la page courante (export CSV, toggle filtre, ouvrir modal de création) <b>sans navigation</b>.</p>
+</div>
+
+<div class="cmdk-card">
+<div class="cmdk-input">Tapez une commande…</div>
+<div class="cmdk-section">
+  <h4>⚡ Sur cette page · /patients</h4>
+  <div class="cmdk-action">
+    <span class="cmdk-icon" style="background:#185FA522;color:#185FA5">👤</span>
+    <div class="cmdk-content">
+      <div class="title">Créer un patient</div>
+      <div class="sub">→ Ouvre la fenêtre de création</div>
+    </div>
+  </div>
+  <div class="cmdk-action">
+    <span class="cmdk-icon" style="background:#5aa05a22;color:#5aa05a">📊</span>
+    <div class="cmdk-content">
+      <div class="title">Exporter les patients en CSV</div>
+      <div class="sub">→ #page-action:export-csv</div>
+    </div>
+  </div>
+  <div class="cmdk-action">
+    <span class="cmdk-icon" style="background:#7CC8C822;color:#7CC8C8">👁</span>
+    <div class="cmdk-content">
+      <div class="title">Activer/désactiver le filtre par contexte</div>
+      <div class="sub">→ #page-action:toggle-ctx-filter</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<h2>🪝 5. Hook usePageAction (event bus)</h2>
+
+<div class="panel">
+<p style="margin:0">Pattern découplé via <code>window.dispatchEvent</code>. Cmd+K émet, les pages écoutent. Pas besoin de modifier GlobalSearch quand on ajoute une action.</p>
+</div>
+
+<pre>// 0.58.42 - lib/usePageAction.js (NEW)
+import { useEffect } from "react";
+
+export function usePageAction(actionName, handler) {
+  useEffect(() =&gt; {
+    if (!actionName || !handler) return;
+    function onPageAction(e) {
+      if (e?.detail?.action === actionName) {
+        handler();
+      }
+    }
+    window.addEventListener("av-page-action", onPageAction);
+    return () =&gt; window.removeEventListener("av-page-action", onPageAction);
+  }, [actionName, handler]);
+}
+
+// Côté GlobalSearch : émetteur
+if (a.url.startsWith("#page-action:")) {
+  const actionName = a.url.slice("#page-action:".length);
+  window.dispatchEvent(new CustomEvent("av-page-action", {
+    detail: { action: actionName, path: pathname },
+  }));
+  setOpen(false);
+  return;
+}
+
+// Côté pages : écouteur
+usePageAction("open-new", () =&gt; openNew());
+usePageAction("export-csv", () =&gt; exportPatientsCsv());
+usePageAction("toggle-ctx-filter", () =&gt; ctx.toggle());</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Notes</b> : 4 onglets max, checkboxes interactives, migration auto v1→v2</li>
+<li><b>Filtre contexte</b> sur 4 pages : <code>/patients</code> · <code>/interventions</code> · <code>/materiels</code> · <code>/maintenance</code></li>
+<li><b>Cmd+K</b> : 30 actions (vs 16) dont 5 page-actions</li>
+<li><b>Hook <code>usePageAction</code></b> : event bus découplé pour les actions de page</li>
+<li><b>+33 tests</b> Vitest (~4395 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4395 verts attendus
+npm run build           # OK attendu (build Vercel restauré en 0.58.41)
+git add -A
+git commit -m "Alpha 0.58.42 - Notes multi-onglets + checkboxes to-do + filtre /maintenance + Cmd+K page-actions"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.43+)</h2>
+<div class="panel">
+<ul>
+<li>Étendre <code>usePageAction("export-csv")</code> à <code>/materiels</code>, <code>/maintenance</code>, <code>/interventions</code> (factoriser les exports)</li>
+<li>Widget <b>🎯 Mes objectifs</b> avec progress bars et milestones</li>
+<li>Drag&drop pour réordonner les colonnes du tableau Crud (dans paramètres profil)</li>
+<li>Notes : raccourci clavier <code>Ctrl+T</code> pour cocher la case du curseur en mode édition</li>
+<li>Filtre contexte sur <code>/signalements</code> (à voir si le schéma le permet)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.42 · 5 juin 2026 · MULTI-NOTES + CHECKBOXES + CMD+K BUS</footer>
+</div>
+
+</body></html>
