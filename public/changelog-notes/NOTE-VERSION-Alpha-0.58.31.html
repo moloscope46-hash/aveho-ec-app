@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.31 — Refonte fiche groupement + raccourcis</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-30px,40px) scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shortcut-stagger{from{opacity:0;transform:translateX(-20px) scale(0.6)}to{opacity:1;transform:translateX(0) scale(1)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.35),rgba(124,200,200,.25));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);overflow:hidden;animation:fadeup .7s cubic-bezier(.2,.8,.2,1)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.2;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:24px;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8);box-shadow:0 0 12px rgba(24,95,165,.5)}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30)}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.2px;line-height:1.6;border-left:3px solid #185FA5;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 24px rgba(24,95,165,.08) inset}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:28px 0}
+.top-kpi{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.2);border-radius:14px;padding:20px 16px;text-align:center;backdrop-filter:blur(20px);position:relative;overflow:hidden}
+.top-kpi-val{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff}
+.top-kpi-lbl{font-size:11px;color:#8aa0b0;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;font-weight:600}
+
+/* DEMO 1 : Sirene dropdown */
+.sirene-demo{background:#f4f7fa;border-radius:14px;padding:24px;margin:18px 0;position:relative;min-height:340px}
+.sirene-input{background:#fff;border:1px solid #e3e9ee;border-radius:8px;padding:10px 14px 10px 36px;font-size:13.5px;width:100%;color:#142131;position:relative}
+.sirene-search-icn{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8a98a8;font-size:16px}
+.sirene-tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:14px}
+.sirene-tile{background:#fff;border:1px solid #e3e9ee;border-radius:10px;padding:12px;color:#142131;font-size:12.5px}
+.sirene-dropdown-fake{position:absolute;left:24px;right:24px;top:74px;background:#fff;border:1px solid #e3e9ee;border-radius:10px;box-shadow:0 12px 32px rgba(20,33,49,.15);max-height:240px;overflow:hidden;z-index:10}
+.sirene-dropdown-head{padding:6px 12px;font-size:10px;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px;font-weight:700;background:#fffaf2;border-bottom:1px solid #f0f0f0}
+.sirene-dropdown-item{padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#142131;cursor:pointer}
+.sirene-dropdown-item:hover{background:#eef5fc}
+.sirene-dropdown-item b{color:#185FA5}
+
+/* DEMO 2 : tuile établissement */
+.etab-tile{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:14px;color:#142131;max-width:290px;margin:14px auto}
+.etab-tile-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.etab-tile-ico{width:38px;height:38px;border-radius:10px;background:#eef5fc;color:#185FA5;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.etab-tile-name{font-weight:700;font-size:14px}
+.etab-tile-sub{font-size:11px;color:#6c7a89;margin-top:1px}
+.etab-tile-badge{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.etab-tile-badge span{font-size:10px;font-weight:600;padding:1px 6px;border-radius:6px}
+.etab-tile-actions{display:flex;gap:6px;margin-top:10px;font-size:11px}
+.etab-action{flex:1;padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;font-weight:600}
+.etab-action.batiments{background:#eef5fc;color:#185FA5}
+.etab-action.equipe{background:#f4f0fa;color:#7a6fb0;cursor:pointer}
+.etab-action.equipe:hover{background:#e8e0f3}
+
+/* DEMO 3 : menu haut-gauche */
+.menu-demo{position:relative;background:linear-gradient(135deg,#1a2a3a,#0d1b28);border-radius:14px;padding:80px 30px 30px;margin:18px 0;min-height:200px;overflow:hidden}
+.menu-demo .topbar{position:absolute;top:0;left:0;right:0;height:50px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(124,200,200,.10);display:flex;align-items:center;padding:0 20px;color:#bfe6e6;font-weight:700;font-size:12px;letter-spacing:.5px}
+.menu-row{display:flex;gap:10px;align-items:center}
+.menu-btn{width:48px;height:48px;border-radius:16px;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;cursor:pointer;border:1px solid rgba(255,255,255,.15)}
+.menu-btn.main{background:linear-gradient(135deg,#142131,#243044);box-shadow:0 8px 24px rgba(20,33,49,.40),0 0 24px rgba(124,200,200,.30)}
+.menu-btn.violet{background:linear-gradient(135deg,#7a6fb0,#5a4a90);box-shadow:0 6px 18px rgba(122,111,176,.55);animation:shortcut-stagger .4s 0s backwards}
+.menu-btn.blue{background:linear-gradient(135deg,#2a7ed1,#185FA5);box-shadow:0 6px 18px rgba(24,95,165,.55);animation:shortcut-stagger .4s 60ms backwards}
+.menu-btn.amber{background:linear-gradient(135deg,#f5b144,#EF9F27);box-shadow:0 6px 18px rgba(239,159,39,.55);animation:shortcut-stagger .4s 120ms backwards}
+
+/* DEMO 4 : profil config */
+.cfg-demo{background:linear-gradient(135deg,#f0fafa 0%,#fff 100%);border:1px solid #bce0e0;border-left:4px solid #7CC8C8;border-radius:14px;padding:20px;margin:18px 0;color:#142131}
+.cfg-preview{display:flex;gap:12px;padding:16px;background:linear-gradient(135deg,#142131,#243044);border-radius:12px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.cfg-preview .info{margin-left:auto;font-size:11px;color:rgba(191,230,230,.7);font-style:italic}
+.cfg-editor{background:#fff;border:1px solid #d8e2ea;border-radius:12px;padding:16px;margin-top:10px}
+.cfg-fld{margin-bottom:10px}
+.cfg-fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;color:#142131}
+.cfg-fld input{width:100%;padding:8px 12px;border:1px solid #d8e2ea;border-radius:8px;font-size:13px;font-family:inherit}
+.cfg-swatches{display:flex;gap:8px;flex-wrap:wrap}
+.cfg-swatch{width:38px;height:38px;border-radius:10px;border:1px solid rgba(0,0,0,.1);cursor:pointer}
+.cfg-swatch.active{border:2px solid #142131;transform:scale(1.1)}
+.cfg-icons{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:8px;background:#f4f7fa;border-radius:8px;margin-top:6px}
+.cfg-icon{aspect-ratio:1;border-radius:8px;background:#fff;color:#5a6878;border:1px solid #e3e9ee;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer}
+.cfg-icon.active{background:#185FA5;color:#fff;border-color:#185FA5}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>FICHE GROUPEMENT + RACCOURCIS · 0.58.31</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.31 — Refonte fiche groupement + menu raccourcis configurable<small>SireneSearch z-index fix · Partenaires retirés · Icône Équipe sur tuiles · Bouton créer établissement · Menu haut-gauche · Config /profil (URL + icône + couleur)</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.31-alpha</code></span>
+    <span><b>Tests :</b> ~4150 estimés (build/test en local)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Demandes traitées</div></div>
+  <div class="top-kpi"><div class="top-kpi-val">1</div><div class="top-kpi-lbl">Bug fix prod</div></div>
+  <div class="top-kpi"><div class="top-kpi-val">28</div><div class="top-kpi-lbl">Icônes configurables</div></div>
+  <div class="top-kpi"><div class="top-kpi-val">+30</div><div class="top-kpi-lbl">Tests Vitest</div></div>
+</div>
+
+<div class="panel warn">
+<p style="margin:0"><b>⚠ À noter :</b> sandbox npm bloqué (403). Le code est complet, les 30 tests écrits, mais <b>build + tests à exécuter en local côté Cédric</b>.</p>
+</div>
+
+<h2>🔍 1. SireneSearch : dropdown au-dessus de tout — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Le dropdown des résultats SIRENE est désormais porté dans <code>document.body</code> via <code>createPortal</code> avec position calculée. Z-index 99999 → passe au-dessus de toutes les tuiles.</p>
+</div>
+
+<div class="sirene-demo">
+  <div style="position:relative">
+    <i class="ti ti-search sirene-search-icn"></i>
+    <input class="sirene-input" value="bastide" readonly />
+  </div>
+  <div class="sirene-dropdown-fake">
+    <div class="sirene-dropdown-head">3 résultats dans la base SIRENE</div>
+    <div class="sirene-dropdown-item">
+      <b>BASTIDE MEDICAL</b> · 30 ROUTE DE MONTPELLIER, 34740 VENDARGUES
+      <div style="font-size:11px;color:#6c7a89;margin-top:2px">SIRET <code>34029415700050</code> · SIREN <code>340294157</code></div>
+    </div>
+    <div class="sirene-dropdown-item">
+      <b>BASTIDE LE CONFORT MEDICAL</b> · 12 AVENUE DE LA VOULTE, 34000 MONTPELLIER
+      <div style="font-size:11px;color:#6c7a89;margin-top:2px">SIRET <code>34029415700068</code></div>
+    </div>
+    <div class="sirene-dropdown-item">
+      <b>HARMONIE MEDICAL SERVICE</b> · 130 RUE D'ALAIS, 71000 MACON
+      <div style="font-size:11px;color:#6c7a89;margin-top:2px">SIRET <code>52456789200012</code></div>
+    </div>
+  </div>
+  <div class="sirene-tile-grid" style="margin-top:120px">
+    <div class="sirene-tile">🏥 EHPAD Les Pins · Saint-Céré</div>
+    <div class="sirene-tile">🏥 Maison Retraite · Figeac</div>
+    <div class="sirene-tile">🏥 EHPAD Le Vignal · Cahors</div>
+  </div>
+</div>
+
+<h2>🧹 2. Fiche groupement : partenaires retirés + 2 actions sur tuile</h2>
+
+<div class="panel">
+<p style="margin:0">Les partenaires (<code>est_partenaire = true</code>) ne sont plus listés ici (ils ont leur propre page <code>/etablissements-partenaires</code>). Chaque tuile a maintenant <b>2 actions footer</b> : Bâtiments (existant) + Équipe (nouveau, redirige vers <code>/etablissement?etab={id}</code>).</p>
+</div>
+
+<div class="etab-tile">
+  <div class="etab-tile-head">
+    <div class="etab-tile-ico">🏥</div>
+    <div style="flex:1;min-width:0">
+      <div class="etab-tile-name">EHPAD Les Pins</div>
+      <div class="etab-tile-sub">EHPAD · Saint-Céré</div>
+    </div>
+  </div>
+  <div class="etab-tile-badge">
+    <span style="background:#eef5fc;color:#185FA5">FINESS 460000012</span>
+    <span style="background:#fff3da;color:#7a4f15">🛏 64 lits</span>
+  </div>
+  <div class="etab-tile-actions">
+    <div class="etab-action batiments">
+      <i class="ti ti-stack-2"></i>
+      <span>Bâtiments</span>
+    </div>
+    <span class="etab-action equipe" title="Voir équipe & services">
+      <i class="ti ti-sitemap"></i>
+      <span>Équipe</span>
+    </span>
+  </div>
+</div>
+
+<h2>➕ 3. Bouton "Créer un établissement" en header (admin)</h2>
+
+<div class="panel">
+<p style="margin:0">Visible si rôle admin. Redirige vers <code>/etablissements?create=1</code> qui détecte le param et ouvre automatiquement la modale de création avec recherche FINESS. URL est nettoyée après ouverture pour ne pas re-déclencher au reload.</p>
+</div>
+
+<pre>// app/etablissements/page.js
+import { useSearchParams } from 'next/navigation';
+const searchParams = useSearchParams();
+
+useEffect(() => {
+  if (searchParams?.get('create') === '1') {
+    openCreateFiness();
+    // Nettoie l'URL pour ne pas réouvrir au reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete('create');
+    window.history.replaceState({}, '', url);
+  }
+}, []);</pre>
+
+<h2>🎯 4. Menu raccourcis HAUT-GAUCHE — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Plus de barre en pied de page ! Un bouton hamburger en haut-gauche (sous TopBar) qui déploie les 3 raccourcis vers la droite avec animation stagger (60ms entre chaque bulle).</p>
+</div>
+
+<div class="menu-demo">
+  <div class="topbar">↑ TopBar (logo + recherche + notifs + profil)</div>
+  <p style="color:#bfe6e6;margin:0 0 14px;font-size:13">↓ Bouton menu en haut-gauche (sous la TopBar). Clic → bulles glissent à droite :</p>
+  <div class="menu-row">
+    <div class="menu-btn main"><i class="ti ti-x"></i></div>
+    <div class="menu-btn violet"><i class="ti ti-scan"></i></div>
+    <div class="menu-btn blue"><i class="ti ti-building-hospital"></i></div>
+    <div class="menu-btn amber"><i class="ti ti-shopping-cart"></i></div>
+  </div>
+  <p style="color:rgba(191,230,230,.5);margin-top:18px;font-size:11.5px;font-style:italic">Esc / clic ailleurs / changement de page = ferme automatiquement</p>
+</div>
+
+<h2>🎨 5. /profil : config visuelle des 3 raccourcis — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau panel "Mes 3 raccourcis rapides" dans l'onglet Sécurité du profil. Clic sur une bulle → ouvre l'éditeur avec Libellé / Destination URL / Couleur (8 swatches) / Icône (28 options Tabler scrollables).</p>
+</div>
+
+<div class="cfg-demo">
+  <h3 style="margin:0 0 8px;font-size:15px;color:#1c5454"><i class="ti ti-layout-grid"></i> Mes 3 raccourcis rapides</h3>
+  <p style="font-size:12px;color:#2a5a5a;margin:0 0 14px">Personnalise les 3 bulles qui apparaissent dans le menu en haut-gauche.</p>
+
+  <div class="cfg-preview">
+    <div style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#2a3a52,#142131);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid rgba(124,200,200,.20)">☰</div>
+    <button style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#7a6fb0,#5a4a90);color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transform:scale(1.10);box-shadow:0 8px 24px rgba(122,111,176,.6),0 0 0 3px rgba(122,111,176,.3);flex-shrink:0">🔍</button>
+    <button style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#2a7ed1,#185FA5);color:#fff;border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 6px 18px rgba(24,95,165,.55);flex-shrink:0">🏥</button>
+    <button style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#f5b144,#EF9F27);color:#fff;border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 6px 18px rgba(239,159,39,.55);flex-shrink:0">🛒</button>
+    <span class="info">Modification en cours…</span>
+  </div>
+
+  <div class="cfg-editor">
+    <h3 style="margin:0 0 12px;font-size:14px;color:#142131;display:flex;align-items:center;gap:8px">
+      <span style="width:24px;height:24px;border-radius:6px;background:#5a4a90;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px">1</span>
+      Raccourci 1 : <code style="font-size:12px;color:#6c7a89">Scan</code>
+    </h3>
+
+    <div class="cfg-fld">
+      <label>Libellé</label>
+      <input value="Scan" />
+    </div>
+    <div class="cfg-fld">
+      <label>Destination (URL interne)</label>
+      <input value="/scan/bulletin-situation" style="font-family:Consolas,monospace" />
+      <p style="font-size:11px;color:#8a98a8;margin:4px 0 0">ℹ Chemin commençant par <code>/</code> (ex: <code>/achats</code>, <code>/patients</code>)</p>
+    </div>
+
+    <div class="cfg-fld">
+      <label>Couleur (8 options)</label>
+      <div class="cfg-swatches">
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#2a7ed1,#185FA5)" title="Bleu"></div>
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#9ed8d8,#7CC8C8)" title="Teal"></div>
+        <div class="cfg-swatch active" style="background:linear-gradient(135deg,#7a6fb0,#5a4a90)" title="Violet"></div>
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#f5b144,#EF9F27)" title="Ambre"></div>
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#d9a09a,#C9867F)" title="Terra"></div>
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#76b876,#5aa05a)" title="Vert"></div>
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#d65749,#c0392b)" title="Rouge"></div>
+        <div class="cfg-swatch" style="background:linear-gradient(135deg,#243044,#142131)" title="Navy"></div>
+      </div>
+    </div>
+
+    <div class="cfg-fld">
+      <label>Icône (28 options Tabler)</label>
+      <div class="cfg-icons">
+        <div class="cfg-icon active">🔍</div>
+        <div class="cfg-icon">🏥</div>
+        <div class="cfg-icon">🛒</div>
+        <div class="cfg-icon">👤</div>
+        <div class="cfg-icon">👥</div>
+        <div class="cfg-icon">🔧</div>
+        <div class="cfg-icon">📦</div>
+        <div class="cfg-icon">🚚</div>
+        <div class="cfg-icon">💰</div>
+        <div class="cfg-icon">📅</div>
+        <div class="cfg-icon">🔔</div>
+        <div class="cfg-icon">✉</div>
+        <div class="cfg-icon">📞</div>
+        <div class="cfg-icon">📍</div>
+        <div class="cfg-icon">🩺</div>
+        <div class="cfg-icon">💊</div>
+      </div>
+      <p style="font-size:10px;color:#8a98a8;margin:4px 0 0;font-style:italic">… 12 autres icônes disponibles via scroll</p>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;align-items:center">
+      <span style="margin-right:auto;color:#5aa05a;font-size:12px;font-weight:600">✓ Sauvegardé</span>
+      <button style="background:transparent;color:#6c7a89;border:1px solid #cfd8e0;padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer">Fermer</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;margin-top:14px">
+    <button style="background:transparent;color:#7a4f15;border:1px solid #f0d59f;padding:7px 13px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">↻ Réinitialiser aux valeurs par défaut</button>
+  </div>
+</div>
+
+<h2>📊 Récap des 6 demandes traitées</h2>
+
+<table>
+<tr><th>#</th><th>Demande Cédric</th><th>Solution</th></tr>
+<tr><td>1</td><td>Liste SIREN passe sous les tuiles</td><td>Portal vers body + z-index 99999</td></tr>
+<tr><td>2</td><td>Enlever les partenaires (ne font pas partie du groupement)</td><td>Filter <code>!e.est_partenaire</code> à la lecture</td></tr>
+<tr><td>3</td><td>Icône Équipe & Services sur tuiles établissement</td><td>2e action footer ti-sitemap → /etablissement?etab={id}</td></tr>
+<tr><td>4</td><td>Créer des établissements dans la nouvelle UI</td><td>Bouton header admin → /etablissements?create=1 (auto-open modal)</td></tr>
+<tr><td>5</td><td>3 raccourcis pied de page → bouton coin haut-gauche</td><td>FloatingActionBar réécrit : hamburger + slide droite stagger 60ms</td></tr>
+<tr><td>6</td><td>Paramètre /profil : URL + icône + couleur des 3 bulles</td><td>ShortcutsConfigPanel : preview + éditeur (libellé/URL/8 couleurs/28 icônes)</td></tr>
+</table>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.31
+npm install --legacy-peer-deps
+npm test                              # ~4150 verts attendus
+npm run build                         # OK attendu
+git add -A
+git commit -m "Alpha 0.58.31 - Fiche groupement (Sirene z-index, partenaires retirés, équipe, créer étab) + raccourcis configurables haut-gauche + config /profil"
+git push origin main</pre>
+</div>
+
+<h2>🎁 Ce que tu vas voir</h2>
+<div class="panel">
+<ul>
+<li><b>/collectivite</b> → recherche SIRENE défile au-dessus de tout, partenaires retirés, bouton "Créer un établissement", tuiles avec 2 actions (Bâtiments + Équipe)</li>
+<li><b>/etablissements?create=1</b> → modale de création ouverte automatiquement (depuis le bouton créer)</li>
+<li><b>Haut-gauche partout dans l'app</b> → bouton hamburger qui déploie tes 3 raccourcis personnalisés vers la droite</li>
+<li><b>/profil → Sécurité → "Mes 3 raccourcis rapides"</b> → tu peux changer label/URL/couleur/icône de chacune des 3 bulles</li>
+</ul>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.32)</h2>
+<div class="panel">
+<ul>
+<li>🚧 <b>Dashboard widgets configurables drag &amp; drop</b> (toujours en attente)</li>
+<li>Page dédiée 'Architecture' par établissement (organigramme équipes + services en arbre visuel)</li>
+<li>Mode présentation : option 'masquer notifs' (comme focus)</li>
+<li>Cmd+K : section 'Récents' premium avec mini-timeline</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.31 · 5 juin 2026 · FICHE GROUPEMENT + RACCOURCIS : 6 demandes Cédric traitées</footer>
+</div>
+
+</body></html>

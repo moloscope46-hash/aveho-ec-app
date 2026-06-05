@@ -1,319 +1,196 @@
 "use client";
 // =============================================================
-//  app/FloatingActionBar.js (Alpha 0.56.16)
+//  app/FloatingActionBar.js (0.58.31)
 //
-//  Barre d'actions flottante en bas de l'écran (mobile + desktop).
-//  3 bulles : Scan/OCR (popup 3 options), Mon étab (raccourci direct),
-//  Commande (popup 2 options).
+//  REFONTE : ancienne barre 3 bulles en pied de page → bouton menu
+//  en HAUT-GAUCHE qui se déplie horizontalement vers la droite
+//  avec les 3 raccourcis configurables (via /profil).
 //
-//  Design : glassmorphism, animations fluides, accessible.
+//  - Bouton hamburger fixed top-left (sous TopBar)
+//  - Au clic : 3 bulles glissent vers la droite avec animation séquentielle
+//  - Chaque bulle = url + label + icon + gradient configurable
+//  - Config lue depuis lib/shortcutsConfig (localStorage)
+//  - Sync via event "av-shortcuts-config-change"
+//  - Esc / clic ailleurs / changement de page = ferme
 // =============================================================
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { getShortcutsConfig, DEFAULT_SHORTCUTS } from "../lib/shortcutsConfig";
 
 export default function FloatingActionBar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [openMenu, setOpenMenu] = useState(null); // null | "scan" | "commande"
+  const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [shortcuts, setShortcuts] = useState(DEFAULT_SHORTCUTS);
 
-  // 0.56.17 : éviter les hydration mismatch SSR/CSR — on attend le mount
-  // côté client avant de rendre la barre (sinon erreurs React #418/#423)
   useEffect(() => {
     setMounted(true);
+    setShortcuts(getShortcutsConfig());
   }, []);
 
-  // Pages où la barre est masquée
-  const HIDDEN_PATHS = ["/login", "/inscription", "/presentation"];
-  const isHidden = HIDDEN_PATHS.some(p => pathname?.startsWith(p));
-
-  // Fermer le menu au changement de page
   useEffect(() => {
-    setOpenMenu(null);
-  }, [pathname]);
-
-  // ESC pour fermer
-  useEffect(() => {
-    function handleEsc(e) {
-      if (e.key === "Escape") setOpenMenu(null);
+    function onConfigChange(e) {
+      setShortcuts(e?.detail?.shortcuts || getShortcutsConfig());
     }
-    if (openMenu) {
+    window.addEventListener("av-shortcuts-config-change", onConfigChange);
+    return () => window.removeEventListener("av-shortcuts-config-change", onConfigChange);
+  }, []);
+
+  const HIDDEN_PATHS = ["/login", "/inscription", "/presentation"];
+  const isHidden = HIDDEN_PATHS.some((p) => pathname?.startsWith(p));
+
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    function handleEsc(e) { if (e.key === "Escape") setOpen(false); }
+    if (open) {
       window.addEventListener("keydown", handleEsc);
       return () => window.removeEventListener("keydown", handleEsc);
     }
-  }, [openMenu]);
+  }, [open]);
 
   if (isHidden || !mounted) return null;
 
   function navigate(url) {
-    setOpenMenu(null);
-    router.push(url);
+    setOpen(false);
+    if (url) router.push(url);
   }
 
   return (
     <>
-      {/* Backdrop pour les popups */}
-      {openMenu && (
+      {open && (
         <div
-          onClick={() => setOpenMenu(null)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 998,
-            background: "rgba(20,33,49,.55)",
-            backdropFilter: "blur(3px)",
-            animation: "fab-fade-in 0.18s ease-out",
-          }}
+          onClick={() => setOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 9990, background: "transparent" }}
+          aria-hidden="true"
         />
       )}
 
-      {/* Popup Scan/OCR */}
-      {openMenu === "scan" && (
-        <PopupMenu
-          title="Scanner / OCR"
-          color="#5a4a90"
-          icon="ti-scan"
-          onClose={() => setOpenMenu(null)}
-          actions={[
-            {
-              icon: "ti-file-scan",
-              color: "#5aa05a",
-              label: "Créer un patient",
-              sub: "Depuis un bulletin de situation",
-              onClick: () => navigate("/scan/bulletin-situation"),
-            },
-            {
-              icon: "ti-prescription",
-              color: "#5a4a90",
-              label: "Lire ordonnance",
-              sub: "OCR + parsing prescriptions",
-              onClick: () => navigate("/scan/prescription"),
-            },
-            {
-              icon: "ti-barcode",
-              color: "#185FA5",
-              label: "Scanner code-barre",
-              sub: "Matériel, médicament, BL",
-              onClick: () => navigate("/scan/codebarre"),
-            },
-            {
-              icon: "ti-qrcode",
-              color: "#7a6fb0",
-              label: "Scanner QR code",
-              sub: "Carte Vitale, étiquettes",
-              onClick: () => navigate("/scan/qr"),
-            },
-          ]}
-        />
-      )}
-
-      {/* Popup Commande */}
-      {openMenu === "commande" && (
-        <PopupMenu
-          title="Commande & Achats"
-          color="#EF9F27"
-          icon="ti-shopping-cart"
-          onClose={() => setOpenMenu(null)}
-          actions={[
-            {
-              icon: "ti-shopping-cart",
-              color: "#e35d5b",
-              label: "Voir mon panier",
-              sub: "Articles en attente de validation",
-              onClick: () => navigate("/panier"),
-            },
-            {
-              icon: "ti-truck-delivery",
-              color: "#5a8f8f",
-              label: "Mes commandes",
-              sub: "Historique et suivi de livraison",
-              onClick: () => navigate("/commandes"),
-            },
-            {
-              icon: "ti-cash",
-              color: "#EF9F27",
-              label: "Achats",
-              sub: "Demandes & validations",
-              onClick: () => navigate("/achats"),
-            },
-          ]}
-        />
-      )}
-
-      {/* La barre elle-même */}
       <div
-        className="fab-bar"
+        className="av-shortcuts-bar"
+        style={{
+          position: "fixed",
+          top: "calc(74px + env(safe-area-inset-top, 0px))",
+          left: 16,
+          zIndex: 9991,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
         role="navigation"
-        aria-label="Actions rapides"
+        aria-label="Raccourcis rapides"
       >
-        <FabBubble
-          icon="ti-scan"
-          label="Scan"
-          color="#5a4a90"
-          gradient="linear-gradient(135deg, #7a6fb0, #5a4a90)"
-          onClick={() => setOpenMenu(openMenu === "scan" ? null : "scan")}
-          active={openMenu === "scan"}
-        />
-        <FabBubble
-          icon="ti-building-hospital"
-          label="Mon étab"
-          color="#185FA5"
-          gradient="linear-gradient(135deg, #2a7ed1, #185FA5)"
-          onClick={() => navigate("/etablissement/fiche")}
-        />
-        <FabBubble
-          icon="ti-shopping-cart"
-          label="Commande"
-          color="#EF9F27"
-          gradient="linear-gradient(135deg, #f5b144, #EF9F27)"
-          onClick={() => setOpenMenu(openMenu === "commande" ? null : "commande")}
-          active={openMenu === "commande"}
-        />
-      </div>
-    </>
-  );
-}
-
-// =============================================================
-//  Bulle individuelle (cliquable, gradient, label)
-// =============================================================
-function FabBubble({ icon, label, color, gradient, onClick, active }) {
-  return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      title={label}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 2,
-        width: 64,
-        height: 64,
-        padding: 0,
-        border: "none",
-        borderRadius: "50%",
-        background: gradient,
-        color: "#fff",
-        cursor: "pointer",
-        fontFamily: "inherit",
-        boxShadow: active
-          ? `0 0 0 4px ${color}33, 0 6px 18px ${color}66`
-          : `0 6px 14px ${color}55, 0 2px 4px rgba(0,0,0,.1)`,
-        transform: active ? "translateY(-3px) scale(1.05)" : "none",
-        transition: "all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        position: "relative",
-      }}
-      onMouseDown={(e) => {
-        e.currentTarget.style.transform = "translateY(0) scale(0.92)";
-      }}
-      onMouseUp={(e) => {
-        e.currentTarget.style.transform = active ? "translateY(-3px) scale(1.05)" : "";
-      }}
-    >
-      <i className={`ti ${icon}`} style={{ fontSize: 22 }} />
-      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.3, textTransform: "uppercase" }}>
-        {label}
-      </span>
-    </button>
-  );
-}
-
-// =============================================================
-//  Popup central avec les sous-actions
-// =============================================================
-function PopupMenu({ title, color, icon, actions, onClose }) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        left: "50%",
-        bottom: "calc(96px + env(safe-area-inset-bottom, 0px))",
-        transform: "translateX(-50%)",
-        zIndex: 999,
-        width: "min(420px, calc(100vw - 32px))",
-        background: "#fff",
-        borderRadius: 16,
-        boxShadow: "0 20px 60px rgba(20,33,49,.35), 0 2px 8px rgba(0,0,0,.1)",
-        animation: "fab-popup-slide 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        overflow: "hidden",
-      }}
-      role="dialog"
-      aria-label={title}
-    >
-      {/* Header */}
-      <div style={{
-        padding: "14px 18px",
-        background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-      }}>
-        <i className={`ti ${icon}`} style={{ fontSize: 22 }} />
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, flex: 1 }}>{title}</h3>
         <button
-          onClick={onClose}
-          aria-label="Fermer"
+          onClick={() => setOpen(!open)}
+          aria-label="Ouvrir les raccourcis"
+          aria-expanded={open}
           style={{
-            background: "rgba(255,255,255,.2)",
-            border: "none",
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            background: open
+              ? "linear-gradient(135deg, #142131, #243044)"
+              : "linear-gradient(135deg, #2a3a52, #142131)",
             color: "#fff",
-            width: 28, height: 28,
-            borderRadius: "50%",
+            border: "1px solid rgba(124,200,200,.20)",
             cursor: "pointer",
-            fontSize: 16,
-            display: "flex", alignItems: "center", justifyContent: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 22,
+            boxShadow: open
+              ? "0 8px 24px rgba(20,33,49,.40), 0 0 24px rgba(124,200,200,.30)"
+              : "0 6px 18px rgba(20,33,49,.30)",
+            transition: "all 220ms cubic-bezier(.2,.8,.2,1)",
+            transform: open ? "scale(1.05)" : "scale(1)",
+            fontFamily: "inherit",
+            padding: 0,
           }}
+          onMouseEnter={(e) => { if (!open) e.currentTarget.style.transform = "scale(1.05)"; }}
+          onMouseLeave={(e) => { if (!open) e.currentTarget.style.transform = "scale(1)"; }}
         >
-          <i className="ti ti-x" />
+          <i className={`ti ${open ? "ti-x" : "ti-menu-2"}`} />
         </button>
-      </div>
 
-      {/* Actions */}
-      <div style={{ padding: 8 }}>
-        {actions.map((a, i) => (
+        {shortcuts.map((s, idx) => (
           <button
-            key={i}
-            onClick={a.onClick}
+            key={s.id || idx}
+            onClick={() => navigate(s.url)}
+            aria-label={s.label}
+            title={s.label}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              width: "100%",
-              padding: "12px 14px",
-              margin: 0,
-              border: "none",
-              background: "transparent",
+              width: 48,
+              height: 48,
+              borderRadius: 16,
+              background: s.gradient || `linear-gradient(135deg, ${s.color}, ${s.color}cc)`,
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,.18)",
               cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 18,
+              boxShadow: `0 6px 18px ${s.color}55, 0 0 0 1px rgba(255,255,255,.10) inset`,
               fontFamily: "inherit",
-              textAlign: "left",
-              borderRadius: 10,
-              transition: "background 0.15s",
+              padding: 0,
+              opacity: open ? 1 : 0,
+              transform: open ? "translateX(0) scale(1)" : "translateX(-20px) scale(0.6)",
+              pointerEvents: open ? "auto" : "none",
+              transition: `opacity 240ms ${idx * 60}ms ease-out, transform 320ms ${idx * 60}ms cubic-bezier(.34, 1.56, .64, 1)`,
+              position: "relative",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#f4f7fa"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            onMouseEnter={(e) => {
+              if (open) {
+                e.currentTarget.style.transform = "translateX(0) scale(1.10)";
+                e.currentTarget.style.boxShadow = `0 8px 24px ${s.color}80, 0 0 0 2px rgba(255,255,255,.20) inset`;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (open) {
+                e.currentTarget.style.transform = "translateX(0) scale(1)";
+                e.currentTarget.style.boxShadow = `0 6px 18px ${s.color}55, 0 0 0 1px rgba(255,255,255,.10) inset`;
+              }
+            }}
           >
-            <div style={{
-              width: 40, height: 40,
-              borderRadius: 10,
-              background: `${a.color}22`,
-              color: a.color,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <i className={`ti ${a.icon}`} style={{ fontSize: 20 }} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#142131" }}>{a.label}</div>
-              {a.sub && (
-                <div style={{ fontSize: 11, color: "#6c7a89", marginTop: 1 }}>{a.sub}</div>
-              )}
-            </div>
-            <i className="ti ti-chevron-right" style={{ fontSize: 16, color: "#a0aeb9" }} />
+            <i className={`ti ${s.icon}`} />
+            <span style={{
+              position: "absolute",
+              top: "calc(100% + 6px)",
+              left: "50%",
+              transform: "translateX(-50%)",
+              background: "rgba(20, 33, 49, 0.92)",
+              color: "#fff",
+              padding: "3px 10px",
+              borderRadius: 6,
+              fontSize: 10.5,
+              fontWeight: 700,
+              letterSpacing: 0.3,
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              pointerEvents: "none",
+              opacity: 0,
+              transition: "opacity 150ms",
+              boxShadow: "0 2px 8px rgba(0,0,0,.20)",
+            }} className="av-shortcut-tooltip">
+              {s.label}
+            </span>
           </button>
         ))}
       </div>
-    </div>
+
+      <style jsx global>{`
+        .av-shortcuts-bar button:hover .av-shortcut-tooltip {
+          opacity: 1;
+        }
+        @media (max-width: 768px) {
+          .av-shortcuts-bar {
+            top: calc(66px + env(safe-area-inset-top, 0px)) !important;
+          }
+        }
+      `}</style>
+    </>
   );
 }

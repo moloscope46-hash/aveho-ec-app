@@ -8,6 +8,7 @@
 //  Utile pour importer fournisseurs, prestataires, sociétés tierces.
 // =============================================================
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { fetchWithAuth } from "../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 // 0.55.5 : catégories médicales prédéfinies pour SIRENE
@@ -32,9 +33,37 @@ export default function SireneSearch({ onSelect, placeholder = "Chercher par nom
   const [showFilters, setShowFilters] = useState(false);
   const debounceRef = useRef(null);
   const wrapperRef = useRef(null);
+  // 0.58.31 : input wrapper ref pour calculer la position du dropdown porté en body
+  const inputBoxRef = useRef(null);
+  const [mounted, setMounted] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState({ left: 0, top: 0, width: 0 });
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // 0.58.31 : recalcule la position du dropdown quand il s'ouvre + au scroll/resize
+  useEffect(() => {
+    if (!open || !inputBoxRef.current) return;
+    function updatePosition() {
+      const rect = inputBoxRef.current.getBoundingClientRect();
+      setDropdownPos({
+        left: rect.left,
+        top: rect.bottom + 4,
+        width: rect.width,
+      });
+    }
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [open, results.length]);
 
   useEffect(() => {
     function onClickOut(e) {
+      // 0.58.31 : ignore les clics sur le dropdown porté en body
+      if (e.target?.closest?.("[data-sirene-dropdown]")) return;
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
         setOpen(false);
       }
@@ -136,7 +165,7 @@ export default function SireneSearch({ onSelect, placeholder = "Chercher par nom
 
   return (
     <div ref={wrapperRef} style={{ position: "relative" }}>
-      <div style={{ position: "relative" }}>
+      <div ref={inputBoxRef} style={{ position: "relative" }}>
         <i className="ti ti-building-store" style={{
           position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
           color: "#8a98a8", fontSize: 16,
@@ -253,16 +282,17 @@ export default function SireneSearch({ onSelect, placeholder = "Chercher par nom
         </div>
       )}
 
-      {open && results.length > 0 && (
-        <div style={{
-          position: "absolute",
-          top: "calc(100% + 4px)",
-          left: 0, right: 0,
+      {open && results.length > 0 && mounted && createPortal((
+        <div data-sirene-dropdown style={{
+          position: "fixed",
+          left: dropdownPos.left,
+          top: dropdownPos.top,
+          width: dropdownPos.width,
           background: "#fff",
           border: "1px solid #e3e9ee",
           borderRadius: 10,
           boxShadow: "0 12px 32px rgba(20,33,49,.15)",
-          zIndex: 150,
+          zIndex: 99999,
           maxHeight: 380,
           overflowY: "auto",
         }}>
@@ -344,7 +374,7 @@ export default function SireneSearch({ onSelect, placeholder = "Chercher par nom
             </button>
           ))}
         </div>
-      )}
+      ), document.body)}
 
       <style jsx>{`
         @keyframes spin {

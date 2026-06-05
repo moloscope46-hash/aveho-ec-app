@@ -27,6 +27,8 @@ import { isPresentationMode, togglePresentationMode } from "../../lib/presentati
 // 0.58.26 : toggle mode focus zen depuis le profil
 // 0.58.30 : sous-option masquer aussi les notifs
 import { isFocusMode, toggleFocusMode, isFocusHideNotifs, setFocusHideNotifs } from "../../lib/focusMode";
+// 0.58.31 : config des 3 raccourcis du menu en haut-gauche
+import { getShortcutsConfig, setShortcutsConfig, resetShortcutsConfig, SHORTCUT_COLORS, SHORTCUT_ICONS, DEFAULT_SHORTCUTS } from "../../lib/shortcutsConfig";
 
 export default function Profil() {
   const supabase = createClient();
@@ -430,6 +432,17 @@ export default function Profil() {
               <ReplayTourButton />
             </Panel>
 
+            {/* 0.58.31 : config des 3 raccourcis du menu haut-gauche */}
+            <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #f0fafa 0%, #ffffff 100%)", borderColor: "#bce0e0", borderLeft: "4px solid #7CC8C8" }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#1c5454", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-layout-grid" /> Mes 3 raccourcis rapides
+              </h2>
+              <p style={{ fontSize: 12.5, color: "#2a5a5a", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Personnalise les 3 bulles qui apparaissent dans le menu en haut-gauche de l'écran (bouton <i className="ti ti-menu-2" style={{ verticalAlign: "middle" }} />). Pour chaque raccourci : libellé, URL de destination, icône et couleur.
+              </p>
+              <ShortcutsConfigPanel />
+            </Panel>
+
             {/* 0.58.20 : panneau "Vider le cache" pour résoudre les bugs de cache navigateur/SW */}
             <Panel style={{ marginTop: 16, background: "linear-gradient(135deg, #fff8ec 0%, #fffcf3 100%)", borderColor: "#f0d59f", borderLeft: "4px solid #EF9F27" }}>
               <h2 style={{ margin: "0 0 8px", fontSize: 16, color: "#7a4f15", display: "flex", alignItems: "center", gap: 8 }}>
@@ -686,6 +699,320 @@ function CacheResetButton() {
           to { transform: rotate(360deg); }
         }
       `}</style>
+    </div>
+  );
+}
+
+// =============================================================
+//  0.58.31 : Panel de config des 3 raccourcis (menu haut-gauche)
+//
+//  Permet à l'utilisateur de personnaliser chacun des 3 raccourcis :
+//  - Libellé (texte court)
+//  - URL de destination (chemin interne, ex: /achats)
+//  - Icône (parmi une grille de 28 icônes Tabler)
+//  - Couleur (parmi 8 swatches)
+//
+//  Sauvegarde via lib/shortcutsConfig (localStorage + event).
+// =============================================================
+function ShortcutsConfigPanel() {
+  const [shortcuts, setShortcuts] = useState(DEFAULT_SHORTCUTS);
+  const [editingIdx, setEditingIdx] = useState(null); // 0 | 1 | 2 | null
+  const [savedMsg, setSavedMsg] = useState("");
+
+  useEffect(() => {
+    setShortcuts(getShortcutsConfig());
+  }, []);
+
+  function updateShortcut(idx, patch) {
+    const updated = shortcuts.map((s, i) => i === idx ? { ...s, ...patch } : s);
+    // Recalcule le gradient si la couleur change
+    if (patch.color) {
+      const found = SHORTCUT_COLORS.find(c => c.color === patch.color);
+      updated[idx].gradient = found?.gradient || `linear-gradient(135deg, ${patch.color}cc, ${patch.color})`;
+    }
+    setShortcuts(updated);
+    setShortcutsConfig(updated);
+    setSavedMsg("✓ Sauvegardé");
+    setTimeout(() => setSavedMsg(""), 1500);
+  }
+
+  function handleReset() {
+    resetShortcutsConfig();
+    setShortcuts(DEFAULT_SHORTCUTS);
+    setEditingIdx(null);
+    setSavedMsg("✓ Réinitialisé");
+    setTimeout(() => setSavedMsg(""), 1500);
+  }
+
+  return (
+    <div>
+      {/* Aperçu compact des 3 raccourcis actuels */}
+      <div style={{
+        display: "flex",
+        gap: 12,
+        padding: 16,
+        background: "linear-gradient(135deg, #142131, #243044)",
+        borderRadius: 12,
+        marginBottom: 14,
+        alignItems: "center",
+        flexWrap: "wrap",
+      }}>
+        <div style={{
+          width: 48, height: 48, borderRadius: 16,
+          background: "linear-gradient(135deg, #2a3a52, #142131)",
+          color: "#fff",
+          border: "1px solid rgba(124,200,200,.20)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 22,
+          boxShadow: "0 6px 18px rgba(20,33,49,.30)",
+          flexShrink: 0,
+        }}>
+          <i className="ti ti-menu-2" />
+        </div>
+        {shortcuts.map((s, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => setEditingIdx(editingIdx === idx ? null : idx)}
+            style={{
+              width: 48, height: 48, borderRadius: 16,
+              background: s.gradient || `linear-gradient(135deg, ${s.color}, ${s.color}cc)`,
+              color: "#fff",
+              border: editingIdx === idx ? "2px solid #fff" : "1px solid rgba(255,255,255,.18)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18,
+              boxShadow: editingIdx === idx
+                ? `0 8px 24px ${s.color}90, 0 0 0 3px ${s.color}40`
+                : `0 6px 18px ${s.color}55`,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              transition: "all 200ms",
+              transform: editingIdx === idx ? "scale(1.10)" : "scale(1)",
+              padding: 0,
+              flexShrink: 0,
+            }}
+            title={`Modifier "${s.label}"`}
+          >
+            <i className={`ti ${s.icon}`} />
+          </button>
+        ))}
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(191,230,230,.7)", fontStyle: "italic" }}>
+          {editingIdx !== null ? "Modification en cours…" : "Clique sur une bulle pour la modifier"}
+        </span>
+      </div>
+
+      {/* Éditeur (visible si une bulle est sélectionnée) */}
+      {editingIdx !== null && (
+        <div style={{
+          padding: 16,
+          background: "#fff",
+          border: "1px solid #d8e2ea",
+          borderRadius: 12,
+          marginBottom: 14,
+          animation: "av-fade-in 200ms ease-out",
+        }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#142131", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              width: 24, height: 24, borderRadius: 6,
+              background: shortcuts[editingIdx].color,
+              color: "#fff",
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12,
+            }}>
+              {editingIdx + 1}
+            </span>
+            Raccourci {editingIdx + 1} : <code style={{ fontSize: 12, color: "#6c7a89" }}>{shortcuts[editingIdx].label}</code>
+          </h3>
+
+          {/* Champ Libellé */}
+          <div className="fld" style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 11.5, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+              Libellé
+            </label>
+            <input
+              type="text"
+              value={shortcuts[editingIdx].label}
+              onChange={(e) => updateShortcut(editingIdx, { label: e.target.value })}
+              maxLength={20}
+              placeholder="Ex: Mes patients"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                fontSize: 13.5,
+                fontFamily: "inherit",
+                border: "1px solid #d8e2ea",
+                borderRadius: 8,
+              }}
+            />
+          </div>
+
+          {/* Champ URL */}
+          <div className="fld" style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 11.5, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 4 }}>
+              Destination (URL interne)
+            </label>
+            <input
+              type="text"
+              value={shortcuts[editingIdx].url}
+              onChange={(e) => updateShortcut(editingIdx, { url: e.target.value })}
+              placeholder="/patients"
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                fontSize: 13,
+                fontFamily: "Consolas, monospace",
+                border: "1px solid #d8e2ea",
+                borderRadius: 8,
+              }}
+            />
+            <p style={{ fontSize: 11, color: "#8a98a8", margin: "4px 0 0" }}>
+              <i className="ti ti-info-circle" /> Saisir un chemin commençant par <code style={{ fontSize: 11 }}>/</code> (ex: <code style={{ fontSize: 11 }}>/achats</code>, <code style={{ fontSize: 11 }}>/patients</code>, <code style={{ fontSize: 11 }}>/etablissement/fiche</code>)
+            </p>
+          </div>
+
+          {/* Couleurs */}
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 11.5, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              Couleur
+            </label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {SHORTCUT_COLORS.map((c) => (
+                <button
+                  key={c.color}
+                  type="button"
+                  onClick={() => updateShortcut(editingIdx, { color: c.color, gradient: c.gradient })}
+                  title={c.label}
+                  aria-label={`Couleur ${c.label}`}
+                  style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    background: c.gradient,
+                    border: shortcuts[editingIdx].color === c.color ? "2px solid #142131" : "1px solid rgba(0,0,0,.10)",
+                    cursor: "pointer",
+                    transition: "all 150ms",
+                    transform: shortcuts[editingIdx].color === c.color ? "scale(1.10)" : "scale(1)",
+                    boxShadow: shortcuts[editingIdx].color === c.color
+                      ? `0 6px 14px ${c.color}80, 0 0 0 3px ${c.color}30`
+                      : `0 2px 6px ${c.color}40`,
+                    fontFamily: "inherit",
+                    padding: 0,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Icônes */}
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ fontSize: 11.5, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>
+              Icône
+            </label>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(40px, 1fr))",
+              gap: 6,
+              maxHeight: 180,
+              overflowY: "auto",
+              padding: 4,
+              background: "#f4f7fa",
+              borderRadius: 8,
+              border: "1px solid #e3e9ee",
+            }}>
+              {SHORTCUT_ICONS.map((ic) => (
+                <button
+                  key={ic}
+                  type="button"
+                  onClick={() => updateShortcut(editingIdx, { icon: ic })}
+                  title={ic}
+                  style={{
+                    width: "100%",
+                    aspectRatio: "1",
+                    borderRadius: 8,
+                    background: shortcuts[editingIdx].icon === ic ? shortcuts[editingIdx].color : "#fff",
+                    color: shortcuts[editingIdx].icon === ic ? "#fff" : "#5a6878",
+                    border: shortcuts[editingIdx].icon === ic
+                      ? `1px solid ${shortcuts[editingIdx].color}`
+                      : "1px solid #e3e9ee",
+                    cursor: "pointer",
+                    fontSize: 17,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontFamily: "inherit",
+                    transition: "all 120ms",
+                    transform: shortcuts[editingIdx].icon === ic ? "scale(1.05)" : "scale(1)",
+                    padding: 0,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (shortcuts[editingIdx].icon !== ic) {
+                      e.currentTarget.style.background = "#eef5fc";
+                      e.currentTarget.style.borderColor = shortcuts[editingIdx].color;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (shortcuts[editingIdx].icon !== ic) {
+                      e.currentTarget.style.background = "#fff";
+                      e.currentTarget.style.borderColor = "#e3e9ee";
+                    }
+                  }}
+                >
+                  <i className={`ti ${ic}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12, alignItems: "center" }}>
+            {savedMsg && (
+              <span style={{ marginRight: "auto", color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
+                {savedMsg}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setEditingIdx(null)}
+              style={{
+                background: "transparent",
+                color: "#6c7a89",
+                border: "1px solid #cfd8e0",
+                padding: "8px 14px",
+                borderRadius: 8,
+                fontSize: 12.5,
+                fontWeight: 600,
+                fontFamily: "inherit",
+                cursor: "pointer",
+              }}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={handleReset}
+          style={{
+            background: "transparent",
+            color: "#7a4f15",
+            border: "1px solid #f0d59f",
+            padding: "7px 13px",
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 600,
+            fontFamily: "inherit",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+          }}
+        >
+          <i className="ti ti-refresh" /> Réinitialiser aux valeurs par défaut
+        </button>
+        {savedMsg && editingIdx === null && (
+          <span style={{ color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>{savedMsg}</span>
+        )}
+      </div>
     </div>
   );
 }

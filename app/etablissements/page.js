@@ -9,6 +9,7 @@
 //  - Tri par n'importe quelle colonne (nom, type, ville, capacité)
 // =============================================================
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
@@ -44,6 +45,8 @@ export default function EtablissementsListPage() {
   const auth = useAuth();
   const cart = useCart();
   const router = useRouter();
+  // 0.58.31 : auto-open create modal si ?create=1 (depuis /collectivite)
+  const searchParams = useSearchParams();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -143,6 +146,20 @@ export default function EtablissementsListPage() {
     setImportSource("finess");
     setModal("create-finess");
   }
+
+  // 0.58.31 : si ?create=1 dans l'URL, ouvre direct la modal de création
+  useEffect(() => {
+    if (searchParams?.get("create") === "1") {
+      openCreateFiness();
+      // Nettoie l'URL pour ne pas réouvrir sur reload
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("create");
+        window.history.replaceState({}, "", url);
+      } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 0.55.4 : action GPS — ouvre direct si provider déjà choisi, sinon affiche modal
   function handleGPSClick(e, etab) {

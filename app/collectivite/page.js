@@ -9,6 +9,7 @@
 //  - Tous les champs SIRENE enrichis (NAF, effectifs, nature juridique…)
 // =============================================================
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
@@ -21,6 +22,7 @@ import { logEvent } from "../../lib/events";
 
 export default function GroupementPage() {
   const supabase = createClient();
+  const router = useRouter();
   const auth = useAuth();
   const cart = useCart();
   const [fiche, setFiche] = useState(null);
@@ -41,7 +43,10 @@ export default function GroupementPage() {
       supabase.from("structures").select("*").eq("id", auth.structureId).maybeSingle(),
       supabase.from("etablissements").select("*").eq("structure_id", auth.structureId).order("nom"),
     ]);
-    setFiche(st); setForm(st || {}); setEtabs(es || []);
+    // 0.58.31 : EXCLURE les partenaires du listing groupement (les partenaires
+    //  ne font pas partie du groupement, ils sont gérés dans /etablissements-partenaires)
+    const etabsNonPartenaires = (es || []).filter(e => !e.est_partenaire);
+    setFiche(st); setForm(st || {}); setEtabs(etabsNonPartenaires);
     setLoading(false);
   }
   useEffect(() => { if (auth.ready && auth.structureId) load(); }, [auth.ready, auth.structureId]);
@@ -333,12 +338,41 @@ export default function GroupementPage() {
             )}
 
             {/* Liste des établissements en cards */}
-            <PageHead 
-              small 
-              icon="ti-buildings"
-              title="Établissements du groupement" 
-              sub={`${etabs.length} établissement${etabs.length > 1 ? "s" : ""} rattaché${etabs.length > 1 ? "s" : ""}. Clique sur une carte pour voir sa hiérarchie de bâtiments.`}
-            />
+            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <PageHead
+                small
+                icon="ti-buildings"
+                title="Établissements du groupement"
+                sub={`${etabs.length} établissement${etabs.length > 1 ? "s" : ""} rattaché${etabs.length > 1 ? "s" : ""}. Clique sur une carte pour voir sa hiérarchie de bâtiments.`}
+              />
+              {/* 0.58.31 : Bouton créer un établissement (redirige vers /etablissements pour FINESS lookup) */}
+              {isAdmin && (
+                <button
+                  onClick={() => router.push("/etablissements?create=1")}
+                  style={{
+                    background: "linear-gradient(135deg, #2a7ed1, #185FA5)",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: 10,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    boxShadow: "0 4px 12px rgba(24,95,165,.35)",
+                    transition: "all .15s",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(24,95,165,.45)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(24,95,165,.35)"; }}
+                >
+                  <i className="ti ti-plus" /> Créer un établissement
+                </button>
+              )}
+            </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, marginTop: 14 }}>
               {etabs.map(etab => (
@@ -347,7 +381,7 @@ export default function GroupementPage() {
                   onClick={() => openEtabPopup(etab)}
                   style={{
                     background: "#fff",
-                    border: `1px solid ${etab.est_partenaire ? "#7CC8C8" : "#e3e9ee"}`,
+                    border: "1px solid #e3e9ee",
                     borderRadius: 12,
                     padding: 14,
                     cursor: "pointer",
@@ -355,18 +389,19 @@ export default function GroupementPage() {
                     textAlign: "left",
                     transition: "all .15s",
                     boxShadow: "0 1px 3px rgba(0,0,0,.03)",
+                    position: "relative",
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#185FA5"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(20,33,49,.10)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = etab.est_partenaire ? "#7CC8C8" : "#e3e9ee"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,.03)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#e3e9ee"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,.03)"; }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                     <div style={{
                       width: 38, height: 38, borderRadius: 10,
-                      background: etab.est_partenaire ? "#e6f7f7" : "#eef5fc",
-                      color: etab.est_partenaire ? "#1c5454" : "#185FA5",
+                      background: "#eef5fc",
+                      color: "#185FA5",
                       display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                     }}>
-                      <i className={`ti ${etab.est_partenaire ? "ti-route" : "ti-building-hospital"}`} style={{ fontSize: 20 }} />
+                      <i className="ti ti-building-hospital" style={{ fontSize: 20 }} />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 14, color: "#142131", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{etab.nom}</div>
@@ -376,9 +411,6 @@ export default function GroupementPage() {
                     </div>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
-                    {etab.est_partenaire && (
-                      <span style={{ background: "#e6f7f7", color: "#1c5454", fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 6 }}>PARTENAIRE</span>
-                    )}
                     {etab.finess && (
                       <span style={{ background: "#eef5fc", color: "#185FA5", fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 6 }}>FINESS {etab.finess}</span>
                     )}
@@ -386,13 +418,48 @@ export default function GroupementPage() {
                       <span style={{ background: "#fff3da", color: "#7a4f15", fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 6 }}>🛏 {etab.capacite} lits</span>
                     )}
                   </div>
-                  <div style={{ marginTop: 8, fontSize: 11, color: "#185FA5", display: "flex", alignItems: "center", gap: 4 }}>
-                    <i className="ti ti-stack-2" /> Voir bâtiments <i className="ti ti-chevron-right" style={{ marginLeft: "auto" }} />
+                  {/* 0.58.31 : 2 actions footer — Bâtiments + Équipe & Services */}
+                  <div style={{ marginTop: 10, display: "flex", gap: 6, fontSize: 11 }}>
+                    <div style={{
+                      flex: 1,
+                      color: "#185FA5",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "5px 8px",
+                      background: "#eef5fc",
+                      borderRadius: 6,
+                      fontWeight: 600,
+                    }}>
+                      <i className="ti ti-stack-2" />
+                      <span>Bâtiments</span>
+                    </div>
+                    <span
+                      onClick={(e) => { e.stopPropagation(); router.push(`/etablissement?etab=${etab.id}`); }}
+                      style={{
+                        color: "#7a6fb0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "5px 10px",
+                        background: "#f4f0fa",
+                        borderRadius: 6,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        transition: "background 150ms",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "#e8e0f3"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "#f4f0fa"; }}
+                      title="Voir équipes & services de cet établissement"
+                    >
+                      <i className="ti ti-sitemap" />
+                      <span>Équipe</span>
+                    </span>
                   </div>
                 </button>
               ))}
               {etabs.length === 0 && (
-                <Panel><StateMsg>Aucun établissement rattaché. Va dans <a href="/etablissements" style={{ color: "#185FA5", fontWeight: 600 }}>Annuaire</a> pour en créer.</StateMsg></Panel>
+                <Panel><StateMsg>Aucun établissement rattaché au groupement. Utilise le bouton ci-dessus pour en créer un.</StateMsg></Panel>
               )}
             </div>
           </>
