@@ -10,9 +10,9 @@
 //  Seul THEME_LABELS (2 KB) reste en import statique.
 //
 //  STATS au moment de la génération :
-//   - VERSIONS_INDEX (JSON public) : 595.3 KB lazy
+//   - VERSIONS_INDEX (JSON public) : 598.8 KB lazy
 //   - Extra (chantiers > 5)        : 144.5 KB lazy
-//   - Versions : 225
+//   - Versions : 226
 // =============================================================
 
 export const THEME_LABELS = {

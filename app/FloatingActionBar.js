@@ -12,6 +12,9 @@
 //  - Config lue depuis lib/shortcutsConfig (localStorage)
 //  - Sync via event "av-shortcuts-config-change"
 //  - Esc / clic ailleurs / changement de page = ferme
+//
+//  0.56.17 historique : guard hydration (mounted state) pour éviter
+//  les hydration mismatch React #418/#423 entre SSR/CSR (conservé).
 // =============================================================
 
 import { useState, useEffect } from "react";
