@@ -35,6 +35,8 @@ export default function GroupementPage() {
   const [popupEtab, setPopupEtab] = useState(null);
   const [popupTree, setPopupTree] = useState(null);
   const [popupLoading, setPopupLoading] = useState(false);
+  // 0.58.35 : onglet actif du popup établissement (bats | equipes)
+  const [popupTab, setPopupTab] = useState("bats");
 
   const isAdmin = auth.role?.nom === "Administrateur" || (auth.can && auth.can("gerer_roles"));
 
@@ -150,7 +152,7 @@ export default function GroupementPage() {
       
       // Charger les étages, services, chambres pour ces bâtiments
       const batIds = (bats || []).map(b => b.id);
-      let etages = [], services = [], chambres = [], lits = [];
+      let etages = [], services = [], chambres = [], lits = [], equipes = [];
       if (batIds.length > 0) {
         const r1 = await supabase.from("etages").select("id, nom, batiment_id").in("batiment_id", batIds).order("nom");
         etages = r1.data || [];
@@ -169,8 +171,16 @@ export default function GroupementPage() {
             }
           }
         }
+        // 0.58.35 : charge aussi les équipes liées à ces bâtiments
+        const r5 = await supabase
+          .from("equipes")
+          .select("id, nom, description, couleur, batiment_id, archive")
+          .in("batiment_id", batIds)
+          .or("archive.is.null,archive.eq.false")
+          .order("nom");
+        equipes = r5.data || [];
       }
-      setPopupTree({ bats: bats || [], etages, services, chambres, lits });
+      setPopupTree({ bats: bats || [], etages, services, chambres, lits, equipes });
     } catch (e) {
       await dialogs.alert({ title: "Erreur", message: e.message });
     } finally {
@@ -465,14 +475,14 @@ export default function GroupementPage() {
           </>
         )}
 
-        {/* Popup bâtiments de l'établissement */}
+        {/* Popup établissement : Bâtiments + Équipes & Services (0.58.35 : onglets) */}
         {popupEtab && (
           <Modal
             open={true}
-            onClose={() => { setPopupEtab(null); setPopupTree(null); }}
-            title={`Bâtiments — ${popupEtab.nom}`}
+            onClose={() => { setPopupEtab(null); setPopupTree(null); setPopupTab("bats"); }}
+            title={`${popupEtab.nom}`}
             footer={<>
-              <Btn variant="ghost" onClick={() => { setPopupEtab(null); setPopupTree(null); }}>Fermer</Btn>
+              <Btn variant="ghost" onClick={() => { setPopupEtab(null); setPopupTree(null); setPopupTab("bats"); }}>Fermer</Btn>
               <Btn variant="primary" icon="ti-edit" onClick={() => { window.location.href = "/etablissement/edition"; }}>
                 Éditer la hiérarchie
               </Btn>
@@ -481,7 +491,85 @@ export default function GroupementPage() {
             {popupLoading ? (
               <StateMsg>Chargement de la hiérarchie…</StateMsg>
             ) : popupTree ? (
-              <TreeView tree={popupTree} />
+              <>
+                {/* 0.58.35 : onglets Bâtiments / Équipes */}
+                <div style={{
+                  display: "flex",
+                  gap: 6,
+                  marginBottom: 16,
+                  borderBottom: "2px solid #f0f4f7",
+                  paddingBottom: 0,
+                }}>
+                  <button
+                    onClick={() => setPopupTab("bats")}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: popupTab === "bats" ? "3px solid #185FA5" : "3px solid transparent",
+                      marginBottom: -2,
+                      padding: "10px 16px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      fontSize: 13,
+                      fontWeight: popupTab === "bats" ? 700 : 500,
+                      color: popupTab === "bats" ? "#185FA5" : "#6c7a89",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      transition: "all 150ms",
+                    }}
+                  >
+                    <i className="ti ti-stack-2" />
+                    Bâtiments
+                    <span style={{
+                      background: popupTab === "bats" ? "#185FA5" : "#cfd8e0",
+                      color: "#fff",
+                      borderRadius: 10,
+                      padding: "1px 7px",
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      marginLeft: 4,
+                    }}>{popupTree.bats.length}</span>
+                  </button>
+                  <button
+                    onClick={() => setPopupTab("equipes")}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: popupTab === "equipes" ? "3px solid #7a6fb0" : "3px solid transparent",
+                      marginBottom: -2,
+                      padding: "10px 16px",
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      fontSize: 13,
+                      fontWeight: popupTab === "equipes" ? 700 : 500,
+                      color: popupTab === "equipes" ? "#7a6fb0" : "#6c7a89",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      transition: "all 150ms",
+                    }}
+                  >
+                    <i className="ti ti-sitemap" />
+                    Équipes &amp; Services
+                    <span style={{
+                      background: popupTab === "equipes" ? "#7a6fb0" : "#cfd8e0",
+                      color: "#fff",
+                      borderRadius: 10,
+                      padding: "1px 7px",
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      marginLeft: 4,
+                    }}>{(popupTree.equipes?.length || 0) + (popupTree.services?.length || 0)}</span>
+                  </button>
+                </div>
+
+                {/* Contenu de l'onglet actif */}
+                {popupTab === "bats" && <TreeView tree={popupTree} />}
+                {popupTab === "equipes" && (
+                  <EquipesServicesView tree={popupTree} onOpenEquipe={(id) => { window.location.href = `/equipe/${id}`; }} />
+                )}
+              </>
             ) : (
               <StateMsg>Aucune donnée.</StateMsg>
             )}
@@ -590,5 +678,193 @@ function Stat({ icon, color, value, label }) {
         <div style={{ fontSize: 10, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".3px", fontWeight: 600 }}>{label}</div>
       </div>
     </div>
+  );
+}
+
+// =============================================================
+//  0.58.35 : Vue Équipes & Services dans le popup établissement
+//
+//  Affiche les équipes de l'établissement (groupées par bâtiment),
+//  ainsi que la liste des services. Permet d'accéder rapidement à
+//  la page de détail d'une équipe (/equipe/{id}).
+// =============================================================
+function EquipesServicesView({ tree, onOpenEquipe }) {
+  if (!tree) return null;
+  const equipesParBat = {};
+  (tree.equipes || []).forEach(eq => {
+    const key = eq.batiment_id || "_sans_bat";
+    if (!equipesParBat[key]) equipesParBat[key] = [];
+    equipesParBat[key].push(eq);
+  });
+
+  const batsAvecEquipes = (tree.bats || []).filter(b => (equipesParBat[b.id] || []).length > 0);
+  const equipesTransversales = equipesParBat._sans_bat || [];
+
+  // Services groupés par bâtiment (via étage)
+  const etageBatMap = {};
+  (tree.etages || []).forEach(e => { etageBatMap[e.id] = e.batiment_id; });
+  const servicesParBat = {};
+  (tree.services || []).forEach(s => {
+    const batId = etageBatMap[s.etage_id] || "_sans_bat";
+    if (!servicesParBat[batId]) servicesParBat[batId] = [];
+    servicesParBat[batId].push(s);
+  });
+
+  return (
+    <div>
+      {/* Équipes par bâtiment */}
+      <div style={{ marginBottom: 18 }}>
+        <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#7a6fb0", display: "flex", alignItems: "center", gap: 8 }}>
+          <i className="ti ti-users" /> Équipes ({tree.equipes?.length || 0})
+        </h3>
+        {(tree.equipes?.length || 0) === 0 ? (
+          <div style={{
+            padding: "16px",
+            background: "#f4f0fa",
+            borderRadius: 10,
+            border: "1px dashed #d7c9eb",
+            color: "#5a4a90",
+            fontSize: 13,
+            textAlign: "center",
+          }}>
+            <i className="ti ti-info-circle" style={{ marginRight: 6 }} />
+            Aucune équipe constituée pour cet établissement. Va dans <a href="/equipes" style={{ color: "#7a6fb0", fontWeight: 600 }}>/equipes</a> pour en créer.
+          </div>
+        ) : (
+          <>
+            {batsAvecEquipes.map(b => (
+              <div key={b.id} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                  <i className="ti ti-building" /> {b.nom}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+                  {equipesParBat[b.id].map(eq => (
+                    <EquipeCard key={eq.id} equipe={eq} onClick={() => onOpenEquipe?.(eq.id)} />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {equipesTransversales.length > 0 && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: "#7CC8C8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                  <i className="ti ti-arrows-shuffle" /> Équipes transversales (sans bâtiment)
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8 }}>
+                  {equipesTransversales.map(eq => (
+                    <EquipeCard key={eq.id} equipe={eq} onClick={() => onOpenEquipe?.(eq.id)} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Services par bâtiment */}
+      <div>
+        <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#EF9F27", display: "flex", alignItems: "center", gap: 8 }}>
+          <i className="ti ti-stethoscope" /> Services ({tree.services?.length || 0})
+        </h3>
+        {(tree.services?.length || 0) === 0 ? (
+          <div style={{
+            padding: "16px",
+            background: "#fff8ec",
+            borderRadius: 10,
+            border: "1px dashed #f0d59f",
+            color: "#7a4f15",
+            fontSize: 13,
+            textAlign: "center",
+          }}>
+            <i className="ti ti-info-circle" style={{ marginRight: 6 }} />
+            Aucun service défini pour cet établissement.
+          </div>
+        ) : (
+          <>
+            {(tree.bats || []).filter(b => (servicesParBat[b.id] || []).length > 0).map(b => (
+              <div key={b.id} style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: "#185FA5", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                  <i className="ti ti-building" /> {b.nom}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {servicesParBat[b.id].map(s => (
+                    <span key={s.id} style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 5,
+                      padding: "4px 10px",
+                      background: "#fff",
+                      border: "1px solid #f0d59f",
+                      borderRadius: 99,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#7a4f15",
+                    }}>
+                      <i className="ti ti-stethoscope" style={{ color: "#EF9F27" }} />
+                      {s.nom}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EquipeCard({ equipe, onClick }) {
+  const couleur = equipe.couleur || "#7a6fb0";
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "#fff",
+        border: `1px solid ${couleur}40`,
+        borderLeft: `4px solid ${couleur}`,
+        borderRadius: 10,
+        padding: "10px 12px",
+        cursor: "pointer",
+        fontFamily: "inherit",
+        textAlign: "left",
+        transition: "all 150ms",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-1px)";
+        e.currentTarget.style.boxShadow = `0 4px 12px ${couleur}33`;
+        e.currentTarget.style.background = `${couleur}08`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.background = "#fff";
+      }}
+      title={equipe.description || equipe.nom}
+    >
+      <div style={{
+        width: 32, height: 32, borderRadius: 8,
+        background: `${couleur}22`,
+        color: couleur,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+        fontSize: 15,
+      }}>
+        <i className="ti ti-users" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: 700, fontSize: 13, color: "#142131", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {equipe.nom}
+        </div>
+        {equipe.description && (
+          <div style={{ fontSize: 11, color: "#6c7a89", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {equipe.description}
+          </div>
+        )}
+      </div>
+      <i className="ti ti-chevron-right" style={{ color: couleur, opacity: 0.6 }} />
+    </button>
   );
 }

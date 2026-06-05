@@ -19,6 +19,8 @@ import NotifBell from "./NotifBell";
 import UserMenu from "./UserMenu";
 import StatusIcons from "./StatusIcons";
 import Modal from "./components/Modal";
+// 0.58.35 : sélecteurs bâtiment + service dans la TopBar (desktop only)
+import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
 
 // 0.56.15 : réorganisation par 5 sections métier dans l'ordre du workflow :
 // 1. COLLECTIVITÉ (vue globale, hiérarchie, équipes, patients, matériel)
@@ -259,6 +261,8 @@ export default function TopBar({ cartCount = 0, auth }) {
             </select>
           </div>
         )}
+        {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) */}
+        {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
         {mounted && auth && <NotifBell structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <button className="tb-icon" onClick={() => router.push("/panier")} aria-label="Panier">

@@ -1,0 +1,284 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.35 — FAB bulle droite + BatSvc + Équipes</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes fab-pulse{0%{transform:scale(1);opacity:.7}70%{transform:scale(1.5);opacity:0}100%{transform:scale(1.5);opacity:0}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes shortcut-stagger{from{opacity:0;transform:translateX(20px)scale(.6)}to{opacity:1;transform:translateX(0)scale(1)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.35),rgba(124,200,200,.25));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50);z-index:2}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #185FA5}
+
+/* DEMO 1 : FAB à droite avec bulle teal */
+.fab-stage{background:linear-gradient(135deg,#1a2a3a,#0d1b28);border-radius:14px;padding:30px;margin:18px 0;min-height:200px;position:relative;overflow:hidden;border:1px solid rgba(124,200,200,.20)}
+.fab-stage .topbar{position:absolute;top:0;left:0;right:0;height:50px;background:rgba(255,255,255,.05);border-bottom:1px solid rgba(124,200,200,.10);display:flex;align-items:center;padding:0 16px;color:#bfe6e6;font-weight:700;font-size:12px;justify-content:space-between}
+.fab-stage .topbar .left{display:flex;align-items:center;gap:10px}
+.fab-stage .topbar .right{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500;color:rgba(191,230,230,.6)}
+.fab-stage .topbar .badge{background:rgba(124,200,200,.15);padding:3px 8px;border-radius:6px;display:flex;align-items:center;gap:4px;color:#7CC8C8;border:1px solid rgba(124,200,200,.20)}
+.fab-row{position:absolute;top:80px;right:16px;display:flex;align-items:center;gap:10px;flex-direction:row-reverse}
+.fab-bubble{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;position:relative;border:2px solid rgba(255,255,255,.30)}
+.fab-bubble.main{background:linear-gradient(135deg,#7CC8C8,#5da8a8);box-shadow:0 6px 20px rgba(124,200,200,.50);font-size:18px}
+.fab-bubble.main::before{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(124,200,200,.60);animation:fab-pulse 2s ease-out infinite}
+.fab-bubble.violet{background:linear-gradient(135deg,#7a6fb0,#5a4a90);box-shadow:0 6px 18px rgba(122,111,176,.55);animation:shortcut-stagger .4s 0s backwards}
+.fab-bubble.blue{background:linear-gradient(135deg,#2a7ed1,#185FA5);box-shadow:0 6px 18px rgba(24,95,165,.55);animation:shortcut-stagger .4s 60ms backwards}
+.fab-bubble.amber{background:linear-gradient(135deg,#f5b144,#EF9F27);box-shadow:0 6px 18px rgba(239,159,39,.55);animation:shortcut-stagger .4s 120ms backwards}
+
+/* DEMO 2 : Popup établissement avec onglets */
+.popup-demo{background:#fff;border-radius:14px;padding:0;margin:18px 0;color:#142131;box-shadow:0 4px 24px rgba(0,0,0,.25);overflow:hidden}
+.popup-head{padding:18px 24px;background:linear-gradient(135deg,#185FA5,#0e4884);color:#fff;display:flex;align-items:center;gap:10px}
+.popup-head .ttl{font-size:16px;font-weight:700;flex:1}
+.popup-body{padding:18px 24px}
+.popup-tabs{display:flex;gap:6px;border-bottom:2px solid #f0f4f7;margin-bottom:16px}
+.popup-tab{background:transparent;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 16px;font-size:13px;color:#6c7a89;display:inline-flex;align-items:center;gap:6px;font-weight:500;cursor:pointer}
+.popup-tab.active{font-weight:700}
+.popup-tab.active.bats{border-bottom-color:#185FA5;color:#185FA5}
+.popup-tab.active.eq{border-bottom-color:#7a6fb0;color:#7a6fb0}
+.popup-tab .count{border-radius:10px;padding:1px 7px;font-size:10.5px;font-weight:700;color:#fff;margin-left:4px}
+.popup-tab .count.bats{background:#185FA5}
+.popup-tab .count.eq{background:#7a6fb0}
+.popup-tab .count.gray{background:#cfd8e0}
+
+.eq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:8px}
+.eq-card{background:#fff;border:1px solid;border-left-width:4px;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:13px}
+.eq-card .ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.eq-card .body{flex:1;min-width:0}
+.eq-card .name{font-weight:700;color:#142131}
+.eq-card .desc{font-size:11px;color:#6c7a89}
+.bat-header{font-size:11.5px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;display:flex;align-items:center;gap:5px}
+.svc-pills{display:flex;flex-wrap:wrap;gap:6px}
+.svc-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#fff;border:1px solid #f0d59f;border-radius:99px;font-size:12px;font-weight:600;color:#7a4f15}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>FAB DROITE · BAT/SVC · ÉQUIPES · 0.58.35</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.35 — FAB bulle teal à droite + Bâtiment/Service TopBar + Équipes dans popup<small>3 demandes Cédric : (1) FAB bouton en bulle pleine à droite (plus d'icône hamburger) (2) sélecteurs bâtiment + service dans la TopBar desktop (3) équipes & services dans le popup tuile établissement</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.35-alpha</code></span>
+    <span><b>Tests :</b> ~4220 verts estimés</span>
+  </div>
+</header>
+
+<h2>🎯 1. FAB : bulle teal à DROITE</h2>
+
+<div class="panel">
+<p style="margin:0">Le bouton menu est maintenant <b>à droite</b> (au lieu de gauche) et c'est une <b>vraie bulle pleine</b> teal Aveho avec pulse halo. Les 3 raccourcis glissent vers la <b>gauche</b> à l'ouverture (au lieu de la droite avant).</p>
+</div>
+
+<div class="fab-stage">
+  <div class="topbar">
+    <div class="left">
+      <span style="color:#fff;font-size:16px;font-weight:600;letter-spacing:2px">a<span style="color:#7CC8C8">v</span>eho</span>
+    </div>
+    <div class="right">
+      🏥 Mon EHPAD ▾ &nbsp;|&nbsp;
+      <span class="badge"><i>🏢</i> Bâtiment A ▾</span>
+      <span class="badge" style="background:rgba(239,159,39,.15);color:#EF9F27;border-color:rgba(239,159,39,.20)"><i>🩺</i> Cardiologie ▾</span>
+      🔔 🛒 👤
+    </div>
+  </div>
+  <div class="fab-row">
+    <div class="fab-bubble main">✨</div>
+    <div class="fab-bubble violet">🔍</div>
+    <div class="fab-bubble blue">🏥</div>
+    <div class="fab-bubble amber">🛒</div>
+  </div>
+  <p style="position:absolute;bottom:16px;left:20px;color:rgba(191,230,230,.6);margin:0;font-size:11.5px;font-style:italic">
+    ↑ Bulle teal Aveho avec halo pulse · Au clic : croix + bulles glissent vers la gauche (stagger 60ms)
+  </p>
+</div>
+
+<h2>🏢 2. TopBar : bâtiment + service courants (desktop only)</h2>
+
+<div class="panel">
+<p style="margin:0">Deux sélecteurs compacts ajoutés à côté du sélecteur d'établissement. Persistés en localStorage avec préfixe <code>av-</code> (purgeables au logout). <b>Masqués en mobile</b> via media query (la TopBar mobile a déjà peu de place).</p>
+</div>
+
+<pre>// 0.58.35 - app/components/BatimentServiceSwitcher.js (NEW)
+const STORAGE_BAT = 'av-current-batiment-id';
+const STORAGE_SVC = 'av-current-service-id';
+
+// Charge bâtiments quand auth.etabId change
+useEffect(() => {
+  supabase.from('batiments')
+    .select('id, nom')
+    .eq('etablissement_id', auth.etabId);
+}, [auth?.etabId]);
+
+// Charge services via étages → services
+useEffect(() => {
+  const { data: etages } = await supabase.from('etages')
+    .select('id').eq('batiment_id', batId);
+  const { data: svcs } = await supabase.from('services')
+    .select('id, nom').in('etage_id', etages.map(e => e.id));
+}, [batId]);
+
+// Émet event pour que d'autres composants puissent réagir
+window.dispatchEvent(new CustomEvent('av-current-context-change', {
+  detail: { batimentId: id, serviceId: null }
+}));
+
+// CSS : masqué en mobile
+@media (max-width: 768px) {
+  .bat-svc-switch { display: none !important; }
+}</pre>
+
+<h2>👥 3. Popup établissement : onglets Bâtiments + Équipes & Services</h2>
+
+<div class="panel">
+<p style="margin:0">Quand tu cliques sur une tuile d'établissement dans <code>/collectivite</code>, tu accèdes désormais à <b>2 onglets</b> dans le popup : Bâtiments (la TreeView habituelle) et le nouvel onglet <b>Équipes & Services</b> qui groupe les équipes par bâtiment + section transversales + liste des services en pilules.</p>
+</div>
+
+<div class="popup-demo">
+  <div class="popup-head">
+    <i>🏥</i>
+    <span class="ttl">EHPAD Les Pins</span>
+  </div>
+  <div class="popup-body">
+    <div class="popup-tabs">
+      <button class="popup-tab bats">📚 Bâtiments <span class="count gray">3</span></button>
+      <button class="popup-tab active eq">🗺 Équipes &amp; Services <span class="count eq">9</span></button>
+    </div>
+
+    <h3 style="margin:0 0 12px;font-size:14px;color:#7a6fb0;display:flex;align-items:center;gap:8px">
+      👥 Équipes (5)
+    </h3>
+
+    <div class="bat-header">🏢 Bâtiment A — Principal</div>
+    <div class="eq-grid">
+      <div class="eq-card" style="border-color:#7a6fb040;border-left-color:#7a6fb0">
+        <div class="ico" style="background:#7a6fb022;color:#7a6fb0">👥</div>
+        <div class="body">
+          <div class="name">Équipe matin</div>
+          <div class="desc">Infirmiers + AS du matin</div>
+        </div>
+        <span style="color:#7a6fb0;opacity:.6">›</span>
+      </div>
+      <div class="eq-card" style="border-color:#185FA540;border-left-color:#185FA5">
+        <div class="ico" style="background:#185FA522;color:#185FA5">👥</div>
+        <div class="body">
+          <div class="name">Équipe nuit</div>
+          <div class="desc">Veille de nuit</div>
+        </div>
+        <span style="color:#185FA5;opacity:.6">›</span>
+      </div>
+    </div>
+
+    <div class="bat-header">🏢 Bâtiment B — Annexe</div>
+    <div class="eq-grid">
+      <div class="eq-card" style="border-color:#EF9F2740;border-left-color:#EF9F27">
+        <div class="ico" style="background:#EF9F2722;color:#EF9F27">👥</div>
+        <div class="body">
+          <div class="name">Équipe Cardiologie</div>
+          <div class="desc">Spécialisée cardio</div>
+        </div>
+        <span style="color:#EF9F27;opacity:.6">›</span>
+      </div>
+    </div>
+
+    <div style="font-size:11.5px;font-weight:700;color:#7CC8C8;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;display:flex;align-items:center;gap:5px">
+      🔀 Équipes transversales (sans bâtiment)
+    </div>
+    <div class="eq-grid">
+      <div class="eq-card" style="border-color:#5aa05a40;border-left-color:#5aa05a">
+        <div class="ico" style="background:#5aa05a22;color:#5aa05a">👥</div>
+        <div class="body">
+          <div class="name">Médecins traitants</div>
+          <div class="desc">Médecins libéraux affiliés</div>
+        </div>
+        <span style="color:#5aa05a;opacity:.6">›</span>
+      </div>
+    </div>
+
+    <h3 style="margin:24px 0 12px;font-size:14px;color:#EF9F27;display:flex;align-items:center;gap:8px">
+      🩺 Services (4)
+    </h3>
+    <div class="bat-header">🏢 Bâtiment A — Principal</div>
+    <div class="svc-pills">
+      <span class="svc-pill">🩺 Cardiologie</span>
+      <span class="svc-pill">🩺 Médecine générale</span>
+      <span class="svc-pill">🩺 Soins palliatifs</span>
+    </div>
+    <div class="bat-header">🏢 Bâtiment B — Annexe</div>
+    <div class="svc-pills">
+      <span class="svc-pill">🩺 Kinésithérapie</span>
+    </div>
+  </div>
+</div>
+
+<h2>📊 Récapitulatif</h2>
+
+<div class="panel">
+<table>
+<tr><th>Demande Cédric</th><th>Implémentation</th></tr>
+<tr><td>FAB bouton bulle à droite (plus de hamburger)</td><td>Position <code>right: 16px</code> + <code>borderRadius: 50%</code> + gradient teal + icône <code>ti-sparkles</code> + pulse halo + bulles glissent à gauche via <code>row-reverse</code></td></tr>
+<tr><td>Barre du haut : bâtiment + service (pas mobile)</td><td>Nouveau composant <code>BatimentServiceSwitcher</code>. Charge bât/svc via auth.etabId. CSS hidden en mobile via <code>@media (max-width: 768px)</code></td></tr>
+<tr><td>Voir équipes & services dans popup tuile groupement</td><td>Onglets dans le Modal de <code>/collectivite</code> : Bâtiments (existant) + Équipes &amp; Services (nouveau). Composant <code>EquipesServicesView</code> + <code>EquipeCard</code> qui groupe par bâtiment</td></tr>
+</table>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4220 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.35 - FAB bulle teal à droite + BatimentServiceSwitcher TopBar + Équipes/Services popup établissement"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.36)</h2>
+<div class="panel">
+<ul>
+<li>Mode présentation : option 'masquer notifs' (comme focus mode 0.58.30)</li>
+<li>Cmd+K : section 'Récents' premium avec mini-timeline</li>
+<li>Nouveaux widgets dashboard : météo locale, citation du jour, mini-calendrier, liens favoris</li>
+<li>Filtrer listes (patients, matériels, DI) selon contexte bât/svc via <code>av-current-context-change</code></li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.35 · 5 juin 2026 · FAB DROITE + BATIMENT/SERVICE + ÉQUIPES POPUP</footer>
+</div>
+
+</body></html>

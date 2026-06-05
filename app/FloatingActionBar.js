@@ -1,17 +1,10 @@
 "use client";
 // =============================================================
-//  app/FloatingActionBar.js (0.58.31)
+//  app/FloatingActionBar.js (0.58.35)
 //
-//  REFONTE : ancienne barre 3 bulles en pied de page → bouton menu
-//  en HAUT-GAUCHE qui se déplie horizontalement vers la droite
-//  avec les 3 raccourcis configurables (via /profil).
-//
-//  - Bouton hamburger fixed top-left (sous TopBar)
-//  - Au clic : 3 bulles glissent vers la droite avec animation séquentielle
-//  - Chaque bulle = url + label + icon + gradient configurable
-//  - Config lue depuis lib/shortcutsConfig (localStorage)
-//  - Sync via event "av-shortcuts-config-change"
-//  - Esc / clic ailleurs / changement de page = ferme
+//  0.58.35 : repositionné à DROITE, bouton principal en bulle pleine
+//   teal (plus d'icône hamburger). Les 3 raccourcis glissent vers la
+//   gauche en s'ouvrant.
 //
 //  0.56.17 historique : guard hydration (mounted state) pour éviter
 //  les hydration mismatch React #418/#423 entre SSR/CSR (conservé).
@@ -71,50 +64,75 @@ export default function FloatingActionBar() {
         />
       )}
 
+      {/* 0.58.35 : container fixed top-RIGHT (était top-left avant) */}
       <div
         className="av-shortcuts-bar"
         style={{
           position: "fixed",
           top: "calc(74px + env(safe-area-inset-top, 0px))",
-          left: 16,
+          right: 16,
           zIndex: 9991,
           display: "flex",
           alignItems: "center",
           gap: 10,
+          flexDirection: "row-reverse",  // 0.58.35 : inverse l'ordre pour que les bulles glissent vers la gauche
         }}
         role="navigation"
         aria-label="Raccourcis rapides"
       >
+        {/* Bouton principal : bulle pleine teal (plus d'icône hamburger) */}
         <button
           onClick={() => setOpen(!open)}
-          aria-label="Ouvrir les raccourcis"
+          aria-label={open ? "Fermer les raccourcis" : "Ouvrir les raccourcis"}
           aria-expanded={open}
           style={{
             width: 48,
             height: 48,
-            borderRadius: 16,
+            borderRadius: "50%",  // 0.58.35 : cercle pur (était 16px arrondi)
             background: open
               ? "linear-gradient(135deg, #142131, #243044)"
-              : "linear-gradient(135deg, #2a3a52, #142131)",
+              : "linear-gradient(135deg, #7CC8C8, #5da8a8)",  // 0.58.35 : teal Aveho au lieu de navy avec hamburger
             color: "#fff",
-            border: "1px solid rgba(124,200,200,.20)",
+            border: "2px solid rgba(255,255,255,.30)",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 22,
+            fontSize: 18,
             boxShadow: open
-              ? "0 8px 24px rgba(20,33,49,.40), 0 0 24px rgba(124,200,200,.30)"
-              : "0 6px 18px rgba(20,33,49,.30)",
-            transition: "all 220ms cubic-bezier(.2,.8,.2,1)",
-            transform: open ? "scale(1.05)" : "scale(1)",
+              ? "0 8px 24px rgba(20,33,49,.40), 0 0 20px rgba(124,200,200,.45)"
+              : "0 6px 20px rgba(124,200,200,.50), 0 0 0 1px rgba(255,255,255,.10) inset",
+            transition: "all 280ms cubic-bezier(.34, 1.56, .64, 1)",
+            transform: open ? "rotate(180deg) scale(1.05)" : "rotate(0deg) scale(1)",
             fontFamily: "inherit",
             padding: 0,
+            position: "relative",
           }}
-          onMouseEnter={(e) => { if (!open) e.currentTarget.style.transform = "scale(1.05)"; }}
-          onMouseLeave={(e) => { if (!open) e.currentTarget.style.transform = "scale(1)"; }}
+          onMouseEnter={(e) => {
+            if (!open) {
+              e.currentTarget.style.transform = "scale(1.10)";
+              e.currentTarget.style.boxShadow = "0 8px 28px rgba(124,200,200,.65), 0 0 0 2px rgba(255,255,255,.20) inset";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!open) {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(124,200,200,.50), 0 0 0 1px rgba(255,255,255,.10) inset";
+            }
+          }}
         >
-          <i className={`ti ${open ? "ti-x" : "ti-menu-2"}`} />
+          {/* 0.58.35 : pulse halo si fermé pour attirer l'œil */}
+          {!open && (
+            <span style={{
+              position: "absolute",
+              inset: -3,
+              borderRadius: "50%",
+              border: "2px solid rgba(124,200,200,.60)",
+              animation: "av-fab-pulse 2s ease-out infinite",
+              pointerEvents: "none",
+            }} />
+          )}
+          <i className={`ti ${open ? "ti-x" : "ti-sparkles"}`} />
         </button>
 
         {shortcuts.map((s, idx) => (
@@ -126,10 +144,10 @@ export default function FloatingActionBar() {
             style={{
               width: 48,
               height: 48,
-              borderRadius: 16,
+              borderRadius: "50%",  // 0.58.35 : cercles purs (uniformité avec le bouton principal)
               background: s.gradient || `linear-gradient(135deg, ${s.color}, ${s.color}cc)`,
               color: "#fff",
-              border: "1px solid rgba(255,255,255,.18)",
+              border: "2px solid rgba(255,255,255,.20)",
               cursor: "pointer",
               display: "flex",
               flexDirection: "column",
@@ -140,7 +158,8 @@ export default function FloatingActionBar() {
               fontFamily: "inherit",
               padding: 0,
               opacity: open ? 1 : 0,
-              transform: open ? "translateX(0) scale(1)" : "translateX(-20px) scale(0.6)",
+              // 0.58.35 : bulles glissent vers la GAUCHE (translateX +20px → 0)
+              transform: open ? "translateX(0) scale(1)" : "translateX(20px) scale(0.6)",
               pointerEvents: open ? "auto" : "none",
               transition: `opacity 240ms ${idx * 60}ms ease-out, transform 320ms ${idx * 60}ms cubic-bezier(.34, 1.56, .64, 1)`,
               position: "relative",
@@ -159,14 +178,15 @@ export default function FloatingActionBar() {
             }}
           >
             <i className={`ti ${s.icon}`} />
+            {/* 0.58.35 : tooltip à GAUCHE de la bulle (puisque le menu est à droite de l'écran) */}
             <span style={{
               position: "absolute",
-              top: "calc(100% + 6px)",
-              left: "50%",
-              transform: "translateX(-50%)",
+              right: "calc(100% + 8px)",
+              top: "50%",
+              transform: "translateY(-50%)",
               background: "rgba(20, 33, 49, 0.92)",
               color: "#fff",
-              padding: "3px 10px",
+              padding: "4px 10px",
               borderRadius: 6,
               fontSize: 10.5,
               fontWeight: 700,
@@ -187,6 +207,11 @@ export default function FloatingActionBar() {
       <style jsx global>{`
         .av-shortcuts-bar button:hover .av-shortcut-tooltip {
           opacity: 1;
+        }
+        @keyframes av-fab-pulse {
+          0% { transform: scale(1); opacity: 0.7; }
+          70% { transform: scale(1.35); opacity: 0; }
+          100% { transform: scale(1.35); opacity: 0; }
         }
         @media (max-width: 768px) {
           .av-shortcuts-bar {
