@@ -20,6 +20,9 @@ import HeroDashboard from "./HeroDashboard";
 import { ParticlesBackground } from "../components/ui-premium";
 // 0.58.33 : dashboard widgets configurables drag & drop
 import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
+// 0.58.38 : 3 nouveaux widgets opt-in (citation, mini-calendrier, liens-favoris)
+// 0.58.39 : + widget météo (Open-Meteo + géolocalisation)
+import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget } from "../components/DashboardWidgets";
 import {
   getDashboardLayout, setDashboardLayout, resetDashboardLayout,
   DEFAULT_ACTIVE, DEFAULT_ORDER, ALL_WIDGETS,
@@ -514,6 +517,11 @@ export default function Accueil() {
                   </div>
                 </Panel>
               );
+              // 0.58.38 : 3 nouveaux widgets
+              if (k === "citation") return wrapWithDrag(<CitationWidget />);
+              if (k === "mini-calendrier") return wrapWithDrag(<MiniCalendrierWidget />);
+              if (k === "liens-favoris") return wrapWithDrag(<LiensFavorisWidget />);
+              if (k === "meteo") return wrapWithDrag(<WeatherWidget />);
               return null;
             })}
           </>

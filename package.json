@@ -1,6 +1,6 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.58.36-alpha",
+  "version": "0.58.39-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",

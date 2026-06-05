@@ -1,0 +1,322 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.39 — 5 pistes implémentées</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.35),rgba(124,200,200,.25));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #185FA5}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO citation */
+.citation-stage{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.citation-card{background:linear-gradient(135deg,#fff 0%,#fff5f3 100%);border:1px solid #e8c5bf;border-radius:14px;padding:20px;color:#142131;position:relative;overflow:hidden}
+.citation-card .quote-mark{position:absolute;top:8px;right:14px;color:#C9867F;opacity:.18;font-size:56px;line-height:1}
+.citation-card p.txt{margin:0;font-style:italic;font-size:14.5px;line-height:1.55;color:#5a4540;font-weight:500;position:relative}
+.citation-card .footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px}
+.citation-card .auth{font-size:12px;color:#C9867F;font-weight:700;flex:1;text-align:right;margin:0}
+.citation-card button{background:transparent;border:1px solid #e8c5bf;color:#C9867F;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+
+/* DEMO weather */
+.weather-card{background:linear-gradient(135deg,#e0f4ff 0%,#fff 100%);border:1px solid #bce0f7;border-radius:14px;padding:20px;color:#142131;margin:14px 0;max-width:480px}
+.weather-row{display:flex;align-items:center;gap:16px}
+.weather-icon{font-size:56px;line-height:1;filter:drop-shadow(0 4px 8px rgba(24,95,165,.30))}
+.weather-temp{font-size:32px;font-weight:700;color:#185FA5;line-height:1}
+.weather-temp small{font-size:18px;color:#5a8888}
+.weather-meta{font-size:11px;color:#8a98a8;margin-top:6px;display:flex;gap:12px}
+
+/* DEMO timeline */
+.timeline-demo{background:#fff;border-radius:14px;padding:16px;color:#142131;max-width:420px;box-shadow:0 8px 30px rgba(0,0,0,.30)}
+.timeline-wrap{position:relative;padding-left:18px}
+.timeline-line{position:absolute;left:7px;top:8px;bottom:8px;width:2px;background:linear-gradient(180deg,#7CC8C8 0%,rgba(124,200,200,0.15) 100%);border-radius:1px}
+.timeline-item{position:relative;padding:8px 10px;display:flex;align-items:center;gap:10px;margin-bottom:4px;border-radius:8px}
+.timeline-dot{position:absolute;left:-16px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;border:2px solid #fff}
+.timeline-dot.blue{background:#185FA5;box-shadow:0 0 0 2px #185FA555,0 2px 6px #185FA540}
+.timeline-dot.terra{background:#C9867F;box-shadow:0 0 0 2px #C9867F55,0 2px 6px #C9867F40}
+.timeline-dot.amber{background:#EF9F27;box-shadow:0 0 0 2px #EF9F2755,0 2px 6px #EF9F2740}
+.timeline-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.timeline-content{flex:1}
+.timeline-content .title{font-weight:600;font-size:12px}
+.timeline-content .sub{font-size:10px;color:#8a98a8}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE PISTES · 0.58.39</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.39 — Toutes les pistes de 0.58.38 implémentées<small>Citation reroll · Édition favoris · Widget météo · Hook useCurrentContext · Filtre /interventions · Cmd+K mini-timeline</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.39-alpha</code></span>
+    <span><b>Tests :</b> ~4320 verts estimés</span>
+  </div>
+</header>
+
+<h2>🎲 1. Citation : bouton "Une autre"</h2>
+
+<div class="panel">
+<p style="margin:0">Le widget Citation a maintenant un bouton qui permet de piocher une <b>citation aléatoire</b> différente de celle du jour. Au clic, l'icône change et un bouton "Du jour" permet de revenir à la citation déterministe.</p>
+</div>
+
+<div class="citation-stage">
+
+<div class="citation-card">
+<i class="ti ti-quote quote-mark">"</i>
+<p class="txt">« Le succès, c'est tomber sept fois, se relever huit. »</p>
+<div class="footer">
+  <p class="auth">— Proverbe japonais</p>
+  <button>🎲 Une autre</button>
+</div>
+</div>
+
+<div class="citation-card">
+<i class="ti ti-quote quote-mark">"</i>
+<p class="txt">« La simplicité est la sophistication suprême. »</p>
+<div class="footer">
+  <p class="auth">— Léonard de Vinci</p>
+  <button>↶ Du jour</button>
+</div>
+</div>
+
+</div>
+
+<h2>✏️ 2. Édition lien favori</h2>
+
+<div class="panel">
+<p style="margin:0">Bouton crayon bleu au hover sur chaque lien favori, à côté de la croix rouge. Pré-remplit le libellé et l'URL pour modification rapide.</p>
+</div>
+
+<pre>// 0.58.39 - app/components/DashboardWidgets.js
+async function editFav(idx) {
+  const current = favs[idx];
+  const label = await dialogs.prompt({
+    title: 'Modifier le libellé',
+    defaultValue: current.label,  // ← pré-rempli
+  });
+  if (label === null) return;
+  const url = await dialogs.prompt({
+    title: "Modifier l'URL",
+    defaultValue: current.url,
+  });
+  if (url === null) return;
+  const next = favs.map((f, i) => i === idx ? { label, url } : f);
+  setFavs(next);
+  setFavLinks(next);
+}
+
+{/* Boutons stack en haut-droite : edit + remove (au hover) */}
+&lt;button onClick={() =&gt; editFav(idx)} className='av-fav-edit'
+        style={{ top: -6, right: 18, background: '#185FA5' }}&gt;
+  &lt;i className='ti ti-pencil' /&gt;
+&lt;/button&gt;</pre>
+
+<h2>🌤 3. Widget météo locale (Open-Meteo + géolocalisation)</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau widget opt-in qui utilise <code>navigator.geolocation</code> + l'API gratuite <a href="https://open-meteo.com" style="color:#7CC8C8" target="_blank">Open-Meteo</a> (pas de clé, pas de tracking). Cache la position en localStorage TTL 24h.</p>
+</div>
+
+<div class="weather-card">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  <h3 style="margin:0;font-size:15px;color:#185FA5">☁️ Météo locale</h3>
+  <span style="font-size:10.5px;color:#5a8888;font-family:monospace">48.85, 2.35</span>
+</div>
+<div class="weather-row">
+  <div class="weather-icon">⛅</div>
+  <div style="flex:1">
+    <div class="weather-temp">19°<small>C</small></div>
+    <div style="font-size:12.5px;color:#5a8888;margin-top:4px">Partiellement nuageux</div>
+    <div class="weather-meta">
+      <span>💨 14 km/h</span>
+      <span>💧 62%</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<pre>// 0.58.39 - Open-Meteo API call
+const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lng}` +
+            `&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=auto`;
+const r = await fetch(url);
+const json = await r.json();
+// json.current.temperature_2m, json.current.weather_code, ...
+
+// Mapping codes WMO (21 codes)
+const WMO = {
+  0: { e: '☀️', l: 'Ciel dégagé' },
+  1: { e: '🌤', l: 'Plutôt dégagé' },
+  // ... 21 codes
+  95: { e: '⛈', l: 'Orage' },
+};</pre>
+
+<h2>🪝 4. Hook useCurrentContext + Filtre /interventions</h2>
+
+<div class="panel">
+<p style="margin:0">Hook réutilisable qui partage le contexte bât/svc défini dans la TopBar. Appliqué à <code>/interventions</code> avec chargement des patient_ids du contexte via chambres → patients.</p>
+</div>
+
+<pre>// 0.58.39 - lib/useCurrentContext.js (NEW)
+export function useCurrentContext() {
+  const [state, setState] = useState({ batimentId: null, serviceId: null, active: false });
+
+  useEffect(() => {
+    // Lit localStorage + écoute event av-current-context-change
+    const batimentId = localStorage.getItem('av-current-batiment-id');
+    const serviceId = localStorage.getItem('av-current-service-id');
+    setState(prev => ({ ...prev, batimentId, serviceId }));
+
+    function onCtxChange(e) { setState(prev => ({ ...prev, ...e.detail })); }
+    window.addEventListener('av-current-context-change', onCtxChange);
+    return () => window.removeEventListener('av-current-context-change', onCtxChange);
+  }, []);
+
+  return { ...state, toggle: () => setState(p => ({...p, active: !p.active})), setActive };
+}
+
+// app/interventions/page.js
+const ctx = useCurrentContext();
+const [ctxPatientIds, setCtxPatientIds] = useState(null);
+
+useEffect(() => {
+  if (!ctx.batimentId &amp;&amp; !ctx.serviceId) { setCtxPatientIds(null); return; }
+  (async () => {
+    // chambres du contexte → patient_ids
+    let query = supabase.from('chambres').select('id, service_id, batiment_id');
+    if (ctx.serviceId) query = query.eq('service_id', ctx.serviceId);
+    else if (ctx.batimentId) query = query.eq('batiment_id', ctx.batimentId);
+    const { data: chambres } = await query;
+    const { data: pats } = await supabase.from('patients').select('id')
+                                  .in('chambre_id', chambres.map(c => c.id));
+    setCtxPatientIds(new Set(pats.map(p => p.id)));
+  })();
+}, [ctx.batimentId, ctx.serviceId]);
+
+// Filtrage
+const visible = rows.filter(r =>
+  (!fStatut || r.statut === fStatut) &amp;&amp;
+  (!fType || r.type === fType) &amp;&amp;
+  (!ctx.active || !ctxPatientIds || ctxPatientIds.has(r.patient_id))
+);</pre>
+
+<div class="panel" style="border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))">
+<p style="margin:0"><b>⚠ /materiels reporté à 0.58.40</b> : la page utilise un composant <code>Crud</code> auto-géré qui charge ses données via <code>onData</code>. Le filtrage actif nécessite un refactoring du Crud pour accepter une prop <code>extraFilter</code>. Pour 0.58.40.</p>
+</div>
+
+<h2>⏱ 5. Cmd+K : section "Récents" en mini-timeline</h2>
+
+<div class="panel">
+<p style="margin:0">Refonte premium de la section "Récents" du Cmd+K. Ligne verticale en gradient teal + dots colorés par type + temps relatifs ("à l'instant", "il y a 5min", "hier", "il y a 3j").</p>
+</div>
+
+<div class="timeline-demo">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+  <p style="font-size:11px;font-weight:700;color:#142131;text-transform:uppercase;letter-spacing:.5px;margin:0;display:inline-flex;align-items:center;gap:6px">⚡ Récents</p>
+  <button style="background:none;border:none;color:#8a98a8;font-size:10px;cursor:pointer">Effacer</button>
+</div>
+<div class="timeline-wrap">
+  <div class="timeline-line"></div>
+  <div class="timeline-item" style="background:#eaf7f7">
+    <span class="timeline-dot blue"></span>
+    <span class="timeline-icon" style="background:#185FA522;color:#185FA5">👤</span>
+    <div class="timeline-content">
+      <div class="title">Dupont Marie</div>
+      <div class="sub">Ch. 12 · 🕐 à l'instant</div>
+    </div>
+    <span style="font-size:9px;color:#185FA5;font-weight:700;text-transform:uppercase">PATIENT</span>
+  </div>
+  <div class="timeline-item">
+    <span class="timeline-dot terra"></span>
+    <span class="timeline-icon" style="background:#C9867F22;color:#C9867F">📋</span>
+    <div class="timeline-content">
+      <div class="title">DI #847</div>
+      <div class="sub">Panne / réparation · 🕐 il y a 12min</div>
+    </div>
+    <span style="font-size:9px;color:#C9867F;font-weight:700;text-transform:uppercase">DI</span>
+  </div>
+  <div class="timeline-item">
+    <span class="timeline-dot amber"></span>
+    <span class="timeline-icon" style="background:#EF9F2722;color:#EF9F27">🛒</span>
+    <div class="timeline-content">
+      <div class="title">Commande CM-2026-114</div>
+      <div class="sub">🕐 il y a 1h</div>
+    </div>
+    <span style="font-size:9px;color:#EF9F27;font-weight:700;text-transform:uppercase">ACHAT</span>
+  </div>
+</div>
+</div>
+
+<pre>// 0.58.39 - app/GlobalSearch.js
+function pushHistory(entry) {
+  // ... + timestamp
+  const updated = [{ ...entry, ts: Date.now() }, ...filtered].slice(0, 6);
+}
+
+function formatRelative(ts) {
+  const diff = Date.now() - ts;
+  const sec = Math.floor(diff / 1000);
+  if (sec &lt; 60) return "à l'instant";
+  const min = Math.floor(sec / 60);
+  if (min &lt; 60) return `il y a ${min}min`;
+  const h = Math.floor(min / 60);
+  if (h &lt; 24) return `il y a ${h}h`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return 'hier';
+  return `il y a ${d}j`;
+}</pre>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4320 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.39 - Citation reroll + Édition favoris + Widget météo + Hook useCurrentContext + Filtre /interventions + Cmd+K mini-timeline"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.40+)</h2>
+<div class="panel">
+<ul>
+<li>Refactor <code>Crud</code> pour accepter prop <code>extraFilter</code> → filtre /materiels par contexte</li>
+<li>Widget Notes/post-its personnels avec markdown léger</li>
+<li>Cmd+K : page-actions contextuelles (selon page courante)</li>
+<li>Drag&drop pour réordonner les liens favoris</li>
+<li>Recharger automatiquement la météo toutes les 30min</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.39 · 5 juin 2026 · 5 PISTES IMPLÉMENTÉES</footer>
+</div>
+
+</body></html>

@@ -58,6 +58,24 @@ export default function Patients() {
   // Alpha 0.7 : filtres avancés
   const [filters, setFilters] = useStickyState({ q: "", service: "", chambre: "", etat: "", etiquette: "" }, "patients:filters");
   const [showFilters, setShowFilters] = useState(false);
+  // 0.58.38 : filtre par contexte bât/svc courant (synchronisé avec TopBar via event)
+  const [ctxFilter, setCtxFilter] = useState({ batimentId: null, serviceId: null, active: false });
+  useEffect(() => {
+    function applyCtxFromStorage() {
+      try {
+        const bat = localStorage.getItem("av-current-batiment-id");
+        const svc = localStorage.getItem("av-current-service-id");
+        // active=false par défaut (l'user opte-in via le toggle UI)
+      } catch {}
+    }
+    function onCtxChange(e) {
+      const detail = e?.detail || {};
+      setCtxFilter(prev => ({ ...prev, batimentId: detail.batimentId || null, serviceId: detail.serviceId || null }));
+    }
+    applyCtxFromStorage();
+    window.addEventListener("av-current-context-change", onCtxChange);
+    return () => window.removeEventListener("av-current-context-change", onCtxChange);
+  }, []);
   // Alpha 0.21.0 : modale consentement RGPD à la création de patient
   const [consentModal, setConsentModal] = useState(null); // patient pour lequel ouvrir le RGPD
   const [consentStatus, setConsentStatus] = useState({}); // {patient_id: a_consenti}
@@ -316,6 +334,23 @@ export default function Patients() {
               <i className={`ti ${showFilters ? "ti-filter-off" : "ti-filter"}`} /> Filtres avancés
               {(filters.q || filters.service || filters.chambre || filters.etat || filters.etiquette) && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
             </button>
+            {/* 0.58.38 : toggle filtre par contexte bât/svc courant (desktop, si contexte défini) */}
+            {(ctxFilter.batimentId || ctxFilter.serviceId) && (
+              <button
+                className="btn-ghost"
+                onClick={() => setCtxFilter(prev => ({ ...prev, active: !prev.active }))}
+                title="Filtre selon le bâtiment/service courant choisi dans la TopBar"
+                style={{
+                  borderColor: ctxFilter.active ? "#7CC8C8" : undefined,
+                  background: ctxFilter.active ? "rgba(124,200,200,.12)" : undefined,
+                  color: ctxFilter.active ? "#1c5454" : undefined,
+                }}
+              >
+                <i className={`ti ${ctxFilter.active ? "ti-eye" : "ti-eye-off"}`} />
+                {ctxFilter.active ? "Contexte ON" : "Filtrer par contexte"}
+                {ctxFilter.active && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
+              </button>
+            )}
             {/* 0.55.11 (AI) : Export CSV */}
             <button
               className="btn-ghost"
@@ -412,6 +447,13 @@ export default function Patients() {
                   if (filters.etiquette) {
                     const tagsDuPatient = patEtiquettes[r.id] || [];
                     if (!tagsDuPatient.includes(filters.etiquette)) return false;
+                  }
+                  // 0.58.38 : filtre par contexte bât/svc courant si activé
+                  if (ctxFilter.active && (ctxFilter.batimentId || ctxFilter.serviceId)) {
+                    const ch = chambres.find((c) => c.id === r.chambre_id);
+                    if (!ch) return false;
+                    if (ctxFilter.serviceId && ch.service_id !== ctxFilter.serviceId) return false;
+                    if (ctxFilter.batimentId && ch.batiment_id !== ctxFilter.batimentId) return false;
                   }
                   return true;
                 });

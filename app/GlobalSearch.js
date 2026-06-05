@@ -124,9 +124,26 @@ export default function GlobalSearch() {
       const filtered = (Array.isArray(h) ? h : []).filter(
         (x) => !(x.type === entry.type && x.id === entry.id)
       );
-      const updated = [entry, ...filtered].slice(0, 6);
+      // 0.58.39 : ajoute timestamp pour mini-timeline
+      const updated = [{ ...entry, ts: Date.now() }, ...filtered].slice(0, 6);
       localStorage.setItem("aveho:search-history", JSON.stringify(updated));
     } catch {}
+  }
+
+  // 0.58.39 : formattage du temps relatif pour la timeline ("il y a 5min", "il y a 2h", "hier", "il y a 3j")
+  function formatRelative(ts) {
+    if (!ts) return "";
+    const diff = Date.now() - ts;
+    const sec = Math.floor(diff / 1000);
+    if (sec < 60) return "à l'instant";
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `il y a ${min}min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `il y a ${h}h`;
+    const d = Math.floor(h / 24);
+    if (d === 1) return "hier";
+    if (d < 7) return `il y a ${d}j`;
+    return `il y a +7j`;
   }
 
   useEffect(() => {
@@ -518,12 +535,12 @@ export default function GlobalSearch() {
                   <div><kbd style={{ background: "#1c545422", color: "#1c5454", padding: "1px 6px", borderRadius: 3, fontSize: 11, fontWeight: 700 }}>x:</kbd> maintenances</div>
                 </div>
               </div>
-              {/* Alpha 0.35.0 : Historique récent */}
+              {/* 0.58.39 : Mini-timeline premium pour la section "Récents" */}
               {history.length > 0 && (
                 <div style={{ paddingTop: 14, marginTop: 14, borderTop: "1px dashed #e3e9ee" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: ".5px", margin: 0 }}>
-                      <i className="ti ti-history" /> Récents
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: ".5px", margin: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <i className="ti ti-clock-bolt" style={{ color: "#7CC8C8" }} /> Récents
                     </p>
                     <button
                       onClick={() => {
@@ -535,7 +552,14 @@ export default function GlobalSearch() {
                       Effacer
                     </button>
                   </div>
-                  <div>
+                  {/* Timeline : ligne verticale + dots colorés à gauche */}
+                  <div style={{ position: "relative", paddingLeft: 18 }}>
+                    {/* Ligne verticale teal */}
+                    <div style={{
+                      position: "absolute", left: 7, top: 8, bottom: 8,
+                      width: 2, background: "linear-gradient(180deg, #7CC8C8 0%, rgba(124,200,200,0.15) 100%)",
+                      borderRadius: 1,
+                    }} />
                     {history.map((r, i) => {
                       const t = TYPES[r.type];
                       if (!t) return null;
@@ -543,19 +567,44 @@ export default function GlobalSearch() {
                         <div key={`h-${r.type}-${r.id}`}
                           onClick={() => { router.push(r.href); setOpen(false); }}
                           style={{
-                            padding: "6px 8px", cursor: "pointer", borderRadius: 6,
+                            position: "relative",
+                            padding: "8px 10px", cursor: "pointer", borderRadius: 8,
                             display: "flex", alignItems: "center", gap: 10,
-                            transition: "background .12s",
+                            marginBottom: 4,
+                            transition: "all .15s",
                           }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = "#eaf7f7"}
-                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#eaf7f7";
+                            e.currentTarget.style.transform = "translateX(2px)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.transform = "translateX(0)";
+                          }}
                         >
+                          {/* Dot coloré à gauche (sur la ligne verticale) */}
+                          <span style={{
+                            position: "absolute", left: -16, top: "50%", transform: "translateY(-50%)",
+                            width: 12, height: 12, borderRadius: "50%",
+                            background: t.color,
+                            border: "2px solid #fff",
+                            boxShadow: `0 0 0 2px ${t.color}55, 0 2px 6px ${t.color}40`,
+                          }} />
                           <span style={{ width: 22, height: 22, borderRadius: 6, background: t.color + "22", color: t.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <i className={`ti ${t.icon}`} style={{ fontSize: 12 }} />
                           </span>
                           <div style={{ flex: 1, minWidth: 0, fontSize: 12 }}>
                             <div style={{ color: "#142131", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.titre}</div>
-                            {r.sub && <div style={{ fontSize: 10, color: "#8a98a8" }}>{r.sub}</div>}
+                            <div style={{ fontSize: 10, color: "#8a98a8", display: "flex", alignItems: "center", gap: 6 }}>
+                              {r.sub && <span>{r.sub}</span>}
+                              {r.ts && <>
+                                {r.sub && <span style={{ opacity: 0.5 }}>·</span>}
+                                <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                                  <i className="ti ti-clock" style={{ fontSize: 9 }} />
+                                  {formatRelative(r.ts)}
+                                </span>
+                              </>}
+                            </div>
                           </div>
                           <span style={{ fontSize: 9, color: t.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".5px" }}>{t.lbl}</span>
                         </div>

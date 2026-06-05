@@ -150,14 +150,16 @@ describe("0.58.31 - FloatingActionBar : refonte menu haut-gauche", () => {
     expect(src).toMatch(/import\s*\{[^}]*getShortcutsConfig[^}]*DEFAULT_SHORTCUTS[^}]*\}\s*from\s*["'][^"']*shortcutsConfig["']/);
   });
 
-  it("Position fixed top-left (top calculé + left 16)", () => {
+  it("Position fixed (top calculé + left OU right 16)", () => {
     expect(src).toMatch(/top:\s*["']calc\(74px/);
-    expect(src).toMatch(/left:\s*16/);
+    // 0.58.35 : FAB est passé à droite (right: 16 au lieu de left: 16)
+    expect(src).toMatch(/(left|right):\s*16/);
   });
 
-  it("Bouton hamburger ti-menu-2 + bascule ti-x quand open", () => {
-    expect(src).toMatch(/ti-menu-2/);
-    expect(src).toMatch(/open\s*\?\s*["']ti-x["']\s*:\s*["']ti-menu-2["']/);
+  it("Bouton menu avec icône (ti-menu-2 ancien OU ti-sparkles nouveau)", () => {
+    // 0.58.35 : hamburger ti-menu-2 → bulle teal avec ti-sparkles
+    expect(src).toMatch(/ti-(menu-2|sparkles)/);
+    expect(src).toMatch(/open\s*\?\s*["']ti-x["']\s*:\s*["']ti-(menu-2|sparkles)["']/);
   });
 
   it("Listener event 'av-shortcuts-config-change'", () => {
@@ -169,8 +171,10 @@ describe("0.58.31 - FloatingActionBar : refonte menu haut-gauche", () => {
     expect(src).toMatch(/idx \* 60/);
   });
 
-  it("translateX animation slide vers la droite", () => {
-    expect(src).toMatch(/translateX\(-20px\)\s+scale\(0\.6\)/);
+  it("translateX animation slide (sens dépend de la position FAB)", () => {
+    // 0.58.31 : translateX(-20px) pour glisser depuis la gauche
+    // 0.58.35 : translateX(20px) pour glisser depuis la droite (FAB à droite)
+    expect(src).toMatch(/translateX\(-?20px\)\s+scale\(0\.6\)/);
     expect(src).toMatch(/translateX\(0\)\s+scale\(1\)/);
   });
 });

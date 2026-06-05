@@ -71,12 +71,14 @@ describe("0.58.35 - BatimentServiceSwitcher", () => {
   });
 
   it("Charge bâtiments quand auth.etabId change", () => {
-    expect(src).toMatch(/from\(["']batiments["']\)\.select\("id, nom"\)\.eq\(["']etablissement_id["'],\s*auth\.etabId\)/);
+    // 0.58.37 : regex multi-line car chainage Supabase avec retours de ligne
+    expect(src).toMatch(/from\(["']batiments["']\)[\s\S]*?\.select\(["']id, nom["']\)[\s\S]*?\.eq\(["']etablissement_id["'],\s*auth\.etabId\)/);
   });
 
   it("Charge services via étages → services", () => {
-    expect(src).toMatch(/from\(["']etages["']\).*\.eq\(["']batiment_id["']/);
-    expect(src).toMatch(/from\(["']services["']\).*\.in\(["']etage_id["']/);
+    // 0.58.37 : regex multi-line car chainage Supabase avec retours de ligne
+    expect(src).toMatch(/from\(["']etages["']\)[\s\S]*?\.eq\(["']batiment_id["']/);
+    expect(src).toMatch(/from\(["']services["']\)[\s\S]*?\.in\(["']etage_id["']/);
   });
 
   it("Event 'av-current-context-change' dispatched", () => {

@@ -3179,3 +3179,19 @@ html.av-focus-mode.av-focus-hide-notifs .notif-badge,
 html.av-focus-mode.av-focus-hide-notifs [data-focus-hide-on-notifs="true"] {
   display: none !important;
 }
+
+/* =============================================================
+   0.58.38 — Mode PRÉSENTATION : option "masquer les notifs aussi"
+   (cohérent avec focus-mode 0.58.30 pour des démos clients zen)
+   ============================================================= */
+html.av-presentation-mode.av-presentation-hide-notifs .notif-wrap,
+html.av-presentation-mode.av-presentation-hide-notifs #av-toast-container,
+html.av-presentation-hide-notifs .notif-wrap,
+html.av-presentation-hide-notifs #av-toast-container {
+  display: none !important;
+}
+html.av-presentation-mode.av-presentation-hide-notifs .notif-badge,
+html.av-presentation-hide-notifs .notif-badge,
+html.av-presentation-mode.av-presentation-hide-notifs [data-focus-hide-on-notifs="true"] {
+  display: none !important;
+}

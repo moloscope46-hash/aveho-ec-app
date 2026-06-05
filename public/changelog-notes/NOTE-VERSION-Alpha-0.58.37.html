@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.37 — Fix 5 tests obsolètes</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3850 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(90,160,90,.5)}70%{box-shadow:0 0 0 10px rgba(90,160,90,0)}}
+header.cover{position:relative;border-radius:28px;padding:40px 36px;margin-bottom:32px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(90,160,90,.30),rgba(124,200,200,.20));border:1px solid rgba(90,160,90,.30);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(90,160,90,.14);border:1px solid rgba(90,160,90,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#5aa05a;animation:pulse-dot 2s ease-out infinite}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:20px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:22px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:14px;padding:20px 24px;margin:14px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #5aa05a}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+<div class="wrap">
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>FIX TESTS · 0.58.37</div>
+  <h1>Version 0.58.37 — Fix 5 tests obsolètes (FAB gauche→droite + regex multi-line)<small>Tests v058-31 et v058-35 assouplis · 0 fail attendu</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.37-alpha</code></span>
+    <span><b>Tests :</b> ~4255 verts attendus</span>
+  </div>
+</header>
+
+<h2>📊 5 fails de 0.58.36</h2>
+
+<div class="panel">
+<table>
+<tr><th>Test</th><th>Cause</th><th>Fix</th></tr>
+<tr><td>v058-31 : Position fixed top-left</td><td>FAB est passé à droite en 0.58.35</td><td>(left\|right):\s*16</td></tr>
+<tr><td>v058-31 : Bouton hamburger ti-menu-2</td><td>Hamburger remplacé par ti-sparkles en 0.58.35</td><td>ti-(menu-2\|sparkles)</td></tr>
+<tr><td>v058-31 : translateX(-20px)</td><td>FAB à droite → translateX(+20px)</td><td>translateX(-?20px)</td></tr>
+<tr><td>v058-35 : Charge bâtiments</td><td>regex single-line .* ne matche pas multi-line</td><td>[\s\S]*?</td></tr>
+<tr><td>v058-35 : Charge services</td><td>idem</td><td>[\s\S]*?</td></tr>
+</table>
+</div>
+
+<h2>🔧 Patterns assouplis</h2>
+
+<pre>// AVANT 0.58.37 - tests trop stricts
+expect(src).toMatch(/left:\s*16/);                    // KO si right
+expect(src).toMatch(/ti-menu-2/);                     // KO si ti-sparkles
+expect(src).toMatch(/translateX\(-20px\)\s+scale\(0\.6\)/);  // KO si +20px
+expect(src).toMatch(/from\(["']batiments["']\)\.select\("id, nom"\)\.eq\(.../);  // KO multi-line
+
+// 0.58.37 - tests souples
+expect(src).toMatch(/(left|right):\s*16/);
+expect(src).toMatch(/ti-(menu-2|sparkles)/);
+expect(src).toMatch(/translateX\(-?20px\)\s+scale\(0\.6\)/);
+expect(src).toMatch(/from\(["']batiments["']\)[\s\S]*?\.select\([\s\S]*?\.eq\(.../);</pre>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4255 verts attendus (0 fail)
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.37 - Fix 5 tests obsolètes (FAB gauche→droite + regex multi-line Supabase)"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.38)</h2>
+<div class="panel">
+<ul>
+<li>Mode présentation : option 'masquer notifs'</li>
+<li>Cmd+K : section 'Récents' premium mini-timeline</li>
+<li>Nouveaux widgets dashboard (météo, citation, mini-calendrier, liens favoris)</li>
+<li>Filtrer listes selon contexte bât/svc via av-current-context-change</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.37 · 5 juin 2026 · FIX 5 TESTS OBSOLÈTES</footer>
+</div>
+</body></html>

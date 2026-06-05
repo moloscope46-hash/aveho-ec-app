@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
+// 0.58.39 : hook réutilisable pour le contexte bâtiment/service de la TopBar
+import { useCurrentContext } from "../../lib/useCurrentContext";
 import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -40,6 +42,35 @@ export default function Interventions() {
   // Alpha 0.29.0 : filtres persistés en localStorage par utilisateur
   const [fStatut, setFStatut] = useStickyState("", "interventions:fStatut");
   const [fType, setFType] = useStickyState("", "interventions:fType");
+  // 0.58.39 : filtre par contexte bâtiment/service (utilise hook + chargement des patient_ids du contexte)
+  const ctx = useCurrentContext();
+  const [ctxPatientIds, setCtxPatientIds] = useState(null); // null = pas chargé, Set = patients dans le contexte
+  useEffect(() => {
+    if (!ctx.batimentId && !ctx.serviceId) {
+      setCtxPatientIds(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        // Charge les chambres du contexte → patient_id assignés
+        let query = supabase.from("chambres").select("id, service_id, batiment_id");
+        if (ctx.serviceId) query = query.eq("service_id", ctx.serviceId);
+        else if (ctx.batimentId) query = query.eq("batiment_id", ctx.batimentId);
+        const { data: chambres } = await query;
+        if (!alive || !chambres) return;
+        const chambreIds = chambres.map(c => c.id);
+        if (chambreIds.length === 0) { setCtxPatientIds(new Set()); return; }
+        // Charge les patients qui occupent ces chambres
+        const { data: pats } = await supabase.from("patients").select("id").in("chambre_id", chambreIds);
+        if (!alive) return;
+        setCtxPatientIds(new Set((pats || []).map(p => p.id)));
+      } catch {
+        if (alive) setCtxPatientIds(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, [ctx.batimentId, ctx.serviceId]);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ type: "Panne / réparation", urgence: "Normal" });
   const [busy, setBusy] = useState(false);
@@ -288,7 +319,15 @@ export default function Interventions() {
 
   if (!auth.ready) return null;
 
-  const visible = rows.filter((r) => (!fStatut || r.statut === fStatut) && (!fType || r.type === fType));
+  const visible = rows.filter((r) => {
+    if (fStatut && r.statut !== fStatut) return false;
+    if (fType && r.type !== fType) return false;
+    // 0.58.39 : filtre par contexte bâtiment/service si activé
+    if (ctx.active && ctxPatientIds) {
+      if (!r.patient_id || !ctxPatientIds.has(r.patient_id)) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="bg-dark">
@@ -326,6 +365,32 @@ export default function Interventions() {
                   ...TYPES.map((t) => ({ value: t, label: t, icon: "ti-tag" })),
                 ]}
               />
+              {/* 0.58.39 : toggle filtre contexte bât/svc (apparait si contexte défini) */}
+              {(ctx.batimentId || ctx.serviceId) && (
+                <button
+                  onClick={ctx.toggle}
+                  title="Filtre selon le bâtiment/service courant choisi dans la TopBar"
+                  style={{
+                    borderColor: ctx.active ? "#7CC8C8" : "#e3e9ee",
+                    background: ctx.active ? "rgba(124,200,200,.12)" : "#fff",
+                    color: ctx.active ? "#1c5454" : "#6c7a89",
+                    border: "1px solid",
+                    padding: "5px 10px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    fontWeight: 600,
+                  }}
+                >
+                  <i className={`ti ${ctx.active ? "ti-eye" : "ti-eye-off"}`} />
+                  {ctx.active ? "Contexte ON" : "Filtrer par contexte"}
+                  {ctx.active && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
+                </button>
+              )}
             </div>
           </div>
 

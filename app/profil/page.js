@@ -23,7 +23,7 @@ import BiometricSection from "../BiometricSection";
 // 0.58.20 : factory reset cache front
 import { fullCacheReset } from "../../lib/cacheReset";
 // 0.58.24 : toggle mode présentation depuis le profil
-import { isPresentationMode, togglePresentationMode } from "../../lib/presentationMode";
+import { isPresentationMode, togglePresentationMode, isPresentationHideNotifs, setPresentationHideNotifs } from "../../lib/presentationMode";
 // 0.58.26 : toggle mode focus zen depuis le profil
 // 0.58.30 : sous-option masquer aussi les notifs
 import { isFocusMode, toggleFocusMode, isFocusHideNotifs, setFocusHideNotifs } from "../../lib/focusMode";
@@ -498,16 +498,26 @@ function entiteIcon(entite) {
 // =============================================================
 function PresentationModeToggle() {
   const [isOn, setIsOn] = useState(false);
+  // 0.58.38 : option masquer notifs aussi (cohérent avec focus mode)
+  const [hideNotifs, setHideNotifsState] = useState(false);
 
   useEffect(() => {
     // Init depuis localStorage
     setIsOn(isPresentationMode());
+    setHideNotifsState(isPresentationHideNotifs());
     // Écoute les changements (déclenché aussi par le shortcut Ctrl+Shift+P)
     function onChange(e) {
       setIsOn(e?.detail?.on ?? isPresentationMode());
     }
+    function onHideChange(e) {
+      setHideNotifsState(e?.detail?.on ?? isPresentationHideNotifs());
+    }
     window.addEventListener("av-presentation-mode-change", onChange);
-    return () => window.removeEventListener("av-presentation-mode-change", onChange);
+    window.addEventListener("av-presentation-hide-notifs-change", onHideChange);
+    return () => {
+      window.removeEventListener("av-presentation-mode-change", onChange);
+      window.removeEventListener("av-presentation-hide-notifs-change", onHideChange);
+    };
   }, []);
 
   function handleToggle() {
@@ -515,14 +525,48 @@ function PresentationModeToggle() {
     setIsOn(next);
   }
 
+  function toggleHideNotifs() {
+    const next = !hideNotifs;
+    setHideNotifsState(next);
+    setPresentationHideNotifs(next);
+  }
+
   return (
-    <NeonButton
-      variant={isOn ? "amber" : "violet"}
-      icon={isOn ? "ti-presentation-analytics" : "ti-presentation"}
-      onClick={handleToggle}
-    >
-      {isOn ? "Désactiver le mode présentation" : "Activer le mode présentation"}
-    </NeonButton>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <NeonButton
+        variant={isOn ? "amber" : "violet"}
+        icon={isOn ? "ti-presentation-analytics" : "ti-presentation"}
+        onClick={handleToggle}
+      >
+        {isOn ? "Désactiver le mode présentation" : "Activer le mode présentation"}
+      </NeonButton>
+      {/* 0.58.38 : option masquer notifs durant la démo */}
+      <label style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "8px 12px",
+        background: isOn ? "rgba(122,111,176,.08)" : "rgba(150,150,150,.05)",
+        border: `1px solid ${isOn ? "rgba(122,111,176,.20)" : "rgba(150,150,150,.10)"}`,
+        borderRadius: 8,
+        cursor: isOn ? "pointer" : "not-allowed",
+        opacity: isOn ? 1 : 0.5,
+        fontSize: 12.5,
+        transition: "all 200ms",
+      }}>
+        <input
+          type="checkbox"
+          checked={hideNotifs}
+          onChange={toggleHideNotifs}
+          disabled={!isOn}
+          style={{ cursor: isOn ? "pointer" : "not-allowed" }}
+        />
+        <i className="ti ti-bell-off" style={{ color: "#7a6fb0" }} />
+        <span>Masquer les notifications pendant les démos
+          <span style={{ display: "block", fontSize: 11, color: "#8a98a8", marginTop: 2 }}>
+            Cache la cloche + les toasts realtime pour une démo client sans interruption
+          </span>
+        </span>
+      </label>
+    </div>
   );
 }
 
