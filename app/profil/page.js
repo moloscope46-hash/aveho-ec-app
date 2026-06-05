@@ -25,7 +25,8 @@ import { fullCacheReset } from "../../lib/cacheReset";
 // 0.58.24 : toggle mode présentation depuis le profil
 import { isPresentationMode, togglePresentationMode } from "../../lib/presentationMode";
 // 0.58.26 : toggle mode focus zen depuis le profil
-import { isFocusMode, toggleFocusMode } from "../../lib/focusMode";
+// 0.58.30 : sous-option masquer aussi les notifs
+import { isFocusMode, toggleFocusMode, isFocusHideNotifs, setFocusHideNotifs } from "../../lib/focusMode";
 
 export default function Profil() {
   const supabase = createClient();
@@ -517,29 +518,81 @@ function PresentationModeToggle() {
 // =============================================================
 function FocusModeToggle() {
   const [isOn, setIsOn] = useState(false);
+  // 0.58.30 : sous-option "masquer aussi les notifs"
+  const [hideNotifs, setHideNotifsState] = useState(false);
 
   useEffect(() => {
     setIsOn(isFocusMode());
+    setHideNotifsState(isFocusHideNotifs());
     function onChange(e) {
       setIsOn(e?.detail?.on ?? isFocusMode());
     }
+    function onHideNotifsChange(e) {
+      setHideNotifsState(e?.detail?.on ?? isFocusHideNotifs());
+    }
     window.addEventListener("av-focus-mode-change", onChange);
-    return () => window.removeEventListener("av-focus-mode-change", onChange);
+    window.addEventListener("av-focus-hide-notifs-change", onHideNotifsChange);
+    return () => {
+      window.removeEventListener("av-focus-mode-change", onChange);
+      window.removeEventListener("av-focus-hide-notifs-change", onHideNotifsChange);
+    };
   }, []);
 
   function handleToggle() {
     const next = toggleFocusMode();
     setIsOn(next);
   }
+  function handleToggleHideNotifs() {
+    const next = !hideNotifs;
+    setFocusHideNotifs(next);
+    setHideNotifsState(next);
+  }
 
   return (
-    <NeonButton
-      variant={isOn ? "amber" : "teal"}
-      icon={isOn ? "ti-target-off" : "ti-target"}
-      onClick={handleToggle}
-    >
-      {isOn ? "Désactiver le mode focus" : "Activer le mode focus zen"}
-    </NeonButton>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, alignItems: "flex-start" }}>
+      <NeonButton
+        variant={isOn ? "amber" : "teal"}
+        icon={isOn ? "ti-target-off" : "ti-target"}
+        onClick={handleToggle}
+      >
+        {isOn ? "Désactiver le mode focus" : "Activer le mode focus zen"}
+      </NeonButton>
+
+      {/* 0.58.30 : sous-option (toujours visible pour configurer même quand focus off) */}
+      <label
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "8px 14px",
+          background: hideNotifs ? "#e8f5e8" : "#f4f7fa",
+          border: `1px solid ${hideNotifs ? "#a8d5a8" : "#d8e2ea"}`,
+          borderRadius: 10,
+          cursor: "pointer",
+          fontSize: 12.5,
+          color: hideNotifs ? "#2e6f33" : "#5a6878",
+          fontWeight: 500,
+          transition: "all 180ms",
+          userSelect: "none",
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={hideNotifs}
+          onChange={handleToggleHideNotifs}
+          style={{
+            width: 16,
+            height: 16,
+            cursor: "pointer",
+            accentColor: "#5aa05a",
+          }}
+        />
+        <span>
+          <i className="ti ti-bell-off" style={{ marginRight: 5, color: hideNotifs ? "#5aa05a" : "#8a98a8" }} />
+          Masquer aussi les notifications (cloche + toasts) pendant le mode focus
+        </span>
+      </label>
+    </div>
   );
 }
 

@@ -167,16 +167,18 @@ describe("0.58.15 - Lien Onboarding depuis /utilisateurs", () => {
 });
 
 describe("0.58.15 - Tooltips partout", () => {
-  it("NotifBell : Tooltip importé + utilisé sur la cloche", () => {
+  it("NotifBell : import Tooltip + Tooltip OU preview hover (0.58.27+)", () => {
     const src = fs.readFileSync(path.resolve(process.cwd(), "app/NotifBell.js"), "utf-8");
     expect(src).toMatch(/import\s+\{[^}]*Tooltip[^}]*\}\s+from\s+["']\.\/components\/ui-premium["']/);
-    expect(src).toMatch(/<Tooltip[\s\S]*?content=\{nonLues\s*>\s*0/);
-    expect(src).toMatch(/position="bottom"/);
+    // 0.58.15 → <Tooltip content={nonLues > 0 ...}>
+    // 0.58.27 → preview hover (panel avec nonLues + lastThree)
+    const hasTooltip = /<Tooltip[\s\S]*?content=\{nonLues\s*>\s*0/.test(src);
+    const hasPreview = /previewOpen[\s\S]*?nonLues/.test(src);
+    expect(hasTooltip || hasPreview).toBe(true);
   });
 
-  it("NotifBell : title='Notifications' HTML supprimé (remplacé par Tooltip)", () => {
+  it("NotifBell : title='Notifications' HTML supprimé (remplacé par Tooltip/preview)", () => {
     const src = fs.readFileSync(path.resolve(process.cwd(), "app/NotifBell.js"), "utf-8");
-    // title="Notifications" sur le button doit avoir disparu
     expect(src).not.toMatch(/className="notif-btn"[\s\S]{0,200}title="Notifications"/);
   });
 

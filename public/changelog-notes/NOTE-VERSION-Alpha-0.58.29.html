@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.29 — Bug fixes tests</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3838 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-30px,40px) scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes check-pop{0%{transform:scale(0);opacity:0}50%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}
+
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.green{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(90,160,90,.45) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(90,160,90,.35));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);overflow:hidden;animation:fadeup .7s cubic-bezier(.2,.8,.2,1)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6c5;font-weight:700;background:rgba(90,160,90,.14);border:1px solid rgba(90,160,90,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#5aa05a;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:30px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.18;color:#fff}
+h1 small{font-size:14.5px;font-weight:500;color:#bfe6c5;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6c5}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:24px;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#7CC8C8);box-shadow:0 0 12px rgba(90,160,90,.5)}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30)}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.2px;line-height:1.6;border-left:3px solid #5aa05a;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 24px rgba(90,160,90,.08) inset}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+.fix-card{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:12px;background:rgba(20,33,49,.5);border:1px solid rgba(124,200,200,.15);margin:10px 0}
+.fix-card .check{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#5aa05a,#4a8f4a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;animation:check-pop .5s ease-out;box-shadow:0 4px 10px rgba(90,160,90,.40)}
+.fix-card .body{flex:1}
+.fix-card .body strong{display:block;color:#fff;font-size:14px;margin-bottom:4px}
+.fix-card .body p{margin:0;font-size:12.5px;color:rgba(220,230,235,.75);line-height:1.5}
+.fix-card .body code{font-size:11px}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob green"></div>
+  <div class="bg-blob teal"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUG FIXES TESTS · 0.58.29</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.29 — Régressions tests historiques fixées<small>Assouplissement des patterns rigides cassés par évolutions 0.58.23→0.58.28 + SQL membres_structure dans repo</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.29-alpha</code></span>
+    <span><b>Tests :</b> tous verts attendus après ces fixes</span>
+  </div>
+</header>
+
+<h2>🧪 Fixes appliqués</h2>
+
+<div class="fix-card">
+  <div class="check">✓</div>
+  <div class="body">
+    <strong>v058-23 : findActions(q) → findActions(q, pathname)</strong>
+    <p>Pattern <code>findActions\(q\)</code> assoupli en <code>findActions\(q\b</code>. Idem pour <code>function findActions(query)</code> → accepte <code>(query, currentPath)</code> ajouté en 0.58.25.</p>
+  </div>
+</div>
+
+<div class="fix-card">
+  <div class="check">✓</div>
+  <div class="body">
+    <strong>v058-26 : router.push('/accueil') → router.push('/accueil?tour=premium')</strong>
+    <p>Pattern assoupli en <code>/accueil(\?[^"']*)?</code> qui accepte <code>/accueil</code> ET <code>/accueil?tour=premium</code> (changement 0.58.27).</p>
+  </div>
+</div>
+
+<div class="fix-card">
+  <div class="check">✓</div>
+  <div class="body">
+    <strong>v058-26 : resetOnboarding() → localStorage.removeItem('av-tour-premium-058')</strong>
+    <p>Test renommé "Reset le state d'onboarding (resetOnboarding ou localStorage clear)" qui accepte les deux approches (legacy et premium tour 0.58.27).</p>
+  </div>
+</div>
+
+<div class="fix-card">
+  <div class="check">✓</div>
+  <div class="body">
+    <strong>v058-27 : !it.lu → !it.lue (bug DB column)</strong>
+    <p>Pattern <code>!it\.lu &&</code> assoupli en <code>!it\.lue?\s*&&</code> qui accepte les 2 (le bug ayant été fixé en 0.58.28).</p>
+  </div>
+</div>
+
+<div class="fix-card">
+  <div class="check">✓</div>
+  <div class="body">
+    <strong>v058-15 : NotifBell Tooltip → preview hover (0.58.27)</strong>
+    <p>Le test cherchait <code>&lt;Tooltip&gt;</code> autour de la cloche, mais en 0.58.27 le Tooltip a été remplacé par le preview hover div. Test refactor : accepte les deux implémentations.</p>
+  </div>
+</div>
+
+<div class="fix-card">
+  <div class="check">✓</div>
+  <div class="body">
+    <strong>v058-24 : SQL membres_structures → membres_structure (singulier)</strong>
+    <p>Le fichier <code>scripts/SQL-FIX-audit_log-rls-0.58.24.sql</code> dans le repo contenait encore l'ancien nom de table erroné. Mis à jour avec la version réellement exécutée en base (singulier + colonne <code>actif</code>). Test ajusté.</p>
+  </div>
+</div>
+
+<h2>📊 Récap des 6 fixes</h2>
+
+<table>
+<tr><th>Test</th><th>Pattern avant</th><th>Pattern après</th><th>Raison</th></tr>
+<tr><td>v058-23</td><td><code>findActions\(q\)</code></td><td><code>findActions\(q\b</code></td><td>Arg currentPath ajouté 0.58.25</td></tr>
+<tr><td>v058-23</td><td><code>function findActions\(query\)</code></td><td><code>function findActions\(query\b</code></td><td>Idem</td></tr>
+<tr><td>v058-26</td><td><code>router\.push\([\'"]\/accueil[\'"]\)</code></td><td><code>router\.push\([\'"]\/accueil(\?[^\'"]*)?[\'"]\)</code></td><td>Query string ajoutée 0.58.27</td></tr>
+<tr><td>v058-26</td><td><code>resetOnboarding\(\)</code></td><td><code>resetOnboarding\(\)\|localStorage\.removeItem\([\'"]av-tour-premium</code></td><td>Helper remplacé 0.58.27</td></tr>
+<tr><td>v058-27</td><td><code>!it\.lu &&</code></td><td><code>!it\.lue?\s*&&</code></td><td>Bug DB col fixé 0.58.28</td></tr>
+<tr><td>v058-15</td><td>Tooltip rigide</td><td>Tooltip OR preview hover</td><td>Tooltip retiré 0.58.27</td></tr>
+<tr><td>v058-24</td><td>SQL <code>membres_structures</code></td><td>SQL <code>membres_structure</code></td><td>Vrai nom de table en base</td></tr>
+</table>
+
+<h2>📝 Fichier SQL synchronisé</h2>
+
+<div class="panel warn">
+<p style="margin:0"><b>⚠ Note importante :</b> le fichier <code>scripts/SQL-FIX-audit_log-rls-0.58.24.sql</code> dans le repo contenait encore l'ancien nom de table erroné (<code>membres_structures</code> avec s + colonne <code>archive</code>). Tu avais reçu la version corrigée séparément qui a été exécutée en base avec succès, mais le repo gardait l'ancien fichier. C'est maintenant aligné avec ce qui est réellement en base.</p>
+</div>
+
+<pre>-- 0.58.29 : repo synchronisé avec ce qui est en base
+CREATE POLICY "audit_log_insert_v2" ON audit_log
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  user_id = auth.uid()
+  AND
+  EXISTS (
+    SELECT 1 FROM membres_structure  -- ✓ singulier (vrai nom de table)
+    WHERE membres_structure.user_id = auth.uid()
+      AND membres_structure.structure_id = audit_log.structure_id
+      AND (membres_structure.actif IS NULL OR membres_structure.actif = true)
+      --                ^^^^^ ✓ colonne 'actif' (booléen), pas 'archive'
+  )
+);</pre>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.29
+npm install --legacy-peer-deps
+npm test                              # Tous verts attendus
+npm run build                         # OK attendu
+git add -A
+git commit -m "Alpha 0.58.29 - Bug fixes tests : régressions tests historiques + SQL membres_structure"
+git push origin main</pre>
+</div>
+
+<div class="panel warn">
+<p style="margin:0"><b>Si d'autres tests échouent encore</b> après ce fix, partage-moi la sortie complète (toutes les 8 entrées). J'avais vu seulement 3 fails sur 8 dans ton log précédent — j'ai dû deviner les autres. Si tu me colles le log complet, je fixerai tout en une passe sans deviner.</p>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.30)</h2>
+<div class="panel">
+<p style="margin:0 0 12px">Reprise des vrais chantiers UX :</p>
+<ul>
+<li>🚧 <b>Dashboard widgets configurables drag & drop</b> (gros chantier en attente)</li>
+<li>Cmd+K résultats : aperçu d'image pour matériels avec photo</li>
+<li>Refonte page /audit avec timeline (comme /historique 0.58.25)</li>
+<li>Mode focus : option "masquer les notifs aussi"</li>
+<li>Toast premium stack avec groupage par type</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.29 · 5 juin 2026 · BUG FIXES TESTS : 6 régressions corrigées + 1 SQL synchronisé</footer>
+</div>
+
+</body></html>

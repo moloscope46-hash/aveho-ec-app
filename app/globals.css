@@ -3157,3 +3157,25 @@ html.av-presentation-mode body:hover::before {
   from { opacity: 0; transform: translateX(8px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* 0.58.30 : Toast premium — keyframe bump du badge compteur lors d'un dedupe */
+@keyframes av-toast-counter-bump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* =============================================================
+   0.58.30 — Mode FOCUS : option "masquer les notifs aussi"
+   ============================================================= */
+/* Cache la cloche de notifications + les toasts pendant focus mode */
+html.av-focus-mode.av-focus-hide-notifs .notif-wrap,
+html.av-focus-mode.av-focus-hide-notifs #av-toast-container {
+  display: none !important;
+}
+/* Cache aussi les badges et autres alertes secondaires */
+html.av-focus-mode.av-focus-hide-notifs .notif-badge,
+html.av-focus-mode.av-focus-hide-notifs [data-focus-hide-on-notifs="true"] {
+  display: none !important;
+}

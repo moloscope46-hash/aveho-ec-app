@@ -60,7 +60,7 @@ describe("0.58.24 - Fix audit_log 403 silent", () => {
     const sql = fs.readFileSync(sqlPath, "utf-8");
     expect(sql).toMatch(/CREATE POLICY "audit_log_insert_v2"/);
     expect(sql).toMatch(/user_id = auth\.uid\(\)/);
-    expect(sql).toMatch(/EXISTS \([\s\S]*?membres_structures/);
+    expect(sql).toMatch(/EXISTS \([\s\S]*?membres_structure\b/);
   });
 });
 

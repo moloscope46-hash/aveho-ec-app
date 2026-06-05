@@ -20,6 +20,9 @@ import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { toast } from "../components/ui-premium";
 import { Heatmap } from "../Charts";
 import { logger } from "../../lib/logger";
+// 0.58.30 : vue timeline (réutilise composant partagé extrait de /historique)
+import AuditTimeline from "../components/AuditTimeline";
+import { NeonButton } from "../components/ui-premium";
 
 const PAGE_SIZE = 50;
 const ACTIONS = ["creer", "modifier", "supprimer", "valider", "refuser", "recevoir", "cloturer", "signer", "envoyer"];
@@ -68,6 +71,8 @@ export default function AuditPage() {
   const [csvBusy, setCsvBusy] = useState(false);
   // Alpha 0.43.0 : heatmap audit log
   const [heatmap, setHeatmap] = useState([]);
+  // 0.58.30 : toggle Tableau / Timeline (timeline par défaut pour les nouvelles installs)
+  const [viewMode, setViewMode] = useState("timeline");
 
   // Permissions admin uniquement
   const peutVoir = auth.role?.nom === "Administrateur" || auth.can?.("gerer_roles");
@@ -476,7 +481,59 @@ export default function AuditPage() {
           </Panel>
         ) : (
           <Panel>
-            <div style={{ overflowX: "auto" }}>
+            {/* 0.58.30 : toggle Tableau / Timeline */}
+            <div style={{
+              display: "flex",
+              gap: 8,
+              marginBottom: 16,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}>
+              <span style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: "#6c7a89",
+                textTransform: "uppercase",
+                letterSpacing: ".5px",
+                marginRight: 6,
+              }}>
+                <i className="ti ti-eye" /> Affichage :
+              </span>
+              <NeonButton
+                variant={viewMode === "timeline" ? "teal" : "blue"}
+                icon="ti-timeline-event"
+                size="sm"
+                onClick={() => setViewMode("timeline")}
+                aria-pressed={viewMode === "timeline"}
+                style={viewMode === "timeline" ? {} : { opacity: 0.65 }}
+              >
+                Timeline
+              </NeonButton>
+              <NeonButton
+                variant={viewMode === "table" ? "navy" : "blue"}
+                icon="ti-table"
+                size="sm"
+                onClick={() => setViewMode("table")}
+                aria-pressed={viewMode === "table"}
+                style={viewMode === "table" ? {} : { opacity: 0.65 }}
+              >
+                Tableau
+              </NeonButton>
+              <span style={{ fontSize: 11.5, color: "#8a98a8", marginLeft: "auto" }}>
+                {rows.length} entrée{rows.length > 1 ? "s" : ""} sur {total}
+              </span>
+            </div>
+
+            {/* 0.58.30 : Vue Timeline (réutilise composant partagé) */}
+            {viewMode === "timeline" ? (
+              <AuditTimeline
+                rows={rows}
+                onClickRow={(r) => setDetailRow(r)}
+                showDetailJson={true}
+                emptyMessage="Aucune entrée correspondant aux filtres."
+              />
+            ) : (
+              <div style={{ overflowX: "auto" }}>
               <div className="panel-table"><table style={{ fontSize: 12.5 }}>
                 <thead>
                   <tr>
@@ -516,6 +573,7 @@ export default function AuditPage() {
                 </tbody>
               </table></div>
             </div>
+            )}{/* /viewMode === "table" */}
 
             {/* Pagination */}
             {totalPages > 1 && (

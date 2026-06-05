@@ -56,7 +56,7 @@ describe("0.58.27 - NotifBell preview hover", () => {
   });
 
   it("Dot non lu coloré + icône type", () => {
-    expect(src).toMatch(/!it\.lu &&/);
+    expect(src).toMatch(/!it\.lue?\s*&&/);
     expect(src).toMatch(/boxShadow:\s*`0 0 8px \$\{type\.color\}99`/);
   });
 });

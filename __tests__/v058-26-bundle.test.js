@@ -111,12 +111,13 @@ describe("0.58.26 - Bouton Rejouer la visite dans /profil", () => {
     expect(src).toMatch(/function ReplayTourButton/);
   });
 
-  it("Utilise resetOnboarding du helper existant", () => {
-    expect(src).toMatch(/resetOnboarding\(\)/);
+  it("Reset le state d'onboarding (resetOnboarding ou localStorage clear)", () => {
+    // 0.58.26 utilisait resetOnboarding(), 0.58.27 utilise localStorage.removeItem
+    expect(src).toMatch(/resetOnboarding\(\)|localStorage\.removeItem\(["']av-tour-premium/);
   });
 
   it("Redirect vers /accueil pour lancer le tour", () => {
-    expect(src).toMatch(/router\.push\(["']\/accueil["']\)/);
+    expect(src).toMatch(/router\.push\(["']\/accueil(\?[^"']*)?["']\)/);
   });
 
   it("Panel 'Visite guidée' avec border-left bleu", () => {

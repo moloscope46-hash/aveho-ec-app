@@ -161,14 +161,14 @@ describe("0.58.23 - Command palette ACTIONS globales", () => {
   });
 
   it("Helper findActions(query) filtre par keywords + > prefix", () => {
-    expect(src).toMatch(/function findActions\(query\)/);
+    expect(src).toMatch(/function findActions\(query\b/);
     expect(src).toMatch(/q\.startsWith\(["']>["']\)/);
     expect(src).toMatch(/a\.keywords\.some/);
   });
 
   it("Section 'Actions rapides' rendue avec icon bolt + matchingActions", () => {
     expect(src).toMatch(/Actions rapides/);
-    expect(src).toMatch(/findActions\(q\)/);
+    expect(src).toMatch(/findActions\(q\b/);
     expect(src).toMatch(/ti-bolt/);
   });
 

@@ -85,6 +85,49 @@ export function showToast({ type = "info", title, message, duration = 4000, acti
   if (!container) return;
 
   const cfg = TOAST_TYPES[type] || TOAST_TYPES.info;
+
+  // 0.58.30 : DÉDUPE / GROUPAGE — si un toast identique (type + title) existe
+  // déjà dans la stack, on incrémente son compteur au lieu d'en créer un nouveau.
+  // Évite le spam quand une action déclenche plusieurs notifications similaires
+  // (ex : sauvegarde en boucle, validation multiple, etc).
+  const dedupeKey = `${type}::${title || ""}`;
+  const existing = container.querySelector(`[data-toast-dedupe-key="${CSS.escape(dedupeKey)}"]`);
+  if (existing) {
+    // Increment counter badge
+    const counterEl = existing.querySelector("[data-toast-counter]");
+    const currentCount = parseInt(existing.dataset.toastCount || "1", 10) + 1;
+    existing.dataset.toastCount = String(currentCount);
+    if (counterEl) {
+      counterEl.textContent = `×${currentCount}`;
+      counterEl.style.display = "inline-flex";
+      // Petit bump animation pour signaler la mise à jour
+      counterEl.style.animation = "none";
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      void counterEl.offsetWidth;
+      counterEl.style.animation = "av-toast-counter-bump 350ms ease-out";
+    }
+    // Reset le timer (et la progress bar) pour que le toast groupé reste visible
+    if (existing._dismissTimer) {
+      clearTimeout(existing._dismissTimer);
+      const progressEl = existing.querySelector("[data-toast-progress]");
+      if (progressEl) {
+        progressEl.style.transition = "none";
+        progressEl.style.width = "100%";
+        // Force reflow puis relance
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        void progressEl.offsetWidth;
+        if (duration > 0) {
+          progressEl.style.transition = `width ${duration}ms linear`;
+          progressEl.style.width = "0%";
+        }
+      }
+      if (duration > 0) {
+        existing._dismissTimer = setTimeout(() => removeToast(existing), duration);
+      }
+    }
+    return;
+  }
+
   const id = `av-toast-${++toastCounter}`;
 
   // Escape user content
@@ -100,6 +143,9 @@ export function showToast({ type = "info", title, message, duration = 4000, acti
   toast.id = id;
   toast.setAttribute("role", "status");
   toast.setAttribute("aria-live", "polite");
+  // 0.58.30 : dedupe key pour grouper les toasts identiques (type + title)
+  toast.setAttribute("data-toast-dedupe-key", dedupeKey);
+  toast.dataset.toastCount = "1";
 
   Object.assign(toast.style, {
     background: "rgba(255, 255, 255, 0.92)",
@@ -140,8 +186,26 @@ export function showToast({ type = "info", title, message, duration = 4000, acti
         <i class="ti ${cfg.icon}" style="color:${cfg.color};font-size:18px;"></i>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;color:var(--av-navy);font-size:13.5px;line-height:1.3;margin-bottom:${message ? "3px" : "0"};">
-          ${escapeHtml(title)}
+        <div style="font-weight:700;color:var(--av-navy);font-size:13.5px;line-height:1.3;margin-bottom:${message ? "3px" : "0"};display:flex;align-items:center;gap:6px;">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">
+            ${escapeHtml(title)}
+          </span>
+          <!-- 0.58.30 : badge compteur (caché tant qu'il vaut 1) -->
+          <span data-toast-counter style="
+            display:none;
+            background:linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc);
+            color:#fff;
+            padding:1px 8px;
+            border-radius:99px;
+            font-size:10.5px;
+            font-weight:800;
+            letter-spacing:.5px;
+            box-shadow:0 2px 6px ${cfg.glow};
+            align-items:center;
+            justify-content:center;
+            flex-shrink:0;
+            min-width:24px;
+          " aria-label="Nombre de notifications groupées"></span>
         </div>
         ${message ? `<div style="color:var(--av-g700);font-size:12.5px;line-height:1.45;">${escapeHtml(message)}</div>` : ""}
         ${actionLabel ? `
@@ -239,6 +303,7 @@ export function showToast({ type = "info", title, message, duration = 4000, acti
   // Auto-dismiss
   if (duration > 0) {
     dismissTimer = setTimeout(() => removeToast(toast), duration);
+    toast._dismissTimer = dismissTimer; // 0.58.30 : exposé pour reset lors d'un dedupe
   }
 
   return id;
