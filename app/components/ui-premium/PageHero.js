@@ -29,14 +29,16 @@
 // =============================================================
 
 import Link from "next/link";
+// 0.58.22 : particules optionnelles dans le PageHero
+import ParticlesBackground from "./ParticlesBackground";
 
 const VARIANTS = {
-  teal:   { grad: "linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%)", accent: "#7CC8C8" },
-  blue:   { grad: "linear-gradient(135deg,#142131 0%,#185FA5 100%)", accent: "#7CC8C8" },
-  terra:  { grad: "linear-gradient(135deg,#142131 0%,#73424d 60%,#C9867F 110%)", accent: "#C9867F" },
-  navy:   { grad: "linear-gradient(135deg,#0d1822 0%,#1d2d42 50%,#243044 100%)", accent: "#7CC8C8" },
-  violet: { grad: "linear-gradient(135deg,#142131 0%,#3d2f5e 50%,#7a6fb0 120%)", accent: "#bfb5dd" },
-  amber:  { grad: "linear-gradient(135deg,#142131 0%,#4d3818 70%,#EF9F27 130%)", accent: "#ffd479" },
+  teal:   { grad: "linear-gradient(135deg,#142131 0%,#2a5a5a 70%,#7CC8C8 130%)", accent: "#7CC8C8", particleColor: "rgba(124, 200, 200, 0.55)" },
+  blue:   { grad: "linear-gradient(135deg,#142131 0%,#185FA5 100%)", accent: "#7CC8C8", particleColor: "rgba(124, 200, 200, 0.55)" },
+  terra:  { grad: "linear-gradient(135deg,#142131 0%,#73424d 60%,#C9867F 110%)", accent: "#C9867F", particleColor: "rgba(201, 134, 127, 0.55)" },
+  navy:   { grad: "linear-gradient(135deg,#0d1822 0%,#1d2d42 50%,#243044 100%)", accent: "#7CC8C8", particleColor: "rgba(124, 200, 200, 0.55)" },
+  violet: { grad: "linear-gradient(135deg,#142131 0%,#3d2f5e 50%,#7a6fb0 120%)", accent: "#bfb5dd", particleColor: "rgba(122, 111, 176, 0.65)" },
+  amber:  { grad: "linear-gradient(135deg,#142131 0%,#4d3818 70%,#EF9F27 130%)", accent: "#ffd479", particleColor: "rgba(239, 159, 39, 0.55)" },
 };
 
 export default function PageHero({
@@ -49,6 +51,9 @@ export default function PageHero({
   actions,
   eyebrow,
   compact = false,
+  // 0.58.22 : particules canvas optionnelles en background du hero
+  particles = false,
+  particlesCount = 20,
 }) {
   const cfg = VARIANTS[variant] || VARIANTS.teal;
 
@@ -75,6 +80,26 @@ export default function PageHero({
         pointerEvents: "none",
         zIndex: 0,
       }} />
+
+      {/* 0.58.22 : Particules canvas optionnelles (couleur dépend du variant) */}
+      {particles && (
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          opacity: 0.7,
+        }}>
+          <ParticlesBackground
+            count={particlesCount}
+            speed={0.2}
+            linkDistance={120}
+            color={cfg.particleColor}
+            lineColor={cfg.particleColor.replace(/[\d.]+\)$/, "0.15)")}
+            showOnMobile={false}
+          />
+        </div>
+      )}
 
       {/* Mesh decorative animé (background-position shift) */}
       <div style={{

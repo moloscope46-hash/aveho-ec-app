@@ -13,6 +13,8 @@ import { logEvent } from "../../lib/events";
 import BulkActions, { useBulkSelection } from "../BulkActions";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 import { logger } from "../../lib/logger";
+// 0.58.22 : NeonButton premium pour boutons principaux
+import { NeonButton } from "../components/ui-premium";
 
 const STATUTS = ["Demandé", "Validé", "Reçu"];
 const MOTIFS = ["Réapprovisionnement", "Retour", "Prêt", "Régularisation"];
@@ -169,7 +171,17 @@ export default function Transferts() {
         ]} />
         <Panel>
           <div className="di-toolbar">
-            {auth.can("ecrire") && <button className="btn-new" onClick={() => { setErr(""); setModal(true); }} disabled={!auth.structureId}><i className="ti ti-plus" /> Nouveau transfert</button>}
+            {/* 0.58.22 : NeonButton variant=violet pour bouton "Nouveau transfert" */}
+            {auth.can("ecrire") && (
+              <NeonButton
+                variant="violet"
+                icon="ti-plus"
+                onClick={() => { setErr(""); setModal(true); }}
+                disabled={!auth.structureId}
+              >
+                Nouveau transfert
+              </NeonButton>
+            )}
           </div>
 
           {loading ? <StateMsg>Chargement…</StateMsg>
@@ -300,7 +312,9 @@ export default function Transferts() {
             </div>
             <div className="modal-foot">
               <button className="btn-ghost" onClick={() => setModal(false)}>Annuler</button>
-              <button className="btn-save" onClick={save} disabled={busy}>{busy ? "…" : "Créer le transfert"}</button>
+              <NeonButton variant="violet" icon={busy ? "ti-loader-2" : "ti-arrows-exchange"} onClick={save} disabled={busy}>
+                {busy ? "Création…" : "Créer le transfert"}
+              </NeonButton>
             </div>
           </div>
         </div>

@@ -38,6 +38,8 @@ export default function Drawer({
   children,
   closeOnBackdrop = true,
   ariaLabel,
+  // 0.58.22 : Skeleton automatique pendant le chargement
+  loading = false,
 }) {
   const dialogRef = useRef(null);
   // 0.58.19 : guard hydratation pour Portal
@@ -235,7 +237,7 @@ export default function Drawer({
           overflowY: "auto",
           padding: "22px 24px",
         }}>
-          {children}
+          {loading ? <DrawerSkeleton /> : children}
         </div>
 
         {/* Footer */}
@@ -256,3 +258,55 @@ export default function Drawer({
     </div>
   ), document.body);
 }
+
+// =============================================================
+//  0.58.22 : DrawerSkeleton - shimmer pendant chargement
+// =============================================================
+function DrawerSkeleton() {
+  return (
+    <div className="av-drawer-skel" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Header skel : titre + sous-titre */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingBottom: 14, borderBottom: "1px solid var(--av-g200, #e3e9ee)" }}>
+        <div className="av-skel-line" style={{ width: "55%", height: 22 }} />
+        <div className="av-skel-line" style={{ width: "75%", height: 14 }} />
+      </div>
+
+      {/* 2 sections avec label + 2 lignes */}
+      {[0, 1].map((i) => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="av-skel-line" style={{ width: 100, height: 11 }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className="av-skel-line" style={{ width: "100%", height: 16 }} />
+            <div className="av-skel-line" style={{ width: "78%", height: 16 }} />
+          </div>
+        </div>
+      ))}
+
+      {/* Block grid (mini cards) */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 6 }}>
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} style={{
+            background: "var(--av-g50, #f4f7fa)",
+            borderRadius: 10,
+            padding: 12,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}>
+            <div className="av-skel-line" style={{ width: "60%", height: 10 }} />
+            <div className="av-skel-line" style={{ width: "80%", height: 18 }} />
+          </div>
+        ))}
+      </div>
+
+      {/* Long paragraph */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 8 }}>
+        <div className="av-skel-line" style={{ width: "100%", height: 12 }} />
+        <div className="av-skel-line" style={{ width: "92%", height: 12 }} />
+        <div className="av-skel-line" style={{ width: "85%", height: 12 }} />
+        <div className="av-skel-line" style={{ width: "68%", height: 12 }} />
+      </div>
+    </div>
+  );
+}
+

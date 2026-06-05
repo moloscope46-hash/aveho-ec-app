@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { KpiCard, MetricCard, EmptyState, SkeletonGrid } from "../components/ui-premium";
+import { KpiCard, MetricCard, EmptyState, SkeletonGrid, ConicCard } from "../components/ui-premium";
 import { fmtEur } from "../../lib/format";
 
 /**
@@ -249,20 +249,24 @@ export default function HeroDashboard({ auth, kpis, atraiter, loading, onNavigat
               gap: 14,
             }}>
               {atraiter.di > 0 && (
-                <KpiCard
+                /* 0.58.22 : ConicCard variant aurora pour le KPI le plus urgent (DI à traiter) */
+                <ConicCard
                   label="DI à traiter"
                   value={atraiter.di}
                   icon="ti-tools"
-                  variant="terra"
+                  variant="aurora"
+                  speed="normal"
                   onClick={() => go("/interventions/kanban")}
                 />
               )}
               {atraiter.achats > 0 && (
-                <KpiCard
+                /* 0.58.22 : ConicCard variant amber pour les achats à valider */
+                <ConicCard
                   label="Achats à valider"
                   value={atraiter.achats}
                   icon="ti-shopping-cart"
                   variant="amber"
+                  speed="normal"
                   onClick={() => go("/achats")}
                 />
               )}

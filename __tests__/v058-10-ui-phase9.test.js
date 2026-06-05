@@ -188,10 +188,12 @@ describe("0.58.10 - PageTransition entre routes", () => {
     expect(src).toMatch(/import\s+\{\s*usePathname\s*\}\s+from\s+["']next\/navigation["']/);
   });
 
-  it("Animation av-page-enter déclenchée par key", () => {
-    expect(src).toMatch(/animation:\s*["']av-page-enter/);
+  it("Animation slide-in déclenchée par key (0.58.22 : remplaçant av-page-enter)", () => {
+    // 0.58.22 : av-page-enter remplacé par slide-in direction-aware
+    expect(src).toMatch(/animation:\s*`?\$?\{?animName\}?|av-page-slide-in-(right|left)|av-page-enter/);
     const css = fs.readFileSync(path.resolve(process.cwd(), "app/globals.css"), "utf-8");
-    expect(css).toMatch(/@keyframes av-page-enter/);
+    // L'un ou l'autre des keyframes doit exister
+    expect(css).toMatch(/@keyframes (av-page-enter|av-page-slide-in-right)/);
   });
 
   it("Layout utilise <PageTransition>", () => {

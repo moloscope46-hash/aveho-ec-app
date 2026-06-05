@@ -19,6 +19,8 @@ import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";
 import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
+// 0.58.22 : NeonButton premium pour boutons d'action principaux
+import { NeonButton } from "../components/ui-premium";
 
 const STATUTS = ["Nouvelle", "Planifiée", "En cours", "Clôturée"];
 const TYPES = ["Panne / réparation", "Maintenance préventive", "Livraison", "Reprise matériel"];
@@ -548,7 +550,10 @@ export default function Interventions() {
             </div>
             <div className="modal-foot">
               <button className="btn-ghost" onClick={() => setModal(false)}>Annuler</button>
-              <button className="btn-save" onClick={save} disabled={busy}>{busy ? "…" : "Envoyer la demande"}</button>
+              {/* 0.58.22 : NeonButton variant=blue pour le bouton principal */}
+              <NeonButton variant="blue" icon={busy ? "ti-loader-2" : "ti-send"} onClick={save} disabled={busy}>
+                {busy ? "Envoi en cours…" : "Envoyer la demande"}
+              </NeonButton>
             </div>
           </div>
         </div>

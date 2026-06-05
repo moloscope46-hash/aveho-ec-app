@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.22 — Bundle WOW</title>
+<style>
+:root{--navy:#142131;--teal:#7CC8C8;--terra:#C9867F;--blue:#185FA5;--amber:#EF9F27;--green:#5aa05a;--violet:#7a6fb0}
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:#0a1420}
+body{background:radial-gradient(1400px 800px at 70% -10%, #244a55 0%, #0d1b28 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}100%{box-shadow:0 0 0 0 rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.05)}66%{transform:translate(-30px,40px) scale(0.95)}}
+@keyframes scan-rot{ to{ transform: rotate(360deg); }}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes spin{ to{ transform: rotate(360deg); }}
+@keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes progress-bar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes slide-right{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slide-left{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Aurora blobs en background fixed */
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.7) 0%,transparent 70%)}
+.bg-blob.blue{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.65) 0%,transparent 70%);animation-delay:-6s}
+.bg-blob.violet{top:35%;right:20%;width:400px;height:400px;background:radial-gradient(circle,rgba(122,111,176,.55) 0%,transparent 70%);animation-delay:-12s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.55),rgba(124,200,200,.4));backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50),0 0 0 1px rgba(255,255,255,.06) inset,0 0 60px rgba(124,200,200,.18);overflow:hidden;animation:fadeup .7s cubic-bezier(.2,.8,.2,1)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 6px rgba(124,200,200,.95),0 0 18px rgba(124,200,200,.7),0 0 36px rgba(124,200,200,.45);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:30px;font-weight:700;margin:14px 0 10px;letter-spacing:-.02em;line-height:1.18;color:#fff}
+h1 small{font-size:14.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;letter-spacing:0;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:'Consolas',monospace;font-size:11.5px}
+
+h2{font-size:24px;color:#fff;margin:48px 0 18px;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:26px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5);box-shadow:0 0 12px rgba(124,200,200,.5)}
+h3{font-size:16px;color:#bfe6e6;margin:22px 0 10px;font-weight:600}
+
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:18px;padding:24px 28px;margin:18px 0;backdrop-filter:blur(20px) saturate(180%);box-shadow:0 4px 24px rgba(0,0,0,.30)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+
+code{font-family:'Consolas','Menlo',monospace;background:rgba(124,200,200,.12);color:#7CC8C8;padding:2px 7px;border-radius:5px;font-size:12.5px;border:1px solid rgba(124,200,200,.20)}
+pre{background:#050a14;color:#e8edf2;padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:12.2px;line-height:1.6;border-left:3px solid #7CC8C8;box-shadow:0 4px 16px rgba(0,0,0,.5),0 0 24px rgba(124,200,200,.08) inset}
+
+.top-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:28px 0}
+.top-kpi{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.2);border-radius:14px;padding:20px 16px;text-align:center;backdrop-filter:blur(20px);position:relative;overflow:hidden;isolation:isolate}
+.top-kpi::before{content:"";position:absolute;top:-40px;right:-40px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle, var(--c, #7CC8C8) 0%, transparent 70%);opacity:.25;filter:blur(20px)}
+.top-kpi-val{font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#fff;position:relative;z-index:1}
+.top-kpi-lbl{font-size:11px;color:#8aa0b0;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;font-weight:600;position:relative;z-index:1}
+.top-kpi.t{--c:#7CC8C8}.top-kpi.b{--c:#185FA5}.top-kpi.v{--c:#7a6fb0}.top-kpi.g{--c:#5aa05a}.top-kpi.a{--c:#EF9F27}.top-kpi.r{--c:#C9867F}
+
+/* DEMO ConicCard live */
+.conic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin:18px 0}
+.conic-card{position:relative;background:rgba(255,255,255,.06);border:1px solid rgba(124,200,200,.20);border-radius:16px;padding:20px;backdrop-filter:blur(20px);overflow:hidden;isolation:isolate;color:#fff;cursor:pointer;transition:transform .25s}
+.conic-card:hover{transform:translateY(-3px)}
+.conic-card::before{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(from 0deg,transparent 0deg,var(--c,#7CC8C8) 50deg,transparent 100deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;-webkit-mask-composite:xor;animation:scan-rot 4s linear infinite;pointer-events:none;opacity:.85}
+.conic-card.aurora::before{background:conic-gradient(from 0deg,#7CC8C8 0deg,#185FA5 90deg,#7a6fb0 180deg,#C9867F 270deg,#7CC8C8 360deg);opacity:.65}
+.conic-card.amber{--c:#EF9F27}
+.conic-card .icn{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--c,#7CC8C8),rgba(255,255,255,.18));display:inline-flex;align-items:center;justify-content:center;font-size:18px;color:#fff;margin-bottom:12px;box-shadow:0 4px 12px rgba(124,200,200,.30),inset 0 1px 0 rgba(255,255,255,.30)}
+.conic-card .lbl{font-size:11.5px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px}
+.conic-card .val{font-size:32px;font-weight:700;color:#fff;letter-spacing:-.02em;line-height:1}
+.conic-card .sub{font-size:11.5px;color:rgba(124,200,200,.85);margin-top:8px}
+
+/* NeonButtons demo */
+.neon-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:18px 0}
+.neon-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-shadow:0 1px 2px rgba(20,33,49,.3);transition:transform .2s;position:relative;overflow:hidden}
+.neon-btn:hover{transform:translateY(-2px)}
+.neon-btn::before{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(from 0deg,transparent 0deg,rgba(255,255,255,.5) 40deg,transparent 80deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;-webkit-mask-composite:xor;animation:scan-rot 3s linear infinite;pointer-events:none}
+.neon-btn.blue{background:linear-gradient(135deg,#185FA5,#4a8dd4);box-shadow:0 0 0 4px rgba(24,95,165,.20),0 8px 24px rgba(24,95,165,.45),0 0 48px rgba(24,95,165,.25)}
+.neon-btn.amber{background:linear-gradient(135deg,#EF9F27,#d6831d);box-shadow:0 0 0 4px rgba(239,159,39,.20),0 8px 24px rgba(239,159,39,.45),0 0 48px rgba(239,159,39,.25)}
+.neon-btn.violet{background:linear-gradient(135deg,#7a6fb0,#5d52a0);box-shadow:0 0 0 4px rgba(122,111,176,.20),0 8px 24px rgba(122,111,176,.45),0 0 48px rgba(122,111,176,.25)}
+.neon-btn.teal{background:linear-gradient(135deg,#7CC8C8,#5db5b5);box-shadow:0 0 0 4px rgba(124,200,200,.20),0 8px 24px rgba(124,200,200,.40),0 0 48px rgba(124,200,200,.25)}
+
+/* Toast premium stack demo */
+.toast-stack{display:flex;flex-direction:column;gap:10px;max-width:380px;margin:18px 0}
+.toast-card{position:relative;overflow:hidden;background:rgba(255,255,255,.92);backdrop-filter:blur(20px) saturate(180%);border-radius:12px;padding:12px 14px;border-left:4px solid var(--toast-color,#5aa05a);box-shadow:0 10px 25px rgba(20,33,49,.18),0 4px 8px rgba(20,33,49,.10),0 0 0 1px rgba(255,255,255,.5) inset,0 0 24px var(--toast-glow,rgba(90,160,90,.35));color:#142131;display:flex;align-items:flex-start;gap:11px;animation:fadeup .4s cubic-bezier(.16, 1, 0.3, 1) backwards}
+.toast-card .icn-wrap{flex-shrink:0;width:32px;height:32px;border-radius:8px;background:var(--toast-bg,#eef9ef);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--toast-color,#5aa05a);box-shadow:0 0 0 1px var(--toast-color,#5aa05a) 25,0 0 12px var(--toast-glow,rgba(90,160,90,.35))}
+.toast-card .body{flex:1;min-width:0}
+.toast-card .ttl{font-weight:700;font-size:13.5px;line-height:1.3;margin-bottom:3px}
+.toast-card .msg{color:#4a5868;font-size:12.5px;line-height:1.45}
+.toast-card::after{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--toast-color,#5aa05a);opacity:.65;transform-origin:left center;animation:progress-bar 4s linear forwards}
+.toast-card.success{--toast-color:#5aa05a;--toast-glow:rgba(90,160,90,.35);--toast-bg:#eef9ef}
+.toast-card.info{--toast-color:#185FA5;--toast-glow:rgba(24,95,165,.35);--toast-bg:#e7f0fa}
+.toast-card.warning{--toast-color:#EF9F27;--toast-glow:rgba(239,159,39,.40);--toast-bg:#fff5e1}
+.toast-card.error{--toast-color:#c0392b;--toast-glow:rgba(192,57,43,.40);--toast-bg:#ffe5e5}
+.toast-card.s1{animation-delay:0ms}.toast-card.s2{animation-delay:80ms}.toast-card.s3{animation-delay:160ms}.toast-card.s4{animation-delay:240ms}
+
+/* Drawer Skeleton demo */
+.skel-demo{background:#fff;border-radius:18px;padding:24px 28px;margin:18px 0;box-shadow:0 8px 24px rgba(0,0,0,.20)}
+.skel-line{background:linear-gradient(90deg,#eef2f5 0%,#e3e9ee 50%,#eef2f5 100%);background-size:200% 100%;border-radius:6px;animation:shimmer 1.4s ease-in-out infinite}
+.skel-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.skel-card{background:#f4f7fa;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+table th{background:rgba(20,33,49,.7);color:#bfe6e6;padding:10px 12px;text-align:left;font-weight:700;border-bottom:2px solid rgba(124,200,200,.30)}
+table td{padding:9px 12px;border-bottom:1px solid rgba(124,200,200,.10);color:#dde4eb}
+table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+footer{margin-top:48px;padding-top:22px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+ul{padding-left:20px}li{margin:6px 0}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob teal"></div>
+  <div class="bg-blob blue"></div>
+  <div class="bg-blob violet"></div>
+</div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE WOW · 0.58.22</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.22 — Bundle WOW : 6 chantiers en série<small>ConicCard /accueil · NeonButton 4 pages · PageHero particles · Toast stack · Page transitions · Drawer Skeleton</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 4 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.22-alpha</code></span>
+    <span><b>Tests :</b> 3953 Vitest (+28)</span>
+  </div>
+</header>
+
+<div class="top-kpis">
+  <div class="top-kpi a"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">Chantiers livrés</div></div>
+  <div class="top-kpi b"><div class="top-kpi-val">6</div><div class="top-kpi-lbl">NeonButton migrés</div></div>
+  <div class="top-kpi v"><div class="top-kpi-val">4</div><div class="top-kpi-lbl">Pages impactées</div></div>
+  <div class="top-kpi g"><div class="top-kpi-val">+28</div><div class="top-kpi-lbl">Tests Vitest (3953)</div></div>
+</div>
+
+<h2>💫 ConicCard sur /accueil — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Les 2 KPIs phares 'DI à traiter' et 'Achats à valider' passent en <code>&lt;ConicCard&gt;</code> avec scan-line conic permanent. Mode <strong>spotlight</strong> qui distingue visuellement les KPIs urgents.</p>
+</div>
+
+<div class="conic-grid">
+  <div class="conic-card aurora">
+    <div class="icn">🔧</div>
+    <div class="lbl">DI à traiter</div>
+    <div class="val">7</div>
+    <div class="sub">→ Cliquer pour ouvrir le kanban</div>
+  </div>
+  <div class="conic-card amber">
+    <div class="icn">🛒</div>
+    <div class="lbl">Achats à valider</div>
+    <div class="val">3</div>
+    <div class="sub">→ Cliquer pour voir la liste</div>
+  </div>
+</div>
+
+<pre>// 0.58.22 - app/accueil/HeroDashboard.js
+import { ConicCard } from '../components/ui-premium';
+
+{atraiter.di > 0 && (
+  &lt;ConicCard
+    label="DI à traiter"
+    value={atraiter.di}
+    icon="ti-tools"
+    variant="aurora"        // multi-couleur Aveho permanente
+    speed="normal"          // 4s scan
+    onClick={() => go('/interventions/kanban')}
+  /&gt;
+)}
+{atraiter.achats > 0 && (
+  &lt;ConicCard
+    label="Achats à valider"
+    value={atraiter.achats}
+    icon="ti-shopping-cart"
+    variant="amber"         // scan ambre permanent
+    speed="normal"
+    onClick={() => go('/achats')}
+  /&gt;
+)}</pre>
+
+<h2>🔄 Migration NeonButton sur 4 pages clés — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">6 boutons d'action principaux passent à NeonButton premium avec variants couleur métier.</p>
+</div>
+
+<div class="neon-gallery">
+  <button class="neon-btn blue">📨 Envoyer la demande</button>
+  <button class="neon-btn amber">➕ Nouvelle demande d'achat</button>
+  <button class="neon-btn violet">➕ Nouveau transfert</button>
+  <button class="neon-btn teal">➕ Nouveau signalement</button>
+</div>
+
+<table>
+<tr><th>Page</th><th>Bouton</th><th>Variant</th><th>Icon</th></tr>
+<tr><td>/interventions</td><td>Envoyer la demande (modal)</td><td><code>blue</code></td><td><code>ti-send</code> / <code>ti-loader-2</code></td></tr>
+<tr><td>/achats</td><td>Nouvelle demande d'achat</td><td><code>amber</code></td><td><code>ti-plus</code></td></tr>
+<tr><td>/transferts</td><td>Nouveau transfert</td><td><code>violet</code></td><td><code>ti-plus</code></td></tr>
+<tr><td>/transferts</td><td>Créer le transfert (modal)</td><td><code>violet</code></td><td><code>ti-arrows-exchange</code></td></tr>
+<tr><td>/signalements</td><td>Nouveau signalement</td><td><code>teal</code></td><td><code>ti-plus</code></td></tr>
+<tr><td>/signalements</td><td>Déposer / Enregistrer (modal)</td><td><code>teal</code></td><td><code>ti-send</code> / <code>ti-device-floppy</code></td></tr>
+</table>
+
+<h2>✨ PageHero : prop <code>particles</code></h2>
+
+<div class="panel">
+<p style="margin:0">Nouvelle prop <code>particles</code> qui ajoute un canvas de particules en background du PageHero, avec <strong>couleur déduite du variant</strong>.</p>
+</div>
+
+<pre>// 0.58.22 - PageHero variant-aware particles
+&lt;PageHero
+  variant="violet"        // → particules violettes (rgba 122,111,176,.65)
+  particles               // active le canvas (false par défaut)
+  particlesCount={20}     // 20 particules par défaut
+  title="Statistiques RGPD"
+/&gt;
+
+&lt;PageHero
+  variant="terra"         // → particules terra (rgba 201,134,127,.55)
+  particles
+  particlesCount={30}
+  title="Patients hospitalisés"
+/&gt;
+
+// Couleurs déduites :
+// teal  → rgba(124, 200, 200, 0.55)
+// blue  → rgba(124, 200, 200, 0.55)
+// violet → rgba(122, 111, 176, 0.65)
+// terra → rgba(201, 134, 127, 0.55)
+// amber → rgba(239, 159, 39, 0.55)</pre>
+
+<h2>🍞 Toast premium stack — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0"><strong>MAX 4 toasts simultanés</strong> · progress bar qui se vide · layered shadows + glow par couleur · backdrop-blur 20px · hover pause auto-dismiss · staggered entrance (80ms).</p>
+</div>
+
+<div class="toast-stack">
+  <div class="toast-card success s1">
+    <div class="icn-wrap">✓</div>
+    <div class="body">
+      <div class="ttl">Patient enregistré</div>
+      <div class="msg">M. Dupont créé avec succès — IPP 4720</div>
+    </div>
+  </div>
+  <div class="toast-card info s2">
+    <div class="icn-wrap">ℹ</div>
+    <div class="body">
+      <div class="ttl">Synchronisation en cours</div>
+      <div class="msg">3 patients hors-ligne en cours de sync…</div>
+    </div>
+  </div>
+  <div class="toast-card warning s3">
+    <div class="icn-wrap">⚠</div>
+    <div class="body">
+      <div class="ttl">Stock faible</div>
+      <div class="msg">SAP HBI L → 4 unités restantes (seuil 10)</div>
+    </div>
+  </div>
+  <div class="toast-card error s4">
+    <div class="icn-wrap">⨯</div>
+    <div class="body">
+      <div class="ttl">Échec sauvegarde</div>
+      <div class="msg">Connexion réseau interrompue — réessaie automatique dans 30s</div>
+    </div>
+  </div>
+</div>
+
+<pre>// 0.58.22 - Toast premium stack
+import { toast } from '@/components/ui-premium/Toast';
+
+toast.success('Patient enregistré', 'M. Dupont créé avec succès — IPP 4720');
+toast.info('Synchronisation', '3 patients en cours de sync…');
+toast.warning('Stock faible', 'SAP HBI L → 4 unités restantes');
+toast.error('Échec sauvegarde', 'Connexion réseau interrompue');
+
+// Les 4 toasts s'affichent en stack, le 5e éjecte le plus ancien.
+// Chaque toast a sa progress bar qui se vide.
+// Hover sur un toast → auto-dismiss pause.</pre>
+
+<h2>🎬 Page transitions slide-in direction-aware</h2>
+
+<div class="panel">
+<p style="margin:0"><strong>Détection forward/back</strong> via history stack interne. Slide depuis la droite si forward, depuis la gauche si back.</p>
+</div>
+
+<pre>// 0.58.22 - PageTransition direction-aware
+const historyStackRef = useRef([pathname]);
+
+useEffect(() => {
+  const stack = historyStackRef.current;
+  const previousIndex = stack.lastIndexOf(pathname);
+  let dir = 'forward';
+
+  if (previousIndex >= 0 && previousIndex < stack.length - 1) {
+    dir = 'back';  // ← l'user revient en arrière
+    historyStackRef.current = stack.slice(0, previousIndex + 1);
+  } else {
+    historyStackRef.current = [...stack, pathname];  // nouvelle route
+  }
+  setDirection(dir);
+}, [pathname]);
+
+const animName = direction === 'back'
+  ? 'av-page-slide-in-left'   // depuis la gauche
+  : 'av-page-slide-in-right'; // depuis la droite
+
+/* CSS */
+@keyframes av-page-slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes av-page-slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}</pre>
+
+<h2>💀 Drawer Skeleton — DÉMO LIVE</h2>
+
+<div class="panel">
+<p style="margin:0">Nouvelle prop <code>loading</code> sur Drawer premium. Quand activée, affiche automatiquement un skeleton structuré avec animation shimmer.</p>
+</div>
+
+<div class="skel-demo">
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:14px;border-bottom:1px solid #e3e9ee">
+      <div class="skel-line" style="width:55%;height:22px"></div>
+      <div class="skel-line" style="width:75%;height:14px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="skel-line" style="width:100px;height:11px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="skel-line" style="width:100%;height:16px"></div>
+        <div class="skel-line" style="width:78%;height:16px"></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="skel-line" style="width:100px;height:11px"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="skel-line" style="width:100%;height:16px"></div>
+        <div class="skel-line" style="width:78%;height:16px"></div>
+      </div>
+    </div>
+    <div class="skel-cards-grid">
+      <div class="skel-card"><div class="skel-line" style="width:60%;height:10px"></div><div class="skel-line" style="width:80%;height:18px"></div></div>
+      <div class="skel-card"><div class="skel-line" style="width:60%;height:10px"></div><div class="skel-line" style="width:80%;height:18px"></div></div>
+      <div class="skel-card"><div class="skel-line" style="width:60%;height:10px"></div><div class="skel-line" style="width:80%;height:18px"></div></div>
+      <div class="skel-card"><div class="skel-line" style="width:60%;height:10px"></div><div class="skel-line" style="width:80%;height:18px"></div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px">
+      <div class="skel-line" style="width:100%;height:12px"></div>
+      <div class="skel-line" style="width:92%;height:12px"></div>
+      <div class="skel-line" style="width:85%;height:12px"></div>
+      <div class="skel-line" style="width:68%;height:12px"></div>
+    </div>
+  </div>
+</div>
+
+<pre>// 0.58.22 - Drawer prop loading
+&lt;Drawer
+  open={open}
+  loading={isLoading}        // ← NEW : skeleton auto pendant chargement
+  title="Détail patient"
+  onClose={() => setOpen(false)}
+&gt;
+  {/* contenu réel rendu uniquement quand loading=false */}
+  &lt;PatientDetails patient={patient} /&gt;
+&lt;/Drawer&gt;</pre>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+# Dézipper le zip 0.58.22
+npm install --legacy-peer-deps
+npm test                              # 3953 verts ✅
+npm run build                         # OK ✅
+git add -A
+git commit -m "Alpha 0.58.22 - Bundle WOW : ConicCard /accueil + NeonButton 4 pages + PageHero particles + Toast stack + Page transitions + Drawer Skeleton"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes WOW (0.58.23)</h2>
+<div class="panel warn">
+<ul>
+<li><b>Migration NeonButton</b> sur /patients, /materiel, /commandes, /utilisateurs</li>
+<li><b>Application ConicCard</b> sur d'autres KPI critiques (signalements urgents, RGPD à renouveler)</li>
+<li><b>PageHero particles activé</b> sur /statistiques, /accueil, /patients</li>
+<li><b>BulkToolbar premium amélioré</b> avec actions groupées + barre de progression</li>
+<li><b>Onboarding visuel</b> pour les nouveaux utilisateurs (Driver.js intégration)</li>
+<li><b>Mode 'présentation'</b> pour démos clients (zoom + animations slow)</li>
+<li><b>Empty states premium</b> avec illustrations SVG animées</li>
+<li><b>Command palette extensions</b> : actions globales (créer patient, intervention…)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.22 · 4 juin 2026 · 3953 Vitest · BUNDLE WOW : 6 chantiers</footer>
+</div>
+
+</body></html>

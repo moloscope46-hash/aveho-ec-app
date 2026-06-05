@@ -2909,3 +2909,39 @@ body.is-compact .chip-row button {
   .av-cmdk-modal { max-width: 100%; }
   .av-cmdk-inner > div:first-child { padding: 12px 14px !important; }
 }
+
+/* 0.58.22 : Toast premium stack - progress bar qui se vide */
+@keyframes av-toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* 0.58.22 : Page transitions slide-in direction-aware */
+@keyframes av-page-slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes av-page-slide-in-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* =============================================================
+   0.58.22 — Drawer Skeleton (shimmer line)
+   ============================================================= */
+.av-skel-line {
+  background: linear-gradient(
+    90deg,
+    var(--av-g100, #eef2f5) 0%,
+    var(--av-g200, #e3e9ee) 50%,
+    var(--av-g100, #eef2f5) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: av-skel-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes av-skel-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.av-drawer-skel { animation: av-fade-in 0.3s var(--av-ease-out); }

@@ -17,6 +17,8 @@ import { useStickyState } from "../../lib/useStickyState";
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
+// 0.58.22 : NeonButton premium pour boutons principaux
+import { NeonButton } from "../components/ui-premium";
 const TYPES = [
   { value: "Problème", color: "#e35d5b", icon: "ti-alert-triangle" },
   { value: "Idée", color: "#7CC8C8", icon: "ti-bulb" },
@@ -257,7 +259,8 @@ export default function SignalementsPage() {
 
         <Panel>
           <div className="di-toolbar" style={{ flexWrap: "wrap" }}>
-            <Btn variant="new" icon="ti-plus" onClick={openNew}>Nouveau signalement</Btn>
+            {/* 0.58.22 : NeonButton variant=teal pour "Nouveau signalement" */}
+            <NeonButton variant="teal" icon="ti-plus" onClick={openNew}>Nouveau signalement</NeonButton>
             <select value={fType} onChange={(e) => setFType(e.target.value)} style={{ padding: "6px 10px" }}>
               <option value="">Tous les types</option>
               {TYPES.map((t) => <option key={t.value} value={t.value}>{t.value}</option>)}
@@ -385,7 +388,9 @@ export default function SignalementsPage() {
         title={modal?.id ? "Répondre / modifier le signalement" : "Nouveau signalement"}
         footer={<>
           <Btn variant="ghost" onClick={() => setModal(null)}>Annuler</Btn>
-          <Btn variant="primary" onClick={save}>{modal?.id ? "Enregistrer" : "Déposer"}</Btn>
+          <NeonButton variant="teal" icon={modal?.id ? "ti-device-floppy" : "ti-send"} onClick={save}>
+            {modal?.id ? "Enregistrer" : "Déposer"}
+          </NeonButton>
         </>}
       >
         {err && <div className="err">{err}</div>}

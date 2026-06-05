@@ -18,6 +18,8 @@ import AchatPreview from "../AchatPreview";
 import { safeFetch } from "../../lib/offlineCache";
 import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
+// 0.58.22 : NeonButton premium pour boutons d'action principaux
+import { NeonButton } from "../components/ui-premium";
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
@@ -379,7 +381,8 @@ function AchatsInner() {
 
         <Panel>
           <div className="di-toolbar">
-            {auth.can("ecrire") && <Btn variant="new" icon="ti-plus" onClick={openNew}>Nouvelle demande d'achat</Btn>}
+            {/* 0.58.22 : NeonButton variant=amber pour bouton "Nouvelle demande d'achat" */}
+            {auth.can("ecrire") && <NeonButton variant="amber" icon="ti-plus" onClick={openNew}>Nouvelle demande d'achat</NeonButton>}
             {fStatut && <Btn variant="ghost" icon="ti-x" onClick={() => setFStatut("")}>Effacer filtre</Btn>}
           </div>
           {loading ? (
