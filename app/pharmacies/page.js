@@ -74,7 +74,7 @@ export default function PharmaciesPage() {
         // Services via etages (chaque service appartient à un etage qui appartient à un bâtiment)
         const batIds = (bats || []).map(b => b.id);
         if (batIds.length > 0) {
-          const { data: etages } = await supabase.from("etages").select("id, batiment_id").in("batiment_id", batIds);
+          const etages = []; // 0.58.85 etages dropped
           const etageIds = (etages || []).map(e => e.id);
           if (etageIds.length > 0) {
             const { data: svcs } = await supabase.from("services").select("id, nom, etage_id").in("etage_id", etageIds).order("nom");

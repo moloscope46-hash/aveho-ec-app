@@ -284,6 +284,33 @@ export default function Profil() {
               </div>
             </Panel>
 
+            {/* 0.58.85 : Mode de démarrage (rouvrir le popup choix-mode) */}
+            <Panel style={{ marginBottom: 18, borderLeft: "4px solid #EF9F27" }}>
+              <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>
+                <i className="ti ti-device-desktop" style={{ color: "#EF9F27", marginRight: 6 }} /> Mode de démarrage
+              </h2>
+              <p style={{ margin: "0 0 14px", fontSize: 12.5, color: "#5a6878" }}>
+                Choisis si tu veux démarrer en mode <b>Logiciel</b> (interface complète bureau) ou <b>Action Mobile</b> (mode terrain simplifié) à chaque connexion.
+                {typeof window !== "undefined" && (
+                  <> Mode actuel : <b>{localStorage.getItem("av-launch-mode") === "mobile" ? "📱 Action Mobile" : localStorage.getItem("av-launch-mode") === "desktop" ? "💻 Logiciel" : "Non défini"}</b></>
+                )}
+              </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => { try { localStorage.setItem("av-launch-mode", "desktop"); } catch {}; setSavedMsg("Mode Logiciel choisi"); setTimeout(() => setSavedMsg(""), 2500); }}
+                  style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: "#fff", border: "2px solid #7CC8C8", color: "#142131", borderRadius: 10, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600 }}>
+                  <i className="ti ti-device-desktop" style={{ color: "#7CC8C8" }} /> Démarrer en <b>Logiciel</b>
+                </button>
+                <button onClick={() => { try { localStorage.setItem("av-launch-mode", "mobile"); } catch {}; setSavedMsg("Mode Action Mobile choisi"); setTimeout(() => setSavedMsg(""), 2500); }}
+                  style={{ flex: 1, minWidth: 200, padding: "10px 14px", background: "#fff", border: "2px solid #EF9F27", color: "#142131", borderRadius: 10, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600 }}>
+                  <i className="ti ti-scan" style={{ color: "#EF9F27" }} /> Démarrer en <b>Action Mobile</b>
+                </button>
+                <button onClick={() => { try { localStorage.removeItem("av-launch-mode"); } catch {}; router.push("/choix-mode"); }}
+                  style={{ padding: "10px 14px", background: "rgba(94,74,140,.10)", border: "1px solid #5e4a8c", color: "#5e4a8c", borderRadius: 10, cursor: "pointer", fontFamily: "inherit", fontSize: 12.5, fontWeight: 600 }}>
+                  <i className="ti ti-arrow-back-up" /> Rouvrir le popup de choix
+                </button>
+              </div>
+            </Panel>
+
             {/* 0.58.83 : Mon téléphone (pour FAB Continuer sur le téléphone) */}
             <Panel style={{ marginBottom: 18, borderLeft: "4px solid #7CC8C8" }}>
               <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>

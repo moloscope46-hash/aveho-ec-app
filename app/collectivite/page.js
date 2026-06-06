@@ -189,7 +189,7 @@ export default function GroupementPage() {
       const batIds = (bats || []).map(b => b.id);
       let etages = [], services = [], chambres = [], lits = [], equipes = [];
       if (batIds.length > 0) {
-        const r1 = await supabase.from("etages").select("id, nom, batiment_id").in("batiment_id", batIds).order("nom");
+        const r1 = { data: [] }; // 0.58.85 etages dropped
         etages = r1.data || [];
         const etagIds = etages.map(e => e.id);
         if (etagIds.length > 0) {

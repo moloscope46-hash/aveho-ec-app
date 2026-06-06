@@ -37,7 +37,52 @@ export default function MobileNewPatientPage() {
     mobilite: "",
     etat: "Présent",
     statut_sejour: "En cours",
+    // 0.58.85 : affectation
+    etablissement_id: "",
+    batiment_id: "",
+    service_id: "",
+    chambre_id: "",
   });
+
+  // 0.58.85 : refs pour sélecteurs cascade
+  const [etablissements, setEtablissements] = useState([]);
+  const [batiments, setBatiments] = useState([]);
+  const [services, setServices] = useState([]);
+  const [chambres, setChambres] = useState([]);
+
+  useEffect(() => {
+    if (!auth.ready || !auth.structureId) return;
+    (async () => {
+      const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+      const [etabs, bats, svcs, chs] = await Promise.all([
+        tryFetch(supabase.from("etablissements").select("id, nom").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("batiments").select("id, nom, etablissement_id").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("services").select("id, nom").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("chambres").select("id, nom, service_id").eq("structure_id", auth.structureId).limit(500)),
+      ]);
+      setEtablissements(etabs);
+      setBatiments(bats);
+      setServices(svcs);
+      setChambres(chs);
+      // Pré-remplissage avec l'établissement courant si l'utilisateur n'a accès qu'à un seul
+      if (etabs.length === 1) {
+        setForm(f => ({ ...f, etablissement_id: etabs[0].id }));
+      } else if (auth.etabId) {
+        setForm(f => ({ ...f, etablissement_id: auth.etabId }));
+      }
+    })();
+  }, [auth.ready, auth.structureId, auth.etabId]);
+
+  // Filtres cascade
+  const filteredBatiments = form.etablissement_id
+    ? batiments.filter(b => b.etablissement_id === form.etablissement_id)
+    : batiments;
+  const filteredServices = form.batiment_id
+    ? services.filter(s => s.batiment_id === form.batiment_id || s.batiment_id == null)
+    : services;
+  const filteredChambres = form.service_id
+    ? chambres.filter(c => c.service_id === form.service_id)
+    : chambres;
 
   function next() { setStep(Math.min(step + 1, 4)); }
   function prev() { setStep(Math.max(step - 1, 1)); }
@@ -48,11 +93,15 @@ export default function MobileNewPatientPage() {
     try {
       const payload = {
         structure_id: auth.structureId,
-        etablissement_id: auth.etabId || null,
+        etablissement_id: form.etablissement_id || auth.etabId || null,
+        chambre_id: form.chambre_id || null,
         ...form,
         gir: form.gir ? parseInt(form.gir, 10) : null,
         created_by: auth.user?.id,
       };
+      // Retire les clés UI seulement
+      delete payload.batiment_id;
+      delete payload.service_id;
       const { data, error } = await supabase.from("patients").insert(payload).select("id").single();
       if (error) throw error;
       // Redirection vers QR/bracelet du nouveau patient
@@ -118,6 +167,45 @@ export default function MobileNewPatientPage() {
             <Field label="Lieu de naissance">
               <input value={form.lieu_naissance} onChange={e => setForm({ ...form, lieu_naissance: e.target.value })} placeholder="Paris" style={inputStyle} />
             </Field>
+          </Section>
+          </>
+        )}
+
+        {/* ÉTAPE 1bis dans étape 1 : Affectation */}
+        {step === 1 && (
+          <Section title="Affectation" icon="ti-building" color="#185FA5">
+            {etablissements.length > 1 && (
+              <Field label="Établissement">
+                <select value={form.etablissement_id} onChange={e => setForm({ ...form, etablissement_id: e.target.value, batiment_id: "", service_id: "", chambre_id: "" })} style={inputStyle}>
+                  <option value="">— Sélectionner —</option>
+                  {etablissements.map(et => <option key={et.id} value={et.id}>{et.nom}</option>)}
+                </select>
+              </Field>
+            )}
+            {filteredBatiments.length > 0 && (
+              <Field label="Bâtiment">
+                <select value={form.batiment_id} onChange={e => setForm({ ...form, batiment_id: e.target.value, service_id: "", chambre_id: "" })} style={inputStyle}>
+                  <option value="">— Aucun —</option>
+                  {filteredBatiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
+                </select>
+              </Field>
+            )}
+            {filteredServices.length > 0 && (
+              <Field label="Service">
+                <select value={form.service_id} onChange={e => setForm({ ...form, service_id: e.target.value, chambre_id: "" })} style={inputStyle}>
+                  <option value="">— Aucun —</option>
+                  {filteredServices.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                </select>
+              </Field>
+            )}
+            {filteredChambres.length > 0 && (
+              <Field label="Chambre">
+                <select value={form.chambre_id} onChange={e => setForm({ ...form, chambre_id: e.target.value })} style={inputStyle}>
+                  <option value="">— Aucune —</option>
+                  {filteredChambres.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
+                </select>
+              </Field>
+            )}
           </Section>
         )}
 

@@ -39,7 +39,7 @@ export default function EditionEtablissement() {
     if (!auth.etabId) { setLoading(false); return; }
     const [b, e, s, c, l] = await Promise.all([
       supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId).order("nom"),
-      supabase.from("etages").select("*").order("nom"),
+      Promise.resolve({ data: [] }), // 0.58.85 etages dropped
       supabase.from("services").select("*").order("nom"),
       supabase.from("chambres").select("*").order("nom"),
       supabase.from("lits").select("*").order("nom"),

@@ -1,0 +1,231 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.85 — Véhicules + Cuves + Stock</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a2a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.r{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.55) 0%,transparent 70%)}
+.bg-blob.a{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.45) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(239,159,39,.20));backdrop-filter:blur(28px);border:1px solid rgba(239,159,39,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5b855;font-weight:700;background:rgba(239,159,39,.18);border:1px solid rgba(239,159,39,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13.5px;font-weight:500;color:#fdd9a8;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdd9a8}
+.meta b{color:#fff}.meta code{background:rgba(239,159,39,.16);color:#fff;border:1px solid rgba(239,159,39,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#EF9F27,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.fix{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.feat{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.warn{border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+
+/* Tuiles KPI démo */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.kpi{background:#fff;color:#142131;border-left:4px solid var(--c);border-radius:12px;padding:14px 16px}
+.kpi-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.kpi-ic{width:32px;height:32px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--c);font-size:18px}
+.kpi-l{font-size:10.5px;color:#5a6878;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.kpi-v{font-size:28px;font-weight:700;color:var(--c);font-family:Consolas,monospace;line-height:1}
+.kpi-s{font-size:11px;color:#5a6878;margin-top:4px}
+
+/* Cuve animation */
+.cuve-demo{background:#fff;color:#142131;border-radius:12px;padding:14px 16px;border-left:4px solid var(--c);max-width:280px;margin:14px auto}
+.gauge{height:8px;background:#e3e9ee;border-radius:4px;overflow:hidden;margin:6px 0}
+.gauge-fill{height:100%;background:linear-gradient(90deg,var(--c),var(--c)cc);transition:width 1.2s ease-in-out;animation:fill 2s ease-in-out infinite}
+@keyframes fill{0%{width:10%}50%{width:90%}100%{width:10%}}
+
+/* Workflow */
+.workflow{display:flex;flex-direction:column;gap:12px;padding:18px;background:linear-gradient(135deg,rgba(239,159,39,.06),rgba(124,200,200,.05));border-radius:14px;margin:14px 0}
+.wf{display:flex;gap:14px;padding:14px 16px;background:rgba(255,255,255,.04);border-radius:10px;border-left:4px solid var(--c)}
+.wf-n{background:var(--c);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;box-shadow:0 4px 12px var(--c)66}
+.wf-b{flex:1}
+.wf-t{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px}
+.wf-d{font-size:12.5px;color:#bfe6e6;line-height:1.5}
+
+/* Onglets stock visu */
+.tabs-demo{display:flex;gap:4px;background:rgba(255,255,255,.04);padding:6px;border-radius:14px;border:1px solid rgba(255,255,255,.08);overflow-x:auto;margin:14px 0}
+.tab{padding:9px 14px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;color:#bfe6e6}
+.tab.on{background:#fff;color:var(--c);border-left:3px solid var(--c);box-shadow:0 4px 10px var(--c)22}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob r"></div><div class="bg-blob a"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#f5b855"></span>0.58.85 · VÉHICULES + CUVES + STOCK</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🚛 Véhicules sanitaires · Cuves O₂ · Refonte stock 7 onglets · Mobile remplissage cuve<small>+ fix bulletproof services + cleanup etages + procédure traçabilité lot pharmaceutique</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.85-alpha</code></span>
+    <span><b>SQL :</b> 🔴 2 nouvelles tables + 1 historique + ALTER</span>
+    <span><b>Type :</b> Feature MAJEURE</span>
+  </div>
+</header>
+
+<h2>🩹 Fixes critiques d'abord</h2>
+
+<div class="panel fix">
+  <p style="margin:0 0 10px;font-size:13px;color:#fff"><b>services.js refait en mode bulletproof</b> — au lieu d'une sonde séparée qui pouvait elle-même crasher en 400, on tente la requête filtrée puis on bascule sur le fallback en cas d'erreur. Le cache `false` est écrit immédiatement → plus jamais de tentative avec batiment_id. 1 seul 400 au tout premier load, après plus rien (cache localStorage permanent).</p>
+  <p style="margin:0;font-size:13px;color:#fff"><b>Suppression définitive de TOUTES les refs à `etages`</b> dans 5 fichiers (patients, collectivite, etablissement x2, pharmacies). Remplacé par <code>Promise.resolve({ data: [] })</code> direct. Plus jamais de 404 sur /etages.</p>
+</div>
+
+<h2>📊 Refonte /stock — 7 onglets pro</h2>
+
+<div class="tabs-demo">
+  <span class="tab on" style="--c:#185FA5"><i class="ti ti-layout-dashboard"></i> Vue globale</span>
+  <span class="tab" style="--c:#7CC8C8"><i class="ti ti-package"></i> Articles</span>
+  <span class="tab" style="--c:#5aa05a"><i class="ti ti-tools-kitchen-2"></i> Matériels</span>
+  <span class="tab" style="--c:#7a6fb0"><i class="ti ti-transfer"></i> Mouvements</span>
+  <span class="tab" style="--c:#EF9F27"><i class="ti ti-flame"></i> Cuves O₂</span>
+  <span class="tab" style="--c:#e35d5b"><i class="ti ti-ambulance"></i> Véhicules</span>
+  <span class="tab" style="--c:#C9867F"><i class="ti ti-coin-euro"></i> Chiffrage</span>
+</div>
+
+<p style="color:#bfe6e6;font-size:13px;margin:8px 0">Vue globale = tuiles KPI cliquables avec stats temps réel :</p>
+
+<div class="kpi-grid">
+  <div class="kpi" style="--c:#7CC8C8;--bg:rgba(124,200,200,.18)"><div class="kpi-h"><div class="kpi-ic"><i class="ti ti-package"></i></div><div class="kpi-l">Articles</div></div><div class="kpi-v">142</div><div class="kpi-s">catalogue</div></div>
+  <div class="kpi" style="--c:#5aa05a;--bg:rgba(90,160,90,.18)"><div class="kpi-h"><div class="kpi-ic"><i class="ti ti-tools-kitchen-2"></i></div><div class="kpi-l">Matériels</div></div><div class="kpi-v">487</div><div class="kpi-s">312 dispo</div></div>
+  <div class="kpi" style="--c:#EF9F27;--bg:rgba(239,159,39,.18)"><div class="kpi-h"><div class="kpi-ic"><i class="ti ti-tool"></i></div><div class="kpi-l">En maintenance</div></div><div class="kpi-v">12</div><div class="kpi-s">à traiter</div></div>
+  <div class="kpi" style="--c:#185FA5;--bg:rgba(24,95,165,.18)"><div class="kpi-h"><div class="kpi-ic"><i class="ti ti-building-warehouse"></i></div><div class="kpi-l">Dépôts</div></div><div class="kpi-v">23</div><div class="kpi-s">actifs</div></div>
+  <div class="kpi" style="--c:#e35d5b;--bg:rgba(227,93,91,.18)"><div class="kpi-h"><div class="kpi-ic"><i class="ti ti-flame"></i></div><div class="kpi-l">Cuves O₂</div></div><div class="kpi-v">38</div><div class="kpi-s">28 pleines · 4 vides</div></div>
+  <div class="kpi" style="--c:#7a6fb0;--bg:rgba(122,111,176,.18)"><div class="kpi-h"><div class="kpi-ic"><i class="ti ti-ambulance"></i></div><div class="kpi-l">Véhicules</div></div><div class="kpi-v">8</div><div class="kpi-s">5 dispo</div></div>
+</div>
+
+<h2>🔥 Cuves O₂ — gestion complète</h2>
+
+<div class="cuve-demo" style="--c:#5aa05a">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <i class="ti ti-flame" style="color:#5aa05a;font-size:22px"></i>
+    <div style="flex:1">
+      <div style="font-size:13.5px;font-weight:700">CUV-2026-001</div>
+      <div style="font-size:11px;color:#5a6878">Air Liquide · M3 · oxygène</div>
+    </div>
+    <span style="background:rgba(90,160,90,.22);color:#5aa05a;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase">pleine</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:10px;color:#5a6878"><span>Niveau</span><span style="font-family:Consolas,monospace;font-weight:700">95%</span></div>
+  <div class="gauge"><div class="gauge-fill"></div></div>
+  <div style="display:flex;gap:8px;font-size:10.5px;color:#5a6878"><span>💧 10L</span><span>⚖ 200 bar</span><span>🏥 Dépôt A</span></div>
+</div>
+
+<h2>🛠 Procédure remplissage cuve mobile — 4 étapes ultra-pro</h2>
+
+<div class="workflow">
+  <div class="wf" style="--c:#7CC8C8">
+    <div class="wf-n">1</div>
+    <div class="wf-b">
+      <div class="wf-t">Sélection cuve</div>
+      <div class="wf-d">Scan QR de la cuve OU choix dans la liste avec statut coloré (vert=pleine, rouge=vide, ambre=partielle).</div>
+    </div>
+  </div>
+  <div class="wf" style="--c:#185FA5">
+    <div class="wf-n">2</div>
+    <div class="wf-b">
+      <div class="wf-t">Mesures AVANT + procédure sécurité</div>
+      <div class="wf-d">Saisie niveau % et pression bar avant. Bloc procédure sécurité affiché : vérif intégrité, requalification, EPI obligatoires.</div>
+    </div>
+  </div>
+  <div class="wf" style="--c:#EF9F27">
+    <div class="wf-n">3</div>
+    <div class="wf-b">
+      <div class="wf-t">Mesures APRÈS + traçabilité lot</div>
+      <div class="wf-d">
+        Boutons rapides 25/50/75/100% pour le niveau final. Saisie pression, volume ajouté.<br/>
+        <b>N° de lot pharmaceutique OBLIGATOIRE</b> (champ requis pour passer à la validation).<br/>
+        Dropdown fournisseur : Air Liquide Healthcare · Linde Healthcare · SOL France · Messer France · Autre.
+      </div>
+    </div>
+  </div>
+  <div class="wf" style="--c:#5aa05a">
+    <div class="wf-n">4</div>
+    <div class="wf-b">
+      <div class="wf-t">Validation + statut auto</div>
+      <div class="wf-d">
+        À la validation : INSERT cuves_remplissages (historique avec technicien_id, date, niveaux/pressions avant/après, lot, fournisseur) + UPDATE cuves_oxygene (niveau, pression, lot, date_dernier_remplissage).<br/>
+        <b>Statut auto-calculé</b> : niveau ≥95% → <i style="color:#5aa05a">pleine</i> · ≤5% → <i style="color:#e35d5b">vide</i> · sinon <i style="color:#EF9F27">partielle</i>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>🚑 Véhicules sanitaires — nouveau modèle</h2>
+
+<div class="panel feat">
+  <p style="margin:0 0 8px;font-size:13px;color:#fff"><b>6 types disponibles</b> : Sanitaire · Ambulance · VSL · Taxi · Utilitaire · Autre</p>
+  <p style="margin:0 0 8px;font-size:13px;color:#fff"><b>Champs gérés</b> :</p>
+  <ul style="color:#bfe6e6;font-size:12.5px;margin:0">
+    <li>Immatriculation, marque, modèle, année, kilométrage</li>
+    <li>Capacités : personnes, brancards, volume m³</li>
+    <li>Équipements en JSON (O₂, défib, PMR, etc.)</li>
+    <li>Conformité : date mise en circulation, contrôle technique, visite sanitaire, requalification, n° agrément ARS</li>
+    <li>Statut : Disponible · En mission · En maintenance · Hors service</li>
+    <li>Conducteur + équipe assignée</li>
+    <li><b>Rattachement dépôt mobile à véhicule</b> via <code>depots.vehicule_id</code></li>
+  </ul>
+</div>
+
+<h2>🗄 SQL — 2 nouvelles tables + historique + ALTER</h2>
+
+<pre>-- migration-0.58.85-vehicules-cuves-stock.sql
+CREATE TABLE IF NOT EXISTS vehicules (... 25 colonnes ...)
+CREATE TABLE IF NOT EXISTS cuves_oxygene (... 21 colonnes ...)
+CREATE TABLE IF NOT EXISTS cuves_remplissages (... historique complet ...)
+
+ALTER TABLE articles ADD type_article, stock_min/max, prix HT...
+ALTER TABLE patients ADD antecedents_*, taille_cm, poids_kg, groupe_sanguin, infirmiere_*, pharmacie_*, kine_*
+ALTER TABLE depots ADD vehicule_id  -- dépôt mobile ↔ véhicule
+
++ RLS + index + vue v_stock_stats</pre>
+
+<h2>📱 Création patient mobile — sélecteur affectation</h2>
+
+<div class="panel feat">
+  <p style="margin:0;font-size:13px;color:#fff">Dans l'étape 1 de l'assistant, ajout d'une <b>section Affectation</b> avec sélecteurs en cascade :</p>
+  <ol style="color:#bfe6e6;font-size:12.5px;margin:8px 0 0">
+    <li>Établissement (auto-rempli si l'utilisateur n'en a qu'un)</li>
+    <li>Bâtiment (filtré par établissement)</li>
+    <li>Service (filtré par bâtiment)</li>
+    <li>Chambre (filtré par service)</li>
+  </ol>
+</div>
+
+<h2>⚙ Mode de démarrage dans le profil</h2>
+
+<div class="panel feat">
+  <p style="margin:0;font-size:13px;color:#fff">Section avec <b>3 boutons</b> : Démarrer en Logiciel · Démarrer en Action Mobile · <b>Rouvrir le popup de choix</b>. Résout le problème "le popup ne s'ouvre pas" chez les utilisateurs ayant déjà fait un choix mémorisé.</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+
+<pre>-- 1. Supabase SQL Editor :
+-- copy-paste migration-0.58.85-vehicules-cuves-stock.sql
+-- Vérification :
+SELECT 'vehicules' AS t, COUNT(*) FROM vehicules
+UNION ALL SELECT 'cuves_oxygene', COUNT(*) FROM cuves_oxygene
+UNION ALL SELECT 'cuves_remplissages', COUNT(*) FROM cuves_remplissages;</pre>
+
+<pre>-- 2. Code (PowerShell — utilise ; pas &&)
+cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+npm run test:e2e
+git add -A
+git commit -m "0.58.85 - Vehicules + Cuves + Stock refonte"
+git push origin main</pre>
+
+<div class="panel warn">
+  <p style="margin:0;font-size:13px;color:#fff"><b>⚠ Vidage cache services après déploiement</b> : si tu vois encore des 400 sur services, ouvre la console et tape :
+  <code style="color:#fff">localStorage.removeItem('av-services-has-batiment-col')</code>
+  puis recharge. Au premier load après reset, le helper sondera à nouveau et cachera la bonne valeur.</p>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.58.85 · 6 juin 2026 · 🚛 VEHICULES + CUVES + STOCK</footer>
+</div></body></html>

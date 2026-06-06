@@ -240,6 +240,32 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.85",
+    "kind": "feat",
+    "titre": "🚛 Véhicules sanitaires + Cuves O₂ + Refonte /stock avec onglets + Mobile remplissage cuve + Fix services/etages",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **services.js refait en mode bulletproof** — au lieu d'une sonde séparée qui peut elle-même 400, on tente directement la requête filtrée puis on bascule sur le fallback en cas d'erreur. Le cache `false` est écrit immédiatement, donc plus jamais de tentative avec batiment_id. Premier appel = 1 seul 400 en console, après plus rien" },
+      { "code": "FIX", "txt": "🗑 **Suppression définitive des refs à `etages`** dans 5 fichiers (patients/page.js, collectivite/page.js, etablissement/page.js, etablissement/edition/page.js, pharmacies/page.js). Remplacé par `Promise.resolve({ data: [] })` direct. Plus jamais de 404 sur /etages" },
+      { "code": "SQL", "txt": "🗄 **Migration `migration-0.58.85-vehicules-cuves-stock.sql`** — 2 nouvelles tables + ALTER : (1) <b>`vehicules`</b> : sanitaire/ambulance/VSL/taxi/utilitaire avec immatriculation, marque/modèle, capacité personnes/brancards, équipements JSONB, agrément ARS, statut, kilométrage · (2) <b>`cuves_oxygene`</b> : N° série, marque, type_gaz, capacité L, niveau %, pression bar, statut (pleine/partielle/vide), affectation dépôt/patient/véhicule, date_dernier_remplissage, requalification · (3) <b>`cuves_remplissages`</b> : historique complet (niveau avant/après, pression avant/après, volume, lot, fournisseur, technicien) · (4) ALTER articles : type_article, stock_min/max, conditionnement, volume/poids unitaire, fournisseur, délai réappro, prix achat/vente HT, TVA · (5) ALTER patients dossier médical : antécédents (chirurgicaux/familiaux/médicaux), taille_cm, poids_kg, groupe_sanguin, rhesus, infirmière/pharmacie/kiné référents · (6) ALTER depots : vehicule_id (rattachement dépôt mobile à véhicule)" },
+      { "code": "AI", "txt": "🏪 **Refonte complète `/stock`** — 7 onglets pro : <b>Vue globale</b> (KPI tiles cliquables avec stats temps réel : articles, matériels dispo/maint/sortis, dépôts, cuves pleines/vides, véhicules disponibles), <b>Articles</b> (redirige /articles), <b>Matériels</b> (redirige /materiels), <b>Mouvements</b> (100 derniers entrées/sorties/transferts avec couleur), <b>Cuves O₂</b> (cards avec jauge niveau colorée + statut + affectation), <b>Véhicules</b> (cards par type sanitaire/ambulance/VSL/taxi avec immatriculation, capacités, statut), <b>Chiffrage</b> (KPI valeur achat HT, vente HT, marge brute €, % marge calculés depuis les prix articles)" },
+      { "code": "AI", "txt": "🔥 **`/mobile/cuve/remplissage` — Procédure ultra-pro 4 étapes** : <b>Étape 1</b> Sélection cuve (scan QR OU choix dans liste avec statut coloré) · <b>Étape 2</b> Mesures AVANT (niveau %, pression bar) + bloc procédure sécurité (vérif intégrité, requalification, EPI) · <b>Étape 3</b> Mesures APRÈS (boutons rapides 25/50/75/100%, pression, volume ajouté, **N° de lot obligatoire pour traçabilité**, fournisseur dropdown Air Liquide/Linde/SOL/Messer, notes) · <b>Étape 4</b> Succès avec récap visuel. À la validation : INSERT cuves_remplissages + UPDATE cuves_oxygene (niveau, statut auto pleine/partielle/vide, date, lot, fournisseur)",
+        "code_snippet": {
+          "file": "app/mobile/cuve/remplissage/page.js",
+          "note": "Validation traçabilité",
+          "lang": "javascript",
+          "after": "// Calcul statut auto selon niveau final\nconst niveauApres = parseInt(form.niveau_apres_pct, 10);\nlet newStatut = 'partielle';\nif (niveauApres >= 95) newStatut = 'pleine';\nelse if (niveauApres <= 5) newStatut = 'vide';\n\n// 1. Insert historique\nawait supabase.from('cuves_remplissages').insert({\n  structure_id, cuve_id, date_remplissage: now,\n  niveau_avant_pct, niveau_apres_pct, pression_avant_bar, pression_apres_bar,\n  volume_ajoute_l, numero_lot, fournisseur,\n  technicien_id: auth.user.id, cree_par_scan: true,\n});\n\n// 2. Update cuve\nawait supabase.from('cuves_oxygene').update({\n  niveau_actuel_pct: niveauApres,\n  pression_actuelle_bar, statut: newStatut,\n  date_dernier_remplissage: now,\n  numero_lot_remplissage, fournisseur_remplissage,\n}).eq('id', cuve.id);"
+        }
+      },
+      { "code": "AI", "txt": "📱 **Tuile `Remplissage cuve O₂`** ajoutée au hub `/mobile` (orange/ambre)" },
+      { "code": "AI", "txt": "👤 **Création patient mobile** : ajout d'une **section Affectation** dans l'étape 1 (Identité) avec sélecteurs en cascade : Établissement → Bâtiment → Service → Chambre. Auto-rempli si l'utilisateur n'a accès qu'à un seul établissement. Filtrage chaîné (services du bâtiment, chambres du service)" },
+      { "code": "AI", "txt": "⚙ **Section profil 'Mode de démarrage'** — 3 boutons : Démarrer en Logiciel · Démarrer en Action Mobile · Rouvrir le popup de choix. Affiche le mode actuel. Sauvegarde localStorage `av-launch-mode`. Résout le problème 'le pop up ne s'ouvre pas' chez les utilisateurs qui ont déjà choisi" },
+      { "code": "INFO", "txt": "📦 **Procédure remplissage cuve** : (1) Tu colles un QR sur chaque cuve (page d'impression à venir 0.58.86) · (2) Tu scannes le QR ou tu choisis la cuve dans la liste · (3) Tu notes les valeurs AVANT (consigne sécurité affichée) · (4) Tu effectues le remplissage physique · (5) Tu notes les valeurs APRÈS + N° de lot pharmaceutique obligatoire + fournisseur · (6) Validation = insertion historique + mise à jour cuve + statut auto-calculé · (7) Tout est tracé : technicien, date/heure, valeurs avant/après, lot, fournisseur" }
+    ],
+    "themes": ["feat", "vehicules", "cuves", "stock", "mobile", "fix"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.85.html"
+  },
+  {
     "v": "0.58.84",
     "kind": "hotfix",
     "titre": "🆘 HOTFIX : sondage services.batiment_id (élimine 400 cascade) + mounted ref /materiels (React #310)",

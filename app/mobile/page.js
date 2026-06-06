@@ -38,6 +38,11 @@ const ACTIONS = [
     label: "Création patient", subtitle: "Assistant guidé étape par étape",
     route: "/mobile/patient/new"
   },
+  {
+    key: "cuve", color: "#EF9F27", icon: "ti-flame",
+    label: "Remplissage cuve O₂", subtitle: "Procédure 4 étapes avec traçabilité lot",
+    route: "/mobile/cuve/remplissage"
+  },
 ];
 
 export default function MobileHomePage() {

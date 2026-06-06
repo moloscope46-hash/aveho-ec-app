@@ -105,7 +105,7 @@ export default function Patients() {
     const [ch, sv, et, ba, li] = await Promise.all([
       supabase.from("chambres").select("*"),
       supabase.from("services").select("*"),
-      supabase.from("etages").select("*"),
+      Promise.resolve({ data: [] }), // 0.58.85 etages dropped
       supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId),
       supabase.from("lits").select("*"),
     ]);
