@@ -1,0 +1,159 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.80 — Demandes d'intervention refonte</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a2a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1080px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.r{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.55) 0%,transparent 70%)}
+.bg-blob.a{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.45) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20));backdrop-filter:blur(28px);border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#ff8a85;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13px;font-weight:500;color:#ffb4b0;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#ffb4b0}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#EF9F27)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.fix{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.feat{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.12),rgba(20,33,49,.6))}
+.panel.warn{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.12),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+.workflow-viz{display:flex;flex-direction:column;gap:14px;padding:22px;background:linear-gradient(135deg,rgba(227,93,91,.08),rgba(239,159,39,.06));border-radius:14px;margin:14px 0}
+.wf-step{display:flex;gap:18px;padding:14px 18px;background:rgba(255,255,255,.05);border-radius:12px;border-left:4px solid var(--c)}
+.wf-num{background:var(--c);color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;box-shadow:0 4px 12px var(--c)66}
+.wf-body{flex:1}
+.wf-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px}
+.wf-desc{font-size:12.5px;color:#bfe6e6;line-height:1.5}
+
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0}
+.status-card{background:#fff;border:2px solid var(--c)33;border-left:4px solid var(--c);padding:12px 14px;border-radius:10px;text-align:left}
+.status-card .ic{color:var(--c);font-size:14px;margin-bottom:4px}
+.status-card .l{font-size:11px;color:#5a6878;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.status-card .n{font-size:22px;font-weight:700;color:var(--c);font-family:Consolas,monospace}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob r"></div><div class="bg-blob a"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#ff8a85"></span>0.58.80 · DEMANDES D'INTERVENTION</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🛠 Demandes d'intervention : refonte ultra-pro + scan-driven<small>5 statuts colorés · Kanban · Workflow auto · Signalement direct depuis QR dépôt</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.80-alpha</code></span>
+    <span><b>Type :</b> Feature majeure</span>
+    <span><b>SQL :</b> 1 ALTER (pas de table)</span>
+  </div>
+</header>
+
+<h2>🎨 5 statuts colorés cohérents</h2>
+<div class="status-grid">
+  <div class="status-card" style="--c:#e35d5b"><div class="ic"><i class="ti ti-alert-circle"></i></div><div class="l">Nouvelle</div><div class="n">3</div></div>
+  <div class="status-card" style="--c:#EF9F27"><div class="ic"><i class="ti ti-calendar-clock"></i></div><div class="l">Planifiée</div><div class="n">5</div></div>
+  <div class="status-card" style="--c:#185FA5"><div class="ic"><i class="ti ti-progress-bolt"></i></div><div class="l">En cours</div><div class="n">2</div></div>
+  <div class="status-card" style="--c:#5aa05a"><div class="ic"><i class="ti ti-check"></i></div><div class="l">Résolue</div><div class="n">12</div></div>
+  <div class="status-card" style="--c:#8a98a8"><div class="ic"><i class="ti ti-archive"></i></div><div class="l">Clôturée</div><div class="n">47</div></div>
+</div>
+
+<h2>🎯 Procédure complète signalement-par-scan</h2>
+
+<div class="workflow-viz">
+  <div class="wf-step" style="--c:#7CC8C8">
+    <div class="wf-num">1</div>
+    <div class="wf-body">
+      <div class="wf-title">Tu vois un problème sur le terrain</div>
+      <div class="wf-desc">Matériel cassé, étagère en désordre, casier vide, chambre à nettoyer, ascenseur HS… Tu sors ton téléphone et tu scannes le QR collé sur le dépôt/zone concernée.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#185FA5">
+    <div class="wf-num">2</div>
+    <div class="wf-body">
+      <div class="wf-title">Landing <code>/scan/depot/[id]</code> avec 5 actions</div>
+      <div class="wf-desc">La page affiche le dépôt en grand avec sa couleur + nb de matériels. Tu vois 5 tuiles : Voir matériels, Inventaire, Transfert, Ranger ICI, et la 5e en pleine largeur rouge corail : <b>🛠 Signaler un problème</b>.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#e35d5b">
+    <div class="wf-num">3</div>
+    <div class="wf-body">
+      <div class="wf-title">Modal DI pré-remplie automatiquement</div>
+      <div class="wf-desc">
+        Click sur 'Signaler' → ouvre <code>/interventions?depot=X</code>. Le composant détecte l'URL param :
+        <pre style="margin:8px 0">const depotId = searchParams.get('depot');
+if (depotId) openNew({ depot_id: depotId, cree_par_scan: true });</pre>
+        La modale apparaît avec un bandeau teal <i>"DI créée depuis le scan d'un QR"</i> et le dépôt déjà sélectionné. Tu remplis : description du problème, urgence (Normal/Urgent/Critique), type (Panne/Maintenance/etc), équipe responsable, emplacement précis optionnel.
+      </div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#EF9F27">
+    <div class="wf-num">4</div>
+    <div class="wf-body">
+      <div class="wf-title">DI créée avec numéro auto <code>DI-2026-NNN</code></div>
+      <div class="wf-desc">Toast de succès, badge SCAN sur la card, statut initial <b>Nouvelle</b>. Apparaît dans la liste avec border-left rouge + icône type colorée + tous les rattachements visibles.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#185FA5">
+    <div class="wf-num">5</div>
+    <div class="wf-body">
+      <div class="wf-title">Workflow boutons d'action rapide</div>
+      <div class="wf-desc">
+        Sur chaque card, le bouton suivant pertinent apparaît selon le statut :
+        <ul style="margin:6px 0">
+          <li><b>Nouvelle</b> → bouton <code>Planifier</code> (enregistre <code>date_assignation</code>)</li>
+          <li><b>Planifiée</b> → bouton <code>Démarrer</code> (enregistre <code>date_demarrage</code>)</li>
+          <li><b>En cours</b> → bouton <code>Résolue</code> (enregistre <code>date_resolution</code>)</li>
+          <li><b>Résolue</b> → bouton <code>Clôturer</code> (enregistre <code>date_cloture</code> + <code>cloture_par</code>)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#5aa05a">
+    <div class="wf-num">6</div>
+    <div class="wf-body">
+      <div class="wf-title">Stats temps réel + Vue Kanban</div>
+      <div class="wf-desc">Hero 5 tuiles cliquables qui filtrent en 1 clic. Toggle Liste/Kanban. Vue Kanban = 5 colonnes par statut avec cards compactes drag-and-drop visuel.</div>
+    </div>
+  </div>
+</div>
+
+<h2>🗄 SQL minimal (que des ALTER)</h2>
+<div class="panel feat">
+<pre>-- migration-0.58.80-interventions-workflow-scan.sql
+ALTER TABLE interventions
+  ADD COLUMN IF NOT EXISTS emplacement TEXT,
+  ADD COLUMN IF NOT EXISTS cree_par_scan BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS equipe_id UUID,
+  ADD COLUMN IF NOT EXISTS assigne_a UUID,
+  ADD COLUMN IF NOT EXISTS date_assignation TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS date_demarrage TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS date_resolution TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS date_cloture TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS cloture_par UUID,
+  ADD COLUMN IF NOT EXISTS resolution TEXT,
+  ADD COLUMN IF NOT EXISTS duree_estimee_min INTEGER,
+  ADD COLUMN IF NOT EXISTS duree_reelle_min INTEGER,
+  ADD COLUMN IF NOT EXISTS photos JSONB DEFAULT '[]';
+
+-- + index + vue v_interventions_stats</pre>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+npm run test:e2e
+git add -A
+git commit -m "0.58.80 - DI scan-driven"
+git push origin main</pre>
+
+<footer>Aveho — Espace Collectivité · 0.58.80 · 6 juin 2026 · 🛠 DI SCAN-DRIVEN</footer>
+</div></body></html>

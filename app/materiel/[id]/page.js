@@ -124,9 +124,22 @@ export default function FicheMateriel({ params }) {
 
       const { data: m } = await supabase
         .from("materiels")
-        .select("*, patients(nom, prenom, chambre), depots(nom), zones(nom)")
+        .select("*")
         .eq("id", matId).maybeSingle();
       if (!m) { setMat(null); setLoading(false); return; }
+
+      // 0.58.79 : joins side-loaded en parallèle (au lieu de SELECT join qui crashe
+      // si une table/FK n'existe pas). Chaque sous-fetch try/catch pour graceful fail.
+      const sideTryFetch = async (q) => {
+        try { const r = await q; return r.data; } catch { return null; }
+      };
+      const [pat, dep] = await Promise.all([
+        m.patient_id ? sideTryFetch(supabase.from("patients").select("nom, prenom").eq("id", m.patient_id).maybeSingle()) : Promise.resolve(null),
+        m.depot_id ? sideTryFetch(supabase.from("depots").select("nom").eq("id", m.depot_id).maybeSingle()) : Promise.resolve(null),
+      ]);
+      // Hydrate côté objet (mimique le pattern Supabase nested select)
+      m.patients = pat;
+      m.depots = dep;
       setMat(m);
 
       // Chargement parallèle des relations
@@ -135,7 +148,8 @@ export default function FicheMateriel({ params }) {
         supabase.from("materiel_tags").select("tag_id").eq("materiel_id", matId),
         supabase.from("maintenances").select("*").eq("materiel_id", matId).order("date_prevue", { ascending: false }),
         supabase.from("interventions").select("*").eq("materiel_id", matId).order("created_at", { ascending: false }),
-        supabase.from("transferts").select("*, depots_source:depot_id_source(nom), depots_dest:depot_id_dest(nom)").eq("materiel_id", matId).order("created_at", { ascending: false }).limit(20),
+        // 0.58.79 : transferts sans nested select (les FK depot_source_id / depot_destination_id n'ont pas de relations PostgREST déclarées)
+        supabase.from("transferts").select("*").eq("materiel_id", matId).order("created_at", { ascending: false }).limit(20),
       ];
       if (ha && m.article_id) {
         promises.push(supabase.from("articles").select("id, libelle, reference, code_lpp, dispositif_medical, classe_dm, prix_vente_ttc").eq("id", m.article_id).maybeSingle());
@@ -534,8 +548,8 @@ export default function FicheMateriel({ params }) {
                     {transferts.map(t => (
                       <tr key={t.id} style={{ borderBottom: "1px solid #f0f3f6" }}>
                         <td style={{ padding: 6, fontSize: 11 }}>{t.created_at ? fmtDate(t.created_at) : "—"}</td>
-                        <td style={{ padding: 6 }}>{t.depots_source?.nom || "—"}</td>
-                        <td style={{ padding: 6, fontWeight: 600 }}>{t.depots_dest?.nom || "—"}</td>
+                        <td style={{ padding: 6 }}>{t.depot_source_nom || (t.depot_source_id ? "Dépôt source" : "—")}</td>
+                        <td style={{ padding: 6, fontWeight: 600 }}>{t.depot_dest_nom || (t.depot_destination_id ? "Dépôt destination" : "—")}</td>
                         <td style={{ padding: 6, fontSize: 11, color: "#5a6878" }}>{t.motif || "—"}</td>
                       </tr>
                     ))}

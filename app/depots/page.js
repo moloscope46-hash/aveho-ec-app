@@ -1,8 +1,9 @@
 "use client";
 // =============================================================
-//  /depots — Page complète refondue (0.58.78)
-//  Hiérarchie SIMPLIFIÉE : Bâtiment → Service → Chambre / Magasin
-//  (plus de groupements ni d'étages — tables non créées)
+//  /depots — Page complète (0.58.79)
+//  Hiérarchie : Bâtiment → Service → Chambre / Magasin
+//  Workflow scan : QR dépôt + inventaire + transfert auto
+//  Sub-emplacements via parent_depot_id
 // =============================================================
 
 import { useEffect, useState, useMemo } from "react";
@@ -22,6 +23,7 @@ const NIVEAUX_HIERARCHIQUES = [
   { value: "chambre", lbl: "Chambre", icon: "ti-bed", color: "#EF9F27" },
   { value: "magasin", lbl: "Magasin", icon: "ti-truck", color: "#C9867F" },
   { value: "mobile", lbl: "Mobile", icon: "ti-package", color: "#7a6fb0" },
+  { value: "emplacement", lbl: "Emplacement", icon: "ti-map-pin", color: "#5e4a8c" },
 ];
 
 const TYPES_DEPOT = [
@@ -31,6 +33,7 @@ const TYPES_DEPOT = [
   { value: "infirmerie", lbl: "Infirmerie", icon: "ti-medical-cross" },
   { value: "froid", lbl: "Stock réfrigéré", icon: "ti-snowflake" },
   { value: "stupefiant", lbl: "Stupéfiants", icon: "ti-lock" },
+  { value: "emplacement", lbl: "Emplacement précis (étagère, casier)", icon: "ti-map-pin" },
 ];
 
 function niveauMeta(n) { return NIVEAUX_HIERARCHIQUES.find(x => x.value === n) || NIVEAUX_HIERARCHIQUES[0]; }
@@ -63,11 +66,11 @@ export default function DepotsPage() {
 
   async function loadRefs() {
     if (!auth.ready || !auth.structureId) return;
+    const tryFetch = async (q) => {
+      try { const r = await q; return r.data || []; }
+      catch (e) { if (e.code === "42P01" || e.code === "42703") return []; throw e; }
+    };
     try {
-      const tryFetch = async (q) => {
-        try { const r = await q; return r.data || []; }
-        catch (e) { if (e.code === "42P01" || e.code === "42703") return []; throw e; }
-      };
       const [b, s, c, m] = await Promise.all([
         tryFetch(supabase.from("batiments").select("id, nom").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("services").select("id, nom, batiment_id").eq("structure_id", auth.structureId)),
@@ -91,7 +94,6 @@ export default function DepotsPage() {
         .order("nom");
       if (error) throw error;
       setDepots(data || []);
-
       try {
         const { data: mats } = await supabase
           .from("materiels")
@@ -103,7 +105,6 @@ export default function DepotsPage() {
         setStats(counts);
       } catch { /* silent */ }
     } catch (e) {
-      console.error("[depots] load:", e);
       toast.error(e.message);
     } finally {
       setLoading(false);
@@ -113,19 +114,32 @@ export default function DepotsPage() {
 
   const filtered = useMemo(() => {
     return depots.filter(d => {
+      // Par défaut on cache les sous-emplacements (parent_depot_id non null)
+      // sauf si on filtre explicitement par niveau=emplacement
+      if (filterNiveau !== "emplacement" && d.parent_depot_id) return false;
       if (filterType && d.type !== filterType) return false;
       if (filterNiveau && d.niveau_hierarchique !== filterNiveau) return false;
       if (filterBatiment && d.batiment_id !== filterBatiment) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
-        const hay = `${d.nom || ""} ${d.code || ""} ${d.ville || ""}`.toLowerCase();
-        if (!hay.includes(q)) return false;
+        if (!`${d.nom || ""} ${d.code || ""} ${d.ville || ""}`.toLowerCase().includes(q)) return false;
       }
       return true;
     });
   }, [depots, search, filterType, filterNiveau, filterBatiment]);
 
-  // Chemin hiérarchique : Bâtiment > Service > Chambre > Magasin
+  // Sub-emplacements groupés par depot parent
+  const subEmpByParent = useMemo(() => {
+    const map = {};
+    depots.forEach(d => {
+      if (d.parent_depot_id) {
+        if (!map[d.parent_depot_id]) map[d.parent_depot_id] = [];
+        map[d.parent_depot_id].push(d);
+      }
+    });
+    return map;
+  }, [depots]);
+
   function getHierarchy(d) {
     const path = [];
     if (d.batiment_id) {
@@ -147,19 +161,31 @@ export default function DepotsPage() {
     return path;
   }
 
-  const servicesForBatiment = useMemo(() => {
-    if (!form.batiment_id) return services;
-    return services.filter(s => s.batiment_id === form.batiment_id);
-  }, [services, form.batiment_id]);
+  const servicesForBatiment = useMemo(() =>
+    !form.batiment_id ? services : services.filter(s => s.batiment_id === form.batiment_id)
+  , [services, form.batiment_id]);
+  const chambresForService = useMemo(() =>
+    !form.service_id ? chambres : chambres.filter(c => c.service_id === form.service_id)
+  , [chambres, form.service_id]);
 
-  const chambresForService = useMemo(() => {
-    if (!form.service_id) return chambres;
-    return chambres.filter(c => c.service_id === form.service_id);
-  }, [chambres, form.service_id]);
-
-  function openNew() {
-    setForm({ type: "general", niveau_hierarchique: "batiment", couleur: "#7CC8C8", icone: "ti-building-warehouse", actif: true, securise: false });
-    setModal({ mode: "new" });
+  function openNew(parentId = null) {
+    const parent = parentId ? depots.find(d => d.id === parentId) : null;
+    setForm({
+      type: parent ? "emplacement" : "general",
+      niveau_hierarchique: parent ? "emplacement" : "batiment",
+      parent_depot_id: parentId,
+      couleur: parent ? "#5e4a8c" : "#7CC8C8",
+      icone: parent ? "ti-map-pin" : "ti-building-warehouse",
+      actif: true,
+      securise: false,
+      // Pré-remplit le rattachement du parent
+      ...(parent && {
+        batiment_id: parent.batiment_id,
+        service_id: parent.service_id,
+        chambre_id: parent.chambre_id,
+      }),
+    });
+    setModal({ mode: "new", parentId });
   }
 
   function openEdit(d) {
@@ -178,6 +204,7 @@ export default function DepotsPage() {
         code: form.code || null,
         type: form.type || "general",
         niveau_hierarchique: form.niveau_hierarchique || null,
+        parent_depot_id: form.parent_depot_id || null,
         batiment_id: form.batiment_id || null,
         service_id: form.service_id || null,
         chambre_id: form.chambre_id || null,
@@ -187,9 +214,6 @@ export default function DepotsPage() {
         temperature_max: form.temperature_max !== "" && form.temperature_max != null ? parseFloat(form.temperature_max) : null,
         humidite_max: form.humidite_max !== "" && form.humidite_max != null ? parseFloat(form.humidite_max) : null,
         securise: !!form.securise,
-        adresse: form.adresse || null,
-        code_postal: form.code_postal || null,
-        ville: form.ville || null,
         couleur: form.couleur || "#7CC8C8",
         icone: form.icone || "ti-building-warehouse",
         notes: form.notes || null,
@@ -214,6 +238,14 @@ export default function DepotsPage() {
     }
   }
 
+  function startTransfertFrom(d) {
+    try {
+      localStorage.setItem("av-transfert-source-depot", JSON.stringify({ depot_id: d.id, depot_nom: d.nom }));
+      toast.success(`Source "${d.nom}" enregistrée. Scanne le QR du dépôt destination.`);
+    } catch {}
+    router.push("/scan/quick?mode=transfert-from");
+  }
+
   if (!auth.ready) return null;
 
   return (
@@ -222,18 +254,18 @@ export default function DepotsPage() {
       <div className="wrap">
         <div style={{ marginBottom: 8 }}><BackButton /></div>
         <PageHead
-          eyebrow="LOGISTIQUE · INVENTAIRE"
+          eyebrow="LOGISTIQUE · DÉPÔTS"
           icon="ti-building-warehouse"
           title="Dépôts"
-          accent={`${depots.length} dépôt${depots.length > 1 ? "s" : ""}`}
-          sub="Hiérarchie : Bâtiment → Service → Chambre / Magasin · Inventaire intégré + scan rapide"
+          accent={`${filtered.length} dépôt${filtered.length > 1 ? "s" : ""}`}
+          sub="Hiérarchie Bâtiment → Service → Chambre · Sub-emplacements · QR imprimables · Inventaire scan"
         />
 
         <Panel style={{ marginBottom: 14, padding: "12px 14px" }}>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <input
               type="search"
-              placeholder="🔍 Rechercher (nom, code, ville...)"
+              placeholder="🔍 Rechercher (nom, code, ville…)"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ flex: 1, minWidth: 220, padding: "8px 14px", border: "1px solid #e3e9ee", borderRadius: 18, fontSize: 13, fontFamily: "inherit" }}
@@ -253,7 +285,7 @@ export default function DepotsPage() {
               </select>
             )}
             <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/quick")}>Scan rapide</Btn>
-            <Btn variant="primary" icon="ti-plus" onClick={openNew}>Nouveau dépôt</Btn>
+            <Btn variant="primary" icon="ti-plus" onClick={() => openNew(null)}>Nouveau dépôt</Btn>
           </div>
         </Panel>
 
@@ -265,7 +297,7 @@ export default function DepotsPage() {
             title={depots.length === 0 ? "Aucun dépôt" : "Aucun résultat"}
             message={depots.length === 0 ? "Crée ton premier dépôt." : "Essaie d'élargir tes filtres."}
             actionLabel={depots.length === 0 ? "Créer un dépôt" : null}
-            onAction={depots.length === 0 ? openNew : null}
+            onAction={depots.length === 0 ? () => openNew(null) : null}
           />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 }}>
@@ -274,6 +306,7 @@ export default function DepotsPage() {
               const type = typeMeta(d.type);
               const hierarchy = getHierarchy(d);
               const matCount = stats[d.id] || 0;
+              const subEmps = subEmpByParent[d.id] || [];
               return (
                 <div key={d.id} style={{
                   background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12,
@@ -295,8 +328,9 @@ export default function DepotsPage() {
                       {d.code && <div style={{ fontSize: 10.5, color: "#5a6878", fontFamily: "Consolas, monospace", marginTop: 2 }}>{d.code}</div>}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
-                      {d.securise && <span title="Accès restreint" style={{ background: "#fde4e1", color: "#c0392b", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>🔒 SÉCURISÉ</span>}
-                      {(d.temperature_min != null) && <span style={{ background: "rgba(124,200,200,.18)", color: "#1c5454", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>❄ {d.temperature_min}°/{d.temperature_max}°</span>}
+                      {d.securise && <span title="Accès restreint" style={{ background: "#fde4e1", color: "#c0392b", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>🔒</span>}
+                      {(d.temperature_min != null) && <span style={{ background: "rgba(124,200,200,.18)", color: "#1c5454", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>❄ {d.temperature_min}/{d.temperature_max}°</span>}
+                      {d.inventaire_dernier && <span title={`Dernier inventaire ${new Date(d.inventaire_dernier).toLocaleDateString()}`} style={{ background: "rgba(90,160,90,.15)", color: "#5aa05a", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>✓ inv.</span>}
                     </div>
                   </div>
 
@@ -317,18 +351,53 @@ export default function DepotsPage() {
                       <div style={{ fontSize: 18, fontWeight: 700, color: matCount > 0 ? "#185FA5" : "#cfd8e0", fontFamily: "Consolas, monospace" }}>{matCount}</div>
                       <div style={{ fontSize: 9, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5 }}>Matériels</div>
                     </div>
+                    {subEmps.length > 0 && (
+                      <div style={{ flex: 1, padding: "6px 10px", background: "rgba(94,74,140,.08)", borderRadius: 6, textAlign: "center" }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: "#5e4a8c", fontFamily: "Consolas, monospace" }}>{subEmps.length}</div>
+                        <div style={{ fontSize: 9, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5 }}>Emplac.</div>
+                      </div>
+                    )}
                     {d.capacite_max && (
                       <div style={{ flex: 1, padding: "6px 10px", background: "#fafbfc", borderRadius: 6, textAlign: "center" }}>
                         <div style={{ fontSize: 18, fontWeight: 700, color: "#142131", fontFamily: "Consolas, monospace" }}>{Math.round((matCount / d.capacite_max) * 100)}%</div>
-                        <div style={{ fontSize: 9, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5 }}>Rempl. (/{d.capacite_max})</div>
+                        <div style={{ fontSize: 9, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5 }}>Rempl.</div>
                       </div>
                     )}
                   </div>
 
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <Btn variant="ghost" icon="ti-eye" onClick={() => setInventaire(d)} style={{ flex: 1, fontSize: 11 }}>Inventaire</Btn>
-                    <Btn variant="ghost" icon="ti-edit" onClick={() => openEdit(d)} style={{ flex: 1, fontSize: 11 }}>Éditer</Btn>
-                    <IconButton icon="ti-arrow-right-circle" color="#7a6fb0" ariaLabel="Transferts" onClick={() => router.push(`/transferts?depot=${d.id}`)} />
+                  {/* Sub-emplacements visibles */}
+                  {subEmps.length > 0 && (
+                    <div style={{ marginBottom: 8, padding: "6px 8px", background: "rgba(94,74,140,.06)", borderRadius: 6, fontSize: 11 }}>
+                      <div style={{ fontSize: 9.5, color: "#5e4a8c", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>
+                        <i className="ti ti-map-pin" /> Emplacements ({subEmps.length})
+                      </div>
+                      <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                        {subEmps.map(sub => (
+                          <button key={sub.id} onClick={() => openEdit(sub)} style={{
+                            background: "#fff", border: `1px solid ${sub.couleur || "#5e4a8c"}44`,
+                            color: sub.couleur || "#5e4a8c", padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 600,
+                            cursor: "pointer", fontFamily: "inherit"
+                          }}>
+                            <i className={`ti ${sub.icone || "ti-map-pin"}`} style={{ marginRight: 3 }} />
+                            {sub.nom}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions row 1 */}
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <Btn variant="ghost" icon="ti-clipboard-check" onClick={() => router.push(`/inventaire/${d.id}`)} style={{ flex: 1, fontSize: 11, minWidth: 0 }}>Inventaire</Btn>
+                    <Btn variant="ghost" icon="ti-edit" onClick={() => openEdit(d)} style={{ flex: 1, fontSize: 11, minWidth: 0 }}>Éditer</Btn>
+                  </div>
+                  {/* Actions row 2 */}
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <Btn variant="ghost" icon="ti-printer" onClick={() => router.push(`/depots/${d.id}/qr`)} style={{ flex: 1, fontSize: 11, minWidth: 0 }}>Imprimer QR</Btn>
+                    <Btn variant="ghost" icon="ti-arrows-right-left" onClick={() => startTransfertFrom(d)} style={{ flex: 1, fontSize: 11, minWidth: 0 }}>Transfert</Btn>
+                    {!d.parent_depot_id && (
+                      <IconButton icon="ti-plus" color="#5e4a8c" ariaLabel="Créer un emplacement" onClick={() => openNew(d.id)} title="Ajouter un sous-emplacement" />
+                    )}
                   </div>
                 </div>
               );
@@ -336,9 +405,14 @@ export default function DepotsPage() {
           </div>
         )}
 
+        {/* Modal édition / création */}
         {modal && (
           <Modal open={!!modal} onClose={() => setModal(null)} kind="patient"
-            title={modal.mode === "new" ? "Nouveau dépôt" : `Édition · ${form.nom || ""}`}
+            title={
+              modal.mode === "new"
+                ? (modal.parentId ? "Nouveau sous-emplacement" : "Nouveau dépôt")
+                : `Édition · ${form.nom || ""}`
+            }
             footer={
               <>
                 <Btn variant="ghost" onClick={() => setModal(null)}>Annuler</Btn>
@@ -347,8 +421,8 @@ export default function DepotsPage() {
             }>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld" style={{ gridColumn: "span 2" }}>
-                <label>Nom du dépôt *</label>
-                <input value={form.nom || ""} onChange={(e) => setForm({ ...form, nom: e.target.value })} placeholder="Ex: Dépôt principal Bât. A" />
+                <label>Nom *</label>
+                <input value={form.nom || ""} onChange={(e) => setForm({ ...form, nom: e.target.value })} placeholder={modal.parentId ? "Ex: Étagère A, casier 3..." : "Ex: Dépôt principal Bât. A"} />
               </div>
               <div className="fld">
                 <label>Code interne</label>
@@ -380,7 +454,7 @@ export default function DepotsPage() {
             </div>
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#7a6fb0", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3d8f5", paddingBottom: 4 }}>
-              <i className="ti ti-hierarchy" /> Rattachements
+              <i className="ti ti-hierarchy" /> Rattachement physique
             </h4>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld">
@@ -398,7 +472,7 @@ export default function DepotsPage() {
                 </select>
               </div>
               <div className="fld">
-                <label>Chambre (stock chambre)</label>
+                <label>Chambre</label>
                 <select value={form.chambre_id || ""} onChange={(e) => setForm({ ...form, chambre_id: e.target.value || null })} disabled={!form.service_id}>
                   <option value="">— Aucune —</option>
                   {chambresForService.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
@@ -406,7 +480,7 @@ export default function DepotsPage() {
               </div>
               {form.type === "deporte" && (
                 <div className="fld">
-                  <label>Magasin déporté</label>
+                  <label>Magasin</label>
                   <select value={form.magasin_id || ""} onChange={(e) => setForm({ ...form, magasin_id: e.target.value || null })}>
                     <option value="">— Aucun —</option>
                     {magasins.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
@@ -416,7 +490,7 @@ export default function DepotsPage() {
             </div>
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#7CC8C8", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #cfeaea", paddingBottom: 4 }}>
-              <i className="ti ti-temperature" /> Capacités & contrôles
+              <i className="ti ti-temperature" /> Capacités
             </h4>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
               <div className="fld">
@@ -438,8 +512,22 @@ export default function DepotsPage() {
             </div>
             <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: form.securise ? "rgba(227,93,91,.10)" : "#fafbfc", border: `1px solid ${form.securise ? "#e35d5b" : "#e3e9ee"}`, borderRadius: 6, cursor: "pointer", fontSize: 12.5, marginTop: 8 }}>
               <input type="checkbox" checked={!!form.securise} onChange={(e) => setForm({ ...form, securise: e.target.checked })} />
-              <span><i className="ti ti-lock" /> <b>Accès restreint</b> (médicaments, coffres, stupéfiants)</span>
+              <span><i className="ti ti-lock" /> <b>Accès restreint</b> (médicaments, stupéfiants)</span>
             </label>
+
+            <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3e9ee", paddingBottom: 4 }}>
+              <i className="ti ti-palette" /> Apparence
+            </h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div className="fld">
+                <label>Couleur</label>
+                <input type="color" value={form.couleur || "#7CC8C8"} onChange={(e) => setForm({ ...form, couleur: e.target.value })} style={{ height: 38, width: "100%" }} />
+              </div>
+              <div className="fld">
+                <label>Icône (Tabler)</label>
+                <input value={form.icone || "ti-building-warehouse"} onChange={(e) => setForm({ ...form, icone: e.target.value })} placeholder="ti-building-warehouse" style={{ fontFamily: "Consolas, monospace", fontSize: 12 }} />
+              </div>
+            </div>
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3e9ee", paddingBottom: 4 }}>
               <i className="ti ti-notes" /> Notes
@@ -452,88 +540,7 @@ export default function DepotsPage() {
             </label>
           </Modal>
         )}
-
-        {inventaire && (
-          <InventaireModal depot={inventaire} onClose={() => setInventaire(null)} supabase={supabase} auth={auth} router={router} />
-        )}
       </div>
     </div>
-  );
-}
-
-function InventaireModal({ depot, onClose, supabase, auth, router }) {
-  const [materiels, setMateriels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      try {
-        // 0.58.78 : SELECT minimal pour éviter les 400 sur colonnes potentiellement absentes
-        const { data } = await supabase
-          .from("materiels")
-          .select("id, libelle, etat, depot_id")
-          .eq("structure_id", auth.structureId)
-          .eq("depot_id", depot.id)
-          .limit(500);
-        setMateriels(data || []);
-      } catch (e) {
-        console.error("[inventaire] load:", e);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [depot.id, supabase, auth.structureId]);
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return materiels;
-    const q = search.toLowerCase();
-    return materiels.filter(m => (m.libelle || "").toLowerCase().includes(q));
-  }, [materiels, search]);
-
-  return (
-    <Modal open={true} onClose={onClose} kind="patient"
-      title={`Inventaire · ${depot.nom}`}
-      footer={
-        <>
-          <Btn variant="ghost" onClick={onClose}>Fermer</Btn>
-          <Btn variant="ghost" icon="ti-scan" onClick={() => router.push(`/scan/quick`)}>Scanner</Btn>
-          <Btn variant="primary" icon="ti-arrow-right" onClick={() => router.push(`/transferts?depot_source=${depot.id}`)}>Créer transfert</Btn>
-        </>
-      }>
-      <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(124,200,200,.10)", borderRadius: 8, fontSize: 12.5, color: "#1c5454" }}>
-        <i className="ti ti-info-circle" /> <b>{materiels.length} matériels</b> dans ce dépôt.
-      </div>
-      <input
-        type="search"
-        placeholder="🔍 Rechercher..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{ width: "100%", padding: "8px 12px", border: "1px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit", marginBottom: 10 }}
-      />
-      {loading ? <SkeletonRow count={5} /> : filtered.length === 0 ? (
-        <p style={{ textAlign: "center", color: "#8a98a8", padding: 20, fontSize: 13 }}>
-          {materiels.length === 0 ? "Ce dépôt est vide." : "Aucun résultat."}
-        </p>
-      ) : (
-        <div style={{ maxHeight: 380, overflowY: "auto", border: "1px solid #f0f3f6", borderRadius: 8 }}>
-          {filtered.map(m => (
-            <div key={m.id} onClick={() => router.push(`/materiel/${m.id}`)} style={{
-              padding: "8px 12px", borderBottom: "1px solid #f0f3f6", cursor: "pointer", display: "flex", gap: 10, alignItems: "center",
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "#fafbfc"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-              <i className="ti ti-package" style={{ color: "#185FA5", fontSize: 18 }} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#142131" }}>{m.libelle || "Matériel"}</div>
-              </div>
-              <span style={{ background: m.etat === "Disponible" ? "rgba(90,160,90,.15)" : "rgba(239,159,39,.15)", color: m.etat === "Disponible" ? "#5aa05a" : "#EF9F27", padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 700 }}>
-                {m.etat || "—"}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </Modal>
   );
 }

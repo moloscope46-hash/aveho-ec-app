@@ -65,34 +65,47 @@ export default function Materiels() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
+      // 0.58.79 : tryFetch individuel — si UNE requête échoue (colonne/table absente),
+      // les autres continuent. Avant : Promise.all → un fail = tout fail = relReady jamais true
+      const tryFetch = async (q, fallback = []) => {
+        try { const r = await q; return r.data || fallback; }
+        catch (e) {
+          logger.warn("[Materiels] partial load fail:", e?.message || e);
+          return fallback;
+        }
+      };
       try {
-        const [{ data: arts }, { data: pats }, { data: tg }, { data: links }, { data: dep }, { data: eqs }] = await Promise.all([
-          supabase.from("articles").select("id,libelle"),
-          supabase.from("patients").select("id,nom,prenom,chambre"),
-          supabase.from("tags_materiel").select("*").order("libelle"),
-          supabase.from("materiel_tags").select("materiel_id, tag_id"),
-          supabase.from("depots").select("id, nom").order("nom"),
-          // 0.58.63 : équipes pour le formulaire matériel
-          supabase.from("equipes").select("id, nom").order("nom"),
+        // Patients : essaie d'abord avec chambre, sinon sans
+        let pats = await tryFetch(supabase.from("patients").select("id,nom,prenom,chambre"));
+        if (pats.length === 0) {
+          pats = await tryFetch(supabase.from("patients").select("id,nom,prenom"));
+        }
+        const [arts, tg, links, dep, eqs] = await Promise.all([
+          tryFetch(supabase.from("articles").select("id,libelle")),
+          tryFetch(supabase.from("tags_materiel").select("*").order("libelle")),
+          tryFetch(supabase.from("materiel_tags").select("materiel_id, tag_id")),
+          tryFetch(supabase.from("depots").select("id, nom").order("nom")),
+          tryFetch(supabase.from("equipes").select("id, nom").order("nom")),
         ]);
         setRel({
-          article_id: (arts || []).map((a) => ({ value: a.id, label: a.libelle })),
-          patient_id: (pats || []).map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
-          // 0.58.63 : option Aucune équipe + liste
-          equipe_id: (eqs || []).map((e) => ({ value: e.id, label: e.nom })),
+          article_id: arts.map((a) => ({ value: a.id, label: a.libelle })),
+          patient_id: pats.map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
+          equipe_id: eqs.map((e) => ({ value: e.id, label: e.nom })),
         });
-        setTags(tg || []);
+        setTags(tg);
         const linksByMat = {};
-        (links || []).forEach((l) => {
+        links.forEach((l) => {
           if (!linksByMat[l.materiel_id]) linksByMat[l.materiel_id] = [];
           linksByMat[l.materiel_id].push(l.tag_id);
         });
         setMatTags(linksByMat);
-        setDepots(dep || []);
+        setDepots(dep);
         setRelReady(true);
       } catch (e) {
-        // 0.57.5 : try/catch englobant pour pas crasher la page
         logger.error("[Materiels] load failed:", e);
+        // 0.58.79 : même en cas d'erreur globale, on flag relReady à true
+        // pour ne pas bloquer la page sur return null indéfiniment
+        setRelReady(true);
       }
     })();
   }, [auth.ready]);

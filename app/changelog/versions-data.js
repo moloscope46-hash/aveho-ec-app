@@ -240,6 +240,58 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.80",
+    "kind": "feat",
+    "titre": "🛠 Demandes d'intervention refonte ultra-pro · Workflow scan + 5 statuts colorés + Kanban + signalement direct depuis QR dépôt",
+    "chantiers": [
+      { "code": "SQL", "txt": "🗄 **Migration `migration-0.58.80-interventions-workflow-scan.sql`** — ALTER table interventions uniquement (philosophie 0.58.78 conservée) : ajout `emplacement TEXT` (libellé précis), `cree_par_scan BOOLEAN`, `equipe_id UUID` (assignation équipe), `assigne_a UUID` (assignation user/technicien), `date_assignation/demarrage/resolution/cloture TIMESTAMPTZ`, `cloture_par UUID`, `resolution TEXT` (compte-rendu), `duree_estimee_min/reelle_min INTEGER`, `photos JSONB`. 5 nouveaux index (statut, equipe, assigne, urgence, depot). Vue `v_interventions_stats` recréée avec compteurs par statut/urgence. **Pas de nouvelle table**" },
+      { "code": "AI", "txt": "🛠 **Refonte complète `/interventions/page.js`** — UI ultra-pro avec : **Hero 5 tuiles cliquables** (Nouvelle/Planifiée/En cours/Résolue/Clôturée) qui filtrent en 1 clic · **Filtres avancés** : recherche full-text, urgence, équipe, dépôt, statut · **Toggle Liste/Kanban** avec persistance · **NeonButton** pour Nouvelle DI · **Cards visuelles** avec icône type colorée, badge statut + urgence + scan, infos rattachement (matériel/dépôt/équipe/emplacement), boutons d'action rapide selon statut courant (Planifier → Démarrer → Résoudre → Clôturer)" },
+      { "code": "AI", "txt": "🎨 **5 statuts colorés cohérents** : Nouvelle (rouge corail #e35d5b alert), Planifiée (ambre #EF9F27), En cours (bleu navy #185FA5), Résolue (vert #5aa05a), Clôturée (gris). **3 urgences** : Normal (gris), Urgent (ambre), Critique (rouge profond). **6 types DI** avec icônes Tabler (Panne/réparation, Maintenance, Nettoyage, Remplacement, Vérif, Autre)" },
+      { "code": "AI", "txt": "📲 **Workflow scan-driven** complet : `/scan/depot/[id]` (landing après scan QR dépôt) propose maintenant **5 actions** au lieu de 4 — la 5e en pleine largeur 'Signaler un problème' (rouge corail) → ouvre `/interventions?depot=X` qui détecte l'URL param, **pré-remplit automatiquement** le dépôt + flag `cree_par_scan=true` + affiche bandeau teal 'DI créée depuis le scan d'un QR'",
+        "code_snippet": {
+          "file": "app/interventions/page.js",
+          "note": "Détection scan via URL params",
+          "lang": "javascript",
+          "after": "useEffect(() => {\n  if (!auth.ready) return;\n  const depotId = searchParams.get('depot');\n  const materielId = searchParams.get('materiel');\n  if (depotId || materielId) {\n    openNew({\n      depot_id: depotId || null,\n      materiel_id: materielId || null,\n      cree_par_scan: true\n    });\n  }\n}, [auth.ready, searchParams]);"
+        }
+      },
+      { "code": "AI", "txt": "🖨 **Page QR imprimable mise à jour** — `/depots/[id]/qr` affiche maintenant les **5 pictos d'action** sur l'étiquette imprimée (Voir, Inventaire, Transfert, Ranger, Signaler) → l'utilisateur sait dès le QR ce qu'il peut faire avec ce dépôt" },
+      { "code": "AI", "txt": "⚡ **Actions rapides workflow** dans la vue Liste — chaque card montre le bouton suivant pertinent selon statut courant : Nouvelle → 'Planifier', Planifiée → 'Démarrer', En cours → 'Résolue', Résolue → 'Clôturer'. Les dates d'étape (`date_assignation`, `date_demarrage`, `date_resolution`, `date_cloture`) sont enregistrées automatiquement à chaque transition" },
+      { "code": "AI", "txt": "📊 **Vue Kanban moderne** — 5 colonnes (une par statut) avec couleur de fond légère + bordure top colorée + compteur de cards. Cards compactes affichant icône type, numéro, urgence (juste l'initiale en badge), description tronquée 2 lignes, matériel + dépôt en bas. Click sur card → ouvre la modal d'édition" },
+      { "code": "AI", "txt": "📝 **Modal édition premium** — 4 sections claires : (1) Numéro + Type, (2) Description, (3) Urgence (3 boutons radio gros), (4) Rattachements (Dépôt, Matériel, Emplacement précis libre), (5) Assignation (Équipe, Durée estimée). En mode édition : section Statut & résolution avec textarea compte-rendu si statut=Résolue/Clôturée" },
+      { "code": "INFO", "txt": "🎯 **Procédure complète** signalement-via-scan : (1) Sur le terrain, tu vois un problème → tu scannes le QR collé sur le dépôt · (2) Landing scan/depot/X s'ouvre → tu cliques '🛠 Signaler un problème' · (3) Modal pré-remplie avec le dépôt + bandeau 'créé par scan' → tu décris le problème + urgence + équipe · (4) DI créée, apparaît dans `/interventions` avec badge SCAN · (5) Workflow boutons : Planifier → Démarrer → Résoudre → Clôturer · (6) Dates auto-enregistrées à chaque étape · (7) Stats Hero mises à jour en temps réel" }
+    ],
+    "themes": ["feat", "scan", "interventions", "workflow"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.80.html"
+  },
+  {
+    "v": "0.58.79",
+    "kind": "feat",
+    "titre": "🚀 Workflow scan complet : QR dépôts imprimables · Inventaire scan + écarts · Transfert 2-scan · Sous-emplacements",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Fix bloquant `/materiels`** — la page restait sur `return null` indéfiniment quand UNE des 6 requêtes du `Promise.all` échouait (typiquement `patients.chambre` colonne ancienne, ou `tags_materiel` absent). Remplacé par `tryFetch` individuel : chaque requête a son propre catch et fallback `[]`. Si patients.chambre échoue, retente sans `chambre`. `setRelReady(true)` même en cas d'erreur globale → page chargeable" },
+      { "code": "SQL", "txt": "🗄 **Migration `migration-0.58.79-workflow-scan-inventaire.sql`** — minimaliste : `ADD COLUMN emplacement TEXT` sur materiels (libellé libre `'Étagère 3, casier B'`), `ADD COLUMN parent_depot_id UUID` sur depots (sous-emplacements via auto-référence), `ADD COLUMN inventaire_dernier + inventaire_dernier_par + inventaire_ecarts_count` sur depots, `ADD COLUMN cree_par_scan` sur transferts. Recrée la vue `v_depots_hierarchie` avec le chemin via parent. **Pas de nouvelle table créée**" },
+      { "code": "AI", "txt": "🖨 **Page `/depots/[id]/qr`** — imprimable A4 portrait avec gros QR 500×500 du dépôt, nom, code, type, pictos des 4 actions disponibles, URL en clair en dessous. Bouton `Imprimer` qui déclenche `window.print()`. CSS `@media print` qui cache la nav et passe le contenu en pleine page. Le QR pointe vers `/scan/depot/[id]`" },
+      { "code": "AI", "txt": "📲 **Page `/scan/depot/[id]`** — landing après scan du gros QR collé sur un dépôt. Affiche dépôt avec couleur + nombre de matériels. Détecte si un transfert est en cours (localStorage `av-transfert-source-depot`) → propose de valider le transfert ICI. 4 grandes tuiles d'action : Voir matériels, Inventaire, Transfert depuis ici, Ranger matériel ici",
+        "code_snippet": {
+          "file": "app/scan/depot/[id]/page.js",
+          "note": "Finalisation transfert 2-scan",
+          "lang": "javascript",
+          "after": "async function finalizeTransfert() {\n  const payload = {\n    structure_id: auth.structureId,\n    depot_source_id: transfertSource.depot_id,\n    depot_destination_id: id,\n    materiel_id: transfertSource.materiel_id || null,\n    statut: 'Validée',\n    cree_par_scan: true,\n    date_validation: new Date().toISOString(),\n  };\n  await supabase.from('transferts').insert(payload);\n  // Met à jour le depot_id du matériel\n  if (transfertSource.materiel_id) {\n    await supabase.from('materiels').update({ depot_id: id })\n      .eq('id', transfertSource.materiel_id);\n  }\n  localStorage.removeItem('av-transfert-source-depot');\n  router.push('/transferts?created=1');\n}"
+        }
+      },
+      { "code": "AI", "txt": "📋 **Page `/inventaire/[depot_id]`** — workflow inventaire scan complet : charge la liste théorique (materiels où depot_id = ce dépôt), barre de progression `trouvés/attendus`, bouton `Démarrer le scan` qui ouvre la caméra. Chaque scan : (1) cherche dans la liste théorique → coche · (2) si pas trouvé, cherche en DB → si trouvé ailleurs = **intrus** (badge violet). Beep audio aigu pour succès / grave pour erreur. Liste des **manquants** (non scannés) et **intrus** (scannés mais d'un autre dépôt) clairement séparée. Bouton `Valider l'inventaire` qui enregistre `inventaire_dernier` + `inventaire_ecarts_count` sur le dépôt" },
+      { "code": "AI", "txt": "↔ **Workflow transfert 2-scan automatique** — dans `/depots`, chaque card a un bouton `Transfert` qui : (1) enregistre la source dans localStorage · (2) ouvre `/scan/quick?mode=transfert-from`. Puis quand l'user scanne le QR d'un autre dépôt, la landing `/scan/depot/[id]` détecte le mode transfert et affiche un bandeau `Transfert en cours → Valider ici`. Click → insert transfert en DB + update materiel.depot_id. Plus besoin de saisir manuellement source/destination" },
+      { "code": "AI", "txt": "📍 **Sous-emplacements (casiers, étagères)** — chaque dépôt peut avoir des sous-emplacements (parent_depot_id). Bouton `+` sur les dépôts de niveau bâtiment/service. Le sub-emplacement hérite du rattachement physique du parent. Les emplacements sont cachés par défaut dans la liste (visibles uniquement via filtre Niveau=Emplacement OU dans la card de leur parent). Chaque emplacement peut aussi avoir son propre QR imprimable" },
+      { "code": "AI", "txt": "📝 **Colonne `emplacement` (TEXT) sur matériels** — libellé libre court pour préciser où le matériel se trouve dans le dépôt sans créer un sous-emplacement formel. Ex: 'Étagère 3, casier B'. Affichage dans l'inventaire avec icône map-pin violette" },
+      { "code": "INFO", "txt": "🎯 **Cycle complet d'usage** : (1) Tu crées tes dépôts dans `/depots` · (2) Pour chacun, tu cliques `Imprimer QR` → tu colles le QR sur l'étagère/porte · (3) Sur le terrain, tu scannes le QR avec ton téléphone → landing avec les 4 actions · (4) Inventaire = scan continu + écarts visibles · (5) Transfert = scan source via QR, scan destination via QR, transfert auto créé. Plus de saisie manuelle" }
+    ],
+    "themes": ["feat", "scan", "qr", "inventaire", "fix"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.79.html"
+  },
+  {
     "v": "0.58.78",
     "kind": "refactor",
     "titre": "🧹 CLEANUP : suppression définitive groupements/etages/groupement_etablissements + hiérarchie simplifiée Bâtiment → Service → Chambre",
