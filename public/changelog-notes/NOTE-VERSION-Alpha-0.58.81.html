@@ -1,0 +1,172 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.81 — Patients enrichis</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1a4a2a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1080px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.g{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(90,160,90,.55) 0%,transparent 70%)}
+.bg-blob.r{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(227,93,91,.40) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(90,160,90,.20));backdrop-filter:blur(28px);border:1px solid rgba(90,160,90,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#8acc8a;font-weight:700;background:rgba(90,160,90,.18);border:1px solid rgba(90,160,90,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13px;font-weight:500;color:#c2e6c2;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#c2e6c2}
+.meta b{color:#fff}.meta code{background:rgba(90,160,90,.16);color:#fff;border:1px solid rgba(90,160,90,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#e35d5b)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.fix{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.feat{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.12),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+.demo-row{display:flex;gap:8px;background:#fff;color:#142131;padding:14px 18px;border-radius:10px;margin:14px 0;flex-wrap:wrap;align-items:center}
+.demo-row b{font-size:14px}
+.tel-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:8px;font-size:11.5px;font-weight:600;border:1px solid}
+.tel-badge.green{background:#eef9ef;color:#5aa05a;border-color:#bfe2bf}
+.tel-badge.red{background:#fef0ee;color:#c0392b;border-color:#f0c4be}
+.tel-badge.amber{background:#fff4e1;color:#EF9F27;border-color:#f0d59f}
+
+.sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:18px 0}
+.section{background:rgba(255,255,255,.05);border-left:4px solid var(--c);padding:14px 16px;border-radius:10px}
+.section h4{margin:0 0 6px;color:var(--c);font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.section ul{margin:0;padding-left:18px;color:#bfe6e6;font-size:12.5px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob g"></div><div class="bg-blob r"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#8acc8a"></span>0.58.81 · PATIENTS ENRICHIS</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>📞 Patients enrichis : téléphones colorés (perso/chambre/urgence) + nouvelle page chambres<small>Fix bloquant services.icone · Workflow complet · Tels cliquables partout</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.81-alpha</code></span>
+    <span><b>SQL :</b> 1 ALTER (28 nouvelles colonnes)</span>
+    <span><b>Type :</b> Feature majeure</span>
+  </div>
+</header>
+
+<h2>🩹 D'abord : fix bloquant services.icone 400</h2>
+<div class="panel fix">
+  <p style="margin:0 0 8px;font-size:13px;color:#fff">Le composant <code>BatimentServiceSwitcher</code> demandait <code>services?select=id,nom,icone</code> mais la colonne <code>icone</code> n'existe pas sur ta table services. Le 400 venait du REST API Supabase (pas une exception JS, donc try/catch ne capte pas). Résultat : composant cassé + cascade React #310 sur les pages qui l'utilisent.</p>
+  <p style="margin:0;font-size:13px;color:#fff"><b>Fix</b> : <code>select('id, nom')</code> direct, sans icone. Fallback structure_id si batiment_id absent. Plus de 400 dans la console.</p>
+</div>
+
+<h2>📞 Démo : icônes téléphone colorées dans la liste patients</h2>
+
+<div class="demo-row">
+  <b>👤 DUPONT Marie</b>
+  <span style="color:#8a98a8;font-size:12px">Ch. 204 · Service Gériatrie</span>
+  <span class="tel-badge green"><i class="ti ti-phone"></i> Perso</span>
+  <span class="tel-badge green"><i class="ti ti-phone"></i> Chambre</span>
+  <span class="tel-badge amber"><i class="ti ti-alert-triangle"></i> Urgence</span>
+</div>
+
+<div class="demo-row">
+  <b>👤 MARTIN Pierre</b>
+  <span style="color:#8a98a8;font-size:12px">Ch. 156 · Service Médecine</span>
+  <span class="tel-badge red"><i class="ti ti-phone"></i> Perso</span>
+  <span class="tel-badge green"><i class="ti ti-phone"></i> Chambre</span>
+</div>
+
+<div class="demo-row">
+  <b>👤 BERNARD Jeanne</b>
+  <span style="color:#8a98a8;font-size:12px">Pas de chambre</span>
+  <span class="tel-badge green"><i class="ti ti-phone"></i> Perso</span>
+  <span class="tel-badge red"><i class="ti ti-phone"></i> Chambre</span>
+</div>
+
+<p style="font-size:13px;color:#bfe6e6">Chaque badge est un lien <code>tel:</code> direct. Clic = appel depuis ton tel/PC. Vert = numéro renseigné, rouge = manquant, ambre = contact d'urgence.</p>
+
+<h2>📝 Modal patient — 5 sections enrichies</h2>
+
+<div class="sections">
+  <div class="section" style="--c:#5aa05a">
+    <h4><i class="ti ti-phone"></i> Coordonnées</h4>
+    <ul>
+      <li>Téléphone perso (clickable tel:)</li>
+      <li>Email</li>
+    </ul>
+  </div>
+  <div class="section" style="--c:#e35d5b">
+    <h4><i class="ti ti-alert-triangle"></i> Contact d'urgence</h4>
+    <ul>
+      <li>Nom contact</li>
+      <li>Téléphone</li>
+      <li>Lien (Conjoint/Enfant/Parent/Tuteur/...)</li>
+    </ul>
+  </div>
+  <div class="section" style="--c:#7a6fb0">
+    <h4><i class="ti ti-stethoscope"></i> Médical étendu</h4>
+    <ul>
+      <li>Tél médecin traitant</li>
+      <li>GIR (1-6)</li>
+      <li>Mobilité (Autonome/Assistance/Fauteuil/Alité)</li>
+      <li>Régime alimentaire</li>
+      <li>Allergies</li>
+      <li>Pathologies / Antécédents</li>
+    </ul>
+  </div>
+  <div class="section" style="--c:#185FA5">
+    <h4><i class="ti ti-map-pin"></i> Adresse BAN</h4>
+    <ul>
+      <li>Autocomplete BAN INSEE</li>
+      <li>CP + ville</li>
+      <li>Latitude/Longitude</li>
+    </ul>
+  </div>
+  <div class="section" style="--c:#7CC8C8">
+    <h4><i class="ti ti-bed"></i> Affectation</h4>
+    <ul>
+      <li>Chambre/lit</li>
+      <li>Équipe responsable</li>
+      <li>Notes complémentaires</li>
+    </ul>
+  </div>
+</div>
+
+<h2>🏠 Nouvelle page /chambres</h2>
+<div class="panel feat">
+  <p style="margin:0;font-size:13px;color:#fff">Cards par chambre avec icône type colorée (Simple/Double/Médicalisée/Isolement), badges téléphone vert/rouge, code d'accès, nb lits, hiérarchie Bâtiment {'>'} Service. Modal d'édition rapide pour saisir téléphone + code + type + notes. Liste des patients présents dans la chambre avec leur tél perso direct.</p>
+</div>
+
+<h2>🗄 SQL minimal (que des ALTER)</h2>
+<div class="panel feat">
+<pre>-- migration-0.58.81-patients-chambres-enrichis.sql
+-- chambres : 6 nouvelles colonnes
+ALTER TABLE chambres
+  ADD COLUMN telephone TEXT,
+  ADD COLUMN code_acces TEXT,
+  ADD COLUMN type_chambre TEXT,
+  ADD COLUMN lits_max INTEGER DEFAULT 1,
+  ADD COLUMN equipements JSONB DEFAULT '[]',
+  ADD COLUMN notes TEXT;
+
+-- patients : 22 nouvelles colonnes
+ALTER TABLE patients
+  ADD COLUMN telephone TEXT, email TEXT, civilite TEXT,
+  ADD COLUMN contact_urgence_nom TEXT, contact_urgence_telephone TEXT,
+  ADD COLUMN medecin_traitant_telephone TEXT, allergies TEXT,
+  ADD COLUMN regime_alimentaire TEXT, gir INTEGER, mobilite TEXT,
+  -- ... +12 autres champs admin/médical/séjour
+  ;</pre>
+</div>
+
+<h2>🚀 Procédure (PowerShell)</h2>
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+npm run test:e2e
+git add -A
+git commit -m "0.58.81 - Patients enrichis"
+git push origin main</pre>
+
+<footer>Aveho — Espace Collectivité · 0.58.81 · 6 juin 2026 · 📞 PATIENTS ENRICHIS</footer>
+</div></body></html>

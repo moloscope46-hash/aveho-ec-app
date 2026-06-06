@@ -240,6 +240,29 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.81",
+    "kind": "feat",
+    "titre": "📞 Patients enrichis : téléphones colorés (perso/chambre/urgence) + page chambres dédiée + fix services.icone 400",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Fix bloquant `BatimentServiceSwitcher`** — la requête `services?select=id,nom,icone` causait des 400 chez toi car la colonne `icone` n'existe pas sur ta table services (et le `error` retourné par Supabase n'était pas capté par le try/catch JS — c'était un 400 silencieux). Remplacé par `select('id, nom')` direct + fallback structure_id si le `batiment_id` n'existe pas non plus. Le composant ne crash plus, plus de 400 dans la console" },
+      { "code": "SQL", "txt": "🗄 **Migration `migration-0.58.81-patients-chambres-enrichis.sql`** — ALTER uniquement, philosophie 0.58.78 préservée. Sur `chambres` : ajout `telephone` (ligne directe), `code_acces`, `type_chambre`, `lits_max`, `equipements JSONB`, `notes`. Sur `patients` : **22 nouvelles colonnes** — Coordonnées (telephone, email), Identité (civilite, nom_jeune_fille, lieu_naissance), Contact urgence (nom, telephone, lien), Médical étendu (medecin_traitant_telephone, allergies, regime_alimentaire, pathologies, traitement_en_cours, gir, mobilite), Administratif (num_secu, num_mutuelle, mutuelle, couverture_sociale), Séjour (date_entree, date_sortie, statut_sejour, motif_sortie), Notes (notes_internes, photo_url). + index + vue `v_patients_complet` avec age calculé et chambre.telephone joint" },
+      { "code": "AI", "txt": "📞 **Icônes téléphone colorées dans la liste patients** — chaque ligne affiche maintenant 3 badges cliquables (`tel:`) : **Perso** (vert si patient a un téléphone, rouge sinon), **Chambre** (vert si la chambre du patient a un tel, rouge sinon, basé sur `chambres.telephone` du SQL 0.58.81), **Urgence** (ambre, visible uniquement si contact_urgence_telephone renseigné). Pas un seul clic à faire pour appeler — direct dans la liste",
+        "code_snippet": {
+          "file": "app/patients/page.js",
+          "note": "Icônes téléphone colorées",
+          "lang": "javascript",
+          "after": "const ch = chambres.find(c => c.id === r.chambre_id);\nconst chTel = ch?.telephone;\n\n<a href={r.telephone ? `tel:${r.telephone}` : undefined}\n   style={{\n     background: r.telephone ? '#eef9ef' : '#fef0ee',\n     color: r.telephone ? '#5aa05a' : '#c0392b',\n     border: `1px solid ${r.telephone ? '#bfe2bf' : '#f0c4be'}`,\n   }}>\n  <i className='ti ti-phone' /> Perso\n</a>\n\n<a href={chTel ? `tel:${chTel}` : undefined}\n   title={chTel ? `Tél chambre : ${chTel}` : 'Pas de tél'}\n   style={{\n     background: chTel ? '#eef9ef' : '#fef0ee',\n     color: chTel ? '#5aa05a' : '#c0392b',\n   }}>\n  <i className='ti ti-phone' /> Chambre\n</a>"
+        }
+      },
+      { "code": "AI", "txt": "📝 **Modal patient enrichi** — 5 nouvelles sections dans le formulaire avec titres colorés et icônes : (1) **Coordonnées** verte avec tel perso + email, (2) **Contact d'urgence** rouge avec nom + tel + lien (Conjoint/Enfant/Parent/Frère-Sœur/Tuteur/Autre), (3) **Informations médicales** violette avec tel médecin, GIR (1-6), Mobilité (Autonome/Assistance/Fauteuil/Alité), Régime alimentaire, Allergies, Pathologies/Antécédents, (4) **Adresse** bleue avec autocomplete BAN INSEE, (5) **Affectation** existante (chambre/lit, équipe responsable, notes). Plus de 'va dans Édition complète' — tout est dans la modal" },
+      { "code": "AI", "txt": "🏠 **Nouvelle page `/chambres`** — gestion légère et focalisée : cards par chambre avec icône type (Simple/Double/Médicalisée/Isolement), badges téléphone (vert/rouge), code d'accès, nb lits, hiérarchie Bâtiment > Service. Modal d'édition rapide pour saisir téléphone + code + type + nb lits + notes. Liste des patients actuellement présents dans la chambre avec leur téléphone perso. Bouton 'Créer/structurer' qui renvoie vers /etablissement/edition pour la création structurée" },
+      { "code": "INFO", "txt": "🐛 **React #310 sur /materiels** — persiste encore. Tous les hooks du composant sont au top, donc ce n'est pas un hook conditionnel direct dans `/materiels`. Cause probable : un composant enfant (`QrScanner`, `BatimentServiceSwitcher`, ou `useCurrentContext`) qui a un nombre variable de hooks entre renders. **Workaround** : la page se charge maintenant que le bug services.icone est fixé. Si erreur persiste, regarde les filtres TopBar (CompactToggle, EquipeSelector). Investigation prévue en 0.58.82" }
+    ],
+    "themes": ["feat", "patients", "fix"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.81.html"
+  },
+  {
     "v": "0.58.80",
     "kind": "feat",
     "titre": "🛠 Demandes d'intervention refonte ultra-pro · Workflow scan + 5 statuts colorés + Kanban + signalement direct depuis QR dépôt",

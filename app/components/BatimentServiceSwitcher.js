@@ -86,28 +86,26 @@ export default function BatimentServiceSwitcher({ auth }) {
     let alive = true;
     (async () => {
       try {
-        // 0.58.78 : services rattachés DIRECTEMENT au bâtiment (plus d'étages)
-        // Si la colonne batiment_id n'existe pas sur services, on prend tout
-        let svcs = null, svcErr = null;
+        // 0.58.81 : SELECT minimal sans icone (pas garanti d'exister sur services)
+        // Si batiment_id absent sur services → fallback structure
+        let svcs = [];
         try {
           const r = await supabase
             .from("services")
-            .select("id, nom, icone")
+            .select("id, nom")
             .eq("batiment_id", batId)
             .order("nom");
-          svcs = r.data; svcErr = r.error;
-        } catch (e) {
-          svcErr = e;
-        }
-        // Fallback 1 : services sans batiment_id → on prend tous les services de la structure
-        if (svcErr && (svcErr.code === "42703" || /batiment_id|icone/i.test(svcErr.message || ""))) {
+          if (r.error) throw r.error;
+          svcs = r.data || [];
+        } catch (err) {
+          // Fallback : tous les services de la structure
           try {
             const fb = await supabase.from("services").select("id, nom").eq("structure_id", structureId).order("nom");
             svcs = fb.data || [];
           } catch { svcs = []; }
         }
         if (!alive) return;
-        const list = svcs || [];
+        const list = svcs;
         setServices(list);
         try {
           const saved = localStorage.getItem(STORAGE_SVC);

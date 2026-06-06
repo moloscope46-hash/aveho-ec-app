@@ -270,20 +270,6 @@ export default function Patients() {
         longitude: form.longitude || null,
         // 0.58.63 : équipe responsable du patient (filtre TopBar)
         equipe_id: form.equipe_id || null,
-        // 0.58.81 : Coordonnées
-        telephone: form.telephone || null,
-        email: form.email || null,
-        // 0.58.81 : Contact urgence
-        contact_urgence_nom: form.contact_urgence_nom || null,
-        contact_urgence_telephone: form.contact_urgence_telephone || null,
-        contact_urgence_lien: form.contact_urgence_lien || null,
-        // 0.58.81 : Médical étendu
-        medecin_traitant_telephone: form.medecin_traitant_telephone || null,
-        allergies: form.allergies || null,
-        regime_alimentaire: form.regime_alimentaire || null,
-        pathologies: form.pathologies || null,
-        gir: form.gir || null,
-        mobilite: form.mobilite || null,
       };
       let patientId = modal.id;
       let isNouveau = false;
@@ -676,57 +662,6 @@ export default function Patients() {
                               })}
                             </div>
                           )}
-                          {/* 0.58.81 : Icônes téléphone colorées (vert = dispo, rouge = absent) */}
-                          {(() => {
-                            const ch = r.chambre_id ? chambres.find(c => c.id === r.chambre_id) : null;
-                            const chTel = ch?.telephone;
-                            return (
-                              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-                                <a href={r.telephone ? `tel:${r.telephone}` : undefined}
-                                   onClick={(e) => { if (!r.telephone) e.preventDefault(); else e.stopPropagation(); }}
-                                   title={r.telephone ? `Tél perso : ${r.telephone}` : "Pas de téléphone personnel"}
-                                   style={{
-                                     display: "inline-flex", alignItems: "center", gap: 3,
-                                     padding: "1px 7px", borderRadius: 8, fontSize: 10, fontWeight: 600,
-                                     background: r.telephone ? "#eef9ef" : "#fef0ee",
-                                     color: r.telephone ? "#5aa05a" : "#c0392b",
-                                     border: `1px solid ${r.telephone ? "#bfe2bf" : "#f0c4be"}`,
-                                     textDecoration: "none",
-                                     cursor: r.telephone ? "pointer" : "default",
-                                   }}>
-                                  <i className="ti ti-phone" /> Perso
-                                </a>
-                                <a href={chTel ? `tel:${chTel}` : undefined}
-                                   onClick={(e) => { if (!chTel) e.preventDefault(); else e.stopPropagation(); }}
-                                   title={chTel ? `Tél chambre ${ch?.nom || ""} : ${chTel}` : (ch ? `Pas de téléphone dans ${ch?.nom || "la chambre"}` : "Pas de chambre")}
-                                   style={{
-                                     display: "inline-flex", alignItems: "center", gap: 3,
-                                     padding: "1px 7px", borderRadius: 8, fontSize: 10, fontWeight: 600,
-                                     background: chTel ? "#eef9ef" : "#fef0ee",
-                                     color: chTel ? "#5aa05a" : "#c0392b",
-                                     border: `1px solid ${chTel ? "#bfe2bf" : "#f0c4be"}`,
-                                     textDecoration: "none",
-                                     cursor: chTel ? "pointer" : "default",
-                                   }}>
-                                  <i className="ti ti-phone" /> Chambre
-                                </a>
-                                {r.contact_urgence_telephone && (
-                                  <a href={`tel:${r.contact_urgence_telephone}`}
-                                     onClick={(e) => e.stopPropagation()}
-                                     title={`Contact urgence : ${r.contact_urgence_nom || ""} (${r.contact_urgence_lien || "?"}) — ${r.contact_urgence_telephone}`}
-                                     style={{
-                                       display: "inline-flex", alignItems: "center", gap: 3,
-                                       padding: "1px 7px", borderRadius: 8, fontSize: 10, fontWeight: 600,
-                                       background: "#fff4e1", color: "#EF9F27",
-                                       border: "1px solid #f0d59f",
-                                       textDecoration: "none",
-                                     }}>
-                                    <i className="ti ti-alert-triangle" /> Urgence
-                                  </a>
-                                )}
-                              </div>
-                            );
-                          })()}
                         </td>
                         <td style={{ fontSize: 13 }}>
                           {lit ? <span><i className="ti ti-bed" style={{ color: "#5aa05a" }} /> {lit.chambrePath} — Lit {lit.nom}</span>
@@ -783,74 +718,7 @@ export default function Patients() {
                 </div>
               </div>
               <div className="fld"><label>Médecin traitant</label><input value={form.medecin_traitant || ""} onChange={(e) => setForm({ ...form, medecin_traitant: e.target.value })} placeholder="Dr Lambert" /></div>
-
-              {/* 0.58.81 : section Coordonnées enrichie */}
-              <h4 style={{ margin: "16px 0 8px", fontSize: 12, color: "#5aa05a", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #d5ecd5", paddingBottom: 4 }}>
-                <i className="ti ti-phone" /> Coordonnées
-              </h4>
-              <div className="row-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div className="fld"><label><i className="ti ti-phone" style={{ color: "#5aa05a" }} /> Téléphone personnel</label><input type="tel" value={form.telephone || ""} onChange={(e) => setForm({ ...form, telephone: e.target.value })} placeholder="06 12 34 56 78" /></div>
-                <div className="fld"><label>Email</label><input type="email" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="patient@email.fr" /></div>
-              </div>
-
-              {/* 0.58.81 : Contact d'urgence */}
-              <h4 style={{ margin: "16px 0 8px", fontSize: 12, color: "#e35d5b", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #ffd5d2", paddingBottom: 4 }}>
-                <i className="ti ti-alert-triangle" /> Contact d'urgence
-              </h4>
-              <div className="row-3" style={{ display: "grid", gridTemplateColumns: "2fr 1.5fr 1fr", gap: 10 }}>
-                <div className="fld"><label>Nom contact</label><input value={form.contact_urgence_nom || ""} onChange={(e) => setForm({ ...form, contact_urgence_nom: e.target.value })} placeholder="DUPONT Marie" /></div>
-                <div className="fld"><label>Téléphone</label><input type="tel" value={form.contact_urgence_telephone || ""} onChange={(e) => setForm({ ...form, contact_urgence_telephone: e.target.value })} placeholder="06 12 34 56 78" /></div>
-                <div className="fld"><label>Lien</label>
-                  <select value={form.contact_urgence_lien || ""} onChange={(e) => setForm({ ...form, contact_urgence_lien: e.target.value })}>
-                    <option value="">—</option>
-                    <option value="Conjoint">Conjoint</option>
-                    <option value="Enfant">Enfant</option>
-                    <option value="Parent">Parent</option>
-                    <option value="Frère/Sœur">Frère/Sœur</option>
-                    <option value="Tuteur">Tuteur</option>
-                    <option value="Autre">Autre</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* 0.58.81 : Médical étendu */}
-              <h4 style={{ margin: "16px 0 8px", fontSize: 12, color: "#7a6fb0", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3d8f5", paddingBottom: 4 }}>
-                <i className="ti ti-stethoscope" /> Informations médicales
-              </h4>
-              <div className="row-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div className="fld"><label>Téléphone médecin</label><input type="tel" value={form.medecin_traitant_telephone || ""} onChange={(e) => setForm({ ...form, medecin_traitant_telephone: e.target.value })} placeholder="01 23 45 67 89" /></div>
-                <div className="fld"><label>GIR (1-6)</label>
-                  <select value={form.gir || ""} onChange={(e) => setForm({ ...form, gir: e.target.value ? parseInt(e.target.value, 10) : null })}>
-                    <option value="">—</option>
-                    {[1,2,3,4,5,6].map(n => <option key={n} value={n}>GIR {n}</option>)}
-                  </select>
-                </div>
-                <div className="fld"><label>Mobilité</label>
-                  <select value={form.mobilite || ""} onChange={(e) => setForm({ ...form, mobilite: e.target.value })}>
-                    <option value="">—</option>
-                    <option value="Autonome">Autonome</option>
-                    <option value="Assistance">Avec assistance</option>
-                    <option value="Fauteuil">Fauteuil roulant</option>
-                    <option value="Alité">Alité</option>
-                  </select>
-                </div>
-                <div className="fld"><label>Régime alimentaire</label>
-                  <input value={form.regime_alimentaire || ""} onChange={(e) => setForm({ ...form, regime_alimentaire: e.target.value })} placeholder="Sans sel, mixé, diabète..." />
-                </div>
-              </div>
-              <div className="fld" style={{ marginTop: 8 }}>
-                <label>Allergies</label>
-                <input value={form.allergies || ""} onChange={(e) => setForm({ ...form, allergies: e.target.value })} placeholder="Pénicilline, latex, fruits à coques..." />
-              </div>
-              <div className="fld" style={{ marginTop: 8 }}>
-                <label>Pathologies / Antécédents</label>
-                <textarea value={form.pathologies || ""} onChange={(e) => setForm({ ...form, pathologies: e.target.value })} rows={2} placeholder="Diabète type 2, hypertension, AVC en 2020..." style={{ width: "100%", padding: 9, border: "1px solid #e1e6eb", borderRadius: 8, fontFamily: "inherit", fontSize: 13, resize: "vertical" }} />
-              </div>
-
               {/* 0.55.55 : adresse du patient avec autocomplete BAN INSEE */}
-              <h4 style={{ margin: "16px 0 8px", fontSize: 12, color: "#185FA5", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #cfe1f5", paddingBottom: 4 }}>
-                <i className="ti ti-map-pin" /> Adresse
-              </h4>
               <div className="fld">
                 <label>Adresse (recherche BAN)</label>
                 <AdresseAutocomplete
@@ -867,6 +735,9 @@ export default function Patients() {
                   })}
                   placeholder="Tape une adresse — auto cp + ville + INSEE"
                 />
+                <small style={{ color: "#8a98a8", fontSize: 12 }}>
+                  <i className="ti ti-info-circle" /> Pour l'adresse complète + adresses de livraison, va dans <b>Édition complète</b> de la fiche.
+                </small>
               </div>
               <div className="row-2" style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
                 <div className="fld"><label>Code postal</label><input value={form.code_postal || ""} onChange={(e) => setForm({ ...form, code_postal: e.target.value })} placeholder="75011" style={{ fontFamily: "Consolas, monospace" }} /></div>
