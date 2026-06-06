@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 // =============================================================
-//  /mobile/patient/new — Assistant création patient (3 étapes)
+//  /mobile/patient/new â€” Assistant crÃ©ation patient (3 Ã©tapes)
 // =============================================================
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../../lib/supabase";
 import { useAuth } from "../../../../lib/useAuth";
@@ -35,7 +35,7 @@ export default function MobileNewPatientPage() {
     regime_alimentaire: "",
     gir: "",
     mobilite: "",
-    etat: "Présent",
+    etat: "PrÃ©sent",
     statut_sejour: "En cours",
     // 0.58.85 : affectation
     etablissement_id: "",
@@ -44,7 +44,7 @@ export default function MobileNewPatientPage() {
     chambre_id: "",
   });
 
-  // 0.58.85 : refs pour sélecteurs cascade
+  // 0.58.85 : refs pour sÃ©lecteurs cascade
   const [etablissements, setEtablissements] = useState([]);
   const [batiments, setBatiments] = useState([]);
   const [services, setServices] = useState([]);
@@ -64,7 +64,7 @@ export default function MobileNewPatientPage() {
       setBatiments(bats);
       setServices(svcs);
       setChambres(chs);
-      // Pré-remplissage avec l'établissement courant si l'utilisateur n'a accès qu'à un seul
+      // PrÃ©-remplissage avec l'Ã©tablissement courant si l'utilisateur n'a accÃ¨s qu'Ã  un seul
       if (etabs.length === 1) {
         setForm(f => ({ ...f, etablissement_id: etabs[0].id }));
       } else if (auth.etabId) {
@@ -99,7 +99,7 @@ export default function MobileNewPatientPage() {
         gir: form.gir ? parseInt(form.gir, 10) : null,
         created_by: auth.user?.id,
       };
-      // Retire les clés UI seulement
+      // Retire les clÃ©s UI seulement
       delete payload.batiment_id;
       delete payload.service_id;
       const { data, error } = await supabase.from("patients").insert(payload).select("id").single();
@@ -137,15 +137,15 @@ export default function MobileNewPatientPage() {
           ))}
         </div>
         <div style={{ color: "#bfe6e6", fontSize: 12.5, marginBottom: 14 }}>
-          Étape {step} / 4 · {step === 1 ? "Identité" : step === 2 ? "Coordonnées + Urgence" : step === 3 ? "Médical" : "Validation"}
+          Ã‰tape {step} / 4 Â· {step === 1 ? "IdentitÃ©" : step === 2 ? "CoordonnÃ©es + Urgence" : step === 3 ? "MÃ©dical" : "Validation"}
         </div>
       </div>
 
       <div style={{ padding: "0 16px" }}>
-        {/* ÉTAPE 1 — IDENTITÉ */}
+        {/* Ã‰TAPE 1 â€” IDENTITÃ‰ */}
         {step === 1 && (
-          <Section title="Identité" icon="ti-id" color="#C9867F">
-            <Field label="Civilité">
+          <Section title="IdentitÃ©" icon="ti-id" color="#C9867F">
+            <Field label="CivilitÃ©">
               <div style={{ display: "flex", gap: 6 }}>
                 {["M.", "Mme", "Dr"].map(c => (
                   <button key={c} type="button" onClick={() => setForm({ ...form, civilite: c })} style={btnRadio(form.civilite === c, "#C9867F")}>{c}</button>
@@ -155,7 +155,7 @@ export default function MobileNewPatientPage() {
             <Field label="Nom *" required>
               <input value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value.toUpperCase() })} placeholder="DUPONT" style={inputStyle} autoFocus />
             </Field>
-            <Field label="Prénom">
+            <Field label="PrÃ©nom">
               <input value={form.prenom} onChange={e => setForm({ ...form, prenom: e.target.value })} placeholder="Marie" style={inputStyle} />
             </Field>
             <Field label="Nom de jeune fille">
@@ -170,21 +170,21 @@ export default function MobileNewPatientPage() {
           </Section>
         )}
 
-        {/* ÉTAPE 1bis dans étape 1 : Affectation */}
+        {/* Ã‰TAPE 1bis dans Ã©tape 1 : Affectation */}
         {step === 1 && (
           <Section title="Affectation" icon="ti-building" color="#185FA5">
             {etablissements.length > 1 && (
-              <Field label="Établissement">
+              <Field label="Ã‰tablissement">
                 <select value={form.etablissement_id} onChange={e => setForm({ ...form, etablissement_id: e.target.value, batiment_id: "", service_id: "", chambre_id: "" })} style={inputStyle}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">â€” SÃ©lectionner â€”</option>
                   {etablissements.map(et => <option key={et.id} value={et.id}>{et.nom}</option>)}
                 </select>
               </Field>
             )}
             {filteredBatiments.length > 0 && (
-              <Field label="Bâtiment">
+              <Field label="BÃ¢timent">
                 <select value={form.batiment_id} onChange={e => setForm({ ...form, batiment_id: e.target.value, service_id: "", chambre_id: "" })} style={inputStyle}>
-                  <option value="">— Aucun —</option>
+                  <option value="">â€” Aucun â€”</option>
                   {filteredBatiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
                 </select>
               </Field>
@@ -192,7 +192,7 @@ export default function MobileNewPatientPage() {
             {filteredServices.length > 0 && (
               <Field label="Service">
                 <select value={form.service_id} onChange={e => setForm({ ...form, service_id: e.target.value, chambre_id: "" })} style={inputStyle}>
-                  <option value="">— Aucun —</option>
+                  <option value="">â€” Aucun â€”</option>
                   {filteredServices.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                 </select>
               </Field>
@@ -200,7 +200,7 @@ export default function MobileNewPatientPage() {
             {filteredChambres.length > 0 && (
               <Field label="Chambre">
                 <select value={form.chambre_id} onChange={e => setForm({ ...form, chambre_id: e.target.value })} style={inputStyle}>
-                  <option value="">— Aucune —</option>
+                  <option value="">â€” Aucune â€”</option>
                   {filteredChambres.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
                 </select>
               </Field>
@@ -208,11 +208,11 @@ export default function MobileNewPatientPage() {
           </Section>
         )}
 
-        {/* ÉTAPE 2 — COORDONNÉES */}
+        {/* Ã‰TAPE 2 â€” COORDONNÃ‰ES */}
         {step === 2 && (
           <>
-            <Section title="Coordonnées" icon="ti-phone" color="#5aa05a">
-              <Field label="Téléphone personnel">
+            <Section title="CoordonnÃ©es" icon="ti-phone" color="#5aa05a">
+              <Field label="TÃ©lÃ©phone personnel">
                 <input type="tel" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} placeholder="06 12 34 56 78" style={inputStyle} />
               </Field>
               <Field label="Email">
@@ -234,27 +234,27 @@ export default function MobileNewPatientPage() {
               <Field label="Nom contact">
                 <input value={form.contact_urgence_nom} onChange={e => setForm({ ...form, contact_urgence_nom: e.target.value })} placeholder="DUPONT Pierre" style={inputStyle} />
               </Field>
-              <Field label="Téléphone">
+              <Field label="TÃ©lÃ©phone">
                 <input type="tel" value={form.contact_urgence_telephone} onChange={e => setForm({ ...form, contact_urgence_telephone: e.target.value })} placeholder="06 12 34 56 78" style={inputStyle} />
               </Field>
               <Field label="Lien">
                 <select value={form.contact_urgence_lien} onChange={e => setForm({ ...form, contact_urgence_lien: e.target.value })} style={inputStyle}>
-                  <option value="">—</option>
+                  <option value="">â€”</option>
                   <option>Conjoint</option><option>Enfant</option><option>Parent</option>
-                  <option>Frère/Sœur</option><option>Tuteur</option><option>Autre</option>
+                  <option>FrÃ¨re/SÅ“ur</option><option>Tuteur</option><option>Autre</option>
                 </select>
               </Field>
             </Section>
           </>
         )}
 
-        {/* ÉTAPE 3 — MÉDICAL */}
+        {/* Ã‰TAPE 3 â€” MÃ‰DICAL */}
         {step === 3 && (
-          <Section title="Informations médicales" icon="ti-stethoscope" color="#7a6fb0">
-            <Field label="Médecin traitant">
+          <Section title="Informations mÃ©dicales" icon="ti-stethoscope" color="#7a6fb0">
+            <Field label="MÃ©decin traitant">
               <input value={form.medecin_traitant} onChange={e => setForm({ ...form, medecin_traitant: e.target.value })} placeholder="Dr Lambert" style={inputStyle} />
             </Field>
-            <Field label="Téléphone médecin">
+            <Field label="TÃ©lÃ©phone mÃ©decin">
               <input type="tel" value={form.medecin_traitant_telephone} onChange={e => setForm({ ...form, medecin_traitant_telephone: e.target.value })} placeholder="01 23 45 67 89" style={inputStyle} />
             </Field>
             <Field label="GIR (1-6)">
@@ -267,42 +267,42 @@ export default function MobileNewPatientPage() {
                 ))}
               </div>
             </Field>
-            <Field label="Mobilité">
+            <Field label="MobilitÃ©">
               <select value={form.mobilite} onChange={e => setForm({ ...form, mobilite: e.target.value })} style={inputStyle}>
-                <option value="">—</option>
+                <option value="">â€”</option>
                 <option>Autonome</option><option>Assistance</option>
-                <option>Fauteuil</option><option>Alité</option>
+                <option>Fauteuil</option><option>AlitÃ©</option>
               </select>
             </Field>
             <Field label="Allergies">
-              <input value={form.allergies} onChange={e => setForm({ ...form, allergies: e.target.value })} placeholder="Pénicilline, latex..." style={inputStyle} />
+              <input value={form.allergies} onChange={e => setForm({ ...form, allergies: e.target.value })} placeholder="PÃ©nicilline, latex..." style={inputStyle} />
             </Field>
-            <Field label="Régime alimentaire">
-              <input value={form.regime_alimentaire} onChange={e => setForm({ ...form, regime_alimentaire: e.target.value })} placeholder="Sans sel, mixé..." style={inputStyle} />
+            <Field label="RÃ©gime alimentaire">
+              <input value={form.regime_alimentaire} onChange={e => setForm({ ...form, regime_alimentaire: e.target.value })} placeholder="Sans sel, mixÃ©..." style={inputStyle} />
             </Field>
           </Section>
         )}
 
-        {/* ÉTAPE 4 — RÉCAP & VALIDATION */}
+        {/* Ã‰TAPE 4 â€” RÃ‰CAP & VALIDATION */}
         {step === 4 && (
-          <Section title="Récapitulatif" icon="ti-check" color="#5aa05a">
+          <Section title="RÃ©capitulatif" icon="ti-check" color="#5aa05a">
             <div style={{ background: "rgba(255,255,255,.04)", borderRadius: 10, padding: 14, marginBottom: 12 }}>
-              <div style={{ color: "#bfe6e6", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Patient à créer</div>
+              <div style={{ color: "#bfe6e6", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Patient Ã  crÃ©er</div>
               <div style={{ color: "#fff", fontSize: 18, fontWeight: 700 }}>
                 {form.civilite && <span>{form.civilite} </span>}
                 {form.nom} {form.prenom}
               </div>
-              {form.nom_jeune_fille && <div style={{ color: "#bfe6e6", fontSize: 12 }}>née {form.nom_jeune_fille}</div>}
-              {form.date_naissance && <div style={{ color: "#bfe6e6", fontSize: 12, marginTop: 4 }}>📅 {form.date_naissance}</div>}
+              {form.nom_jeune_fille && <div style={{ color: "#bfe6e6", fontSize: 12 }}>nÃ©e {form.nom_jeune_fille}</div>}
+              {form.date_naissance && <div style={{ color: "#bfe6e6", fontSize: 12, marginTop: 4 }}>ðŸ“… {form.date_naissance}</div>}
               <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {form.telephone && <Badge color="#5aa05a">☎ {form.telephone}</Badge>}
-                {form.contact_urgence_telephone && <Badge color="#e35d5b">🚨 Urgence</Badge>}
+                {form.telephone && <Badge color="#5aa05a">â˜Ž {form.telephone}</Badge>}
+                {form.contact_urgence_telephone && <Badge color="#e35d5b">ðŸš¨ Urgence</Badge>}
                 {form.gir && <Badge color="#7a6fb0">GIR {form.gir}</Badge>}
-                {form.allergies && <Badge color="#c0392b">⚠ Allergies</Badge>}
+                {form.allergies && <Badge color="#c0392b">âš  Allergies</Badge>}
               </div>
             </div>
             <div style={{ background: "rgba(124,200,200,.08)", borderRadius: 10, padding: 14, fontSize: 12, color: "#bfe6e6", lineHeight: 1.5 }}>
-              <i className="ti ti-info-circle" /> Après création, tu seras redirigé vers la page <b>QR bracelet</b> pour imprimer le bracelet d'identification du patient (formats A4 fiche ou A6 bracelet).
+              <i className="ti ti-info-circle" /> AprÃ¨s crÃ©ation, tu seras redirigÃ© vers la page <b>QR bracelet</b> pour imprimer le bracelet d'identification du patient (formats A4 fiche ou A6 bracelet).
             </div>
           </Section>
         )}
@@ -341,7 +341,7 @@ export default function MobileNewPatientPage() {
             fontFamily: "inherit", fontSize: 14, fontWeight: 700,
             opacity: (busy || !form.nom) ? 0.6 : 1,
           }}>
-            {busy ? "Création..." : <>✓ Créer & imprimer bracelet</>}
+            {busy ? "CrÃ©ation..." : <>âœ“ CrÃ©er & imprimer bracelet</>}
           </button>
         )}
       </div>
