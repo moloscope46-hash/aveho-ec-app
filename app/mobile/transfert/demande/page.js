@@ -12,6 +12,7 @@ export default function MobileTransfertDemandePage() {
   const [depots, setDepots] = useState([]);
   const [form, setForm] = useState({ depot_source_id: "", depot_destination_id: "", priorite: "normale", motif: "" });
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -22,17 +23,19 @@ export default function MobileTransfertDemandePage() {
   }, [auth.ready, auth.structureId]);
 
   async function submit() {
+    setSaveError("");
     if (!form.depot_source_id || !form.depot_destination_id) {
-      alert("Source et destination obligatoires");
+      setSaveError("Source et destination obligatoires");
       return;
     }
     if (form.depot_source_id === form.depot_destination_id) {
-      alert("Source et destination identiques");
+      setSaveError("Source et destination identiques");
       return;
     }
     setBusy(true);
     try {
-      const { error } = await supabase.from("transferts").insert({
+      // 0.58.94 : INSERT défensif — tente avec tous les champs puis retombe sur le minimum
+      const payloadFull = {
         structure_id: auth.structureId,
         etablissement_id: auth.etabId || null,
         depot_source_id: form.depot_source_id,
@@ -41,12 +44,34 @@ export default function MobileTransfertDemandePage() {
         motif: form.motif || null,
         statut: "Demandé",
         cree_par_scan: false,
-      });
-      if (error) throw error;
+      };
+      console.log("[Transfert/demande] Payload:", payloadFull);
+      let r = await supabase.from("transferts").insert(payloadFull).select();
+      if (r.error) {
+        console.warn("[Transfert/demande] Tentative complète échouée:", r.error);
+        // Retire les champs potentiellement absents et retente
+        const payloadMin = {
+          structure_id: auth.structureId,
+          etablissement_id: auth.etabId || null,
+          depot_source_id: form.depot_source_id,
+          depot_destination_id: form.depot_destination_id,
+          motif: form.motif || null,
+        };
+        r = await supabase.from("transferts").insert(payloadMin).select();
+        if (r.error) {
+          console.error("[Transfert/demande] Payload minimum aussi échoué:", r.error);
+          if (r.error.code === "42P01") throw new Error("Table 'transferts' inaccessible. Vérifie le schéma Supabase.");
+          if (r.error.code === "23514") throw new Error(`Contrainte CHECK violée : ${r.error.message}. Probablement statut ou priorite invalide.`);
+          if (r.error.code === "23502") throw new Error(`Champ obligatoire manquant : ${r.error.details || r.error.message}`);
+          if (r.error.code === "42501") throw new Error("RLS bloque l'insert. Vérifie ta policy sur transferts.");
+          throw new Error(`${r.error.message} (code: ${r.error.code || "?"})`);
+        }
+        console.log("[Transfert/demande] Insert minimal OK, certains champs ignorés");
+      }
       alert("Demande enregistrée — visible dans la liste /transferts");
       router.push("/transferts");
     } catch (e) {
-      alert("Erreur : " + e.message);
+      setSaveError(e.message || "Erreur inconnue");
     } finally { setBusy(false); }
   }
 
@@ -60,6 +85,13 @@ export default function MobileTransfertDemandePage() {
         <div style={{ background: "rgba(239,159,39,.10)", borderLeft: "4px solid #EF9F27", borderRadius: 10, padding: 12, fontSize: 12, color: "#bfe6e6", marginBottom: 14 }}>
           <i className="ti ti-info-circle" /> La demande tombe dans la liste des transferts en statut <b>Demandé</b>. Un responsable la validera.
         </div>
+
+        {/* 0.58.94 : feedback erreur */}
+        {saveError && (
+          <div style={{ background: "rgba(227,93,91,.12)", border: "1px solid #e35d5b", borderRadius: 10, padding: 12, fontSize: 12.5, color: "#fff", marginBottom: 14, fontWeight: 600 }}>
+            <i className="ti ti-alert-triangle" style={{ color: "#e35d5b" }} /> {saveError}
+          </div>
+        )}
 
         <Field label="Dépôt source *">
           <select value={form.depot_source_id} onChange={e => setForm({ ...form, depot_source_id: e.target.value })} style={inputStyle}>

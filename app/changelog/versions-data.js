@@ -240,6 +240,70 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.95",
+    "kind": "fix",
+    "titre": "🩹 Création patient mobile : INSERT défensif 2 niveaux + détection colonnes absentes",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **`POST patients?select=id 400`** : le wizard mobile envoyait tous les nouveaux champs (allergies, GIR, contact_urgence_*, antécédents, etc.) qui ne sont créés que par migrations SQL 0.58.81 et 0.58.85. Si l'utilisateur ne les a pas appliquées, **toutes** les colonnes inconnues causent un 400 et bloquent la création basique du patient. **Nouveau** : INSERT en 2 niveaux — tente avec tous les champs, si erreur retombe sur le minimum strict (nom/prenom/date_naissance/structure_id/etablissement_id/chambre_id). Si même le minimum échoue, message d'erreur ciblé avec code Postgres",
+        "code_snippet": {
+          "file": "app/mobile/patient/new/page.js",
+          "note": "INSERT défensif 2 niveaux",
+          "lang": "javascript",
+          "after": "// Niveau 1 : tout le formulaire (allergies, GIR, contact_urgence, etc.)\nlet r = await supabase.from('patients').insert(fullPayload).select('id').single();\nif (r.error) {\n  // Niveau 2 : payload strict minimum (compatible n'importe quel schéma)\n  const minPayload = {\n    structure_id, etablissement_id, chambre_id,\n    nom, prenom, date_naissance,\n    created_by\n  };\n  r = await supabase.from('patients').insert(minPayload).select('id').single();\n  if (!r.error) {\n    alert('Patient créé avec les champs basiques. Pour avoir allergies/GIR/etc, applique migration-0.58.81.');\n  }\n}"
+        }
+      },
+      { "code": "FIX", "txt": "🩹 **Retiré `etat: 'Présent'` et `statut_sejour: 'En cours'`** du form par défaut — ces colonnes n'existent que si migration 0.58.81 appliquée, et un défaut non-null peut faire échouer l'INSERT avant même le fallback" },
+      { "code": "AI", "txt": "📢 **Banner rouge à l'étape 4 du wizard** : si l'INSERT échoue, le message d'erreur exact s'affiche dans le récap avec le code Postgres détecté (42703 colonne absente, 42501 RLS, 23502 NOT NULL, 23503 FK invalide)" },
+      { "code": "AI", "txt": "🛟 **Fallback gracieux** : si seul le payload complet échoue, le patient est créé quand même avec les champs basiques + alert informatif disant à l'utilisateur d'appliquer le SQL pour les champs avancés. Pas de blocage total" },
+      { "code": "INFO", "txt": "🎯 **À faire** : (1) Push ce 0.58.95 · (2) Hard refresh Ctrl+Shift+R · (3) Réessaye création patient mobile · (4) Si erreur, lis le banner rouge à l'étape 4 et copie-le moi · (5) Ouvre F12 → Console et regarde les lignes `[Patient/new] Payload complet:` et `[Patient/new] Erreur:` pour identifier la colonne qui plante" }
+    ],
+    "themes": ["fix", "patient", "mobile"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.95.html"
+  },
+  {
+    "v": "0.58.94",
+    "kind": "fix",
+    "titre": "🩹 Transferts mobile : INSERT défensif + jointure FK fallback + feedback erreur visible",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **`transferts:1` 400 → 503 sur /mobile/transfert/demande** : l'INSERT envoyait `cree_par_scan: false` et `statut: 'Demandé'` qui pouvaient ne pas exister/être acceptés selon le schéma. **Nouveau** : INSERT en 2 niveaux — tente le payload complet, si échec → retente avec payload minimal (source/destination/motif/etablissement seulement). Si ça échoue encore, le message d'erreur exact s'affiche dans un banner rouge sur la page",
+        "code_snippet": {
+          "file": "app/mobile/transfert/demande/page.js",
+          "note": "Insert défensif avec détection codes Postgres",
+          "lang": "javascript",
+          "after": "let r = await supabase.from('transferts').insert(payloadFull).select();\nif (r.error) {\n  // Retente avec payload minimal (sans cree_par_scan/statut/priorite)\n  r = await supabase.from('transferts').insert(payloadMin).select();\n  if (r.error) {\n    if (r.error.code === '23514') throw new Error('Contrainte CHECK violée — statut/priorite invalide');\n    if (r.error.code === '23502') throw new Error('Champ obligatoire manquant');\n    if (r.error.code === '42501') throw new Error('RLS bloque l\\'insert');\n    throw new Error(`${r.error.message} (code: ${r.error.code})`);\n  }\n}"
+        }
+      },
+      { "code": "FIX", "txt": "🔗 **Jointure FK défensive dans `/mobile/transfert/pickup`** : la query utilisait `select('*, depot_source:depot_source_id(nom, couleur), depot_destination:depot_destination_id(nom, couleur)')` qui plante en 400 si la FK n'est pas reconnue par PostgREST. **Nouveau** : fallback automatique sur un SELECT simple puis enrichissement côté JS avec une 2e requête sur `depots` filtrée par `in('id', [...])` — un peu plus lent mais ça ne crashe plus" },
+      { "code": "AI", "txt": "📢 **Banner rouge dans /mobile/transfert/demande** : si l'INSERT échoue, le message exact s'affiche (au lieu d'un `alert()` qui disparaît). Code Postgres détecté → message ciblé" },
+      { "code": "INFO", "txt": "🎯 **À tester maintenant** : (1) Va sur /mobile/transfert/demande · (2) Remplis source + destination + click Envoyer · (3) Si erreur, lis le banner rouge → copie-le moi pour qu'on debug · (4) `AbortError on play()` dans le log est lié à la recherche vocale (micro qui s'interrompt) — pas grave" }
+    ],
+    "themes": ["fix", "transferts", "mobile"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.94.html"
+  },
+  {
+    "v": "0.58.93",
+    "kind": "fix",
+    "titre": "🩹 /vehicules : SELECT défensif + diagnostic table absente sur la page",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Erreur 400 sur `vehicules?select=*,etablissements(nom)`** : ça plante car (a) soit la table `vehicules` n'existe pas (migration-0.58.85 pas appliquée), (b) soit la FK `etablissements` n'est pas reconnue par PostgREST. Le SELECT du chargement initial est maintenant en **3 niveaux** : (1) tente avec jointure `etablissements(nom)` → si échec (2) retente sans jointure → si échec encore (3) affiche un banner rouge en haut de la page expliquant qu'il faut appliquer la migration",
+        "code_snippet": {
+          "file": "app/vehicules/page.js",
+          "note": "SELECT défensif",
+          "lang": "javascript",
+          "after": "try {\n  const r = await supabase.from('vehicules')\n    .select('*, etablissements(nom)')\n    .eq('structure_id', auth.structureId).order('nom');\n  if (r.error) throw r.error;\n  vehData = r.data;\n} catch {\n  // Fallback sans jointure FK\n  const r2 = await supabase.from('vehicules').select('*')...;\n  if (r2.error?.code === '42P01') {\n    setLoadError('La table vehicules n\\'existe pas. Applique migration-0.58.85.');\n  }\n}"
+        }
+      },
+      { "code": "AI", "txt": "📢 **Banner rouge en haut de /vehicules** : si la table n'existe pas, un encart explique clairement le problème + propose la procédure dans Supabase SQL Editor. Plus de page vide silencieuse" },
+      { "code": "INFO", "txt": "ℹ️ **Concernant les autres erreurs du log** : (1) `router is not defined` sur /profil = fix déjà fait en 0.58.91, mais ton navigateur a peut-être un cache → fais **Ctrl+Shift+R** pour hard refresh · (2) `audit_log 403` = faux positif RLS, l'app log les actions audit en best-effort, peut échouer silencieusement, à ignorer · (3) `consentements_rgpd date_expiration 400` = colonne absente, déjà géré en 0.58.36 avec un fallback, le 400 dans la console est cosmétique" },
+      { "code": "INFO", "txt": "🎯 **Ce qu'il faut faire MAINTENANT** : (1) `git push` ce 0.58.93 · (2) Va dans Supabase Dashboard → SQL Editor · (3) Colle le contenu de `public/sql/migration-0.58.85-vehicules-cuves-stock.sql` (ou le SQL livré standalone précédent) · (4) Run · (5) Recharge /vehicules avec **Ctrl+Shift+R** → la page doit fonctionner et tu peux créer des véhicules" }
+    ],
+    "themes": ["fix", "vehicules", "diag"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.93.html"
+  },
+  {
     "v": "0.58.92",
     "kind": "fix",
     "titre": "🔍 Création véhicule : feedback erreur détaillé dans le modal + SQL fix RLS de secours",

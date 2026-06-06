@@ -16,14 +16,50 @@ export default function MobileTransfertPickupPage() {
     if (!auth.ready) return;
     (async () => {
       try {
-        const { data } = await supabase
-          .from("transferts")
-          .select("*, depot_source:depot_source_id(nom, couleur), depot_destination:depot_destination_id(nom, couleur)")
-          .eq("structure_id", auth.structureId)
-          .eq("statut", "Demandé")
-          .order("created_at", { ascending: false })
-          .limit(100);
-        setRows(data || []);
+        // 0.58.94 : SELECT défensif — la jointure FK depot_source:depot_source_id peut échouer si FK absente
+        let rows = [];
+        try {
+          const r = await supabase
+            .from("transferts")
+            .select("*, depot_source:depot_source_id(nom, couleur), depot_destination:depot_destination_id(nom, couleur)")
+            .eq("structure_id", auth.structureId)
+            .eq("statut", "Demandé")
+            .order("created_at", { ascending: false })
+            .limit(100);
+          if (r.error) throw r.error;
+          rows = r.data || [];
+        } catch (e1) {
+          console.warn("[Pickup] Jointure FK échouée, fallback simple:", e1?.message);
+          // Fallback : récupère sans jointure puis enrichi côté JS
+          const r2 = await supabase
+            .from("transferts")
+            .select("*")
+            .eq("structure_id", auth.structureId)
+            .eq("statut", "Demandé")
+            .order("created_at", { ascending: false })
+            .limit(100);
+          if (r2.error) {
+            console.error("[Pickup] Erreur transferts:", r2.error);
+            rows = [];
+          } else {
+            const ts = r2.data || [];
+            // Enrichi avec les noms de dépôts
+            const depotIds = [...new Set(ts.flatMap(t => [t.depot_source_id, t.depot_destination_id]).filter(Boolean))];
+            let depotsMap = {};
+            if (depotIds.length > 0) {
+              try {
+                const rd = await supabase.from("depots").select("id, nom, couleur").in("id", depotIds);
+                (rd.data || []).forEach(d => { depotsMap[d.id] = d; });
+              } catch {}
+            }
+            rows = ts.map(t => ({
+              ...t,
+              depot_source: depotsMap[t.depot_source_id] || { nom: "?" },
+              depot_destination: depotsMap[t.depot_destination_id] || { nom: "?" },
+            }));
+          }
+        }
+        setRows(rows);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();

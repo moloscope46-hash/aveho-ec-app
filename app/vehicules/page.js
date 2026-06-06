@@ -35,6 +35,7 @@ function VehiculesPageInner() {
   const [vehs, setVehs] = useState([]);
   const [etabs, setEtabs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [modal, setModal] = useState(null); // null | "new" | row
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -45,13 +46,34 @@ function VehiculesPageInner() {
     let mounted = true;
     (async () => {
       try {
-        const [v, et] = await Promise.all([
-          supabase.from("vehicules").select("*, etablissements(nom)").eq("structure_id", auth.structureId).order("nom"),
-          supabase.from("etablissements").select("id, nom").eq("structure_id", auth.structureId).order("nom"),
-        ]);
+        // 0.58.93 : SELECT défensif — tente d'abord avec jointure, fallback si erreur (FK absente ou table absente)
+        let vehData = [];
+        let etabData = [];
+        try {
+          const r = await supabase.from("vehicules").select("*, etablissements(nom)").eq("structure_id", auth.structureId).order("nom");
+          if (r.error) throw r.error;
+          vehData = r.data || [];
+        } catch (errVeh) {
+          console.warn("[Vehicules] Jointure etablissements échouée, fallback sans :", errVeh?.message);
+          try {
+            const r2 = await supabase.from("vehicules").select("*").eq("structure_id", auth.structureId).order("nom");
+            if (r2.error) throw r2.error;
+            vehData = r2.data || [];
+          } catch (errVeh2) {
+            console.error("[Vehicules] Table vehicules inaccessible :", errVeh2?.message);
+            vehData = [];
+            if (errVeh2?.code === "42P01") {
+              setLoadError("La table 'vehicules' n'existe pas. Applique migration-0.58.85-vehicules-cuves-stock.sql dans Supabase SQL Editor.");
+            }
+          }
+        }
+        try {
+          const r = await supabase.from("etablissements").select("id, nom").eq("structure_id", auth.structureId).order("nom");
+          if (!r.error) etabData = r.data || [];
+        } catch {}
         if (!mounted) return;
-        setVehs(v.data || []);
-        setEtabs(et.data || []);
+        setVehs(vehData);
+        setEtabs(etabData);
       } catch (e) { console.error(e); }
       finally { if (mounted) setLoading(false); }
     })();
@@ -148,6 +170,17 @@ function VehiculesPageInner() {
           <Btn variant="primary" icon="ti-plus" onClick={openNew}>Nouveau véhicule</Btn>
         </div>
 
+        {loadError && (
+          <Panel style={{ background: "rgba(227,93,91,.08)", borderLeft: "4px solid #e35d5b", marginBottom: 14 }}>
+            <div style={{ color: "#c0392b", fontWeight: 600, fontSize: 13.5, marginBottom: 4 }}>
+              <i className="ti ti-alert-triangle" /> Configuration manquante
+            </div>
+            <div style={{ color: "#142131", fontSize: 13 }}>{loadError}</div>
+            <pre style={{ background: "#142131", color: "#bfe6e6", padding: 12, borderRadius: 6, fontSize: 11, marginTop: 8, overflow: "auto" }}>
+{`-- Dans Supabase Dashboard → SQL Editor → colle migration-0.58.85-vehicules-cuves-stock.sql`}
+            </pre>
+          </Panel>
+        )}
         {loading ? (
           <Panel>Chargement...</Panel>
         ) : vehs.length === 0 ? (

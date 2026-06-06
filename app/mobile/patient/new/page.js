@@ -14,6 +14,7 @@ export default function MobileNewPatientPage() {
   const auth = useAuth();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [form, setForm] = useState({
     civilite: "",
     nom: "",
@@ -35,8 +36,9 @@ export default function MobileNewPatientPage() {
     regime_alimentaire: "",
     gir: "",
     mobilite: "",
-    etat: "Présent",
-    statut_sejour: "En cours",
+    // 0.58.95 : retirés (peuvent causer 400 si colonnes absentes en DB)
+    // etat: "Présent",  → présent dans SQL 0.58.81 seulement
+    // statut_sejour: "En cours",
     // 0.58.85 : affectation
     etablissement_id: "",
     batiment_id: "",
@@ -88,10 +90,12 @@ export default function MobileNewPatientPage() {
   function prev() { setStep(Math.max(step - 1, 1)); }
 
   async function save() {
-    if (!form.nom?.trim()) { alert("Le nom est obligatoire"); return; }
+    setSaveError("");
+    if (!form.nom?.trim()) { setSaveError("Le nom est obligatoire"); return; }
     setBusy(true);
     try {
-      const payload = {
+      // 0.58.95 : INSERT défensif - 2 niveaux pour gérer si SQL 0.58.81/85 pas appliqués
+      const fullPayload = {
         structure_id: auth.structureId,
         etablissement_id: form.etablissement_id || auth.etabId || null,
         chambre_id: form.chambre_id || null,
@@ -99,15 +103,44 @@ export default function MobileNewPatientPage() {
         gir: form.gir ? parseInt(form.gir, 10) : null,
         created_by: auth.user?.id,
       };
-      // Retire les clés UI seulement
-      delete payload.batiment_id;
-      delete payload.service_id;
-      const { data, error } = await supabase.from("patients").insert(payload).select("id").single();
-      if (error) throw error;
+      delete fullPayload.batiment_id;
+      delete fullPayload.service_id;
+      console.log("[Patient/new] Payload complet:", fullPayload);
+
+      let r = await supabase.from("patients").insert(fullPayload).select("id").single();
+      if (r.error) {
+        console.warn("[Patient/new] Tentative complète échouée:", r.error);
+        // Niveau 2 : payload minimal compatible avec n'importe quel schéma patients
+        const minPayload = {
+          structure_id: auth.structureId,
+          etablissement_id: form.etablissement_id || auth.etabId || null,
+          chambre_id: form.chambre_id || null,
+          nom: form.nom,
+          prenom: form.prenom || null,
+          date_naissance: form.date_naissance || null,
+          created_by: auth.user?.id,
+        };
+        console.log("[Patient/new] Retente minimal:", minPayload);
+        r = await supabase.from("patients").insert(minPayload).select("id").single();
+        if (r.error) {
+          console.error("[Patient/new] Erreur même en minimal:", r.error);
+          if (r.error.code === "42703") {
+            throw new Error(`Colonne inexistante : ${r.error.message}. Applique migration-0.58.81-patients-chambres-enrichis.sql et migration-0.58.85.`);
+          }
+          if (r.error.code === "42501") throw new Error("RLS bloque l'insert. Vérifie ta policy 'patients'.");
+          if (r.error.code === "23502") throw new Error(`Champ obligatoire manquant : ${r.error.details || r.error.message}`);
+          if (r.error.code === "23503") throw new Error(`FK invalide : ${r.error.details || r.error.message} (chambre_id ou etablissement_id n'existe pas ?)`);
+          throw new Error(`${r.error.message} (code: ${r.error.code || "?"})`);
+        }
+        // Avertir Cédric que certains champs n'ont pas été sauvés
+        alert("Patient créé avec les champs basiques.\n\nNote : certains champs (allergies, GIR, médecin, etc.) n'ont pas pu être sauvés. Applique migration-0.58.81-patients-chambres-enrichis.sql pour les avoir.");
+      }
+      console.log("[Patient/new] Patient créé id=", r.data?.id);
       // Redirection vers QR/bracelet du nouveau patient
-      router.push(`/patients/${data.id}/qr`);
+      router.push(`/patients/${r.data.id}/qr`);
     } catch (e) {
-      alert("Erreur : " + e.message);
+      console.error("[Patient/new] Catch:", e);
+      setSaveError(e.message || "Erreur inconnue");
     } finally {
       setBusy(false);
     }
@@ -304,6 +337,12 @@ export default function MobileNewPatientPage() {
             <div style={{ background: "rgba(124,200,200,.08)", borderRadius: 10, padding: 14, fontSize: 12, color: "#bfe6e6", lineHeight: 1.5 }}>
               <i className="ti ti-info-circle" /> Après création, tu seras redirigé vers la page <b>QR bracelet</b> pour imprimer le bracelet d'identification du patient (formats A4 fiche ou A6 bracelet).
             </div>
+            {/* 0.58.95 : feedback erreur */}
+            {saveError && (
+              <div style={{ marginTop: 12, background: "rgba(227,93,91,.16)", border: "1px solid #e35d5b", borderRadius: 10, padding: 12, color: "#fff", fontSize: 12.5, fontWeight: 600 }}>
+                <i className="ti ti-alert-triangle" style={{ color: "#e35d5b" }} /> {saveError}
+              </div>
+            )}
           </Section>
         )}
       </div>
