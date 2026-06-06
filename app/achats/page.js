@@ -18,6 +18,8 @@ import AchatPreview from "../AchatPreview";
 import { safeFetch } from "../../lib/offlineCache";
 import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
+// 0.58.54 : filtre contexte bât/svc via patient_id
+import { useContextPatientIds } from "../../lib/useContextPatientIds";
 // 0.58.45 : hook pour les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 // 0.58.22 : NeonButton premium pour boutons d'action principaux
@@ -367,10 +369,15 @@ function AchatsInner() {
 
   if (!auth.ready) return null;
 
-  const filtered = fStatut ? rows.filter((r) => r.statut === fStatut) : rows;
+  // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
+  const { patientIds, ctx } = useContextPatientIds();
+  const rowsCtxFiltered = ctx.active && patientIds
+    ? rows.filter(r => !r.patient_id || patientIds.has(r.patient_id))
+    : rows;
+  const filtered = fStatut ? rowsCtxFiltered.filter((r) => r.statut === fStatut) : rowsCtxFiltered;
   const compteStatuts = {};
-  rows.forEach((r) => { compteStatuts[r.statut] = (compteStatuts[r.statut] || 0) + 1; });
-  const budgetEngage = rows
+  rowsCtxFiltered.forEach((r) => { compteStatuts[r.statut] = (compteStatuts[r.statut] || 0) + 1; });
+  const budgetEngage = rowsCtxFiltered
     .filter((r) => ["Validée", "Commandée", "Reçue"].includes(r.statut))
     .reduce((s, r) => s + (parseFloat(r.budget_reel || r.budget_estime) || 0), 0);
 

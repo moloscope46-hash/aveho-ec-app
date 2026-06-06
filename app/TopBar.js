@@ -37,24 +37,34 @@ const MENU = [
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
     { p: "/promotions", ic: "ti-discount-2", lbl: "Promotions", col: "#e35d5b" },
   ] },
-  // 1. COLLECTIVITÉ — toute la hiérarchie : groupement → étabs → bâtiments → équipes → patients → matériel
-  { section: "Collectivité", items: [
+  // 0.58.53 : refonte de la section Collectivité avec hiérarchie claire
+  // 1. GROUPEMENT (entité morale)
+  { section: "Groupement", items: [
     { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
     { p: "/direction", ic: "ti-building-skyscraper", lbl: "Dashboard direction", col: "#7a6fb0" },
-    { p: "/etablissements", ic: "ti-buildings", lbl: "Annuaire étabs", col: "#185FA5" },
-    { p: "/etablissement", ic: "ti-building-hospital", lbl: "Mon établissement", col: "#185FA5" },
+    // 2. ÉTABLISSEMENTS, BÂTIMENTS, SERVICES, ÉQUIPES (organisationnel)
+    { p: "/etablissement", ic: "ti-building-hospital", lbl: "Établissements", col: "#185FA5" },
     { p: "/etablissement/fiche", ic: "ti-id-badge-2", lbl: "Fiche étab.", col: "#1c5454" },
-    { p: "/etablissement/edition", ic: "ti-edit", lbl: "Édition hiérarchie", col: "#7a6fb0" },
+    { p: "/etablissement/edition", ic: "ti-edit", lbl: "Bâtiments / Services", col: "#7a6fb0" },
     { p: "/equipes", ic: "ti-users-group", lbl: "Équipes", col: "#5a4a90" },
-    { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Étabs partenaires", col: "#7a6fb0" },
     { p: "/carte", ic: "ti-map", lbl: "Carte logistique", col: "#5aa05a" },
+    // 3. CONTENU MÉTIER
     { p: "/patients", ic: "ti-users", lbl: "Patients", col: "#7a6fb0" },
     { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
     { p: "/stock", ic: "ti-stack-2", lbl: "Stock", col: "#c97a2a" },
-    { p: "/annuaire-rpps", ic: "ti-stethoscope", lbl: "Annuaire RPPS", col: "#7a6fb0" },
-    { p: "/partenaires-rpps", ic: "ti-user-circle", lbl: "Mes partenaires RPPS", col: "#7a6fb0" },
+  ] },
+  // 0.58.53 : nouvelle section "Mes partenaires" avec sous-types + raccourcis vers les annuaires officiels
+  { section: "Mes partenaires", items: [
+    { p: "/partenaires-rpps?type=prescripteur", ic: "ti-stethoscope", lbl: "Prescripteurs (médecins)", col: "#5a4a90" },
+    { p: "/partenaires-rpps?type=infirmiere", ic: "ti-heart-rate-monitor", lbl: "Infirmières", col: "#C9867F" },
+    { p: "/partenaires-rpps?type=pharmacie", ic: "ti-prescription", lbl: "Pharmacies", col: "#5aa05a" },
+    { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Établissements partenaires", col: "#7a6fb0" },
+    // Raccourcis vers les annuaires officiels (déplacés de "Collectivité")
+    { p: "/annuaire-rpps?metier=medecin", ic: "ti-list-search", lbl: "🔍 Annuaire RPPS (médecins)", col: "#8a98a8" },
+    { p: "/annuaire-rpps?metier=infirmiere", ic: "ti-list-search", lbl: "🔍 Annuaire RPPS (infirmières)", col: "#8a98a8" },
+    { p: "/etablissements", ic: "ti-list-search", lbl: "🔍 Annuaire étabs (FINESS)", col: "#8a98a8" },
   ] },
   // 2. SCAN
   { section: "Scan", items: [

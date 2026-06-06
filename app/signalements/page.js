@@ -14,6 +14,8 @@ import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";
 import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
+// 0.58.54 : filtre contexte bât/svc via patient_id
+import { useContextPatientIds } from "../../lib/useContextPatientIds";
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
@@ -203,8 +205,14 @@ export default function SignalementsPage() {
 
   if (!auth.ready) return null;
 
+  // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
+  const { patientIds, ctx } = useContextPatientIds();
+  const rowsCtx = ctx.active && patientIds
+    ? rows.filter(r => !r.patient_id || patientIds.has(r.patient_id))
+    : rows;
+
   // Filtrage côté client par statut, type, catégorie (Alpha 0.41) + tri
-  const filtered = rows
+  const filtered = rowsCtx
     .filter((r) => {
       if (fStatut && r.statut !== fStatut) return false;
       if (fType && r.type !== fType) return false;

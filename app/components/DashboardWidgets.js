@@ -1707,7 +1707,11 @@ function getGoals() {
 
 function saveGoals(goals) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals.slice(0, GOALS_MAX))); } catch {}
+  try {
+    localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals.slice(0, GOALS_MAX)));
+    // 0.58.53 : event pour que le HeroDashboard se mette à jour en temps réel
+    window.dispatchEvent(new CustomEvent("av-goals-changed", { detail: { goals } }));
+  } catch {}
 }
 
 // 0.58.52 : sync Supabase

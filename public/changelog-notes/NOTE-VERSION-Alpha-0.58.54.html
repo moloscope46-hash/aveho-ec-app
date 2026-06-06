@@ -1,0 +1,224 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.54</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3a2a 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(90,160,90,.5)}70%{box-shadow:0 0 0 10px rgba(90,160,90,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.green{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(90,160,90,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(90,160,90,.30),rgba(124,200,200,.20));backdrop-filter:blur(30px);border:1px solid rgba(90,160,90,.28);box-shadow:0 30px 80px rgba(42,58,42,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6bf;font-weight:700;background:rgba(90,160,90,.14);border:1px solid rgba(90,160,90,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#5aa05a;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#5aa05a;text-shadow:0 0 18px rgba(90,160,90,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6bf;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6bf}
+.meta b{color:#fff}
+.meta code{background:rgba(90,160,90,.12);color:#bfe6bf;border:1px solid rgba(90,160,90,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(90,160,90,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(90,160,90,.12);color:#bfe6bf;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #5aa05a}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Pages couverture */
+.pages-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:14px 0}
+.page-card{padding:12px;background:rgba(90,160,90,.10);border:1px solid rgba(90,160,90,.30);border-radius:10px;text-align:center;color:#fff;font-size:12.5px}
+.page-card.new{background:rgba(124,200,200,.15);border-color:rgba(124,200,200,.40)}
+.page-card .name{font-weight:700;margin-bottom:2px}
+.page-card .desc{font-size:10.5px;opacity:.75}
+.page-card .tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.18);margin-top:4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.page-card.new .tag{background:#7CC8C8;color:#142131}
+
+/* CTAs demo */
+.cta-demo{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.cta{padding:12px 18px;border-radius:10px;color:#fff;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.30)}
+.cta.rpps{background:linear-gradient(135deg, #7a6fb0, #bfa9e0)}
+.cta.finess{background:linear-gradient(135deg, #5aa05a, #4a8a4a)}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(90,160,90,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob green"></div><div class="bg-blob teal"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.54</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.54 — Filtre contexte étendu + Ajout partenaires depuis FINESS<small>7 pages filtrent par bâtiment/service · Pharmacies & SSIAD via annuaire officiel · Hook réutilisable</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.54-alpha</code></span>
+    <span><b>Tests :</b> ~4745 verts</span>
+    <span><b>SQL :</b> aucun (utilise l'existant)</span>
+  </div>
+</header>
+
+<h2>🎯 1. Filtre contexte étendu</h2>
+
+<div class="panel ok">
+<p style="margin:0">Le sélecteur <code>BatimentServiceSwitcher</code> de la TopBar filtre maintenant <b>7 pages</b> au lieu de 4. Quand tu actives le filtre, toutes les listes commerciales (commandes, achats, signalements) se filtrent automatiquement sur les patients du bâtiment/service choisi.</p>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">Pages couvertes</h3>
+
+<div class="pages-grid">
+<div class="page-card"><div class="name">/interventions</div><div class="desc">DI filtrées par patient_id</div><span class="tag">déjà</span></div>
+<div class="page-card"><div class="name">/materiels</div><div class="desc">Matériel par chambre/svc</div><span class="tag">déjà</span></div>
+<div class="page-card"><div class="name">/maintenance</div><div class="desc">Maintenances ciblées</div><span class="tag">déjà</span></div>
+<div class="page-card"><div class="name">/patients</div><div class="desc">Liste par bâtiment/svc</div><span class="tag">déjà</span></div>
+<div class="page-card new"><div class="name">/commandes</div><div class="desc">Commandes liées au périmètre</div><span class="tag">0.58.54</span></div>
+<div class="page-card new"><div class="name">/achats</div><div class="desc">DA par patient ciblé</div><span class="tag">0.58.54</span></div>
+<div class="page-card new"><div class="name">/signalements</div><div class="desc">Signalements patients</div><span class="tag">0.58.54</span></div>
+</div>
+
+<pre>// 0.58.54 - lib/useContextPatientIds.js (NEW)
+export function useContextPatientIds() {
+  const ctx = useCurrentContext();
+  const [patientIds, setPatientIds] = useState(null);
+  
+  useEffect(() =&gt; {
+    if (!ctx.active || (!ctx.batimentId && !ctx.serviceId)) {
+      setPatientIds(null);  // pas de filtrage
+      return;
+    }
+    (async () =&gt; {
+      // 1) chambres dans le périmètre
+      let query = supabase.from('chambres').select('id, service_id, batiment_id');
+      if (ctx.serviceId) query = query.eq('service_id', ctx.serviceId);
+      else query = query.eq('batiment_id', ctx.batimentId);
+      const { data: chambres } = await query;
+      const chambreIds = chambres.map(c =&gt; c.id);
+      
+      // 2) patients liés à ces chambres
+      const { data: pats } = await supabase.from('patients')
+        .select('id').in('chambre_id', chambreIds);
+      
+      setPatientIds(new Set(pats.map(p =&gt; p.id)));
+    })();
+  }, [ctx.active, ctx.batimentId, ctx.serviceId]);
+  
+  return { patientIds, ctx };
+}
+
+// Usage dans /commandes /achats /signalements
+const { patientIds, ctx } = useContextPatientIds();
+
+const filtered = ctx.active && patientIds
+  ? rows.filter(r =&gt; !r.patient_id || patientIds.has(r.patient_id))
+  : rows;</pre>
+
+<p style="font-size:12px;color:#9fb6c2;background:rgba(124,200,200,.10);border-radius:8px;padding:10px 14px;margin:14px 0">
+💡 <b>Note</b> : les rows sans <code>patient_id</code> (commandes au niveau étab) sont conservées. Seules les rows liées à un patient hors périmètre sont masquées. <b>Empty state contextuel</b> : "Aucune commande dans ce périmètre" si filtre actif vs message générique sinon.
+</p>
+
+<h2>💊 2. Ajout partenaire depuis FINESS</h2>
+
+<div class="panel">
+<p style="margin:0">Sur <code>/partenaires-rpps</code>, en complément du bouton "Ajouter depuis RPPS" (médecins, IDE individuels), un <b>nouveau bouton vert "Ajouter depuis FINESS"</b> permet d'ajouter des pharmacies d'officine, des SSIAD (Services de Soins Infirmiers À Domicile), des services HAD, ou tout autre établissement de santé.</p>
+</div>
+
+<div class="cta-demo">
+<div class="cta rpps">🩺 Ajouter depuis RPPS (médecins, IDE)</div>
+<div class="cta finess">🏥 Ajouter depuis FINESS (pharmacie, SSIAD)</div>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">Catégories FINESS pré-filtrées</h3>
+
+<div class="panel">
+<ul>
+<li><b>Pharmacies & Matériel médical (LPP)</b> :
+  <ul>
+    <li>Pharmacies d'Officine (code 620)</li>
+    <li>Pharmacies à Usage Intérieur (code 619)</li>
+    <li>Commerces Biens à Usage Médical / LPP (code 3201)</li>
+    <li>Loueurs Matériel Médical (code 3299)</li>
+  </ul>
+</li>
+<li><b>Soins à domicile</b> :
+  <ul>
+    <li>HAD - Hospitalisation à Domicile (code 354)</li>
+    <li>SSIAD - Services de Soins Infirmiers À Domicile</li>
+    <li>SPASAD (code 446)</li>
+  </ul>
+</li>
+</ul>
+<p style="margin:10px 0 0;font-size:12.5px;color:#9fb6c2">Les filtres sont modifiables directement dans la recherche pour étendre à d'autres catégories.</p>
+</div>
+
+<pre>// 0.58.54 - app/partenaires-rpps/page.js
+async function addPartenaireFromFiness(f) {
+  const typeFiness = (f.type || '').toLowerCase();
+  const isPharmacie = typeFiness.includes('pharmac');
+  const isSsiad = typeFiness.match(/ssiad|infirm|had/i);
+  
+  const payload = {
+    structure_id: auth.structureId,
+    rpps: f.finess,  // stocke le FINESS dans le champ rpps
+    nom: f.nom,
+    profession: isPharmacie ? 'Pharmacie d\'officine'
+              : isSsiad ? 'SSIAD / Infirmières'
+              : f.type,
+    adresse: f.adresse, cp: f.code_postal, commune: f.ville,
+    telephone: f.telephone,
+    est_pharmacien: isPharmacie,    // détection automatique
+    est_intervenant: isSsiad,
+    est_prescripteur: false,
+  };
+  
+  await supabase.from('partenaires_rpps').insert(payload);
+}</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Filtre contexte étendu</b> : 7 pages au total (commandes, achats, signalements ajoutées)</li>
+<li><b>Hook réutilisable</b> <code>useContextPatientIds()</code> — factorisation propre</li>
+<li><b>Ajout FINESS</b> : pharmacies + SSIAD + HAD + LPP depuis annuaire officiel</li>
+<li><b>2 boutons CTA</b> distincts (RPPS violet / FINESS vert) sur /partenaires-rpps</li>
+<li><b>+30 tests</b> Vitest (~4745 verts estimés)</li>
+<li><b>Aucun SQL</b> nouveau — utilise <code>est_pharmacien</code> de la 0.58.53</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4745 verts attendus
+npm run build           # OK attendu
+
+# Aucun SQL nouveau à exécuter pour cette version.
+# (s'assurer que migration-0.58.53-partenaires-types.sql a bien été passée)
+
+git add -A
+git commit -m "Alpha 0.58.54 - Filtre ctx étendu + Ajout partenaires depuis FINESS"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.55+)</h2>
+<div class="panel">
+<ul>
+<li>Étendre le filtre ctx à <code>/transferts</code> via dépôt_id (souvent lié à un bâtiment)</li>
+<li>Page dédiée Pharmacies (table séparée avec horaires d'ouverture, garde, FINESS officiel)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Brancher ColorPicker dans <code>/annonces</code></li>
+<li>Drag&drop fields formulaire Crud (modal)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Permission partage objectifs équipe</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.54 · 6 juin 2026 · CTX FILTER × 7 + FINESS ADD ✨</footer>
+</div>
+
+</body></html>

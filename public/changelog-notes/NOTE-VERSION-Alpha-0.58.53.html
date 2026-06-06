@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.53</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 30% -10%, #2a2a3a 0%, #0d1620 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(122,111,176,.5)}70%{box-shadow:0 0 0 10px rgba(122,111,176,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.purple{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(122,111,176,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(122,111,176,.30),rgba(124,200,200,.20));backdrop-filter:blur(30px);border:1px solid rgba(122,111,176,.28);box-shadow:0 30px 80px rgba(42,42,58,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#c9c0e0;font-weight:700;background:rgba(122,111,176,.14);border:1px solid rgba(122,111,176,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7a6fb0;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7a6fb0;text-shadow:0 0 18px rgba(122,111,176,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#c9c0e0;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#c9c0e0}
+.meta b{color:#fff}
+.meta code{background:rgba(122,111,176,.12);color:#c9c0e0;border:1px solid rgba(122,111,176,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7a6fb0,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(122,111,176,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.warn{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.danger{border-color:rgba(192,57,43,.4);border-left:4px solid #c0392b;background:linear-gradient(135deg,rgba(192,57,43,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(122,111,176,.12);color:#c9c0e0;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7a6fb0}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO modal SIRET */
+.modal-demo{background:#fff;border-radius:14px;padding:20px;color:#142131;margin:14px 0;max-width:520px;box-shadow:0 24px 60px rgba(192,57,43,.30);border-top:5px solid #c0392b}
+.modal-title{font-size:17px;font-weight:700;color:#c0392b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.modal-body{font-size:13px;line-height:1.55;color:#5a6878;white-space:pre-wrap}
+.modal-body b{color:#142131}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.btn-cancel{padding:8px 16px;border:1px solid #d3d9e0;background:#fff;color:#5a6878;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-confirm{padding:8px 16px;border:none;background:#c0392b;color:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+
+/* DEMO menu reorga */
+.menu-demo{background:rgba(13,24,34,.7);border:1px solid rgba(124,200,200,.20);border-radius:14px;padding:14px;color:#fff;margin:14px 0;max-width:340px}
+.menu-section{padding:8px 4px;border-bottom:1px solid rgba(124,200,200,.10)}
+.menu-section:last-child{border-bottom:none}
+.menu-section-title{font-size:10.5px;color:#7CC8C8;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:6px;padding:0 8px}
+.menu-item{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:13px;color:#bfe6e6;border-radius:8px;cursor:pointer}
+.menu-item:hover{background:rgba(124,200,200,.08)}
+.menu-item.shortcut{color:#8aa0b0;font-size:12px}
+.menu-icon{width:22px;height:22px;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+
+/* DEMO objectifs kanban */
+.kanban-demo{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.kanban-card{padding:14px;background:rgba(20,33,49,.55);border:1px solid rgba(124,200,200,.20);border-radius:14px;color:#fff}
+.kanban-card.complete{border-color:rgba(90,160,90,.45);box-shadow:0 0 20px rgba(90,160,90,.15)}
+.kanban-card-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.kanban-label{font-size:13.5px;font-weight:700}
+.kanban-vals{font-size:11px;font-family:Consolas,monospace;color:#bfe6e6}
+.kanban-vals b{font-size:14px}
+.kanban-bar{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+.kanban-fill{height:100%;border-radius:4px}
+.kanban-pct{text-align:right;font-size:12px;font-weight:700;margin-top:4px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(122,111,176,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob purple"></div><div class="bg-blob teal"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.53</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.53 — Modal SIRET + Réorga menu + Objectifs kanban + Filtres partenaires<small>Validation explicite SIRET · Menu hiérarchique · Objectifs visibles sur /accueil · Médecins / IDE / Pharmaciens</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.53-alpha</code></span>
+    <span><b>Tests :</b> ~4715 verts</span>
+    <span><b>SQL :</b> <code>migration-0.58.53-partenaires-types.sql</code></span>
+  </div>
+</header>
+
+<h2>🔐 1. Modal validation SIRET</h2>
+
+<div class="panel danger">
+<p style="margin:0">Modifier le SIRET d'un groupement est un changement structurant qui impacte la facturation, les conventions AMC/SESAM-Vitale, les accréditations. Une modal de confirmation en variant <b>danger</b> liste désormais ces impacts avant validation.</p>
+</div>
+
+<div class="modal-demo">
+<div class="modal-title">⚠ Modification du SIRET</div>
+<div class="modal-body">Vous modifiez le SIRET du groupement.
+
+Ancien SIRET : <b>12345678901234</b>
+Nouveau SIRET : <b>98765432109876</b>
+
+⚠ Ce changement est structurant et peut impacter :
+• La facturation et les liens AMC/SESAM-Vitale
+• Les conventions et accréditations
+• L'historique des certifications
+
+Voulez-vous vraiment continuer ?</div>
+<div class="modal-actions">
+<button class="btn-cancel">Annuler</button>
+<button class="btn-confirm">Confirmer le changement</button>
+</div>
+</div>
+
+<pre>// 0.58.53 - app/collectivite/page.js
+async function saveFiche() {
+  const oldSiret = fiche?.siret || '';
+  const newSiret = form.siret?.trim() || '';
+  
+  if (newSiret !== oldSiret) {
+    const ok = await dialogs.confirm({
+      title: 'Modification du SIRET',
+      message: `Ancien SIRET : ${oldSiret}\nNouveau SIRET : ${newSiret}\n\n⚠ Impact :\n• Facturation et AMC/SESAM-Vitale\n• Conventions et accréditations\n• Historique des certifications`,
+      okLabel: 'Confirmer le changement',
+      okColor: '#c0392b',
+      variant: 'danger',
+    });
+    if (!ok) return;
+  }
+  // ... save
+}</pre>
+
+<h2>📋 2. Réorganisation du menu déplié</h2>
+
+<div class="panel">
+<p style="margin:0">Section <code>Collectivité</code> renommée en <b>Groupement</b> avec hiérarchie claire. Nouvelle section <b>Mes partenaires</b> qui regroupe les sous-types + raccourcis vers les annuaires officiels.</p>
+</div>
+
+<div class="menu-demo">
+<div class="menu-section">
+<div class="menu-section-title">Mon espace</div>
+<div class="menu-item"><span class="menu-icon">🏠</span>Accueil</div>
+<div class="menu-item"><span class="menu-icon">📊</span>Vue globale</div>
+<div class="menu-item"><span class="menu-icon">👤</span>Mon profil</div>
+</div>
+<div class="menu-section">
+<div class="menu-section-title">Groupement</div>
+<div class="menu-item"><span class="menu-icon">🏢</span>Fiche groupement</div>
+<div class="menu-item"><span class="menu-icon">🏥</span>Établissements</div>
+<div class="menu-item"><span class="menu-icon">🏗</span>Bâtiments / Services</div>
+<div class="menu-item"><span class="menu-icon">👥</span>Équipes</div>
+<div class="menu-item"><span class="menu-icon">🛏</span>Patients</div>
+<div class="menu-item"><span class="menu-icon">🪑</span>Matériel</div>
+<div class="menu-item"><span class="menu-icon">📦</span>Stock</div>
+</div>
+<div class="menu-section">
+<div class="menu-section-title">Mes partenaires</div>
+<div class="menu-item"><span class="menu-icon">🩺</span>Prescripteurs (médecins)</div>
+<div class="menu-item"><span class="menu-icon">❤️</span>Infirmières</div>
+<div class="menu-item"><span class="menu-icon">💊</span>Pharmacies</div>
+<div class="menu-item"><span class="menu-icon">🏛</span>Établissements partenaires</div>
+<div class="menu-item shortcut"><span class="menu-icon">🔍</span>Annuaire RPPS (médecins)</div>
+<div class="menu-item shortcut"><span class="menu-icon">🔍</span>Annuaire RPPS (infirmières)</div>
+<div class="menu-item shortcut"><span class="menu-icon">🔍</span>Annuaire étabs (FINESS)</div>
+</div>
+</div>
+
+<p style="font-size:12.5px;color:#9fb6c2;margin-top:14px">↑ Les <b>3 raccourcis 🔍</b> en bas pointent vers les annuaires officiels (RPPS / FINESS) — pratique pour ajouter un partenaire depuis un annuaire public.</p>
+
+<h2>🎯 3. Objectifs perso dans le hero /accueil (kanban)</h2>
+
+<div class="panel">
+<p style="margin:0">Les objectifs personnels remontent directement sur la page d'accueil dans une section kanban-like, <b>entre 'À traiter' et 'Vue d'ensemble'</b>. Sync temps réel via event <code>av-goals-changed</code> : modifier un objectif dans le widget met à jour le kanban automatiquement.</p>
+</div>
+
+<div style="background:linear-gradient(135deg, #185FA5, #134e87);padding:6px 14px;border-radius:12px;display:inline-flex;align-items:center;gap:8px;color:#fff;font-weight:700;margin-bottom:8px">
+🎯 Mes objectifs <span style="font-weight:500;font-size:12px;opacity:.85">(2 / 3 atteints)</span>
+</div>
+
+<div class="kanban-demo">
+<div class="kanban-card complete">
+<div class="kanban-card-h">
+<span class="kanban-label">✓ Visites clients</span>
+<span class="kanban-vals"><b style="color:#5aa05a">22</b><span style="opacity:.6"> / 20</span></span>
+</div>
+<div class="kanban-bar"><div class="kanban-fill" style="width:100%;background:linear-gradient(90deg, #5aa05a, #4a8a4a);box-shadow:0 0 8px rgba(90,160,90,.5)"></div></div>
+<div class="kanban-pct" style="color:#5aa05a">110%</div>
+</div>
+<div class="kanban-card complete">
+<div class="kanban-card-h">
+<span class="kanban-label">✓ DI clôturées</span>
+<span class="kanban-vals"><b style="color:#5aa05a">48</b><span style="opacity:.6"> / 40</span></span>
+</div>
+<div class="kanban-bar"><div class="kanban-fill" style="width:100%;background:linear-gradient(90deg, #5aa05a, #4a8a4a);box-shadow:0 0 8px rgba(90,160,90,.5)"></div></div>
+<div class="kanban-pct" style="color:#5aa05a">120%</div>
+</div>
+<div class="kanban-card">
+<div class="kanban-card-h">
+<span class="kanban-label">Articles écrits</span>
+<span class="kanban-vals"><b style="color:#7CC8C8">7</b><span style="opacity:.6"> / 10</span></span>
+</div>
+<div class="kanban-bar"><div class="kanban-fill" style="width:70%;background:linear-gradient(90deg, #7CC8C8, #5da8a8);box-shadow:0 0 6px rgba(124,200,200,.5)"></div></div>
+<div class="kanban-pct" style="color:#7CC8C8">70%</div>
+</div>
+</div>
+
+<h2>🩺 4. Filtres partenaires : médecin / IDE / pharmacien</h2>
+
+<div class="panel sql">
+<p style="margin:0 0 8px"><b>SQL à exécuter</b> dans Supabase :</p>
+<pre style="margin:0;background:#1a1410;color:#c9c0e0;font-size:11px">ALTER TABLE partenaires_rpps
+  ADD COLUMN IF NOT EXISTS est_pharmacien BOOLEAN DEFAULT FALSE;
+
+CREATE INDEX IF NOT EXISTS idx_partenaires_rpps_types
+  ON partenaires_rpps(structure_id, archive,
+    est_prescripteur, est_intervenant, est_pharmacien);</pre>
+</div>
+
+<div class="panel">
+<p style="margin:0"><b>Page /partenaires-rpps</b> accepte maintenant <code>?type=prescripteur</code>, <code>?type=infirmiere</code>, <code>?type=pharmacie</code> pour pré-filtrer la liste. 5 boutons de filtres au lieu de 3, chacun avec son compteur live.</p>
+</div>
+
+<pre>// 0.58.53 - app/partenaires-rpps/page.js
+function PartenairesRppsInner() {
+  const searchParams = useSearchParams();
+  const typeFromUrl = searchParams.get('type');
+  // prescripteur | infirmiere | pharmacie | null
+  
+  const initialTag = ['prescripteur', 'infirmiere', 'pharmacie'].includes(typeFromUrl)
+    ? typeFromUrl : 'all';
+  const [filterTag, setFilterTag] = useState(initialTag);
+  
+  // Filtre selon type
+  const filtered = rows.filter((p) => {
+    if (filterTag === 'prescripteur' && !p.est_prescripteur) return false;
+    if (filterTag === 'infirmiere') {
+      if (!p.est_intervenant) return false;
+      if (!(p.profession || '').match(/infirm|ide\b|idel/i)) return false;
+    }
+    if (filterTag === 'pharmacie' && !p.est_pharmacien) return false;
+    return true;
+  });
+  
+  // Auto-détection lors de l'ajout depuis RPPS
+  const payload = {
+    ...,
+    est_prescripteur: prof.includes('médecin'),
+    est_intervenant: !!prof.match(/infirm|kin|sage/),
+    est_pharmacien: !!prof.match(/pharmac/i),  // NEW
+  };
+}</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Modal SIRET</b> : confirmation explicite avec listing des impacts</li>
+<li><b>Menu</b> : Groupement (hiérarchie) + Mes partenaires (sous-types + raccourcis annuaires)</li>
+<li><b>Objectifs sur /accueil</b> : kanban responsive avec sync temps réel</li>
+<li><b>Partenaires</b> : médecins + IDE + pharmaciens avec filtres pré-applicables</li>
+<li><b>+35 tests</b> Vitest (~4715 verts estimés)</li>
+<li><b>1 SQL</b> à exécuter : <code>migration-0.58.53-partenaires-types.sql</code></li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4715 verts attendus
+npm run build           # OK attendu
+
+# 1) D'ABORD : exécuter le SQL dans Supabase
+#    migration-0.58.53-partenaires-types.sql
+
+# 2) Push code
+git add -A
+git commit -m "Alpha 0.58.53 - Modal SIRET + Réorga menu + Objectifs kanban + Filtres partenaires"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.54+)</h2>
+<div class="panel">
+<ul>
+<li>Brancher ColorPicker dans <code>/annonces</code></li>
+<li>Filtre contexte bât/svc étendu à <code>/commandes</code>, <code>/achats</code>, <code>/transferts</code> (via <code>etablissement_id</code>)</li>
+<li>Page dédiée Pharmacies (table séparée avec adresse, horaires, FINESS)</li>
+<li>Créer partenaire pharmacie depuis annuaire FINESS</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Drag&drop fields formulaire Crud (modal)</li>
+<li>Tags multi-langues</li>
+<li>Permission partage objectifs équipe</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.53 · 6 juin 2026 · SIRET + MENU + KANBAN + PARTENAIRES ✨</footer>
+</div>
+
+</body></html>

@@ -17,6 +17,24 @@ import { useRouter } from "next/navigation";
 import { KpiCard, MetricCard, EmptyState, SkeletonGrid, ConicCard } from "../components/ui-premium";
 import { fmtEur } from "../../lib/format";
 
+// 0.58.53 : import du helper pour lire les objectifs perso (affichage sur l'accueil)
+const GOALS_STORAGE_KEY = "av-personal-goals";
+const GOAL_COLORS_LOCAL = [
+  { id: "navy",  bg: "#142131", grad: "linear-gradient(90deg, #142131, #2a3850)" },
+  { id: "teal",  bg: "#7CC8C8", grad: "linear-gradient(90deg, #7CC8C8, #5da8a8)" },
+  { id: "terra", bg: "#C9867F", grad: "linear-gradient(90deg, #C9867F, #b56e67)" },
+  { id: "amber", bg: "#EF9F27", grad: "linear-gradient(90deg, #EF9F27, #d28818)" },
+  { id: "green", bg: "#5aa05a", grad: "linear-gradient(90deg, #5aa05a, #4a8a4a)" },
+  { id: "blue",  bg: "#185FA5", grad: "linear-gradient(90deg, #185FA5, #134e87)" },
+];
+function getGoalsLocal() {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GOALS_STORAGE_KEY);
+    return raw ? JSON.parse(raw).slice(0, 6) : [];
+  } catch { return []; }
+}
+
 /**
  * Petit helper pour le greeting selon l'heure.
  */
@@ -36,6 +54,16 @@ export default function HeroDashboard({ auth, kpis, atraiter, loading, onNavigat
     || "";
 
   const go = onNavigate || ((path) => router.push(path));
+
+  // 0.58.53 : objectifs personnels affichés directement dans le hero (façon mini-kanban)
+  const [goals, setGoals] = useState([]);
+  useEffect(() => {
+    setGoals(getGoalsLocal());
+    // Re-load à chaque event av-goals-changed (déclenché par le widget Objectifs)
+    function onGoalsChange() { setGoals(getGoalsLocal()); }
+    window.addEventListener("av-goals-changed", onGoalsChange);
+    return () => window.removeEventListener("av-goals-changed", onGoalsChange);
+  }, []);
 
   // Total "à traiter" pour le badge
   const totalAtraiter = (atraiter?.di || 0) + (atraiter?.achats || 0) +
@@ -303,6 +331,87 @@ export default function HeroDashboard({ auth, kpis, atraiter, loading, onNavigat
               )}
             </div>
           )}
+        </section>
+      )}
+
+      {/* ====================================================
+          OBJECTIFS PERSO : mini-kanban (0.58.53)
+          Affiché seulement si l'user a au moins 1 objectif défini
+      ==================================================== */}
+      {goals.length > 0 && (
+        <section style={{ marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 28, height: 28,
+                background: "linear-gradient(135deg, #185FA5, #134e87)",
+                borderRadius: "var(--av-r-md)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(24,95,165,.40)",
+              }}>
+                <i className="ti ti-target" style={{ color: "#fff", fontSize: 16 }} />
+              </div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: "#fff", margin: 0, letterSpacing: "-0.01em" }}>
+                Mes objectifs
+                <span style={{ marginLeft: 8, fontSize: 12, color: "#bfe6e6", fontWeight: 500 }}>
+                  ({goals.filter(g => g.current >= g.target).length} / {goals.length} atteints)
+                </span>
+              </h2>
+            </div>
+          </div>
+
+          {/* Grille kanban-like : 3 colonnes par défaut, responsive */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: 12,
+          }}>
+            {goals.map((g) => {
+              const pct = g.target > 0 ? Math.min(100, Math.max(0, (g.current / g.target) * 100)) : 0;
+              const color = GOAL_COLORS_LOCAL.find(c => c.id === g.colorId) || GOAL_COLORS_LOCAL[0];
+              const isComplete = g.current >= g.target;
+              return (
+                <div
+                  key={g.id}
+                  style={{
+                    background: "rgba(20,33,49,.55)",
+                    border: `1px solid ${isComplete ? "rgba(90,160,90,.45)" : "rgba(124,200,200,.20)"}`,
+                    borderRadius: 14,
+                    padding: 14,
+                    backdropFilter: "blur(20px)",
+                    boxShadow: isComplete ? "0 0 20px rgba(90,160,90,.15)" : "0 4px 14px rgba(0,0,0,.20)",
+                    transition: "transform 150ms",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 6 }}>
+                      {isComplete && <i className="ti ti-check" style={{ color: "#5aa05a", fontSize: 15 }} />}
+                      {g.label}
+                    </div>
+                    <div style={{ fontSize: 11, fontFamily: "Consolas, monospace", color: "#bfe6e6" }}>
+                      <b style={{ color: isComplete ? "#5aa05a" : color.bg, fontSize: 14 }}>{g.current}</b>
+                      <span style={{ opacity: 0.6 }}> / {g.target}{g.unit ? ` ${g.unit}` : ""}</span>
+                    </div>
+                  </div>
+                  {/* Progress */}
+                  <div style={{ width: "100%", height: 8, background: "rgba(255,255,255,.08)", borderRadius: 4, overflow: "hidden", marginBottom: 4 }}>
+                    <div style={{
+                      width: `${pct}%`, height: "100%",
+                      background: isComplete ? "linear-gradient(90deg, #5aa05a, #4a8a4a)" : color.grad,
+                      borderRadius: 4,
+                      transition: "width 400ms ease-out",
+                      boxShadow: isComplete ? "0 0 8px rgba(90,160,90,.5)" : `0 0 6px ${color.bg}40`,
+                    }} />
+                  </div>
+                  <div style={{ textAlign: "right", fontSize: 12, fontWeight: 700, color: isComplete ? "#5aa05a" : color.bg }}>
+                    {Math.round(pct)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
       )}
 

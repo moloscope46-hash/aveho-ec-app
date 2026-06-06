@@ -113,6 +113,25 @@ export default function GroupementPage() {
 
   async function saveFiche() {
     if (!isAdmin) return;
+    // 0.58.53 : si le SIRET a changé, on demande confirmation explicite avant de sauvegarder
+    //   (c'est un changement structurant qui peut casser les liens AMC/SESAM-Vitale, etc.)
+    const oldSiret = fiche?.siret || "";
+    const newSiret = form.siret?.trim() || "";
+    if (newSiret !== oldSiret) {
+      const message = oldSiret
+        ? `Vous modifiez le SIRET du groupement.\n\nAncien SIRET : ${oldSiret}\nNouveau SIRET : ${newSiret || "(vide)"}\n\n⚠ Ce changement est structurant et peut impacter :\n• La facturation et les liens AMC/SESAM-Vitale\n• Les conventions et accréditations\n• L'historique des certifications\n\nVoulez-vous vraiment continuer ?`
+        : `Vous ajoutez un SIRET au groupement : ${newSiret}\n\nCe changement est structurant — assurez-vous que le numéro est correct avant de valider.`;
+      const ok = await dialogs.confirm({
+        title: "Modification du SIRET",
+        message,
+        okLabel: "Confirmer le changement",
+        okColor: "#c0392b",
+        variant: "danger",
+      });
+      if (!ok) {
+        return;
+      }
+    }
     setBusy(true);
     try {
       const payload = {
@@ -141,7 +160,7 @@ export default function GroupementPage() {
       await safeUpdate(supabase, "structures", payload, { id: auth.structureId }, { userId: auth.user?.id });
       await logEvent(supabase, auth, { 
         action: "modifier", entite: "groupement", entite_id: auth.structureId,
-        details: { nom: payload.nom, source: form.siret ? "sirene" : "manuel" },
+        details: { nom: payload.nom, source: form.siret ? "sirene" : "manuel", siret_change: newSiret !== oldSiret },
       });
       setSavedMsg("Fiche groupement enregistrée.");
       setTimeout(() => setSavedMsg(""), 2500);

@@ -120,6 +120,72 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.54",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Filtre ctx étendu (commandes/achats/signalements) + Ajout partenaire depuis FINESS (pharmacies, SSIAD)",
+    "chantiers": [
+      { "code": "ARCH", "txt": "🧩 NOUVEAU HOOK RÉUTILISABLE `useContextPatientIds()` dans `lib/useContextPatientIds.js`. Encapsule le pattern utilisé dans /materiels et /interventions pour résoudre les patient_ids du contexte bâtiment/service actif. **Retourne** : `{ patientIds: Set | null, loading: bool, ctx }`. Si ctx inactif → `patientIds = null` (= pas de filtrage). Si ctx actif avec 0 chambre matche → `Set vide` (= masque tout). Évite la duplication de la logique chambres → patients dans chaque page",
+        "code_snippet": {
+          "file": "lib/useContextPatientIds.js (NEW)",
+          "note": "Hook ctx filter",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.54 - le pattern chambres → patients était dupliqué dans chaque page\nuseEffect(() => {\n  if (!ctx.batimentId && !ctx.serviceId) {\n    setCtxPatientIds(null);\n    return;\n  }\n  (async () => {\n    let query = supabase.from('chambres').select('id, service_id, batiment_id');\n    if (ctx.serviceId) query = query.eq('service_id', ctx.serviceId);\n    else if (ctx.batimentId) query = query.eq('batiment_id', ctx.batimentId);\n    const { data: chambres } = await query;\n    const chambreIds = chambres.map(c => c.id);\n    const { data: pats } = await supabase.from('patients').select('id').in('chambre_id', chambreIds);\n    setCtxPatientIds(new Set(pats.map(p => p.id)));\n  })();\n}, [ctx.batimentId, ctx.serviceId]);",
+          "after": "// 0.58.54 - hook réutilisable\nimport { useContextPatientIds } from '../../lib/useContextPatientIds';\n\nconst { patientIds, ctx } = useContextPatientIds();\n\n// Filtre simple\nconst filtered = ctx.active && patientIds\n  ? rows.filter(r => !r.patient_id || patientIds.has(r.patient_id))\n  : rows;"
+        }
+      },
+      { "code": "FEAT", "txt": "🎯 FILTRE CONTEXTE bât/svc ÉTENDU à 3 PAGES SUPPLÉMENTAIRES : `/commandes`, `/achats`, `/signalements`. Avec /interventions, /materiels, /maintenance, /patients (déjà existants), **7 pages** filtrent maintenant par le contexte bâtiment/service de la TopBar. La logique : les rows sans `patient_id` (commandes au niveau étab) sont **conservées** (pas masquées), les rows liées à un patient hors périmètre sont masquées. Empty state contextuel : message différent si le ctx est actif mais ne matche aucune row ('Aucune commande dans ce périmètre' vs 'Aucune commande pour le moment')" },
+      { "code": "FEAT", "txt": "💊 NOUVEAU BOUTON 'AJOUTER DEPUIS FINESS' dans `/partenaires-rpps` (vert). Complète le bouton 'Ajouter depuis RPPS' (violet) existant. **Cas d'usage** : ajouter une pharmacie d'officine, un SSIAD (Service de Soins Infirmiers À Domicile), un service HAD, ou tout autre établissement de santé qui n'est PAS une personne physique au RPPS. **Pré-filtrage par catégories** : `pharma_lpp` (officines, PUI, LPP, loueurs matériel) + `domicile` (HAD, SSIAD, SPASAD). L'utilisateur peut élargir les filtres directement dans la recherche",
+        "code_snippet": {
+          "file": "app/partenaires-rpps/page.js",
+          "note": "FINESS partner add",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.54 - 1 seul bouton, pas d'ajout pharmacie possible\n<button onClick={() => setRppsSearchOpen(true)}>\n  Ajouter un partenaire depuis RPPS\n</button>",
+          "after": "// 0.58.54 - 2 boutons CTA distincts\n<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>\n  <button onClick={() => setRppsSearchOpen(true)}\n          style={{ background: 'linear-gradient(135deg, #7a6fb0, #bfa9e0)' }}>\n    🩺 Ajouter depuis RPPS (médecins, IDE)\n  </button>\n  <button onClick={() => setFinessSearchOpen(true)}\n          style={{ background: 'linear-gradient(135deg, #5aa05a, #4a8a4a)' }}>\n    🏥 Ajouter depuis FINESS (pharmacie, SSIAD)\n  </button>\n</div>\n\n// Modal FINESS avec catégories pré-filtrées\n<Modal open={finessSearchOpen} title='Ajouter une pharmacie ou un SSIAD' ...>\n  <FinessSearch\n    onSelect={addPartenaireFromFiness}\n    defaultCategories={['pharma_lpp', 'domicile']}\n  />\n</Modal>\n\n// Fonction d'ajout : détecte type, mappe flags\nasync function addPartenaireFromFiness(f) {\n  const isPharmacie = (f.type || '').toLowerCase().includes('pharmac');\n  const isSsiad = (f.type || '').match(/ssiad|infirm|had/i);\n  const payload = {\n    structure_id: auth.structureId,\n    rpps: f.finess,  // stocke le FINESS dans rpps\n    nom: f.nom,\n    profession: isPharmacie ? 'Pharmacie d\\'officine'\n              : isSsiad ? 'SSIAD / Infirmières'\n              : f.type,\n    est_pharmacien: isPharmacie,\n    est_intervenant: isSsiad,\n    est_prescripteur: false,\n  };\n  await supabase.from('partenaires_rpps').insert(payload);\n}"
+        }
+      },
+      { "code": "AI", "txt": "+30 tests Vitest (v058-54-bundle.test.js) : version+SW (2), hook useContextPatientIds (4 — export, useCurrentContext, chambres→patients, null si inactif), filtre ctx appliqué dans 3 pages (8 — imports + applications + useMemo + empty state contextuel), ajout FINESS (10 — import, state, bouton, fonction, détection type, payload, FINESS dans rpps, doublons, modal défauts), cohérence (2). Total **~4745 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.54 : **(1)** Le sélecteur de contexte bâtiment/service de la TopBar filtre maintenant **7 pages** : interventions, matériels, maintenance, patients, commandes, achats, signalements. Les transferts restent au niveau étab (pas de patient_id direct). **(2)** Les pharmacies et SSIAD peuvent maintenant être ajoutés comme partenaires depuis l'annuaire officiel FINESS. **(3)** Le hook `useContextPatientIds` factorise la logique et est prêt à être réutilisé sur d'autres pages futures. PROCHAINES PISTES (0.58.55+) : (a) Étendre le filtre ctx à /transferts via dépôt_id (souvent lié à un bâtiment). (b) Page dédiée Pharmacies (table séparée avec horaires d'ouverture, FINESS, garde). (c) Mode présentation pour widget Météo. (d) Brancher ColorPicker dans /annonces. (e) Drag&drop fields formulaire Crud (modal). (f) Tags multi-langues. (g) Permission partage objectifs équipe (extension user_goals avec team_id)" }
+    ],
+    "themes": ["feature", "wow", "ui"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.54.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.53",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Modal SIRET + Réorga menu + Objectifs kanban /accueil + Filtres partenaires (médecin/IDE/pharmacien)",
+    "chantiers": [
+      { "code": "FEAT", "txt": "🔐 MODAL DE VALIDATION SIRET dans fiche groupement. Quand l'admin modifie le SIRET du groupement, une modal de confirmation s'affiche **avec variant danger** (rouge) listant les impacts du changement : (a) facturation et liens AMC/SESAM-Vitale, (b) conventions et accréditations, (c) historique des certifications. Le label du bouton de confirmation est explicite : 'Confirmer le changement' (vs 'Annuler'). Cas où le SIRET est ajouté pour la première fois → message adapté plus court",
+        "code_snippet": {
+          "file": "app/collectivite/page.js",
+          "note": "Modal SIRET",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.53 - save direct sans confirmation\nasync function saveFiche() {\n  if (!isAdmin) return;\n  setBusy(true);\n  const payload = { siret: form.siret, ... };\n  await safeUpdate(supabase, 'structures', payload, ...);\n}",
+          "after": "// 0.58.53 - modal de validation si SIRET change\nasync function saveFiche() {\n  if (!isAdmin) return;\n  \n  const oldSiret = fiche?.siret || '';\n  const newSiret = form.siret?.trim() || '';\n  if (newSiret !== oldSiret) {\n    const ok = await dialogs.confirm({\n      title: 'Modification du SIRET',\n      message: `Ancien SIRET : ${oldSiret}\\nNouveau SIRET : ${newSiret}\\n\\n⚠ Impact :\\n• Facturation et liens AMC/SESAM-Vitale\\n• Conventions et accréditations\\n• Historique des certifications\\n\\nVoulez-vous vraiment continuer ?`,\n      okLabel: 'Confirmer le changement',\n      okColor: '#c0392b',\n      variant: 'danger',\n    });\n    if (!ok) return;\n  }\n  // ... save\n}"
+        }
+      },
+      { "code": "UI", "txt": "📋 RÉORGANISATION DU MENU DÉPLIÉ. **Section 'Collectivité' renommée en 'Groupement'** avec hiérarchie claire : Fiche groupement → Dashboard direction → Établissements → Fiche étab. → Bâtiments/Services → Équipes → Carte logistique → Patients → Matériel → Articles → Dépôts → Stock. **Nouvelle section 'Mes partenaires'** distincte qui regroupe : Prescripteurs (médecins) `?type=prescripteur`, Infirmières `?type=infirmiere`, Pharmacies `?type=pharmacie`, Établissements partenaires, **+ raccourcis 🔍 vers les annuaires officiels** (RPPS médecins, RPPS infirmières, FINESS étabs) — pratique pour ajouter un partenaire depuis un annuaire public" },
+      { "code": "FEAT", "txt": "🎯 OBJECTIFS PERSO DANS LE HERO /ACCUEIL (mini-kanban). Les objectifs personnels du widget remontent maintenant **directement** sur la page d'accueil dans une section kanban-like, **entre 'À traiter' et 'Vue d'ensemble'**. Affichage conditionnel (seulement si au moins 1 objectif défini). **Grille responsive** auto-fit minmax(260px, 1fr). Compteur 'X / N atteints' dans le header. **Sync temps réel** via event `av-goals-changed` : dès que tu modifies un objectif dans le widget, la grille du hero se met à jour automatiquement",
+        "code_snippet": {
+          "file": "app/accueil/HeroDashboard.js + DashboardWidgets.js",
+          "note": "Objectifs kanban",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.53 - les objectifs n'étaient visibles QUE dans le widget Objectifs\n// (en bas du dashboard, après tous les autres widgets)",
+          "after": "// 0.58.53 - section kanban en haut de l'accueil\nconst [goals, setGoals] = useState([]);\nuseEffect(() => {\n  setGoals(getGoalsLocal());\n  // Sync temps réel via event\n  function onGoalsChange() { setGoals(getGoalsLocal()); }\n  window.addEventListener('av-goals-changed', onGoalsChange);\n  return () => window.removeEventListener('av-goals-changed', onGoalsChange);\n}, []);\n\n{goals.length > 0 && (\n  <section>\n    <h2>Mes objectifs ({completedCount} / {goals.length} atteints)</h2>\n    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12 }}>\n      {goals.map((g) => (\n        <div className='goal-card'>\n          <div className='label'>{isComplete && '✓'} {g.label}</div>\n          <div className='vals'>{g.current} / {g.target}</div>\n          <progress value={pct} max={100} />\n          <div className='pct'>{Math.round(pct)}%</div>\n        </div>\n      ))}\n    </div>\n  </section>\n)}\n\n// DashboardWidgets : dispatch event sur save\nfunction saveGoals(goals) {\n  localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));\n  window.dispatchEvent(new CustomEvent('av-goals-changed', { detail: { goals } }));\n}"
+        }
+      },
+      { "code": "ARCH", "txt": "🩺 SQL `migration-0.58.53-partenaires-types.sql` — extension `partenaires_rpps` avec colonne `est_pharmacien BOOLEAN DEFAULT FALSE`. Index composite pour filtres rapides : `(structure_id, archive, est_prescripteur, est_intervenant, est_pharmacien)`. **Auto-détection** : lors de l'ajout d'un partenaire depuis le RPPS, `est_pharmacien` est mis à `true` si la profession matche `/pharmac/i` (pharmacien d'officine, pharmacien hospitalier, etc.)" },
+      { "code": "UI", "txt": "🔍 PAGE `/partenaires-rpps` ACCEPTE `?type=` POUR PRÉ-FILTRER. Wrapper Suspense + `useSearchParams` (Next.js 15 compliance). Types supportés : `prescripteur` (médecins via `est_prescripteur`), `infirmiere` (intervenants dont la profession matche `/infirm|ide\\b|idel/i`), `pharmacie` (via `est_pharmacien`). **5 boutons de filtres** au lieu de 3 : Tous / Prescripteurs / Infirmières / Pharmaciens / Autres intervenants, chacun avec son compteur live. Permet d'accéder à la liste filtrée directement depuis le nouveau menu" },
+      { "code": "AI", "txt": "+35 tests Vitest (v058-53-bundle.test.js) : version+SW (2), modal SIRET (3 — détection, danger, message), réorga menu (5 — Groupement, Mes partenaires, query params, raccourcis 🔍, hiérarchie), objectifs kanban (6 — getGoalsLocal, state, event listener, conditional render, compteur, grille auto-fit), event av-goals-changed (1), SQL partenaires (3 — fichier, est_pharmacien, index), page partenaires (7 — Suspense, typeFromUrl, initialTag, regex infirmière, filtre pharmacie, auto-détection, 4 boutons filtres). Total **~4715 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.53 : **(1)** Le SIRET ne peut plus être modifié par accident — confirmation explicite avec listing des impacts. **(2)** Le menu déplié a une structure logique : Mon espace → Groupement (hiérarchie) → Mes partenaires (avec annuaires intégrés) → Scan → Commande → Livraison → Administratif → Admin. **(3)** Les objectifs personnels remontent dans le hero pour visibilité immédiate. **(4)** La table partenaires supporte maintenant médecins + IDE + pharmaciens avec auto-détection. ⚠ **SQL À EXÉCUTER** : `migration-0.58.53-partenaires-types.sql`. PROCHAINES PISTES (0.58.54+) : (a) Brancher ColorPicker dans /annonces. (b) Filtre contexte bât/svc étendu à /commandes /achats /transferts (via etablissement_id). (c) Permettre de créer un partenaire depuis l'annuaire FINESS pour les pharmacies. (d) Page dédiée Pharmacies (table separée avec adresse, horaires d'ouverture, FINESS officiel). (e) Mode présentation pour Météo. (f) Drag&drop fields formulaire Crud. (g) Tags multi-langues" }
+    ],
+    "themes": ["ui", "feature", "wow"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.53.html",
+    "sqlFile": "migration-0.58.53-partenaires-types.sql"
+  },
+  {
     "v": "0.58.52",
     "kind": "version",
     "titre": "🎁 BUNDLE : Tuiles forcées + Table membres_equipe + ColorPicker custom + Sync Objectifs Supabase + 3 pages UI",

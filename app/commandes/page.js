@@ -1,11 +1,13 @@
 "use client";
 // Page Commandes — Historique et suivi des commandes passées aux magasins
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState, Fragment, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 // 0.58.45 : hook pour les page-actions du Cmd+K (export-csv)
 import { usePageAction } from "../../lib/usePageAction";
+// 0.58.54 : filtre contexte bât/svc via patient_id
+import { useContextPatientIds } from "../../lib/useContextPatientIds";
 import { fmtEur, fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -23,6 +25,14 @@ export default function Commandes() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
   const [lignes, setLignes] = useState({});
+
+  // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
+  const { patientIds, ctx } = useContextPatientIds();
+  const filteredCmds = useMemo(() => {
+    if (!ctx.active || !patientIds) return cmds;
+    // Garde les commandes liées à un patient du périmètre OU sans patient_id
+    return cmds.filter(c => !c.patient_id || patientIds.has(c.patient_id));
+  }, [cmds, ctx.active, patientIds]);
 
   // 0.58.45 : export CSV des commandes (pour Cmd+K)
   async function exportCommandesCsv() {
@@ -91,21 +101,23 @@ export default function Commandes() {
               {[0,1,2,3].map((i) => <SkeletonRow key={i} cols={4} />)}
             </div>
           )
-            : cmds.length === 0 ? (
+            : filteredCmds.length === 0 ? (
               <EmptyState
                 illustration="folder"
                 variant="teal"
-                title="Aucune commande pour le moment"
-                message="Découvre les promotions du moment pour passer ta première commande auprès du fournisseur."
-                actionLabel="Voir les promotions"
-                onAction={() => router.push("/promotions")}
+                title={ctx.active && cmds.length > 0 ? "Aucune commande dans ce périmètre" : "Aucune commande pour le moment"}
+                message={ctx.active && cmds.length > 0
+                  ? `Aucune commande liée aux patients du bâtiment/service actif. (${cmds.length} commandes au total dans l'établissement)`
+                  : "Découvre les promotions du moment pour passer ta première commande auprès du fournisseur."}
+                actionLabel={ctx.active && cmds.length > 0 ? null : "Voir les promotions"}
+                onAction={ctx.active && cmds.length > 0 ? null : () => router.push("/promotions")}
               />
             )
             : (
               <table>
                 <thead><tr><th>N°</th><th>Date</th><th>Magasin</th><th style={{ textAlign: "right" }}>Total</th><th>Statut</th><th></th></tr></thead>
                 <tbody>
-                  {cmds.map((c) => (
+                  {filteredCmds.map((c) => (
                     <Fragment key={c.id}>
                       <tr style={{ cursor: "pointer" }} onClick={() => toggle(c.id)}>
                         <td style={{ fontWeight: 600 }}>{c.numero}</td>

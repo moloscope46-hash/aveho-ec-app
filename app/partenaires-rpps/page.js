@@ -7,9 +7,13 @@
 //  de l'app (pas de compte).
 //
 //  Données enrichies depuis l'API FHIR ANS (recherche RPPS).
+//
+//  0.58.53 : support du query param ?type=prescripteur|infirmiere|pharmacie
+//    pour pré-filtrer la liste (via les nouveaux items du menu).
 // =============================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
@@ -19,20 +23,38 @@ import { PageHead, Panel, StateMsg} from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import RppsAutocomplete from "../RppsAutocomplete";
+import FinessSearch from "../FinessSearch";  // 0.58.54 : ajout depuis annuaire FINESS pour pharmacies/SSIAD
 import Modal from "../components/Modal";
 import ContactActions from "../components/ContactActions";
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 
-export default function PartenairesRpps() {
+// 0.58.53 : wrapper Suspense pour useSearchParams (Next.js 15 requirement)
+export default function PartenairesRppsPage() {
+  return (
+    <Suspense fallback={<div className="bg-dark"><div className="wrap">Chargement…</div></div>}>
+      <PartenairesRppsInner />
+    </Suspense>
+  );
+}
+
+function PartenairesRppsInner() {
+  const searchParams = useSearchParams();
+  const typeFromUrl = searchParams.get("type");  // prescripteur | infirmiere | pharmacie | null
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterTag, setFilterTag] = useState("all"); // all | prescripteur | intervenant
+  // 0.58.53 : filterTag initialisé depuis ?type= (sinon "all")
+  const initialTag = typeFromUrl === "prescripteur" || typeFromUrl === "infirmiere" || typeFromUrl === "pharmacie"
+    ? typeFromUrl
+    : "all";
+  const [filterTag, setFilterTag] = useState(initialTag);
   const [rppsSearchOpen, setRppsSearchOpen] = useState(false);
+  // 0.58.54 : recherche dans l'annuaire FINESS (pharmacies, SSIAD, etc.)
+  const [finessSearchOpen, setFinessSearchOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(null); // partenaire en édition
 
   async function loadAll() {
@@ -92,6 +114,8 @@ export default function PartenairesRpps() {
         created_by: auth.user?.id,
         est_prescripteur: (p.profession || "").toLowerCase().includes("médecin"),
         est_intervenant: !!(p.profession || "").toLowerCase().match(/infirm|kin|sage/),
+        // 0.58.53 : auto-détection pharmacien depuis la profession
+        est_pharmacien: !!(p.profession || "").toLowerCase().match(/pharmac/i),
       };
       const { error } = await supabase.from("partenaires_rpps").insert(payload);
       if (error) throw error;
@@ -100,6 +124,69 @@ export default function PartenairesRpps() {
       await dialogs.alert({
         title: "Partenaire ajouté",
         message: `${payload.prenom || ""} ${payload.nom} a été ajouté à votre liste de partenaires.`,
+      });
+    } catch (e) {
+      await dialogs.alert({
+        title: "Erreur",
+        message: e.message || "Impossible d'ajouter ce partenaire",
+        variant: "danger",
+      });
+    }
+  }
+
+  // 0.58.54 : ajout d'un partenaire depuis l'annuaire FINESS
+  //   Utile pour les pharmacies d'officine, SSIAD, et établissements de soins infirmiers
+  //   qui ne sont pas des personnes physiques au RPPS.
+  async function addPartenaireFromFiness(f) {
+    if (!auth.structureId) return;
+    try {
+      const finessNum = f.finess || null;
+      const typeFiness = (f.type || "").toLowerCase();
+      // Check si déjà existant (même FINESS dans cette structure)
+      if (finessNum) {
+        const { data: existing } = await supabase
+          .from("partenaires_rpps")
+          .select("id, nom")
+          .eq("structure_id", auth.structureId)
+          .eq("rpps", finessNum)  // on utilise le champ rpps pour stocker le FINESS (faute de mieux)
+          .eq("archive", false)
+          .maybeSingle();
+        if (existing) {
+          await dialogs.alert({
+            title: "Déjà partenaire",
+            message: `${existing.nom} (FINESS ${finessNum}) est déjà dans votre liste de partenaires.`,
+          });
+          setFinessSearchOpen(false);
+          return;
+        }
+      }
+      // Détection du type via la catégorie FINESS
+      const isPharmacie = typeFiness.includes("pharmac") || typeFiness === "officine";
+      const isSsiad = typeFiness.includes("ssiad") || typeFiness.includes("infirm") || typeFiness === "had";
+      // Construction du payload : adapté à une "structure" partenaire (pas une personne)
+      const payload = {
+        structure_id: auth.structureId,
+        rpps: finessNum,  // stocke le FINESS dans le champ rpps
+        nom: f.nom || "Inconnu",
+        prenom: null,  // pas de prénom pour une structure
+        profession: isPharmacie ? "Pharmacie d'officine" : (isSsiad ? "SSIAD / Infirmières" : (f.type || "Établissement")),
+        adresse: f.adresse || null,
+        cp: f.code_postal || null,
+        commune: f.ville || null,
+        telephone: f.telephone || null,
+        created_by: auth.user?.id,
+        // Flags selon le type FINESS
+        est_prescripteur: false,
+        est_intervenant: isSsiad,
+        est_pharmacien: isPharmacie,
+      };
+      const { error } = await supabase.from("partenaires_rpps").insert(payload);
+      if (error) throw error;
+      setFinessSearchOpen(false);
+      await loadAll();
+      await dialogs.alert({
+        title: "Partenaire ajouté",
+        message: `${payload.nom} (${payload.profession}) a été ajouté à votre liste de partenaires.`,
       });
     } catch (e) {
       await dialogs.alert({
@@ -122,8 +209,17 @@ export default function PartenairesRpps() {
 
   // Filtres
   const filtered = rows.filter((p) => {
+    // 0.58.53 : filterTag supporte 4 valeurs : all | prescripteur | infirmiere | pharmacie
+    //   "infirmiere" = est_intervenant + profession contient "infirm"
     if (filterTag === "prescripteur" && !p.est_prescripteur) return false;
+    if (filterTag === "infirmiere") {
+      if (!p.est_intervenant) return false;
+      // Matche infirmier(e), IDE, IDEL
+      const prof = (p.profession || "").toLowerCase();
+      if (!prof.match(/infirm|ide\b|idel/i)) return false;
+    }
     if (filterTag === "intervenant" && !p.est_intervenant) return false;
+    if (filterTag === "pharmacie" && !p.est_pharmacien) return false;
     if (search) {
       const s = search.toLowerCase();
       return (p.nom || "").toLowerCase().includes(s)
@@ -149,26 +245,48 @@ export default function PartenairesRpps() {
             accent="(non-utilisateurs)"
             sub="Médecins prescripteurs, IDE libéraux, kinés et autres intervenants qui n'ont pas de compte Aveho"
           />
-          <button
-            onClick={() => setRppsSearchOpen(true)}
-            style={{
-              background: "linear-gradient(135deg, #7a6fb0, #bfa9e0)",
-              color: "#fff",
-              border: "none",
-              padding: "10px 16px",
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              fontFamily: "inherit",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              alignSelf: "center",
-            }}
-          >
-            <i className="ti ti-stethoscope" /> Ajouter un partenaire depuis RPPS
-          </button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignSelf: "center" }}>
+            <button
+              onClick={() => setRppsSearchOpen(true)}
+              style={{
+                background: "linear-gradient(135deg, #7a6fb0, #bfa9e0)",
+                color: "#fff",
+                border: "none",
+                padding: "10px 16px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <i className="ti ti-stethoscope" /> Ajouter depuis RPPS (médecins, IDE)
+            </button>
+            {/* 0.58.54 : bouton pour ajouter une pharmacie ou un SSIAD via FINESS */}
+            <button
+              onClick={() => setFinessSearchOpen(true)}
+              style={{
+                background: "linear-gradient(135deg, #5aa05a, #4a8a4a)",
+                color: "#fff",
+                border: "none",
+                padding: "10px 16px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+              title="Ajouter une pharmacie, un SSIAD ou un service infirmier à domicile depuis l'annuaire FINESS officiel"
+            >
+              <i className="ti ti-building-hospital" /> Ajouter depuis FINESS (pharmacie, SSIAD)
+            </button>
+          </div>
         </div>
 
         <KpiRow tiles={[
@@ -194,11 +312,14 @@ export default function PartenairesRpps() {
                 fontFamily: "inherit",
               }}
             />
-            <div style={{ display: "flex", gap: 6 }}>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {[
                 { k: "all", l: `Tous (${rows.length})` },
                 { k: "prescripteur", l: `Prescripteurs (${countPrescripteurs})` },
-                { k: "intervenant", l: `Intervenants (${countIntervenants})` },
+                // 0.58.53 : ajout des filtres infirmière + pharmacie
+                { k: "infirmiere", l: `Infirmières (${rows.filter(p => p.est_intervenant && (p.profession || "").match(/infirm|ide\b|idel/i)).length})` },
+                { k: "pharmacie", l: `Pharmaciens (${rows.filter(p => p.est_pharmacien).length})` },
+                { k: "intervenant", l: `Autres intervenants (${countIntervenants})` },
               ].map((opt) => (
                 <button
                   key={opt.k}
@@ -331,6 +452,33 @@ export default function PartenairesRpps() {
           />
           <div style={{ marginTop: 14, padding: 10, background: "#f4f7fa", borderRadius: 8, fontSize: 11.5, color: "#6c7a89", lineHeight: 1.6 }}>
             <b><i className="ti ti-info-circle" /> Astuce :</b> tape un <b>nom</b> de famille (ex : <i>"Dupont"</i>) ou une <b>ville</b> (ex : <i>"Paris"</i>) ou les deux séparés par un espace. Le sélecteur profession à gauche filtre encore plus précisément.
+          </div>
+        </div>
+      </Modal>
+
+      {/* 0.58.54 : Modale recherche FINESS pour ajouter une pharmacie / SSIAD / IDE */}
+      <Modal
+        open={finessSearchOpen}
+        onClose={() => setFinessSearchOpen(false)}
+        title="Ajouter une pharmacie ou un SSIAD"
+        subtitle="Recherche dans l'annuaire officiel FINESS (data.gouv.fr)"
+        icon="ti-building-hospital"
+        color="#5aa05a"
+        maxWidth={720}
+      >
+        <div style={{ minHeight: 380 }}>
+          <FinessSearch
+            placeholder="Nom, ville ou n° FINESS (ex : 'pharmacie centrale paris')…"
+            onSelect={addPartenaireFromFiness}
+            defaultCategories={["pharma_lpp", "domicile"]}
+          />
+          <div style={{ marginTop: 14, padding: 10, background: "#f0f7f0", borderRadius: 8, fontSize: 11.5, color: "#3a5a3a", lineHeight: 1.6 }}>
+            <b><i className="ti ti-info-circle" /> Catégories pré-filtrées :</b>
+            <ul style={{ margin: "6px 0 0 16px", padding: 0 }}>
+              <li><b>Pharmacies & Matériel médical</b> : Pharmacies d'officine, PUI, commerces LPP, loueurs matériel</li>
+              <li><b>Soins à domicile</b> : HAD, SSIAD, SPASAD (services d'infirmières)</li>
+            </ul>
+            Tu peux modifier les filtres directement dans la recherche pour étendre à d'autres catégories.
           </div>
         </div>
       </Modal>
