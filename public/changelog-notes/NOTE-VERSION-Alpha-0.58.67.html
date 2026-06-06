@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.67</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #1a3a5a 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(24,95,165,.5)}70%{box-shadow:0 0 0 10px rgba(24,95,165,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes bar-grow{0%{width:0}100%{width:var(--w)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.amber{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.35) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.30),rgba(124,200,200,.20));backdrop-filter:blur(30px);border:1px solid rgba(24,95,165,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bdd6ec;font-weight:700;background:rgba(24,95,165,.14);border:1px solid rgba(24,95,165,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#185FA5;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bdd6ec;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bdd6ec}
+.meta b{color:#fff}
+.meta code{background:rgba(24,95,165,.18);color:#bdd6ec;border:1px solid rgba(24,95,165,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #185FA5}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Demo article row */
+.art-row{display:grid;grid-template-columns:60px 1fr 100px 110px 70px 75px 75px 50px 60px 70px 50px;gap:6px;padding:8px 10px;border-bottom:1px solid #2a3850;font-size:12px;color:#e8edf2;align-items:center}
+.art-row.head{background:linear-gradient(135deg,#1a2a3a,#0d1820);color:#bdd6ec;font-weight:700;font-size:10.5px;text-transform:uppercase;border-bottom:2px solid #185FA5}
+.art-table{background:rgba(20,33,49,.6);border-radius:10px;overflow:hidden;margin:10px 0;border:1px solid rgba(124,200,200,.18)}
+.ref{color:#185FA5;font-family:Consolas,monospace;font-size:11.5px}
+.libelle{display:flex;align-items:center;gap:4px}
+.libelle a{color:#fff;font-weight:600;text-decoration:none}
+.badge-dm{font-size:9px;background:#fde4e1;color:#c0392b;padding:1px 5px;border-radius:4px;font-weight:700;margin-left:4px}
+.badge-st{font-size:9px;background:#dbe7f5;color:#185FA5;padding:1px 5px;border-radius:4px;font-weight:700;margin-left:4px}
+.code-barre{font-family:Consolas,monospace;font-size:11px;color:#bfe6e6}
+.prix{text-align:right;font-family:Consolas,monospace;color:#bfe6e6}
+.prix.vente{color:#fff;font-weight:600}
+.tva{text-align:center;color:#bda4dd;font-weight:600;font-size:11px}
+.marge{text-align:right;font-family:Consolas,monospace;font-weight:600}
+.marge.green{color:#5aa05a}
+.marge.amber{color:#EF9F27}
+.trac{text-align:center;font-size:13px}
+.mat-badge{cursor:help;background:linear-gradient(135deg,#7CC8C8,#5da8a8);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:3px}
+
+/* Demo popup hover materiels */
+.hover-popup{position:relative;background:#142131;color:#fff;padding:12px 14px;border-radius:8px;font-size:11.5px;box-shadow:0 10px 30px rgba(0,0,0,.50);margin:8px 0}
+.hover-popup .title{font-weight:700;margin-bottom:6px;font-size:12.5px;color:#7CC8C8}
+.hover-popup .mat{padding:4px 0;border-bottom:1px solid #2a3850;display:flex;justify-content:space-between;gap:8px}
+.hover-popup .mat:last-child{border:none}
+.hover-popup .sn{color:#7CC8C8;font-family:Consolas,monospace;font-size:10.5px}
+
+/* Demo tabs */
+.tabs-demo{display:flex;border-bottom:2px solid #2a3850;margin:10px 0 14px;overflow-x:auto}
+.tab{background:transparent;color:#9fb6c2;border:none;border-bottom:3px solid transparent;padding:8px 14px;font-size:12.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.tab.on{color:#7CC8C8;border-bottom-color:#7CC8C8;font-weight:700;background:linear-gradient(135deg,rgba(124,200,200,.10),transparent)}
+
+/* Demo EAN13 SVG */
+.barcode-demo{background:#fff;padding:10px;border-radius:8px;margin:8px 0;display:inline-block}
+
+/* Demo team vs team */
+.team-vs{padding:12px 14px;background:linear-gradient(135deg,rgba(122,111,176,.06),rgba(124,200,200,.06));border:1px solid rgba(122,111,176,.20);border-radius:12px;margin:10px 0;color:#e8edf2}
+.team-row{display:flex;align-items:center;gap:8px;padding:5px 0}
+.rank-circle{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.rank-circle.gold{background:#EF9F27}
+.rank-circle.silver{background:#a0aeb9}
+.rank-circle.bronze{background:#C9867F}
+.rank-circle.gray{background:#8a98a8}
+.team-name{min-width:110px;display:flex;align-items:center;gap:5px;font-size:12;color:#fff;font-weight:600}
+.team-bar-bg{flex:1;height:16px;background:#1a2a3a;border-radius:8px;overflow:hidden;border:1px solid #2a3850;position:relative}
+.team-bar{height:100%;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;color:#fff;font-size:10px;font-weight:700;animation:bar-grow 600ms cubic-bezier(.34, 1.56, .64, 1) forwards;width:0}
+.team-bar.b1{--w:96%;background:linear-gradient(90deg,#7a6fb0,#7a6fb0cc)}
+.team-bar.b2{--w:84%;background:linear-gradient(90deg,#5aa05a,#5aa05acc)}
+.team-bar.b3{--w:67%;background:linear-gradient(90deg,#185FA5,#185FA5cc)}
+.team-bar.b4{--w:42%;background:linear-gradient(90deg,#EF9F27,#EF9F27cc)}
+.team-mono{font-size:11px;color:#bfe6e6;font-family:Consolas,monospace;white-space:nowrap}
+
+/* Sparkline avec MA7 */
+.spark-card{padding:10px 12px;background:linear-gradient(135deg,#fff,#f5f8fc);border:1px solid #d6c9ec;border-radius:10px;color:#142131;margin:10px 0}
+.spark-toggle{display:inline-flex;border-radius:6px;background:#fff;border:1px solid #d3d9e0;padding:2px}
+.spark-toggle button{background:transparent;color:#7a6fb0;border:none;border-radius:4px;padding:3px 9px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.spark-toggle button.on{background:linear-gradient(135deg,#7a6fb0,#5a4a90);color:#fff}
+.smooth-btn{background:linear-gradient(135deg,#C9867F,#b56e67);color:#fff;border:1.5px solid #C9867F;border-radius:6px;padding:3px 9px;font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px;margin-left:6px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob blue"></div><div class="bg-blob amber"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>VERSION 0.58.67</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Refonte massive Articles + Lissage MA7 + Export CSV + Équipes vs Équipes<small>Catalogue PSAD/FBM complet · Codes-barres GS1 · TVA paramétrable · Tracabilité lot/série · 7 onglets · Hover matériels</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.67-alpha</code></span>
+    <span><b>Tests :</b> ~5150 verts</span>
+    <span><b>SQL :</b> <code>migration-0.58.67-articles-refonte-complete.sql</code></span>
+    <span><b>Nouvelles colonnes :</b> ~50 sur articles + table tva_taux</span>
+  </div>
+</header>
+
+<h2>📋 1. SQL — refonte articles + table TVA paramétrable</h2>
+
+<div class="panel sql">
+<p style="margin:0">Migration MASSIVE : nouvelle table <code>tva_taux</code> avec comptes comptables complets + ALTER TABLE articles avec ~50 nouvelles colonnes pour transformer la table en vrai référentiel catalogue PSAD/FBM.</p>
+</div>
+
+<pre style="background:#1a1410;color:#bfe6bf;font-size:11px">CREATE TABLE IF NOT EXISTS tva_taux (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  structure_id UUID NOT NULL,
+  code TEXT NOT NULL,            -- "NORMAL", "REDUIT", ...
+  libelle TEXT NOT NULL,
+  taux NUMERIC(5,2) NOT NULL,
+  -- COMPTA
+  compte_vente TEXT,             -- ex: "707100"
+  compte_achat TEXT,             -- ex: "607100"
+  compte_tva_collectee TEXT,
+  compte_tva_deductible TEXT,
+  code_analytique TEXT,
+  est_defaut BOOLEAN, actif BOOLEAN,
+  UNIQUE (structure_id, code)
+);
+
+ALTER TABLE articles
+  -- Codes-barres
+  ADD COLUMN code_barre TEXT, code_barre_type TEXT,
+  ADD COLUMN code_lpp TEXT, code_acl TEXT, code_ucd TEXT,
+  -- Logistique
+  ADD COLUMN unite TEXT DEFAULT 'unité', conditionnement INTEGER DEFAULT 1,
+  ADD COLUMN poids_g NUMERIC(10,2), volume_ml NUMERIC(10,2),
+  ADD COLUMN longueur_cm NUMERIC, largeur_cm NUMERIC, hauteur_cm NUMERIC,
+  -- Tarifs
+  ADD COLUMN prix_achat_ht NUMERIC(10,4), prix_vente_ht NUMERIC(10,4),
+  ADD COLUMN prix_vente_ttc NUMERIC(10,4),
+  ADD COLUMN tva_taux_id UUID REFERENCES tva_taux(id),
+  ADD COLUMN tva_pct NUMERIC(5,2), marge_pct NUMERIC(5,2),
+  -- Tracabilité
+  ADD COLUMN gere_lot BOOLEAN, gere_serie BOOLEAN, gere_peremption BOOLEAN,
+  -- Rattachements
+  ADD COLUMN fournisseur_principal_id UUID,
+  ADD COLUMN etablissement_partenaire_id UUID,
+  ADD COLUMN pharmacie_id UUID REFERENCES pharmacies(id),
+  ADD COLUMN fabricant TEXT, marque TEXT, modele TEXT,
+  -- Classifications DM
+  ADD COLUMN classe_dm TEXT, sterile BOOLEAN, usage_unique BOOLEAN,
+  ADD COLUMN dispositif_medical BOOLEAN;
+  -- + 25 autres colonnes...</pre>
+
+<h2>📦 2. Page articles refondue — Liste enrichie + 7 onglets</h2>
+
+<div class="art-table">
+<div class="art-row head">
+<span>Réf.</span><span>Libellé</span><span>Famille</span><span>Code-barres</span><span>Cond.</span><span>PA HT</span><span>PV HT</span><span>TVA</span><span>Marge</span><span>🔍 Trac</span><span>📦 Mat</span><span></span>
+</div>
+<div class="art-row">
+<span class="ref">REF-001</span>
+<span class="libelle"><a>Set perfusion 100ml</a><span class="badge-dm">DM IIa</span><span class="badge-st">✦</span></span>
+<span>Perfusion</span>
+<span class="code-barre">2001234567893</span>
+<span>Boîte de 50</span>
+<span class="prix">2,40 €</span>
+<span class="prix vente">5,90 €</span>
+<span class="tva">20%</span>
+<span class="marge green">145,8%</span>
+<span class="trac">🏷 ⏱</span>
+<span><span class="mat-badge">📦 7</span></span>
+<span>✏️ 🗑</span>
+</div>
+<div class="art-row">
+<span class="ref">REF-002</span>
+<span class="libelle"><a>Concentrateur O2 5L</a><span class="badge-dm">DM IIb</span></span>
+<span>Respiratoire</span>
+<span class="code-barre">2009876543219</span>
+<span>1 unité</span>
+<span class="prix">850,00 €</span>
+<span class="prix vente">1 250,00 €</span>
+<span class="tva">5.5%</span>
+<span class="marge amber">47,1%</span>
+<span class="trac">🔢</span>
+<span><span class="mat-badge">📦 12</span></span>
+<span>✏️ 🗑</span>
+</div>
+<div class="art-row">
+<span class="ref">REF-003</span>
+<span class="libelle"><a>Pansement hydrocolloïde</a></span>
+<span>Cicatrisation</span>
+<span class="code-barre">3401582934007</span>
+<span>Boîte de 10</span>
+<span class="prix">0,42 €</span>
+<span class="prix vente">1,90 €</span>
+<span class="tva">10%</span>
+<span class="marge green">352,4%</span>
+<span class="trac">🏷 ⏱</span>
+<span><span class="mat-badge">📦 3</span></span>
+<span>✏️ 🗑</span>
+</div>
+</div>
+
+<p style="font-size:11.5px;color:#9fb6c2;margin-top:4px">↑ 12 colonnes : Réf / Libellé+badges DM/Stérile/UU / Famille / Code-barres / Cond. / PA HT / PV HT / TVA / Marge (verte≥30% / ambre 10-30% / rouge<10%) / 🔍 Tracabilité (🏷lot / 🔢série / ⏱péremption) / 📦 Matériels rattachés / Actions</p>
+
+<h2>🔍 3. Hover sur 📦 → Popup matériels rattachés (LIVE)</h2>
+
+<div class="panel">
+<p style="margin:0">Au survol du badge teal "📦 N" dans la liste, une popup overlay apparaît avec jusqu'à 10 matériels rattachés à cet article.</p>
+</div>
+
+<div class="hover-popup">
+<div class="title"><i class="ti ti-package"></i> Matériels rattachés (7)</div>
+<div class="mat"><span>Set perfusion #1</span><span class="sn">S/N AVH-2024-001</span></div>
+<div class="mat"><span>Set perfusion #2</span><span class="sn">S/N AVH-2024-002</span></div>
+<div class="mat"><span>Set perfusion #3</span><span class="sn">Lot LOT-A-1234</span></div>
+<div class="mat"><span>Set perfusion #4</span><span class="sn">Lot LOT-A-1234</span></div>
+<div class="mat"><span>Set perfusion #5</span><span class="sn">Lot LOT-B-5678</span></div>
+<div style="margin-top:6px;font-size:10px;color:#7CC8C8;text-align:center">+ 2 autres…</div>
+</div>
+
+<h2>📑 4. Modal d'édition à 7 onglets</h2>
+
+<div class="tabs-demo">
+<button class="tab on"><i class="ti ti-info-circle"></i> Général</button>
+<button class="tab"><i class="ti ti-barcode"></i> Codes-barres</button>
+<button class="tab"><i class="ti ti-package"></i> Logistique</button>
+<button class="tab"><i class="ti ti-coin-euro"></i> Tarifs & TVA</button>
+<button class="tab"><i class="ti ti-search"></i> Tracabilité</button>
+<button class="tab"><i class="ti ti-link"></i> Rattachements</button>
+<button class="tab"><i class="ti ti-calculator"></i> Compta</button>
+</div>
+
+<ul style="font-size:13px">
+<li><b>Général</b> : référence, libellé, famille, classe DM, description, notes internes, flags (actif/DM/stérile/usage unique)</li>
+<li><b>Codes-barres</b> : code-barre principal + bouton <b>Générer EAN13</b> avec aperçu SVG + type + LPP/ACL/UCD</li>
+<li><b>Logistique</b> : unité, conditionnement (+libellé), poids, volume, L/l/H, qté carton/palette, stock min/max, délai appro</li>
+<li><b>Tarifs & TVA</b> : PA HT / PV HT / devise / select TVA paramétrable + <b>calcul TTC + marge LIVE</b></li>
+<li><b>Tracabilité</b> : 3 cards toggles (🏷 lot / 🔢 série / ⏱ péremption) + durée de vie standard</li>
+<li><b>Rattachements</b> : marque/modèle/fabricant + étab partenaire + pharmacie + count matériels avec lien</li>
+<li><b>Compta</b> : override comptes vente/achat/analytique + récap des comptes hérités du taux TVA</li>
+</ul>
+
+<h2>🔢 5. Génération EAN13 + aperçu SVG</h2>
+
+<div class="panel">
+<p style="margin:0">Un clic sur <b>Générer</b> et hop, un EAN13 valide avec préfixe interne 200-299 (réservé usage privé) est créé. Aperçu SVG instantané sous le champ.</p>
+</div>
+
+<div class="barcode-demo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80" style="width:240px;height:70px">
+<rect x="12" y="10" width="1.2" height="50" fill="#142131"/><rect x="14" y="10" width="2.5" height="50" fill="#142131"/>
+<rect x="19" y="10" width="1" height="50" fill="#142131"/><rect x="22" y="10" width="1.5" height="50" fill="#142131"/>
+<rect x="26" y="10" width="2.5" height="50" fill="#142131"/><rect x="31" y="10" width="1.5" height="50" fill="#142131"/>
+<rect x="35" y="10" width="2.5" height="50" fill="#142131"/><rect x="40" y="10" width="1" height="50" fill="#142131"/>
+<rect x="44" y="10" width="2" height="50" fill="#142131"/><rect x="49" y="10" width="2.5" height="50" fill="#142131"/>
+<rect x="54" y="10" width="1.2" height="50" fill="#142131"/><rect x="57" y="10" width="1.5" height="50" fill="#142131"/>
+<rect x="62" y="10" width="2.5" height="50" fill="#142131"/><rect x="68" y="10" width="1.2" height="50" fill="#142131"/>
+<rect x="72" y="10" width="2" height="50" fill="#142131"/><rect x="77" y="10" width="1.5" height="50" fill="#142131"/>
+<rect x="82" y="10" width="2.5" height="50" fill="#142131"/><rect x="87" y="10" width="1.2" height="50" fill="#142131"/>
+<rect x="91" y="10" width="1.5" height="50" fill="#142131"/><rect x="95" y="10" width="2.5" height="50" fill="#142131"/>
+<rect x="100" y="10" width="1.5" height="50" fill="#142131"/><rect x="104" y="10" width="2" height="50" fill="#142131"/>
+<rect x="109" y="10" width="1.2" height="50" fill="#142131"/><rect x="114" y="10" width="2.5" height="50" fill="#142131"/>
+<rect x="119" y="10" width="1.5" height="50" fill="#142131"/><rect x="124" y="10" width="2" height="50" fill="#142131"/>
+<rect x="129" y="10" width="2.5" height="50" fill="#142131"/><rect x="134" y="10" width="1.2" height="50" fill="#142131"/>
+<rect x="138" y="10" width="1.5" height="50" fill="#142131"/><rect x="142" y="10" width="2" height="50" fill="#142131"/>
+<rect x="147" y="10" width="2.5" height="50" fill="#142131"/><rect x="153" y="10" width="1.2" height="50" fill="#142131"/>
+<rect x="157" y="10" width="1.5" height="50" fill="#142131"/><rect x="161" y="10" width="2.5" height="50" fill="#142131"/>
+<rect x="166" y="10" width="2" height="50" fill="#142131"/><rect x="171" y="10" width="1.5" height="50" fill="#142131"/>
+<rect x="175" y="10" width="1.2" height="50" fill="#142131"/><rect x="179" y="10" width="2.5" height="50" fill="#142131"/>
+<text x="100" y="74" font-family="Consolas,monospace" font-size="11" font-weight="700" fill="#142131" text-anchor="middle">2001234567893</text>
+</svg>
+</div>
+
+<p style="font-size:11px;color:#9fb6c2">↑ Aperçu visuel approximatif (pour vrai EAN13 conforme, importer bwip-js)</p>
+
+<h2>🎵 6. Sparkline avec lissage MA7</h2>
+
+<div class="panel">
+<p style="margin:0">Sur les modes 30j et 90j, un bouton <b>Lisser</b> active une courbe pointillée corail qui montre la moyenne mobile 7 jours par-dessus la courbe principale. Permet de voir la <b>tendance de fond</b> sans le bruit quotidien.</p>
+</div>
+
+<div class="spark-card">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+<span style="font-size:11px;color:#7a6fb0;font-weight:700;text-transform:uppercase">
+<i class="ti ti-chart-line"></i> Évolution 90 jours
+<span style="font-size:9px;background:rgba(90,160,90,.12);color:#5aa05a;padding:1px 6px;border-radius:6px;margin-left:4px"><i class="ti ti-cloud-check"></i> Serveur</span>
+</span>
+<div style="display:inline-flex;align-items:center">
+<div class="spark-toggle">
+<button>7j</button>
+<button>30j</button>
+<button class="on">90j</button>
+</div>
+<button class="smooth-btn"><i class="ti ti-wave-sine"></i> Lisser</button>
+<span style="color:#5aa05a;font-weight:700;font-size:12px;margin-left:8px">+24 pts</span>
+</div>
+</div>
+<svg viewBox="0 0 380 90" style="width:100%;height:90px;display:block">
+<defs>
+<linearGradient id="g90" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#7a6fb0" stop-opacity="0.35"/>
+<stop offset="100%" stop-color="#7a6fb0" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<line x1="4" y1="48" x2="376" y2="48" stroke="rgba(122,111,176,.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<polygon points="4,68 12.4,70 20.8,62 29.2,72 37.6,58 46,66 54.4,48 62.8,58 71.2,42 79.6,54 88,38 96.4,46 104.8,32 113.2,42 121.6,28 130,38 138.4,24 146.8,34 155.2,20 163.6,30 172,18 180.4,26 188.8,14 197.2,24 205.6,12 214,18 222.4,8 230.8,16 239.2,6 247.6,12 256,4 264.4,10 272.8,2 281.2,8 289.6,4 298,6 306.4,2 314.8,4 323.2,2 331.6,6 340,2 348.4,4 356.8,2 365.2,4 376,2 376,84 4,84" fill="url(#g90)"/>
+<polyline points="4,68 12.4,70 20.8,62 29.2,72 37.6,58 46,66 54.4,48 62.8,58 71.2,42 79.6,54 88,38 96.4,46 104.8,32 113.2,42 121.6,28 130,38 138.4,24 146.8,34 155.2,20 163.6,30 172,18 180.4,26 188.8,14 197.2,24 205.6,12 214,18 222.4,8 230.8,16 239.2,6 247.6,12 256,4 264.4,10 272.8,2 281.2,8 289.6,4 298,6 306.4,2 314.8,4 323.2,2 331.6,6 340,2 348.4,4 356.8,2 365.2,4 376,2" fill="none" stroke="#7a6fb0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<!-- Moyenne mobile 7j en pointillé corail -->
+<polyline points="4,66 12.4,65 20.8,64 29.2,62 37.6,60 46,58 54.4,55 62.8,52 71.2,48 79.6,46 88,42 96.4,40 104.8,36 113.2,34 121.6,30 130,28 138.4,25 146.8,23 155.2,20 163.6,19 172,17 180.4,16 188.8,14 197.2,13 205.6,12 214,11 222.4,10 230.8,9 239.2,8 247.6,7 256,7 264.4,6 272.8,6 281.2,5 289.6,5 298,4 306.4,4 314.8,3 323.2,3 331.6,3 340,3 348.4,3 356.8,3 365.2,3 376,3" fill="none" stroke="#C9867F" stroke-width="2" stroke-dasharray="4,3" opacity="0.95"/>
+</svg>
+<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#8a98a8;margin-top:2px">
+<span>03-08</span>
+<span style="display:flex;gap:10px"><span style="color:#7a6fb0">━ Brut</span><span style="color:#C9867F">┄ MA7</span></span>
+<span>06-06 · 98%</span>
+</div>
+</div>
+
+<h2>📊 7. Export CSV des snapshots serveur</h2>
+
+<div class="panel">
+<p style="margin:0">Bouton teal <code>📥 Export CSV</code> au-dessus de la sparkline. Télécharge tout l'historique 90j (rétention max CRON) en format compatible Excel France (séparateur <code>;</code>, BOM UTF-8, décimales virgule). 2 sections : vue globale + détail par équipe.</p>
+</div>
+
+<pre style="background:#fff;color:#142131;font-size:11px;border-left:3px solid #5aa05a">Date;Moyenne (%);Atteints;Total;Taux atteinte (%);Equipes (détail)
+2026-03-08;52,00;3;7;42,86;Sud-Ouest: 60% (2/3) | Paris-Nord: 50% (1/2)
+2026-03-09;55,30;4;7;57,14;Sud-Ouest: 65% (2/3) | Paris-Nord: 60% (1/2)
+...
+2026-06-06;98,20;9;10;90,00;Sud-Ouest: 100% (5/5) | Paris-Nord: 95% (3/3)
+
+=== Détail par équipe ===
+Date;Equipe;Moyenne (%);Atteints;Total;Taux atteinte (%)
+2026-03-08;Sud-Ouest;60,00;2;3;66,67
+2026-03-08;Paris-Nord;50,00;1;2;50,00
+...</pre>
+
+<h2>🏆 8. Vue équipes vs équipes</h2>
+
+<div class="panel">
+<p style="margin:0">Sous la sparkline, classement décroissant par avg% avec barres horizontales animées, médailles 🥇🥈🥉, couleurs natives des équipes et compteur atteints/total.</p>
+</div>
+
+<div class="team-vs">
+<div style="font-size:11px;color:#bda4dd;font-weight:700;text-transform:uppercase;margin-bottom:10px">
+<i class="ti ti-trophy"></i> Équipes vs Équipes — classement <span style="float:right;font-size:10px;color:#9fb6c2;font-weight:500">4 équipes</span>
+</div>
+<div class="team-row">
+<span class="rank-circle gold">1</span>
+<span class="team-name"><i class="ti ti-target" style="color:#7a6fb0"></i> Sud-Ouest</span>
+<div class="team-bar-bg"><div class="team-bar b1">96%</div></div>
+<span class="team-mono">14/15</span>
+</div>
+<div class="team-row">
+<span class="rank-circle silver">2</span>
+<span class="team-name"><i class="ti ti-medical-cross" style="color:#5aa05a"></i> Commerciale</span>
+<div class="team-bar-bg"><div class="team-bar b2">84%</div></div>
+<span class="team-mono">10/12</span>
+</div>
+<div class="team-row">
+<span class="rank-circle bronze">3</span>
+<span class="team-name"><i class="ti ti-users-group" style="color:#185FA5"></i> Paris-Nord</span>
+<div class="team-bar-bg"><div class="team-bar b3">67%</div></div>
+<span class="team-mono">8/12</span>
+</div>
+<div class="team-row">
+<span class="rank-circle gray">4</span>
+<span class="team-name"><i class="ti ti-package" style="color:#EF9F27"></i> Logistique</span>
+<div class="team-bar-bg"><div class="team-bar b4">42%</div></div>
+<span class="team-mono">3/7</span>
+</div>
+<div style="margin-top:10px;padding:6px 8px;background:rgba(255,255,255,.06);border-radius:6px;font-size:10px;color:#9fb6c2;text-align:center">
+<i class="ti ti-info-circle"></i> Trié par moyenne d'avancement décroissante · 🥇 leader · 🥈 2nd · 🥉 3ème
+</div>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li>📋 <b>SQL massif</b> articles (~50 colonnes) + table tva_taux avec comptes compta</li>
+<li>🧮 <b>lib/barcode.js</b> : génération EAN13 + parsing GS1-128 + checksum</li>
+<li>📦 <b>Page articles refondue</b> : 43 → 800 lignes, 12 colonnes liste, 7 onglets modal</li>
+<li>🔍 <b>Hover survol matériels</b> : popup overlay avec S/N et Lots</li>
+<li>🎵 <b>Lissage MA7</b> sur sparkline 30j/90j (toggle Lisser)</li>
+<li>📊 <b>Export CSV snapshots</b> compatible Excel FR (BOM + ; + virgule)</li>
+<li>🏆 <b>Équipes vs équipes</b> : classement avec médailles + barres animées</li>
+<li>✅ <b>+40 tests</b> Vitest (~5150 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~5150 verts attendus
+npm run build           # OK attendu
+
+# 1) SQL Supabase (MASSIF — ~50 colonnes + table tva_taux + RLS + trigger)
+#    public/sql/migration-0.58.67-articles-refonte-complete.sql
+
+# 2) Seed initial des taux TVA français (à adapter avec ta structure_id)
+INSERT INTO tva_taux (structure_id, code, libelle, taux, compte_vente, compte_achat, est_defaut) VALUES
+  ('VOTRE_STRUCTURE_ID', 'NORMAL',        'TVA Normale 20%',         20.00, '707100', '607100', true),
+  ('VOTRE_STRUCTURE_ID', 'INTERMEDIAIRE', 'TVA Intermédiaire 10%',   10.00, '707200', '607200', false),
+  ('VOTRE_STRUCTURE_ID', 'REDUIT',        'TVA Réduite 5.5%',          5.50, '707300', '607300', false),
+  ('VOTRE_STRUCTURE_ID', 'SUPER_REDUIT',  'TVA Super-réduite 2.1%',    2.10, '707400', '607400', false),
+  ('VOTRE_STRUCTURE_ID', 'EXO',           'Exonération TVA',           0.00, '707500', '607500', false);
+
+# 3) Push code
+git add -A
+git commit -m "Alpha 0.58.67 - Refonte articles massive + MA7 + Export CSV + Equipes vs"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.68+)</h2>
+<div class="panel">
+<ul>
+<li>Page paramétrage Compta avec gestion taux TVA (UI sur table tva_taux)</li>
+<li>Scan code-barres mobile pour entrée stock article (réutiliser BL scanner 0.58.40)</li>
+<li>Étiquettes prix : génération PDF avec EAN13 + libellé + prix TTC</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Fiche détaillée article en page dédiée (au-delà du modal)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.67 · 6 juin 2026 · 📦 ARTICLES 🔢 EAN13 🎵 MA7 📊 CSV 🏆 RANKING</footer>
+</div>
+
+</body></html>

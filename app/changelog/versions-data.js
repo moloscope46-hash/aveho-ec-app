@@ -6,6 +6,41 @@ import { logger } from "../../lib/logger";
 // =============================================================
 
 export const THEME_LABELS = {
+  "article": {
+    "lbl": "Articles & Catalogue",
+    "icon": "ti-package",
+    "color": "#185FA5"
+  },
+  "logistique": {
+    "lbl": "Logistique",
+    "icon": "ti-truck-delivery",
+    "color": "#5a8f8f"
+  },
+  "tva": {
+    "lbl": "TVA & Tarifs",
+    "icon": "ti-percentage",
+    "color": "#EF9F27"
+  },
+  "tracabilite": {
+    "lbl": "Tracabilité Lot/Série",
+    "icon": "ti-barcode",
+    "color": "#7a6fb0"
+  },
+  "code_barres": {
+    "lbl": "Codes-barres GS1",
+    "icon": "ti-scan",
+    "color": "#142131"
+  },
+  "compta": {
+    "lbl": "Comptabilité",
+    "icon": "ti-calculator",
+    "color": "#5e4a8c"
+  },
+  "export": {
+    "lbl": "Export & CSV",
+    "icon": "ti-file-download",
+    "color": "#5aa05a"
+  },
   "rgpd": {
     "lbl": "RGPD & Consents",
     "icon": "ti-shield-lock",
@@ -204,6 +239,58 @@ export const THEME_LABELS = {
 };
 
 export const ALL_VERSIONS = [
+  {
+    "v": "0.58.67",
+    "kind": "version",
+    "titre": "📦 Refonte massive Articles (logistique + TVA + tracabilité + rattachements) + 🎵 Lissage MA7 + 📊 Export CSV + 🏆 Équipes vs Équipes",
+    "chantiers": [
+      { "code": "ARCH", "txt": "📋 SQL `migration-0.58.67-articles-refonte-complete.sql` (MASSIF) : **(1) Nouvelle table `tva_taux`** paramétrable avec id/structure_id/code/libelle/taux + colonnes COMPTA : compte_vente/compte_achat/compte_tva_collectee/compte_tva_deductible/code_analytique/est_defaut/actif. UNIQUE(structure_id, code) + RLS read pour la structure + write pour admins. Seed commenté avec 5 taux français usuels (NORMAL 20%, INTERMEDIAIRE 10%, REDUIT 5.5%, SUPER_REDUIT 2.1%, EXO 0%). **(2) ALTER TABLE articles** avec ~50 nouvelles colonnes : codes-barres (code_barre, code_barres_alt[], code_barre_type, code_lpp, code_acl, code_ucd), logistique (unite, conditionnement, conditionnement_libelle, poids_g, volume_ml, longueur_cm/largeur_cm/hauteur_cm, quantite_palette, quantite_carton), stock (stock_min, stock_max, delai_appro_jours), tarifs (prix_achat_ht, prix_vente_ht, prix_vente_ttc, tva_taux_id FK, tva_pct, marge_pct, devise), tracabilité (gere_lot, gere_serie, gere_peremption, duree_vie_jours), rattachements (fournisseur_principal_id, etablissement_partenaire_id, pharmacie_id FK pharmacies, fabricant, marque, modele), classifications (classe_dm I/IIa/IIb/III, sterile, usage_unique, dispositif_medical), compta override (compte_vente_override, compte_achat_override, code_analytique_override), métadonnées (description, notes_internes, image_url, actif, archive, updated_at + trigger auto). **9 index** pour requêtes courantes + trigger updated_at",
+        "code_snippet": {
+          "file": "public/sql/migration-0.58.67-articles-refonte-complete.sql",
+          "note": "SQL refonte massive",
+          "lang": "sql",
+          "before": "-- AVANT 0.58.67 - articles minimaliste\n-- Colonnes : id, structure_id, etablissement_id, reference, libelle, famille, prix",
+          "after": "-- 0.58.67 - refonte massive (~50 colonnes)\nCREATE TABLE IF NOT EXISTS tva_taux (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  structure_id UUID NOT NULL,\n  code TEXT NOT NULL,\n  libelle TEXT NOT NULL,\n  taux NUMERIC(5,2) NOT NULL DEFAULT 0,\n  compte_vente TEXT, compte_achat TEXT,\n  compte_tva_collectee TEXT, compte_tva_deductible TEXT,\n  code_analytique TEXT, est_defaut BOOLEAN, actif BOOLEAN,\n  UNIQUE (structure_id, code)\n);\n\nALTER TABLE articles\n  ADD COLUMN IF NOT EXISTS code_barre TEXT,\n  ADD COLUMN IF NOT EXISTS code_lpp TEXT,\n  ADD COLUMN IF NOT EXISTS poids_g NUMERIC(10,2),\n  ADD COLUMN IF NOT EXISTS conditionnement INTEGER DEFAULT 1,\n  ADD COLUMN IF NOT EXISTS prix_achat_ht NUMERIC(10,4),\n  ADD COLUMN IF NOT EXISTS prix_vente_ht NUMERIC(10,4),\n  ADD COLUMN IF NOT EXISTS tva_taux_id UUID REFERENCES tva_taux(id),\n  ADD COLUMN IF NOT EXISTS marge_pct NUMERIC(5,2),\n  ADD COLUMN IF NOT EXISTS gere_lot BOOLEAN DEFAULT false,\n  ADD COLUMN IF NOT EXISTS gere_serie BOOLEAN DEFAULT false,\n  ADD COLUMN IF NOT EXISTS pharmacie_id UUID REFERENCES pharmacies(id),\n  ADD COLUMN IF NOT EXISTS etablissement_partenaire_id UUID,\n  ADD COLUMN IF NOT EXISTS classe_dm TEXT,\n  ADD COLUMN IF NOT EXISTS dispositif_medical BOOLEAN DEFAULT false;\n  -- + 35 autres colonnes pour logistique/tarifs/compta..."
+        }
+      },
+      { "code": "ARCH", "txt": "🧮 Nouveau utilitaire `lib/barcode.js` : fonctions pures pour génération + validation + parsing de codes-barres. `ean13Checksum(code12)` calcule le 13ème chiffre, `isValidEan13(code)` valide checksum, `generateEan13(prefix='200')` génère un EAN13 valide avec préfixe interne (200-299 réservé usage privé), `detectBarcodeType(code)` retourne EAN13/EAN8/GS1-128/CODE128, `parseGS1(code)` extrait les AI (01=GTIN, 10=lot, 11=fabrication, 17=péremption, 21=série, 240=ref complément), `formatGS1Date(YYMMDD)` → ISO, `generateEan13Svg(code)` pour aperçu visuel" },
+      { "code": "FEAT", "txt": "📦 REFONTE MASSIVE PAGE `/articles` — passage de 43 lignes basiques à 800 lignes UI premium. **Liste enrichie** avec 12 colonnes : Réf / Libellé (+ badges DM/Stérile/UU) / Famille / Code-barres (mono) / Cond. / PA HT / PV HT / TVA / Marge (vert>30% / ambre 10-30% / rouge<10%) / 🔍 Tracabilité (🏷lot/🔢série/⏱péremption) / 📦 Matériels rattachés (badge teal cliquable) / Actions. **Filtres** : search (libellé/réf/code-barres/LPP) + famille + tracabilité (lot/série) + DM uniquement. **Modal d'édition à 7 onglets** : Général/Codes-barres/Logistique/Tarifs & TVA/Tracabilité/Rattachements/Compta. **Génération EAN13** en un clic (préfixe 200) + aperçu SVG. **Calcul TTC + marge en LIVE** quand on saisit PA HT et PV HT. **Tracabilité** présentée comme 3 cards toggles avec descriptions explicites. **Rattachements** : marque/modèle/fabricant + select étab partenaire + select pharmacie + count matériels rattachés visible en édition" },
+      { "code": "FEAT", "txt": "🔍 HOVER SUR LISTE ARTICLE → POPUP MATÉRIELS RATTACHÉS. Au survol du badge `📦 N` dans la colonne 'Matériels' de la liste articles, une popup overlay (fond navy, z-index 100, box-shadow) apparaît et affiche jusqu'à 10 matériels rattachés à cet article avec : libellé + S/N (numero_serie) ou Lot (numero_lot) en mono teal. Si plus de 10 matériels, footer '+ N autres…'. Chargement à la demande via `loadMaterielsForArticle(articleId)` (Supabase query .limit(10))",
+        "code_snippet": {
+          "file": "app/articles/page.js",
+          "note": "Hover matériels",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.67 - colonne basique sans interaction\n<td>{materielCount}</td>",
+          "after": "// 0.58.67 - badge cliquable + popup hover\n<td style={{ position: 'relative' }}>\n  <span\n    onMouseEnter={() => { setHoveredArticle(a.id); loadMaterielsForArticle(a.id); }}\n    onMouseLeave={() => { setHoveredArticle(null); setHoveredMateriels([]); }}\n    style={{ background: 'linear-gradient(135deg, #7CC8C8, #5da8a8)', color: '#fff', padding: '2px 8px', borderRadius: 10 }}\n  >\n    <i className='ti ti-package' /> {matCount}\n  </span>\n  {hoveredArticle === a.id && hoveredMateriels.length > 0 && (\n    <div style={{ position: 'absolute', top: '100%', right: 0, background: '#142131', color: '#fff', padding: '10px 12px', borderRadius: 8, minWidth: 280, zIndex: 100, boxShadow: '0 10px 30px rgba(0,0,0,.30)' }}>\n      <div style={{ fontWeight: 700 }}>\n        <i className='ti ti-package' /> Matériels rattachés ({matCount})\n      </div>\n      {hoveredMateriels.map(m => (\n        <div key={m.id}>\n          <span>{m.libelle}</span>\n          <span style={{ color: '#7CC8C8' }}>\n            {m.numero_serie ? `S/N ${m.numero_serie}` : m.numero_lot ? `Lot ${m.numero_lot}` : ''}\n          </span>\n        </div>\n      ))}\n    </div>\n  )}\n</td>"
+        }
+      },
+      { "code": "FEAT", "txt": "🎵 MOYENNE MOBILE 7j SUR SPARKLINE 30j/90j (lisse le bruit quotidien). Nouveau bouton **'Lisser'** corail (visible uniquement en mode 30j et 90j, pas 7j) qui active une **courbe pointillée corail superposée** à la courbe principale violette. Calcul : fenêtre centrée de 7 jours (i-3 → i+4), moyenne arithmétique des avgPct dans la fenêtre. Aux bords de la série la fenêtre se réduit (pas d'NaN). Persisté en `localStorage av-team-goals-smooth`. Permet de voir la **tendance de fond** sans le bruit des oscillations quotidiennes",
+        "code_snippet": {
+          "file": "app/components/TeamGoalsSparkline.js",
+          "note": "MA7 lissage",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.67 - une seule courbe\n<polyline points={points.polyline} stroke='#7a6fb0' />",
+          "after": "// 0.58.67 - courbe brute + MA7 lissée superposée\nconst [smooth, setSmooth] = useState(() => localStorage.getItem('av-team-goals-smooth') === '1');\n\n// Calcul MA7 centré\nconst ma7Values = displayHistory.map((_, i) => {\n  const start = Math.max(0, i - 3);\n  const end = Math.min(displayHistory.length, i + 4);\n  const window = displayHistory.slice(start, end);\n  return window.reduce((sum, h) => sum + h.avgPct, 0) / window.length;\n});\n\n// Toggle button (visible 30j/90j seulement)\n{rangeDays !== 7 && (\n  <button onClick={() => setSmooth(!smooth)} title='Moyenne mobile 7j'>\n    <i className='ti ti-wave-sine' /> Lisser\n  </button>\n)}\n\n// Rendu : courbe brute + MA7 pointillée corail\n<polyline points={points.polyline} stroke='#7a6fb0' strokeWidth='2.5' />\n{smooth && rangeDays !== 7 && (\n  <polyline\n    points={points.ma7Polyline}\n    stroke='#C9867F'\n    strokeWidth='2'\n    strokeDasharray='4,3'\n    fill='none'\n  />\n)}"
+        }
+      },
+      { "code": "FEAT", "txt": "📊 EXPORT CSV DES SNAPSHOTS SERVEUR (nouveau composant `TeamGoalsSnapshotsExport`). Bouton 'Export CSV' (style teal + icône `ti-file-download`) au-dessus de la sparkline qui télécharge tout l'historique 90j depuis `user_goals_snapshots`. **Format compatible Excel FR** : séparateur `;`, BOM UTF-8, nombres décimaux avec virgule. **2 sections** : (1) Vue globale (Date / Moyenne / Atteints / Total / Taux / Détail équipes inline), (2) Vue détaillée par équipe (Date / Équipe / Moyenne / Atteints / Total / Taux). Nom de fichier : `objectifs-snapshots-{YYYY-MM-DD}.csv`. Téléchargement via Blob + `URL.createObjectURL` + `a.download` (pas de dépendance externe)" },
+      { "code": "FEAT", "txt": "🏆 VUE 'ÉQUIPES vs ÉQUIPES' COMPARATIVE (nouveau composant `TeamVsTeamChart`). Apparaît automatiquement sous le sparkline quand `stats.teamStats.length > 1`. **Classement décroissant par avgPct** avec : (a) rang 1/2/3 dans une pastille colorée (🥇 ambre / 🥈 argent / 🥉 bronze, gris ensuite), (b) icône + nom de l'équipe en couleur native (récupérée depuis table `equipes` via fetch async), (c) barre horizontale animée 600ms (cubic-bezier ease-out-back) avec gradient de couleur de l'équipe + label % à l'intérieur (ou à côté si barre trop courte), (d) compteur atteints/total en mono. Footer explicatif avec légende des médailles",
+        "code_snippet": {
+          "file": "app/components/TeamVsTeamChart.js",
+          "note": "Comparatif équipes",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.67 - simples cartes verticales sans classement\n{stats.teamStats.map(ts => (\n  <div key={ts.team_id}>\n    {ts.team_nom} : {ts.avgPct}%\n  </div>\n))}",
+          "after": "// 0.58.67 - classement + barres + couleurs natives\nconst sorted = [...teamStats].sort((a, b) => (b.avgPct || 0) - (a.avgPct || 0));\n\n{sorted.map((t, idx) => {\n  const meta = teamsMeta[t.team_id] || {};\n  const couleur = meta.couleur || '#7a6fb0';\n  const rankColor = idx === 0 ? '#EF9F27' : idx === 1 ? '#a0aeb9' : idx === 2 ? '#C9867F' : '#8a98a8';\n  const widthPct = ((t.avgPct || 0) / maxVal) * 100;\n  return (\n    <div key={t.team_id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>\n      <span style={{ background: rankColor, color: '#fff', borderRadius: '50%', width: 22 }}>\n        {idx + 1}\n      </span>\n      <i className={`ti ${meta.icone || 'ti-users-group'}`} style={{ color: couleur }} />\n      <span>{t.team_nom}</span>\n      <div style={{ flex: 1, background: '#fff', height: 16, borderRadius: 8 }}>\n        <div style={{\n          width: `${widthPct}%`,\n          height: '100%',\n          background: `linear-gradient(90deg, ${couleur}, ${couleur}cc)`,\n          transition: 'width 600ms cubic-bezier(.34, 1.56, .64, 1)',\n        }}>\n          {Math.round(t.avgPct)}%\n        </div>\n      </div>\n      <span>{t.achieved}/{t.nb}</span>\n    </div>\n  );\n})}"
+        }
+      },
+      { "code": "AI", "txt": "+40 tests Vitest (v058-67-bundle.test.js) : SQL articles refonte + tva_taux (8), lib/barcode unit (5+1 fonctionnel), Page articles refondue (8), MA7 sparkline (4), Export CSV (4), TeamVsTeam (4), intégration DashboardWidgets (3). Total **~5150 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.67 : **(1) Articles** = vrai référentiel catalogue PSAD/FBM avec codes-barres GS1, prix TTC calculés, marge live, classifications DM, tracabilité lot/série/péremption, rattachements multiples. **(2) TVA** paramétrable par structure (table dédiée avec comptes compta complets). **(3) Hover survol** affiche les matériels rattachés à un article (popup overlay avec S/N ou Lot). **(4) Dashboard objectifs** propose maintenant : sparkline 7/30/90j + lissage MA7 + export CSV + comparatif équipes. PROCHAINES PISTES (0.58.68+) : (a) Tags multi-langues (icone + label fr/en/es), (b) Mode présentation widget Météo, (c) Page paramétrage Compta avec gestion taux TVA (UI sur table tva_taux), (d) Scan code-barres mobile pour entrée stock article (réutiliser BL scanner 0.58.40), (e) Étiquettes prix (génération PDF avec EAN13 + libellé + prix TTC)" }
+    ],
+    "themes": ["feature", "article", "logistique", "tva", "tracabilite", "code_barres", "compta", "team", "objectifs", "stats_dashboard", "export"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.67.html",
+    "sqlFile": "migration-0.58.67-articles-refonte-complete.sql"
+  },
   {
     "v": "0.58.66",
     "kind": "version",

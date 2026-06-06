@@ -13,6 +13,8 @@ import { Panel } from "../ui";
 import { dialogs } from "../dialogs";
 import TeamStatsPdfExport from "./TeamStatsPdfExport";  // 0.58.62
 import TeamGoalsSparkline from "./TeamGoalsSparkline";  // 0.58.63
+import TeamVsTeamChart from "./TeamVsTeamChart";  // 0.58.67
+import TeamGoalsSnapshotsExport from "./TeamGoalsSnapshotsExport";  // 0.58.67
 
 // 30 citations soigneusement choisies (pas trop perso, pas trop corporate)
 const CITATIONS = [
@@ -2642,9 +2644,19 @@ export function TeamGoalsWidget() {
         </div>
       )}
 
-      {/* 0.58.63 : Sparkline évolution sur 7 jours */}
+      {/* 0.58.63 : Sparkline évolution sur 7 jours, 0.58.67 : + export CSV */}
       {stats && teamGoals.length > 0 && (
-        <TeamGoalsSparkline stats={stats} totalGoals={teamGoals.length} />
+        <>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+            <TeamGoalsSnapshotsExport />
+          </div>
+          <TeamGoalsSparkline stats={stats} totalGoals={teamGoals.length} />
+        </>
+      )}
+
+      {/* 0.58.67 : Vue équipes vs équipes (comparatif avec barres + classement) */}
+      {stats?.teamStats && stats.teamStats.length > 1 && (
+        <TeamVsTeamChart stats={stats} />
       )}
 
       {/* 0.58.59 : mini-stats par équipe */}

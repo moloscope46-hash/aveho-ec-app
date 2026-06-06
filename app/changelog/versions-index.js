@@ -10,12 +10,47 @@
 //  Seul THEME_LABELS (2 KB) reste en import statique.
 //
 //  STATS au moment de la génération :
-//   - VERSIONS_INDEX (JSON public) : 828.1 KB lazy
-//   - Extra (chantiers > 5)        : 171.2 KB lazy
-//   - Versions : 260
+//   - VERSIONS_INDEX (JSON public) : 836.5 KB lazy
+//   - Extra (chantiers > 5)        : 175.1 KB lazy
+//   - Versions : 261
 // =============================================================
 
 export const THEME_LABELS = {
+  "article": {
+    "lbl": "Articles & Catalogue",
+    "icon": "ti-package",
+    "color": "#185FA5"
+  },
+  "logistique": {
+    "lbl": "Logistique",
+    "icon": "ti-truck-delivery",
+    "color": "#5a8f8f"
+  },
+  "tva": {
+    "lbl": "TVA & Tarifs",
+    "icon": "ti-percentage",
+    "color": "#EF9F27"
+  },
+  "tracabilite": {
+    "lbl": "Tracabilité Lot/Série",
+    "icon": "ti-barcode",
+    "color": "#7a6fb0"
+  },
+  "code_barres": {
+    "lbl": "Codes-barres GS1",
+    "icon": "ti-scan",
+    "color": "#142131"
+  },
+  "compta": {
+    "lbl": "Comptabilité",
+    "icon": "ti-calculator",
+    "color": "#5e4a8c"
+  },
+  "export": {
+    "lbl": "Export & CSV",
+    "icon": "ti-file-download",
+    "color": "#5aa05a"
+  },
   "rgpd": {
     "lbl": "RGPD & Consents",
     "icon": "ti-shield-lock",

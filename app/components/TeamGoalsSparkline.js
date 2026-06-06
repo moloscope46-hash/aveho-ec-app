@@ -53,6 +53,14 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
 
   const [history, setHistory] = useState([]);
   const [source, setSource] = useState("local");  // "supabase" | "local"
+  // 0.58.67 : toggle moyenne mobile 7j (lisse le bruit sur 90j)
+  const [smooth, setSmooth] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem("av-team-goals-smooth") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("av-team-goals-smooth", smooth ? "1" : "0"); } catch {}
+  }, [smooth]);
 
   useEffect(() => {
     if (!stats || totalGoals === 0) return;
@@ -116,7 +124,18 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
     const xs = displayHistory.map((_, i) => padX + (i / (displayHistory.length - 1)) * innerW);
     const ys = displayHistory.map(h => padY + innerH - (h.avgPct / 100) * innerH);
     const polyline = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
-    return { polyline, xs, ys, w, h, history: displayHistory };
+    // 0.58.67 : moyenne mobile 7j (centrée — fenêtre de 7 jours, valeur centrale)
+    // Pour les bords on prend la fenêtre disponible (moins de points).
+    const ma7Values = displayHistory.map((_, i) => {
+      const start = Math.max(0, i - 3);
+      const end = Math.min(displayHistory.length, i + 4);
+      const window = displayHistory.slice(start, end);
+      const avg = window.reduce((sum, h) => sum + h.avgPct, 0) / window.length;
+      return avg;
+    });
+    const ma7Ys = ma7Values.map(v => padY + innerH - (v / 100) * innerH);
+    const ma7Polyline = xs.map((x, i) => `${x.toFixed(1)},${ma7Ys[i].toFixed(1)}`).join(" ");
+    return { polyline, xs, ys, w, h, history: displayHistory, ma7Polyline, ma7Values };
   }, [displayHistory, rangeDays]);
 
   if (!points) {
@@ -189,6 +208,23 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
               }}
             >90j</button>
           </div>
+          {/* 0.58.67 : toggle "Lisser" (moyenne mobile 7j) — utile surtout en 30j/90j */}
+          {rangeDays !== 7 && (
+            <button
+              onClick={() => setSmooth(!smooth)}
+              title="Moyenne mobile 7 jours (lisse le bruit quotidien)"
+              style={{
+                background: smooth ? "linear-gradient(135deg, #C9867F, #b56e67)" : "transparent",
+                color: smooth ? "#fff" : "#C9867F",
+                border: `1.5px solid ${smooth ? "#C9867F" : "#C9867F"}`,
+                borderRadius: 6, padding: "3px 9px", fontSize: 10.5, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 3,
+              }}
+            >
+              <i className="ti ti-wave-sine" /> Lisser
+            </button>
+          )}
           <span style={{ fontSize: 12, fontWeight: 700, color: trendColor, display: "flex", alignItems: "center", gap: 3 }}>
             <i className={`ti ti-trending-${trend > 0 ? "up" : trend < 0 ? "down" : "right"}`} />
             {trend > 0 ? "+" : ""}{trend} pts
@@ -209,6 +245,10 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
           fill={`url(#sparkline-gradient-${rangeDays})`}
         />
         <polyline points={points.polyline} fill="none" stroke="#7a6fb0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {/* 0.58.67 : moyenne mobile 7j en pointillé corail (visible si toggle "Lisser" activé) */}
+        {smooth && rangeDays !== 7 && (
+          <polyline points={points.ma7Polyline} fill="none" stroke="#C9867F" strokeWidth="2" strokeDasharray="4,3" strokeLinejoin="round" strokeLinecap="round" opacity="0.95" />
+        )}
         {points.xs.map((x, i) => (
           <circle key={i} cx={x} cy={points.ys[i]} r={rangeDays === 90 ? 1.2 : rangeDays === 30 ? 1.8 : 2.5} fill="#fff" stroke="#7a6fb0" strokeWidth={rangeDays === 90 ? 1.5 : 2}>
             <title>{`${points.history[i].d} — ${points.history[i].avgPct}%`}</title>
