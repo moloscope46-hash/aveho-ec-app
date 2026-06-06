@@ -139,7 +139,7 @@ export default function MobileNewPatientPage() {
       let r = await supabase.from("patients").insert(fullPayload).select("id").single();
       if (r.error) {
         console.warn("[Patient/new] Tentative complète échouée:", r.error);
-        // Niveau 2 : payload minimal compatible avec n'importe quel schéma patients
+        // Niveau 2 : payload minimal avec chambre_id (si colonne existe)
         const minPayload = {
           structure_id: auth.structureId,
           etablissement_id: form.etablissement_id || auth.etabId || null,
@@ -152,17 +152,30 @@ export default function MobileNewPatientPage() {
         console.log("[Patient/new] Retente minimal:", minPayload);
         r = await supabase.from("patients").insert(minPayload).select("id").single();
         if (r.error) {
-          console.error("[Patient/new] Erreur même en minimal:", r.error);
-          if (r.error.code === "42703") {
-            throw new Error(`Colonne inexistante : ${r.error.message}. Applique migration-0.58.81-patients-chambres-enrichis.sql et migration-0.58.85.`);
+          // 0.59.4 : Niveau 3 ULTRA-MINIMAL (juste les champs absolument requis)
+          // Si chambre_id n'existe pas (PGRST204), on retire et retente
+          console.warn("[Patient/new] Niveau 2 échoué, tentative ULTRA-minimal:", r.error);
+          const ultraMin = {
+            structure_id: auth.structureId,
+            nom: form.nom,
+            prenom: form.prenom || null,
+            created_by: auth.user?.id,
+          };
+          console.log("[Patient/new] Retente ULTRA-minimal:", ultraMin);
+          r = await supabase.from("patients").insert(ultraMin).select("id").single();
+          if (r.error) {
+            console.error("[Patient/new] Erreur même en ULTRA-minimal:", r.error);
+            if (r.error.code === "PGRST204") throw new Error(`Colonne absente : ${r.error.message}. Applique fix-missing-columns-0.59.4.sql dans Supabase SQL Editor.`);
+            if (r.error.code === "42703") throw new Error(`Colonne inexistante : ${r.error.message}. Applique fix-missing-columns-0.59.4.sql.`);
+            if (r.error.code === "42501") throw new Error("RLS bloque l'insert. Vérifie ta policy 'patients'.");
+            if (r.error.code === "23502") throw new Error(`Champ obligatoire manquant : ${r.error.details || r.error.message}`);
+            if (r.error.code === "23503") throw new Error(`FK invalide : ${r.error.details || r.error.message}`);
+            throw new Error(`${r.error.message} (code: ${r.error.code || "?"})`);
           }
-          if (r.error.code === "42501") throw new Error("RLS bloque l'insert. Vérifie ta policy 'patients'.");
-          if (r.error.code === "23502") throw new Error(`Champ obligatoire manquant : ${r.error.details || r.error.message}`);
-          if (r.error.code === "23503") throw new Error(`FK invalide : ${r.error.details || r.error.message} (chambre_id ou etablissement_id n'existe pas ?)`);
-          throw new Error(`${r.error.message} (code: ${r.error.code || "?"})`);
+          alert("⚠ Patient créé en mode ULTRA-minimal (juste nom/prénom).\n\nApplique fix-missing-columns-0.59.4.sql dans Supabase pour activer chambre/service/médecin/etc.");
+        } else {
+          alert("Patient créé avec les champs basiques.\n\nApplique fix-missing-columns-0.59.4.sql pour activer tous les champs.");
         }
-        // Avertir Cédric que certains champs n'ont pas été sauvés
-        alert("Patient créé avec les champs basiques.\n\nNote : certains champs (allergies, GIR, médecin, etc.) n'ont pas pu être sauvés. Applique migration-0.58.81-patients-chambres-enrichis.sql pour les avoir.");
       }
       console.log("[Patient/new] Patient créé id=", r.data?.id);
       // Redirection vers QR/bracelet du nouveau patient
@@ -187,19 +200,41 @@ export default function MobileNewPatientPage() {
     }}>
       <MobileSubHeader title="Nouveau patient" icon="ti-user-plus" color="#C9867F" />
 
-      {/* Progression */}
+      {/* 0.59.3 : Stepper visuel 5 étapes avec icônes */}
       <div style={{ padding: "16px 16px 0" }}>
-        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-          {[1, 2, 3, 4].map(n => (
-            <div key={n} style={{
-              flex: 1, height: 5, borderRadius: 3,
-              background: step >= n ? "#C9867F" : "rgba(255,255,255,.10)",
-              transition: "background .2s",
-            }} />
-          ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 4 }}>
+          {[
+            { n: 1, ic: "ti-id", lbl: "Identité" },
+            { n: 1.5, ic: "ti-building", lbl: "Affectation" }, // sous-étape de 1
+            { n: 2, ic: "ti-phone", lbl: "Contact" },
+            { n: 3, ic: "ti-stethoscope", lbl: "Médical" },
+            { n: 4, ic: "ti-check", lbl: "Validation" },
+          ].map((s, idx, arr) => {
+            const reached = step >= Math.ceil(s.n);
+            const isCurrent = (step === 1 && (s.n === 1 || s.n === 1.5)) || (step === Math.ceil(s.n) && s.n !== 1.5);
+            return (
+              <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, position: "relative" }}>
+                {idx > 0 && <div style={{ position: "absolute", left: "-50%", top: 14, width: "100%", height: 2, background: reached ? "#C9867F" : "rgba(255,255,255,.10)" }} />}
+                <div style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: reached ? "#C9867F" : "rgba(255,255,255,.10)",
+                  color: reached ? "#fff" : "#8a98a8",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 700, zIndex: 1,
+                  border: isCurrent ? "2px solid #fff" : "none",
+                  boxShadow: isCurrent ? "0 0 0 3px rgba(255,255,255,.20)" : "none",
+                }}>
+                  <i className={`ti ${s.ic}`} />
+                </div>
+                <div style={{ fontSize: 9, color: reached ? "#fff" : "#8a98a8", marginTop: 3, fontWeight: isCurrent ? 700 : 500, textAlign: "center" }}>
+                  {s.lbl}
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div style={{ color: "#bfe6e6", fontSize: 12.5, marginBottom: 14 }}>
-          Étape {step} / 4 · {step === 1 ? "Identité" : step === 2 ? "Coordonnées + Urgence" : step === 3 ? "Médical" : "Validation"}
+        <div style={{ color: "#bfe6e6", fontSize: 12.5, marginBottom: 14, textAlign: "center", fontWeight: 600 }}>
+          Étape {step} / 4 · {step === 1 ? "Identité + Affectation + Médecin" : step === 2 ? "Coordonnées + Urgence" : step === 3 ? "Médical complet" : "Récapitulatif & validation"}
         </div>
       </div>
 
@@ -570,13 +605,18 @@ function ChambreMaterielSection({ supabase, chambreId, structureId, chambreNom }
     if (!chambreId) return;
     (async () => {
       try {
-        // Tente avec chambre_id (si colonne existe sur matériels)
-        const r = await supabase
+        // 0.59.4 : Niveau 1 avec chambre_id + structure_id
+        let r = await supabase
           .from("materiels")
           .select("id, libelle, num_serie, num_parc, etat, photo_url")
           .eq("chambre_id", chambreId)
           .eq("structure_id", structureId)
           .limit(50);
+        if (r.error) {
+          // Niveau 2 : juste chambre_id (sans structure_id si pas de cette colonne)
+          console.warn("[Chambre] Fallback sans structure_id:", r.error?.message);
+          r = await supabase.from("materiels").select("id, libelle, num_serie, num_parc, etat, photo_url").eq("chambre_id", chambreId).limit(50);
+        }
         setMateriels(r.data || []);
       } catch (e) {
         setMateriels([]);
@@ -587,11 +627,16 @@ function ChambreMaterielSection({ supabase, chambreId, structureId, chambreNom }
   useEffect(() => {
     if (!showSearch) return;
     (async () => {
-      const r = await supabase
+      // 0.59.4 : tente avec structure_id, fallback sans
+      let r = await supabase
         .from("articles")
         .select("id, libelle, code, photo_url, prix_vente_ht, type_article")
         .eq("structure_id", structureId)
         .limit(100);
+      if (r.error) {
+        console.warn("[Articles] Fallback sans structure_id:", r.error?.message);
+        r = await supabase.from("articles").select("id, libelle, code, photo_url, prix_vente_ht, type_article").limit(100);
+      }
       setArticles(r.data || []);
     })();
   }, [showSearch]);

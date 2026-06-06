@@ -243,6 +243,7 @@ export default function FichePatient() {
                   const { imprimerFichePatient } = await import("../../../lib/ficheToPdf");
                   imprimerFichePatient({ patient: pat, etiquettes, materiels, interventions });
                 }}>Imprimer</Btn>
+                <Btn variant="ghost" icon="ti-clipboard-pulse" onClick={() => router.push(`/patient/${patId}/dossier`)}>Dossier médical 💎</Btn>
                 <Btn variant="ghost" icon="ti-clipboard-heart" onClick={() => router.push(`/patient/${patId}/dashboard`)}>Dashboard santé</Btn>
                 <Btn variant="ghost" icon="ti-edit" onClick={() => router.push(`/patient/${patId}/edit`)}>Édition complète</Btn>
               </div>
@@ -490,6 +491,28 @@ export default function FichePatient() {
           </>
         )}
       </Modal>
+
+      {/* 0.59.3 : FAB Réimprimer QR/Bracelet — utile quand patient change de chambre */}
+      <button
+        onClick={() => router.push(`/patients/${patId}/qr`)}
+        title="Réimprimer QR + bracelet (utile si patient a changé de chambre)"
+        style={{
+          position: "fixed", bottom: 90, right: 20,
+          width: 56, height: 56, borderRadius: "50%",
+          background: "linear-gradient(135deg, #5e4a8c, #473873)",
+          color: "#fff", border: "none",
+          fontSize: 22, cursor: "pointer",
+          boxShadow: "0 6px 20px rgba(94,74,140,.40), 0 2px 6px rgba(0,0,0,.15)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 100,
+          transition: "transform 150ms",
+          fontFamily: "inherit",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.1)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+      >
+        <i className="ti ti-qrcode" />
+      </button>
     </div>
   );
 }

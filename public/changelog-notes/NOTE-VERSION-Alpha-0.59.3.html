@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.3 — 4-in-1 Patient & Service</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #3a1a4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,74,140,.30));border:1px solid rgba(94,74,140,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#a899d0;font-weight:700;background:rgba(120,100,180,.18);border:1px solid rgba(120,100,180,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#c4bbd9;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#c4bbd9}
+.meta b{color:#fff}.meta code{background:rgba(120,100,180,.16);color:#fff;border:1px solid rgba(120,100,180,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5e4a8c,#C9867F)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(94,74,140,.20);border-left:4px solid #5e4a8c;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* Stepper demo */
+.stepper-demo{display:flex;justify-content:space-between;align-items:center;gap:4px;background:#142131;padding:14px 10px;border-radius:10px;margin:14px 0}
+.step-bullet{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.step-bullet .dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;z-index:1}
+.step-bullet.done .dot{background:#C9867F;color:#fff}
+.step-bullet.cur .dot{background:#C9867F;color:#fff;border:2px solid #fff;box-shadow:0 0 0 3px rgba(255,255,255,.20)}
+.step-bullet.todo .dot{background:rgba(255,255,255,.10);color:#8a98a8}
+.step-bullet .lbl{font-size:9;margin-top:3px;font-weight:500}
+.step-bullet.done .lbl, .step-bullet.cur .lbl{color:#fff;font-weight:700}
+.step-bullet.todo .lbl{color:#8a98a8}
+.step-line{position:absolute;left:-50%;top:14px;width:100%;height:2px}
+.step-bullet.done .step-line, .step-bullet.cur .step-line{background:#C9867F}
+.step-bullet.todo .step-line{background:rgba(255,255,255,.10)}
+
+/* FAB demo */
+.fab-demo{position:relative;width:160px;height:160px;background:#1a2434;border-radius:12px;margin:14px 0}
+.fab{position:absolute;bottom:16px;right:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#5e4a8c,#473873);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22;box-shadow:0 6px 20px rgba(94,74,140,.40)}
+
+/* Dossier sections */
+.tabs-demo{display:flex;gap:4px;overflow-x:auto;background:#1a2434;padding:8px;border-radius:10px;margin:14px 0;flex-wrap:wrap}
+.tab{padding:6px 12px;border-radius:8px;font-size:11.5;font-weight:700;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.tab.active{background:rgba(24,95,165,.25);color:#7eaae0;border-bottom:3px solid #185FA5}
+.tab.inactive{color:#8a98a8;border-bottom:3px solid transparent}
+
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin:14px 0}
+.synth-card{background:#1a2434;padding:12px;border-radius:8px;border:1px solid #2a3645}
+.synth-card.alert{background:rgba(227,93,91,.10);border-color:rgba(227,93,91,.30);border-left:4px solid #e35d5b}
+.synth-card .title{font-size:10px;color:#8a98a8;text-transform:uppercase;font-weight:700;letter-spacing:1px}
+.synth-card .val{font-size:13;font-weight:600;color:#fff;margin-top:4px}
+
+/* Pathologie selector */
+.path-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin:8px 0;background:#1a2434;padding:8px;border-radius:8px}
+.path-chip{padding:8px 10px;border:2px solid #2a3645;background:#0e1620;color:#8a98a8;border-radius:8px;font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+.path-chip.linked{background:rgba(124,200,200,.13);color:#7CC8C8;border-color:#7CC8C8}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #5e4a8c}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(94,74,140,.18);font-size:11.5px;color:#c4bbd9;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">💎 0.59.3 · 4-IN-1 PATIENT & SERVICE</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>💎 Stepper 5 étapes + FAB QR + Dossier médical premium + Multi-select pathologies du service<small>4 features Cédric en une version — workflow patient guidé, réimpression QR, dossier riche, cascade pathologie/service</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.3-alpha</code></span>
+    <span><b>SQL :</b> aucun (utilise 0.58.99 + 0.59.0)</span>
+    <span><b>Type :</b> Pack feature</span>
+  </div>
+</header>
+
+<h2>📊 1. Stepper visuel 5 étapes</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">Création patient mobile : barre de progression remplacée par 5 bullets avec icônes Tabler.</p>
+</div>
+
+<div class="stepper-demo">
+  <div class="step-bullet done"><div class="dot"><i class="ti ti-id">📋</i></div><div class="lbl">Identité</div></div>
+  <div class="step-bullet cur"><div class="step-line"></div><div class="dot"><i class="ti ti-building">🏢</i></div><div class="lbl">Affectation</div></div>
+  <div class="step-bullet todo"><div class="step-line"></div><div class="dot"><i class="ti ti-phone">📞</i></div><div class="lbl">Contact</div></div>
+  <div class="step-bullet todo"><div class="step-line"></div><div class="dot"><i class="ti ti-stethoscope">🩺</i></div><div class="lbl">Médical</div></div>
+  <div class="step-bullet todo"><div class="step-line"></div><div class="dot"><i class="ti ti-check">✓</i></div><div class="lbl">Validation</div></div>
+</div>
+
+<h2>🖨 2. FAB Réimprimer QR/Bracelet</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">Sur la page patient, un bouton flottant violet en bas à droite permet de réimprimer le QR/bracelet à tout moment — utile quand le patient change de chambre.</p>
+</div>
+
+<div class="fab-demo">
+  <div style="padding:10px;font-size:11;color:#8a98a8">Page patient...</div>
+  <div class="fab"><i class="ti ti-qrcode">📱</i></div>
+</div>
+
+<h2>💎 3. Dossier médical premium</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff;font-size:13.5px">Nouvelle page <code>/patient/[id]/dossier</code> avec 7 onglets éditables :</p>
+</div>
+
+<div class="tabs-demo">
+  <div class="tab active"><i>📊</i> Synthèse</div>
+  <div class="tab inactive"><i>🕒</i> Antécédents</div>
+  <div class="tab inactive"><i>⚠</i> Allergies</div>
+  <div class="tab inactive"><i>💊</i> Traitements</div>
+  <div class="tab inactive"><i>🩺</i> Pathologie</div>
+  <div class="tab inactive"><i>📔</i> Notes</div>
+  <div class="tab inactive"><i>🔧</i> Interventions</div>
+</div>
+
+<p style="color:#c4bbd9;font-size:13;margin:8px 0">Onglet Synthèse : 6 cards récap (pathologie, référent, allergies, traitements, GIR, interventions).</p>
+
+<div class="cards-grid">
+  <div class="synth-card">
+    <div class="title">🩺 Pathologie</div>
+    <div class="val">PPC (Apnée du sommeil)</div>
+  </div>
+  <div class="synth-card">
+    <div class="title">👨‍⚕️ Référent</div>
+    <div class="val">Dr Martin (docteur)</div>
+  </div>
+  <div class="synth-card alert">
+    <div class="title">⚠ Allergies</div>
+    <div class="val">Pénicilline, arachides</div>
+  </div>
+  <div class="synth-card">
+    <div class="title">💊 Traitements</div>
+    <div class="val">Doliprane 1g x3/j si douleur</div>
+  </div>
+  <div class="synth-card">
+    <div class="title">📈 GIR</div>
+    <div class="val">GIR 3</div>
+  </div>
+  <div class="synth-card">
+    <div class="title">🔧 Interventions</div>
+    <div class="val">12 interventions</div>
+  </div>
+</div>
+
+<p style="color:#c4bbd9;font-size:13;margin:8px 0">Chaque autre onglet a un mode "Éditer" inline avec textarea + bouton Enregistrer. Sauvegarde directe en DB sur la colonne correspondante (antecedents, allergies, traitements, notes).</p>
+
+<h2>🩺 4. Multi-select pathologies par service</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">Dans <code>/etablissement/edition</code>, modal d'édition d'un service : nouvelle section "Pathologies prises en charge". Click pour toggler le rattachement.</p>
+</div>
+
+<div class="path-grid">
+  <div class="path-chip linked"><i>💧</i> <span><span style="font-size:9;opacity:.7">PERF</span><br>Perfusion</span> ✓</div>
+  <div class="path-chip linked"><i>🥩</i> <span><span style="font-size:9;opacity:.7">NUT-NED</span><br>Nut. entérale</span> ✓</div>
+  <div class="path-chip"><i>💨</i> <span><span style="font-size:9;opacity:.7">PPC</span><br>PPC</span></div>
+  <div class="path-chip"><i>⭕</i> <span><span style="font-size:9;opacity:.7">OXY</span><br>Oxy.</span></div>
+  <div class="path-chip linked"><i>🩹</i> <span><span style="font-size:9;opacity:.7">CICA</span><br>Cicatrisation</span> ✓</div>
+  <div class="path-chip"><i>🦽</i> <span><span style="font-size:9;opacity:.7">VPH</span><br>VPH</span></div>
+</div>
+
+<p style="color:#c4bbd9;font-size:12;margin:8px 0">3/6 pathologies cochées · Insert/delete instantané dans <code>services_pathologies</code> · Pas besoin de Save global</p>
+
+<h2>🔄 Workflow complet</h2>
+
+<pre>1️⃣ Tu crées tes pathologies (/pathologies)
+       ↓
+2️⃣ Tu rattaches les pathos aux services (/etablissement/edition → modal service)
+       ↓
+3️⃣ Tu crées un patient mobile (/mobile/patient/new)
+       - Choix service → propose pathologies du service en priorité (0.59.4)
+       - Choix chambre → affiche matériel installé + recherche article (0.59.2)
+       - Choix collaborateur référent → filtré par service (0.59.1)
+       ↓
+4️⃣ Patient créé → QR/bracelet auto-imprimé
+       ↓
+5️⃣ Si patient change de chambre → click FAB violet → réimpression QR
+       ↓
+6️⃣ Suivi via dossier médical premium (/patient/[id]/dossier)</pre>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.3 - Stepper + FAB QR + Dossier premium + Patho service"
+git push origin main</pre>
+
+<p style="color:#c4bbd9;font-size:13;margin-top:14px">Prérequis : SQL 0.58.99 (pathologies) + 0.59.0 (collaborateurs) doivent être appliqués. Sans ça, certaines sections ne s'affichent simplement pas.</p>
+
+<footer>Aveho — Espace Collectivité · 0.59.3 · 6 juin 2026 · 💎 4-IN-1 PATIENT & SERVICE</footer>
+</div></body></html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.4 — HOTFIX SQL colonnes manquantes</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a1a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20));border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f08a88;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#fdcecd;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdcecd}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:#e35d5b}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(227,93,91,.20);border-left:4px solid #e35d5b;border-radius:14px;padding:20px 24px;margin:14px 0}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #e35d5b}
+.err-line{background:rgba(227,93,91,.10);padding:8px 12px;border-left:3px solid #e35d5b;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px;margin:4px 0;color:#fdcecd}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(227,93,91,.18);font-size:13px}
+table th{color:#f08a88;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(227,93,91,.18);font-size:11.5px;color:#fdcecd;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🩹 0.59.4 · HOTFIX SQL</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩹 HOTFIX SQL critique : colonnes <code>chambre_id</code> manquantes + payload ULTRA-minimal défensif<small>Tes 400 dans la console viennent de colonnes absentes en DB. Ce SQL + ce code défensif débloquent tout.</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.4-alpha</code></span>
+    <span><b>SQL :</b> <code>fix-missing-columns-0.59.4.sql</code></span>
+    <span><b>Type :</b> Hotfix critique</span>
+  </div>
+</header>
+
+<h2>🐛 Les erreurs que tu as vues</h2>
+
+<div class="panel">
+<div class="err-line">PGRST204: Could not find the 'chambre_id' column of 'patients' in the schema cache</div>
+<div class="err-line">patients?select=chambre_id&structure_id=...&chambre_id=not.is.null → 400</div>
+<div class="err-line">materiels?select=...&chambre_id=eq.b0ecb317-... → 400</div>
+<div class="err-line">articles?select=...&structure_id=eq.aaaaaaaa-... → 400</div>
+<div class="err-line">services?select=id,nom,batiment_id → 400</div>
+<p style="margin:8px 0 0;color:#fdcecd;font-size:13">Cause : les colonnes <code>chambre_id</code>, <code>service_id</code>, <code>structure_id</code>, <code>batiment_id</code> ne sont pas toutes présentes en DB. Les migrations 0.58.81 / 0.58.85 / 0.58.99 / 0.59.0 auraient dû les créer, mais elles ne sont pas toutes appliquées chez toi.</p>
+</div>
+
+<h2>🔧 La fix : 2 actions</h2>
+
+<h3 style="color:#fff;margin:18px 0 8px">1️⃣ Code défensif (déjà dans le zip)</h3>
+
+<div class="panel">
+<p style="margin:0 0 6px;color:#fff;font-size:13.5px"><b>Payload patient en 3 niveaux</b> :</p>
+<ol style="margin:0;color:#fdcecd;font-size:13;padding-left:20px">
+<li>Full avec tous les champs (chambre_id, service_id, allergies, etc.)</li>
+<li>Minimal avec chambre_id (si full plante)</li>
+<li><b>ULTRA-minimal sans chambre_id</b> (juste structure_id, nom, prenom, created_by) — fallback si même chambre_id n'existe pas</li>
+</ol>
+<p style="margin:8px 0 0;color:#fdcecd;font-size:12.5">Si niveau 3 marche : alert <i>"Patient créé en mode ULTRA-minimal. Applique fix-missing-columns-0.59.4.sql"</i></p>
+</div>
+
+<h3 style="color:#fff;margin:18px 0 8px">2️⃣ SQL fix idempotent</h3>
+
+<pre>-- Toutes les colonnes manquantes en ADD COLUMN IF NOT EXISTS
+
+ALTER TABLE patients
+  ADD COLUMN IF NOT EXISTS chambre_id UUID,
+  ADD COLUMN IF NOT EXISTS service_id UUID,
+  ADD COLUMN IF NOT EXISTS etablissement_id UUID,
+  ADD COLUMN IF NOT EXISTS collaborateur_id UUID,
+  ADD COLUMN IF NOT EXISTS pathologie_id UUID,
+  ADD COLUMN IF NOT EXISTS allergies TEXT,
+  ADD COLUMN IF NOT EXISTS antecedents TEXT,
+  ADD COLUMN IF NOT EXISTS traitements TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS gir INTEGER,
+  ...
+
+ALTER TABLE materiels
+  ADD COLUMN IF NOT EXISTS chambre_id UUID,
+  ADD COLUMN IF NOT EXISTS service_id UUID;
+
+ALTER TABLE articles
+  ADD COLUMN IF NOT EXISTS structure_id UUID,
+  ADD COLUMN IF NOT EXISTS code TEXT,
+  ADD COLUMN IF NOT EXISTS libelle TEXT,
+  ...
+
+-- + Indexes appropriés</pre>
+
+<h2>🚀 Procédure</h2>
+
+<table>
+<tr><th>Étape</th><th>Action</th></tr>
+<tr><td>1</td><td>Push le code 0.59.4 (zip) sur GitHub → Vercel redéploie</td></tr>
+<tr><td>2</td><td>Va dans <b>Supabase Dashboard → SQL Editor</b></td></tr>
+<tr><td>3</td><td>Colle tout le contenu de <code>fix-missing-columns-0.59.4.sql</code></td></tr>
+<tr><td>4</td><td>Click <b>Run</b></td></tr>
+<tr><td>5</td><td>À la fin tu verras un SELECT qui liste les colonnes ajoutées</td></tr>
+<tr><td>6</td><td>Reviens sur l'appli → hard refresh Ctrl+Shift+R → les 400 disparaissent</td></tr>
+</table>
+
+<h2>📋 Effet attendu</h2>
+
+<div class="panel">
+<ul style="margin:0;color:#fdcecd;font-size:13;line-height:1.8">
+<li>Plus de <code>PGRST204 chambre_id</code> dans la console</li>
+<li>Plus de 400 sur <code>patients?chambre_id=...</code></li>
+<li>Plus de 400 sur <code>materiels?chambre_id=...</code></li>
+<li>Plus de 400 sur <code>articles?structure_id=...</code></li>
+<li>Plus de 400 sur <code>services?batiment_id=...</code></li>
+<li>Création patient marche avec chambre + tous les champs</li>
+<li>Matériel installé dans la chambre s'affiche correctement</li>
+<li>Recherche article au panier marche</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.4 · 6 juin 2026 · 🩹 HOTFIX SQL CRITIQUE</footer>
+</div></body></html>

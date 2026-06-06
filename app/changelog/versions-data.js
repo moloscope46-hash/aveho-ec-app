@@ -240,6 +240,44 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.59.4",
+    "kind": "hotfix",
+    "titre": "🩹 HOTFIX SQL critique : colonnes chambre_id/service_id/etc. manquantes + payload patient ULTRA-minimal",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`fix-missing-columns-0.59.4.sql`** : SQL idempotent qui ajoute toutes les colonnes manquantes en DB (qui auraient dû être ajoutées par les migrations 0.58.81/0.58.85/0.58.99/0.59.0 mais ne le sont pas toutes). Couvre `patients.chambre_id`, `materiels.chambre_id`, `articles.structure_id`, `services.batiment_id`, `chambres.service_id`, et tous les autres champs enrichis. Safe à re-run autant que tu veux" },
+      { "code": "AI", "txt": "🛡 **Payload patient en 3 niveaux** : (1) full avec tous les champs, (2) minimal avec chambre_id, **(3) ULTRA-minimal sans chambre_id** (juste structure_id, nom, prenom, created_by). Si niveau 3 marche, alert : 'Patient créé en mode ULTRA-minimal — applique fix-missing-columns-0.59.4.sql pour activer chambre/service/etc.'" },
+      { "code": "AI", "txt": "🛡 **ChambreMaterielSection défensif** : fallback sans structure_id si le filtre plante (table articles sans structure_id ou table materiels sans chambre_id). Évite les 400 dans la console" },
+      { "code": "INFO", "txt": "🎯 **À faire MAINTENANT** : (1) Va dans Supabase SQL Editor · (2) Colle `fix-missing-columns-0.59.4.sql` · (3) Run · (4) Refresh ton appli — les 400 dans la console doivent disparaître et la création patient doit marcher complètement" }
+    ],
+    "themes": ["hotfix", "sql"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.4.html"
+  },
+  {
+    "v": "0.59.3",
+    "kind": "feat",
+    "titre": "💎 4-in-1 : Stepper visuel 5 étapes + FAB Réimprimer QR + Dossier médical premium + Multi-select pathologies du service",
+    "chantiers": [
+      { "code": "AI", "txt": "📊 **Stepper visuel 5 étapes** dans `/mobile/patient/new` : remplace la barre simple par 5 bullets cliquables (Identité, Affectation, Contact, Médical, Validation) avec icônes Tabler. La bullet courante a un cercle blanc 2px + ombre, les bullets atteintes sont en saumon (#C9867F) avec icône blanche, les futures en gris. Lignes de connexion entre bullets changent de couleur selon progression" },
+      { "code": "AI", "txt": "🖨 **FAB Réimprimer QR/Bracelet** sur la page patient (`/patient/[id]`) : bouton flottant violet (#5e4a8c) bottom: 90, right: 20, taille 56×56 px, icône ti-qrcode. Tooltip 'Réimprimer QR + bracelet (utile si patient a changé de chambre)'. Click → ouvre directement `/patients/[id]/qr`. Animation scale(1.1) au hover" },
+      { "code": "AI", "txt": "💎 **Nouvelle page `/patient/[id]/dossier` — Dossier médical premium** avec 7 onglets : Synthèse (cards récap), Antécédents, Allergies (avec alerte ⚠), Traitements, Pathologie (avec protocole détaillé), Notes, Interventions (timeline). Header coloré selon la pathologie principale avec avatar initiales + bouton Éditer/QR. Chaque section éditable inline avec textarea + bouton Enregistrer",
+        "code_snippet": {
+          "file": "app/patient/[id]/dossier/page.js",
+          "note": "Sections du dossier",
+          "lang": "javascript",
+          "after": "const SECTIONS = [\n  { id: 'synthese', icon: 'ti-clipboard-pulse', col: '#185FA5' },\n  { id: 'antecedents', icon: 'ti-history', col: '#7a6fb0' },\n  { id: 'allergies', icon: 'ti-alert-triangle', col: '#e35d5b' },  // alerte ⚠\n  { id: 'traitements', icon: 'ti-pill', col: '#5aa05a' },\n  { id: 'pathologie', icon: 'ti-stethoscope', col: '#C9867F' },\n  { id: 'notes', icon: 'ti-notebook', col: '#EF9F27' },\n  { id: 'interventions', icon: 'ti-tools', col: '#7CC8C8' },\n];"
+        }
+      },
+      { "code": "AI", "txt": "📌 **Lien vers dossier** : nouveau bouton 'Dossier médical 💎' ajouté à la barre d'actions de la page patient (à côté de Dashboard santé et Édition complète)" },
+      { "code": "AI", "txt": "🩺 **Multi-select pathologies dans l'édition de service** (`/etablissement/edition`) : nouveau composant `<ServicePathologies>` qui apparaît dans le modal d'édition d'un service. Grid de pathologies (toutes celles du référentiel /pathologies), click pour toggler le rattachement. Visuel : couleur de la pathologie quand sélectionnée + icône, transparent quand pas, ✓ check si lié. Insert/delete instantané dans table `services_pathologies` (créée en 0.58.99)" },
+      { "code": "INFO", "txt": "🎯 **Workflow complet** : (1) Tu crées une pathologie dans /pathologies · (2) Dans /etablissement/edition tu édites un service, tu coches les pathologies pertinentes · (3) Quand tu crées un patient mobile et tu choisis ce service, les pathologies cochées seront proposées en priorité (à implémenter en 0.59.4 si tu confirmes le flux)" },
+      { "code": "INFO", "txt": "✨ **Tout le pack 0.59 (0.59.0→0.59.3)** : Collaborateurs avec rôles pro, icônes menu, mobile responsive, pathologies CRUD, création patient enrichie, fix dark mode, matériel chambre, stepper 5 étapes, dossier médical premium, multi-select pathologies du service. 11 SQL/features cumulés depuis le bundle 0.58.96→0.58.99" }
+    ],
+    "themes": ["feat", "patient", "dossier", "service"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.3.html"
+  },
+  {
     "v": "0.59.2",
     "kind": "feat",
     "titre": "🌙 Fix MODE SOMBRE (text noir sur noir) + 🛏 Matériel installé dans chambre + recherche article",

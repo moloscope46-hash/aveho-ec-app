@@ -267,7 +267,95 @@ export default function EditionEtablissement() {
             />
           </div>
         )}
+        {/* 0.59.3 : multi-select pathologies pour un service */}
+        {modal?.kind === "service" && modal?.row?.id && (
+          <ServicePathologies serviceId={modal.row.id} supabase={supabase} />
+        )}
       </Modal>
+    </div>
+  );
+}
+
+// 0.59.3 : Composant rattachement pathologies à un service
+function ServicePathologies({ serviceId, supabase }) {
+  const [pathologies, setPathologies] = useState([]);
+  const [linked, setLinked] = useState(new Set()); // ids des pathologies liées
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!serviceId) return;
+    (async () => {
+      try {
+        const [allP, linkedP] = await Promise.all([
+          supabase.from("pathologies").select("id, nom, code, icone, couleur").eq("actif", true).order("nom"),
+          supabase.from("services_pathologies").select("pathologie_id").eq("service_id", serviceId),
+        ]);
+        setPathologies(allP.data || []);
+        setLinked(new Set((linkedP.data || []).map(r => r.pathologie_id)));
+      } catch (e) {
+        console.error("[SvcPath]", e);
+      } finally { setLoading(false); }
+    })();
+  }, [serviceId]);
+
+  async function toggle(pathId) {
+    const wasLinked = linked.has(pathId);
+    setSaving(true);
+    const newSet = new Set(linked);
+    try {
+      if (wasLinked) {
+        await supabase.from("services_pathologies").delete().eq("service_id", serviceId).eq("pathologie_id", pathId);
+        newSet.delete(pathId);
+      } else {
+        await supabase.from("services_pathologies").insert({ service_id: serviceId, pathologie_id: pathId });
+        newSet.add(pathId);
+      }
+      setLinked(newSet);
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setSaving(false); }
+  }
+
+  if (loading) return <div style={{ color: "#5a6878", fontSize: 12, padding: 8 }}>Chargement pathologies...</div>;
+  if (pathologies.length === 0) return (
+    <div className="fld" style={{ background: "#fff8ec", padding: 10, borderRadius: 6, fontSize: 12, color: "#7a4f15", borderLeft: "3px solid #EF9F27" }}>
+      <i className="ti ti-info-circle" /> Aucune pathologie créée. <a href="/pathologies" style={{ color: "#185FA5" }}>Créer dans /pathologies</a>
+    </div>
+  );
+
+  return (
+    <div className="fld">
+      <label>
+        Pathologies prises en charge ({linked.size}/{pathologies.length})
+        {saving && <span style={{ marginLeft: 8, color: "#7CC8C8", fontSize: 11 }}>Mise à jour…</span>}
+      </label>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 6, maxHeight: 280, overflowY: "auto", padding: 4, background: "#fafbfc", borderRadius: 8, border: "1px solid #e3e9ee" }}>
+        {pathologies.map(p => {
+          const isLinked = linked.has(p.id);
+          return (
+            <button key={p.id} type="button" onClick={() => toggle(p.id)}
+              style={{
+                padding: "8px 10px",
+                background: isLinked ? `${p.couleur}22` : "#fff",
+                border: `2px solid ${isLinked ? p.couleur : "#e3e9ee"}`,
+                color: isLinked ? p.couleur : "#5a6878",
+                borderRadius: 8, fontFamily: "inherit", fontSize: 11.5,
+                fontWeight: 600, cursor: "pointer", textAlign: "left",
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+              <i className={`ti ${p.icone || "ti-stethoscope"}`} />
+              <span style={{ flex: 1 }}>
+                {p.code && <div style={{ fontSize: 9, fontFamily: "Consolas,monospace", opacity: 0.7 }}>{p.code}</div>}
+                {p.nom}
+              </span>
+              {isLinked && <i className="ti ti-check" />}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 4 }}>
+        Click pour ajouter/retirer. Les pathologies cochées apparaissent comme suggestions dans la création patient pour ce service.
+      </div>
     </div>
   );
 }
