@@ -52,18 +52,24 @@ export default function BatimentServiceSwitcher({ auth }) {
           list = fb.data || [];
         }
         setBatiments(list);
-        // Restore sélection précédente si toujours valide, sinon premier
+        // Restore sélection précédente si toujours valide
+        // 0.58.98 : si saved === "" → "Tous les bâtiments" (préserver le choix)
         try {
           const saved = localStorage.getItem(STORAGE_BAT);
-          if (saved && list.find(b => b.id === saved)) {
+          if (saved === "") {
+            // "Tous les bâtiments" explicitement choisi
+            setBatId("");
+          } else if (saved && list.find(b => b.id === saved)) {
             setBatId(saved);
           } else if (list.length > 0) {
-            setBatId(list[0].id);
+            // Par défaut au premier load : "Tous les bâtiments" (au lieu du 1er)
+            // pour ne pas surprendre l'utilisateur en filtrant d'office
+            setBatId("");
           } else {
             setBatId("");
           }
         } catch {
-          setBatId(list[0]?.id || "");
+          setBatId("");
         }
       } catch (e) {
         setBatiments([]);
@@ -99,13 +105,17 @@ export default function BatimentServiceSwitcher({ auth }) {
         setServices(list);
         try {
           const saved = localStorage.getItem(STORAGE_SVC);
-          if (saved && list.find(s => s.id === saved)) {
+          if (saved === "") {
+            // 0.58.98 : "Tous les services" préservé
+            setSvcId("");
+          } else if (saved && list.find(s => s.id === saved)) {
             setSvcId(saved);
           } else {
-            setSvcId(list[0]?.id || "");
+            // Par défaut "Tous les services" (au lieu du 1er)
+            setSvcId("");
           }
         } catch {
-          setSvcId(list[0]?.id || "");
+          setSvcId("");
         }
       } catch (err) {
         if (alive) { setServices([]); setSvcId(""); }
@@ -153,12 +163,16 @@ export default function BatimentServiceSwitcher({ auth }) {
   }, [batId]);
 
   // Persiste + dispatch event
+  // 0.58.98 : id="" = "Tous les bâtiments" → dispatch batimentId: null
   function changeBat(id) {
     setBatId(id);
     try { localStorage.setItem(STORAGE_BAT, id); } catch {}
+    // Reset service quand on change de bâtiment
+    setSvcId("");
+    try { localStorage.setItem(STORAGE_SVC, ""); } catch {}
     try {
       window.dispatchEvent(new CustomEvent("av-current-context-change", {
-        detail: { batimentId: id, serviceId: null },
+        detail: { batimentId: id || null, serviceId: null, equipeId: null },
       }));
     } catch {}
   }
@@ -167,7 +181,7 @@ export default function BatimentServiceSwitcher({ auth }) {
     try { localStorage.setItem(STORAGE_SVC, id); } catch {}
     try {
       window.dispatchEvent(new CustomEvent("av-current-context-change", {
-        detail: { batimentId: batId, serviceId: id, equipeId: equipeId || null },
+        detail: { batimentId: batId || null, serviceId: id || null, equipeId: equipeId || null },
       }));
     } catch {}
   }
@@ -177,7 +191,7 @@ export default function BatimentServiceSwitcher({ auth }) {
     try { localStorage.setItem("av-current-equipe-id", id); } catch {}
     try {
       window.dispatchEvent(new CustomEvent("av-current-context-change", {
-        detail: { batimentId: batId, serviceId: svcId, equipeId: id || null },
+        detail: { batimentId: batId || null, serviceId: svcId || null, equipeId: id || null },
       }));
     } catch {}
   }
@@ -228,6 +242,12 @@ export default function BatimentServiceSwitcher({ auth }) {
           }}
         >
           {batiments.length === 0 && <option value="">—</option>}
+          {/* 0.58.98 : option "Tous les bâtiments" pour ne pas filtrer */}
+          {batiments.length > 0 && (
+            <option value="" style={{ color: "#142131", fontWeight: 700 }}>
+              ★ Tous les bâtiments
+            </option>
+          )}
           {batiments.map(b => (
             <option key={b.id} value={b.id} style={{ color: "#142131" }}>{b.nom}</option>
           ))}
@@ -267,6 +287,10 @@ export default function BatimentServiceSwitcher({ auth }) {
               outline: "none",
             }}
           >
+            {/* 0.58.98 : option "Tous les services" */}
+            <option value="" style={{ color: "#142131", fontWeight: 700 }}>
+              ★ Tous les services
+            </option>
             {services.map(s => (
               <option key={s.id} value={s.id} style={{ color: "#142131" }}>{s.nom}</option>
             ))}

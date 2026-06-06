@@ -240,6 +240,28 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.98",
+    "kind": "feat",
+    "titre": "🏢 ★ Option \"Tous les bâtiments\" et \"Tous les services\" dans les filtres du haut",
+    "chantiers": [
+      { "code": "AI", "txt": "✨ **Nouveau choix '★ Tous les bâtiments'** en tête du sélecteur bâtiment dans la TopBar (BatimentServiceSwitcher). Sélectionne cette option pour ne PAS filtrer par bâtiment et voir tous les éléments de l'établissement. Marqué d'une étoile ★ pour le distinguer visuellement",
+        "code_snippet": {
+          "file": "app/components/BatimentServiceSwitcher.js",
+          "note": "Option Tous au début du select",
+          "lang": "javascript",
+          "after": "{batiments.length > 0 && (\n  <option value=\"\" style={{ fontWeight: 700 }}>\n    ★ Tous les bâtiments\n  </option>\n)}\n{batiments.map(b => (\n  <option key={b.id} value={b.id}>{b.nom}</option>\n))}"
+        }
+      },
+      { "code": "AI", "txt": "✨ **Aussi '★ Tous les services'** : quand un bâtiment est sélectionné, le sélecteur service propose maintenant 'Tous les services' au début pour voir tous les services du bâtiment sans filtre" },
+      { "code": "AI", "txt": "🔁 **Default change** : au premier login (pas de choix sauvé), la page démarre désormais sur 'Tous les bâtiments' au lieu du 1er bâtiment trouvé. Évite de surprendre l'utilisateur avec un filtre actif à son insu. Si l'utilisateur choisit un bâtiment, sa sélection est mémorisée pour le prochain login" },
+      { "code": "AI", "txt": "📡 **Event `av-current-context-change` propre** : quand 'Tous les bâtiments' est sélectionné, l'event est dispatché avec `batimentId: null` (au lieu de `\"\"`). Les pages qui filtrent par batiment_id doivent vérifier `batimentId !== null` avant d'appliquer le filtre WHERE batiment_id" },
+      { "code": "INFO", "txt": "💡 **Reset cascade** : changer de bâtiment reset auto le service ET l'équipe (cohérence). Sélectionner 'Tous les bâtiments' vide aussi service et équipe" }
+    ],
+    "themes": ["feat", "ux", "filtre"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.98.html"
+  },
+  {
     "v": "0.58.97",
     "kind": "hotfix",
     "titre": "🚨 HOTFIX React #418 — hydration mismatch sur /profil (localStorage direct dans JSX)",
