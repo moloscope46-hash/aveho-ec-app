@@ -37,13 +37,18 @@ export default function BatimentServiceSwitcher({ auth }) {
     (async () => {
       setLoading(true);
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("batiments")
-          .select("id, nom")
+          .select("id, nom, icone")
           .eq("etablissement_id", auth.etabId)
           .order("nom");
         if (!alive) return;
-        const list = data || [];
+        // Fallback gracieux si la colonne `icone` n'existe pas encore (SQL 0.58.60 pas passé)
+        let list = data || [];
+        if (error && (error.code === "42703" || /icone/i.test(error.message || ""))) {
+          const fb = await supabase.from("batiments").select("id, nom").eq("etablissement_id", auth.etabId).order("nom");
+          list = fb.data || [];
+        }
         setBatiments(list);
         // Restore sélection précédente si toujours valide, sinon premier
         try {
@@ -67,6 +72,10 @@ export default function BatimentServiceSwitcher({ auth }) {
     return () => { alive = false; };
   }, [auth?.etabId]);
 
+  // 0.58.60 : équipes rattachées au service (ou bâtiment si pas de service)
+  const [equipes, setEquipes] = useState([]);
+  const [equipeId, setEquipeId] = useState("");
+
   // Charge services quand le bâtiment change (via étages → services)
   useEffect(() => {
     if (!batId) {
@@ -87,13 +96,18 @@ export default function BatimentServiceSwitcher({ auth }) {
           if (alive) { setServices([]); setSvcId(""); }
           return;
         }
-        const { data: svcs } = await supabase
+        const { data: svcs, error: svcErr } = await supabase
           .from("services")
-          .select("id, nom")
+          .select("id, nom, icone")
           .in("etage_id", etageIds)
           .order("nom");
         if (!alive) return;
-        const list = svcs || [];
+        let list = svcs || [];
+        // Fallback si icone n'existe pas
+        if (svcErr && (svcErr.code === "42703" || /icone/i.test(svcErr.message || ""))) {
+          const fb = await supabase.from("services").select("id, nom").in("etage_id", etageIds).order("nom");
+          list = fb.data || [];
+        }
         setServices(list);
         try {
           const saved = localStorage.getItem(STORAGE_SVC);
@@ -107,6 +121,44 @@ export default function BatimentServiceSwitcher({ auth }) {
         }
       } catch {
         if (alive) { setServices([]); setSvcId(""); }
+      }
+    })();
+    return () => { alive = false; };
+  }, [batId]);
+
+  // 0.58.60 : Charge les équipes du bâtiment courant
+  useEffect(() => {
+    if (!batId) {
+      setEquipes([]);
+      setEquipeId("");
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("equipes")
+          .select("id, nom, couleur")
+          .eq("batiment_id", batId)
+          .order("nom");
+        if (!alive) return;
+        if (error) {
+          // colonne batiment_id absente ? on cherche via etablissement
+          const fb = await supabase.from("equipes").select("id, nom, couleur").order("nom");
+          setEquipes((fb.data || []).slice(0, 30));
+        } else {
+          setEquipes(data || []);
+        }
+        try {
+          const saved = localStorage.getItem("av-current-equipe-id");
+          if (saved && (data || []).find(e => e.id === saved)) {
+            setEquipeId(saved);
+          } else {
+            setEquipeId("");
+          }
+        } catch {}
+      } catch {
+        if (alive) { setEquipes([]); setEquipeId(""); }
       }
     })();
     return () => { alive = false; };
@@ -127,7 +179,17 @@ export default function BatimentServiceSwitcher({ auth }) {
     try { localStorage.setItem(STORAGE_SVC, id); } catch {}
     try {
       window.dispatchEvent(new CustomEvent("av-current-context-change", {
-        detail: { batimentId: batId, serviceId: id },
+        detail: { batimentId: batId, serviceId: id, equipeId: equipeId || null },
+      }));
+    } catch {}
+  }
+  // 0.58.60 : change équipe + persist + dispatch
+  function changeEquipe(id) {
+    setEquipeId(id);
+    try { localStorage.setItem("av-current-equipe-id", id); } catch {}
+    try {
+      window.dispatchEvent(new CustomEvent("av-current-context-change", {
+        detail: { batimentId: batId, serviceId: svcId, equipeId: id || null },
       }));
     } catch {}
   }
@@ -158,7 +220,10 @@ export default function BatimentServiceSwitcher({ auth }) {
           padding: "4px 4px 4px 8px",
         }}
       >
-        <i className="ti ti-building" style={{ color: "#7CC8C8", fontSize: 14 }} />
+        <i
+          className={`ti ti-${batiments.find(b => b.id === batId)?.icone || "building"}`}
+          style={{ color: "#7CC8C8", fontSize: 14 }}
+        />
         <select
           value={batId}
           onChange={(e) => changeBat(e.target.value)}
@@ -195,7 +260,10 @@ export default function BatimentServiceSwitcher({ auth }) {
             padding: "4px 4px 4px 8px",
           }}
         >
-          <i className="ti ti-stethoscope" style={{ color: "#EF9F27", fontSize: 14 }} />
+          <i
+            className={`ti ti-${services.find(s => s.id === svcId)?.icone || "stethoscope"}`}
+            style={{ color: "#EF9F27", fontSize: 14 }}
+          />
           <select
             value={svcId}
             onChange={(e) => changeSvc(e.target.value)}
@@ -213,6 +281,50 @@ export default function BatimentServiceSwitcher({ auth }) {
           >
             {services.map(s => (
               <option key={s.id} value={s.id} style={{ color: "#142131" }}>{s.nom}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* 0.58.60 : Équipe */}
+      {equipes.length > 0 && (
+        <div
+          title="Équipe courante (filtre)"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            background: "rgba(255,255,255,.06)",
+            border: "1px solid rgba(255,255,255,.10)",
+            borderRadius: 8,
+            padding: "4px 4px 4px 8px",
+          }}
+        >
+          <i
+            className="ti ti-users-group"
+            style={{
+              color: equipes.find(e => e.id === equipeId)?.couleur || "#7a6fb0",
+              fontSize: 14,
+            }}
+          />
+          <select
+            value={equipeId}
+            onChange={(e) => changeEquipe(e.target.value)}
+            aria-label="Équipe courante"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#dde4eb",
+              fontSize: 12,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              maxWidth: 130,
+              outline: "none",
+            }}
+          >
+            <option value="" style={{ color: "#142131" }}>— Toutes les équipes —</option>
+            {equipes.map(e => (
+              <option key={e.id} value={e.id} style={{ color: "#142131" }}>{e.nom}</option>
             ))}
           </select>
         </div>

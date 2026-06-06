@@ -18,6 +18,7 @@ import MesValidationsEnAttente from "../MesValidationsEnAttente";
 import HeroDashboard from "./HeroDashboard";
 // 0.58.20 : particules teal flottantes en arrière-plan
 import { ParticlesBackground } from "../components/ui-premium";
+import GalaxyBackground from "../components/GalaxyBackground";
 // 0.58.33 : dashboard widgets configurables drag & drop
 import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
 // 0.58.38 : 3 nouveaux widgets opt-in (citation, mini-calendrier, liens-favoris)
@@ -316,6 +317,8 @@ export default function Accueil() {
         zIndex: 0,
         pointerEvents: "none",
       }}>
+        {/* 0.58.60 : galaxies + planètes + étoiles filantes en plus des particules */}
+        <GalaxyBackground density="normal" showShootingStars={true} />
         {/* 0.58.26 : mode multicolor (palette Aveho cyclant) pour effet 'cosmic' sur /accueil */}
         <ParticlesBackground count={40} speed={0.25} linkDistance={150} mode="multicolor" />
       </div>

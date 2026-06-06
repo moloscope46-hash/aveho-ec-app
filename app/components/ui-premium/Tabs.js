@@ -26,9 +26,82 @@ export default function Tabs({
   tabs = [],
   style: variant = "pills",
   size = "md",
+  // 0.58.59 : drag&drop optionnel des onglets
+  reorderable = false,
+  storageKey = null,  // si fourni → persistance dans localStorage
 }) {
   const containerRef = useRef(null);
   const [indicatorStyle, setIndicatorStyle] = useState({});
+  // 0.58.59 : ordre des tabs persistant + state drag
+  const [tabOrder, setTabOrder] = useState(null);
+  const [draggedTabId, setDraggedTabId] = useState(null);
+  const [dragOverTabId, setDragOverTabId] = useState(null);
+  const [reorderEditMode, setReorderEditMode] = useState(false);
+
+  // Charge l'ordre persistant + réconcilie
+  useEffect(() => {
+    if (!reorderable || !storageKey) {
+      setTabOrder(tabs.map(t => t.id));
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const stored = raw ? JSON.parse(raw) : [];
+      const currentIds = tabs.map(t => t.id);
+      const validStored = stored.filter(id => currentIds.includes(id));
+      const missing = currentIds.filter(id => !validStored.includes(id));
+      setTabOrder([...validStored, ...missing]);
+    } catch {
+      setTabOrder(tabs.map(t => t.id));
+    }
+  }, [reorderable, storageKey, tabs.length]);
+
+  // Persiste à chaque changement
+  useEffect(() => {
+    if (!reorderable || !storageKey || !tabOrder) return;
+    try { localStorage.setItem(storageKey, JSON.stringify(tabOrder)); } catch {}
+  }, [tabOrder, reorderable, storageKey]);
+
+  // Tabs réordonnés
+  const orderedTabs = tabOrder
+    ? tabOrder.map(id => tabs.find(t => t.id === id)).filter(Boolean)
+    : tabs;
+
+  function handleTabDragStart(e, id) {
+    setDraggedTabId(id);
+    try { e.dataTransfer.effectAllowed = "move"; } catch {}
+  }
+  function handleTabDragOver(e, id) {
+    e.preventDefault();
+    if (id !== draggedTabId) setDragOverTabId(id);
+  }
+  function handleTabDrop(e, targetId) {
+    e.preventDefault();
+    if (!draggedTabId || draggedTabId === targetId) {
+      setDraggedTabId(null); setDragOverTabId(null);
+      return;
+    }
+    setTabOrder(prev => {
+      const arr = [...prev];
+      const fromIdx = arr.indexOf(draggedTabId);
+      const toIdx = arr.indexOf(targetId);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, draggedTabId);
+      return arr;
+    });
+    setDraggedTabId(null); setDragOverTabId(null);
+  }
+  function handleTabDragEnd() {
+    setDraggedTabId(null); setDragOverTabId(null);
+  }
+  function resetTabOrder() {
+    setTabOrder(tabs.map(t => t.id));
+    if (storageKey) {
+      try { localStorage.removeItem(storageKey); } catch {}
+    }
+  }
+  const isTabOrderModified = tabOrder && tabOrder.join(",") !== tabs.map(t => t.id).join(",");
 
   // Calcul de la position de l'indicator (pour variant underline + segmented)
   useEffect(() => {
@@ -58,6 +131,7 @@ export default function Tabs({
   // === STYLE PILLS (par défaut) ===
   if (variant === "pills") {
     return (
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       <div
         ref={containerRef}
         role="tablist"
@@ -67,18 +141,27 @@ export default function Tabs({
           padding: 4,
           background: "var(--av-g100)",
           borderRadius: "var(--av-r-full)",
-          border: "1px solid var(--av-g200)",
+          border: `1px solid ${reorderEditMode ? "var(--av-teal)" : "var(--av-g200)"}`,
+          boxShadow: reorderEditMode ? "0 0 0 3px rgba(124,200,200,.15)" : "none",
+          transition: "border-color 200ms, box-shadow 200ms",
         }}
       >
-        {tabs.map((t) => {
+        {orderedTabs.map((t) => {
           const isActive = t.id === active;
+          const isDragged = draggedTabId === t.id;
+          const isDropTarget = dragOverTabId === t.id && draggedTabId !== t.id;
           return (
             <button
               key={t.id}
               data-tab-id={t.id}
               role="tab"
               aria-selected={isActive}
-              onClick={() => onChange?.(t.id)}
+              draggable={reorderable && reorderEditMode}
+              onDragStart={reorderEditMode ? (e) => handleTabDragStart(e, t.id) : undefined}
+              onDragOver={reorderEditMode ? (e) => handleTabDragOver(e, t.id) : undefined}
+              onDrop={reorderEditMode ? (e) => handleTabDrop(e, t.id) : undefined}
+              onDragEnd={reorderEditMode ? handleTabDragEnd : undefined}
+              onClick={() => !reorderEditMode && onChange?.(t.id)}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -86,22 +169,27 @@ export default function Tabs({
                 padding: `${sz.padV}px ${sz.padH}px`,
                 background: isActive ? "var(--av-g0)" : "transparent",
                 color: isActive ? "var(--av-navy)" : "var(--av-g600)",
-                border: "none",
+                border: isDropTarget ? "2px solid var(--av-teal)" : "none",
                 borderRadius: "var(--av-r-full)",
                 fontWeight: isActive ? 600 : 500,
                 fontSize: sz.fontSize,
-                cursor: "pointer",
-                transition: "background 200ms var(--av-ease-out), color 200ms",
+                cursor: reorderEditMode ? "grab" : "pointer",
+                transition: "background 200ms var(--av-ease-out), color 200ms, opacity 150ms",
                 boxShadow: isActive ? "var(--av-shadow-sm)" : "none",
                 whiteSpace: "nowrap",
+                opacity: isDragged ? 0.4 : 1,
+                transform: isDropTarget ? "translateY(-1px)" : "none",
               }}
               onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.color = "var(--av-navy)";
+                if (!isActive && !reorderEditMode) e.currentTarget.style.color = "var(--av-navy)";
               }}
               onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.color = "var(--av-g600)";
+                if (!isActive && !reorderEditMode) e.currentTarget.style.color = "var(--av-g600)";
               }}
             >
+              {reorderEditMode && (
+                <span style={{ color: "var(--av-teal)", fontWeight: 900, letterSpacing: -2, fontSize: 12, marginRight: -2 }}>⋮⋮</span>
+              )}
               {t.icon && <i className={`ti ${t.icon}`} style={{ fontSize: sz.iconSize }} />}
               {t.label}
               {t.count !== undefined && t.count !== null && (
@@ -123,6 +211,52 @@ export default function Tabs({
             </button>
           );
         })}
+      </div>
+      {/* 0.58.59 : bouton pour activer le mode réorganisation */}
+      {reorderable && (
+        <div style={{ display: "inline-flex", gap: 4 }}>
+          <button
+            onClick={() => setReorderEditMode(!reorderEditMode)}
+            title={reorderEditMode ? "Terminer le réordonnancement" : "Réorganiser les onglets"}
+            style={{
+              background: reorderEditMode ? "linear-gradient(135deg, #7CC8C8, #5da8a8)" : "transparent",
+              color: reorderEditMode ? "#fff" : "var(--av-g600)",
+              border: `1px solid ${reorderEditMode ? "#7CC8C8" : "var(--av-g300)"}`,
+              padding: "5px 10px",
+              borderRadius: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              cursor: "pointer",
+              fontFamily: "inherit",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <i className={reorderEditMode ? "ti ti-check" : "ti ti-arrows-shuffle"} />
+            {reorderEditMode ? "OK" : ""}
+          </button>
+          {isTabOrderModified && !reorderEditMode && (
+            <button
+              onClick={resetTabOrder}
+              title="Réinitialiser l'ordre des onglets"
+              style={{
+                background: "transparent",
+                color: "#c0392b",
+                border: "1px solid #fcc",
+                padding: "5px 8px",
+                borderRadius: 6,
+                fontSize: 10.5,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              <i className="ti ti-restore" />
+            </button>
+          )}
+        </div>
+      )}
       </div>
     );
   }

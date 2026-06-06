@@ -2299,17 +2299,6 @@ export function ObjectifsWidget() {
             animation: "av-modal-fade-in 200ms ease-out",
           }}
         >
-        <div
-          onClick={(e) => { if (e.target === e.currentTarget) { setTeamPickerOpen(false); setTeamPickerGoal(null); } }}
-          style={{
-            position: "fixed", inset: 0, zIndex: 99997,
-            background: "rgba(13, 24, 34, 0.55)",
-            backdropFilter: "blur(4px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: 20,
-            animation: "av-modal-fade-in 200ms ease-out",
-          }}
-        >
           <div style={{
             background: "#fff",
             borderRadius: 16,
@@ -2478,6 +2467,32 @@ export function TeamGoalsWidget() {
           team: teamsMap[g.team_id],
           ownerName: ownersMap[g.user_id] || "Collègue",
         }));
+
+        // 0.58.59 : détection des objectifs atteints depuis la dernière visite
+        try {
+          const SEEN_KEY = "av-team-goals-achieved-seen";
+          const seenRaw = localStorage.getItem(SEEN_KEY);
+          const seenSet = new Set(seenRaw ? JSON.parse(seenRaw) : []);
+          const newlyAchieved = enriched.filter(g => g.current >= g.target && !seenSet.has(g.id));
+          if (newlyAchieved.length > 0) {
+            newlyAchieved.forEach(g => {
+              try {
+                window.dispatchEvent(new CustomEvent("av-team-goal-achieved", {
+                  detail: {
+                    goalId: g.id,
+                    goalLabel: g.label,
+                    ownerName: g.ownerName,
+                    teamName: g.team?.nom,
+                    teamColor: g.team?.couleur,
+                  },
+                }));
+              } catch {}
+            });
+            enriched.filter(g => g.current >= g.target).forEach(g => seenSet.add(g.id));
+            try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seenSet])); } catch {}
+          }
+        } catch {}
+
         setTeamGoals(enriched);
         setLoading(false);
       } catch (e) {
@@ -2490,7 +2505,51 @@ export function TeamGoalsWidget() {
     return () => { alive = false; };
   }, []);
 
+  // 0.58.59 : écoute l'event d'objectif atteint et déclenche un toast festif
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let toastFn = null;
+    // Charge dynamiquement le toast pour éviter cycle d'imports
+    import("../components/ui-premium/Toast").then(mod => { toastFn = mod.toast || mod.showToast; });
+    function onAchieved(e) {
+      const { goalLabel, ownerName, teamName } = e.detail || {};
+      if (!toastFn) return;
+      const fn = toastFn.success || toastFn;
+      fn(
+        "🎯 Objectif atteint !",
+        `${ownerName} a atteint son objectif "${goalLabel}"${teamName ? ` (${teamName})` : ""}.`,
+        { duration: 6000 }
+      );
+    }
+    window.addEventListener("av-team-goal-achieved", onAchieved);
+    return () => window.removeEventListener("av-team-goal-achieved", onAchieved);
+  }, []);
+
   if (!mounted) return null;
+
+  // 0.58.59 : stats agrégées sur l'ensemble des objectifs équipe affichés
+  const stats = (() => {
+    if (teamGoals.length === 0) return null;
+    const pcts = teamGoals.map(g => g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0);
+    const avgPct = pcts.reduce((a, b) => a + b, 0) / pcts.length;
+    const nbAtteints = teamGoals.filter(g => g.current >= g.target).length;
+    const tauxAtteinte = (nbAtteints / teamGoals.length) * 100;
+    // 0.58.59 : groupé par équipe pour mini-stats par équipe
+    const byTeam = {};
+    teamGoals.forEach(g => {
+      const tid = g.team?.id || "_none";
+      if (!byTeam[tid]) byTeam[tid] = { team: g.team, goals: [], achieved: 0, sumPct: 0 };
+      byTeam[tid].goals.push(g);
+      byTeam[tid].sumPct += g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
+      if (g.current >= g.target) byTeam[tid].achieved++;
+    });
+    const teamStats = Object.values(byTeam).map(t => ({
+      ...t,
+      avgPct: t.goals.length > 0 ? t.sumPct / t.goals.length : 0,
+      tauxAtteinte: t.goals.length > 0 ? (t.achieved / t.goals.length) * 100 : 0,
+    }));
+    return { avgPct, nbAtteints, tauxAtteinte, teamStats };
+  })();
 
   return (
     <Panel style={{
@@ -2506,6 +2565,63 @@ export function TeamGoalsWidget() {
           </span>
         </h2>
       </div>
+
+      {/* 0.58.59 : Bandeau de stats agrégées */}
+      {stats && teamGoals.length > 0 && (
+        <div style={{
+          background: "linear-gradient(135deg, #fff 0%, #f0fafa 100%)",
+          border: "1px solid #cfe0e0",
+          borderRadius: 10,
+          padding: "10px 12px",
+          marginBottom: 12,
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 10,
+        }}>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 9.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>Moyenne</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: stats.avgPct >= 80 ? "#5aa05a" : "#185FA5", marginTop: 2 }}>
+              {Math.round(stats.avgPct)}%
+            </div>
+          </div>
+          <div style={{ textAlign: "center", borderLeft: "1px solid #e3e9ee", borderRight: "1px solid #e3e9ee" }}>
+            <div style={{ fontSize: 9.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>Atteints</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "#5aa05a", marginTop: 2 }}>
+              {stats.nbAtteints} / {teamGoals.length}
+            </div>
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 9.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>Taux</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: stats.tauxAtteinte >= 50 ? "#5aa05a" : "#EF9F27", marginTop: 2 }}>
+              {Math.round(stats.tauxAtteinte)}%
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 0.58.59 : mini-stats par équipe */}
+      {stats?.teamStats && stats.teamStats.length > 1 && (
+        <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+          {stats.teamStats.map((ts, i) => (
+            <div key={ts.team?.id || i} style={{
+              flex: "1 1 calc(50% - 4px)", minWidth: 130,
+              padding: "8px 10px",
+              background: "#fff",
+              borderLeft: `3px solid ${ts.team?.couleur || "#7CC8C8"}`,
+              borderRadius: 6,
+              border: "1px solid #e3e9ee",
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#142131", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {ts.team?.nom || "Sans équipe"}
+              </div>
+              <div style={{ fontSize: 10, color: "#8a98a8", display: "flex", justifyContent: "space-between" }}>
+                <span>{ts.goals.length} obj. · {ts.achieved} ✓</span>
+                <span style={{ fontWeight: 700, color: ts.avgPct >= 80 ? "#5aa05a" : "#185FA5" }}>{Math.round(ts.avgPct)}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       {loading ? (
         <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12.5 }}>
           <i className="ti ti-loader-2 ti-spin" style={{ fontSize: 22 }} />

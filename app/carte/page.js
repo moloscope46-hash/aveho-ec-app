@@ -108,6 +108,7 @@ export default function CartePage() {
   const finessOverlayLayerRef = useRef(null);  // 0.55.9 : marqueurs FINESS éphémères
   const rppsOverlayLayerRef = useRef(null);    // 0.55.38 : marqueurs RPPS
   const sireneOverlayLayerRef = useRef(null);  // 0.55.38 : marqueurs SIRENE
+  const pharmaciesLayerRef = useRef(null);  // 0.58.59 : marqueurs pharmacies de garde
   const camionsStateRef = useRef([]); // état mouvement
   const animRef = useRef(null);
   const [selectedCamion, setSelectedCamion] = useState(null);
@@ -133,6 +134,11 @@ export default function CartePage() {
   const [lastGeolocAt, setLastGeolocAt] = useState(null);
   const [geolocAccuracy, setGeolocAccuracy] = useState(null);
   const fetchDebounceRef = useRef(null);
+  // 0.58.59 : pharmacies de garde et autres pharmacies enregistrées
+  const [pharmacies, setPharmacies] = useState([]);
+  const [pharmaciesLoading, setPharmaciesLoading] = useState(false);
+  const [showPharmacies, setShowPharmacies] = useState(false);
+  const [pharmaciesFilter, setPharmaciesFilter] = useState("garde"); // 'all' | 'garde' | 'open-now'
 
   // 0.55.8 : Init Leaflet + carte en un seul useEffect patient
   // Le problème en prod était une race condition : `setLeafletReady(true)` déclenchait
@@ -190,6 +196,8 @@ export default function CartePage() {
         finessOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.9
         rppsOverlayLayerRef.current = L.layerGroup().addTo(map);    // 0.55.38
         sireneOverlayLayerRef.current = L.layerGroup().addTo(map);  // 0.55.38
+        // 0.58.59 : layer dédié aux pharmacies (de garde + autres)
+        pharmaciesLayerRef.current = L.layerGroup().addTo(map);
         freeSearchLayerRef.current = L.layerGroup().addTo(map);     // 0.55.47 : recherche libre
         mapInstanceRef.current = map;
 
@@ -218,6 +226,104 @@ export default function CartePage() {
   }
 
   useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.structureId]);
+
+  // 0.58.59 : Charge les pharmacies de la structure
+  useEffect(() => {
+    if (!auth.ready || !auth.structureId || !showPharmacies) return;
+    let alive = true;
+    (async () => {
+      setPharmaciesLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("pharmacies")
+          .select("id, nom, latitude, longitude, ville, telephone, garde_disponible, garde_24h, garde_notes, horaires, specialites, type")
+          .eq("structure_id", auth.structureId)
+          .eq("archive", false)
+          .not("latitude", "is", null)
+          .not("longitude", "is", null);
+        if (!alive) return;
+        if (error) {
+          // Table peut ne pas exister si SQL 0.58.57 pas passé
+          setPharmacies([]);
+        } else {
+          setPharmacies(data || []);
+        }
+      } catch {
+        if (alive) setPharmacies([]);
+      } finally {
+        if (alive) setPharmaciesLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [auth.ready, auth.structureId, showPharmacies]);
+
+  // 0.58.59 : helper isOpenNow (réutilisé depuis /pharmacies)
+  function isPharmaOpenNow(horaires) {
+    if (!horaires) return false;
+    const JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+    const now = new Date();
+    const jour = JOURS[(now.getDay() + 6) % 7];
+    const plages = horaires[jour] || [];
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    return plages.some(p => {
+      if (!p.open || !p.close) return false;
+      const [oh, om] = p.open.split(":").map(Number);
+      const [ch, cm] = p.close.split(":").map(Number);
+      return nowMins >= (oh * 60 + om) && nowMins <= (ch * 60 + cm);
+    });
+  }
+
+  // 0.58.59 : Rendu des markers pharmacies quand changement
+  useEffect(() => {
+    if (!leafletReady || !pharmaciesLayerRef.current) return;
+    const L = window.L;
+    if (!L) return;
+    pharmaciesLayerRef.current.clearLayers();
+    if (!showPharmacies || pharmacies.length === 0) return;
+
+    // Filtrer selon le filtre actif
+    const filtered = pharmacies.filter(p => {
+      if (pharmaciesFilter === "garde") return p.garde_disponible || p.garde_24h;
+      if (pharmaciesFilter === "open-now") return isPharmaOpenNow(p.horaires);
+      return true;
+    });
+
+    filtered.forEach(p => {
+      const isGarde = p.garde_disponible || p.garde_24h;
+      const isOpen = isPharmaOpenNow(p.horaires);
+      // Icône custom : croix verte de pharmacie, halo violet si garde
+      const html = `
+        <div style="position:relative;width:32px;height:32px">
+          ${isGarde ? `<div style="position:absolute;inset:-3px;border-radius:50%;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation:av-pharma-pulse 1.6s ease-in-out infinite"></div>` : ""}
+          <div style="position:absolute;inset:0;border-radius:50%;background:${isGarde ? "linear-gradient(135deg,#7a6fb0,#5a4a90)" : (isOpen ? "linear-gradient(135deg,#5aa05a,#4a8a4a)" : "linear-gradient(135deg,#a0aeb9,#7a8a94)")};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.30)">+</div>
+        </div>`;
+      const icon = L.divIcon({
+        html,
+        className: "av-pharma-marker",
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
+      const marker = L.marker([Number(p.latitude), Number(p.longitude)], { icon }).addTo(pharmaciesLayerRef.current);
+      const speciaText = (p.specialites || []).slice(0, 3).join(", ");
+      const gardeBadge = p.garde_24h
+        ? `<span style="background:#fde4e1;color:#c0392b;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">🌙 24H/24</span>`
+        : p.garde_disponible
+        ? `<span style="background:#f3effa;color:#5a4a90;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">🌙 GARDE</span>`
+        : "";
+      const openBadge = isOpen
+        ? `<span style="background:#dff5e0;color:#2e6f33;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">▶ OUVERTE</span>`
+        : `<span style="background:#fde4e1;color:#c0392b;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">⬛ FERMÉE</span>`;
+      marker.bindPopup(`
+        <div style="font-family:Quicksand,sans-serif;min-width:230px">
+          <div style="font-weight:700;font-size:14px;color:#142131;margin-bottom:4px">${p.nom}</div>
+          <div style="font-size:11.5px;color:#8a98a8;margin-bottom:6px">${p.ville || ""}${p.telephone ? ` · ${p.telephone}` : ""}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${openBadge}${gardeBadge}</div>
+          ${speciaText ? `<div style="font-size:11px;color:#5a4a90;margin-bottom:6px"><b>Spécialités :</b> ${speciaText}</div>` : ""}
+          ${p.garde_notes ? `<div style="font-size:11px;color:#5a4a90;background:#f3effa;padding:6px 8px;border-radius:6px;margin-top:4px"><b>🌙 Note garde :</b> ${p.garde_notes}</div>` : ""}
+        </div>
+      `);
+    });
+  }, [leafletReady, showPharmacies, pharmacies, pharmaciesFilter]);
 
   // 0.55.8 : 2e effect — animation des camions (la map est créée dans le 1er useEffect)
   useEffect(() => {
@@ -1206,6 +1312,63 @@ export default function CartePage() {
                   )}
                 </div>
               </div>
+            </Panel>
+
+            {/* 0.58.59 — Toggle Pharmacies de garde */}
+            <Panel style={{ marginBottom: 12, padding: "12px 16px", background: "linear-gradient(135deg, #f3effa 0%, #fff 100%)", borderColor: "#d6c9ec" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: showPharmacies ? 8 : 0, cursor: "pointer" }}
+                   onClick={() => setShowPharmacies(!showPharmacies)}>
+                <i className="ti ti-prescription" style={{ fontSize: 18, color: "#7a6fb0" }} />
+                <b style={{ fontSize: 13, color: "#142131", flex: 1 }}>Pharmacies</b>
+                {pharmaciesLoading && <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite", color: "#7a6fb0" }} />}
+                {!pharmaciesLoading && showPharmacies && pharmacies.length > 0 && (
+                  <span style={{ fontSize: 11, color: "#5a4a90", background: "#e9defc", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>
+                    {pharmacies.length}
+                  </span>
+                )}
+                <label style={{ position: "relative", display: "inline-block", width: 36, height: 20, cursor: "pointer" }} onClick={(e) => e.stopPropagation()}>
+                  <input type="checkbox" checked={showPharmacies} onChange={(e) => setShowPharmacies(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
+                  <span style={{
+                    position: "absolute", inset: 0, borderRadius: 10,
+                    background: showPharmacies ? "linear-gradient(135deg, #7a6fb0, #5a4a90)" : "#cfd8e0",
+                    transition: "all 200ms",
+                  }}>
+                    <span style={{
+                      position: "absolute", top: 2, left: showPharmacies ? 18 : 2, width: 16, height: 16,
+                      background: "#fff", borderRadius: "50%", transition: "left 200ms",
+                      boxShadow: "0 1px 3px rgba(0,0,0,.2)",
+                    }} />
+                  </span>
+                </label>
+              </div>
+              {showPharmacies && (
+                <>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    {[
+                      { k: "garde", l: "🌙 De garde", c: "#7a6fb0" },
+                      { k: "open-now", l: "▶ Ouvertes maintenant", c: "#5aa05a" },
+                      { k: "all", l: "Toutes", c: "#8a98a8" },
+                    ].map(opt => (
+                      <button key={opt.k}
+                        onClick={() => setPharmaciesFilter(opt.k)}
+                        style={{
+                          background: pharmaciesFilter === opt.k ? opt.c : "#fff",
+                          color: pharmaciesFilter === opt.k ? "#fff" : opt.c,
+                          border: `1px solid ${opt.c}`,
+                          padding: "4px 10px", borderRadius: 8, fontSize: 10.5, fontWeight: 600,
+                          cursor: "pointer", fontFamily: "inherit",
+                        }}>
+                        {opt.l}
+                      </button>
+                    ))}
+                  </div>
+                  {pharmacies.length === 0 && !pharmaciesLoading && (
+                    <p style={{ fontSize: 11, color: "#8a98a8", margin: "8px 0 0", fontStyle: "italic" }}>
+                      Aucune pharmacie géolocalisée. Ajoute-les depuis <code style={{ fontSize: 10 }}>/pharmacies</code> avec coordonnées.
+                    </p>
+                  )}
+                </>
+              )}
             </Panel>
 
             {/* 0.55.47 — Recherche libre par mot-clé/adresse (orthopédiste, boulangerie, Paris, etc.) */}

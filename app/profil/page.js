@@ -163,6 +163,8 @@ export default function Profil() {
               active={activeTab}
               onChange={setActiveTab}
               style="pills"
+              reorderable
+              storageKey="av-profil-tabs-order"
               tabs={[
                 { id: "activite", label: "Activité",      icon: "ti-chart-bar" },
                 { id: "profil",   label: "Profil",        icon: "ti-user" },

@@ -13,6 +13,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, EntityIcon} from "../../ui";
+import IconPicker from "../../components/IconPicker";  // 0.58.60
 import { dialogs } from "../../dialogs";
 export default function EditionEtablissement() {
   const supabase = createClient();
@@ -77,10 +78,13 @@ export default function EditionEtablissement() {
       const table = tables[k];
       let payload = { nom: form.nom };
       // Alpha 0.15.3 : ajout systématique de structure_id pour passer la RLS
-      // (les policies exigent structure_id IN mes_structures())
       payload.structure_id = auth.structureId;
       // Alpha 0.15.6 : colonne services.type rétablie (ajoutée via alter table)
       if (k === "service") payload.type = form.type || null;
+      // 0.58.60 : icône optionnelle pour bâtiments et services
+      if ((k === "batiment" || k === "service") && form.icone) {
+        payload.icone = form.icone;
+      }
       if (k === "batiment") {
         payload.etablissement_id = auth.etabId;
       } else if (modal.parentId) {
@@ -122,7 +126,20 @@ export default function EditionEtablissement() {
   const row = (kind, item, childCount, onAddChild) => (
     <div key={kind + ":" + item.id} className="hier-row">
       <div className="hier-info">
-        <EntityIcon kind={kind} size={32} />
+        {/* 0.58.60 : icône custom si l'utilisateur en a choisi une pour ce bâtiment / service */}
+        {(kind === "batiment" || kind === "service") && item.icone ? (
+          <div style={{
+            width: 32, height: 32, borderRadius: 8,
+            background: kind === "batiment" ? "rgba(124,200,200,.15)" : "rgba(239,159,39,.15)",
+            color: kind === "batiment" ? "#185FA5" : "#a06820",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <i className={`ti ti-${item.icone}`} style={{ fontSize: 18 }} />
+          </div>
+        ) : (
+          <EntityIcon kind={kind} size={32} />
+        )}
         <div>
           <b>{item.nom}</b>
           {kind === "etage" && item.niveau != null && false && <span style={{ color: "#8a98a8", marginLeft: 6, fontSize: 12 }}>Niveau {item.niveau}</span>}
@@ -236,6 +253,18 @@ export default function EditionEtablissement() {
               <option value="Pédiatrie">Pédiatrie</option>
               <option value="Réanimation">Réanimation</option>
             </select>
+          </div>
+        )}
+        {/* 0.58.60 : sélecteur d'icône pour bâtiments et services */}
+        {(modal?.kind === "batiment" || modal?.kind === "service") && (
+          <div className="fld">
+            <label>Icône (affichée dans le filtre du haut de page)</label>
+            <IconPicker
+              value={form.icone || ""}
+              onChange={(ic) => setForm({ ...form, icone: ic })}
+              suggestFor={form.nom}
+              color={modal?.kind === "batiment" ? "#7CC8C8" : "#EF9F27"}
+            />
           </div>
         )}
       </Modal>

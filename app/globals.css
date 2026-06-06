@@ -3283,3 +3283,9 @@ html.av-presentation-hide-notifs .notif-badge,
 html.av-presentation-mode.av-presentation-hide-notifs [data-focus-hide-on-notifs="true"] {
   display: none !important;
 }
+
+/* 0.58.59 : pulse pour pharmacies de garde sur la carte */
+@keyframes av-pharma-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.20; transform: scale(1.30); }
+}

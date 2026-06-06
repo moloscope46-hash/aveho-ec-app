@@ -92,6 +92,8 @@ function ParametresInner() {
               active={activeTab}
               onChange={setActiveTab}
               style="pills"
+              reorderable
+              storageKey="av-parametres-tabs-order"
               tabs={[
                 { id: "general",  label: "Général",       icon: "ti-adjustments" },
                 { id: "notifs",   label: "Notifications", icon: "ti-bell" },

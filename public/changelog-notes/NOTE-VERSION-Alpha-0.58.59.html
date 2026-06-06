@@ -1,0 +1,271 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.59</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #1a3a3a 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pharma-pulse{0%,100%{opacity:.45;transform:scale(1)}50%{opacity:.2;transform:scale(1.30)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.violet{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(122,111,176,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#7a6fb0)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Demo stats agrégées */
+.stats-bar{background:linear-gradient(135deg,#fff,#f0fafa);border:1px solid #cfe0e0;border-radius:10px;padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;color:#142131;max-width:520px;margin:10px 0}
+.stat-cell{text-align:center}
+.stat-cell.middle{border-left:1px solid #e3e9ee;border-right:1px solid #e3e9ee}
+.stat-lbl{font-size:9.5px;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.stat-val{font-size:22px;font-weight:700;margin-top:3px}
+.stat-val.blue{color:#185FA5}
+.stat-val.green{color:#5aa05a}
+.stat-val.amber{color:#EF9F27}
+.teams-mini{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap;max-width:520px}
+.team-mini{flex:1 1 calc(50% - 4px);min-width:130px;padding:8px 10px;background:#fff;border:1px solid #e3e9ee;border-radius:6px;color:#142131}
+.team-mini.t1{border-left:3px solid #185FA5}
+.team-mini.t2{border-left:3px solid #5aa05a}
+.team-mini-nom{font-size:11px;font-weight:700;margin-bottom:2px}
+.team-mini-row{font-size:10px;color:#8a98a8;display:flex;justify-content:space-between}
+.team-mini-pct{font-weight:700;color:#5aa05a}
+
+/* Toast demo */
+.toast-demo{max-width:380px;background:#fff;border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.20);padding:14px 16px;display:flex;align-items:flex-start;gap:12px;border-left:4px solid #5aa05a;color:#142131;margin:14px 0}
+.toast-icon{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#5aa05a,#4a8a4a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.toast-body{flex:1}
+.toast-title{font-weight:700;font-size:13.5px;margin-bottom:2px}
+.toast-msg{font-size:12px;color:#5a6878}
+
+/* Pharmacie carte demo */
+.carte-demo{background:#1a3a3a;border-radius:14px;padding:20px;margin:14px 0;color:#fff;position:relative;min-height:200px;border:1px solid rgba(124,200,200,.30)}
+.pharma-marker{position:absolute;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.40)}
+.pharma-marker.garde{background:linear-gradient(135deg,#7a6fb0,#5a4a90);top:40px;left:80px}
+.pharma-marker.garde::before{content:"";position:absolute;inset:-5px;border-radius:50%;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation:pharma-pulse 1.6s ease-in-out infinite}
+.pharma-marker.open{background:linear-gradient(135deg,#5aa05a,#4a8a4a);top:90px;left:240px}
+.pharma-marker.closed{background:linear-gradient(135deg,#a0aeb9,#7a8a94);top:130px;left:160px}
+.carte-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filter-pill{padding:4px 10px;border-radius:8px;font-size:10.5px;font-weight:600;border:1px solid}
+.filter-pill.active{background:#7a6fb0;color:#fff;border-color:#7a6fb0}
+.filter-pill.inactive{background:#fff;color:#7a6fb0;border-color:#7a6fb0}
+.legend{position:absolute;bottom:14px;right:14px;background:rgba(255,255,255,.95);color:#142131;padding:8px 12px;border-radius:8px;font-size:10.5px;display:flex;flex-direction:column;gap:4px}
+.legend-row{display:flex;align-items:center;gap:6px}
+.legend-dot{width:12px;height:12px;border-radius:50%;border:1px solid #fff}
+
+/* Tabs reorderable demo */
+.tabs-demo{display:inline-flex;align-items:center;gap:8px;background:rgba(124,200,200,.05);padding:6px;border-radius:99px;border:1px solid #7CC8C8;box-shadow:0 0 0 3px rgba(124,200,200,.15);margin:14px 0}
+.tab-pill{padding:7px 14px;background:transparent;color:#5a6878;border-radius:99px;font-size:12px;font-weight:500;cursor:grab;display:inline-flex;align-items:center;gap:5px}
+.tab-pill .grip{color:#7CC8C8;font-weight:900;letter-spacing:-2px}
+.tab-pill.active{background:#fff;color:#142131;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.10)}
+.tab-pill.dragged{opacity:.4}
+.tab-pill.drop{border:2px solid #7CC8C8;transform:translateY(-1px)}
+.tabs-reorg-btn{background:linear-gradient(135deg,#7CC8C8,#5da8a8);color:#fff;border:1px solid #7CC8C8;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob violet"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.59</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.59 — Stats équipe + Notif goal atteint + Carte pharmacies garde + Drag&drop onglets<small>3 stats globales · Toast festif automatique · Marker pulsant violet · Pills onglets réordonnables</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.59-alpha</code></span>
+    <span><b>Tests :</b> ~4910 verts</span>
+    <span><b>SQL :</b> aucun</span>
+  </div>
+</header>
+
+<h2>📊 1. Stats agrégées objectifs équipe</h2>
+
+<div class="panel">
+<p style="margin:0">Le widget <code>TeamGoalsWidget</code> affiche maintenant un bandeau <b>3 stats globales</b> (Moyenne %, Atteints X/N, Taux d'atteinte %) + des <b>mini-cartes par équipe</b> si l'user appartient à plusieurs équipes. Calcul local zéro requête.</p>
+</div>
+
+<div class="stats-bar">
+<div class="stat-cell">
+<div class="stat-lbl">Moyenne</div>
+<div class="stat-val blue">67%</div>
+</div>
+<div class="stat-cell middle">
+<div class="stat-lbl">Atteints</div>
+<div class="stat-val green">3 / 5</div>
+</div>
+<div class="stat-cell">
+<div class="stat-lbl">Taux</div>
+<div class="stat-val green">60%</div>
+</div>
+</div>
+
+<div class="teams-mini">
+<div class="team-mini t1">
+<div class="team-mini-nom">Équipe Commerciale</div>
+<div class="team-mini-row"><span>3 obj. · 2 ✓</span><span class="team-mini-pct">75%</span></div>
+</div>
+<div class="team-mini t2">
+<div class="team-mini-nom">Équipe Sud-Ouest</div>
+<div class="team-mini-row"><span>2 obj. · 1 ✓</span><span class="team-mini-pct">55%</span></div>
+</div>
+</div>
+
+<h2>🔔 2. Notification objectif équipe atteint</h2>
+
+<div class="panel">
+<p style="margin:0">Quand un membre de l'équipe atteint 100% d'un objectif partagé, un <b>toast festif</b> s'affiche automatiquement. Le widget détecte les nouveaux atteints via un snapshot localStorage des goals déjà vus comme atteints (pas de doublon).</p>
+</div>
+
+<div class="toast-demo">
+<div class="toast-icon">🎯</div>
+<div class="toast-body">
+<div class="toast-title">Objectif atteint !</div>
+<div class="toast-msg">Hugo Martin a atteint son objectif "Articles écrits" (Équipe Sud-Ouest).</div>
+</div>
+</div>
+
+<pre>// 0.58.59 - Détection + dispatch event + toast
+const SEEN_KEY = 'av-team-goals-achieved-seen';
+const seenSet = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]'));
+const newlyAchieved = enriched.filter(g =&gt; g.current &gt;= g.target && !seenSet.has(g.id));
+
+if (newlyAchieved.length &gt; 0) {
+  newlyAchieved.forEach(g =&gt; {
+    window.dispatchEvent(new CustomEvent('av-team-goal-achieved', {
+      detail: { goalLabel: g.label, ownerName: g.ownerName, teamName: g.team?.nom }
+    }));
+  });
+  // Marque comme vus pour éviter doublons à la prochaine visite
+  enriched.filter(g =&gt; g.current &gt;= g.target).forEach(g =&gt; seenSet.add(g.id));
+  localStorage.setItem(SEEN_KEY, JSON.stringify([...seenSet]));
+}
+
+// Listener global → toast festif
+window.addEventListener('av-team-goal-achieved', (e) =&gt; {
+  toast.success('🎯 Objectif atteint !',
+    `${e.detail.ownerName} a atteint son objectif "${e.detail.goalLabel}".`,
+    { duration: 6000 });
+});</pre>
+
+<h2>🗺️ 3. Carte des pharmacies de garde</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau panneau dans <code>/carte</code> avec <b>toggle on/off</b> + <b>3 filtres pastilles</b> (🌙 De garde / ▶ Ouvertes maintenant / Toutes). Markers custom : croix verte + halo violet pulsant pour les pharmacies de garde, vert pour ouvertes maintenant, gris pour fermées. Popup riche avec spécialités + note garde dédiée.</p>
+</div>
+
+<div class="carte-demo">
+<div class="carte-filter-bar">
+<div class="filter-pill active">🌙 De garde</div>
+<div class="filter-pill inactive">▶ Ouvertes maintenant</div>
+<div class="filter-pill inactive">Toutes</div>
+</div>
+<div class="pharma-marker garde">+</div>
+<div class="pharma-marker open">+</div>
+<div class="pharma-marker closed">+</div>
+<div class="legend">
+<div class="legend-row"><div class="legend-dot" style="background:#7a6fb0"></div> De garde</div>
+<div class="legend-row"><div class="legend-dot" style="background:#5aa05a"></div> Ouverte</div>
+<div class="legend-row"><div class="legend-dot" style="background:#a0aeb9"></div> Fermée</div>
+</div>
+</div>
+
+<p style="font-size:11.5px;color:#9fb6c2;text-align:center">↑ Halo violet pulsant autour des pharmacies de garde. Cliquer un marker = popup avec horaires + spécialités + note garde.</p>
+
+<h2>🎯 4. Drag&drop des onglets dans /profil et /parametres</h2>
+
+<div class="panel">
+<p style="margin:0">Le composant <code>Tabs</code> (variant pills) accepte maintenant les props <code>reorderable</code> et <code>storageKey</code>. Activé sur <code>/profil</code> (4 onglets) et <code>/parametres</code> (3 onglets). Pattern identique au drag&drop fields Crud (0.58.58).</p>
+</div>
+
+<div class="tabs-demo">
+<div class="tab-pill"><span class="grip">⋮⋮</span><i class="ti ti-chart-bar"></i> Activité</div>
+<div class="tab-pill active"><span class="grip">⋮⋮</span><i class="ti ti-user"></i> Profil</div>
+<div class="tab-pill drop"><span class="grip">⋮⋮</span><i class="ti ti-bell-cog"></i> Notifications</div>
+<div class="tab-pill dragged"><span class="grip">⋮⋮</span><i class="ti ti-shield-lock"></i> Sécurité</div>
+<button class="tabs-reorg-btn">✓ OK</button>
+</div>
+
+<p style="font-size:11.5px;color:#9fb6c2">↑ Mode édition activé : bordure teal + halo + poignées ⋮⋮ visibles. Drop target (3ème) avec bordure teal 2px, élément draggé (4ème) avec opacity 0.4.</p>
+
+<pre>// 0.58.59 - app/profil/page.js
+&lt;Tabs
+  active={activeTab}
+  onChange={setActiveTab}
+  style="pills"
+  reorderable                                  // ← nouveau
+  storageKey="av-profil-tabs-order"            // ← nouveau
+  tabs={[
+    { id: 'activite', label: 'Activité',      icon: 'ti-chart-bar' },
+    { id: 'profil',   label: 'Profil',        icon: 'ti-user' },
+    { id: 'notifs',   label: 'Notifications', icon: 'ti-bell-cog' },
+    { id: 'secu',     label: 'Sécurité',      icon: 'ti-shield-lock' },
+  ]}
+/&gt;
+
+// app/components/ui-premium/Tabs.js
+// Réconciliation auto : si on ajoute/retire un onglet dans le code, l'ordre stocké s'adapte
+const validStored = stored.filter(id =&gt; currentIds.includes(id));
+const missing = currentIds.filter(id =&gt; !validStored.includes(id));
+setTabOrder([...validStored, ...missing]);</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Stats agrégées</b> : bandeau Moyenne/Atteints/Taux + mini-cartes par équipe</li>
+<li><b>Notif goal atteint</b> : toast festif auto + event global réutilisable</li>
+<li><b>Carte pharmacies</b> : layer dédié, 3 filtres, markers custom avec halo pulsant</li>
+<li><b>Drag&drop onglets</b> : <code>/profil</code> et <code>/parametres</code> réordonnables</li>
+<li><b>+30 tests</b> Vitest (~4910 verts estimés)</li>
+<li><b>Aucun SQL</b> nouveau — utilise les tables existantes</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4910 verts attendus
+npm run build           # OK attendu
+
+# Aucun SQL nouveau (utilise pharmacies + user_goals des versions précédentes)
+git add -A
+git commit -m "Alpha 0.58.59 - Stats équipe + Notif goal + Carte pharmacies garde + Drag&drop onglets"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.60+)</h2>
+<div class="panel">
+<ul>
+<li>Notification persistante dans le centre de notifs (en plus du toast)</li>
+<li>Drag&drop des onglets dans d'autres pages (admin, etc.)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Export PDF des stats équipe</li>
+<li>Trajets vers pharmacie de garde la plus proche depuis ma position</li>
+<li>Drag&drop des cases du dashboard (peaufiner)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.59 · 6 juin 2026 · STATS + NOTIF + CARTE + TABS ✨</footer>
+</div>
+
+</body></html>
