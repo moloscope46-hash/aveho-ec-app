@@ -115,10 +115,154 @@ export const THEME_LABELS = {
     "lbl": "Divers",
     "icon": "ti-tag",
     "color": "#8a98a8"
+  },
+  "feature": {
+    "lbl": "Nouvelle Feature",
+    "icon": "ti-sparkles",
+    "color": "#7CC8C8"
+  },
+  "fix": {
+    "lbl": "Bug Fix",
+    "icon": "ti-bug",
+    "color": "#e35d5b"
+  },
+  "wow": {
+    "lbl": "Wow effect ✨",
+    "icon": "ti-stars",
+    "color": "#EF9F27"
+  },
+  "ui": {
+    "lbl": "Refonte UI",
+    "icon": "ti-color-swatch",
+    "color": "#7a6fb0"
+  },
+  "team": {
+    "lbl": "Équipe & Collab",
+    "icon": "ti-users-group",
+    "color": "#185FA5"
+  },
+  "dashboard": {
+    "lbl": "Dashboard & Widgets",
+    "icon": "ti-layout-dashboard",
+    "color": "#7CC8C8"
+  },
+  "objectifs": {
+    "lbl": "Objectifs",
+    "icon": "ti-target",
+    "color": "#185FA5"
+  },
+  "pharmacie": {
+    "lbl": "Pharmacies",
+    "icon": "ti-prescription",
+    "color": "#5aa05a"
+  },
+  "carte": {
+    "lbl": "Carte interactive",
+    "icon": "ti-map-2",
+    "color": "#185FA5"
+  },
+  "dnd": {
+    "lbl": "Drag & Drop",
+    "icon": "ti-grip-vertical",
+    "color": "#7CC8C8"
+  },
+  "raccourcis": {
+    "lbl": "Raccourcis & FAB",
+    "icon": "ti-sparkles",
+    "color": "#5a4a90"
+  },
+  "menu": {
+    "lbl": "Menu & Navigation",
+    "icon": "ti-menu-2",
+    "color": "#142131"
+  },
+  "partenaires": {
+    "lbl": "Partenaires RPPS",
+    "icon": "ti-id-badge-2",
+    "color": "#7a6fb0"
+  },
+  "build": {
+    "lbl": "Build & Deploy",
+    "icon": "ti-server-cog",
+    "color": "#c0392b"
+  },
+  "supabase": {
+    "lbl": "Supabase & SQL",
+    "icon": "ti-database",
+    "color": "#5aa05a"
+  },
+  "mobile": {
+    "lbl": "Mobile UX",
+    "icon": "ti-device-mobile",
+    "color": "#7CC8C8"
+  },
+  "animation": {
+    "lbl": "Animations",
+    "icon": "ti-wand",
+    "color": "#EF9F27"
   }
 };
 
 export const ALL_VERSIONS = [
+  {
+    "v": "0.58.64",
+    "kind": "version",
+    "titre": "🩹 HOTFIX tags écrasés par regen + alert() natif → toast + Fallback 404 pharmacies (table absente)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 FIX BUG 16 NOUVEAUX TAGS DU CHANGELOG ÉCRASÉS. **Cause** : le script `scripts/regen-versions-index.mjs` régénère `app/changelog/versions-index.js` depuis `app/changelog/versions-data.js` à chaque invocation. En 0.58.61, j'avais ajouté les 16 nouveaux tags directement dans `versions-index.js` — mais comme ce fichier est écrasé, ils disparaissaient au prochain `regen`. **Fix** : déplacement des 16 nouveaux tags vers `versions-data.js` (la source) → la régénération les propage correctement. **Total : 38 tags** maintenant persistent" },
+      { "code": "FIX", "txt": "🩹 FIX `alert()` NATIF dans /carte (test 0.58.8 cassé). En 0.58.61 j'avais ajouté un `alert(\"Position non disponible...\")` pour la 'Pharmacie de garde la plus proche' qui violait la règle UX 'pas d'alert natif'. **Fix** : remplacé par `toast.error(...)` cohérent avec le reste de l'app (toast en bas à droite, non-bloquant, esthétique Aveho)" },
+      { "code": "FIX", "txt": "🚨 FIX 404 PHARMACIES EN PROD (table absente). En console : `GET /pharmacies?... 404 (Not Found)` + erreur `relation \"pharmacies\" does not exist`. **Cause** : l'user n'a pas encore exécuté le SQL `migration-0.58.57-pharmacies-depots-batiment.sql`. **Fix** : (a) côté front, détection de l'erreur 42P01 / PGRST205 / 'does not exist' → `setShowPharmacies(false)` + flag `localStorage av-pharmacies-table-missing`, (b) toggle UI 'Pharmacies' caché tant que le flag est présent, (c) flag retiré automatiquement dès que la requête réussit (après exécution du SQL). **Résultat** : pas de spam d'erreurs console + UX propre en attendant l'application du SQL" },
+      { "code": "AI", "txt": "+15 tests Vitest (v058-64-bundle.test.js) : version+SW (2), tags propagés dans versions-data ET versions-index (3), alert natif remplacé (2), fallback 404 pharmacies (4), régression 0.58.61 tags OK (2). Total **~5055 verts estimés**. **Bonus** : les tests 0.58.61 qui failaient sont maintenant verts car les tags sont propagés correctement" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.64 : **(1)** Les 38 tags du changelog sont définitivement persistants (plus jamais écrasés par regen). **(2)** Plus aucun `alert()` natif dans /carte. **(3)** L'app gère gracieusement l'absence de la table `pharmacies` (toggle caché en attendant le SQL). ⚠ **RAPPEL SQL À EXÉCUTER** : (a) `migration-0.58.57-pharmacies-depots-batiment.sql`, (b) `migration-0.58.60-batiments-services-icones.sql`, (c) `migration-0.58.62-equipe-id-patients-interventions-materiels.sql`, (d) `migration-0.58.63-pharmacies-rattachement.sql`. Aucun SQL nouveau pour cette 0.58.64. PROCHAINES PISTES (0.58.65+) : (a) Filtrer la carte par équipe (les pharmacies rattachées s'affichent en premier), (b) Snapshot serveur (Edge Function CRON) pour le sparkline 7j, (c) Graphique 30 jours stats équipe, (d) Tags multi-langues, (e) Mode présentation Météo" }
+    ],
+    "themes": ["fix", "carte", "pharmacie", "documentation", "build"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.64.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.63",
+    "kind": "version",
+    "titre": "👥 Filtre équipe COMPLET (7 listes) + 🏥 Pharmacie rattachée bât/svc/équipe + 📈 Sparkline 7j + 🔀 Tri tuiles changelog",
+    "chantiers": [
+      { "code": "ARCH", "txt": "📋 SQL `migration-0.58.63-pharmacies-rattachement.sql` : ALTER `pharmacies` ADD COLUMN `batiment_id UUID` + `service_id UUID` + `equipe_id UUID` (REFERENCES + ON DELETE SET NULL). **3 index partiels** sur ces colonnes WHERE IS NOT NULL pour accélérer les filtres" },
+      { "code": "FEAT", "txt": "👥 FILTRE ÉQUIPE COMPLÉTÉ SUR LES 4 PAGES RESTANTES : **(1) `/commandes`** filtre `c.equipe_id !== ctx.equipeId`, **(2) `/achats`** combine ctxPatientIds + equipe, **(3) `/signalements`** idem, **(4) `/transferts`** combine depotsCtx (bâtiment) + equipe. **Total : 7 listes** filtrent maintenant par équipe (patients, interventions, materiels, commandes, achats, signalements, transferts). Le hook `useCurrentContext` propageait déjà `equipeId` (0.58.60), il ne restait plus qu'à brancher chaque liste",
+        "code_snippet": {
+          "file": "app/commandes/page.js",
+          "note": "Filtre commandes",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.63 - juste filtre patientIds (bât/svc)\nconst filteredCmds = useMemo(() => {\n  if (!ctx.active || !patientIds) return cmds;\n  return cmds.filter(c => !c.patient_id || patientIds.has(c.patient_id));\n}, [cmds, ctx.active, patientIds]);",
+          "after": "// 0.58.63 - filtre patientIds (bât/svc) + filtre equipe\nconst filteredCmds = useMemo(() => {\n  if (!ctx.active || (!patientIds && !ctx.equipeId)) return cmds;\n  return cmds.filter(c => {\n    if (patientIds && c.patient_id && !patientIds.has(c.patient_id)) return false;\n    if (ctx.equipeId && c.equipe_id !== ctx.equipeId) return false;\n    return true;\n  });\n}, [cmds, ctx.active, patientIds, ctx.equipeId]);"
+        }
+      },
+      { "code": "FEAT", "txt": "🧩 COMPOSANT `EquipeSelector` RÉUTILISABLE. Petit dropdown qui charge les équipes par bâtiment ou par structure (fallback gracieux), icône `ti-users-group` avec couleur de l'équipe sélectionnée, option par défaut '— Aucune équipe —'. Border-left coloré 4px quand une équipe est choisie. Props : `value` / `onChange` / `structureId` / `batimentId` / `label`. **Intégré dans 4 formulaires** : (1) modal /patients (Équipe responsable), (2) modal /interventions (Équipe en charge), (3) `rel.equipe_id` de /materiels via Crud, (4) modal /pharmacies dans un encart 'Rattachement (filtre TopBar)'",
+        "code_snippet": {
+          "file": "app/components/EquipeSelector.js",
+          "note": "Composant",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.63 - pas de selecteur d'equipe dans les formulaires",
+          "after": "// 0.58.63 - composant réutilisable\nexport default function EquipeSelector({ value, onChange, structureId = null, batimentId = null, label = 'Équipe' }) {\n  const [equipes, setEquipes] = useState([]);\n\n  useEffect(() => {\n    let q = supabase.from('equipes').select('id, nom, couleur, batiment_id').order('nom');\n    if (batimentId) q = q.eq('batiment_id', batimentId);\n    else if (structureId) q = q.eq('structure_id', structureId);\n    // ... fallback gracieux si filtre fail\n  }, [structureId, batimentId]);\n\n  const current = equipes.find(e => e.id === value);\n  return (\n    <div className='fld'>\n      <label><i className='ti ti-users-group' style={{ color: current?.couleur }} /> {label}</label>\n      <select value={value || ''} onChange={(e) => onChange(e.target.value || null)}\n              style={current ? { borderLeft: `4px solid ${current.couleur}` } : null}>\n        <option value=''>— Aucune équipe —</option>\n        {equipes.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}\n      </select>\n    </div>\n  );\n}"
+        }
+      },
+      { "code": "FEAT", "txt": "🏥 RATTACHEMENT PHARMACIE → BÂTIMENT / SERVICE / ÉQUIPE. Nouveau bloc dans le modal /pharmacies avec **3 sélecteurs en cascade** : (a) Bâtiment (charge tous les bâtiments de l'étab), (b) Service (filtrés par bâtiment sélectionné via la jointure `etages.batiment_id`, disabled tant qu'aucun bâtiment), (c) Équipe (via `EquipeSelector` avec `batimentId` propagé pour ne montrer que les équipes du bâtiment). Bloc visuellement isolé avec gradient teal/violet + label 'Rattachement (filtre TopBar)'. Permet de croiser les filtres TopBar avec la liste des pharmacies" },
+      { "code": "FEAT", "txt": "📈 SPARKLINE ÉVOLUTION SUR 7 JOURS dans le widget Objectifs équipe. Nouveau composant `TeamGoalsSparkline` qui : (a) **snapshot quotidien** de `stats.avgPct` en `localStorage av-team-goals-history-7d` (rotation glissante, max 7 entrées), (b) trace une **mini-courbe SVG 220×60** avec aire dégradée violette, ligne de référence à 50%, points cliquables (tooltip date + %), (c) calcule la **tendance** (+/- pts entre 1er et dernier jour) avec icône `ti-trending-up/down/right` et couleur adaptative vert/rouge/gris. **Si <2 jours** : message explicatif 'revenez demain pour voir la courbe' + compteur `X/7 jours`",
+        "code_snippet": {
+          "file": "app/components/TeamGoalsSparkline.js",
+          "note": "Sparkline SVG",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.63 - stats fixes sans historique",
+          "after": "// 0.58.63 - snapshot quotidien + SVG sparkline\nfunction pushSnapshot(stats, totalGoals) {\n  const today = new Date().toISOString().slice(0, 10);\n  const history = getHistory().filter(h => h.d !== today);\n  history.push({ d: today, avgPct: Math.round(stats.avgPct), nbAtteints, total });\n  localStorage.setItem('av-team-goals-history-7d', JSON.stringify(history.slice(-7)));\n}\n\n// SVG\n<svg viewBox='0 0 220 60'>\n  <defs><linearGradient id='sparkline-gradient'>...</linearGradient></defs>\n  <line ... stroke='rgba(122,111,176,.20)' strokeDasharray='3,3' />  {/* ref 50% */}\n  <polygon points='...' fill='url(#sparkline-gradient)' />            {/* aire */}\n  <polyline points='...' stroke='#7a6fb0' strokeWidth='2.5' />        {/* ligne */}\n  {points.map(p => <circle r='2.5' fill='#fff' stroke='#7a6fb0'><title>{p.d} — {p.avgPct}%</title></circle>)}\n</svg>\n\n// Trend\n<span style={{ color: trend > 0 ? '#5aa05a' : '#e35d5b' }}>\n  <i className={`ti ti-trending-${trend > 0 ? 'up' : 'down'}`} />\n  {trend > 0 ? '+' : ''}{trend} pts\n</span>"
+        }
+      },
+      { "code": "FEAT", "txt": "🔀 FILTRES AVANCÉS DE TRI DANS LA PAGE CHANGELOG. Nouveau sélecteur 'Tri' avec **4 modes** : (1) Version ↓ (récente — défaut), (2) Version ↑ (ancienne), (3) Date ↓ (récente, parser FR pour `'6 juin 2026'` → Date), (4) Nb de tags ↓ (versions les plus thématiques en premier). **Persisté** en `localStorage av-changelog-sort`. Visible aussi bien en vue Liste qu'en vue Tuiles, avec icône `ti-arrows-sort`. Combiné avec les filtres existants (themes, search, kind)" },
+      { "code": "AI", "txt": "+30 tests Vitest (v058-63-bundle.test.js) : version+SW (2), SQL pharmacies (3), filtre équipe 4 pages (4), EquipeSelector composant (4), intégration 3 formulaires (3), Sparkline 7j (5), tri tuiles changelog (4), pharmacies rattachement UI (5). Total **~5040 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.63 : **(1)** Les 7 listes principales (patients, interventions, materiels, commandes, achats, signalements, transferts) filtrent toutes par équipe via le sélecteur TopBar. **(2)** Le composant `EquipeSelector` est réutilisable partout. **(3)** Les pharmacies peuvent être rattachées à un bâtiment/service/équipe. **(4)** Le widget Objectifs équipe affiche une mini-courbe d'évolution sur 7 jours. **(5)** La page changelog a un tri avancé en 4 modes. ⚠ **SQL À EXÉCUTER** : `migration-0.58.63-pharmacies-rattachement.sql`. PROCHAINES PISTES (0.58.64+) : (a) Filtrer la carte par équipe (les pharmacies rattachées s'affichent en premier), (b) Snapshot serveur (Edge Function CRON) pour ne plus dépendre du localStorage pour le sparkline 7j, (c) Tags multi-langues, (d) Mode présentation Météo, (e) Graphique 30 jours pour les stats équipe (en plus du 7j)" }
+    ],
+    "themes": ["feature", "supabase", "team", "objectifs", "pharmacie", "stats_dashboard", "patients", "maintenance", "ui", "dnd"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.63.html",
+    "sqlFile": "migration-0.58.63-pharmacies-rattachement.sql"
+  },
   {
     "v": "0.58.62",
     "kind": "version",

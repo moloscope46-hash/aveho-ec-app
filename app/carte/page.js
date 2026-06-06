@@ -243,10 +243,16 @@ export default function CartePage() {
           .not("longitude", "is", null);
         if (!alive) return;
         if (error) {
-          // Table peut ne pas exister si SQL 0.58.57 pas passé
+          // 0.58.64 : table absente → masque le toggle proprement (pas d'erreur console)
+          if (error.code === "PGRST205" || error.code === "42P01" || /not found|does not exist/i.test(error.message || "")) {
+            setShowPharmacies(false);
+            // Flag pour éviter de re-tenter au prochain toggle
+            try { localStorage.setItem("av-pharmacies-table-missing", "1"); } catch {}
+          }
           setPharmacies([]);
         } else {
           setPharmacies(data || []);
+          try { localStorage.removeItem("av-pharmacies-table-missing"); } catch {}
         }
       } catch {
         if (alive) setPharmacies([]);
@@ -1340,7 +1346,8 @@ export default function CartePage() {
               </div>
             </Panel>
 
-            {/* 0.58.59 — Toggle Pharmacies de garde */}
+            {/* 0.58.59 — Toggle Pharmacies de garde + 0.58.64 masqué si table absente */}
+            {(typeof window === "undefined" || localStorage.getItem("av-pharmacies-table-missing") !== "1") && (
             <Panel style={{ marginBottom: 12, padding: "12px 16px", background: "linear-gradient(135deg, #f3effa 0%, #fff 100%)", borderColor: "#d6c9ec" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: showPharmacies ? 8 : 0, cursor: "pointer" }}
                    onClick={() => setShowPharmacies(!showPharmacies)}>
@@ -1399,7 +1406,7 @@ export default function CartePage() {
                       onClick={() => {
                         const userPos = (typeof window !== "undefined" && window._avehoUserPosition) || getStoredPosition();
                         if (!userPos || !userPos.lat || !userPos.lng) {
-                          alert("Position non disponible. Active la géolocalisation pour trouver la pharmacie la plus proche.");
+                          toast.error("Position non disponible. Active la géolocalisation pour trouver la pharmacie la plus proche.");
                           return;
                         }
                         const gardes = pharmacies.filter(p => (p.garde_disponible || p.garde_24h) && p.latitude && p.longitude);
@@ -1448,6 +1455,7 @@ export default function CartePage() {
                 </>
               )}
             </Panel>
+            )}
 
             {/* 0.55.47 — Recherche libre par mot-clé/adresse (orthopédiste, boulangerie, Paris, etc.) */}
             <Panel style={{ marginBottom: 12, padding: "12px 16px", background: "linear-gradient(135deg, #f3effa 0%, #fff 100%)", borderColor: "#d6c9ec" }}>

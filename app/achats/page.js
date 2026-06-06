@@ -371,8 +371,13 @@ function AchatsInner() {
 
   // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
   const { patientIds, ctx } = useContextPatientIds();
-  const rowsCtxFiltered = ctx.active && patientIds
-    ? rows.filter(r => !r.patient_id || patientIds.has(r.patient_id))
+  const rowsCtxFiltered = ctx.active
+    ? rows.filter(r => {
+        if (patientIds && r.patient_id && !patientIds.has(r.patient_id)) return false;
+        // 0.58.63 : filtre équipe
+        if (ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
+        return true;
+      })
     : rows;
   const filtered = fStatut ? rowsCtxFiltered.filter((r) => r.statut === fStatut) : rowsCtxFiltered;
   const compteStatuts = {};

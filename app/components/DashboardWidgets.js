@@ -12,6 +12,7 @@ import { useEffect, useState, useRef } from "react";
 import { Panel } from "../ui";
 import { dialogs } from "../dialogs";
 import TeamStatsPdfExport from "./TeamStatsPdfExport";  // 0.58.62
+import TeamGoalsSparkline from "./TeamGoalsSparkline";  // 0.58.63
 
 // 30 citations soigneusement choisies (pas trop perso, pas trop corporate)
 const CITATIONS = [
@@ -2639,6 +2640,11 @@ export function TeamGoalsWidget() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 0.58.63 : Sparkline évolution sur 7 jours */}
+      {stats && teamGoals.length > 0 && (
+        <TeamGoalsSparkline stats={stats} totalGoals={teamGoals.length} />
       )}
 
       {/* 0.58.59 : mini-stats par équipe */}

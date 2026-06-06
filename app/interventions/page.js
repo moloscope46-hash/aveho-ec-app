@@ -14,6 +14,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { EmptyState, toast, SkeletonRow, Avatar, Select, DatePicker, BulkToolbar, Tooltip, ProgressBar, Drawer } from "../components/ui-premium";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.63
 import { Dialog } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import DIPreview from "../DIPreview";
@@ -267,6 +268,8 @@ export default function Interventions() {
         depot_id: form.depot_id || null, zone_id: form.zone_id || null,
         description: form.description || null, statut: "Nouvelle", created_by: auth.user.id,
         due_date: form.due_date || null,
+        // 0.58.63 : équipe en charge (filtre TopBar)
+        equipe_id: form.equipe_id || null,
       };
       // Alpha 0.26.0 : safeInsert
       const { data, error, queued } = await safeInsert(supabase, "interventions", insertPayload, { userId, returning: !queued });
@@ -652,6 +655,13 @@ export default function Interventions() {
               <div className="fld"><label>Description</label>
                 <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Décrivez le problème ou la demande…" />
               </div>
+              {/* 0.58.63 : équipe en charge */}
+              <EquipeSelector
+                value={form.equipe_id}
+                onChange={(eqId) => setForm({ ...form, equipe_id: eqId })}
+                structureId={auth.structureId}
+                label="Équipe en charge"
+              />
             </div>
             <div className="modal-foot">
               <button className="btn-ghost" onClick={() => setModal(false)}>Annuler</button>

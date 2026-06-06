@@ -29,10 +29,18 @@ export default function Commandes() {
   // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
   const { patientIds, ctx } = useContextPatientIds();
   const filteredCmds = useMemo(() => {
-    if (!ctx.active || !patientIds) return cmds;
-    // Garde les commandes liées à un patient du périmètre OU sans patient_id
-    return cmds.filter(c => !c.patient_id || patientIds.has(c.patient_id));
-  }, [cmds, ctx.active, patientIds]);
+    if (!ctx.active || (!patientIds && !ctx.equipeId)) return cmds;
+    return cmds.filter(c => {
+      // Filtre patient (bât/svc)
+      if (patientIds && c.patient_id && !patientIds.has(c.patient_id)) return false;
+      if (patientIds && !c.patient_id) {
+        // ok : conserve les commandes sans patient (déjà existant)
+      }
+      // 0.58.63 : filtre équipe
+      if (ctx.equipeId && c.equipe_id !== ctx.equipeId) return false;
+      return true;
+    });
+  }, [cmds, ctx.active, patientIds, ctx.equipeId]);
 
   // 0.58.45 : export CSV des commandes (pour Cmd+K)
   async function exportCommandesCsv() {

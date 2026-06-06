@@ -20,6 +20,7 @@ import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 import { EmptyState, toast, SkeletonRow } from "../components/ui-premium";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.63
 import { KpiRow } from "../kpis";
 import ConsentementRGPD from "../ConsentementRGPD";
 import PatientPreview from "../PatientPreview";
@@ -267,6 +268,8 @@ export default function Patients() {
         code_insee_residence: form.code_insee_residence || null,
         latitude: form.latitude || null,
         longitude: form.longitude || null,
+        // 0.58.63 : équipe responsable du patient (filtre TopBar)
+        equipe_id: form.equipe_id || null,
       };
       let patientId = modal.id;
       let isNouveau = false;
@@ -752,6 +755,13 @@ export default function Patients() {
                   <i className="ti ti-info-circle" /> Seuls les lits libres sont proposés (et le lit actuel en édition). Pour gérer les chambres, va dans <b>Mon établissement</b>.
                 </small>
               </div>
+              {/* 0.58.63 : sélecteur d'équipe responsable */}
+              <EquipeSelector
+                value={form.equipe_id}
+                onChange={(eqId) => setForm({ ...form, equipe_id: eqId })}
+                structureId={auth.structureId}
+                label="Équipe responsable"
+              />
               <div className="fld"><label>Notes</label>
                 <textarea value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="Informations complémentaires (régime, allergies, contexte familial…)" style={{ width:"100%", padding:9, border:"1px solid #e1e6eb", borderRadius:8, fontFamily:"inherit", fontSize:13, resize:"vertical" }} />
               </div>

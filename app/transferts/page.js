@@ -214,14 +214,20 @@ export default function Transferts() {
         <PageHead small title="Transferts de stock" sub="Magasin ↔ dépôt déporté · chambre ↔ dépôt — suivi par statut" />
         {(() => {
           // 0.58.57 : filtrage ctx via depots du bâtiment actif
-          const rowsFiltered = ctx.active && depotsCtx
+          // 0.58.63 : + filtre équipe si sélectionnée
+          const rowsFiltered = ctx.active
             ? rows.filter(r => {
-                // Garde les transferts dont la source OU la destination est un dépôt du bâtiment
-                const srcMatch = r.src_type === "depot" && r.src_id && depotsCtx.has(r.src_id);
-                const dstMatch = r.dst_type === "depot" && r.dst_id && depotsCtx.has(r.dst_id);
-                // Si aucun des deux n'est un dépôt → on garde (transfert chambre↔chambre)
-                if (r.src_type !== "depot" && r.dst_type !== "depot") return true;
-                return srcMatch || dstMatch;
+                // Filtre dépôts (bâtiment)
+                if (depotsCtx) {
+                  const srcMatch = r.src_type === "depot" && r.src_id && depotsCtx.has(r.src_id);
+                  const dstMatch = r.dst_type === "depot" && r.dst_id && depotsCtx.has(r.dst_id);
+                  if (r.src_type === "depot" || r.dst_type === "depot") {
+                    if (!srcMatch && !dstMatch) return false;
+                  }
+                }
+                // 0.58.63 : filtre équipe
+                if (ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
+                return true;
               })
             : rows;
           return (

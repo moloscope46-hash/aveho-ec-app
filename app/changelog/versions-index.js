@@ -10,9 +10,9 @@
 //  Seul THEME_LABELS (2 KB) reste en import statique.
 //
 //  STATS au moment de la génération :
-//   - VERSIONS_INDEX (JSON public) : 803.7 KB lazy
-//   - Extra (chantiers > 5)        : 167.4 KB lazy
-//   - Versions : 256
+//   - VERSIONS_INDEX (JSON public) : 813.0 KB lazy
+//   - Extra (chantiers > 5)        : 169.0 KB lazy
+//   - Versions : 258
 // =============================================================
 
 export const THEME_LABELS = {
@@ -125,6 +125,91 @@ export const THEME_LABELS = {
     "lbl": "Divers",
     "icon": "ti-tag",
     "color": "#8a98a8"
+  },
+  "feature": {
+    "lbl": "Nouvelle Feature",
+    "icon": "ti-sparkles",
+    "color": "#7CC8C8"
+  },
+  "fix": {
+    "lbl": "Bug Fix",
+    "icon": "ti-bug",
+    "color": "#e35d5b"
+  },
+  "wow": {
+    "lbl": "Wow effect ✨",
+    "icon": "ti-stars",
+    "color": "#EF9F27"
+  },
+  "ui": {
+    "lbl": "Refonte UI",
+    "icon": "ti-color-swatch",
+    "color": "#7a6fb0"
+  },
+  "team": {
+    "lbl": "Équipe & Collab",
+    "icon": "ti-users-group",
+    "color": "#185FA5"
+  },
+  "dashboard": {
+    "lbl": "Dashboard & Widgets",
+    "icon": "ti-layout-dashboard",
+    "color": "#7CC8C8"
+  },
+  "objectifs": {
+    "lbl": "Objectifs",
+    "icon": "ti-target",
+    "color": "#185FA5"
+  },
+  "pharmacie": {
+    "lbl": "Pharmacies",
+    "icon": "ti-prescription",
+    "color": "#5aa05a"
+  },
+  "carte": {
+    "lbl": "Carte interactive",
+    "icon": "ti-map-2",
+    "color": "#185FA5"
+  },
+  "dnd": {
+    "lbl": "Drag & Drop",
+    "icon": "ti-grip-vertical",
+    "color": "#7CC8C8"
+  },
+  "raccourcis": {
+    "lbl": "Raccourcis & FAB",
+    "icon": "ti-sparkles",
+    "color": "#5a4a90"
+  },
+  "menu": {
+    "lbl": "Menu & Navigation",
+    "icon": "ti-menu-2",
+    "color": "#142131"
+  },
+  "partenaires": {
+    "lbl": "Partenaires RPPS",
+    "icon": "ti-id-badge-2",
+    "color": "#7a6fb0"
+  },
+  "build": {
+    "lbl": "Build & Deploy",
+    "icon": "ti-server-cog",
+    "color": "#c0392b"
+  },
+  "supabase": {
+    "lbl": "Supabase & SQL",
+    "icon": "ti-database",
+    "color": "#5aa05a"
+  },
+  "mobile": {
+    "lbl": "Mobile UX",
+    "icon": "ti-device-mobile",
+    "color": "#7CC8C8"
+  },
+  "animation": {
+    "lbl": "Animations",
+    "icon": "ti-wand",
+    "color": "#EF9F27"
   }
 };
 

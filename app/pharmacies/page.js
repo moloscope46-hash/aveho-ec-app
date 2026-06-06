@@ -13,6 +13,7 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.63
 import { PageHead, Panel } from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
@@ -57,6 +58,38 @@ export default function PharmaciesPage() {
   const [finessSearchOpen, setFinessSearchOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(null);  // pharmacie en édition
   const [form, setForm] = useState({});
+  // 0.58.63 : batiments + services pour rattachement
+  const [batiments, setBatiments] = useState([]);
+  const [services, setServices] = useState([]);
+
+  // 0.58.63 : charge batiments + services au mount
+  useEffect(() => {
+    if (!auth.ready || !auth.etabId) return;
+    let alive = true;
+    (async () => {
+      try {
+        const { data: bats } = await supabase.from("batiments").select("id, nom").eq("etablissement_id", auth.etabId).order("nom");
+        if (!alive) return;
+        setBatiments(bats || []);
+        // Services via etages (chaque service appartient à un etage qui appartient à un bâtiment)
+        const batIds = (bats || []).map(b => b.id);
+        if (batIds.length > 0) {
+          const { data: etages } = await supabase.from("etages").select("id, batiment_id").in("batiment_id", batIds);
+          const etageIds = (etages || []).map(e => e.id);
+          if (etageIds.length > 0) {
+            const { data: svcs } = await supabase.from("services").select("id, nom, etage_id").in("etage_id", etageIds).order("nom");
+            if (!alive) return;
+            // Enrichit avec batiment_id en passant par etage
+            const etageToBat = Object.fromEntries((etages || []).map(e => [e.id, e.batiment_id]));
+            setServices((svcs || []).map(s => ({ ...s, batiment_id: etageToBat[s.etage_id] })));
+          }
+        }
+      } catch {
+        if (alive) { setBatiments([]); setServices([]); }
+      }
+    })();
+    return () => { alive = false; };
+  }, [auth.ready, auth.etabId]);
 
   async function loadAll() {
     if (!auth.ready || !auth.structureId) return;
@@ -100,6 +133,10 @@ export default function PharmaciesPage() {
       garde_notes: "",
       specialites: [],
       notes: "",
+      // 0.58.63 : rattachement par défaut vide
+      batiment_id: null,
+      service_id: null,
+      equipe_id: null,
     });
     setEditOpen({ id: null });
   }
@@ -142,6 +179,10 @@ export default function PharmaciesPage() {
         pharmacien_titulaire: form.pharmacien_titulaire || null,
         pharmacien_rpps: form.pharmacien_rpps || null,
         notes: form.notes || null,
+        // 0.58.63 : rattachement bât/svc/équipe
+        batiment_id: form.batiment_id || null,
+        service_id: form.service_id || null,
+        equipe_id: form.equipe_id || null,
       };
       if (editOpen?.id) {
         await supabase.from("pharmacies").update(payload).eq("id", editOpen.id);
@@ -523,6 +564,42 @@ export default function PharmaciesPage() {
               <div className="fld">
                 <label>Pharmacien titulaire</label>
                 <input value={form.pharmacien_titulaire || ""} onChange={(e) => setForm({ ...form, pharmacien_titulaire: e.target.value })} placeholder="Dr. Jean Dupont" />
+              </div>
+            </div>
+
+            {/* 0.58.63 : rattachement bâtiment / service / équipe */}
+            <div style={{
+              background: "linear-gradient(135deg, rgba(124,200,200,.08), rgba(122,111,176,.08))",
+              border: "1px solid rgba(124,200,200,.25)",
+              borderRadius: 10,
+              padding: "10px 12px",
+              margin: "10px 0",
+            }}>
+              <div style={{ fontSize: 11.5, color: "#185FA5", fontWeight: 700, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                <i className="ti ti-link" /> Rattachement (filtre TopBar)
+              </div>
+              <div className="grid-3-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                <div className="fld">
+                  <label><i className="ti ti-building" style={{ color: "#7CC8C8" }} /> Bâtiment</label>
+                  <select value={form.batiment_id || ""} onChange={(e) => setForm({ ...form, batiment_id: e.target.value || null, service_id: null })}>
+                    <option value="">— Aucun —</option>
+                    {(batiments || []).map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
+                  </select>
+                </div>
+                <div className="fld">
+                  <label><i className="ti ti-stethoscope" style={{ color: "#EF9F27" }} /> Service</label>
+                  <select value={form.service_id || ""} onChange={(e) => setForm({ ...form, service_id: e.target.value || null })} disabled={!form.batiment_id}>
+                    <option value="">— Aucun —</option>
+                    {(services || []).filter(s => !form.batiment_id || s.batiment_id === form.batiment_id).map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                  </select>
+                </div>
+                <EquipeSelector
+                  value={form.equipe_id}
+                  onChange={(eqId) => setForm({ ...form, equipe_id: eqId })}
+                  structureId={auth.structureId}
+                  batimentId={form.batiment_id}
+                  label="Équipe"
+                />
               </div>
             </div>
 

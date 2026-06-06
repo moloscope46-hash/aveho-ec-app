@@ -62,16 +62,20 @@ export default function Materiels() {
     if (!auth.ready) return;
     (async () => {
       try {
-        const [{ data: arts }, { data: pats }, { data: tg }, { data: links }, { data: dep }] = await Promise.all([
+        const [{ data: arts }, { data: pats }, { data: tg }, { data: links }, { data: dep }, { data: eqs }] = await Promise.all([
           supabase.from("articles").select("id,libelle"),
           supabase.from("patients").select("id,nom,prenom,chambre"),
           supabase.from("tags_materiel").select("*").order("libelle"),
           supabase.from("materiel_tags").select("materiel_id, tag_id"),
           supabase.from("depots").select("id, nom").order("nom"),
+          // 0.58.63 : équipes pour le formulaire matériel
+          supabase.from("equipes").select("id, nom").order("nom"),
         ]);
         setRel({
           article_id: (arts || []).map((a) => ({ value: a.id, label: a.libelle })),
           patient_id: (pats || []).map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
+          // 0.58.63 : option Aucune équipe + liste
+          equipe_id: (eqs || []).map((e) => ({ value: e.id, label: e.nom })),
         });
         setTags(tg || []);
         const linksByMat = {};

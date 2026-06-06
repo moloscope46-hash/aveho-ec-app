@@ -1,0 +1,240 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.63</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #1a3a3a 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.violet{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(122,111,176,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#7a6fb0)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Demo selecteur equipe */
+.eq-demo{background:#fff;color:#142131;padding:12px 14px;border-radius:10px;border:1px solid #e3e9ee;max-width:380px;margin:8px 0}
+.eq-label{font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.eq-select{width:100%;padding:7px 9px;border:1px solid #e3e9ee;border-left:4px solid #7a6fb0;border-radius:6px;font-size:12.5px;color:#142131;font-family:inherit;background:#fff}
+
+/* Demo sparkline */
+.spark-demo{background:linear-gradient(135deg,rgba(122,111,176,.08),rgba(124,200,200,.08));border:1px solid rgba(122,111,176,.20);border-radius:10px;padding:12px;max-width:380px;margin:10px 0}
+.spark-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:11px;color:#7a6fb0;font-weight:700;text-transform:uppercase}
+.spark-trend{color:#5aa05a;display:flex;align-items:center;gap:3px}
+
+/* Demo pharma rattachement */
+.pharma-demo{background:linear-gradient(135deg,rgba(124,200,200,.08),rgba(122,111,176,.08));border:1px solid rgba(124,200,200,.25);border-radius:10px;padding:14px;margin:10px 0;max-width:560px;color:#142131}
+.pharma-demo-title{font-size:11.5px;color:#185FA5;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fld-mini{}
+.fld-mini label{font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.fld-mini select{width:100%;padding:5px 7px;border:1px solid #e3e9ee;border-radius:6px;font-size:11.5px;background:#fff;color:#142131;font-family:inherit}
+
+/* Demo tri tuiles */
+.sort-demo{background:#fff;color:#142131;padding:8px 12px;border-radius:8px;border:1px solid #d3d9e0;display:inline-flex;align-items:center;gap:8px;margin:8px 0;font-size:12px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob violet"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.63</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.63 — Filtre équipe COMPLET (7 listes) + Pharmacie rattachée + Sparkline 7j + Tri tuiles<small>EquipeSelector réutilisable · 4 dernières pages branchées · Mini-courbe SVG · 4 modes de tri changelog</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.63-alpha</code></span>
+    <span><b>Tests :</b> ~5040 verts</span>
+    <span><b>SQL :</b> <code>migration-0.58.63-pharmacies-rattachement.sql</code></span>
+  </div>
+</header>
+
+<h2>📋 1. SQL — pharmacies rattachement</h2>
+
+<div class="panel sql">
+<pre style="margin:0;background:#1a1410;color:#bfe6bf;font-size:11px">ALTER TABLE pharmacies
+  ADD COLUMN IF NOT EXISTS batiment_id UUID REFERENCES batiments(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS service_id  UUID REFERENCES services(id)  ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS equipe_id   UUID REFERENCES equipes(id)   ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pharmacies_batiment_id ON pharmacies(batiment_id) WHERE batiment_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pharmacies_service_id  ON pharmacies(service_id)  WHERE service_id  IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pharmacies_equipe_id   ON pharmacies(equipe_id)   WHERE equipe_id   IS NOT NULL;</pre>
+</div>
+
+<h2>👥 2. Filtre équipe COMPLET sur 7 listes</h2>
+
+<div class="panel">
+<p style="margin:0">Le sélecteur Équipe TopBar (0.58.60) filtre maintenant <b>toutes les listes principales</b>. 0.58.62 avait branché Patients/Interventions/Matériels — 0.58.63 ajoute les 4 dernières : <b>Commandes, Achats, Signalements, Transferts</b>.</p>
+</div>
+
+<ul>
+<li>✅ <code>/patients</code> — filtre par <code>equipe_id</code> (0.58.62)</li>
+<li>✅ <code>/interventions</code> — filtre par <code>equipe_id</code> (0.58.62)</li>
+<li>✅ <code>/materiels</code> — filtre par <code>equipe_id</code> via extraFilter combiné (0.58.62)</li>
+<li>🆕 <code>/commandes</code> — filtre par <code>equipe_id</code> en plus de patientIds</li>
+<li>🆕 <code>/achats</code> — filtre par <code>equipe_id</code> en plus de patientIds</li>
+<li>🆕 <code>/signalements</code> — filtre par <code>equipe_id</code> en plus de patientIds</li>
+<li>🆕 <code>/transferts</code> — filtre par <code>equipe_id</code> en plus de depotsCtx (bâtiment)</li>
+</ul>
+
+<h2>🧩 3. Composant EquipeSelector réutilisable</h2>
+
+<div class="panel">
+<p style="margin:0">Petit dropdown qui charge les équipes par bâtiment ou par structure (avec fallback gracieux). Border-left coloré selon l'équipe sélectionnée. Intégré dans 4 formulaires : <code>/patients</code>, <code>/interventions</code>, <code>/materiels</code> (via Crud relations), <code>/pharmacies</code>.</p>
+</div>
+
+<div class="eq-demo">
+<div class="eq-label">
+<i class="ti ti-users-group" style="color:#5aa05a"></i> Équipe responsable
+</div>
+<select class="eq-select" style="border-left-color:#5aa05a">
+<option>— Aucune équipe —</option>
+<option selected>Équipe Sud-Ouest</option>
+<option>Équipe Commerciale</option>
+<option>Équipe Paris-Nord</option>
+</select>
+</div>
+
+<h2>🏥 4. Pharmacies rattachées à bâtiment / service / équipe</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau bloc dans le modal pharmacies avec <b>3 sélecteurs en cascade</b> : Bâtiment ▸ Service (filtré par bâtiment) ▸ Équipe (filtrée par bâtiment via EquipeSelector).</p>
+</div>
+
+<div class="pharma-demo">
+<div class="pharma-demo-title"><i class="ti ti-link"></i> Rattachement (filtre TopBar)</div>
+<div class="grid-3">
+<div class="fld-mini">
+<label><i class="ti ti-building" style="color:#7CC8C8"></i> Bâtiment</label>
+<select><option>— Aucun —</option><option selected>CHU Toulouse</option></select>
+</div>
+<div class="fld-mini">
+<label><i class="ti ti-stethoscope" style="color:#EF9F27"></i> Service</label>
+<select><option>— Aucun —</option><option selected>Pharmacie hospitalière</option></select>
+</div>
+<div class="fld-mini">
+<label><i class="ti ti-users-group" style="color:#7a6fb0"></i> Équipe</label>
+<select style="border-left:3px solid #7a6fb0"><option>— Aucune équipe —</option><option selected>Équipe PUI</option></select>
+</div>
+</div>
+</div>
+
+<h2>📈 5. Sparkline évolution 7 jours</h2>
+
+<div class="panel">
+<p style="margin:0">Mini-graphique d'évolution de la moyenne d'avancement dans le widget Objectifs équipe. Snapshot quotidien en localStorage <code>av-team-goals-history-7d</code> (rotation glissante, max 7 entrées). Trend +/- pts avec couleur adaptative.</p>
+</div>
+
+<div class="spark-demo">
+<div class="spark-header">
+<span><i class="ti ti-chart-line"></i> Évolution sur 7 jours</span>
+<span class="spark-trend"><i class="ti ti-trending-up"></i> +12 pts</span>
+</div>
+<svg viewBox="0 0 220 60" style="width:100%;height:60px;display:block">
+<defs>
+<linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#7a6fb0" stop-opacity="0.35"/>
+<stop offset="100%" stop-color="#7a6fb0" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<line x1="4" y1="33" x2="216" y2="33" stroke="rgba(122,111,176,.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<polygon points="4,30 39,38 74,32 109,28 144,20 179,14 214,12 214,54 4,54" fill="url(#g1)"/>
+<polyline points="4,30 39,38 74,32 109,28 144,20 179,14 214,12" fill="none" stroke="#7a6fb0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="4" cy="30" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+<circle cx="39" cy="38" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+<circle cx="74" cy="32" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+<circle cx="109" cy="28" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+<circle cx="144" cy="20" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+<circle cx="179" cy="14" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+<circle cx="214" cy="12" r="2.5" fill="#fff" stroke="#7a6fb0" stroke-width="2"/>
+</svg>
+<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#8a98a8;margin-top:2px">
+<span>05-31</span>
+<span>06-06 · 78%</span>
+</div>
+</div>
+
+<p style="font-size:11.5px;color:#9fb6c2">↑ Le widget mémorise le pourcentage moyen chaque jour. Si tu reviens demain, un nouveau point apparaît. Au bout de 7 jours, la courbe est complète et glisse en mode FIFO.</p>
+
+<h2>🔀 6. Tri avancé dans la page Changelog</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau sélecteur 'Tri' avec 4 modes (persisté en localStorage). Combinable avec les filtres existants (thèmes, search, kind).</p>
+</div>
+
+<div class="sort-demo" style="color:#142131">
+<i class="ti ti-arrows-sort"></i> Tri :
+<select style="background:#fff;color:#142131;border:1px solid #d3d9e0;border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit">
+<option>Version ↓ (récente)</option>
+<option>Version ↑ (ancienne)</option>
+<option>Date ↓ (récente)</option>
+<option>Nb de tags ↓</option>
+</select>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>📋 SQL</b> ALTER pharmacies ADD bât/svc/équipe + 3 index</li>
+<li><b>👥 Filtre équipe</b> branché sur 4 dernières pages (commandes, achats, signalements, transferts) — <b>7 listes au total</b> maintenant</li>
+<li><b>🧩 EquipeSelector</b> composant réutilisable, intégré dans 4 formulaires</li>
+<li><b>🏥 Pharmacies</b> rattachées à bât/svc/équipe avec cascade</li>
+<li><b>📈 Sparkline 7j</b> dans widget Objectifs équipe (snapshot localStorage)</li>
+<li><b>🔀 Tri changelog</b> en 4 modes (version/date/nb tags)</li>
+<li><b>+30 tests</b> Vitest (~5040 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~5040 verts attendus
+npm run build           # OK attendu
+
+# 1) D'ABORD : exécuter le SQL dans Supabase
+#    migration-0.58.63-pharmacies-rattachement.sql
+
+# 2) Push code
+git add -A
+git commit -m "Alpha 0.58.63 - Filtre equipe 4 pages + EquipeSelector + Pharma rattachement + Sparkline 7j + Tri tuiles"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.64+)</h2>
+<div class="panel">
+<ul>
+<li>Filtrer la carte par équipe (les pharmacies rattachées s'affichent en premier)</li>
+<li>Snapshot serveur (Edge Function CRON) pour ne plus dépendre du localStorage pour le sparkline 7j</li>
+<li>Graphique 30 jours pour les stats équipe (en plus du 7j)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Mode présentation pour widget Météo</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.63 · 6 juin 2026 · ÉQUIPE COMPLÈTE 👥📈🏥</footer>
+</div>
+
+</body></html>

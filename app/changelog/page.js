@@ -123,9 +123,37 @@ export default function ChangelogPage() {
     return counts;
   }, [ALL_VERSIONS]);
 
+  // 0.58.63 : tri pour la vue Tuiles (version desc / version asc / date desc / nb tags)
+  const [sortMode, setSortMode] = useState(() => {
+    if (typeof window === "undefined") return "version-desc";
+    try { return localStorage.getItem("av-changelog-sort") || "version-desc"; } catch { return "version-desc"; }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem("av-changelog-sort", sortMode); } catch {}
+  }, [sortMode]);
+
   const filtered = useMemo(() => {
     let arr = [...ALL_VERSIONS];
-    arr.sort((a, b) => compareVersions(b.v, a.v));
+    // 0.58.63 : tri dynamique
+    if (sortMode === "version-asc") {
+      arr.sort((a, b) => compareVersions(a.v, b.v));
+    } else if (sortMode === "date-desc") {
+      // Parse FR date "6 juin 2026" → comparable
+      const parseDate = (d) => {
+        if (!d) return 0;
+        const months = { janvier: 0, février: 1, mars: 2, avril: 3, mai: 4, juin: 5, juillet: 6, août: 7, septembre: 8, octobre: 9, novembre: 10, décembre: 11 };
+        const m = d.match(/(\d+)\s+(\S+)\s+(\d+)/);
+        if (!m) return 0;
+        return new Date(parseInt(m[3]), months[m[2].toLowerCase()] || 0, parseInt(m[1])).getTime();
+      };
+      arr.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+    } else if (sortMode === "tags-desc") {
+      arr.sort((a, b) => (b.themes?.length || 0) - (a.themes?.length || 0));
+    } else {
+      // version-desc (défaut)
+      arr.sort((a, b) => compareVersions(b.v, a.v));
+    }
     
     if (filter === "version") arr = arr.filter(v => v.kind === "version");
     if (filter === "hotfix") arr = arr.filter(v => v.kind === "hotfix");
@@ -148,7 +176,7 @@ export default function ChangelogPage() {
     }
     
     return arr;
-  }, [filter, search, selectedThemes, ALL_VERSIONS]);
+  }, [filter, search, selectedThemes, sortMode, ALL_VERSIONS]);
 
   const currentVersion = pkg.version.replace(/-alpha$/, "");
   const totalVersions = ALL_VERSIONS.filter(v => v.kind === "version").length;
@@ -524,8 +552,35 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
             </div>
           )}
 
-          {/* 0.58.61 : toggle vue Liste / Tuiles */}
-          <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 4 }}>
+          {/* 0.58.61 : toggle vue Liste / Tuiles + 0.58.63 : tri */}
+          <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {/* 0.58.63 : sélecteur de tri (visible surtout en mode tuiles) */}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 11.5, color: "#8a98a8", fontWeight: 600 }}>
+                <i className="ti ti-arrows-sort" /> Tri :
+              </label>
+              <select
+                value={sortMode}
+                onChange={(e) => setSortMode(e.target.value)}
+                style={{
+                  background: "#fff",
+                  color: "#142131",
+                  border: "1px solid #d3d9e0",
+                  borderRadius: 6,
+                  padding: "5px 8px",
+                  fontSize: 12,
+                  fontFamily: "inherit",
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                <option value="version-desc">Version ↓ (récente)</option>
+                <option value="version-asc">Version ↑ (ancienne)</option>
+                <option value="date-desc">Date ↓ (récente)</option>
+                <option value="tags-desc">Nb de tags ↓</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
             <button
               onClick={() => setViewMode("list")}
               title="Vue chronologique en liste"
@@ -566,6 +621,7 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
             >
               <i className="ti ti-layout-grid" /> Tuiles
             </button>
+            </div>
           </div>
         </Panel>
 
