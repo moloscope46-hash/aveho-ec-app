@@ -20,6 +20,7 @@ import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
 // 0.58.54 : filtre contexte bât/svc via patient_id
 import { useContextPatientIds } from "../../lib/useContextPatientIds";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.66
 // 0.58.45 : hook pour les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 // 0.58.22 : NeonButton premium pour boutons d'action principaux
@@ -187,6 +188,8 @@ function AchatsInner() {
         notes: form.notes || null,
         demandeur_id: form.demandeur_id || auth.user?.id || null,
         updated_at: new Date().toISOString(),
+        // 0.58.66 : équipe responsable de la demande d'achat
+        equipe_id: form.equipe_id || null,
       };
       let cmdId = modal?.id;
       const userId = auth.user?.id;
@@ -608,6 +611,13 @@ function AchatsInner() {
           <label>Notes internes</label>
           <textarea value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} />
         </div>
+        {/* 0.58.66 : équipe responsable */}
+        <EquipeSelector
+          value={form.equipe_id}
+          onChange={(eqId) => setForm({ ...form, equipe_id: eqId })}
+          structureId={auth.structureId}
+          label="Équipe responsable"
+        />
       </Modal>
 
       <Modal open={!!refusModal} onClose={() => setRefusModal(null)} kind="patient"

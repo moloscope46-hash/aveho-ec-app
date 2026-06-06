@@ -205,6 +205,56 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.66",
+    "kind": "version",
+    "titre": "🚨 HOTFIX build prerender + 👥 Équipe sur 4 formulaires restants + 🔍 Filtres combinés tuiles + 📊 Sparkline 90j",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 FIX CRITIQUE BUILD VERCEL — `Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!` sur le prerender de `/materiels` et `/signalements`. **Cause** : Next.js 15 tente de SSG ces pages → `createBrowserClient(undefined, undefined)` throw car les `NEXT_PUBLIC_*` ne sont pas disponibles au build time. **Fix** dans `lib/supabase.js` : si `url || !key` manquent, retourne un **client stub via Proxy** qui répond `{ data: null, error: null }` à toutes les opérations (auth/storage/from/rpc/channel/functions). Au runtime browser l'env est toujours présent → comportement normal. Permet le prerender SSG sans casser",
+        "code_snippet": {
+          "file": "lib/supabase.js",
+          "note": "Stub SSR-safe",
+          "lang": "js",
+          "before": "// AVANT 0.58.66 - throw au build prerender\nexport function createClient() {\n  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;\n  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;\n  if (!url || !key) {\n    if (typeof window !== 'undefined') console.error('...');\n  }\n  return createBrowserClient(url, key);  // ← throw si undefined\n}",
+          "after": "// 0.58.66 - stub Proxy si env absent (build prerender)\nexport function createClient() {\n  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;\n  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;\n  if (!url || !key) {\n    const asyncStub = () => Promise.resolve({ data: null, error: null });\n    const stubBuilder = new Proxy({}, {\n      get: (_target, prop) => {\n        if (prop === 'then') return undefined;  // pas une promesse\n        return () => stubBuilder;\n      },\n    });\n    return {\n      from: () => stubBuilder,\n      auth: { getUser: asyncStub, getSession: asyncStub, ... },\n      storage: { from: () => ({ upload: asyncStub, ... }) },\n      rpc: asyncStub, channel: () => ({...}),\n      functions: { invoke: asyncStub },\n    };\n  }\n  return createBrowserClient(url, key);\n}"
+        }
+      },
+      { "code": "FIX", "txt": "🩹 FIX test `v058-65-bundle.test.js` qui cherchait le pattern `/aMatch.*bMatch/` — j'avais utilisé une syntaxe inline ternaire `b.equipe_id === ctx.equipeId ? 1 : 0` qui ne contient pas ces variables. Pattern assoupli vers `/equipe_id === ctx\\.equipeId/` + `/\\[\\.\\.\\.filtered\\]\\.sort/`" },
+      { "code": "FEAT", "txt": "👥 ÉQUIPE DANS LES 4 FORMULAIRES RESTANTS. Ajout du composant `EquipeSelector` (0.58.63) dans : **(1) `/achats`** — modal d'achat, équipe responsable, payload `equipe_id`, **(2) `/signalements`** — modal de signalement, équipe en charge (optionnel), visible en création OU si l'user est admin (préserve l'anonymat), **(3) `/transferts`** — modal de transfert, équipe responsable, après le motif, **(4) `/panier` (commandes)** — encart dédié avant le total, state local `equipeId`. **TOTAL : 8 formulaires** ont maintenant le sélecteur (patients, interventions, materiels, pharmacies, achats, signalements, transferts, panier)",
+        "code_snippet": {
+          "file": "app/panier/page.js",
+          "note": "EquipeSelector panier",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.66 - cmdPayload sans equipe_id\nconst cmdPayload = {\n  structure_id, etablissement_id, magasin_id, numero,\n  statut: 'En cours', total: cart.total, created_by: auth.user.id,\n};",
+          "after": "// 0.58.66 - state + payload + UI\nconst [equipeId, setEquipeId] = useState(null);\n\nconst cmdPayload = {\n  ...payload,\n  // 0.58.66 : équipe responsable\n  equipe_id: equipeId || null,\n};\n\n// UI avant le total\n<EquipeSelector\n  value={equipeId}\n  onChange={(eqId) => setEquipeId(eqId)}\n  structureId={auth.structureId}\n  label='Équipe responsable (optionnel)'\n/>"
+        }
+      },
+      { "code": "FEAT", "txt": "🔍 FILTRES AVANCÉS VUE TUILES CHANGELOG — récap visuel avec CHIPS REMOVABLES. Quand des filtres sont actifs, une barre récap apparaît avec : **(a) compteur résultats** (`<i>{N}</i> résultats`), **(b) chips colorés** pour chaque filtre actif (filter version/hotfix en bleu, search en violet, themes avec leur couleur native), **(c) × sur chaque chip** pour retirer ce filtre spécifique, **(d) bouton 'Tout réinitialiser'** terra en bout de ligne. Les filtres se combinent toujours dans le useMemo (tri + tag + search + version/hotfix). Couleur de chip = `THEME_LABELS[t].color` pour un visuel cohérent",
+        "code_snippet": {
+          "file": "app/changelog/page.js",
+          "note": "Chips filtres combinés",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.66 - récap textuel simple\n{hasActiveFilters && (\n  <div>{filtered.length} résultats · filtres thèmes : {selectedThemes.map(t => THEME_LABELS[t]?.lbl).join(', ')}</div>\n)}",
+          "after": "// 0.58.66 - chips removables\n{hasActiveFilters && (\n  <div className='filter-recap'>\n    <span>{filtered.length} résultat{filtered.length > 1 ? 's' : ''}</span>\n    {filter !== 'all' && <span className='chip filter'>{filter} <button onClick={() => setFilter('all')}>×</button></span>}\n    {search.trim() && <span className='chip search'>'{search}' <button onClick={() => setSearch('')}>×</button></span>}\n    {selectedThemes.map(t => (\n      <span key={t} className='chip theme' style={{ background: THEME_LABELS[t].color }}>\n        {THEME_LABELS[t].lbl}\n        <button onClick={() => toggleTheme(t)}>×</button>\n      </span>\n    ))}\n    <button onClick={resetFilters}>Tout réinitialiser</button>\n  </div>\n)}"
+        }
+      },
+      { "code": "FEAT", "txt": "📊 SPARKLINE 90 JOURS (rétention max CRON). Ajout d'un **3ème mode** au toggle Sparkline : 7j / 30j / **90j** (rétention maximale du serveur, le CRON supprime au-delà). **Dimensions adaptées** : SVG 380×90 pour 90j (vs 320×80 pour 30j et 220×60 pour 7j). **Points encore plus petits** : r=1.2 + stroke=1.5 pour 90j vs r=1.8/sw=2 pour 30j vs r=2.5/sw=2 pour 7j. **Fallback localStorage étendu** : la rotation FIFO garde maintenant 90 jours max (vs 30 en 0.58.65) pour rester cohérent avec le serveur. Le toggle se comporte comme avant : persisté en `localStorage av-team-goals-range`",
+        "code_snippet": {
+          "file": "app/components/TeamGoalsSparkline.js",
+          "note": "Mode 90 jours",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.66 - 7j / 30j seulement\nconst w = rangeDays === 30 ? 320 : 220;\nconst h = rangeDays === 30 ? 80 : 60;\n\n<button onClick={() => setRangeDays(7)}>7j</button>\n<button onClick={() => setRangeDays(30)}>30j</button>",
+          "after": "// 0.58.66 - 7j / 30j / 90j\nconst w = rangeDays === 90 ? 380 : rangeDays === 30 ? 320 : 220;\nconst h = rangeDays === 90 ? 90  : rangeDays === 30 ? 80  : 60;\n\nif (rangeDays === 7) return history.slice(-7);\nif (rangeDays === 30) return history.slice(-30);\nreturn history.slice(-90);  // 0.58.66 : tout l'historique CRON\n\n<button onClick={() => setRangeDays(7)}>7j</button>\n<button onClick={() => setRangeDays(30)}>30j</button>\n<button onClick={() => setRangeDays(90)} title='rétention maximale du serveur'>90j</button>\n\n// Points adaptés\n<circle r={rangeDays === 90 ? 1.2 : rangeDays === 30 ? 1.8 : 2.5} />"
+        }
+      },
+      { "code": "AI", "txt": "+25 tests Vitest (v058-66-bundle.test.js) : version+SW (2), Hotfix Supabase stub SSR (3), EquipeSelector 4 formulaires (4), Filtres combinés tuiles (5), Sparkline 90j (6). Total **~5110 verts estimés** (+ le test 0.58.65 cassé repassera vert)" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.66 : **(1)** Le build Vercel devrait passer même sans env Supabase au prerender (stub SSR-safe). **(2)** Les 8 formulaires de l'app permettent de rattacher une entité à une équipe : patients, interventions, materiels, pharmacies, achats, signalements, transferts, commandes (panier). Le filtre TopBar fonctionne donc à 100% bout-en-bout. **(3)** Les filtres du changelog combinent maintenant visuellement tri + tag + search + version avec des chips couleurs. **(4)** La sparkline d'objectifs équipe peut afficher jusqu'à 90 jours d'historique (rétention max du CRON). PROCHAINES PISTES (0.58.67+) : (a) Tags multi-langues (icone + label fr/en/es), (b) Mode présentation pour widget Météo, (c) Stats équipe : moyenne mobile 7j sur la sparkline 90j (pour lisser le bruit), (d) Export CSV des snapshots serveur, (e) Vue 'équipes vs équipes' avec comparatif" }
+    ],
+    "themes": ["fix", "build", "feature", "team", "objectifs", "stats_dashboard", "supabase", "ui"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.66.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.65",
     "kind": "version",
     "titre": "🗺️ Filtre carte par équipe + ☁️ Snapshots serveur (CRON) + 📊 Graphique 30 jours",

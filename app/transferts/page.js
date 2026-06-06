@@ -7,6 +7,7 @@ import { useLibelles } from "../../lib/useLibelles";
 import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.66
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
@@ -139,6 +140,8 @@ export default function Transferts() {
         materiel_id: form.contenu === "materiel" ? form.materiel_id : null,
         libelle, quantite: form.contenu === "article" ? Number(form.quantite || 1) : 1,
         created_by: auth.user.id,
+        // 0.58.66 : équipe responsable du transfert
+        equipe_id: form.equipe_id || null,
       };
       // Alpha 0.28.0 : safeInsert
       const { data, error, queued } = await safeInsert(supabase, "transferts", insertPayload, { userId, returning: !queued });
@@ -347,6 +350,13 @@ export default function Transferts() {
                   {MOTIFS.map((m) => <option key={m}>{m}</option>)}
                 </select>
               </div>
+              {/* 0.58.66 : équipe responsable du transfert */}
+              <EquipeSelector
+                value={form.equipe_id}
+                onChange={(eqId) => setForm({ ...form, equipe_id: eqId })}
+                structureId={auth.structureId}
+                label="Équipe responsable"
+              />
 
               <div className="fld"><label>Source</label>
                 <div className="fld-row">

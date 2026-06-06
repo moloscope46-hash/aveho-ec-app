@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.66</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #2a1f1a 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(227,93,91,.5)}70%{box-shadow:0 0 0 10px rgba(227,93,91,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.red{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.45) 0%,transparent 70%)}
+.bg-blob.violet{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(227,93,91,.20),rgba(122,111,176,.20));backdrop-filter:blur(30px);border:1px solid rgba(227,93,91,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#fcc;font-weight:700;background:rgba(227,93,91,.14);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#e35d5b;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#fcc;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#fcc}
+.meta b{color:#fff}
+.meta code{background:rgba(227,93,91,.12);color:#fcc;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#7a6fb0)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.fix{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #e35d5b}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Demo chips filtres */
+.chips-demo{background:linear-gradient(135deg,rgba(124,200,200,.08),rgba(122,111,176,.08));border:1px solid rgba(124,200,200,.25);border-radius:10px;padding:8px 12px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;color:#142131;margin:8px 0}
+.chip{background:#fff;color:#185FA5;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid #185FA5;display:inline-flex;align-items:center;gap:4px}
+.chip.violet{color:#7a6fb0;border-color:#7a6fb0}
+.chip.theme{color:#fff;border:none}
+.chip.theme.feat{background:#7CC8C8}
+.chip.theme.team{background:#185FA5}
+.chip.theme.objectifs{background:#185FA5}
+.chip.theme.ui{background:#7a6fb0}
+.chip x{cursor:pointer;font-weight:700}
+.reset-btn{background:linear-gradient(135deg,#C9867F,#b56e67);color:#fff;border:none;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:auto}
+
+/* Demo 90j sparkline */
+.spark90{background:linear-gradient(135deg,rgba(122,111,176,.08),rgba(124,200,200,.08));border:1px solid rgba(122,111,176,.20);border-radius:10px;padding:12px;margin:10px 0;color:#142131}
+.spark-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:11px;color:#7a6fb0;font-weight:700;text-transform:uppercase;flex-wrap:wrap;gap:6px}
+.spark-toggle{display:inline-flex;border-radius:6px;background:#fff;border:1px solid #d3d9e0;padding:2px}
+.spark-toggle button{background:transparent;color:#7a6fb0;border:none;border-radius:4px;padding:3px 9px;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit}
+.spark-toggle button.on{background:linear-gradient(135deg,#7a6fb0,#5a4a90);color:#fff}
+
+/* Demo équipe selector */
+.eq-form{background:linear-gradient(135deg,#fff,#fafbfc);border:1px solid #e3e9ee;border-radius:10px;padding:14px;color:#142131;max-width:380px}
+.eq-form label{font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:5px}
+.eq-form select{width:100%;padding:7px 9px;border:1px solid #e3e9ee;border-left:4px solid #5aa05a;border-radius:6px;font-size:12.5px;background:#fff;color:#142131}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob red"></div><div class="bg-blob violet"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX 0.58.66</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.66 — Hotfix build prerender + Équipe sur 4 formulaires + Filtres combinés tuiles + Sparkline 90j<small>Stub SSR-safe · 8 formulaires avec équipe · Chips removables · 7j/30j/90j</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.66-alpha</code></span>
+    <span><b>Tests :</b> ~5110 verts</span>
+    <span><b>SQL :</b> aucun</span>
+  </div>
+  <p style="background:rgba(227,93,91,.10);border:1px solid rgba(227,93,91,.40);border-radius:10px;padding:10px 14px;margin-top:18px;font-size:12.5px;color:#ffc9c9">
+  🚨 <b>Hotfix critique inclus</b> : le build prod 0.58.65 plantait sur <code style="color:#ffc9c9">@supabase/ssr: Your project's URL and API key are required</code> au prerender de <code style="color:#ffc9c9">/materiels</code> et <code style="color:#ffc9c9">/signalements</code>. Cette version retourne un client stub si les env vars sont absentes (au build seulement, le runtime browser garde le comportement normal).
+  </p>
+</header>
+
+<h2>🚨 1. FIX build Vercel — stub Supabase SSR-safe</h2>
+
+<div class="panel fix">
+<p style="margin:0 0 8px"><b>Symptôme</b> : Vercel échouait avec <code>Error: @supabase/ssr: Your project's URL and API key are required to create a Supabase client!</code> au prerender de <code>/materiels</code> et <code>/signalements</code>.</p>
+<p style="margin:0"><b>Cause</b> : Next.js 15 tente le SSG → <code>createBrowserClient(undefined, undefined)</code> throw car les <code>NEXT_PUBLIC_*</code> ne sont pas disponibles au build time côté Vercel.</p>
+</div>
+
+<pre>// lib/supabase.js (0.58.66)
+export function createClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    // 0.58.66 : stub Proxy au lieu de throw (build prerender)
+    const asyncStub = () => Promise.resolve({ data: null, error: null });
+    const stubBuilder = new Proxy({}, {
+      get: (_target, prop) => {
+        if (prop === 'then') return undefined;  // pas une promesse
+        return () => stubBuilder;
+      },
+    });
+    return {
+      from: () => stubBuilder,
+      auth: { getUser: asyncStub, getSession: asyncStub, ... },
+      storage: { from: () => ({ upload: asyncStub, ... }) },
+      rpc: asyncStub, channel: () => ({...}),
+      functions: { invoke: asyncStub },
+    };
+  }
+  return createBrowserClient(url, key);
+}</pre>
+
+<h2>👥 2. EquipeSelector dans les 4 formulaires restants</h2>
+
+<div class="panel">
+<p style="margin:0">Le sélecteur d'équipe est maintenant présent dans <b>tous les formulaires de création d'entités</b> qui ont une colonne <code>equipe_id</code> en base. <b>Total 8 formulaires</b> avec EquipeSelector.</p>
+</div>
+
+<ul>
+<li>✅ <code>/patients</code> (0.58.63)</li>
+<li>✅ <code>/interventions</code> (0.58.63)</li>
+<li>✅ <code>/materiels</code> (0.58.63 via Crud)</li>
+<li>✅ <code>/pharmacies</code> (0.58.63)</li>
+<li>🆕 <code>/achats</code> — modal d'achat</li>
+<li>🆕 <code>/signalements</code> — modal signalement (visible en création ou admin)</li>
+<li>🆕 <code>/transferts</code> — modal transfert</li>
+<li>🆕 <code>/panier</code> (commandes) — encart dédié avant le total</li>
+</ul>
+
+<div class="eq-form">
+<label><i class="ti ti-users-group" style="color:#5aa05a"></i> Équipe responsable</label>
+<select>
+<option>— Aucune équipe —</option>
+<option selected>Équipe Sud-Ouest</option>
+<option>Équipe Commerciale</option>
+<option>Équipe Paris-Nord</option>
+</select>
+</div>
+<p style="font-size:11.5px;color:#9fb6c2;margin-top:6px">↑ Présent dans 8 formulaires maintenant. La couleur de la bordure gauche reflète la couleur de l'équipe sélectionnée.</p>
+
+<h2>🔍 3. Filtres avancés vue Tuiles changelog — chips removables</h2>
+
+<div class="panel">
+<p style="margin:0">Quand des filtres sont actifs, une barre récap apparaît avec chips colorés × removables individuellement + bouton "Tout réinitialiser" terra.</p>
+</div>
+
+<div class="chips-demo">
+<span style="color:#185FA5;font-weight:700"><i class="ti ti-filter"></i> <b>12</b> résultats</span>
+<span class="chip">Versions <x>×</x></span>
+<span class="chip violet"><i class="ti ti-search"></i> "équipe" <x>×</x></span>
+<span class="chip theme team"><i class="ti ti-users-group"></i> Équipe & Collab <x>×</x></span>
+<span class="chip theme objectifs"><i class="ti ti-target"></i> Objectifs <x>×</x></span>
+<span class="chip theme ui"><i class="ti ti-color-swatch"></i> Refonte UI <x>×</x></span>
+<button class="reset-btn"><i class="ti ti-trash"></i> Tout réinitialiser</button>
+</div>
+
+<p style="font-size:11.5px;color:#9fb6c2">↑ Tri (Version ↓ / Date ↓ / Tags ↓) + filtres tag + search + version/hotfix se combinent. Chaque chip est removable individuellement.</p>
+
+<h2>📊 4. Sparkline 90 jours (rétention max CRON)</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau mode <b>90j</b> dans le toggle sparkline. Affiche tout l'historique conservé par le CRON serveur (rétention max). Le SVG s'élargit à 380×90 et les points deviennent encore plus petits (r=1.2).</p>
+</div>
+
+<div class="spark90">
+<div class="spark-header">
+<span><i class="ti ti-chart-line"></i> Évolution 90 jours <span style="font-size:9px;background:rgba(90,160,90,.12);color:#5aa05a;padding:1px 6px;border-radius:6px;margin-left:4px"><i class="ti ti-cloud-check"></i> Serveur</span></span>
+<div style="display:inline-flex;align-items:center;gap:8px">
+<div class="spark-toggle">
+<button>7j</button>
+<button>30j</button>
+<button class="on">90j</button>
+</div>
+<span style="color:#5aa05a;font-weight:700;font-size:12px;display:flex;align-items:center;gap:3px">
+<i class="ti ti-trending-up"></i> +35 pts
+</span>
+</div>
+</div>
+<svg viewBox="0 0 380 90" style="width:100%;height:90px;display:block">
+<defs>
+<linearGradient id="g90" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#7a6fb0" stop-opacity="0.35"/>
+<stop offset="100%" stop-color="#7a6fb0" stop-opacity="0"/>
+</linearGradient>
+</defs>
+<line x1="4" y1="48" x2="376" y2="48" stroke="rgba(122,111,176,.20)" stroke-width="1" stroke-dasharray="3,3"/>
+<polygon points="4,70 8.2,72 12.4,68 16.6,69 20.8,65 25,67 29.2,63 33.4,65 37.6,60 41.8,62 46,58 50.2,60 54.4,55 58.6,57 62.8,53 67,55 71.2,50 75.4,52 79.6,48 83.8,50 88,46 92.2,48 96.4,44 100.6,46 104.8,42 109,44 113.2,40 117.4,42 121.6,38 125.8,40 130,36 134.2,38 138.4,34 142.6,36 146.8,32 151,34 155.2,30 159.4,32 163.6,28 167.8,30 172,26 176.2,28 180.4,24 184.6,26 188.8,22 193,24 197.2,20 201.4,22 205.6,18 209.8,20 214,16 218.2,18 222.4,14 226.6,16 230.8,12 235,14 239.2,10 243.4,12 247.6,14 251.8,10 256,12 260.2,8 264.4,10 268.6,12 272.8,8 277,10 281.2,12 285.4,8 289.6,10 293.8,6 298,8 302.2,4 306.4,6 310.6,8 314.8,4 319,6 323.2,8 327.4,4 331.6,6 335.8,8 340,4 344.2,6 348.4,8 352.6,4 356.8,6 361,4 365.2,6 369.4,2 373.6,4 376,2 376,84 4,84" fill="url(#g90)"/>
+<polyline points="4,70 8.2,72 12.4,68 16.6,69 20.8,65 25,67 29.2,63 33.4,65 37.6,60 41.8,62 46,58 50.2,60 54.4,55 58.6,57 62.8,53 67,55 71.2,50 75.4,52 79.6,48 83.8,50 88,46 92.2,48 96.4,44 100.6,46 104.8,42 109,44 113.2,40 117.4,42 121.6,38 125.8,40 130,36 134.2,38 138.4,34 142.6,36 146.8,32 151,34 155.2,30 159.4,32 163.6,28 167.8,30 172,26 176.2,28 180.4,24 184.6,26 188.8,22 193,24 197.2,20 201.4,22 205.6,18 209.8,20 214,16 218.2,18 222.4,14 226.6,16 230.8,12 235,14 239.2,10 243.4,12 247.6,14 251.8,10 256,12 260.2,8 264.4,10 268.6,12 272.8,8 277,10 281.2,12 285.4,8 289.6,10 293.8,6 298,8 302.2,4 306.4,6 310.6,8 314.8,4 319,6 323.2,8 327.4,4 331.6,6 335.8,8 340,4 344.2,6 348.4,8 352.6,4 356.8,6 361,4 365.2,6 369.4,2 373.6,4 376,2" fill="none" stroke="#7a6fb0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
+<div style="display:flex;justify-content:space-between;font-size:9.5px;color:#8a98a8;margin-top:2px">
+<span>03-08</span>
+<span>06-06 · 96%</span>
+</div>
+</div>
+
+<p style="font-size:11.5px;color:#9fb6c2">↑ Mode 90j : SVG plus large, points r=1.2 (vs 1.8 en 30j vs 2.5 en 7j). Le fallback localStorage est étendu à 90 jours aussi.</p>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li>🚨 <b>FIX build Vercel</b> : Supabase client stub Proxy quand env vars absentes (prerender SSG)</li>
+<li>🩹 <b>FIX test 0.58.65</b> pattern aMatch/bMatch assoupli</li>
+<li>👥 <b>EquipeSelector</b> dans 4 derniers formulaires (achats, signalements, transferts, panier) → 8 au total</li>
+<li>🔍 <b>Chips removables</b> dans le récap des filtres changelog</li>
+<li>📊 <b>Sparkline 90j</b> (rétention max CRON) avec SVG 380×90</li>
+<li>✅ <b>+25 tests</b> Vitest (~5110 verts estimés)</li>
+<li>📦 <b>Aucun SQL</b> nouveau (fix front + UX)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~5110 verts attendus
+npm run build           # OK attendu (fix Vercel inclus) ✅
+
+# Aucun SQL nouveau pour 0.58.66 (fix front + UX)
+git add -A
+git commit -m "Alpha 0.58.66 - Fix build prerender + Equipe 4 formulaires + Chips filtres + Sparkline 90j"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.67+)</h2>
+<div class="panel">
+<ul>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Stats équipe : moyenne mobile 7j sur la sparkline 90j (lisse le bruit)</li>
+<li>Export CSV des snapshots serveur</li>
+<li>Vue 'équipes vs équipes' avec comparatif</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.66 · 6 juin 2026 · BUILD ✅ ÉQUIPE 8 📊 90j</footer>
+</div>
+
+</body></html>

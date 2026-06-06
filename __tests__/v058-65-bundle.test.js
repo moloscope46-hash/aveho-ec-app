@@ -156,7 +156,9 @@ describe("0.58.65 - Filtre carte par équipe", () => {
 
   it("Tri prioritaire des pharmacies rattachées à ctx.equipeId", () => {
     expect(src).toMatch(/ctx\.active && ctx\.equipeId/);
-    expect(src).toMatch(/aMatch.*bMatch/);
+    // 0.58.66 : pattern assoupli — tri stable par appartenance équipe
+    expect(src).toMatch(/equipe_id === ctx\.equipeId/);
+    expect(src).toMatch(/\[\.\.\.filtered\]\.sort/);
   });
 
   it("Halo teal accentué sur markers de l'équipe (isEquipeMatch)", () => {

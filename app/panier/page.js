@@ -11,6 +11,7 @@ import { PageHead, Panel, StateMsg, IconButton } from "../ui";
 // 0.58.49 : migration UI premium
 import { EmptyState } from "../components/ui-premium";
 import { safeInsert } from "../../lib/safeWrite";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.66
 
 export default function Panier() {
   const supabase = createClient();
@@ -20,6 +21,8 @@ export default function Panier() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  // 0.58.66 : équipe optionnelle pour la commande
+  const [equipeId, setEquipeId] = useState(null);
 
   async function valider() {
     setErr(""); setMsg("");
@@ -36,6 +39,8 @@ export default function Panier() {
         ...(newCmdId ? { id: newCmdId } : {}),
         structure_id: auth.structureId, etablissement_id: auth.etabId, magasin_id, numero,
         statut: "En cours", total: cart.total, created_by: auth.user.id,
+        // 0.58.66 : équipe responsable
+        equipe_id: equipeId || null,
       };
       const { data: cmd, error: e1, queued } = await safeInsert(supabase, "commandes", cmdPayload, { userId, returning: true });
       if (e1) throw e1;
@@ -90,6 +95,15 @@ export default function Panier() {
                   ))}
                 </tbody>
               </table>
+              {/* 0.58.66 : équipe optionnelle pour la commande */}
+              <div style={{ marginTop: 16, padding: "10px 14px", background: "linear-gradient(135deg, rgba(124,200,200,.08), #fff)", border: "1px solid rgba(124,200,200,.25)", borderRadius: 10 }}>
+                <EquipeSelector
+                  value={equipeId}
+                  onChange={(eqId) => setEquipeId(eqId)}
+                  structureId={auth.structureId}
+                  label="Équipe responsable (optionnel)"
+                />
+              </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
                 <span style={{ fontSize: 18, fontWeight: 700 }}>Total : {fmtEur(cart.total)}</span>
                 <button className="btn-primary" style={{ width: "auto", padding: "0 28px" }} onClick={valider} disabled={busy}>

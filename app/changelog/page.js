@@ -542,13 +542,57 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
           </div>
 
           {hasActiveFilters && (
-            <div style={{ marginTop: 8, fontSize: 12, color: "#185FA5" }}>
-              <b>{filtered.length}</b> résultat{filtered.length > 1 ? "s" : ""}
-              {selectedThemes.length > 0 && (
-                <span style={{ marginLeft: 6, color: "#8a98a8" }}>
-                  · filtres thèmes : {selectedThemes.map(t => THEME_LABELS[t]?.lbl).join(", ")}
+            <div style={{
+              marginTop: 10,
+              padding: "8px 12px",
+              background: "linear-gradient(135deg, rgba(124,200,200,.08), rgba(122,111,176,.08))",
+              border: "1px solid rgba(124,200,200,.25)",
+              borderRadius: 10,
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 8,
+              fontSize: 12,
+            }}>
+              {/* 0.58.66 : récap visuel des filtres actifs combinés */}
+              <span style={{ color: "#185FA5", fontWeight: 700 }}>
+                <i className="ti ti-filter" /> <b>{filtered.length}</b> résultat{filtered.length > 1 ? "s" : ""}
+              </span>
+              {filter !== "all" && (
+                <span style={{ background: "#fff", color: "#185FA5", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600, border: "1px solid #185FA5", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  {filter === "version" ? "Versions" : "Hotfix"}
+                  <button onClick={() => setFilter("all")} style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: "#185FA5", fontSize: 11, lineHeight: 1 }}>×</button>
                 </span>
               )}
+              {search.trim() && (
+                <span style={{ background: "#fff", color: "#7a6fb0", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600, border: "1px solid #7a6fb0", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <i className="ti ti-search" /> "{search.length > 20 ? search.slice(0, 20) + "…" : search}"
+                  <button onClick={() => setSearch("")} style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: "#7a6fb0", fontSize: 11, lineHeight: 1 }}>×</button>
+                </span>
+              )}
+              {selectedThemes.map(t => {
+                const themeData = THEME_LABELS[t];
+                if (!themeData) return null;
+                return (
+                  <span key={t} style={{ background: themeData.color, color: "#fff", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <i className={`ti ${themeData.icon}`} /> {themeData.lbl}
+                    <button onClick={() => toggleTheme(t)} style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", color: "#fff", fontSize: 11, lineHeight: 1 }}>×</button>
+                  </span>
+                );
+              })}
+              <button
+                onClick={resetFilters}
+                style={{
+                  marginLeft: "auto",
+                  background: "linear-gradient(135deg, #C9867F, #b56e67)",
+                  color: "#fff", border: "none",
+                  padding: "3px 10px", borderRadius: 8,
+                  fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                }}
+              >
+                <i className="ti ti-trash" /> Tout réinitialiser
+              </button>
             </div>
           )}
 

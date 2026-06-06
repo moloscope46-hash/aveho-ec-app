@@ -37,12 +37,12 @@ function pushLocalSnapshot(stats, totalGoals) {
       nbAtteints: stats.nbAtteints,
       total: totalGoals,
     });
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-30)));  // 0.58.65 : max 30j pour fallback
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-90)));  // 0.58.66 : max 90j pour fallback
   } catch {}
 }
 
 export default function TeamGoalsSparkline({ stats, totalGoals }) {
-  // 0.58.65 : toggle 7j/30j persisté
+  // 0.58.65 : toggle 7j/30j persisté, 0.58.66 : ajout 90j (rétention max CRON)
   const [rangeDays, setRangeDays] = useState(() => {
     if (typeof window === "undefined") return 7;
     try { return parseInt(localStorage.getItem("av-team-goals-range") || "7", 10); } catch { return 7; }
@@ -100,13 +100,16 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
   const displayHistory = useMemo(() => {
     if (history.length === 0) return [];
     if (rangeDays === 7) return history.slice(-7);
-    return history.slice(-30);
+    if (rangeDays === 30) return history.slice(-30);
+    // 0.58.66 : 90j = tout l'historique disponible (max CRON rétention)
+    return history.slice(-90);
   }, [history, rangeDays]);
 
   const points = useMemo(() => {
     if (displayHistory.length < 2) return null;
-    const w = rangeDays === 30 ? 320 : 220;
-    const h = rangeDays === 30 ? 80 : 60;
+    // 0.58.66 : dimensions adaptées au range (90j → SVG plus large)
+    const w = rangeDays === 90 ? 380 : rangeDays === 30 ? 320 : 220;
+    const h = rangeDays === 90 ? 90 : rangeDays === 30 ? 80 : 60;
     const padX = 4, padY = 6;
     const innerW = w - padX * 2;
     const innerH = h - padY * 2;
@@ -174,6 +177,17 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
                 cursor: "pointer", fontFamily: "inherit",
               }}
             >30j</button>
+            {/* 0.58.66 : bouton 90j (rétention max CRON) */}
+            <button
+              onClick={() => setRangeDays(90)}
+              title="Vue 90 jours (rétention maximale du serveur)"
+              style={{
+                background: rangeDays === 90 ? "linear-gradient(135deg, #7a6fb0, #5a4a90)" : "transparent",
+                color: rangeDays === 90 ? "#fff" : "#7a6fb0",
+                border: "none", borderRadius: 4, padding: "3px 9px", fontSize: 10.5, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >90j</button>
           </div>
           <span style={{ fontSize: 12, fontWeight: 700, color: trendColor, display: "flex", alignItems: "center", gap: 3 }}>
             <i className={`ti ti-trending-${trend > 0 ? "up" : trend < 0 ? "down" : "right"}`} />
@@ -196,7 +210,7 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
         />
         <polyline points={points.polyline} fill="none" stroke="#7a6fb0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         {points.xs.map((x, i) => (
-          <circle key={i} cx={x} cy={points.ys[i]} r={rangeDays === 30 ? 1.8 : 2.5} fill="#fff" stroke="#7a6fb0" strokeWidth="2">
+          <circle key={i} cx={x} cy={points.ys[i]} r={rangeDays === 90 ? 1.2 : rangeDays === 30 ? 1.8 : 2.5} fill="#fff" stroke="#7a6fb0" strokeWidth={rangeDays === 90 ? 1.5 : 2}>
             <title>{`${points.history[i].d} — ${points.history[i].avgPct}%`}</title>
           </circle>
         ))}

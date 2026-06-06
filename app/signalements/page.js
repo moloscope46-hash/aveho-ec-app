@@ -9,6 +9,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn} from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
+import EquipeSelector from "../components/EquipeSelector";  // 0.58.66
 import { fmtDate } from "../../lib/format";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";
@@ -158,6 +159,8 @@ export default function SignalementsPage() {
       // Alpha 0.32.0 : opt-in created_by si l'utilisateur a coché "Tracker dans mon profil".
       // L'anonymat reste le défaut. created_by est NULL si la case n'est pas cochée.
       // Note : seule l'écriture initiale renseigne created_by (pas l'édition admin).
+      // 0.58.66 : équipe en charge du signalement
+      equipe_id: form.equipe_id || null,
     };
     if (modal?.id) {
       // En édition (admin uniquement) on autorise à toucher au statut + réponse
@@ -507,6 +510,15 @@ export default function SignalementsPage() {
           <label>Description *</label>
           <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} placeholder="Détails du problème, de l'idée ou de la question…" disabled={!!modal?.id && !isAdmin} />
         </div>
+        {/* 0.58.66 : équipe en charge */}
+        {(!modal?.id || isAdmin) && (
+          <EquipeSelector
+            value={form.equipe_id}
+            onChange={(eqId) => setForm({ ...form, equipe_id: eqId })}
+            structureId={auth.structureId}
+            label="Équipe en charge (optionnel)"
+          />
+        )}
         {!modal?.id && (
           <div className="fld">
             <label>Signature (optionnel)</label>
