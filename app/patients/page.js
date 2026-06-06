@@ -742,6 +742,8 @@ export default function Patients() {
                             <i className="ti ti-tag" style={{ color: "#7a6fb0", cursor: "pointer", marginRight: 12 }} onClick={() => setEtqModal(r)} title="Étiquettes" />
                           )}
                           {auth.can("ecrire") && <i className="ti ti-edit" style={{ color: "#2a5a5a", cursor: "pointer", marginRight: 12 }} onClick={() => openEdit(r)} />}
+                          {/* 0.58.82 : Bouton imprimer bracelet QR */}
+                          <i className="ti ti-id" style={{ color: "#185FA5", cursor: "pointer", marginRight: 12 }} onClick={(e) => { e.stopPropagation(); router.push(`/patients/${r.id}/qr`); }} title="Imprimer bracelet QR" />
                           {auth.can("supprimer") && <IconButton icon="ti-trash" color="#C9867F" ariaLabel={`Supprimer ${r.nom || "patient"}`} onClick={() => del(r)} />}
                         </td>
                       </tr>

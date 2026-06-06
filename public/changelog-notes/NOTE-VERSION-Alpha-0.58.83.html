@@ -1,0 +1,136 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.83 — FAB Switch to Phone</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1a4a4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:920px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.t{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.b{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.45) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(124,200,200,.20));backdrop-filter:blur(28px);border:1px solid rgba(124,200,200,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.feat{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+
+.demo-page{position:relative;background:linear-gradient(180deg, #f7faf9 0%, #eef5f5 100%);border-radius:20px;padding:30px;min-height:380px;margin:14px 0;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.05)}
+.demo-page-content{color:#142131;font-size:13px;opacity:.5}
+.demo-fab{position:absolute;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(124,200,200,.45);font-size:24px;cursor:pointer;animation:pulse 2.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(124,200,200,.45)}50%{box-shadow:0 12px 36px rgba(124,200,200,.75)}}
+.demo-fab-label{position:absolute;bottom:36px;right:96px;background:#142131;color:#fff;padding:8px 14px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.demo-fab-label::after{content:"";position:absolute;right:-6px;top:50%;transform:translateY(-50%);border:6px solid transparent;border-left-color:#142131}
+
+.modal-mock{background:linear-gradient(180deg,#1c2940,#142131);border:1px solid rgba(124,200,200,.30);border-radius:18px;padding:22px;max-width:380px;margin:14px auto;color:#fff;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.modal-qr{background:#fff;border-radius:12px;padding:14px;display:flex;justify-content:center;margin:10px 0;color:#142131;font-size:12px;align-items:center;height:200px}
+.modal-tel{background:rgba(90,160,90,.12);border:1px solid rgba(90,160,90,.30);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;margin-top:10px}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob t"></div><div class="bg-blob b"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#7CC8C8"></span>0.58.83 · FAB SWITCH TO PHONE</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>📲 FAB "Continuer sur mon téléphone"<small>Bouton flottant universel avec QR de la page courante · Tél perso dans le profil</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.83-alpha</code></span>
+    <span><b>SQL :</b> aucun (user_metadata Supabase)</span>
+    <span><b>Type :</b> Feature UX</span>
+  </div>
+</header>
+
+<h2>🎯 Démo visuelle</h2>
+
+<p style="color:#bfe6e6;font-size:13px">Sur n'importe quelle page de l'app, tu vois maintenant ce bouton flottant en bas à droite :</p>
+
+<div class="demo-page">
+  <div class="demo-page-content">
+    <h3 style="margin:0 0 12px;font-size:16px">📋 Liste matériels</h3>
+    <p style="margin:0">Tu es en train de travailler sur cette page sur ton PC, et tu veux continuer sur ton téléphone...</p>
+    <ul style="margin:14px 0">
+      <li>Matériel #1 — Lit médicalisé Chambre 204</li>
+      <li>Matériel #2 — Pompe à perfusion B.Braun</li>
+      <li>Matériel #3 — Concentrateur d'oxygène DeVilbiss</li>
+    </ul>
+  </div>
+  <div class="demo-fab-label">← Click pour switch sur tél</div>
+  <div class="demo-fab"><i class="ti ti-device-mobile"></i></div>
+</div>
+
+<h2>🪟 La modal qui s'ouvre</h2>
+
+<div class="modal-mock">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+    <div style="width:40px;height:40px;background:rgba(124,200,200,.30);border-radius:10px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(124,200,200,.40)">
+      <i class="ti ti-device-mobile" style="font-size:20px;color:#7CC8C8"></i>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:700">Continuer sur le téléphone ?</div>
+      <div style="font-size:11px;color:#bfe6e6">Scanne ce QR avec ton téléphone</div>
+    </div>
+  </div>
+  <div class="modal-qr">
+    📲 QR 300×300 généré à la volée
+  </div>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.10);border-radius:8px;padding:10px;font-family:Consolas,monospace;font-size:10px;color:#bfe6e6;word-break:break-all">
+    https://aveho-ec-app.vercel.app/materiels?depot=abc-123
+  </div>
+  <div class="modal-tel">
+    <i class="ti ti-phone-check" style="color:#5aa05a;font-size:22px"></i>
+    <div style="flex:1">
+      <div style="font-size:10px;color:#8acc8a;text-transform:uppercase;letter-spacing:1px;font-weight:700">Téléphone enregistré</div>
+      <div style="font-size:14px;font-family:Consolas,monospace;font-weight:600">06 12 34 56 78</div>
+    </div>
+    <span style="background:rgba(90,160,90,.20);color:#8acc8a;padding:5px 10px;border-radius:6px;font-size:10px;font-weight:600">📞 Appeler</span>
+  </div>
+</div>
+
+<h2>📝 Configuration dans Profil</h2>
+
+<div class="panel feat">
+<p style="margin:0;font-size:13px;color:#fff">Va dans <code>/profil</code> onglet <b>Profil</b> → nouvelle panel teal <b>"Mon téléphone"</b> :</p>
+<ul style="color:#bfe6e6;font-size:12.5px">
+  <li>Input <code>type=tel</code> en police mono</li>
+  <li>Bouton "Enregistrer" NeonButton teal</li>
+  <li>Stockage : <code>auth.user.user_metadata.telephone_perso</code> via <code>supabase.auth.updateUser()</code></li>
+  <li>Pas besoin de table SQL — c'est dans Supabase Auth metadata, chiffré server-side</li>
+</ul>
+</div>
+
+<h2>🔍 Comportement intelligent</h2>
+
+<div class="panel feat">
+<p style="margin:0 0 8px;font-size:13px;color:#fff">Le FAB est caché sur :</p>
+<ul style="color:#bfe6e6;font-size:12.5px;margin:0">
+  <li><code>/login</code>, <code>/choix-mode</code>, <code>/connexion</code> (pas pertinent avant auth)</li>
+  <li>Toutes les pages d'impression : <code>/depots/[id]/qr</code>, <code>/patients/[id]/qr</code>, <code>/print/*</code> (gênant pendant impression)</li>
+  <li>Pas affiché si <code>auth.ready</code> false ou pas d'user</li>
+</ul>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+git add -A
+git commit -m "0.58.83 - FAB Switch to Phone"
+git push origin main</pre>
+
+<p style="font-size:13px;color:#bfe6e6;line-height:1.7">
+<b>Aucun SQL</b> · Le composant est monté dans <code>app/layout.js</code> donc visible globalement dès le déploiement. Renseigne ton numéro dans Profil → l'encart vert apparaît dans la modal.
+</p>
+
+<footer>Aveho — Espace Collectivité · 0.58.83 · 6 juin 2026 · 📲 SWITCH TO PHONE</footer>
+</div></body></html>

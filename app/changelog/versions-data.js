@@ -240,6 +240,58 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.83",
+    "kind": "feat",
+    "titre": "📲 FAB \"Continuer sur mon téléphone\" : bouton flottant universel avec QR code de la page courante",
+    "chantiers": [
+      { "code": "AI", "txt": "🔘 **FAB `SwitchToPhoneFab`** — bouton flottant rond teal en bas à droite (56×56px, position fixed, z-index 9998) visible sur toutes les pages **sauf** /login, /choix-mode, /connexion, et les pages d'impression (QR dépôt, QR patient, /print). Au hover : scale 1.08 + glow renforcé. Au click : ouvre une modal centrée avec backdrop blur" },
+      { "code": "AI", "txt": "🪟 **Modal du FAB** — backdrop sombre semi-transparent + glassmorphism. Affiche : (1) Header avec icône device-mobile teal et titre \"Continuer sur le téléphone ?\" · (2) **QR code 300×300** généré à la volée via api.qrserver.com avec l'URL exacte de la page courante (incluant query string) · (3) URL en clair dans un bloc monospace pour visu/copie · (4) Si **téléphone perso renseigné** dans le profil : encart vert avec le numéro affiché en mono + bouton 'Appeler' (`tel:` direct) · (5) Si **pas de numéro** : message ambre avec lien vers /profil pour l'enregistrer",
+        "code_snippet": {
+          "file": "app/components/SwitchToPhoneFab.js",
+          "note": "Génération QR depuis URL courante",
+          "lang": "javascript",
+          "after": "useEffect(() => {\n  if (typeof window !== 'undefined') {\n    setCurrentUrl(\n      `${window.location.origin}${pathname}${window.location.search || ''}`\n    );\n  }\n}, [pathname, open]);\n\nconst qrUrl = currentUrl\n  ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=12&format=png&data=${encodeURIComponent(currentUrl)}`\n  : '';"
+        }
+      },
+      { "code": "AI", "txt": "👤 **Section dans `/profil`** (onglet Profil) — nouvelle panel teal **'Mon téléphone'** avec icône device-mobile. Input `type=tel` mono. Explication courte de l'utilité du FAB. Bouton NeonButton teal pour enregistrer. Stockage dans `auth.user.user_metadata.telephone_perso` via `supabase.auth.updateUser({ data: { telephone_perso } })` — **pas besoin de table SQL**, c'est directement dans Supabase Auth metadata, chiffré côté server" },
+      { "code": "AI", "txt": "🎨 **Intégration dans `app/layout.js`** — import statique + montage juste avant la fermeture du body. Le composant gère lui-même sa visibilité (cache si pas auth, cache sur pages spéciales). Pas de polution sur les pages d'impression où il serait gênant" },
+      { "code": "INFO", "txt": "🎯 **Usage** : (1) Va dans Profil → Mon téléphone → renseigne ton numéro → enregistre · (2) Sur n'importe quelle page (matériels, dépôts, interventions...) tu vois maintenant le bouton flottant teal · (3) Click → QR + ton numéro affiché · (4) Tu sors ton tél → tu scannes → la même page s'ouvre sur ton tél (en mode mobile si tu as choisi ce mode) · (5) Tu continues le travail là où tu en étais sur PC" },
+      { "code": "INFO", "txt": "💡 **Pas de SQL** — utilise Supabase Auth `user_metadata` qui existe déjà. Pas d'ALTER, pas de table, juste le composant et 4 lignes dans profil/page.js" }
+    ],
+    "themes": ["feat", "mobile", "qr", "ux"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.83.html"
+  },
+  {
+    "v": "0.58.82",
+    "kind": "feat",
+    "titre": "📱 Action Mobile : choix au login · bracelet QR patient · hub mobile complet (transfert/DI/inventaire/scan ordo+BS/création patient)",
+    "chantiers": [
+      { "code": "AI", "txt": "📲 **Page `/choix-mode`** affichée au premier login — 2 grandes cartes : (1) <b>Accéder au logiciel</b> teal (interface bureau complète) → /accueil · (2) <b>Action mobile</b> ambre (mode terrain simplifié) → /mobile. Le choix est mémorisé en localStorage `av-launch-mode`. `/accueil` détecte le mode et redirige automatiquement les sessions suivantes",
+        "code_snippet": {
+          "file": "app/accueil/page.js",
+          "note": "Détection mode au login",
+          "lang": "javascript",
+          "after": "useEffect(() => {\n  if (!auth.ready || !auth.user) return;\n  const mode = localStorage.getItem('av-launch-mode');\n  if (!mode) router.push('/choix-mode');\n  else if (mode === 'mobile') router.push('/mobile');\n}, [auth.ready, auth.user]);"
+        }
+      },
+      { "code": "AI", "txt": "🎫 **QR Bracelet patient `/patients/[id]/qr`** — page imprimable 2 formats : (1) <b>A4 fiche</b> portrait complète avec identité, photo placeholder, encadré allergies rouge, GIR, mobilité, contact urgence, médecin + tels, RGPD badge, procédure scan en 5 points · (2) <b>Bracelet A6</b> paysage compact pour impression bracelet papier (nom, prénom, date naissance, chambre, allergies courtes, GIR, QR 200×200, badge RGPD). Bouton toggle format dans la nav. QR pointe vers `/scan/patient/[id]`" },
+      { "code": "AI", "txt": "📲 **Bouton 'Imprimer bracelet QR'** dans la liste patients (icône `ti-id` bleue cliquable sur chaque ligne, à côté de Éditer/Supprimer)" },
+      { "code": "AI", "txt": "🆔 **Landing `/scan/patient/[id]`** — page d'accueil après scan du bracelet : en-tête bleu navy avec nom/prénom/âge/N° dossier/statut, encart rouge allergies si présentes, infos rapides (chambre + tel direct cliquable, tels patient/urgence/médecin tous cliquables, GIR, mobilité), 4 grandes tuiles d'action (Fiche complète, Signaler problème, Affecter matériel, Voir matériels assignés), bouton réimpression bracelet" },
+      { "code": "AI", "txt": "📱 **Page `/mobile` hub principal** — menu Action Mobile tactile avec 6 grandes actions (boutons d'au moins 60px haut, optimisés touchscreen) : <b>Transfert</b> (violet), <b>Inventaire</b> (ambre), <b>Demande d'intervention</b> (rouge), <b>Scan ordonnance</b> (vert), <b>Scan bulletin de situation</b> (bleu), <b>Création patient</b> (terra). En-tête avec bouton 'Logiciel' pour revenir en mode desktop. Bouton 'Scan rapide' premier en haut" },
+      { "code": "AI", "txt": "↔ **Hub `/mobile/transfert` — 3 modes distincts** : (1) <b>Faire une demande</b> (ambre) → /mobile/transfert/demande, formulaire complet source/destination/priorité/motif, insertion en statut <b>Demandé</b> dans la table transferts · (2) <b>Transfert direct</b> (vert) → /scan/quick?mode=transfert-direct, workflow 2-scan QR source puis QR destination · (3) <b>Récupérer dans la liste</b> (violet) → /mobile/transfert/pickup, affiche tous les transferts en statut Demandé avec priorité colorée, tap = prise en charge → statut <b>En cours</b> + valide_par enregistré" },
+      { "code": "AI", "txt": "🛠 **Hub `/mobile/di` — 4 types** : <b>Maintenance</b> (ambre, panne/réparation/préventif → état matériel 'Maintenance'), <b>Désinfection</b> (teal, nettoyage/stérilisation → état 'En désinfection', à rescanner à la sortie), <b>Retour fournisseur</b> (navy, SAV/échange → état 'Retour fournisseur' + BL retour), <b>Rebut</b> (rouge corail, mise hors service définitive → état 'Rebut' + sortie de stock). Chaque type stocke ses paramètres dans localStorage et redirige vers /scan/quick?mode=di&type=X pour scanner le matériel concerné. **L'état du matériel change automatiquement**" },
+      { "code": "AI", "txt": "📋 **Page `/mobile/inventaire`** — gros bouton scan QR dépôt en premier, puis liste de tous les dépôts actifs avec icône colorée, date du dernier inventaire et compteur d'écarts si présent. Tap → /inventaire/[id] (page complète déjà livrée en 0.58.79)" },
+      { "code": "AI", "txt": "👤 **Assistant `/mobile/patient/new` — création en 4 étapes** : Étape 1 Identité (civilité boutons radio, nom auto-uppercase, prénom, nom de jeune fille, date+lieu naissance) · Étape 2 Coordonnées + Contact urgence (3 colonnes : nom contact, tél, lien) · Étape 3 Médical (médecin + tél, GIR 1-6 en boutons, mobilité, allergies, régime) · Étape 4 Récapitulatif avec badges colorés. À la création : insert patient + **redirection automatique vers /patients/[id]/qr pour imprimer le bracelet**. Barre de progression visuelle en haut. Footer fixe Retour/Suivant/Créer" },
+      { "code": "AI", "txt": "📷 **Stubs `/mobile/scan-ordo` et `/mobile/scan-bs`** — pages d'accueil avec description du workflow OCR à venir (extraction prescripteur RPPS / patient / matériels / posologie pour ordo · identité patient / N° sécu / régime / mutuelle pour bulletin de situation). Boutons 'Démarrer la prise de vue' → scan caméra. Mention 'bêta - OCR affiné en 0.59.x'" },
+      { "code": "AI", "txt": "🧩 **Composant `MobileSubHeader`** réutilisable — header sticky pour toutes les sous-pages mobile : bouton retour, icône colorée, titre, fond glassmorphism" },
+      { "code": "INFO", "txt": "🎯 **Procédure complète** : (1) Tu te connectes · (2) /choix-mode te propose Logiciel ou Mobile · (3) Mobile = menu 6 actions tactiles · (4) Création patient → 4 étapes guidées → impression bracelet QR auto · (5) Bracelet collé sur poignet patient · (6) N'importe quel soignant scan le bracelet → /scan/patient/[id] avec toutes les infos critiques (allergies en rouge, contact urgence cliquable) · (7) Action mobile depuis le terrain : DI, transfert, inventaire, tout scan-driven" }
+    ],
+    "themes": ["feat", "mobile", "patient", "qr"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.82.html"
+  },
+  {
     "v": "0.58.81",
     "kind": "feat",
     "titre": "📞 Patients enrichis : téléphones colorés (perso/chambre/urgence) + page chambres dédiée + fix services.icone 400",

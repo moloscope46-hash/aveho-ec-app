@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.82 — Action Mobile + Bracelet QR</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a3a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1080px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.a{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(239,159,39,.50) 0%,transparent 70%)}
+.bg-blob.t{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(239,159,39,.20));backdrop-filter:blur(28px);border:1px solid rgba(239,159,39,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f5b855;font-weight:700;background:rgba(239,159,39,.18);border:1px solid rgba(239,159,39,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13px;font-weight:500;color:#fdd9a8;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdd9a8}
+.meta b{color:#fff}.meta code{background:rgba(239,159,39,.16);color:#fff;border:1px solid rgba(239,159,39,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#EF9F27,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.feat{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+
+.mobile-mockup{background:linear-gradient(180deg, #142131 0%, #050a14 100%);border-radius:22px;padding:18px 14px;max-width:360px;margin:14px auto;border:8px solid #1c2940;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.mock-tile{background:rgba(255,255,255,.05);border-left:4px solid var(--c);border-radius:12px;padding:14px;margin:8px 0;display:flex;align-items:center;gap:10px;cursor:pointer}
+.mock-tile-ic{width:42px;height:42px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--c);font-size:22px}
+.mock-tile-body{flex:1}
+.mock-tile-t{color:#fff;font-size:14px;font-weight:700;margin-bottom:2px}
+.mock-tile-s{color:#bfe6e6;font-size:11px}
+
+.workflow{display:flex;flex-direction:column;gap:12px;padding:18px;background:linear-gradient(135deg,rgba(239,159,39,.06),rgba(124,200,200,.05));border-radius:14px;margin:14px 0}
+.wf-step{display:flex;gap:14px;padding:12px 14px;background:rgba(255,255,255,.04);border-radius:10px;border-left:4px solid var(--c)}
+.wf-num{background:var(--c);color:#fff;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.wf-body{flex:1}
+.wf-t{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:3px}
+.wf-d{font-size:12px;color:#bfe6e6;line-height:1.5}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob a"></div><div class="bg-blob t"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#f5b855"></span>0.58.82 · ACTION MOBILE</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>📱 Action Mobile · Bracelet QR patient · Hub mobile complet<small>Choix au login · Transfert 3 modes · DI 4 types · Inventaire · Scan ordo/BS · Création patient assistée</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.82-alpha</code></span>
+    <span><b>SQL :</b> aucun (utilise tables 0.58.81)</span>
+    <span><b>Type :</b> Feature MAJEURE</span>
+  </div>
+</header>
+
+<h2>🎯 Cycle complet d'usage</h2>
+
+<div class="workflow">
+  <div class="wf-step" style="--c:#7CC8C8">
+    <div class="wf-num">1</div>
+    <div class="wf-body">
+      <div class="wf-t">Tu te connectes</div>
+      <div class="wf-d">Page <code>/choix-mode</code> avec 2 grandes cartes : <b>Accéder au logiciel</b> (teal, mode bureau complet) ou <b>Action mobile</b> (ambre, mode terrain). Le choix est mémorisé.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#EF9F27">
+    <div class="wf-num">2</div>
+    <div class="wf-body">
+      <div class="wf-t">Si Action Mobile → /mobile</div>
+      <div class="wf-d">Menu 6 grandes tuiles tactiles : Transfert · Inventaire · DI · Scan ordo · Scan BS · Création patient. Plus un gros bouton "Scan rapide" en haut.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#C9867F">
+    <div class="wf-num">3</div>
+    <div class="wf-body">
+      <div class="wf-t">Création patient assistée (4 étapes)</div>
+      <div class="wf-d">Wizard guidé : Identité → Coordonnées + Urgence → Médical → Récap. À la fin : insert patient + <b>redirection auto vers /patients/[id]/qr</b> pour imprimer le bracelet immédiatement.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#185FA5">
+    <div class="wf-num">4</div>
+    <div class="wf-body">
+      <div class="wf-t">Impression bracelet QR (2 formats)</div>
+      <div class="wf-d">📄 <b>A4 fiche</b> = portrait complet avec allergies en rouge, contact urgence, médecin, GIR, RGPD signé/à recueillir, procédure scan en 5 points. 🆔 <b>Bracelet A6 paysage</b> = compact pour bracelet papier.</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#5aa05a">
+    <div class="wf-num">5</div>
+    <div class="wf-body">
+      <div class="wf-t">N'importe quel soignant scanne le bracelet</div>
+      <div class="wf-d">Landing <code>/scan/patient/[id]</code> : nom/âge/N° dossier, <b>encart rouge allergies si présentes</b>, tels cliquables (chambre/perso/urgence/médecin), GIR, mobilité, 4 actions (Fiche / Signaler / Affecter matériel / Voir matériels).</div>
+    </div>
+  </div>
+  <div class="wf-step" style="--c:#7a6fb0">
+    <div class="wf-num">6</div>
+    <div class="wf-body">
+      <div class="wf-t">Action mobile sur le terrain</div>
+      <div class="wf-d">DI 4 types (Maintenance/Désinfection/Retour/Rebut) qui changent l'état matériel auto · Transfert 3 modes (Demande/Direct/Récupérer dans liste) · Inventaire scan auto · Scan ordo/BS pour OCR.</div>
+    </div>
+  </div>
+</div>
+
+<h2>📱 Aperçu du hub /mobile</h2>
+
+<div class="mobile-mockup">
+  <div style="color:#fff;font-size:14px;font-weight:700;margin-bottom:6px"><i class="ti ti-scan"></i> Action mobile</div>
+  <div style="color:#bfe6e6;font-size:10px;margin-bottom:14px">moloscope46</div>
+  <div style="background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;padding:16px;border-radius:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px">
+    <i class="ti ti-camera" style="font-size:24px"></i>
+    <div style="flex:1"><div style="font-size:15px;font-weight:700">📸 Scan rapide</div><div style="font-size:10px;opacity:.7">QR dépôt · Bracelet patient · Code-barre</div></div>
+  </div>
+  <div class="mock-tile" style="--c:#7a6fb0;--bg:rgba(122,111,176,.22)"><div class="mock-tile-ic"><i class="ti ti-arrows-right-left"></i></div><div class="mock-tile-body"><div class="mock-tile-t">Transfert</div><div class="mock-tile-s">Direct · Demande · Récupération</div></div></div>
+  <div class="mock-tile" style="--c:#EF9F27;--bg:rgba(239,159,39,.22)"><div class="mock-tile-ic"><i class="ti ti-clipboard-check"></i></div><div class="mock-tile-body"><div class="mock-tile-t">Inventaire</div><div class="mock-tile-s">Scan + comptage + écarts</div></div></div>
+  <div class="mock-tile" style="--c:#e35d5b;--bg:rgba(227,93,91,.22)"><div class="mock-tile-ic"><i class="ti ti-tools"></i></div><div class="mock-tile-body"><div class="mock-tile-t">Demande d'intervention</div><div class="mock-tile-s">Maintenance · Désinf. · Retour · Rebut</div></div></div>
+  <div class="mock-tile" style="--c:#5aa05a;--bg:rgba(90,160,90,.22)"><div class="mock-tile-ic"><i class="ti ti-file-text"></i></div><div class="mock-tile-body"><div class="mock-tile-t">Scan ordonnance</div><div class="mock-tile-s">OCR + création matériel</div></div></div>
+  <div class="mock-tile" style="--c:#185FA5;--bg:rgba(24,95,165,.22)"><div class="mock-tile-ic"><i class="ti ti-file-certificate"></i></div><div class="mock-tile-body"><div class="mock-tile-t">Scan bulletin situation</div><div class="mock-tile-s">Importer données patient</div></div></div>
+  <div class="mock-tile" style="--c:#C9867F;--bg:rgba(201,134,127,.22)"><div class="mock-tile-ic"><i class="ti ti-user-plus"></i></div><div class="mock-tile-body"><div class="mock-tile-t">Création patient</div><div class="mock-tile-s">Assistant guidé 4 étapes</div></div></div>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+git add -A
+git commit -m "0.58.82 - Action Mobile + Bracelet QR"
+git push origin main</pre>
+
+<p style="font-size:13px;color:#bfe6e6;line-height:1.7">
+<b>Pas de SQL cette fois</b> — les colonnes patients enrichies + chambres.telephone du 0.58.81 sont suffisantes. Les pages /patients/[id]/qr et /mobile/patient/new utilisent déjà tous les champs disponibles.<br/>
+À la prochaine connexion, tu verras la page <code>/choix-mode</code>. Sélectionne le mode qui te convient — il sera mémorisé pour les connexions suivantes.
+</p>
+
+<footer>Aveho — Espace Collectivité · 0.58.82 · 6 juin 2026 · 📱 ACTION MOBILE</footer>
+</div></body></html>

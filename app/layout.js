@@ -18,6 +18,8 @@ import KeyboardHints from "./KeyboardHints";
 // Component pour permettre next/dynamic ssr: false (interdit dans les
 // Server Components depuis Next 15). Économise du JS sur le bundle initial.
 import LazyLayoutChrome from "./LazyLayoutChrome";
+// 0.58.83 : FAB Continuer sur le téléphone (QR code de la page courante)
+import SwitchToPhoneFab from "./components/SwitchToPhoneFab";
 
 // 0.57.8 : Quicksand via next/font (self-hosted + préchargée + 0 FOUT/CLS)
 // Avant : link href Google Fonts CDN dans le head — round-trip réseau bloquant
@@ -105,6 +107,8 @@ export default function RootLayout({ children }) {
             BiometricOptInModal, FloatingActionBar) chargés en lazy via
             next/dynamic ssr: false. Voir LazyLayoutChrome.js */}
         <LazyLayoutChrome />
+        {/* 0.58.83 : FAB Continuer sur le téléphone (visible sur toutes les pages) */}
+        <SwitchToPhoneFab />
       </body>
     </html>
   );

@@ -72,6 +72,23 @@ export default function Accueil() {
   const auth = useAuth();
   const cart = useCart();
   const [loading, setLoading] = useState(true);
+
+  // 0.58.82 : redirection automatique si mode 'mobile' choisi au login précédent
+  useEffect(() => {
+    if (!auth.ready || !auth.user) return;
+    try {
+      const mode = localStorage.getItem("av-launch-mode");
+      // Si pas de mode défini → on propose le choix
+      if (!mode) {
+        router.push("/choix-mode");
+      } else if (mode === "mobile") {
+        // Mode mobile choisi → on bascule sur /mobile
+        router.push("/mobile");
+      }
+      // Sinon mode "desktop" : on reste sur /accueil
+    } catch { /* localStorage indispo : on reste */ }
+  }, [auth.ready, auth.user, router]);
+
   const [kpis, setKpis] = useState({ promos: 0, commandes: 0, enCours: 0, aRegler: 0 });
   const [dernieres, setDernieres] = useState([]);
   // Alpha 0.6 : widgets personnalisables (mémoire localStorage)

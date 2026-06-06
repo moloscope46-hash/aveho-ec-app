@@ -35,6 +35,9 @@ export default function Profil() {
   const auth = useAuth();
   const cart = useCart();
   const [nom, setNom] = useState("");
+  // 0.58.83 : numéro de téléphone perso pour le FAB "Continuer sur mon téléphone"
+  const [telPerso, setTelPerso] = useState("");
+  const [telSavedMsg, setTelSavedMsg] = useState("");
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
   const [savedMsg, setSavedMsg] = useState("");
@@ -50,6 +53,7 @@ export default function Profil() {
   useEffect(() => {
     if (!auth.ready) return;
     setNom(auth.user?.user_metadata?.nom_affiche || auth.user?.email?.split("@")[0] || "");
+    setTelPerso(auth.user?.user_metadata?.telephone_perso || "");
     loadStats();
     setLoading(false);
   }, [auth.ready]);
@@ -116,6 +120,17 @@ export default function Profil() {
       if (error) throw error;
       setSavedMsg("Nom d'affichage mis à jour.");
       setTimeout(() => setSavedMsg(""), 2500);
+    } catch (e) { setErr(e.message); }
+  }
+
+  // 0.58.83 : sauvegarde du numéro perso (pour le FAB Continuer sur le téléphone)
+  async function saveTelPerso() {
+    setErr("");
+    try {
+      const { error } = await supabase.auth.updateUser({ data: { telephone_perso: telPerso || null } });
+      if (error) throw error;
+      setTelSavedMsg("Numéro enregistré !");
+      setTimeout(() => setTelSavedMsg(""), 2500);
     } catch (e) { setErr(e.message); }
   }
 
@@ -264,6 +279,38 @@ export default function Profil() {
               <div style={{ textAlign: "right" }}>
                 {/* 0.58.21 : migration vers NeonButton premium */}
                 <NeonButton variant="teal" icon="ti-device-floppy" onClick={saveNom}>
+                  Enregistrer
+                </NeonButton>
+              </div>
+            </Panel>
+
+            {/* 0.58.83 : Mon téléphone (pour FAB Continuer sur le téléphone) */}
+            <Panel style={{ marginBottom: 18, borderLeft: "4px solid #7CC8C8" }}>
+              <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>
+                <i className="ti ti-device-mobile" style={{ color: "#7CC8C8", marginRight: 6 }} /> Mon téléphone
+              </h2>
+              <p style={{ margin: "0 0 14px", fontSize: 12.5, color: "#5a6878" }}>
+                Renseigne ton numéro pour le FAB <b>"Continuer sur mon téléphone"</b> (bouton flottant <i className="ti ti-device-mobile" /> en bas à droite de chaque page).
+                Quand tu cliques, un QR de la page actuelle s'affiche et ton numéro apparaît à côté pour rappel.
+              </p>
+              {telSavedMsg && <div className="ok" style={{ marginBottom: 10 }}>{telSavedMsg}</div>}
+              <div className="fld-row">
+                <div className="fld" style={{ flex: 1 }}>
+                  <label>Numéro personnel</label>
+                  <input
+                    type="tel"
+                    value={telPerso}
+                    onChange={(e) => setTelPerso(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                    style={{ fontFamily: "Consolas, monospace" }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+                <div style={{ flex: 1, padding: "8px 12px", background: "rgba(124,200,200,.08)", borderRadius: 8, fontSize: 11.5, color: "#5a6878" }}>
+                  <i className="ti ti-info-circle" /> Stocké chiffré dans tes métadonnées Supabase (auth.users)
+                </div>
+                <NeonButton variant="teal" icon="ti-device-floppy" onClick={saveTelPerso}>
                   Enregistrer
                 </NeonButton>
               </div>
