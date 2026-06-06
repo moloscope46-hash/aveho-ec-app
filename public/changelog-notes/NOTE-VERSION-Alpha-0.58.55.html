@@ -1,0 +1,277 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.55</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 30% -10%, #1f2a44 0%, #0d1620 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(24,95,165,.5)}70%{box-shadow:0 0 0 10px rgba(24,95,165,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes um-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.65;transform:scale(.85)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.blue{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(24,95,165,.30),rgba(124,200,200,.20));backdrop-filter:blur(30px);border:1px solid rgba(24,95,165,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfd6e6;font-weight:700;background:rgba(24,95,165,.14);border:1px solid rgba(24,95,165,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#185FA5;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#185FA5;text-shadow:0 0 18px rgba(24,95,165,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfd6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfd6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(24,95,165,.12);color:#bfd6e6;border:1px solid rgba(24,95,165,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(24,95,165,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.fix{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(24,95,165,.12);color:#bfd6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #185FA5}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO menu profil */
+.tb-demo{background:rgba(20,33,49,.8);border:1px solid rgba(124,200,200,.18);border-radius:14px;padding:14px;margin:14px 0;color:#fff;display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.um-btn-demo{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg, rgba(124,200,200,.30) 0%, rgba(24,95,165,.30) 100%);border:1px solid #7CC8C8;border-radius:10px;padding:6px 10px;box-shadow:0 0 0 2px rgba(124,200,200,.20)}
+.um-btn-demo .av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#185FA5,#7CC8C8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px}
+.um-btn-demo .nm{font-size:13px;font-weight:600;color:#fff}
+.um-filter-dot-demo{width:8px;height:8px;border-radius:50%;background:#7CC8C8;box-shadow:0 0 8px rgba(124,200,200,.8);animation:um-pulse 1.6s ease-in-out infinite}
+
+/* DEMO interactions */
+.interactions{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0}
+.interaction{padding:14px;background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:12px;text-align:center;color:#fff}
+.interaction .icon{font-size:32px;margin-bottom:6px;display:block}
+.interaction .lbl{font-weight:700;font-size:13.5px;margin-bottom:4px}
+.interaction .desc{font-size:11.5px;color:#9fb6c2}
+
+/* DEMO type partenaire selector */
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.type-card{padding:12px 8px;border-radius:8px;border:2px solid #2a3a48;background:#142131;color:#9fb6c2;font-size:12px;font-weight:600;text-align:center}
+.type-card.sel{border-color:#7a6fb0;background:#5a4a9015;color:#bfa9e0}
+.type-card .ic{font-size:24px;display:block;margin-bottom:6px}
+
+/* DEMO badges */
+.badges-demo{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.b{padding:3px 8px;border-radius:8px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
+.b.presc{background:#dbe7f5;color:#185FA5}
+.b.interv{background:#dff5e0;color:#2e6f33}
+.b.pharm{background:#f5e6df;color:#a04a2a}
+.b.collab{background:linear-gradient(135deg,#185FA5,#7CC8C8);color:#fff;display:inline-flex;align-items:center;gap:3px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(24,95,165,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob blue"></div><div class="bg-blob teal"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.55</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.55 — Profil interactif + Type partenaire à la création + Partage objectifs équipe<small>1 clic = filtre · 2 clics = menu · Long press mobile · Badge COLLABORATEUR · Goals team_id</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.55-alpha</code></span>
+    <span><b>Tests :</b> ~4785 verts</span>
+    <span><b>SQL :</b> <code>migration-0.58.55-team-goals-collaborateur.sql</code></span>
+  </div>
+</header>
+
+<h2>🐛 1. Fix bug menu profil qui débordait</h2>
+
+<div class="panel fix">
+<p style="margin:0"><b>Bug</b> : sur certaines pages, le menu profil débordait sous l'écran et on ne voyait que "Déconnexion" en bas. <b>Fix</b> : (a) <code>max-height + overflow-y: auto</code> pour scroll interne, (b) <b>auto-flip</b> du menu vers le haut si pas assez d'espace en bas (détecté via <code>getBoundingClientRect()</code>).</p>
+</div>
+
+<pre>// 0.58.55 - JS detection à l'ouverture
+useEffect(() =&gt; {
+  if (!open || !ref.current) return;
+  const rect = ref.current.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - rect.bottom;
+  const spaceAbove = rect.top;
+  // ~380px estimé pour le menu
+  setFlipUp(spaceBelow &lt; 380 && spaceAbove &gt; spaceBelow);
+}, [open]);
+
+// CSS
+.um-sheet { max-height: calc(100vh - 110px); overflow-y: auto; }
+.um-sheet.um-sheet-up {
+  top: auto;
+  bottom: calc(100% + 10px);  /* flip vers le haut */
+}</pre>
+
+<h2>👤 2. Profil interactif : 1 clic / 2 clics / long press</h2>
+
+<div class="panel">
+<p style="margin:0">Le bouton profil dans la TopBar a maintenant <b>3 comportements</b> selon ton interaction. Plus rapide : un clic pour filtrer instantanément sur tes bât/svc rattachés.</p>
+</div>
+
+<div class="interactions">
+<div class="interaction">
+<span class="icon">👆</span>
+<div class="lbl">1 clic</div>
+<div class="desc">Filtre rapide sur mon bâtiment/service rattaché</div>
+</div>
+<div class="interaction">
+<span class="icon">👆👆</span>
+<div class="lbl">2 clics rapides</div>
+<div class="desc">Ouvre le menu déroulant complet</div>
+</div>
+<div class="interaction">
+<span class="icon">⏱</span>
+<div class="lbl">Long press (mobile)</div>
+<div class="desc">Ouvre le menu + vibration tactile</div>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">Indicateur visuel quand filtre actif</h3>
+
+<div class="tb-demo">
+<div class="um-btn-demo">
+<div class="av">CM</div>
+<span class="nm">Cédric Mignot</span>
+<span class="um-filter-dot-demo"></span>
+<i class="ti ti-chevron-down" style="color:rgba(255,255,255,.7);font-size:12px"></i>
+</div>
+</div>
+
+<p style="font-size:12px;color:#9fb6c2;text-align:center;margin-top:6px">↑ Pastille teal animée + halo du bouton quand le filtre rapide est actif</p>
+
+<h2>👥 3. Création user avec type partenaire</h2>
+
+<div class="panel">
+<p style="margin:0">Lors de la création d'un utilisateur dans <code>/utilisateurs</code>, tu peux maintenant indiquer s'il est <b>aussi un partenaire de santé externe</b>. L'user sera automatiquement ajouté dans la bonne liste (Prescripteurs / Infirmières / Pharmacies) avec un badge <b>COLLABORATEUR</b> distinctif.</p>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">Sélecteur dans le formulaire d'invitation</h3>
+
+<div class="type-grid">
+<div class="type-card sel"><span class="ic">✗</span>Aucun</div>
+<div class="type-card sel" style="border-color:#5a4a90;background:#5a4a9015;color:#bfa9e0"><span class="ic">🩺</span>Prescripteur</div>
+<div class="type-card"><span class="ic">❤️</span>Infirmier(ère)</div>
+<div class="type-card"><span class="ic">💊</span>Pharmacien</div>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">Badges dans /partenaires-rpps</h3>
+
+<div class="panel">
+<p style="font-size:13px;color:#bfd6e6;margin:0 0 8px">Dr. Marie Dupont · Médecin Généraliste</p>
+<div class="badges-demo">
+<span class="b presc">PRESCRIPTEUR</span>
+<span class="b collab"><i class="ti ti-user-check"></i>COLLABORATEUR</span>
+<span class="b" style="background:#f3effa;color:#5a4a90;font-family:Consolas,monospace">RPPS 10001234567</span>
+</div>
+</div>
+
+<div class="panel">
+<p style="font-size:13px;color:#bfd6e6;margin:0 0 8px">Sophie Leblanc · Infirmier(ère)</p>
+<div class="badges-demo">
+<span class="b interv">INTERVENANT</span>
+<span class="b collab"><i class="ti ti-user-check"></i>COLLABORATEUR</span>
+</div>
+</div>
+
+<div class="panel">
+<p style="font-size:13px;color:#bfd6e6;margin:0 0 8px">Pharmacie Centrale (externe — pas collaborateur)</p>
+<div class="badges-demo">
+<span class="b pharm">PHARMACIEN</span>
+<span class="b" style="background:#f3effa;color:#5a4a90;font-family:Consolas,monospace">FINESS 460001234</span>
+</div>
+</div>
+
+<pre>// 0.58.55 - app/utilisateurs/page.js
+// Après l'insert de l'invitation, on ajoute aussi dans partenaires_rpps si type choisi
+if (inviteForm.type_partenaire) {
+  const profMapping = {
+    prescripteur: 'Médecin',
+    infirmiere: 'Infirmier(ière)',
+    pharmacien: 'Pharmacien',
+  };
+  await supabase.from('partenaires_rpps').insert({
+    structure_id: auth.structureId,
+    nom, prenom, email, telephone, rpps, adeli,
+    profession: inviteForm.rpps_profession || profMapping[type],
+    est_prescripteur: type === 'prescripteur',
+    est_intervenant: type === 'infirmiere',
+    est_pharmacien: type === 'pharmacien',
+    est_collaborateur: true,  // badge spécial
+  });
+}</pre>
+
+<h2>☁️ 4. Partage objectifs équipe</h2>
+
+<div class="panel sql">
+<p style="margin:0 0 8px"><b>SQL à exécuter</b> dans Supabase :</p>
+<pre style="margin:0;background:#1a1410;color:#bfd6e6;font-size:11px">-- A) user_goals : ajout team_id + shared
+ALTER TABLE user_goals
+  ADD COLUMN IF NOT EXISTS team_id UUID REFERENCES equipes(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS shared BOOLEAN DEFAULT FALSE;
+
+-- Nouvelle policy RLS : lecture des objectifs partagés
+CREATE POLICY "Read own or shared goals" ON user_goals FOR SELECT
+  TO authenticated
+  USING (
+    user_id = auth.uid()
+    OR (shared = TRUE AND team_id IS NOT NULL AND EXISTS (
+      SELECT 1 FROM membres_equipe
+      WHERE equipe_id = user_goals.team_id AND user_id = auth.uid()
+    ))
+  );
+
+-- B) partenaires_rpps : badge collaborateur
+ALTER TABLE partenaires_rpps
+  ADD COLUMN IF NOT EXISTS est_collaborateur BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);</pre>
+</div>
+
+<p style="font-size:13px;color:#bfd6e6;background:rgba(124,200,200,.10);border:1px solid rgba(124,200,200,.20);border-radius:8px;padding:10px 14px;margin:14px 0">
+💡 <b>Côté front 0.58.56</b> (à venir) : le widget Objectifs aura un sélecteur d'équipe et un toggle "Partager avec l'équipe" pour activer le partage. Pour le moment le SQL est en place et la RLS est compatible.
+</p>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Fix bug menu profil</b> : auto-flip + scroll interne</li>
+<li><b>Profil interactif</b> : 1 clic = filtre, 2 clics = menu, long press mobile</li>
+<li><b>Type partenaire</b> à la création + badge COLLABORATEUR (gradient navy→teal)</li>
+<li><b>SQL team_id</b> sur user_goals pour partage équipe (RLS adaptée)</li>
+<li><b>SQL est_collaborateur</b> sur partenaires_rpps + user_id (lien optionnel vers user)</li>
+<li><b>+40 tests</b> Vitest (~4785 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4785 verts attendus
+npm run build           # OK attendu
+
+# 1) D'ABORD : exécuter le SQL dans Supabase
+#    migration-0.58.55-team-goals-collaborateur.sql
+
+# 2) Push code
+git add -A
+git commit -m "Alpha 0.58.55 - Fix menu profil + Filtre rapide + Type partenaire + Partage objectifs équipe"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.56+)</h2>
+<div class="panel">
+<ul>
+<li>Widget Objectifs : sélecteur équipe + toggle "Partager" pour activer team_id</li>
+<li>Page dédiée Pharmacies (table séparée avec horaires + garde)</li>
+<li>Étendre filtre ctx à <code>/transferts</code> via dépôt_id</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Drag&drop fields formulaire Crud (modal)</li>
+<li>Indicateur dans liste partenaires montrant les COLLABORATEURS au-dessus</li>
+<li>Tri par défaut : Collaborateurs > Partenaires externes</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.55 · 6 juin 2026 · PROFIL + COLLAB + TEAM GOALS ✨</footer>
+</div>
+
+</body></html>

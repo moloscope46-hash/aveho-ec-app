@@ -411,9 +411,26 @@ function PartenairesRppsInner() {
                           INTERVENANT
                         </span>
                       )}
+                      {/* 0.58.55 : badge pharmacien */}
+                      {p.est_pharmacien && (
+                        <span style={{ background: "#f5e6df", color: "#a04a2a", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 8, letterSpacing: 0.3 }}>
+                          PHARMACIEN
+                        </span>
+                      )}
+                      {/* 0.58.55 : badge collaborateur (le partenaire a aussi un compte sur l'app) */}
+                      {p.est_collaborateur && (
+                        <span style={{
+                          background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                          color: "#fff",
+                          fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 8, letterSpacing: 0.3,
+                          display: "inline-flex", alignItems: "center", gap: 3,
+                        }} title="Cet utilisateur est aussi un collaborateur interne avec un compte Aveho">
+                          <i className="ti ti-user-check" style={{ fontSize: 10 }} /> COLLABORATEUR
+                        </span>
+                      )}
                       {p.rpps && (
                         <span style={{ background: "#f3effa", color: "#5a4a90", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 8, fontFamily: "Consolas, monospace" }}>
-                          RPPS {p.rpps}
+                          {p.rpps.length === 9 ? `FINESS ${p.rpps}` : `RPPS ${p.rpps}`}
                         </span>
                       )}
                     </div>

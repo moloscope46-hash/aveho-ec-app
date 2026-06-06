@@ -120,6 +120,47 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.55",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Fix menu profil + Filtre rapide bât/svc + Création user type partenaire + Partage objectifs équipe",
+    "chantiers": [
+      { "code": "FIX", "txt": "🐛 FIX BUG MENU PROFIL QUI S'OUVRE VERS LE HAUT (seule la 'Déconnexion' visible). **Cause** : `.um-sheet` était en `position: absolute, top: calc(100% + 10px)` sans détection d'espace disponible → si la TopBar était proche du bas de l'écran (ou page très scrollée), le menu débordait sous le viewport. **Fix** : (a) ajout `max-height: calc(100vh - 110px) + overflow-y: auto` pour permettre le scroll dans le menu, (b) **auto-flip** : à l'ouverture, calcul `spaceBelow` vs `spaceAbove` via `getBoundingClientRect()` et application de la classe `.um-sheet-up` (top: auto, bottom: calc(100% + 10px)) si peu d'espace en bas",
+        "code_snippet": {
+          "file": "app/UserMenu.js + globals.css",
+          "note": "Auto-flip menu",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.55 - menu fixe vers le bas, déborde si peu de place\n.um-sheet {\n  position: absolute;\n  top: calc(100% + 10px); right: 0;\n  overflow: hidden;  // ❌ empêche scroll interne\n}",
+          "after": "// 0.58.55 - auto-flip + max-height scrollable\n.um-sheet {\n  position: absolute;\n  top: calc(100% + 10px); right: 0;\n  max-height: calc(100vh - 110px);  // ✓ limite hauteur\n  overflow-y: auto;                   // ✓ scroll interne\n}\n.um-sheet.um-sheet-up {\n  top: auto;\n  bottom: calc(100% + 10px);          // ✓ flip vers le haut\n  animation: um-pop-up 220ms ease-out;\n}\n\n// JS : détection à l'ouverture\nuseEffect(() => {\n  if (!open || !ref.current) return;\n  const rect = ref.current.getBoundingClientRect();\n  const spaceBelow = window.innerHeight - rect.bottom;\n  const spaceAbove = rect.top;\n  // Estime ~380px et flip si manque d'espace\n  setFlipUp(spaceBelow < 380 && spaceAbove > spaceBelow);\n}, [open]);"
+        }
+      },
+      { "code": "FEAT", "txt": "👤 FILTRE RAPIDE BÂT/SVC DEPUIS LE PROFIL. **Nouveau comportement** sur le bouton du profil dans la TopBar : (a) **1 clic** → toggle filtre ctx sur les bâtiments/services auxquels l'user est rattaché (via UserAttachmentsInfo). (b) **2 clics rapides** (250ms) → ouvre le menu déroulant complet (comportement classique). (c) **Mobile long press** (500ms + vibration tactile) → ouvre le menu. **Indicateur visuel** : pastille teal animée (`um-filter-dot`) + halo du bouton (`um-btn.filter-active`) quand le filtre est actif. Item dans le menu : 'Filtrer sur mon bâtiment/service' avec icône `ti-filter` qui devient `ti-filter-x` (désactiver) quand actif",
+        "code_snippet": {
+          "file": "app/UserMenu.js + UserAttachmentsInfo.js",
+          "note": "Quick filter from profile",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.55 - 1 clic = ouvre le menu, point.\n<button onClick={() => setOpen(!open)}>\n  <Avatar /><span>{name}</span><i className='ti ti-chevron-down' />\n</button>",
+          "after": "// 0.58.55 - 1 clic = filtre rapide, 2 clics = menu, long press = menu\nfunction handleButtonClick() {\n  if (clickTimerRef.current) {\n    clearTimeout(clickTimerRef.current);\n    setOpen(!open);  // double-clic\n    return;\n  }\n  clickTimerRef.current = setTimeout(() => {\n    clickTimerRef.current = null;\n    if (userAttachments.batimentId) {\n      toggleQuickFilter();  // simple-clic = filtre rapide\n    } else {\n      setOpen(!open);  // fallback : ouvre le menu\n    }\n  }, 250);\n}\n\nfunction handleTouchStart() {\n  longPressTimerRef.current = setTimeout(() => {\n    setOpen(true);\n    if (navigator.vibrate) navigator.vibrate(40);\n  }, 500);\n}\n\n// UserAttachmentsInfo dispatch les bât/svc trouvés\nwindow.dispatchEvent(new CustomEvent('av-user-attachments-loaded', {\n  detail: { batimentId: firstBatId, batiments, equipes }\n}));"
+        }
+      },
+      { "code": "FEAT", "txt": "👥 CRÉATION USER AVEC TYPE PARTENAIRE (prescripteur/infirmière/pharmacien) + badge COLLABORATEUR. Dans `/utilisateurs`, nouveau bloc 'Type de collaborateur' avec **4 options visuelles** (Aucun / Prescripteur / Infirmier(ère) / Pharmacien). Si l'admin sélectionne un type, l'invitation crée à la fois : (a) l'invitation classique pour le compte Aveho, (b) une entrée dans `partenaires_rpps` avec les flags appropriés + `est_collaborateur=true`. **Conséquence** : l'user apparaît automatiquement dans la bonne liste (Prescripteurs / Infirmières / Pharmacies) avec un **badge COLLABORATEUR** (gradient navy→teal + icône `ti-user-check`) qui le distingue des partenaires externes purs. Fallback gracieux si SQL pas appliqué (retry sans est_collaborateur)",
+        "code_snippet": {
+          "file": "app/utilisateurs/page.js",
+          "note": "Type partenaire à la création",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.55 - création user = seulement table invitations\nawait supabase.from('invitations').insert({\n  email, role_id, nom_affiche, rpps, rpps_profession, ...\n});",
+          "after": "// 0.58.55 - création user + partenaire si type choisi\n// State\nconst [inviteForm, setInviteForm] = useState({\n  ...,\n  type_partenaire: '',  // '' | 'prescripteur' | 'infirmiere' | 'pharmacien'\n});\n\n// UI : sélecteur 4 boutons visuels\n{[\n  { k: '', l: 'Aucun', ic: 'ti-x' },\n  { k: 'prescripteur', l: 'Prescripteur', ic: 'ti-stethoscope' },\n  { k: 'infirmiere', l: 'Infirmier(ère)', ic: 'ti-heart-rate-monitor' },\n  { k: 'pharmacien', l: 'Pharmacien', ic: 'ti-prescription' },\n].map(opt => <button>...)}\n\n// Logique : insert partenaire après invitation\nif (inviteForm.type_partenaire) {\n  await supabase.from('partenaires_rpps').insert({\n    structure_id: auth.structureId,\n    nom, prenom, email, rpps,\n    profession: { prescripteur: 'Médecin', infirmiere: 'Infirmier(ière)', pharmacien: 'Pharmacien' }[type],\n    est_prescripteur: type === 'prescripteur',\n    est_intervenant: type === 'infirmiere',\n    est_pharmacien: type === 'pharmacien',\n    est_collaborateur: true,  // badge spécial\n  });\n}\n\n// Affichage badge\n{p.est_collaborateur && (\n  <span style={{ background: 'linear-gradient(135deg, #185FA5, #7CC8C8)', color: '#fff' }}>\n    <i className='ti ti-user-check' /> COLLABORATEUR\n  </span>\n)}"
+        }
+      },
+      { "code": "ARCH", "txt": "☁️ SQL `migration-0.58.55-team-goals-collaborateur.sql`. **(A) user_goals étendu** : ajout colonnes `team_id UUID REFERENCES equipes(id) ON DELETE SET NULL` + `shared BOOLEAN DEFAULT FALSE`. **RLS étendue** : nouvelle policy 'Read own or shared goals' qui autorise la lecture des objectifs partagés (shared=true) avec une équipe dont l'user est membre via `membres_equipe`. Index partial sur `(team_id, shared) WHERE team_id IS NOT NULL`. **(B) partenaires_rpps étendu** : ajout `est_collaborateur BOOLEAN DEFAULT FALSE` + `user_id UUID REFERENCES auth.users(id)` (lien optionnel vers le compte si le partenaire est aussi user interne). Index partial sur `(structure_id, est_collaborateur) WHERE est_collaborateur = TRUE`" },
+      { "code": "AI", "txt": "+40 tests Vitest (v058-55-bundle.test.js) : version+SW (2), bug menu profil + auto-flip (4), filtre rapide bât/svc (5), gestion clic/double-clic/long-press (5), UserAttachmentsInfo dispatch (1), création user type partenaire (5), badges COLLABORATEUR+PHARMACIEN (3), SQL extension (5). Total **~4785 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.55 : **(1)** Le menu profil ne déborde plus jamais — auto-flip + scroll interne. **(2)** Un simple clic sur ton nom active le filtre rapide bât/svc rattaché, double-clic ou long press ouvrent le menu complet. **(3)** Création d'un user prescripteur/IDE/pharmacien l'ajoute automatiquement dans Mes partenaires avec un badge COLLABORATEUR distinctif. **(4)** Les objectifs personnels peuvent maintenant être partagés avec une équipe (champ `team_id` + `shared` dans `user_goals`). ⚠ **SQL À EXÉCUTER** : `migration-0.58.55-team-goals-collaborateur.sql`. PROCHAINES PISTES (0.58.56+) : (a) Côté front Widget Objectifs : sélecteur équipe + toggle 'Partager' pour activer le partage. (b) Page dédiée Pharmacies avec horaires et garde. (c) Étendre filtre ctx à /transferts via dépôt_id. (d) Mode présentation pour widget Météo. (e) Drag&drop fields formulaire Crud. (f) Indicateur dans la liste partenaires montrant les COLLABORATEURS au-dessus des autres" }
+    ],
+    "themes": ["fix", "feature", "wow", "ui"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.55.html",
+    "sqlFile": "migration-0.58.55-team-goals-collaborateur.sql"
+  },
+  {
     "v": "0.58.54",
     "kind": "version",
     "titre": "🎁 BUNDLE : Filtre ctx étendu (commandes/achats/signalements) + Ajout partenaire depuis FINESS (pharmacies, SSIAD)",

@@ -64,6 +64,21 @@ export default function UserAttachmentsInfo({ userId, etabId }) {
           if (eq.batiments) batMap[eq.batiments.id] = eq.batiments;
         });
         setBatiments(Object.values(batMap));
+
+        // 0.58.55 : dispatch event pour que UserMenu sache les bât/svc rattachés
+        //   et puisse proposer le filtre rapide
+        const firstBatId = Object.keys(batMap)[0] || null;
+        const firstSvcId = eqs[0]?.id || null;  // pas vraiment un service, mais utile comme fallback
+        try {
+          window.dispatchEvent(new CustomEvent("av-user-attachments-loaded", {
+            detail: {
+              batimentId: firstBatId,
+              serviceId: null,  // pas de service direct sur l'équipe ; on prend le bâtiment seulement
+              batiments: Object.values(batMap),
+              equipes: eqs,
+            }
+          }));
+        } catch {}
       } catch {
         // silencieux : si schéma différent, on n'affiche rien
       }

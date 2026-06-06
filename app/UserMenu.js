@@ -31,12 +31,46 @@ export default function UserMenu({ auth }) {
   const supabase = createClient();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // 0.58.55 : auto-flip si le menu déborde en bas de l'écran
+  const [flipUp, setFlipUp] = useState(false);
+  // 0.58.55 : état du filtre rapide via UserMenu (toggle ctx avec bât/svc rattaché)
+  const [quickFilterActive, setQuickFilterActive] = useState(false);
+  const [userAttachments, setUserAttachments] = useState({ batimentId: null, serviceId: null });
   const [installPrompt, setInstallPrompt] = useState(null);
   const [installed, setInstalled] = useState(false);
   const [iosCanInstall, setIosCanInstall] = useState(false);
   // Alpha 0.49.5 : modal d'instructions d'installation manuelle (Chrome desktop)
   const [showInstallHelp, setShowInstallHelp] = useState(false);
   const ref = useRef(null);
+  // 0.58.55 : refs pour gérer simple-clic vs double-clic vs long-press
+  const clickTimerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const longPressTriggeredRef = useRef(false);
+
+  // 0.58.55 : charge les rattachements bât/svc de l'user pour le filtre rapide
+  useEffect(() => {
+    if (!auth?.user?.id) return;
+    // Check si on a déjà un flag localStorage de filtre rapide actif
+    try {
+      const isActive = localStorage.getItem("av-quickfilter-active") === "true";
+      setQuickFilterActive(isActive);
+      const batId = localStorage.getItem("av-user-batiment-id") || null;
+      const svcId = localStorage.getItem("av-user-service-id") || null;
+      setUserAttachments({ batimentId: batId, serviceId: svcId });
+    } catch {}
+
+    // Listen à l'event UserAttachmentsInfo qui détecte les bât/svc de l'user
+    function onAttachments(e) {
+      const { batimentId, serviceId } = e.detail || {};
+      setUserAttachments({ batimentId, serviceId });
+      try {
+        if (batimentId) localStorage.setItem("av-user-batiment-id", batimentId);
+        if (serviceId) localStorage.setItem("av-user-service-id", serviceId);
+      } catch {}
+    }
+    window.addEventListener("av-user-attachments-loaded", onAttachments);
+    return () => window.removeEventListener("av-user-attachments-loaded", onAttachments);
+  }, [auth?.user?.id]);
 
   // PWA install detection
   useEffect(() => {
@@ -65,7 +99,88 @@ export default function UserMenu({ auth }) {
     };
   }, [open]);
 
+  // 0.58.55 : à l'ouverture, détecte si on doit flip vers le haut
+  useEffect(() => {
+    if (!open || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    // Estime que le menu fait ~380px de haut. Si pas assez en bas ET plus d'espace en haut → flip
+    const menuHeight = 380;
+    setFlipUp(spaceBelow < menuHeight && spaceAbove > spaceBelow);
+  }, [open]);
+
   function go(p) { setOpen(false); router.push(p); }
+
+  // 0.58.55 : activer/désactiver le filtre rapide sur les bât/svc de l'user
+  function toggleQuickFilter() {
+    const next = !quickFilterActive;
+    setQuickFilterActive(next);
+    try {
+      localStorage.setItem("av-quickfilter-active", next ? "true" : "false");
+      if (next && (userAttachments.batimentId || userAttachments.serviceId)) {
+        // Active le ctx avec les bât/svc rattachés à l'user
+        if (userAttachments.batimentId) localStorage.setItem("av-current-batiment-id", userAttachments.batimentId);
+        if (userAttachments.serviceId) localStorage.setItem("av-current-service-id", userAttachments.serviceId);
+        window.dispatchEvent(new CustomEvent("av-current-context-change", {
+          detail: {
+            batimentId: userAttachments.batimentId,
+            serviceId: userAttachments.serviceId,
+            active: true,
+          }
+        }));
+      } else if (!next) {
+        // Désactive le filtre
+        window.dispatchEvent(new CustomEvent("av-current-context-change", {
+          detail: { batimentId: null, serviceId: null, active: false }
+        }));
+      }
+    } catch {}
+  }
+
+  // 0.58.55 : gestion des clics avec délai pour distinguer simple/double clic
+  function handleButtonClick(e) {
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
+      return;
+    }
+    // Si timer en cours = c'est un double-clic
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      // Double clic = ouvre le menu déroulant
+      setOpen(!open);
+      return;
+    }
+    // Sinon démarre un timer pour le simple clic
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null;
+      // Simple clic = toggle filtre rapide (si user a des bât/svc rattachés)
+      if (userAttachments.batimentId || userAttachments.serviceId) {
+        toggleQuickFilter();
+      } else {
+        // Sinon ouvre le menu (fallback comportement classique)
+        setOpen(!open);
+      }
+    }, 250);  // 250ms de délai pour le double-clic
+  }
+
+  // 0.58.55 : long press mobile (touch hold) ouvre le menu
+  function handleTouchStart() {
+    longPressTriggeredRef.current = false;
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setOpen(true);
+      // Vibration tactile si supportée
+      try { if (navigator.vibrate) navigator.vibrate(40); } catch {}
+    }, 500);  // 500ms pour le long press
+  }
+  function handleTouchEnd() {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }
 
   // 0.57.35 : purge données user-spécifiques AVANT signOut
   // Critique sur devices partagés (poste de soin) — empêche user B
@@ -124,17 +239,33 @@ export default function UserMenu({ auth }) {
 
   return (
     <div className="um-root" ref={ref}>
-      <button className={`um-btn${open ? " open" : ""}`} onClick={() => setOpen(!open)} aria-label="Menu utilisateur">
+      <button
+        className={`um-btn${open ? " open" : ""}${quickFilterActive ? " filter-active" : ""}`}
+        onClick={handleButtonClick}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+        title={
+          userAttachments.batimentId || userAttachments.serviceId
+            ? "Clic : filtrer sur mon bâtiment / service · Double-clic : ouvrir le menu"
+            : "Ouvrir le menu utilisateur"
+        }
+        aria-label="Menu utilisateur"
+      >
         {/* 0.58.5 : Avatar premium (gradient déterministe par nom) */}
         <Avatar name={displayName} size={30} />
         <span className="um-name">{displayName}</span>
+        {/* 0.58.55 : indicateur filtre rapide actif */}
+        {quickFilterActive && (
+          <span className="um-filter-dot" title="Filtre bâtiment/service actif" />
+        )}
         <i className="ti ti-chevron-down um-chev" />
       </button>
 
       {open && (
         <>
           <div className="um-backdrop" onClick={() => setOpen(false)} />
-          <div className="um-sheet">
+          <div className={`um-sheet${flipUp ? " um-sheet-up" : ""}`}>
             <div className="um-head">
               {/* 0.58.5 : Avatar XL avec halo glow dans le header du menu */}
               <Avatar name={displayName} size={52} ring />
@@ -148,6 +279,14 @@ export default function UserMenu({ auth }) {
             </div>
 
             <div className="um-divider" />
+
+            {/* 0.58.55 : toggle filtre rapide bât/svc rattaché */}
+            {(userAttachments.batimentId || userAttachments.serviceId) && (
+              <button className={`um-item${quickFilterActive ? " active" : ""}`} onClick={() => { toggleQuickFilter(); setOpen(false); }}>
+                <i className={quickFilterActive ? "ti ti-filter-x" : "ti ti-filter"} />
+                <span>{quickFilterActive ? "Désactiver le filtre" : "Filtrer sur mon bâtiment/service"}</span>
+              </button>
+            )}
 
             <button className="um-item" onClick={() => go("/profil")}>
               <i className="ti ti-user-circle" /> <span>Mon profil</span>

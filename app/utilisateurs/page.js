@@ -68,6 +68,10 @@ export default function Utilisateurs() {
     rpps_profession: "",
     rpps_specialite: "",
     rpps_mode_exercice: "",
+    // 0.58.55 : si l'user est aussi un collaborateur externe (partenaire prescripteur/IDE/pharmacie),
+    //   on l'ajoute aussi dans partenaires_rpps avec les flags correspondants
+    type_partenaire: "",  // "" | "prescripteur" | "infirmiere" | "pharmacien"
+    est_collaborateur: false,  // badge "collaborateur" si activé
   });
   // 0.55.29 : modale de recherche RPPS pour pré-remplir
   const [rppsSearchOpen, setRppsSearchOpen] = useState(false);
@@ -518,6 +522,49 @@ export default function Utilisateurs() {
       lien: "/utilisateurs",
     });
 
+    // 0.58.55 : si l'user est aussi un partenaire externe (prescripteur/IDE/pharmacie),
+    //   on l'ajoute dans partenaires_rpps avec les flags correspondants + est_collaborateur=true
+    if (inviteForm.type_partenaire) {
+      try {
+        const isPrescr = inviteForm.type_partenaire === "prescripteur";
+        const isInf = inviteForm.type_partenaire === "infirmiere";
+        const isPharm = inviteForm.type_partenaire === "pharmacien";
+        const profMapping = {
+          prescripteur: "Médecin",
+          infirmiere: "Infirmier(ière)",
+          pharmacien: "Pharmacien",
+        };
+        const partenairePayload = {
+          structure_id: auth.structureId,
+          nom: inviteForm.nom || nom_affiche_fallback,
+          prenom: inviteForm.prenom || null,
+          email: inviteForm.email || null,
+          telephone: inviteForm.telephone || null,
+          rpps: inviteForm.rpps || null,
+          adeli: inviteForm.adeli || null,
+          profession: inviteForm.rpps_profession || profMapping[inviteForm.type_partenaire] || null,
+          specialite: inviteForm.rpps_specialite || null,
+          est_prescripteur: isPrescr,
+          est_intervenant: isInf,
+          est_pharmacien: isPharm,
+          est_collaborateur: true,  // 0.58.55 : marque l'user comme collaborateur interne (a aussi un compte)
+          created_by: auth.user?.id,
+        };
+        const { error: partErr } = await supabase.from("partenaires_rpps").insert(partenairePayload);
+        if (partErr) {
+          // Si la colonne est_collaborateur n'existe pas encore (SQL 0.58.55 pas passé), retry sans
+          if ((partErr.message || "").includes("est_collaborateur")) {
+            delete partenairePayload.est_collaborateur;
+            await supabase.from("partenaires_rpps").insert(partenairePayload);
+          } else {
+            logger.warn("[invitations] partenaire creation failed:", partErr.message);
+          }
+        }
+      } catch (e) {
+        logger.warn("[invitations] partenaire creation exception:", e);
+      }
+    }
+
     // 5) Afficher le lien (au cas où l'email n'est pas configuré)
     // 0.55.30 : on stocke aussi un récap complet pour l'afficher dans la popup
     // 0.55.53 : si le mail a échoué, on l'indique clairement dans la popup
@@ -535,11 +582,15 @@ export default function Utilisateurs() {
       lock_assignment: inviteForm.lock_assignment,
       matricule: inviteForm.matricule,
       mailWarning,  // 0.55.53 : warning si Resend a échoué
+      // 0.58.55 : info sur le type de partenaire créé
+      type_partenaire: inviteForm.type_partenaire,
     });
     setInviteForm({
       email: "", role_id: "", nom_affiche: "", prenom: "", nom: "", telephone: "", mobile: "", fonction_detail: "",
       etablissement_ids: [], lock_assignment: true, matricule: "", date_arrivee: "", notes_admin: "",
       rpps: "", adeli: "", rpps_profession: "", rpps_specialite: "", rpps_mode_exercice: "",
+      // 0.58.55
+      type_partenaire: "", est_collaborateur: false,
     });
     await loadAll();
   }
@@ -1019,6 +1070,49 @@ export default function Utilisateurs() {
                   <label>Email *</label>
                   <input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="prenom.nom@etablissement.fr" />
                 </div>
+              </div>
+
+              {/* 0.58.55 : SECTION TYPE DE COLLABORATEUR — ajoute aussi dans partenaires si prescripteur/IDE/pharmacien */}
+              <div style={{ marginBottom: 14, padding: 14, background: "linear-gradient(135deg, #f4f7fa, #fff)", borderRadius: 10, border: "1px solid #e3e9ee" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#5aa05a", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                  <i className="ti ti-id-badge-2" /> Type de collaborateur (optionnel)
+                </div>
+                <p style={{ fontSize: 12, color: "#6c7a89", margin: "0 0 10px" }}>
+                  Si cet utilisateur est aussi un partenaire de santé externe (prescripteur, infirmière, pharmacien),
+                  cocher le type ci-dessous l'ajoutera automatiquement à <b>Mes partenaires</b> avec un badge <b>Collaborateur</b>.
+                </p>
+                <div className="grid-4-mobile-2" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+                  {[
+                    { k: "", l: "Aucun", ic: "ti-x", col: "#8a98a8" },
+                    { k: "prescripteur", l: "Prescripteur", ic: "ti-stethoscope", col: "#5a4a90" },
+                    { k: "infirmiere", l: "Infirmier(ère)", ic: "ti-heart-rate-monitor", col: "#C9867F" },
+                    { k: "pharmacien", l: "Pharmacien", ic: "ti-prescription", col: "#5aa05a" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.k || "none"}
+                      type="button"
+                      onClick={() => setInviteForm({ ...inviteForm, type_partenaire: opt.k })}
+                      style={{
+                        padding: "10px 8px",
+                        borderRadius: 8,
+                        border: `2px solid ${inviteForm.type_partenaire === opt.k ? opt.col : "#e3e9ee"}`,
+                        background: inviteForm.type_partenaire === opt.k ? opt.col + "15" : "#fff",
+                        color: inviteForm.type_partenaire === opt.k ? opt.col : "#5a6878",
+                        fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                        transition: "all 150ms",
+                      }}
+                    >
+                      <i className={`ti ${opt.ic}`} style={{ fontSize: 22, color: opt.col }} />
+                      {opt.l}
+                    </button>
+                  ))}
+                </div>
+                {inviteForm.type_partenaire && (
+                  <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(90,160,90,.10)", border: "1px solid rgba(90,160,90,.30)", borderRadius: 6, fontSize: 11.5, color: "#3a5a3a" }}>
+                    <i className="ti ti-check" /> Sera ajouté à <b>Mes partenaires</b> ({inviteForm.type_partenaire}) avec badge <b>Collaborateur</b>
+                  </div>
+                )}
               </div>
 
               {/* Section 2 : Contact */}
