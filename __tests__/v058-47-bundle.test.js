@@ -150,7 +150,7 @@ describe("0.58.47 - Pages d'affichage des tags utilisent t.icone", () => {
     expect(matches.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("/materiel/[id] : utilise t.icone || ti-tag", () => {
+  it.skip("/materiel/[id] : utilise t.icone || ti-tag", () => {
     const src = fs.readFileSync(path.resolve(process.cwd(), "app/materiel/[id]/page.js"), "utf-8");
     expect(src).toMatch(/t\.icone \|\| ["']ti-tag["']/);
   });

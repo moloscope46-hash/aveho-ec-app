@@ -1,8 +1,26 @@
 // playwright.config.js
 // Alpha 0.57.14 — Tests E2E cross-browser + visual regression
+// 0.58.76 — auto-fallback dev si pas de build prod (évite fail 1ms)
 import { defineConfig, devices } from "@playwright/test";
+import fs from "fs";
+import path from "path";
 
-const E2E_USE_PROD_BUILD = process.env.E2E_USE_PROD_BUILD !== "false";
+// 0.58.76 : auto-détection. Si E2E_USE_PROD_BUILD pas explicite et qu'on n'a pas
+// de build, on bascule en dev mode plutôt que de faire un fail 1ms.
+const hasNextBuild = fs.existsSync(path.resolve(process.cwd(), ".next", "BUILD_ID"));
+let E2E_USE_PROD_BUILD;
+if (process.env.E2E_USE_PROD_BUILD === "false") {
+  E2E_USE_PROD_BUILD = false;
+} else if (process.env.E2E_USE_PROD_BUILD === "true") {
+  E2E_USE_PROD_BUILD = true;
+} else {
+  // Auto : true si build dispo, sinon dev
+  E2E_USE_PROD_BUILD = hasNextBuild;
+  if (!hasNextBuild) {
+    console.log("⚠ [playwright] Pas de build Next détecté (.next/BUILD_ID absent) — bascule en `npm run dev`.");
+    console.log("  Pour forcer le mode prod : `npm run build` avant, ou `E2E_USE_PROD_BUILD=true`.");
+  }
+}
 
 // Filtrer les browsers via env BROWSERS=chromium,firefox,webkit (par défaut tous)
 const BROWSERS = (process.env.BROWSERS || "chromium,firefox,webkit").split(",").map(s => s.trim());
