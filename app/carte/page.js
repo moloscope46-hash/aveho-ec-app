@@ -9,6 +9,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { useCurrentContext } from "../../lib/useCurrentContext";  // 0.58.65 : filtre équipe
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
@@ -97,6 +98,8 @@ export default function CartePage() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
+  // 0.58.65 : filtre équipe pour la carte (tri prioritaire des pharma rattachées)
+  const ctx = useCurrentContext();
   const [etabs, setEtabs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -236,7 +239,7 @@ export default function CartePage() {
       try {
         const { data, error } = await supabase
           .from("pharmacies")
-          .select("id, nom, latitude, longitude, ville, telephone, garde_disponible, garde_24h, garde_notes, horaires, specialites, type")
+          .select("id, nom, latitude, longitude, ville, telephone, garde_disponible, garde_24h, garde_notes, horaires, specialites, type, batiment_id, service_id, equipe_id")
           .eq("structure_id", auth.structureId)
           .eq("archive", false)
           .not("latitude", "is", null)
@@ -288,20 +291,33 @@ export default function CartePage() {
     if (!showPharmacies || pharmacies.length === 0) return;
 
     // Filtrer selon le filtre actif
-    const filtered = pharmacies.filter(p => {
+    let filtered = pharmacies.filter(p => {
       if (pharmaciesFilter === "garde") return p.garde_disponible || p.garde_24h;
       if (pharmaciesFilter === "open-now") return isPharmaOpenNow(p.horaires);
       return true;
     });
 
+    // 0.58.65 : tri prioritaire — les pharmacies rattachées à l'équipe en premier
+    // (ainsi leurs popups s'affichent en priorité au zoom)
+    if (ctx.active && ctx.equipeId) {
+      filtered = [...filtered].sort((a, b) => {
+        const aMatch = a.equipe_id === ctx.equipeId ? 1 : 0;
+        const bMatch = b.equipe_id === ctx.equipeId ? 1 : 0;
+        return bMatch - aMatch;
+      });
+    }
+
     filtered.forEach(p => {
       const isGarde = p.garde_disponible || p.garde_24h;
       const isOpen = isPharmaOpenNow(p.horaires);
-      // Icône custom : croix verte de pharmacie, halo violet si garde
+      // 0.58.65 : halo teal accentué si pharmacie rattachée à l'équipe sélectionnée
+      const isEquipeMatch = ctx.active && ctx.equipeId && p.equipe_id === ctx.equipeId;
+      // Icône custom : croix verte de pharmacie, halo violet si garde, halo teal si équipe
       const html = `
         <div style="position:relative;width:32px;height:32px">
+          ${isEquipeMatch ? `<div style="position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(124,200,200,.65) 0%,rgba(124,200,200,.20) 50%,transparent 75%);animation:av-pharma-pulse 1.6s ease-in-out infinite;z-index:0"></div>` : ""}
           ${isGarde ? `<div style="position:absolute;inset:-3px;border-radius:50%;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation:av-pharma-pulse 1.6s ease-in-out infinite"></div>` : ""}
-          <div style="position:absolute;inset:0;border-radius:50%;background:${isGarde ? "linear-gradient(135deg,#7a6fb0,#5a4a90)" : (isOpen ? "linear-gradient(135deg,#5aa05a,#4a8a4a)" : "linear-gradient(135deg,#a0aeb9,#7a8a94)")};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.30)">+</div>
+          <div style="position:absolute;inset:0;border-radius:50%;background:${isGarde ? "linear-gradient(135deg,#7a6fb0,#5a4a90)" : (isOpen ? "linear-gradient(135deg,#5aa05a,#4a8a4a)" : "linear-gradient(135deg,#a0aeb9,#7a8a94)")};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:18px;border:${isEquipeMatch ? "3px solid #7CC8C8" : "2px solid #fff"};box-shadow:0 4px 12px rgba(0,0,0,.30);z-index:1">+</div>
         </div>`;
       const icon = L.divIcon({
         html,
@@ -355,7 +371,7 @@ export default function CartePage() {
         </div>
       `);
     });
-  }, [leafletReady, showPharmacies, pharmacies, pharmaciesFilter]);
+  }, [leafletReady, showPharmacies, pharmacies, pharmaciesFilter, ctx.equipeId, ctx.active]);
 
   // 0.55.8 : 2e effect — animation des camions (la map est créée dans le 1er useEffect)
   useEffect(() => {
@@ -1353,6 +1369,15 @@ export default function CartePage() {
                    onClick={() => setShowPharmacies(!showPharmacies)}>
                 <i className="ti ti-prescription" style={{ fontSize: 18, color: "#7a6fb0" }} />
                 <b style={{ fontSize: 13, color: "#142131", flex: 1 }}>Pharmacies</b>
+                {/* 0.58.65 : badge filtre équipe actif */}
+                {ctx.active && ctx.equipeId && showPharmacies && pharmacies.length > 0 && (() => {
+                  const matchCount = pharmacies.filter(p => p.equipe_id === ctx.equipeId).length;
+                  return matchCount > 0 ? (
+                    <span title="Pharmacies de l'équipe sélectionnée (halo teal sur la carte)" style={{ fontSize: 10, color: "#1c5454", background: "rgba(124,200,200,.20)", border: "1px solid #7CC8C8", padding: "2px 7px", borderRadius: 8, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                      <i className="ti ti-users-group" /> {matchCount} équipe
+                    </span>
+                  ) : null;
+                })()}
                 {pharmaciesLoading && <i className="ti ti-loader-2" style={{ animation: "spin 1s linear infinite", color: "#7a6fb0" }} />}
                 {!pharmaciesLoading && showPharmacies && pharmacies.length > 0 && (
                   <span style={{ fontSize: 11, color: "#5a4a90", background: "#e9defc", padding: "2px 8px", borderRadius: 10, fontWeight: 600 }}>

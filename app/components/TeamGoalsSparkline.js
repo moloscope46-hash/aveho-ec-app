@@ -1,25 +1,24 @@
 "use client";
 // =============================================================
-//  app/components/TeamGoalsSparkline.js (0.58.63)
+//  app/components/TeamGoalsSparkline.js (0.58.63, refondu 0.58.65)
 //
-//  Mini-graphique d'évolution des stats équipe sur 7 jours.
-//  Stocke un snapshot quotidien de stats.avgPct en localStorage
-//  et trace une sparkline SVG.
+//  Graphique d'évolution des stats équipe sur 7 ou 30 jours.
+//  0.58.65 : lit les snapshots depuis Supabase (table user_goals_snapshots
+//  alimentée par l'Edge Function goals-snapshot-cron). Fallback localStorage
+//  si Supabase indispo ou table absente.
 //
-//  Storage : av-team-goals-history-7d = [{ d: "YYYY-MM-DD", avgPct, nbAtteints, total }, ...]
-//  Max 7 entrées (rotation glissante).
+//  Toggle 7j / 30j en haut à droite du graphique.
 // =============================================================
 
 import { useEffect, useState, useMemo } from "react";
 
 const HISTORY_KEY = "av-team-goals-history-7d";
-const MAX_DAYS = 7;
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function getHistory() {
+function getLocalHistory() {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -27,51 +26,103 @@ function getHistory() {
   } catch { return []; }
 }
 
-function pushSnapshot(stats, totalGoals) {
+function pushLocalSnapshot(stats, totalGoals) {
   if (typeof window === "undefined") return;
   try {
     const today = todayISO();
-    const history = getHistory();
-    // Si déjà un snapshot aujourd'hui → on remplace (dernière valeur du jour)
-    const filtered = history.filter(h => h.d !== today);
-    filtered.push({
+    const history = getLocalHistory().filter(h => h.d !== today);
+    history.push({
       d: today,
       avgPct: Math.round(stats.avgPct),
       nbAtteints: stats.nbAtteints,
       total: totalGoals,
     });
-    // Garde max 7 jours (les plus récents)
-    const trimmed = filtered.slice(-MAX_DAYS);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-30)));  // 0.58.65 : max 30j pour fallback
   } catch {}
 }
 
 export default function TeamGoalsSparkline({ stats, totalGoals }) {
-  const [history, setHistory] = useState([]);
+  // 0.58.65 : toggle 7j/30j persisté
+  const [rangeDays, setRangeDays] = useState(() => {
+    if (typeof window === "undefined") return 7;
+    try { return parseInt(localStorage.getItem("av-team-goals-range") || "7", 10); } catch { return 7; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("av-team-goals-range", String(rangeDays)); } catch {}
+  }, [rangeDays]);
 
-  // Snapshot quotidien
+  const [history, setHistory] = useState([]);
+  const [source, setSource] = useState("local");  // "supabase" | "local"
+
   useEffect(() => {
     if (!stats || totalGoals === 0) return;
-    pushSnapshot(stats, totalGoals);
-    setHistory(getHistory());
-  }, [stats?.avgPct, stats?.nbAtteints, totalGoals]);
+    pushLocalSnapshot(stats, totalGoals);
+
+    (async () => {
+      try {
+        const { createClient } = await import("../../lib/supabase");
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setHistory(getLocalHistory());
+          setSource("local");
+          return;
+        }
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - rangeDays);
+        const cutoffISO = cutoff.toISOString().slice(0, 10);
+        const { data, error } = await supabase
+          .from("user_goals_snapshots")
+          .select("snapshot_date, avg_pct, nb_atteints, nb_total")
+          .eq("user_id", user.id)
+          .gte("snapshot_date", cutoffISO)
+          .order("snapshot_date", { ascending: true });
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setHistory(data.map(d => ({
+            d: d.snapshot_date,
+            avgPct: Math.round(Number(d.avg_pct) || 0),
+            nbAtteints: d.nb_atteints,
+            total: d.nb_total,
+          })));
+          setSource("supabase");
+        } else {
+          setHistory(getLocalHistory());
+          setSource("local");
+        }
+      } catch {
+        setHistory(getLocalHistory());
+        setSource("local");
+      }
+    })();
+  }, [stats?.avgPct, stats?.nbAtteints, totalGoals, rangeDays]);
+
+  const displayHistory = useMemo(() => {
+    if (history.length === 0) return [];
+    if (rangeDays === 7) return history.slice(-7);
+    return history.slice(-30);
+  }, [history, rangeDays]);
 
   const points = useMemo(() => {
-    if (history.length < 2) return null;
-    const w = 220, h = 60, padX = 4, padY = 6;
+    if (displayHistory.length < 2) return null;
+    const w = rangeDays === 30 ? 320 : 220;
+    const h = rangeDays === 30 ? 80 : 60;
+    const padX = 4, padY = 6;
     const innerW = w - padX * 2;
     const innerH = h - padY * 2;
-    const xs = history.map((_, i) => padX + (i / (history.length - 1)) * innerW);
-    const ys = history.map(h => padY + innerH - (h.avgPct / 100) * innerH);
+    const xs = displayHistory.map((_, i) => padX + (i / (displayHistory.length - 1)) * innerW);
+    const ys = displayHistory.map(h => padY + innerH - (h.avgPct / 100) * innerH);
     const polyline = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
-    return { polyline, xs, ys, w, h, history };
-  }, [history]);
+    return { polyline, xs, ys, w, h, history: displayHistory };
+  }, [displayHistory, rangeDays]);
 
   if (!points) {
-    // Pas assez de données — message explicatif
     return (
       <div style={{ marginTop: 10, padding: "8px 12px", background: "rgba(122,111,176,.08)", borderRadius: 8, fontSize: 11, color: "#7a6fb0", textAlign: "center" }}>
-        <i className="ti ti-chart-line" /> Évolution sur 7 jours — revenez demain pour voir la courbe se former{history.length > 0 && ` (${history.length}/7 jours)`}
+        <i className="ti ti-chart-line" /> Évolution {rangeDays}j —
+        {displayHistory.length === 0
+          ? " aucune donnée encore, reviens demain"
+          : ` ${displayHistory.length}/${rangeDays} jour${displayHistory.length > 1 ? "s" : ""} (CRON serveur quotidien)`}
       </div>
     );
   }
@@ -89,36 +140,63 @@ export default function TeamGoalsSparkline({ stats, totalGoals }) {
       border: "1px solid rgba(122,111,176,.20)",
       borderRadius: 10,
     }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <span style={{ fontSize: 11, color: "#7a6fb0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
-          <i className="ti ti-chart-line" /> Évolution sur {points.history.length} jour{points.history.length > 1 ? "s" : ""}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, flexWrap: "wrap", gap: 6 }}>
+        <span style={{ fontSize: 11, color: "#7a6fb0", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, display: "inline-flex", alignItems: "center", gap: 4 }}>
+          <i className="ti ti-chart-line" /> Évolution {points.history.length} jour{points.history.length > 1 ? "s" : ""}
+          {source === "supabase" && (
+            <span title="Snapshot serveur (CRON quotidien)" style={{ fontSize: 9, color: "#5aa05a", background: "rgba(90,160,90,.12)", padding: "1px 6px", borderRadius: 6, fontWeight: 700, marginLeft: 4 }}>
+              <i className="ti ti-cloud-check" /> Serveur
+            </span>
+          )}
+          {source === "local" && (
+            <span title="Mode local (Supabase indispo ou CRON pas encore exécuté)" style={{ fontSize: 9, color: "#8a98a8", background: "rgba(138,152,168,.12)", padding: "1px 6px", borderRadius: 6, fontWeight: 700, marginLeft: 4 }}>
+              <i className="ti ti-device-floppy" /> Local
+            </span>
+          )}
         </span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: trendColor, display: "flex", alignItems: "center", gap: 3 }}>
-          <i className={`ti ti-trending-${trend > 0 ? "up" : trend < 0 ? "down" : "right"}`} />
-          {trend > 0 ? "+" : ""}{trend} pts
-        </span>
+        <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "inline-flex", borderRadius: 6, background: "#fff", border: "1px solid #d3d9e0", padding: 2 }}>
+            <button
+              onClick={() => setRangeDays(7)}
+              style={{
+                background: rangeDays === 7 ? "linear-gradient(135deg, #7a6fb0, #5a4a90)" : "transparent",
+                color: rangeDays === 7 ? "#fff" : "#7a6fb0",
+                border: "none", borderRadius: 4, padding: "3px 9px", fontSize: 10.5, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >7j</button>
+            <button
+              onClick={() => setRangeDays(30)}
+              style={{
+                background: rangeDays === 30 ? "linear-gradient(135deg, #7a6fb0, #5a4a90)" : "transparent",
+                color: rangeDays === 30 ? "#fff" : "#7a6fb0",
+                border: "none", borderRadius: 4, padding: "3px 9px", fontSize: 10.5, fontWeight: 700,
+                cursor: "pointer", fontFamily: "inherit",
+              }}
+            >30j</button>
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 700, color: trendColor, display: "flex", alignItems: "center", gap: 3 }}>
+            <i className={`ti ti-trending-${trend > 0 ? "up" : trend < 0 ? "down" : "right"}`} />
+            {trend > 0 ? "+" : ""}{trend} pts
+          </span>
+        </div>
       </div>
-      <svg viewBox={`0 0 ${points.w} ${points.h}`} style={{ width: "100%", height: 60, display: "block" }}>
-        {/* Gradient pour l'aire sous la courbe */}
+      <svg viewBox={`0 0 ${points.w} ${points.h}`} style={{ width: "100%", height: points.h, display: "block" }}>
         <defs>
-          <linearGradient id="sparkline-gradient" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`sparkline-gradient-${rangeDays}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#7a6fb0" stopOpacity="0.35" />
             <stop offset="100%" stopColor="#7a6fb0" stopOpacity="0" />
           </linearGradient>
         </defs>
-        {/* Ligne de référence à 50% */}
         <line x1="4" y1={6 + (points.h - 12) * 0.5} x2={points.w - 4} y2={6 + (points.h - 12) * 0.5}
               stroke="rgba(122,111,176,.20)" strokeWidth="1" strokeDasharray="3,3" />
-        {/* Aire sous la courbe */}
         <polygon
           points={`${points.xs[0]},${points.h - 6} ${points.polyline} ${points.xs[points.xs.length - 1]},${points.h - 6}`}
-          fill="url(#sparkline-gradient)"
+          fill={`url(#sparkline-gradient-${rangeDays})`}
         />
-        {/* Courbe */}
         <polyline points={points.polyline} fill="none" stroke="#7a6fb0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-        {/* Points */}
         {points.xs.map((x, i) => (
-          <circle key={i} cx={x} cy={points.ys[i]} r="2.5" fill="#fff" stroke="#7a6fb0" strokeWidth="2">
+          <circle key={i} cx={x} cy={points.ys[i]} r={rangeDays === 30 ? 1.8 : 2.5} fill="#fff" stroke="#7a6fb0" strokeWidth="2">
             <title>{`${points.history[i].d} — ${points.history[i].avgPct}%`}</title>
           </circle>
         ))}
