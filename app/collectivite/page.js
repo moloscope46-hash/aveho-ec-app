@@ -258,6 +258,10 @@ export default function GroupementPage() {
                 { id: "activite",      label: "Activité",      icon: "ti-briefcase",  color: "#7a6fb0" },
                 { id: "localisation",  label: "Localisation",  icon: "ti-map-pin",    color: "#5aa05a" },
                 { id: "etablissements", label: `Établissements (${etabs.length})`, icon: "ti-buildings", color: "#EF9F27" },
+                // 0.59.0 : 3 nouveaux onglets
+                { id: "collaborateurs", label: "Collaborateurs", icon: "ti-users", color: "#7CC8C8" },
+                { id: "depots",         label: "Dépôts",         icon: "ti-building-warehouse", color: "#5a8f8f" },
+                { id: "equipes",        label: "Équipes",        icon: "ti-users-group", color: "#5a4a90" },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -573,6 +577,67 @@ export default function GroupementPage() {
               )}
             </div>
             </>)}
+
+            {/* 0.59.0 : Nouveaux onglets Collaborateurs / Dépôts / Équipes */}
+            {activeTab === "collaborateurs" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-users" style={{ fontSize: 56, color: "#7CC8C8", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Liste des collaborateurs</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Gestion centralisée des collaborateurs avec rôles (infirmier, docteur, pharmacien...)
+                  </p>
+                  <button onClick={() => router.push("/collaborateurs")} style={{
+                    background: "linear-gradient(135deg,#7CC8C8,#5db5b5)", color: "#142131",
+                    border: "none", padding: "10px 22px", borderRadius: 10,
+                    fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(124,200,200,.30)",
+                  }}>
+                    <i className="ti ti-arrow-right" /> Ouvrir la page Collaborateurs
+                  </button>
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === "depots" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-building-warehouse" style={{ fontSize: 56, color: "#5a8f8f", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Dépôts du groupement</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Tous les dépôts physiques et mobiles de la structure
+                  </p>
+                  <button onClick={() => router.push("/depots")} style={{
+                    background: "linear-gradient(135deg,#5a8f8f,#477676)", color: "#fff",
+                    border: "none", padding: "10px 22px", borderRadius: 10,
+                    fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(90,143,143,.30)",
+                  }}>
+                    <i className="ti ti-arrow-right" /> Ouvrir la page Dépôts
+                  </button>
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === "equipes" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-users-group" style={{ fontSize: 56, color: "#5a4a90", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Équipes & Services</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Équipes terrain et services du groupement
+                  </p>
+                  <button onClick={() => router.push("/equipes")} style={{
+                    background: "linear-gradient(135deg,#5a4a90,#473873)", color: "#fff",
+                    border: "none", padding: "10px 22px", borderRadius: 10,
+                    fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer",
+                    boxShadow: "0 4px 12px rgba(90,74,144,.30)",
+                  }}>
+                    <i className="ti ti-arrow-right" /> Ouvrir la page Équipes
+                  </button>
+                </div>
+              </Panel>
+            )}
           </>
         )}
 

@@ -240,6 +240,84 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.59.2",
+    "kind": "feat",
+    "titre": "🌙 Fix MODE SOMBRE (text noir sur noir) + 🛏 Matériel installé dans chambre + recherche article",
+    "chantiers": [
+      { "code": "FIX", "txt": "🌙 **Fix mode sombre — texte noir sur noir** : ajout de règles CSS dark agressives qui ciblent les inline styles courants. Toutes les tuiles avec `color: #142131` (noir) sont maintenant passées en `var(--aveho-text)` (clair) en dark, les `#5a6878` en `--aveho-muted`, les `#8a98a8` en `#b8c4d0`. Backgrounds blancs forcés en `--aveho-panel`. Couvre /pathologies, /collaborateurs, et toutes mes nouvelles cartes. Les tuiles avec data-color (couleur dynamique de la DB type `${role.col}22`) gardent leur teinte mais le texte devient lisible",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Règles dark globales",
+          "lang": "css",
+          "after": "html[data-theme=\"dark\"] [style*=\"color: #142131\"],\nhtml[data-theme=\"dark\"] [style*=\"color:#142131\"]{\n  color: var(--aveho-text) !important;\n}\n\nhtml[data-theme=\"dark\"] [style*=\"background: #fff\"]:not(.tb-icon){\n  background: var(--aveho-panel) !important;\n  color: var(--aveho-text) !important;\n}\n\n/* Fonds gris très clairs → sombre */\nhtml[data-theme=\"dark\"] [style*=\"#fafbfc\"],\nhtml[data-theme=\"dark\"] [style*=\"#f7fafa\"]{ background: #1f2a3a !important; }"
+        }
+      },
+      { "code": "AI", "txt": "🛏 **Section 'Matériel installé dans la chambre'** dans la création patient : dès qu'une chambre est sélectionnée, un panneau teal apparaît affichant les matériels rattachés à cette chambre (via `chambre_id` sur la table materiels). Affiche libellé + N° série en chips" },
+      { "code": "AI", "txt": "🔍 **Bouton '+ Ajouter un article au panier'** : ouvre un panneau de recherche article (fond fond blanc, scrollable max 240px). Affiche les 30 premiers articles par défaut ou filtre selon la recherche (libellé/code). Bouton vert 'Ajouter' à droite de chaque article. Ajoute au panier global avec `chambre_id` + `chambre_nom` en méta. Le badge panier de la TopBar se met à jour instantanément (event `av-cart-change`)" },
+      { "code": "AI", "txt": "🎨 **Le panneau matériel chambre** utilise le code couleur teal (#7CC8C8) cohérent avec la charte. S'affiche sous la grille de chambres dès que `form.chambre_id` est set" },
+      { "code": "INFO", "txt": "📋 **Restant pour 0.59.3+** : workflow d'entrée patient guidé (5 étapes), réimpression QR auto si patient change de chambre, dossier médical premium UI, cascade pathologies du service (multi-select dans /etablissement/edition)" }
+    ],
+    "themes": ["feat", "darkmode", "patient", "panier"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.2.html"
+  },
+  {
+    "v": "0.59.1",
+    "kind": "feat",
+    "titre": "🏥 Création patient mobile enrichie : établissement obligatoire + chambres dispo/occupées + collaborateur référent + pathologie + fix bulles pathologies",
+    "chantiers": [
+      { "code": "FIX", "txt": "🎨 **Fix bulles /pathologies qui faisaient toute la largeur** : grid layout passé de `minmax(280px, 1fr)` à `minmax(280px, 320px)` + `justifyContent: 'start'`. Les cards font maintenant 280-320px max au lieu de s'étirer sur toute la largeur disponible" },
+      { "code": "AI", "txt": "✅ **Établissement OBLIGATOIRE dans création patient mobile** : le sélecteur est maintenant affiché même s'il n'y a qu'un seul établissement, marqué d'une étoile, et la validation bloque le passage à l'étape 2 si vide. Bordure rouge + message d'erreur. L'établissement courant est pré-sélectionné si disponible",
+        "code_snippet": {
+          "file": "app/mobile/patient/new/page.js",
+          "note": "Validation step 1",
+          "lang": "javascript",
+          "after": "function next() {\n  if (step === 1 && !form.etablissement_id) {\n    setSaveError('⚠ L\\'établissement est obligatoire');\n    return;  // Bloque la progression\n  }\n  ..."
+        }
+      },
+      { "code": "AI", "txt": "🛏 **Affichage des chambres en GRID avec statut dispo/occupée** : remplacé le `<select>` par une grid de boutons. Chaque bouton-chambre affiche son nom + son statut (✓ Dispo en blanc | ⊘ Occupée en rouge | ✓ Choisie en vert). Les chambres occupées sont désactivées (cliquage impossible). Compteur dynamique : 'Chambre (X dispo / Y total)'",
+        "code_snippet": {
+          "file": "app/mobile/patient/new/page.js",
+          "note": "Grid chambres",
+          "lang": "jsx",
+          "after": "{filteredChambres.map(c => {\n  const occupee = chambresOccupees.has(c.id);\n  return (\n    <button disabled={occupee && !selected}\n      style={{ background: selected ? '#5aa05a' : occupee ? 'rgba(227,93,91,.10)' : '#fff' }}>\n      <div>{c.nom}</div>\n      <div>{selected ? '✓ Choisie' : occupee ? '⊘ Occupée' : '✓ Dispo'}</div>\n    </button>\n  );\n})}"
+        }
+      },
+      { "code": "AI", "txt": "👨‍⚕️ **Section 'Médecin & Pathologie'** : nouvelle section dans l'étape 1 qui apparaît si pathologies/collaborateurs existent. (1) Sélecteur **Pathologie principale** parmi le référentiel /pathologies (préfixé du code [PERF], [OXY]...). (2) Sélecteur **Collaborateur référent** filtré automatiquement par service sélectionné. Si aucun collab du service → message d'info avec lien vers /collaborateurs" },
+      { "code": "AI", "txt": "📡 **Chargement enrichi** : la création patient charge maintenant en parallèle pathologies (table 0.58.99), v_collaborateurs (vue 0.59.0), et patients actifs pour calculer le set des chambres occupées. Tous en `tryFetch` défensif — si une table n'existe pas, on passe sans planter" },
+      { "code": "INFO", "txt": "📋 **Encore à faire (0.59.2+)** : workflow d'entrée patient en mobile (étapes guidées), réimpression QR auto si patient change de chambre, dossier médical premium UI, ajout matériel installé dans chambre" }
+    ],
+    "themes": ["feat", "patient", "mobile", "fix"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.1.html"
+  },
+  {
+    "v": "0.59.0",
+    "kind": "feat",
+    "titre": "👥 Page Collaborateurs (rôles infirmier/docteur/pharmacien) + icônes menu + mobile compact",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **Nouveau SQL `migration-0.59.0-collaborateurs-roles.sql`** : crée table `pharmacies` + ALTER `membres_structure` (ajoute `role_professionnel`, `specialite`, `numero_adeli`, `numero_rpps`, `pharmacie_id`, `etablissement_id`, `service_id`, `prenom`, `nom`, `telephone`, `notes`) + ALTER `patients` (ajoute `collaborateur_id`) + crée vue `v_collaborateurs` avec jointures pharmacie/étab/service",
+        "code_snippet": {
+          "file": "public/sql/migration-0.59.0-collaborateurs-roles.sql",
+          "note": "Champs ajoutés",
+          "lang": "sql",
+          "after": "ALTER TABLE membres_structure\n  ADD COLUMN role_professionnel TEXT,\n  -- 'infirmier' | 'docteur' | 'pharmacien' | 'aide_soignant' | 'kine' | 'autre'\n  ADD COLUMN specialite TEXT,\n  ADD COLUMN numero_adeli TEXT,\n  ADD COLUMN numero_rpps TEXT,\n  ADD COLUMN pharmacie_id UUID,\n  ADD COLUMN etablissement_id UUID,\n  ADD COLUMN service_id UUID,\n  ADD COLUMN prenom TEXT, ADD COLUMN nom TEXT,\n  ADD COLUMN telephone TEXT;\n\nALTER TABLE patients ADD COLUMN collaborateur_id UUID;"
+        }
+      },
+      { "code": "AI", "txt": "🆕 **Page `/collaborateurs`** : liste tous les membres de la structure avec rôle pro (9 choix : infirmier / docteur / pharmacien / aide-soignant / kiné / secrétaire / logistique / admin / autre), spécialité, N° ADELI, N° RPPS, téléphone, rattachements pharmacie/étab/service. Recherche multi-critère, filtre par rôle, filtre par service. Stats cliquables par rôle en haut" },
+      { "code": "AI", "txt": "🆕 **Si role = pharmacien**, un champ supplémentaire apparaît dans le modal d'édition pour rattacher le collaborateur à une **pharmacie**. Lien direct vers /pharmacies si aucune n'est créée" },
+      { "code": "AI", "txt": "📍 **Ajouté en TÊTE du menu Groupement** : Collaborateurs. Et /login → /choix-mode → mode Logiciel atterrit maintenant sur `/collaborateurs` au lieu de `/accueil` (selon demande de Cédric : l'équipe d'abord)" },
+      { "code": "AI", "txt": "🎨 **Icônes devant chaque titre de section** du menu de gauche : Mon espace=ti-home-2, Groupement=ti-building-community, Mes partenaires=ti-users-group, Scan=ti-scan, Commande=ti-shopping-bag, Livraison=ti-truck-delivery, Administratif=ti-clipboard-list, Administration=ti-shield-lock" },
+      { "code": "AI", "txt": "📱 **Mode mobile : menu compact icônes seules** (CSS @media max-width 768px). Les libellés des items ET des sections sont cachés, les tuiles deviennent des carrés 48×48px avec juste l'icône. Optimise l'usage tactile et l'espace vertical limité" },
+      { "code": "AI", "txt": "📑 **Nouveaux onglets dans `/collectivite`** : Collaborateurs, Dépôts, Équipes (en plus de Identité/Activité/Localisation/Établissements). Chaque onglet présente la section + bouton CTA vers la page dédiée" },
+      { "code": "INFO", "txt": "🎯 **À faire** : (1) `git push` 0.59.0 · (2) Applique migration-0.59.0-collaborateurs-roles.sql dans Supabase · (3) Va sur /collaborateurs · (4) Édite chaque membre pour lui assigner son rôle pro + service + (si pharmacien) une pharmacie · (5) Test responsive : redimensionne le navigateur < 768px → le menu devient compact" },
+      { "code": "INFO", "txt": "🔜 **Suite (0.59.1+)** : (a) Rattacher patient → collaborateur référent dans création/édition patient avec filtre par service, (b) Établissement obligatoire dans création patient mobile, (c) Cascade service → chambres dispo → matériel installé, (d) Pathologies rattachées au service" }
+    ],
+    "themes": ["feat", "collaborateurs", "menu", "responsive"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.0.html"
+  },
+  {
     "v": "0.58.99",
     "kind": "feat",
     "titre": "🩺 Pathologies & Protocoles (page CRUD) + fix colonnes num_serie",

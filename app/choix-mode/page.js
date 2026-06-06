@@ -25,7 +25,8 @@ export default function ChoixModePage() {
   function choose(mode) {
     try { localStorage.setItem("av-launch-mode", mode); } catch {}
     if (mode === "mobile") router.push("/mobile");
-    else router.push("/accueil");
+    // 0.59.0 : mode Logiciel atterrit sur /collaborateurs (l'équipe d'abord)
+    else router.push("/collaborateurs");
   }
 
   if (!auth.ready) return null;

@@ -44,6 +44,9 @@ export default function MobileNewPatientPage() {
     batiment_id: "",
     service_id: "",
     chambre_id: "",
+    // 0.59.1 : collaborateur référent + pathologie principale
+    collaborateur_id: "",
+    pathologie_id: "",
   });
 
   // 0.58.85 : refs pour sélecteurs cascade
@@ -51,21 +54,33 @@ export default function MobileNewPatientPage() {
   const [batiments, setBatiments] = useState([]);
   const [services, setServices] = useState([]);
   const [chambres, setChambres] = useState([]);
+  // 0.59.1 : ajout collaborateurs (filtré par service) + pathologies + chambres avec statut
+  const [collaborateurs, setCollaborateurs] = useState([]);
+  const [pathologies, setPathologies] = useState([]);
+  const [chambresOccupees, setChambresOccupees] = useState(new Set()); // ids chambres avec patient présent
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
       const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
-      const [etabs, bats, svcs, chs] = await Promise.all([
+      const [etabs, bats, svcs, chs, collabs, paths, patientsActifs] = await Promise.all([
         tryFetch(supabase.from("etablissements").select("id, nom").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("batiments").select("id, nom, etablissement_id").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("services").select("id, nom").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("chambres").select("id, nom, service_id").eq("structure_id", auth.structureId).limit(500)),
+        // 0.59.1 : collaborateurs avec rôle + service via vue v_collaborateurs (fallback membres_structure)
+        tryFetch(supabase.from("v_collaborateurs").select("user_id, prenom, nom, role_professionnel, service_id").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("pathologies").select("id, nom, icone, couleur, code").eq("structure_id", auth.structureId).eq("actif", true).order("nom")),
+        // 0.59.1 : chambres occupées (patient avec chambre_id non null)
+        tryFetch(supabase.from("patients").select("chambre_id").eq("structure_id", auth.structureId).not("chambre_id", "is", null)),
       ]);
       setEtablissements(etabs);
       setBatiments(bats);
       setServices(svcs);
       setChambres(chs);
+      setCollaborateurs(collabs);
+      setPathologies(paths);
+      setChambresOccupees(new Set(patientsActifs.map(p => p.chambre_id).filter(Boolean)));
       // Pré-remplissage avec l'établissement courant si l'utilisateur n'a accès qu'à un seul
       if (etabs.length === 1) {
         setForm(f => ({ ...f, etablissement_id: etabs[0].id }));
@@ -86,7 +101,21 @@ export default function MobileNewPatientPage() {
     ? chambres.filter(c => c.service_id === form.service_id)
     : chambres;
 
-  function next() { setStep(Math.min(step + 1, 4)); }
+  function next() {
+    // 0.59.1 : validation établissement obligatoire pour passer de l'étape 1 à 2
+    if (step === 1 && !form.etablissement_id) {
+      setSaveError("⚠ L'établissement est obligatoire pour passer à l'étape suivante");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (step === 1 && !form.nom?.trim()) {
+      setSaveError("⚠ Le nom est obligatoire");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    setSaveError("");
+    setStep(Math.min(step + 1, 4));
+  }
   function prev() { setStep(Math.max(step - 1, 1)); }
 
   async function save() {
@@ -175,6 +204,12 @@ export default function MobileNewPatientPage() {
       </div>
 
       <div style={{ padding: "0 16px" }}>
+        {/* 0.59.1 : Erreur de validation affichée en haut quel que soit l'étape */}
+        {saveError && step < 4 && (
+          <div style={{ background: "rgba(227,93,91,.12)", border: "1px solid #e35d5b", borderRadius: 10, padding: 10, color: "#fff", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
+            <i className="ti ti-alert-triangle" style={{ color: "#e35d5b" }} /> {saveError}
+          </div>
+        )}
         {/* ÉTAPE 1 — IDENTITÉ */}
         {step === 1 && (
           <Section title="Identité" icon="ti-id" color="#C9867F">
@@ -205,15 +240,17 @@ export default function MobileNewPatientPage() {
 
         {/* ÉTAPE 1bis dans étape 1 : Affectation */}
         {step === 1 && (
+          <>
           <Section title="Affectation" icon="ti-building" color="#185FA5">
-            {etablissements.length > 1 && (
-              <Field label="Établissement">
-                <select value={form.etablissement_id} onChange={e => setForm({ ...form, etablissement_id: e.target.value, batiment_id: "", service_id: "", chambre_id: "" })} style={inputStyle}>
-                  <option value="">— Sélectionner —</option>
-                  {etablissements.map(et => <option key={et.id} value={et.id}>{et.nom}</option>)}
-                </select>
-              </Field>
-            )}
+            {/* 0.59.1 : Établissement OBLIGATOIRE (affiché même si 1 seul, pour validation) */}
+            <Field label="Établissement *" required>
+              <select value={form.etablissement_id} onChange={e => setForm({ ...form, etablissement_id: e.target.value, batiment_id: "", service_id: "", chambre_id: "" })}
+                style={{ ...inputStyle, borderColor: form.etablissement_id ? "#5aa05a" : "#e35d5b" }}>
+                <option value="">— Choisir l'établissement —</option>
+                {etablissements.map(et => <option key={et.id} value={et.id}>{et.nom}</option>)}
+              </select>
+              {!form.etablissement_id && <div style={{ fontSize: 10.5, color: "#e35d5b", marginTop: 3 }}>⚠ Obligatoire pour créer le patient</div>}
+            </Field>
             {filteredBatiments.length > 0 && (
               <Field label="Bâtiment">
                 <select value={form.batiment_id} onChange={e => setForm({ ...form, batiment_id: e.target.value, service_id: "", chambre_id: "" })} style={inputStyle}>
@@ -224,21 +261,93 @@ export default function MobileNewPatientPage() {
             )}
             {filteredServices.length > 0 && (
               <Field label="Service">
-                <select value={form.service_id} onChange={e => setForm({ ...form, service_id: e.target.value, chambre_id: "" })} style={inputStyle}>
+                <select value={form.service_id} onChange={e => setForm({ ...form, service_id: e.target.value, chambre_id: "", collaborateur_id: "" })} style={inputStyle}>
                   <option value="">— Aucun —</option>
                   {filteredServices.map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
                 </select>
               </Field>
             )}
+            {/* 0.59.1 : Chambres avec affichage statut dispo/occupée */}
             {filteredChambres.length > 0 && (
-              <Field label="Chambre">
-                <select value={form.chambre_id} onChange={e => setForm({ ...form, chambre_id: e.target.value })} style={inputStyle}>
-                  <option value="">— Aucune —</option>
-                  {filteredChambres.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
-                </select>
+              <Field label={`Chambre ${form.service_id ? `(${filteredChambres.filter(c => !chambresOccupees.has(c.id)).length} dispo / ${filteredChambres.length})` : ""}`}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(80px,1fr))", gap: 6, maxHeight: 220, overflowY: "auto", padding: 4 }}>
+                  {filteredChambres.map(c => {
+                    const occupee = chambresOccupees.has(c.id);
+                    const selected = form.chambre_id === c.id;
+                    return (
+                      <button key={c.id} type="button"
+                        onClick={() => !occupee && setForm({ ...form, chambre_id: selected ? "" : c.id })}
+                        disabled={occupee && !selected}
+                        style={{
+                          padding: "10px 6px",
+                          background: selected ? "#5aa05a" : occupee ? "rgba(227,93,91,.10)" : "#fff",
+                          color: selected ? "#fff" : occupee ? "#e35d5b" : "#142131",
+                          border: `2px solid ${selected ? "#5aa05a" : occupee ? "rgba(227,93,91,.30)" : "#cfd8e0"}`,
+                          borderRadius: 8, cursor: occupee && !selected ? "not-allowed" : "pointer",
+                          fontFamily: "inherit", fontSize: 12, fontWeight: 700,
+                          opacity: occupee && !selected ? 0.6 : 1,
+                          textAlign: "center",
+                        }}
+                        title={occupee ? "Chambre occupée" : "Chambre disponible"}
+                      >
+                        <div>{c.nom}</div>
+                        <div style={{ fontSize: 9, fontWeight: 500, opacity: 0.8, marginTop: 2 }}>
+                          {selected ? "✓ Choisie" : occupee ? "⊘ Occupée" : "✓ Dispo"}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </Field>
             )}
           </Section>
+
+          {/* 0.59.2 : Matériel installé dans la chambre + recherche article pour ajouter au panier */}
+          {form.chambre_id && (
+            <ChambreMaterielSection
+              supabase={supabase}
+              chambreId={form.chambre_id}
+              structureId={auth.structureId}
+              chambreNom={chambres.find(c => c.id === form.chambre_id)?.nom}
+            />
+          )}
+
+          {/* 0.59.1 : Section collaborateur référent + pathologie */}
+          {(collaborateurs.length > 0 || pathologies.length > 0) && (
+            <Section title="Médecin & Pathologie" icon="ti-stethoscope" color="#7a6fb0">
+              {pathologies.length > 0 && (
+                <Field label="Pathologie principale">
+                  <select value={form.pathologie_id} onChange={e => setForm({ ...form, pathologie_id: e.target.value })} style={inputStyle}>
+                    <option value="">— Aucune —</option>
+                    {pathologies.map(p => <option key={p.id} value={p.id}>{p.code ? `[${p.code}] ` : ""}{p.nom}</option>)}
+                  </select>
+                </Field>
+              )}
+              {collaborateurs.length > 0 && (
+                <Field label={`Collaborateur référent ${form.service_id ? "(filtré par service)" : ""}`}>
+                  <select value={form.collaborateur_id} onChange={e => setForm({ ...form, collaborateur_id: e.target.value })} style={inputStyle}>
+                    <option value="">— Aucun —</option>
+                    {collaborateurs
+                      .filter(c => !form.service_id || c.service_id === form.service_id || !c.service_id)
+                      .map(c => {
+                        const role = c.role_professionnel ? ` (${c.role_professionnel})` : "";
+                        return (
+                          <option key={c.user_id} value={c.user_id}>
+                            {`${c.prenom || ""} ${c.nom || ""}`.trim() || "Sans nom"}{role}
+                          </option>
+                        );
+                      })}
+                  </select>
+                  {form.service_id && collaborateurs.filter(c => c.service_id === form.service_id).length === 0 && (
+                    <div style={{ fontSize: 10.5, color: "#EF9F27", marginTop: 3 }}>
+                      ⚠ Aucun collaborateur rattaché à ce service. Va dans <a href="/collaborateurs" style={{ color: "#185FA5" }}>/collaborateurs</a> pour en assigner.
+                    </div>
+                  )}
+                </Field>
+              )}
+            </Section>
+          )}
+          </>
         )}
 
         {/* ÉTAPE 2 — COORDONNÉES */}
@@ -445,4 +554,159 @@ function btnRadio(active, color) {
     fontSize: 13, fontWeight: 600,
     cursor: "pointer",
   };
+}
+
+// =============================================================
+// 0.59.2 : Composant matériel installé dans la chambre + recherche article
+// =============================================================
+function ChambreMaterielSection({ supabase, chambreId, structureId, chambreNom }) {
+  const [materiels, setMateriels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
+  const [articles, setArticles] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    if (!chambreId) return;
+    (async () => {
+      try {
+        // Tente avec chambre_id (si colonne existe sur matériels)
+        const r = await supabase
+          .from("materiels")
+          .select("id, libelle, num_serie, num_parc, etat, photo_url")
+          .eq("chambre_id", chambreId)
+          .eq("structure_id", structureId)
+          .limit(50);
+        setMateriels(r.data || []);
+      } catch (e) {
+        setMateriels([]);
+      } finally { setLoading(false); }
+    })();
+  }, [chambreId]);
+
+  useEffect(() => {
+    if (!showSearch) return;
+    (async () => {
+      const r = await supabase
+        .from("articles")
+        .select("id, libelle, code, photo_url, prix_vente_ht, type_article")
+        .eq("structure_id", structureId)
+        .limit(100);
+      setArticles(r.data || []);
+    })();
+  }, [showSearch]);
+
+  function addToCart(article) {
+    try {
+      const raw = localStorage.getItem("aveho_ec_cart");
+      const items = raw ? JSON.parse(raw) : [];
+      const existing = items.find(i => i.id === article.id);
+      if (existing) {
+        existing.qte = (existing.qte || 1) + 1;
+      } else {
+        items.push({
+          id: article.id,
+          libelle: article.libelle,
+          code: article.code,
+          photo_url: article.photo_url,
+          prix_vente_ht: article.prix_vente_ht,
+          qte: 1,
+          chambre_id: chambreId,
+          chambre_nom: chambreNom,
+        });
+      }
+      localStorage.setItem("aveho_ec_cart", JSON.stringify(items));
+      window.dispatchEvent(new Event("av-cart-change"));
+      alert(`✓ "${article.libelle}" ajouté au panier`);
+    } catch (e) { alert("Erreur : " + e.message); }
+  }
+
+  const searchLow = search.trim().toLowerCase();
+  const filteredArticles = searchLow
+    ? articles.filter(a =>
+        (a.libelle || "").toLowerCase().includes(searchLow) ||
+        (a.code || "").toLowerCase().includes(searchLow)
+      )
+    : articles.slice(0, 30);
+
+  return (
+    <div style={{
+      background: "rgba(124,200,200,.06)",
+      borderLeft: "4px solid #7CC8C8",
+      borderRadius: 10,
+      padding: 14,
+      marginTop: 10,
+      color: "#142131",
+    }}>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: "#7CC8C8", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+        <i className="ti ti-armchair-2" /> Matériel installé dans {chambreNom || "la chambre"}
+      </div>
+      {loading ? (
+        <div style={{ color: "#5a6878", fontSize: 12 }}>Chargement...</div>
+      ) : materiels.length === 0 ? (
+        <div style={{ color: "#5a6878", fontSize: 12 }}>Aucun matériel rattaché à cette chambre.</div>
+      ) : (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {materiels.map(m => (
+            <span key={m.id} style={{
+              padding: "4px 10px", background: "#fff", border: "1px solid #cfd8e0",
+              borderRadius: 6, fontSize: 11, color: "#142131",
+            }}>
+              <i className="ti ti-armchair-2" style={{ color: "#7CC8C8" }} /> {m.libelle}
+              {m.num_serie && <span style={{ color: "#8a98a8", marginLeft: 4, fontFamily: "Consolas,monospace" }}>· {m.num_serie}</span>}
+            </span>
+          ))}
+        </div>
+      )}
+      <button onClick={() => setShowSearch(!showSearch)} style={{
+        marginTop: 10,
+        background: showSearch ? "rgba(20,33,49,.06)" : "linear-gradient(135deg,#5aa05a,#4a8a4a)",
+        color: showSearch ? "#142131" : "#fff",
+        border: "none", padding: "8px 14px", borderRadius: 8,
+        fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer",
+      }}>
+        <i className={`ti ${showSearch ? "ti-x" : "ti-shopping-cart-plus"}`} /> {showSearch ? "Fermer la recherche" : "+ Ajouter un article au panier"}
+      </button>
+
+      {showSearch && (
+        <div style={{ marginTop: 10, background: "#fff", border: "1px solid #cfd8e0", borderRadius: 8, padding: 10 }}>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un article..."
+            style={{ width: "100%", padding: "8px 10px", background: "#fafbfc", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 12 }}
+            autoFocus
+          />
+          <div style={{ maxHeight: 240, overflowY: "auto", marginTop: 8 }}>
+            {filteredArticles.length === 0 ? (
+              <div style={{ padding: 12, textAlign: "center", color: "#8a98a8", fontSize: 11 }}>
+                {searchLow ? "Aucun résultat" : "Tape pour chercher (ou affiche les 30 premiers)"}
+              </div>
+            ) : (
+              filteredArticles.map(a => (
+                <div key={a.id} style={{
+                  display: "flex", gap: 8, alignItems: "center",
+                  padding: "6px 8px", borderBottom: "1px solid #f0f3f6", fontSize: 11.5,
+                }}>
+                  <i className="ti ti-package" style={{ color: "#7CC8C8" }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "#142131" }}>{a.libelle}</div>
+                    {a.code && <div style={{ fontFamily: "Consolas,monospace", color: "#8a98a8", fontSize: 10 }}>{a.code}</div>}
+                  </div>
+                  {a.prix_vente_ht && <span style={{ color: "#5aa05a", fontWeight: 700, fontSize: 11 }}>{parseFloat(a.prix_vente_ht).toFixed(2)} €</span>}
+                  <button onClick={() => addToCart(a)} style={{
+                    background: "linear-gradient(135deg,#5aa05a,#4a8a4a)", color: "#fff",
+                    border: "none", padding: "5px 10px", borderRadius: 6,
+                    fontFamily: "inherit", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  }}>
+                    <i className="ti ti-plus" /> Ajouter
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

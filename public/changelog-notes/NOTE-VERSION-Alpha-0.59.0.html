@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.0 — Collaborateurs + Icônes menu + Mobile</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #2a4256 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(124,200,200,.20));border:1px solid rgba(124,200,200,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.20);border-left:4px solid #7CC8C8;border-radius:14px;padding:20px 24px;margin:14px 0}
+.roles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:14px 0}
+.role-card{background:#fff;color:#142131;border-radius:10px;padding:12px;border:2px solid #e3e9ee;display:flex;align-items:center;gap:8px}
+.role-card.infirmier{border-color:#7CC8C8;background:rgba(124,200,200,.06)}
+.role-card.docteur{border-color:#185FA5;background:rgba(24,95,165,.06)}
+.role-card.pharmacien{border-color:#5aa05a;background:rgba(90,160,90,.06)}
+.menu-demo{background:#142131;border-radius:10px;padding:14px;font-family:Quicksand;margin:14px 0}
+.menu-section-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#bfe6e6;margin:10px 0 6px}
+.menu-section-title i{font-size:18px;color:#7CC8C8}
+.menu-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,.05);margin:3px 0;font-size:12px;color:#dde4eb}
+.mobile-grid{display:grid;grid-template-columns:repeat(6,48px);gap:6px;margin:10px 0}
+.mobile-tile{aspect-ratio:1;background:rgba(124,200,200,.10);border:1px solid rgba(124,200,200,.30);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#7CC8C8}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #7CC8C8}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(124,200,200,.18);font-size:13px}
+table th{color:#7CC8C8;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">👥 0.59.0 · COLLABORATEURS + UX MENU</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>👥 Page Collaborateurs (infirmier/docteur/pharmacien) + Icônes menu + Mode mobile compact<small>Étape 1 d'une grosse demande Cédric — rôles pro + rattachements pharmacie/étab/service + menu responsive</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.0-alpha</code></span>
+    <span><b>SQL :</b> <code>migration-0.59.0</code></span>
+    <span><b>Type :</b> Feature majeure</span>
+  </div>
+</header>
+
+<h2>👥 Nouvelle page /collaborateurs</h2>
+
+<p style="color:#bfe6e6;font-size:13.5px;margin:0 0 8px">Liste centralisée des membres de la structure avec leurs rôles professionnels :</p>
+
+<div class="roles-grid">
+  <div class="role-card infirmier"><span style="font-size:20px">👩‍⚕️</span> <span><b>Infirmier·ère</b></span></div>
+  <div class="role-card docteur"><span style="font-size:20px">🩺</span> <span><b>Docteur</b></span></div>
+  <div class="role-card pharmacien"><span style="font-size:20px">💊</span> <span><b>Pharmacien·ne</b><br/><small style="color:#5aa05a">→ rattaché à pharmacie</small></span></div>
+  <div class="role-card" style="border-color:#C9867F"><span>🤝</span> <span><b>Aide-soignant·e</b></span></div>
+  <div class="role-card" style="border-color:#7a6fb0"><span>💆</span> <span><b>Kiné</b></span></div>
+  <div class="role-card" style="border-color:#8a98a8"><span>⌨️</span> <span><b>Secrétaire</b></span></div>
+  <div class="role-card" style="border-color:#EF9F27"><span>🚚</span> <span><b>Logistique</b></span></div>
+  <div class="role-card" style="border-color:#5e4a8c"><span>💼</span> <span><b>Administratif</b></span></div>
+  <div class="role-card"><span>👤</span> <span><b>Autre</b></span></div>
+</div>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">Chaque collaborateur a aussi : <b>spécialité</b>, <b>N° ADELI</b>, <b>N° RPPS</b>, <b>téléphone</b>, <b>rattachement étab/service</b>. Si rôle = <b>pharmacien</b>, un champ supplémentaire apparaît pour rattacher à une <b>pharmacie</b> de la base.</p>
+</div>
+
+<h2>🎨 Icônes devant chaque section du menu</h2>
+
+<div class="menu-demo">
+  <div class="menu-section-title"><i class="ti ti-home-2">🏠</i> MON ESPACE</div>
+  <div class="menu-item"><span style="color:#7CC8C8">🏠</span> Accueil</div>
+
+  <div class="menu-section-title"><i class="ti ti-building-community">🏘</i> GROUPEMENT</div>
+  <div class="menu-item"><span style="color:#7CC8C8">👥</span> Collaborateurs ← <b style="color:#7CC8C8">NEW</b></div>
+  <div class="menu-item"><span>🏢</span> Fiche groupement</div>
+  <div class="menu-item"><span>🏥</span> Établissements</div>
+
+  <div class="menu-section-title"><i class="ti ti-users-group">👥</i> MES PARTENAIRES</div>
+  <div class="menu-item"><span>🩺</span> Prescripteurs</div>
+  <div class="menu-item"><span>💊</span> Pharmacies</div>
+
+  <div class="menu-section-title"><i class="ti ti-scan">📷</i> SCAN</div>
+  <div class="menu-section-title"><i class="ti ti-shopping-bag">🛍</i> COMMANDE</div>
+  <div class="menu-section-title"><i class="ti ti-truck-delivery">🚚</i> LIVRAISON</div>
+  <div class="menu-section-title"><i class="ti ti-clipboard-list">📋</i> ADMINISTRATIF</div>
+  <div class="menu-section-title"><i class="ti ti-shield-lock">🔒</i> ADMINISTRATION</div>
+</div>
+
+<h2>📱 Mode mobile : icônes seulement</h2>
+
+<p style="color:#bfe6e6;font-size:13px;margin:0 0 8px">En dessous de 768px, libellés cachés + tuiles compactes 48×48px :</p>
+
+<div style="background:#142131;border-radius:10px;padding:14px;max-width:340px;margin:0 auto">
+  <div style="font-size:11px;color:#7CC8C8;font-weight:700;letter-spacing:1px;text-align:center;margin-bottom:8px"><i>🏘</i></div>
+  <div class="mobile-grid">
+    <div class="mobile-tile" style="background:#7CC8C822;color:#7CC8C8">👥</div>
+    <div class="mobile-tile" style="background:#185FA522;color:#185FA5">🏢</div>
+    <div class="mobile-tile" style="background:#7a6fb022;color:#7a6fb0">🏢</div>
+    <div class="mobile-tile" style="background:#185FA522;color:#185FA5">🏥</div>
+    <div class="mobile-tile" style="background:#5a8f8f22;color:#5a8f8f">📦</div>
+    <div class="mobile-tile" style="background:#c97a2a22;color:#c97a2a">📚</div>
+  </div>
+</div>
+
+<h2>🗄 SQL ajouté</h2>
+
+<pre>-- Nouvelle table pharmacies (référentiel)
+CREATE TABLE pharmacies (id, structure_id, nom, finess, adresse, ...)
+
+-- ALTER membres_structure (rôles pro)
+ALTER TABLE membres_structure
+  ADD COLUMN role_professionnel TEXT,
+  ADD COLUMN specialite TEXT,
+  ADD COLUMN numero_adeli TEXT, ADD COLUMN numero_rpps TEXT,
+  ADD COLUMN pharmacie_id UUID,
+  ADD COLUMN etablissement_id UUID, ADD COLUMN service_id UUID,
+  ADD COLUMN prenom TEXT, ADD COLUMN nom TEXT,
+  ADD COLUMN telephone TEXT;
+
+-- ALTER patients (collaborateur référent)
+ALTER TABLE patients ADD COLUMN collaborateur_id UUID;
+
+-- Vue v_collaborateurs (jointures pharmacie/étab/service nom)
+CREATE VIEW v_collaborateurs AS SELECT ms.*, ph.nom AS pharmacie_nom, ...</pre>
+
+<h2>📑 Onglets ajoutés à /collectivite</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">3 nouveaux onglets dans la page <code>/collectivite</code> (à côté de Identité/Activité/Localisation/Établissements) :</p>
+<ul style="margin:8px 0 0;color:#bfe6e6;font-size:13px">
+<li><b>👥 Collaborateurs</b> — bouton vers la page dédiée</li>
+<li><b>📦 Dépôts</b> — bouton vers /depots</li>
+<li><b>👥 Équipes</b> — bouton vers /equipes</li>
+</ul>
+</div>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+# Extraire le zip 0.59.0
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.59.0 - Collaborateurs + Icones menu + Mobile compact"
+git push origin main
+
+# Puis dans Supabase SQL Editor :
+# Colle migration-0.59.0-collaborateurs-roles.sql → Run</pre>
+
+<h2>🔜 Suite à venir (0.59.1+)</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;color:#bfe6e6;font-size:13px;line-height:1.9">
+<li>Rattacher patient → collaborateur référent dans création/édition (filtré par service)</li>
+<li>Établissement <b>obligatoire</b> dans création patient mobile</li>
+<li>Cascade création patient : service → chambres dispo → matériel installé + recherche article</li>
+<li>Pathologies rattachées au service (UI multi-select)</li>
+<li>Workflow d'entrée patient en mobile (étapes guidées)</li>
+<li>Réimpression QR si patient change de chambre</li>
+<li>Dossier médical premium UI</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.0 · 6 juin 2026 · 👥 COLLABORATEURS + 📱 MENU</footer>
+</div></body></html>

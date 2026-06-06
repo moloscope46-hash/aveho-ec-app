@@ -175,7 +175,7 @@ export default function PathologiesPage() {
               {paths.length === 0 ? "Aucune pathologie créée. Clique 'Nouvelle pathologie'." : `Aucun résultat pour "${search}"`}
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 320px))", gap: 12, justifyContent: "start" }}>
               {filtered.map(p => (
                 <div key={p.id} style={{
                   background: "#fff", border: `1px solid ${p.couleur}33`, borderLeft: `4px solid ${p.couleur}`,

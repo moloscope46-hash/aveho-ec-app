@@ -32,7 +32,7 @@ import CartDropdown from "./components/CartDropdown";
 // 5. ADMINISTRATIF (RGPD, statistiques, journal, signalements, paramètres)
 // 6. ADMIN (admin tech : utilisateurs, audit, logs, référentiels santé)
 const MENU = [
-  { section: "Mon espace", items: [
+  { section: "Mon espace", sectionIcon: "ti-home-2", items: [
     { p: "/accueil", ic: "ti-home", lbl: "Accueil", col: "#7CC8C8" },
     { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
@@ -41,7 +41,8 @@ const MENU = [
   ] },
   // 0.58.53 : refonte de la section Collectivité avec hiérarchie claire
   // 1. GROUPEMENT (entité morale)
-  { section: "Groupement", items: [
+  { section: "Groupement", sectionIcon: "ti-building-community", items: [
+    { p: "/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#7CC8C8" },
     { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
     { p: "/direction", ic: "ti-building-skyscraper", lbl: "Dashboard direction", col: "#7a6fb0" },
     // 2. ÉTABLISSEMENTS, BÂTIMENTS, SERVICES, ÉQUIPES (organisationnel)
@@ -58,7 +59,7 @@ const MENU = [
     { p: "/stock", ic: "ti-stack-2", lbl: "Stock", col: "#c97a2a" },
   ] },
   // 0.58.53 : nouvelle section "Mes partenaires" avec sous-types + raccourcis vers les annuaires officiels
-  { section: "Mes partenaires", items: [
+  { section: "Mes partenaires", sectionIcon: "ti-users-group", items: [
     { p: "/partenaires-rpps?type=prescripteur", ic: "ti-stethoscope", lbl: "Prescripteurs (médecins)", col: "#5a4a90" },
     { p: "/partenaires-rpps?type=infirmiere", ic: "ti-heart-rate-monitor", lbl: "Infirmières", col: "#C9867F" },
     // 0.58.57 : page dédiée pharmacies (table séparée avec horaires + garde)
@@ -70,7 +71,7 @@ const MENU = [
     { p: "/etablissements", ic: "ti-list-search", lbl: "🔍 Annuaire étabs (FINESS)", col: "#8a98a8" },
   ] },
   // 2. SCAN
-  { section: "Scan", items: [
+  { section: "Scan", sectionIcon: "ti-scan", items: [
     { p: "/scan/bulletin-situation", ic: "ti-file-scan", lbl: "Créer patient depuis bulletin", col: "#5aa05a" },
     { p: "/scan/prescription", ic: "ti-prescription", lbl: "OCR Ordonnance", col: "#5a4a90" },
     { p: "/scan/qr", ic: "ti-qrcode", lbl: "Scan QR code", col: "#185FA5" },
@@ -78,13 +79,13 @@ const MENU = [
     { p: "/scan/ocr", ic: "ti-text-recognition", lbl: "OCR générique", col: "#EF9F27" },
   ] },
   // 3. COMMANDE
-  { section: "Commande", items: [
+  { section: "Commande", sectionIcon: "ti-shopping-bag", items: [
     { p: "/panier", ic: "ti-shopping-cart", lbl: "Panier", col: "#e35d5b", count: "cart" },
     { p: "/commandes", ic: "ti-truck-delivery", lbl: "Mes commandes", col: "#5a8f8f" },
     { p: "/achats", ic: "ti-cash", lbl: "Achats", col: "#EF9F27" },
   ] },
   // 4. LIVRAISON (= interventions / DI / transferts / planning)
-  { section: "Livraison", items: [
+  { section: "Livraison", sectionIcon: "ti-truck-delivery", items: [
     { p: "/interventions", ic: "ti-tools", lbl: "Interventions / DI", col: "#c0392b" },
     { p: "/transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
     { p: "/maintenance", ic: "ti-tool", lbl: "Maintenance", col: "#5a8f8f" },
@@ -92,7 +93,7 @@ const MENU = [
     { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV de service", col: "#7CC8C8" },
   ] },
   // 5. ADMINISTRATIF (RGPD, statistiques métier, signalements, paramètres usuels)
-  { section: "Administratif", items: [
+  { section: "Administratif", sectionIcon: "ti-clipboard-list", items: [
     { p: "/statistiques", ic: "ti-chart-bar", lbl: "Statistiques", col: "#7a6fb0" },
     { p: "/statistiques-activite", ic: "ti-users-group", lbl: "Statistiques activité", col: "#185FA5" },
     { p: "/statistiques-interventions", ic: "ti-tools", lbl: "Statistiques DI", col: "#e35d5b" },
@@ -113,7 +114,7 @@ const MENU = [
     { p: "/mentions-legales", ic: "ti-license", lbl: "Mentions légales", col: "#8a98a8" },
   ] },
   // 6. ADMIN (tech)
-  { section: "Administration", items: [
+  { section: "Administration", sectionIcon: "ti-shield-lock", items: [
     { p: "/utilisateurs", ic: "ti-users-group", lbl: "Utilisateurs", col: "#185FA5" },
     { p: "/historique", ic: "ti-history", lbl: "Historique", col: "#7a6fb0" },
     { p: "/audit", ic: "ti-list-search", lbl: "Audit log", col: "#5e4a8c" },
@@ -394,8 +395,12 @@ export default function TopBar({ cartCount = 0, auth }) {
                   }}
                   aria-expanded={!isCollapsed}
                 >
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                    {sec.section}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    {/* 0.59.0 : icône de section */}
+                    {sec.sectionIcon && (
+                      <i className={`ti ${sec.sectionIcon}`} style={{ fontSize: 18, color: hue.barCol }} />
+                    )}
+                    <span className="menu-section-label">{sec.section}</span>
                     <span style={{
                       display: "inline-block",
                       width: 28,
@@ -403,7 +408,7 @@ export default function TopBar({ cartCount = 0, auth }) {
                       background: hue.barCol,
                       borderRadius: 1,
                       verticalAlign: "middle",
-                    }} />
+                    }} className="menu-section-bar" />
                   </span>
                   <i className={`ti ti-chevron-${isCollapsed ? "down" : "up"}`} style={{ fontSize: 14, opacity: 0.6, transition: "transform 200ms" }} />
                 </button>

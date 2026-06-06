@@ -336,6 +336,30 @@ button{font-family:inherit;cursor:pointer}
   letter-spacing:-.01em;
   position:relative;z-index:1;
 }
+/* 0.59.0 : Mode mobile — menu compact, libellés cachés, icônes uniquement */
+@media (max-width: 768px) {
+  .menu-section-label,
+  .menu-section-bar,
+  .menu-tile .mt-lbl {
+    display: none !important;
+  }
+  .menu-tile {
+    padding: 8px !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+  }
+  .menu-tile .mt-ic {
+    margin: 0 !important;
+  }
+  .menu-tiles {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)) !important;
+    gap: 6px !important;
+  }
+  .menu-section-h {
+    padding: 4px !important;
+    justify-content: center !important;
+  }
+}
 .menu-tile .mt-count{
   position:absolute;
   top:11px;right:11px;
@@ -1333,6 +1357,107 @@ html[data-theme="dark"] .menu-tile .mt-lbl{color:var(--aveho-text)}
 html[data-theme="dark"] .menu-section-h{color:#8a98a8}
 html[data-theme="dark"] .menu-section-h .bar{
   background:linear-gradient(90deg,var(--aveho-line) 0%,transparent 100%);
+}
+
+/* =============================================================
+   0.59.2 — DARK MODE FIX AGRESSIF
+   Cible les tuiles avec inline styles qui ne tournent pas bien en dark
+   (cartes pathologies, collaborateurs, dépôts, etc.)
+   ============================================================= */
+
+/* Cards avec fond blanc inline → fond sombre + texte clair */
+html[data-theme="dark"] [style*="background: #fff"]:not(.tb-icon):not(.btn-primary),
+html[data-theme="dark"] [style*="background:#fff"]:not(.tb-icon):not(.btn-primary),
+html[data-theme="dark"] [style*="background: white"],
+html[data-theme="dark"] [style*="background: rgba(255,255,255"]{
+  background: var(--aveho-panel) !important;
+  color: var(--aveho-text) !important;
+}
+
+/* Texte explicitement noir #142131 → clair en dark */
+html[data-theme="dark"] [style*="color: #142131"],
+html[data-theme="dark"] [style*="color:#142131"]{
+  color: var(--aveho-text) !important;
+}
+
+/* Texte gris foncé → muted */
+html[data-theme="dark"] [style*="color: #5a6878"],
+html[data-theme="dark"] [style*="color:#5a6878"],
+html[data-theme="dark"] [style*="color: #6c7a89"],
+html[data-theme="dark"] [style*="color:#6c7a89"]{
+  color: var(--aveho-muted) !important;
+}
+
+/* Texte gris très clair → muted */
+html[data-theme="dark"] [style*="color: #8a98a8"],
+html[data-theme="dark"] [style*="color:#8a98a8"]{
+  color: #b8c4d0 !important;
+}
+
+/* Backgrounds gris très clairs (#fafbfc, #f7fafa, #fafafa) → fond sombre */
+html[data-theme="dark"] [style*="background: #fafbfc"],
+html[data-theme="dark"] [style*="background:#fafbfc"],
+html[data-theme="dark"] [style*="background: #f7fafa"],
+html[data-theme="dark"] [style*="background:#f7fafa"],
+html[data-theme="dark"] [style*="background: #f9fafb"],
+html[data-theme="dark"] [style*="background:#f9fafb"],
+html[data-theme="dark"] [style*="background: #fafafa"],
+html[data-theme="dark"] [style*="background:#fafafa"]{
+  background: #1f2a3a !important;
+}
+
+/* Borders très claires → border sombre */
+html[data-theme="dark"] [style*="border: 1px solid #e3e9ee"],
+html[data-theme="dark"] [style*="border:1px solid #e3e9ee"],
+html[data-theme="dark"] [style*="border: 1px solid #cfd8e0"],
+html[data-theme="dark"] [style*="border:1px solid #cfd8e0"],
+html[data-theme="dark"] [style*="border: 1px solid #f0f3f6"],
+html[data-theme="dark"] [style*="border:1px solid #f0f3f6"]{
+  border-color: var(--aveho-line) !important;
+}
+
+/* Input/textarea/select inline avec fond clair → fond sombre */
+html[data-theme="dark"] input[style*="#fafbfc"],
+html[data-theme="dark"] select[style*="#fafbfc"],
+html[data-theme="dark"] textarea[style*="#fafbfc"]{
+  background: #1f2a3a !important;
+  color: var(--aveho-text) !important;
+}
+
+/* PRE (code blocks) en dark — déjà sombre donc OK */
+
+/* === Bandeaux & alerts en dark === */
+html[data-theme="dark"] [style*="background: rgba(227,93,91,.08)"],
+html[data-theme="dark"] [style*="background:rgba(227,93,91,.08)"],
+html[data-theme="dark"] [style*="background: rgba(227,93,91,.10)"]{
+  background: rgba(227,93,91,.16) !important;
+}
+html[data-theme="dark"] [style*="color: #c0392b"],
+html[data-theme="dark"] [style*="color:#c0392b"]{
+  color: #ff8e8c !important;
+}
+
+/* Cards data-colored : le fond garde la teinte mais contour visible */
+html[data-theme="dark"] [style*="background: rgba(124,200,200"],
+html[data-theme="dark"] [style*="background: rgba(24,95,165"],
+html[data-theme="dark"] [style*="background: rgba(90,160,90"],
+html[data-theme="dark"] [style*="background: rgba(239,159,39"],
+html[data-theme="dark"] [style*="background: rgba(201,134,127"],
+html[data-theme="dark"] [style*="background: rgba(122,111,176"]{
+  /* On laisse la couleur data, mais force le texte clair */
+  color: var(--aveho-text);
+}
+
+/* Force tous les <b> et <strong> dans tuiles colorées à rester contrastés */
+html[data-theme="dark"] [style*="background: rgba"] b,
+html[data-theme="dark"] [style*="background: rgba"] strong{
+  color: inherit;
+}
+
+/* Spécifique : badges et chips */
+html[data-theme="dark"] [style*="padding: 2px 8px"][style*="borderRadius: 8"],
+html[data-theme="dark"] [style*="padding:2px 8px"]{
+  color: inherit;
 }
 /* === FIN DARK MODE PREMIUM === */
 

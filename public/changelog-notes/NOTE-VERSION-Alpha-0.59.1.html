@@ -1,0 +1,121 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.1 — Création patient enrichie</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #2a4256 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(24,95,165,.30));border:1px solid rgba(24,95,165,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#185FA5)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.20);border-left:4px solid #7CC8C8;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* Demo chambres */
+.chambres-demo{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:420px;margin:14px auto;padding:10px;background:#fff;border-radius:10px;border:1px solid #cfd8e0}
+.ch{padding:10px 6px;border:2px solid #cfd8e0;border-radius:8px;text-align:center;font-size:12px;font-weight:700;font-family:Quicksand}
+.ch.dispo{background:#fff;color:#142131}
+.ch.occupee{background:rgba(227,93,91,.10);color:#e35d5b;border-color:rgba(227,93,91,.30);opacity:.6}
+.ch.choisie{background:#5aa05a;color:#fff;border-color:#5aa05a}
+.ch-stat{font-size:9px;font-weight:500;opacity:.8;margin-top:2px}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #7CC8C8}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🏥 0.59.1 · CRÉATION PATIENT ENRICHIE</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🏥 Création patient mobile enrichie : établissement obligatoire + chambres dispo/occupées + médecin + pathologie<small>+ Fix layout pathologies (bulles ne s'étirent plus sur toute la largeur)</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.1-alpha</code></span>
+    <span><b>SQL :</b> aucun (utilise tables 0.58.99 + 0.59.0)</span>
+    <span><b>Type :</b> Feature + fix</span>
+  </div>
+</header>
+
+<h2>🎨 Fix bulles pathologies</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5px">Avant : grid <code>minmax(280px, 1fr)</code> faisait s'étirer une seule bulle sur toute la largeur. <b>Après</b> : <code>minmax(280px, 320px)</code> + <code>justifyContent: 'start'</code> → les cards font 280-320px max, alignées à gauche.</p>
+</div>
+
+<h2>✅ Établissement OBLIGATOIRE</h2>
+
+<div class="panel">
+<p style="margin:0 0 6px;color:#fff;font-size:13.5px">Le sélecteur Établissement est maintenant <b>toujours visible</b>, marqué d'une étoile <code>*</code>, et le passage à l'étape 2 est bloqué si vide :</p>
+<ul style="margin:6px 0 0;color:#bfe6e6;font-size:13px">
+<li>Bordure <b>verte</b> si rempli</li>
+<li>Bordure <b>rouge</b> si vide + message ⚠ "Obligatoire pour créer le patient"</li>
+<li>Bouton "Suivant" affiche une alerte en haut + scroll vers le haut au lieu de naviguer</li>
+</ul>
+</div>
+
+<h2>🛏 Chambres en GRID avec statut dispo/occupée</h2>
+
+<p style="color:#bfe6e6;font-size:13px;margin:0 0 8px">Plus de <code>&lt;select&gt;</code> caché : grid de boutons-chambres avec statut visuel temps réel.</p>
+
+<div style="text-align:center;color:#7CC8C8;font-size:12px;font-weight:700;margin:8px 0">Chambre (3 dispo / 6)</div>
+<div class="chambres-demo">
+  <div class="ch choisie">A101<div class="ch-stat">✓ Choisie</div></div>
+  <div class="ch dispo">A102<div class="ch-stat">✓ Dispo</div></div>
+  <div class="ch occupee">A103<div class="ch-stat">⊘ Occupée</div></div>
+  <div class="ch dispo">A104<div class="ch-stat">✓ Dispo</div></div>
+  <div class="ch occupee">A105<div class="ch-stat">⊘ Occupée</div></div>
+  <div class="ch occupee">A106<div class="ch-stat">⊘ Occupée</div></div>
+</div>
+
+<p style="color:#bfe6e6;font-size:12px;text-align:center;margin:8px 0">Calculé en temps réel via <code>patients WHERE chambre_id IS NOT NULL</code></p>
+
+<h2>👨‍⚕️ Section "Médecin & Pathologie"</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff;font-size:13.5px">Nouvelle section qui apparaît dès l'étape 1 (si pathologies/collaborateurs ont été créés) :</p>
+<ul style="margin:0;color:#bfe6e6;font-size:13px">
+<li><b>Pathologie principale</b> : sélecteur dans le référentiel /pathologies (préfixé du code : <code>[PERF]</code>, <code>[PPC]</code>, <code>[OXY]</code>...)</li>
+<li><b>Collaborateur référent</b> : sélecteur filtré automatiquement <b>par service sélectionné</b>. Si aucun collab du service → message d'info "⚠ Aucun collaborateur rattaché à ce service" avec lien vers /collaborateurs</li>
+</ul>
+</div>
+
+<h2>📡 Chargement parallèle enrichi</h2>
+
+<pre>// Tout en Promise.all + tryFetch défensif (pas de crash si table absente)
+const [etabs, bats, svcs, chs, collabs, paths, patientsActifs] = await Promise.all([
+  ...etablissements, bâtiments, services, chambres habituels,
+  // NOUVEAU :
+  tryFetch(supabase.from("v_collaborateurs")...),       // 0.59.0
+  tryFetch(supabase.from("pathologies").eq("actif", true)...),  // 0.58.99
+  tryFetch(supabase.from("patients").not("chambre_id", "is", null)),
+]);
+setChambresOccupees(new Set(patientsActifs.map(p => p.chambre_id)));</pre>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.1 - Creation patient enrichie + fix pathologies"
+git push origin main</pre>
+
+<p style="color:#bfe6e6;font-size:13px;margin-top:14px"><b>Prérequis</b> : pour profiter de tout, applique d'abord <code>migration-0.58.99-pathologies-protocoles.sql</code> et <code>migration-0.59.0-collaborateurs-roles.sql</code> (ou <code>fix-pharmacies-columns-0.59.1.sql</code> si problème). Sans ça, les sections Pathologie / Collaborateur restent simplement masquées.</p>
+
+<h2>🔜 À venir (0.59.2+)</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;color:#bfe6e6;font-size:13px;line-height:1.9">
+<li>Matériel installé dans chambre (TV, lit, sonnette...) avec recherche article</li>
+<li>Workflow d'entrée patient guidé en mode mobile (5 étapes)</li>
+<li>Réimpression QR automatique si patient change de chambre</li>
+<li>Dossier médical premium UI (antécédents, traitements, notes)</li>
+<li>Cascade pathologies du service (multi-select dans /etablissement/edition)</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.1 · 6 juin 2026 · 🏥 PATIENT ENRICHI</footer>
+</div></body></html>
