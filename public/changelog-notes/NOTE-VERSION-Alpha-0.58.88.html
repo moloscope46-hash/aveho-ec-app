@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.88 — HOTFIX BUILD</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a1a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20));border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f08a88;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#fdcecd;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdcecd}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:#e35d5b}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(227,93,91,.20);border-left:4px solid #e35d5b;border-radius:14px;padding:20px 24px;margin:14px 0}
+pre{background:#050a14;color:#e8edf2;padding:16px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #e35d5b}
+.diff-del{color:#f08a88;background:rgba(227,93,91,.10);padding:1px 4px;border-radius:3px}
+.diff-keep{color:#bfe6e6}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🚨 0.58.88 · HOTFIX BUILD</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩹 Fragment JSX orphelin dans /mobile/patient/new<small>Cassait le build Vercel avec "Unterminated regexp literal" — introduit en 0.58.85</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.88-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Hotfix urgent</span>
+  </div>
+</header>
+
+<h2>🐛 Le bug</h2>
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff;font-size:13.5px">Quand j'ai ajouté la section Affectation à l'étape 1 du wizard de création patient en 0.58.85, j'ai laissé une balise <code>&lt;/&gt;</code> de fermeture orpheline ligne 171. Le compilateur Next l'a interprété comme une regex et a balancé un <code>Unterminated regexp literal</code> au build.</p>
+</div>
+
+<h2>🔧 Le fix</h2>
+<pre><span class="diff-keep">          &lt;/Section&gt;</span>
+<span class="diff-del">          &lt;/&gt;            ← supprimée</span>
+<span class="diff-keep">        )}</span></pre>
+
+<h2>🔍 Sanity check</h2>
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">J'ai vérifié la cohérence des fragments JSX sur tous les fichiers récents :</p>
+<pre style="margin-top:10px">✓ app/etablissement/page.js     balanced (3/3)
+✓ app/stock/page.js             balanced (3/3)
+✓ app/vehicules/page.js         balanced (2/2)
+✓ app/mobile/cuve/remplissage/page.js  balanced (2/2)
+✓ app/components/CartDropdown.js        balanced (0/0)
+✓ app/components/DepotArticlesModal.js  balanced (0/0)
+✓ app/mobile/patient/new/page.js  balanced (2/2)</pre>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run build       # → doit passer maintenant
+git add -A
+git commit -m "0.58.88 - HOTFIX fragment JSX orphelin"
+git push origin main</pre>
+
+<p style="color:#bfe6e6;font-size:13px;margin-top:20px"><b>Aucun changement fonctionnel.</b> Les features 0.58.85→0.58.87 (véhicules, cuves, refonte stock, mobile remplissage, FAB tél, popup dépôt vocal 🎤, panier dropdown 🛒) restent identiques. Le build Vercel devrait passer au prochain push.</p>
+
+<footer>Aveho — Espace Collectivité · 0.58.88 · 6 juin 2026 · 🚨 HOTFIX</footer>
+</div></body></html>

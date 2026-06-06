@@ -168,7 +168,6 @@ export default function MobileNewPatientPage() {
               <input value={form.lieu_naissance} onChange={e => setForm({ ...form, lieu_naissance: e.target.value })} placeholder="Paris" style={inputStyle} />
             </Field>
           </Section>
-          </>
         )}
 
         {/* ÉTAPE 1bis dans étape 1 : Affectation */}

@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.88",
+    "kind": "hotfix",
+    "titre": "🚨 HOTFIX BUILD : fragment JSX orphelin dans /mobile/patient/new (introduit en 0.58.85)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Suppression du `</>` orphelin** ligne 171 de `app/mobile/patient/new/page.js` qui cassait le build Vercel avec `Error: Unterminated regexp literal`. Ce bug avait été introduit en 0.58.85 quand j'ai ajouté la section Affectation à l'étape 1 du wizard de création patient — j'avais oublié de retirer une balise de fermeture restée du fragment précédent",
+        "code_snippet": {
+          "file": "app/mobile/patient/new/page.js",
+          "note": "Avant / Après",
+          "lang": "diff",
+          "after": "  </Section>\n-  </>\n  )}"
+        }
+      },
+      { "code": "FIX", "txt": "🔍 **Sanity check fragments** : vérification de cohérence sur tous les fichiers récents (`/etablissement`, `/stock`, `/vehicules`, `/mobile/cuve/remplissage`, `CartDropdown`, `DepotArticlesModal`) — tous **balanced** (opens = closes). Plus de risque que ce bug se reproduise sur les autres pages ajoutées" },
+      { "code": "INFO", "txt": "💡 **Aucun changement fonctionnel** — c'est purement un hotfix de build. Toutes les features 0.58.85→0.58.87 (véhicules, cuves, refonte stock, mobile remplissage, FAB tél, popup dépôt vocal, panier dropdown) restent identiques" }
+    ],
+    "themes": ["hotfix", "build"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.88.html"
+  },
+  {
     "v": "0.58.87",
     "kind": "feat",
     "titre": "🛒 Mini-panier dropdown style Amazon + Popup articles dépôt avec recherche vocale 🎤",
