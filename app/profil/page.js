@@ -914,6 +914,28 @@ function ShortcutsConfigPanel() {
             </p>
           </div>
 
+          {/* 0.58.56 : option ouvrir en popup plein écran avec bouton retour */}
+          <div className="fld" style={{ marginBottom: 10, padding: 12, background: "linear-gradient(135deg, #f0fafa, #fff)", borderRadius: 10, border: "1px solid #d8e2ea" }}>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={!!shortcuts[editingIdx].openInPopup}
+                onChange={(e) => updateShortcut(editingIdx, { openInPopup: e.target.checked })}
+                style={{ marginTop: 2, cursor: "pointer", width: 18, height: 18, accentColor: "#7CC8C8" }}
+              />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#142131", marginBottom: 2 }}>
+                  <i className="ti ti-window-maximize" style={{ color: "#7CC8C8", marginRight: 4 }} />
+                  Ouvrir dans une popup plein écran
+                </div>
+                <p style={{ fontSize: 11.5, color: "#5a6878", margin: 0, lineHeight: 1.5 }}>
+                  Si activé, le raccourci s'ouvre dans une fenêtre superposée plein écran avec un bouton « ← Retour » pour revenir où tu étais — pratique pour des actions courtes (scan, panier).
+                  <br />Sinon (par défaut), le raccourci redirige vers la page comme un lien normal.
+                </p>
+              </div>
+            </label>
+          </div>
+
           {/* Couleurs */}
           <div style={{ marginBottom: 10 }}>
             <label style={{ fontSize: 11.5, fontWeight: 700, color: "#142131", textTransform: "uppercase", letterSpacing: 0.5, display: "block", marginBottom: 6 }}>

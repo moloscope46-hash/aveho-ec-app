@@ -1,0 +1,288 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.56</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #2a2440 0%, #0d1620 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.purple{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(122,111,176,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(42,42,64,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#7a6fb0)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO popup raccourci */
+.popup-demo{background:rgba(13,24,34,.92);border-radius:14px;padding:0;margin:14px 0;max-width:560px;box-shadow:0 24px 50px rgba(0,0,0,.40);overflow:hidden}
+.popup-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(135deg, #142131, #2a3850);color:#fff;border-bottom:1px solid rgba(124,200,200,.25)}
+.popup-back{background:rgba(124,200,200,.15);color:#7CC8C8;border:1px solid rgba(124,200,200,.35);padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
+.popup-title{flex:1;font-size:14px;font-weight:700;letter-spacing:.3px}
+.popup-fullscreen{background:transparent;color:#bfe6e6;border:1px solid rgba(124,200,200,.20);padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:600}
+.popup-body{height:180px;background:#fff;color:#142131;padding:24px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#5a6878}
+
+/* DEMO menu sections */
+.menu-demo{background:rgba(13,24,34,.7);border:1px solid rgba(124,200,200,.20);border-radius:14px;padding:14px;color:#fff;margin:14px 0;max-width:340px}
+.menu-sect{padding:10px 12px;border-radius:12px;margin-bottom:8px}
+.menu-sect.teal{background:rgba(124,200,200,.06)}
+.menu-sect.blue{background:rgba(24,95,165,.07)}
+.menu-sect.purple{background:rgba(122,111,176,.06)}
+.menu-sect.green{background:rgba(90,160,90,.06)}
+.menu-sect-title{font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;justify-content:space-between;cursor:pointer}
+.menu-sect-title .title-bar{display:inline-block;width:28px;height:2px;border-radius:1px}
+.menu-sect.teal .menu-sect-title{color:#7CC8C8}
+.menu-sect.teal .title-bar{background:#7CC8C8}
+.menu-sect.blue .menu-sect-title{color:#185FA5}
+.menu-sect.blue .title-bar{background:#185FA5}
+.menu-sect.purple .menu-sect-title{color:#7a6fb0}
+.menu-sect.purple .title-bar{background:#7a6fb0}
+.menu-sect.green .menu-sect-title{color:#5aa05a}
+.menu-sect.green .title-bar{background:#5aa05a}
+.menu-tiles{margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:11.5px;color:#bfe6e6}
+.menu-tile{background:rgba(255,255,255,.05);padding:6px 8px;border-radius:6px}
+
+/* DEMO tri collaborateurs */
+.partner-card{background:#fff;color:#142131;border-radius:10px;padding:12px;margin:6px 0;display:flex;align-items:center;gap:10px}
+.partner-card.collab{border-left:4px solid #185FA5;background:linear-gradient(90deg, #f0f7ff 0%, #fff 80%)}
+.partner-name{font-weight:700;font-size:13px;flex:1}
+.partner-badges{display:inline-flex;gap:4px;flex-wrap:wrap}
+.partner-b{padding:2px 6px;border-radius:6px;font-size:10px;font-weight:700}
+.partner-b.collab{background:linear-gradient(135deg,#185FA5,#7CC8C8);color:#fff}
+.partner-b.presc{background:#dbe7f5;color:#185FA5}
+
+/* DEMO share goal */
+.goal-card-demo{background:#f5f8fc;border-radius:10px;padding:12px;margin:8px 0;color:#142131}
+.goal-actions{display:flex;gap:6px;margin-top:8px;align-items:center;font-size:11px;color:#5a6878}
+.share-btn{background:rgba(124,200,200,.20);color:#185FA5;border:1px solid #7CC8C8;padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:.3px;display:inline-flex;align-items:center;gap:3px;font-size:11px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob purple"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.56</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.56 — Raccourcis popup + Menu sections colorées + Tri Collaborateurs + Partage objectifs<small>Coche popup par raccourci · 8 teintes sobres avec collapse · Collaborateurs en haut · Partage équipe live</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.56-alpha</code></span>
+    <span><b>Tests :</b> ~4815 verts</span>
+    <span><b>SQL :</b> aucun (utilise 0.58.55)</span>
+  </div>
+</header>
+
+<h2>🪟 1. Raccourcis : option popup plein écran</h2>
+
+<div class="panel">
+<p style="margin:0">Dans <code>/profil → Mes 3 raccourcis rapides → éditer</code>, nouvelle <b>coche</b> qui permet d'ouvrir le raccourci dans une <b>fenêtre superposée plein écran</b> avec bouton <i class="ti ti-arrow-left"></i> Retour, au lieu de naviguer normalement. Idéal pour les actions courtes (scan, panier) sans perdre le contexte.</p>
+</div>
+
+<div class="popup-demo">
+<div class="popup-header">
+<button class="popup-back">← Retour</button>
+<div class="popup-title">🪟 Scan</div>
+<button class="popup-fullscreen">↗ Ouvrir en plein écran</button>
+</div>
+<div class="popup-body">
+[ La page /scan/bulletin-situation s'affiche ici dans un iframe plein écran ]
+</div>
+</div>
+
+<pre>// 0.58.56 - app/FloatingActionBar.js
+const [popupUrl, setPopupUrl] = useState(null);
+
+function navigate(s) {
+  setOpen(false);
+  if (!s?.url) return;
+  if (s.openInPopup) {
+    // Ouvre overlay z-index 99999 avec iframe
+    setPopupLabel(s.label);
+    setPopupUrl(s.url);
+  } else {
+    router.push(s.url);  // navigation normale
+  }
+}
+
+// Overlay : header + iframe full-height
+{popupUrl && (
+  &lt;div style={{ position: 'fixed', inset: 0, zIndex: 99999 }}&gt;
+    &lt;button onClick={() =&gt; setPopupUrl(null)}&gt;← Retour&lt;/button&gt;
+    &lt;iframe src={popupUrl} /&gt;
+  &lt;/div&gt;
+)}</pre>
+
+<h2>📋 2. Menu déplié : sections colorées + collapse</h2>
+
+<div class="panel">
+<p style="margin:0">Refonte visuelle complète du menu de gauche. <b>8 teintes sobres par section</b> avec mini-barre accent colorée + titres en uppercase 800 letter-spacing 1.5px = bien plus lisible. <b>Sections collapsables</b> : clic sur le titre → toggle les tuiles, état persisté en localStorage.</p>
+</div>
+
+<div class="menu-demo">
+<div class="menu-sect teal">
+<div class="menu-sect-title">
+<span>Mon espace <span class="title-bar"></span></span>
+<i class="ti ti-chevron-up"></i>
+</div>
+<div class="menu-tiles">
+<div class="menu-tile">🏠 Accueil</div>
+<div class="menu-tile">📊 Vue globale</div>
+</div>
+</div>
+
+<div class="menu-sect blue">
+<div class="menu-sect-title">
+<span>Groupement <span class="title-bar"></span></span>
+<i class="ti ti-chevron-up"></i>
+</div>
+<div class="menu-tiles">
+<div class="menu-tile">🏢 Fiche groupement</div>
+<div class="menu-tile">🏥 Établissements</div>
+<div class="menu-tile">🏗 Bât/Services</div>
+<div class="menu-tile">👥 Équipes</div>
+</div>
+</div>
+
+<div class="menu-sect purple">
+<div class="menu-sect-title">
+<span>Mes partenaires <span class="title-bar"></span></span>
+<i class="ti ti-chevron-down" style="opacity:.6"></i>
+</div>
+</div>
+
+<div class="menu-sect green">
+<div class="menu-sect-title">
+<span>Scan <span class="title-bar"></span></span>
+<i class="ti ti-chevron-up"></i>
+</div>
+<div class="menu-tiles">
+<div class="menu-tile">📷 Bulletin</div>
+<div class="menu-tile">💊 Ordonnance</div>
+</div>
+</div>
+</div>
+
+<p style="font-size:12px;color:#9fb6c2;text-align:center">↑ Chaque section a sa propre teinte sobre. Clique sur le titre → toggle les tuiles. État sauvegardé entre sessions.</p>
+
+<h2>🏆 3. Tri des partenaires : Collaborateurs en premier</h2>
+
+<div class="panel">
+<p style="margin:0">Sur <code>/partenaires-rpps</code>, les <b>collaborateurs internes</b> (users avec compte Aveho + flag <code>est_collaborateur</code>) sont maintenant <b>toujours en haut</b> de la liste. Tri secondaire alpha sur le nom. Nouvelle <b>KPI tile dédiée</b> 'Collaborateurs internes'.</p>
+</div>
+
+<div class="partner-card collab">
+<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#185FA5,#7CC8C8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">CM</div>
+<div class="partner-name">Cédric Mignot</div>
+<div class="partner-badges">
+<span class="partner-b presc">PRESCRIPTEUR</span>
+<span class="partner-b collab"><i class="ti ti-user-check"></i> COLLABORATEUR</span>
+</div>
+</div>
+
+<div class="partner-card collab">
+<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#5aa05a,#4a8a4a);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">HL</div>
+<div class="partner-name">Hélène Lafaye</div>
+<div class="partner-badges">
+<span class="partner-b" style="background:#dff5e0;color:#2e6f33">INTERVENANT</span>
+<span class="partner-b collab"><i class="ti ti-user-check"></i> COLLABORATEUR</span>
+</div>
+</div>
+
+<div class="partner-card">
+<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#7a6fb0,#bfa9e0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">DM</div>
+<div class="partner-name">Dr. Marie Dupont (externe)</div>
+<div class="partner-badges">
+<span class="partner-b presc">PRESCRIPTEUR</span>
+</div>
+</div>
+
+<p style="font-size:12px;color:#9fb6c2">↑ Les collaborateurs (bordure bleue à gauche) sont automatiquement triés en haut. Les partenaires externes purs viennent ensuite.</p>
+
+<h2>☁️ 4. Partage objectifs équipe — front</h2>
+
+<div class="panel">
+<p style="margin:0">Le widget Objectifs supporte maintenant le <b>partage avec une équipe</b>. Bouton <i class="ti ti-share"></i> sur chaque objectif → si plusieurs équipes, prompt pour choisir laquelle. Une fois partagé, badge <i class="ti ti-users-group"></i> ÉQUIPE. Compatible avec la RLS étendue du SQL 0.58.55.</p>
+</div>
+
+<div class="goal-card-demo">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+<span style="font-weight:700;font-size:13px">✓ Visites clients ce mois</span>
+<span style="font-family:Consolas,monospace;font-size:11px">22 / 20 visites</span>
+</div>
+<div style="height:8px;background:#e3e9ee;border-radius:4px;overflow:hidden">
+<div style="width:100%;height:100%;background:linear-gradient(90deg,#5aa05a,#4a8a4a)"></div>
+</div>
+<div class="goal-actions">
+<button style="background:#7CC8C822;color:#185FA5;border:none;padding:2px 8px;border-radius:4px;font-weight:700">+1</button>
+<button style="background:#7CC8C822;color:#185FA5;border:none;padding:2px 8px;border-radius:4px;font-weight:700">+5</button>
+<button style="background:#cfd8e0;color:#5a6878;border:none;padding:2px 8px;border-radius:4px;font-weight:700">-1</button>
+<i class="ti ti-edit" style="color:#5a6878"></i>
+<span class="share-btn"><i class="ti ti-users-group"></i> ÉQUIPE</span>
+<i class="ti ti-trash" style="color:#c0392b;margin-left:auto"></i>
+</div>
+</div>
+
+<p style="font-size:12px;color:#9fb6c2">↑ Quand un objectif est partagé, badge teal "ÉQUIPE" visible. Re-clic = arrêter le partage.</p>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Raccourcis</b> : coche "Ouvrir en popup" + overlay iframe avec bouton retour</li>
+<li><b>Menu</b> : 8 teintes sobres par section + titres uppercase 800 + collapse persistant</li>
+<li><b>Partenaires</b> : tri Collaborateurs en haut + KPI dédiée</li>
+<li><b>Objectifs</b> : partage équipe avec choix multi-équipes + sync Supabase</li>
+<li><b>+30 tests</b> Vitest (~4815 verts estimés)</li>
+<li><b>Aucun SQL</b> nouveau — utilise les colonnes de la 0.58.55</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4815 verts attendus
+npm run build           # OK attendu
+
+# Aucun SQL nouveau (utilise team_id + shared + est_collaborateur de 0.58.55)
+# S'assurer que migration-0.58.55-team-goals-collaborateur.sql a bien été passée
+
+git add -A
+git commit -m "Alpha 0.58.56 - Raccourcis popup + Menu sections + Tri Collaborateurs + Partage objectifs équipe (front)"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.57+)</h2>
+<div class="panel">
+<ul>
+<li>Page dédiée Pharmacies (table séparée avec horaires + garde + FINESS)</li>
+<li>Drag&drop fields formulaire Crud (modal)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Vue des objectifs d'équipe partagés par les autres membres</li>
+<li>Sélection d'équipe dans un dropdown plus joli (vs prompt)</li>
+<li>Étendre filtre ctx à /transferts (nécessite batiment_id sur depots)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.56 · 6 juin 2026 · POPUP + MENU + TRI + TEAM GOALS ✨</footer>
+</div>
+
+</body></html>

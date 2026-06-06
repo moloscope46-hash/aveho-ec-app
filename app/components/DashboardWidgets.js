@@ -1756,6 +1756,9 @@ async function fetchGoalsFromSupabase(supabase, userId) {
       current: Number(r.current) || 0,
       unit: r.unit || "",
       colorId: r.color_id || "blue",
+      // 0.58.56 : partage équipe
+      shared: !!r.shared,
+      teamId: r.team_id || null,
     }));
   } catch {
     return null;
@@ -1782,6 +1785,9 @@ async function pushGoalsToSupabase(supabase, userId, goals) {
       unit: g.unit || null,
       color_id: g.colorId || "blue",
       position: idx,
+      // 0.58.56 : champs partage équipe
+      shared: !!g.shared,
+      team_id: g.teamId || null,
     }));
     const { error: insErr } = await supabase.from("user_goals").insert(rows);
     if (insErr) return false;
@@ -1907,10 +1913,85 @@ export function ObjectifsWidget() {
       target,
       unit: (unit || "").slice(0, 20),
       colorId: GOAL_COLORS[colorIdx].id,
+      // 0.58.56 : champs pour partage équipe (par défaut privé)
+      shared: false,
+      teamId: null,
     };
     const next = [...goals, newGoal];
     setGoals(next);
     saveAndSync(next);
+  }
+
+  // 0.58.56 : ouvrir le modal de partage équipe pour un objectif
+  async function toggleShareGoal(goalId) {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    if (goal.shared) {
+      // Désactiver le partage
+      const ok = await dialogs.confirm({
+        title: "Arrêter le partage",
+        message: `L'objectif "${goal.label}" ne sera plus visible par les membres de ton équipe.`,
+        okLabel: "Arrêter le partage",
+      });
+      if (!ok) return;
+      const next = goals.map(g => g.id === goalId ? { ...g, shared: false, teamId: null } : g);
+      setGoals(next);
+      saveAndSync(next);
+      return;
+    }
+    // Activer le partage : on charge les équipes auxquelles l'user appartient
+    try {
+      const { createClient } = await import("../../lib/supabase");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: memb, error } = await supabase
+        .from("membres_equipe")
+        .select("equipe_id, equipes(id, nom)")
+        .eq("user_id", user.id);
+      if (error || !memb || memb.length === 0) {
+        await dialogs.alert({
+          title: "Aucune équipe",
+          message: "Tu n'es membre d'aucune équipe pour le moment. Demande à un admin de t'ajouter dans une équipe pour pouvoir partager tes objectifs.",
+        });
+        return;
+      }
+      // Si une seule équipe → activer direct
+      if (memb.length === 1) {
+        const eq = memb[0].equipes;
+        const next = goals.map(g => g.id === goalId ? { ...g, shared: true, teamId: eq.id } : g);
+        setGoals(next);
+        saveAndSync(next);
+        await dialogs.alert({
+          title: "Objectif partagé",
+          message: `"${goal.label}" est maintenant visible par les membres de l'équipe "${eq.nom}".`,
+        });
+        return;
+      }
+      // Plusieurs équipes → on demande laquelle
+      const teamsList = memb.map((m, i) => `${i + 1}. ${m.equipes?.nom || "Équipe"}`).join("\n");
+      const choice = await dialogs.prompt({
+        title: "Choisir l'équipe",
+        message: `Avec quelle équipe veux-tu partager "${goal.label}" ?\n\n${teamsList}\n\nTape le numéro :`,
+        placeholder: "1",
+      });
+      const idx = parseInt(choice, 10) - 1;
+      if (isNaN(idx) || idx < 0 || idx >= memb.length) return;
+      const eq = memb[idx].equipes;
+      const next = goals.map(g => g.id === goalId ? { ...g, shared: true, teamId: eq.id } : g);
+      setGoals(next);
+      saveAndSync(next);
+      await dialogs.alert({
+        title: "Objectif partagé",
+        message: `"${goal.label}" est maintenant visible par les membres de l'équipe "${eq.nom}".`,
+      });
+    } catch (e) {
+      await dialogs.alert({
+        title: "Erreur",
+        message: "Impossible de charger les équipes : " + (e.message || ""),
+        variant: "danger",
+      });
+    }
   }
 
   async function setCurrent(goalId) {
@@ -2067,6 +2148,26 @@ export function ObjectifsWidget() {
                   <button onClick={() => setCurrent(g.id)} title="Modifier la valeur"
                     style={{ background: "transparent", color: "#5a6878", border: "none", padding: "2px 4px", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
                     <i className="ti ti-edit" />
+                  </button>
+                  {/* 0.58.56 : bouton partage équipe */}
+                  <button
+                    onClick={() => toggleShareGoal(g.id)}
+                    title={g.shared ? "Objectif partagé — cliquer pour arrêter le partage" : "Partager avec mon équipe"}
+                    style={{
+                      background: g.shared ? "rgba(124,200,200,.20)" : "transparent",
+                      color: g.shared ? "#185FA5" : "#7a98a8",
+                      border: g.shared ? "1px solid #7CC8C8" : "none",
+                      padding: "2px 6px",
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 2,
+                    }}>
+                    <i className={`ti ${g.shared ? "ti-users-group" : "ti-share"}`} />
+                    {g.shared && <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.3 }}>ÉQUIPE</span>}
                   </button>
                   <button onClick={() => deleteGoal(g.id)} title="Supprimer"
                     style={{ background: "transparent", color: "#c0392b", border: "none", padding: "2px 4px", fontSize: 11, cursor: "pointer", fontFamily: "inherit", marginLeft: "auto" }}>

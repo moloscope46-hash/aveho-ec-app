@@ -180,6 +180,17 @@ export default function TopBar({ cartCount = 0, auth }) {
   useEffect(() => { setMounted(true); }, []);
   // Alpha 0.48.0 : swipe-to-close gesture pour drawer mobile
   const [touchStart, setTouchStart] = useState(null);
+  // 0.58.56 : état de collapse par section du menu (sticky en localStorage)
+  const [collapsedSections, setCollapsedSections] = useState(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem("av-menu-collapsed-sections") || "{}");
+    } catch { return {}; }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem("av-menu-collapsed-sections", JSON.stringify(collapsedSections)); } catch {}
+  }, [collapsedSections]);
   const [touchDelta, setTouchDelta] = useState(0);
 
   function onTouchStart(e) {
@@ -324,32 +335,94 @@ export default function TopBar({ cartCount = 0, auth }) {
           <button className="menu-close" onClick={() => setOpen(false)} aria-label="Fermer"><i className="ti ti-x" /></button>
         </div>
         <div className="menu-scroll">
-          {MENU.map((sec) => (
-            <div className="menu-section" key={sec.section}>
-              <div className="menu-section-h">{sec.section}<span className="bar" /></div>
-              <div className="menu-tiles">
-                {sec.items.map((it) => {
-                  // 0.55.2 : cartCount vient de localStorage → guard mounted
-                  const cnt = mounted && it.count === "cart" ? cartCount : 0;
-                  // Alpha 0.53.0 (BO) : badge NEW si page récente non visitée
-                  // 0.55.1 : ne calcule qu'après mount (sinon mismatch hydratation)
-                  const showNew = mounted && isPageNew(it.p);
-                  return (
-                    <button key={it.p} className={`menu-tile${path === it.p ? " on" : ""}`} onClick={() => go(it.p)}>
-                      {cnt > 0 && <span className="mt-count teal">{cnt}</span>}
-                      {showNew && (
-                        <span className="mt-count" style={{ background: "#c0392b", color: "#fff", fontWeight: 700, fontSize: 9, letterSpacing: ".5px", padding: "1px 6px" }}>
-                          NEW
-                        </span>
-                      )}
-                      <span className="mt-ic" style={{ background: it.col + "22", color: it.col }}><i className={`ti ${it.ic}`} /></span>
-                      <span className="mt-lbl">{it.lbl}</span>
-                    </button>
-                  );
-                })}
+          {MENU.map((sec, secIdx) => {
+            // 0.58.56 : couleur sobre par section (rotation parmi 7 teintes)
+            const SECTION_HUES = [
+              { bg: "rgba(124,200,200,.06)", barCol: "#7CC8C8", txtCol: "#7CC8C8" }, // teal - Mon espace
+              { bg: "rgba(24,95,165,.07)",   barCol: "#185FA5", txtCol: "#185FA5" }, // bleu - Groupement
+              { bg: "rgba(122,111,176,.06)", barCol: "#7a6fb0", txtCol: "#7a6fb0" }, // violet - Mes partenaires
+              { bg: "rgba(90,160,90,.06)",   barCol: "#5aa05a", txtCol: "#5aa05a" }, // vert - Scan
+              { bg: "rgba(239,159,39,.06)",  barCol: "#EF9F27", txtCol: "#c97a2a" }, // ambre - Commande
+              { bg: "rgba(201,134,127,.06)", barCol: "#C9867F", txtCol: "#a04a2a" }, // terra - Livraison
+              { bg: "rgba(20,33,49,.06)",    barCol: "#142131", txtCol: "#142131" }, // navy - Administratif
+              { bg: "rgba(192,57,43,.05)",   barCol: "#c0392b", txtCol: "#c0392b" }, // rouge - Admin
+            ];
+            const hue = SECTION_HUES[secIdx % SECTION_HUES.length];
+            const isCollapsed = collapsedSections[sec.section];
+            return (
+              <div
+                className={`menu-section${isCollapsed ? " collapsed" : ""}`}
+                key={sec.section}
+                style={{
+                  background: hue.bg,
+                  borderRadius: 12,
+                  marginBottom: 8,
+                  padding: "8px 10px",
+                  transition: "background 200ms",
+                }}
+              >
+                {/* 0.58.56 : titre cliquable pour collapse + plus visible */}
+                <button
+                  className="menu-section-h"
+                  onClick={() => setCollapsedSections({ ...collapsedSections, [sec.section]: !isCollapsed })}
+                  style={{
+                    color: hue.txtCol,
+                    fontSize: 13,
+                    fontWeight: 800,
+                    letterSpacing: "1.5px",
+                    textTransform: "uppercase",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "6px 4px",
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 6,
+                    fontFamily: "inherit",
+                  }}
+                  aria-expanded={!isCollapsed}
+                >
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    {sec.section}
+                    <span style={{
+                      display: "inline-block",
+                      width: 28,
+                      height: 2,
+                      background: hue.barCol,
+                      borderRadius: 1,
+                      verticalAlign: "middle",
+                    }} />
+                  </span>
+                  <i className={`ti ti-chevron-${isCollapsed ? "down" : "up"}`} style={{ fontSize: 14, opacity: 0.6, transition: "transform 200ms" }} />
+                </button>
+                {!isCollapsed && (
+                  <div className="menu-tiles" style={{ marginTop: 4 }}>
+                    {sec.items.map((it) => {
+                      // 0.55.2 : cartCount vient de localStorage → guard mounted
+                      const cnt = mounted && it.count === "cart" ? cartCount : 0;
+                      // Alpha 0.53.0 (BO) : badge NEW si page récente non visitée
+                      // 0.55.1 : ne calcule qu'après mount (sinon mismatch hydratation)
+                      const showNew = mounted && isPageNew(it.p);
+                      return (
+                        <button key={it.p} className={`menu-tile${path === it.p ? " on" : ""}`} onClick={() => go(it.p)}>
+                          {cnt > 0 && <span className="mt-count teal">{cnt}</span>}
+                          {showNew && (
+                            <span className="mt-count" style={{ background: "#c0392b", color: "#fff", fontWeight: 700, fontSize: 9, letterSpacing: ".5px", padding: "1px 6px" }}>
+                              NEW
+                            </span>
+                          )}
+                          <span className="mt-ic" style={{ background: it.col + "22", color: it.col }}><i className={`ti ${it.ic}`} /></span>
+                          <span className="mt-lbl">{it.lbl}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </nav>
         </>,

@@ -6,6 +6,9 @@
 //   teal (plus d'icône hamburger). Les 3 raccourcis glissent vers la
 //   gauche en s'ouvrant.
 //
+//  0.58.56 : option openInPopup par raccourci — ouvre l'URL dans
+//   un iframe plein écran avec bouton retour, sans naviguer la page.
+//
 //  0.56.17 historique : guard hydration (mounted state) pour éviter
 //  les hydration mismatch React #418/#423 entre SSR/CSR (conservé).
 // =============================================================
@@ -20,6 +23,9 @@ export default function FloatingActionBar() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [shortcuts, setShortcuts] = useState(DEFAULT_SHORTCUTS);
+  // 0.58.56 : URL ouverte en popup (null = pas de popup)
+  const [popupUrl, setPopupUrl] = useState(null);
+  const [popupLabel, setPopupLabel] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -49,9 +55,18 @@ export default function FloatingActionBar() {
 
   if (isHidden || !mounted) return null;
 
-  function navigate(url) {
+  // 0.58.56 : navigate adapté au mode popup
+  function navigate(s) {
     setOpen(false);
-    if (url) router.push(url);
+    if (!s?.url) return;
+    if (s.openInPopup) {
+      // Mode popup : ouvre une overlay plein écran avec iframe
+      setPopupLabel(s.label || "");
+      setPopupUrl(s.url);
+    } else {
+      // Mode classique : navigation normale
+      router.push(s.url);
+    }
   }
 
   return (
@@ -138,7 +153,7 @@ export default function FloatingActionBar() {
         {shortcuts.map((s, idx) => (
           <button
             key={s.id || idx}
-            onClick={() => navigate(s.url)}
+            onClick={() => navigate(s)}
             aria-label={s.label}
             title={s.label}
             style={{
@@ -219,6 +234,89 @@ export default function FloatingActionBar() {
           }
         }
       `}</style>
+
+      {/* 0.58.56 : overlay popup plein écran pour les raccourcis avec openInPopup */}
+      {popupUrl && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 99999,
+          background: "rgba(13, 24, 34, 0.92)",
+          backdropFilter: "blur(4px)",
+          display: "flex",
+          flexDirection: "column",
+          animation: "av-popup-fade-in 200ms ease-out",
+        }}>
+          {/* Header avec bouton retour */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "12px 16px",
+            background: "linear-gradient(135deg, #142131, #2a3850)",
+            borderBottom: "1px solid rgba(124,200,200,.25)",
+            boxShadow: "0 4px 12px rgba(0,0,0,.30)",
+          }}>
+            <button
+              onClick={() => { setPopupUrl(null); setPopupLabel(""); }}
+              style={{
+                background: "rgba(124,200,200,.15)",
+                color: "#7CC8C8",
+                border: "1px solid rgba(124,200,200,.35)",
+                padding: "8px 14px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <i className="ti ti-arrow-left" /> Retour
+            </button>
+            <div style={{ flex: 1, color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: 0.3 }}>
+              <i className="ti ti-window-maximize" style={{ marginRight: 6, color: "#7CC8C8" }} />
+              {popupLabel || "Raccourci"}
+            </div>
+            <button
+              onClick={() => { setPopupUrl(null); setPopupLabel(""); router.push(popupUrl); }}
+              style={{
+                background: "transparent",
+                color: "#bfe6e6",
+                border: "1px solid rgba(124,200,200,.20)",
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 11.5,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              title="Ouvrir cette page dans le navigateur (mode normal)"
+            >
+              <i className="ti ti-external-link" /> Ouvrir en plein écran
+            </button>
+          </div>
+          {/* iframe plein écran */}
+          <iframe
+            src={popupUrl}
+            title={popupLabel || "Raccourci"}
+            style={{
+              flex: 1,
+              width: "100%",
+              border: "none",
+              background: "#fff",
+            }}
+          />
+          <style jsx global>{`
+            @keyframes av-popup-fade-in {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
     </>
   );
 }

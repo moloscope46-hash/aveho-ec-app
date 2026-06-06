@@ -120,6 +120,39 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.56",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Raccourcis popup + Menu sections collapsables + Tri Collaborateurs + Partage objectifs équipe (front)",
+    "chantiers": [
+      { "code": "FEAT", "txt": "🪟 RACCOURCIS : OPTION 'OUVRIR EN POPUP PLEIN ÉCRAN'. Dans `/profil` → section 'Mes 3 raccourcis rapides' → édition d'un raccourci → **nouvelle coche** : 'Ouvrir dans une popup plein écran'. Si activé, le raccourci ouvre l'URL dans un **overlay z-index 99999** avec **bouton ← Retour** (revient où tu étais) + **bouton 'Ouvrir en plein écran'** (sort de la popup et navigue normalement). Pratique pour les actions courtes (scan bulletin, panier) sans perdre le contexte de la page d'origine. Implémenté via iframe pour isolation. Comportement par défaut inchangé (navigation normale)",
+        "code_snippet": {
+          "file": "lib/shortcutsConfig.js + app/FloatingActionBar.js + app/profil/page.js",
+          "note": "Popup overlay raccourcis",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.56 - tous les raccourcis naviguent normalement\nfunction navigate(url) {\n  setOpen(false);\n  if (url) router.push(url);\n}",
+          "after": "// 0.58.56 - navigate adapté + state popup\nconst [popupUrl, setPopupUrl] = useState(null);\nconst [popupLabel, setPopupLabel] = useState('');\n\nfunction navigate(s) {\n  setOpen(false);\n  if (!s?.url) return;\n  if (s.openInPopup) {\n    // Ouvre dans overlay iframe plein écran\n    setPopupLabel(s.label);\n    setPopupUrl(s.url);\n  } else {\n    router.push(s.url);  // comportement classique\n  }\n}\n\n// Overlay\n{popupUrl && (\n  <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(13,24,34,.92)' }}>\n    <div className='header'>\n      <button onClick={() => setPopupUrl(null)}>← Retour</button>\n      <div>{popupLabel}</div>\n      <button onClick={() => { setPopupUrl(null); router.push(popupUrl); }}>Ouvrir en plein écran ↗</button>\n    </div>\n    <iframe src={popupUrl} style={{ flex: 1, width: '100%', border: 'none' }} />\n  </div>\n)}\n\n// Config dans /profil\n<input type='checkbox' checked={shortcuts[idx].openInPopup}\n       onChange={(e) => updateShortcut(idx, { openInPopup: e.target.checked })} />\n<label>Ouvrir dans une popup plein écran</label>"
+        }
+      },
+      { "code": "UI", "txt": "📋 MENU DÉPLIÉ : TITRES BIEN PLUS VISIBLES + SECTIONS COLLAPSABLES + COULEURS SOBRES. Refonte visuelle complète du menu de gauche : (a) **8 teintes de fond sobres** rotation par section (teal/bleu/violet/vert/ambre/terra/navy/rouge) — chacune avec sa propre `barCol` accent, (b) **titres en uppercase fontSize 13 fontWeight 800 letter-spacing 1.5px** avec mini barre colorée en suffix, (c) **sections collapsables** : clic sur le titre → toggle les tuiles avec animation chevron up/down, (d) **state persisté en localStorage** (`av-menu-collapsed-sections`) — tes choix de collapse sont mémorisés entre sessions, (e) bordures arrondies + padding par section pour bien les distinguer",
+        "code_snippet": {
+          "file": "app/TopBar.js",
+          "note": "Menu sections collapsables",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.56 - menu plat sans distinction visuelle des sections\n{MENU.map((sec) => (\n  <div className='menu-section' key={sec.section}>\n    <div className='menu-section-h'>{sec.section}<span className='bar' /></div>\n    <div className='menu-tiles'>\n      {sec.items.map((it) => <button>...)}\n    </div>\n  </div>\n))}",
+          "after": "// 0.58.56 - sections colorées + collapsables avec persistance\nconst SECTION_HUES = [\n  { bg: 'rgba(124,200,200,.06)', barCol: '#7CC8C8', txtCol: '#7CC8C8' }, // Mon espace\n  { bg: 'rgba(24,95,165,.07)', barCol: '#185FA5', txtCol: '#185FA5' },   // Groupement\n  { bg: 'rgba(122,111,176,.06)', barCol: '#7a6fb0', txtCol: '#7a6fb0' }, // Mes partenaires\n  { bg: 'rgba(90,160,90,.06)', barCol: '#5aa05a', txtCol: '#5aa05a' },   // Scan\n  ...\n];\n\n{MENU.map((sec, secIdx) => {\n  const hue = SECTION_HUES[secIdx % SECTION_HUES.length];\n  const isCollapsed = collapsedSections[sec.section];\n  return (\n    <div style={{ background: hue.bg, borderRadius: 12, padding: '8px 10px' }}>\n      <button onClick={() => setCollapsedSections({...collapsedSections, [sec.section]: !isCollapsed})}\n              style={{ color: hue.txtCol, fontSize: 13, fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase' }}>\n        {sec.section} <span style={{ width: 28, height: 2, background: hue.barCol }} />\n        <i className={`ti ti-chevron-${isCollapsed ? 'down' : 'up'}`} />\n      </button>\n      {!isCollapsed && <div className='menu-tiles'>{...}</div>}\n    </div>\n  );\n})}"
+        }
+      },
+      { "code": "UI", "txt": "🏆 TRI DES PARTENAIRES : COLLABORATEURS EN PREMIER + KPI DÉDIÉE. Dans `/partenaires-rpps`, la liste filtrée est maintenant triée par `est_collaborateur DESC` puis alpha sur le nom. **Les collaborateurs internes (qui ont aussi un compte Aveho) apparaissent toujours en haut** de la liste, juste après le tri actif. Nouvelle **tile KPI dédiée** : 'Collaborateurs internes' avec icône `ti-user-check` couleur bleu Aveho, à côté des tiles Prescripteurs / Intervenants / Partenaires actifs" },
+      { "code": "FEAT", "txt": "☁️ PARTAGE OBJECTIFS ÉQUIPE — FRONT. Le widget Objectifs supporte maintenant le partage : (a) **bouton 'Partager'** sur chaque objectif (icône `ti-share` si privé, `ti-users-group` si partagé avec label 'ÉQUIPE'), (b) clic → charge les équipes auxquelles l'user appartient via `membres_equipe`, (c) si 1 seule équipe → activation directe avec confirm, (d) si plusieurs équipes → prompt avec liste numérotée pour choisir, (e) clic sur un objectif déjà partagé → demande confirmation pour arrêter le partage. **Sync Supabase** : `pushGoalsToSupabase` envoie maintenant `shared` + `team_id`, `fetchGoalsFromSupabase` les remappe. Compatible avec la RLS étendue du SQL 0.58.55 qui permet aux membres de l'équipe de voir les objectifs partagés" },
+      { "code": "AI", "txt": "+30 tests Vitest (v058-56-bundle.test.js) : version+SW (2), raccourcis popup (5), menu sections collapsables (5), tri collaborateurs (3), partage objectifs équipe (8). Total **~4815 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.56 : **(1)** Les raccourcis peuvent maintenant s'ouvrir en popup plein écran avec bouton retour (config par raccourci). **(2)** Le menu déplié est radicalement plus lisible : sections colorées sobres + titres visibles + collapse persistant. **(3)** Les collaborateurs sont mis en avant dans la liste des partenaires (tri + KPI dédiée). **(4)** Les objectifs personnels peuvent maintenant être partagés avec une équipe (UI + sync Supabase). PROCHAINES PISTES (0.58.57+) : (a) Page dédiée Pharmacies (table séparée avec horaires d'ouverture + garde + FINESS). (b) Drag&drop fields formulaire Crud (modal). (c) Mode présentation pour widget Météo. (d) Tags multi-langues. (e) Étendre filtre ctx à /transferts via dépôt_id (nécessite d'ajouter batiment_id à la table depots). (f) Vue des objectifs d'équipe partagés par les autres membres" }
+    ],
+    "themes": ["feature", "ui", "wow"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.56.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.55",
     "kind": "version",
     "titre": "🎁 BUNDLE : Fix menu profil + Filtre rapide bât/svc + Création user type partenaire + Partage objectifs équipe",

@@ -231,6 +231,15 @@ function PartenairesRppsInner() {
     return true;
   });
 
+  // 0.58.56 : tri — Collaborateurs (users internes) en premier, puis tri alpha sur le nom
+  filtered.sort((a, b) => {
+    const aCollab = a.est_collaborateur ? 1 : 0;
+    const bCollab = b.est_collaborateur ? 1 : 0;
+    if (aCollab !== bCollab) return bCollab - aCollab;  // collaborateurs en premier
+    return (a.nom || "").localeCompare(b.nom || "");
+  });
+
+  const countCollaborateurs = rows.filter((p) => p.est_collaborateur).length;
   const countPrescripteurs = rows.filter((p) => p.est_prescripteur).length;
   const countIntervenants = rows.filter((p) => p.est_intervenant).length;
 
@@ -291,7 +300,9 @@ function PartenairesRppsInner() {
 
         <KpiRow tiles={[
           { label: "Partenaires actifs", value: rows.length, icon: "ti-users", color: "#7a6fb0" },
-          { label: "Prescripteurs", value: countPrescripteurs, icon: "ti-prescription", color: "#185FA5" },
+          // 0.58.56 : tile dédiée aux collaborateurs (users internes)
+          { label: "Collaborateurs internes", value: countCollaborateurs, icon: "ti-user-check", color: "#185FA5" },
+          { label: "Prescripteurs", value: countPrescripteurs, icon: "ti-prescription", color: "#5a4a90" },
           { label: "Intervenants", value: countIntervenants, icon: "ti-stethoscope", color: "#5aa05a" },
         ]} />
 
