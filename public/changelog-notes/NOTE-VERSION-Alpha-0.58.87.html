@@ -1,0 +1,202 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.87 — Mini-panier + Popup dépôt vocal</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #3a1a3a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.45}
+.bg-blob.r{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.55) 0%,transparent 70%)}
+.bg-blob.t{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.50) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20));backdrop-filter:blur(28px);border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f08a88;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13.5px;font-weight:500;color:#fdcecd;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdcecd}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.feat{border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.12),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+
+/* Dropdown panier mock */
+.cart-mock{background:#fff;color:#142131;border-radius:14px;box-shadow:0 16px 50px rgba(20,33,49,.30);width:380px;margin:20px auto;border:1px solid #e3e9ee;overflow:hidden}
+.cart-h{padding:14px 18px;border-bottom:1px solid #e3e9ee;background:linear-gradient(135deg,rgba(124,200,200,.08),rgba(20,33,49,.03));display:flex;align-items:center;gap:10px}
+.cart-i{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #f0f3f6}
+.cart-ic{width:48px;height:48px;background:#f7fafa;border:1px solid #e3e9ee;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#7CC8C8;font-size:22px}
+.cart-f{padding:14px;border-top:1px solid #e3e9ee;background:#fafbfc}
+.cta{background:linear-gradient(135deg,#e35d5b,#c0494a);color:#fff;padding:11px;border-radius:10px;font-weight:700;font-size:13.5px;text-align:center;box-shadow:0 4px 12px rgba(227,93,91,.30)}
+
+/* Mic animation */
+.mic{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#e35d5b,#c0494a);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:20px;animation:mic-pulse 1s ease-in-out infinite;box-shadow:0 0 0 6px rgba(227,93,91,.18)}
+@keyframes mic-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 6px rgba(227,93,91,.18)}50%{transform:scale(1.05);box-shadow:0 0 0 12px rgba(227,93,91,.10)}}
+
+/* Modal dépôt mock */
+.modal-mock{background:#fff;color:#142131;border-radius:18px;max-width:680px;margin:14px auto;border:1px solid #e3e9ee;overflow:hidden}
+.search-bar{padding:14px 20px;border-bottom:1px solid #e3e9ee;display:flex;gap:8px;align-items:center}
+.search-in{flex:1;padding:10px 12px 10px 36px;background:#fafbfc;border:1px solid #cfd8e0;border-radius:10px;font-size:13.5px}
+
+/* Article row */
+.art{background:#fff;border:1px solid #e3e9ee;border-left:3px solid #5aa05a;border-radius:10px;padding:12px 14px;margin:8px 20px;display:flex;gap:12px}
+.add-btn{background:linear-gradient(135deg,#5aa05a,#4a8a4a);color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;align-self:flex-start;box-shadow:0 2px 6px rgba(90,160,90,.30)}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob r"></div><div class="bg-blob t"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#f08a88"></span>0.58.87 · PANIER DROPDOWN + DEPOT VOCAL</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🛒 Mini-panier dropdown style Amazon + Popup articles dépôt avec recherche vocale 🎤<small>Click sur le panier en haut = dropdown · Click sur tuile dépôt = popup articles + matériels + recherche vocale + ajout panier</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.87-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Feature UX</span>
+  </div>
+</header>
+
+<h2>🛍 Le mini-panier dropdown</h2>
+
+<p style="color:#bfe6e6;font-size:13px">Avant : click sur l'icône 🛒 → redirection directe vers <code>/panier</code>. Maintenant : <b>click → dropdown style Amazon</b> qui affiche un aperçu sans quitter la page.</p>
+
+<div class="cart-mock">
+  <div class="cart-h">
+    <i class="ti ti-shopping-cart" style="font-size:22px;color:#e35d5b"></i>
+    <div style="flex:1">
+      <div style="font-size:15px;font-weight:700">Mon panier</div>
+      <div style="font-size:11px;color:#5a6878">3 articles · 142.50 € HT</div>
+    </div>
+    <span style="background:rgba(20,33,49,.04);border:1px solid #e3e9ee;width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center">✕</span>
+  </div>
+  <div class="cart-i">
+    <div class="cart-ic"><i class="ti ti-package"></i></div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700">Lit médicalisé 2 moteurs</div>
+      <div style="font-size:10.5px;color:#5a6878"><i class="ti ti-building-warehouse"></i> Dépôt principal</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
+        <span style="background:#fff;border:1px solid #cfd8e0;width:22px;height:22px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:13;font-weight:700">−</span>
+        <span style="font-family:Consolas,monospace;font-weight:700;font-size:12">1</span>
+        <span style="background:#fff;border:1px solid #cfd8e0;width:22px;height:22px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:13;font-weight:700">+</span>
+        <span style="flex:1"></span>
+        <span style="font-size:12.5px;font-weight:700;color:#5aa05a">85.00 €</span>
+        <span style="background:rgba(227,93,91,.10);color:#e35d5b;width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11">🗑</span>
+      </div>
+    </div>
+  </div>
+  <div class="cart-i">
+    <div class="cart-ic"><i class="ti ti-flame" style="color:#EF9F27"></i></div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700">Concentrateur oxygène 5L</div>
+      <div style="font-size:10.5px;color:#5a6878"><i class="ti ti-building-warehouse"></i> Dépôt principal</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:5px">
+        <span style="font-family:Consolas,monospace;font-weight:700;font-size:12;margin-left:50px">2</span>
+        <span style="flex:1"></span>
+        <span style="font-size:12.5px;font-weight:700;color:#5aa05a">57.50 €</span>
+      </div>
+    </div>
+  </div>
+  <div class="cart-f">
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><span style="color:#5a6878">Sous-total HT</span><span style="font-weight:700;font-family:Consolas,monospace">142.50 €</span></div>
+    <div class="cta"><i class="ti ti-shopping-cart"></i> Voir mon panier · Commander</div>
+  </div>
+</div>
+
+<h2>📦 Popup articles du dépôt avec recherche vocale 🎤</h2>
+
+<p style="color:#bfe6e6;font-size:13px">Sur chaque card dépôt dans <code>/etablissement → onglet Dépôts</code> : nouveau bouton <b>"Voir les articles"</b> (couleur du dépôt).</p>
+
+<div class="modal-mock">
+  <div style="padding:18px 22px;background:linear-gradient(135deg,rgba(124,200,200,.22),rgba(124,200,200,.08));border-bottom:1px solid rgba(124,200,200,.33);display:flex;align-items:center;gap:12px">
+    <div style="width:46px;height:46px;background:rgba(124,200,200,.22);border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(124,200,200,.44)">
+      <i class="ti ti-building-warehouse" style="color:#7CC8C8;font-size:24px"></i>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:11px;color:#5a6878;text-transform:uppercase;letter-spacing:1px;font-weight:700"><i class="ti ti-package"></i> Articles du dépôt</div>
+      <div style="margin:2px 0 0;font-size:18px;font-weight:700">Dépôt Principal</div>
+      <div style="font-size:11.5px;color:#5a6878;margin-top:2px">42 matériels · <span style="color:#5aa05a;font-weight:600">35 disponibles</span> · 18 références</div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div style="position:relative;flex:1">
+      <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#8a98a8;font-size:16px"></i>
+      <input class="search-in" placeholder="Rechercher un article, n° série..." value="lit médicalisé" readonly/>
+    </div>
+    <span class="mic"><i class="ti ti-microphone"></i></span>
+  </div>
+  <div style="padding:8px 20px;background:rgba(227,93,91,.06);color:#e35d5b;font-size:12px;text-align:center;font-weight:600">
+    🎤 Parle maintenant... (français)
+  </div>
+
+  <div class="art">
+    <div style="width:52px;height:52px;background:#f7fafa;border:1px solid #e3e9ee;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#7CC8C8"><i class="ti ti-package" style="font-size:24px"></i></div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700">Lit médicalisé 2 moteurs</div>
+      <div style="font-size:10.5px;color:#8a98a8;font-family:Consolas,monospace">ART-LIT-2M</div>
+      <div style="font-size:11px;color:#5a6878;margin-top:2px"><b style="color:#5aa05a">3</b> dispo sur <b>5</b> · <span style="color:#5aa05a;font-weight:600">85.00 € HT</span></div>
+    </div>
+    <span class="add-btn"><i class="ti ti-shopping-cart-plus"></i> Ajouter</span>
+  </div>
+
+  <div class="art" style="border-left-color:#EF9F27">
+    <div style="width:52px;height:52px;background:#f7fafa;border:1px solid #e3e9ee;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#EF9F27"><i class="ti ti-flame" style="font-size:24px"></i></div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:700">Concentrateur oxygène 5L</div>
+      <div style="font-size:10.5px;color:#8a98a8;font-family:Consolas,monospace">ART-OXY-5L</div>
+      <div style="font-size:11px;color:#5a6878;margin-top:2px"><b style="color:#5aa05a">2</b> dispo sur <b>3</b> · <span style="color:#5aa05a;font-weight:600">28.75 € HT</span> · <span style="color:#e35d5b;font-weight:600">⚠ Stock min atteint</span></div>
+    </div>
+    <span class="add-btn"><i class="ti ti-shopping-cart-plus"></i> Ajouter</span>
+  </div>
+</div>
+
+<h2>🔍 Recherche cross-matériels</h2>
+
+<div class="panel feat">
+<p style="margin:0;font-size:13px;color:#fff">La recherche scanne à la fois :</p>
+<ul style="color:#bfe6e6;font-size:12.5px;margin:8px 0 0">
+  <li>Le libellé et le code de l'<b>article</b></li>
+  <li>Les <b>n° série</b>, <b>n° parc</b>, <b>n° lot</b> et libellé de chaque <b>matériel</b> associé</li>
+</ul>
+<p style="margin:10px 0 0;font-size:13px;color:#fff">Cherche <code>AB-1234</code> → matche l'article qui contient un matériel avec ce numéro de série. Ouvre le `&lt;details&gt;` "Voir les matériels associés" pour voir les détails avec badges d'état colorés.</p>
+</div>
+
+<h2>🎤 Web Speech API</h2>
+
+<div class="panel feat">
+<p style="margin:0 0 8px;color:#fff;font-size:13px">Bouton micro qui utilise <code>window.SpeechRecognition</code> :</p>
+<ul style="color:#bfe6e6;font-size:12.5px;margin:0">
+  <li>Langue : <b>fr-FR</b></li>
+  <li>Mode : single shot (continuous false)</li>
+  <li>Animation pulse rouge quand en écoute</li>
+  <li>Bouton se transforme en stop (📴) pendant l'écoute</li>
+  <li>Si non supporté (Firefox) → bouton caché + message en footer</li>
+</ul>
+</div>
+
+<h2>🔗 Sync localStorage</h2>
+
+<div class="panel feat">
+<p style="margin:0;color:#fff;font-size:13px"><code>useCart</code> écoute désormais les events <code>av-cart-change</code> (custom) et <code>storage</code> (cross-tab). Quand tu ajoutes un article depuis la popup dépôt, le badge <b>tb-badge</b> rouge de l'icône panier s'incrémente <b>instantanément</b> sans recharger la page.</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+git add -A
+git commit -m "0.58.87 - Panier dropdown + Depot articles vocal"
+git push origin main</pre>
+
+<p style="font-size:13px;color:#bfe6e6;line-height:1.7">
+<b>Pas de SQL</b> — utilise les tables existantes (articles, materiels, depots). Pour tester la recherche vocale, ouvre sur <b>Chrome/Edge/Safari</b> (pas Firefox). Tu peux dire "lit médicalisé", "oxygène concentrateur", "AB 1234", etc.
+</p>
+
+<footer>Aveho — Espace Collectivité · 0.58.87 · 6 juin 2026 · 🛒 CART DROPDOWN + 🎤 VOICE SEARCH</footer>
+</div></body></html>

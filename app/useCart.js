@@ -7,12 +7,29 @@ export function useCart() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    try { setItems(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { setItems([]); }
+    function reload() {
+      try { setItems(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { setItems([]); }
+    }
+    reload();
+    // 0.58.87 : écoute les modifications du panier depuis d'autres composants
+    function onCartChange() { reload(); }
+    if (typeof window !== "undefined") {
+      window.addEventListener("av-cart-change", onCartChange);
+      window.addEventListener("storage", onCartChange);
+      return () => {
+        window.removeEventListener("av-cart-change", onCartChange);
+        window.removeEventListener("storage", onCartChange);
+      };
+    }
   }, []);
 
   const persist = useCallback((next) => {
     setItems(next);
-    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
+    try {
+      localStorage.setItem(KEY, JSON.stringify(next));
+      // 0.58.87 : notifie les autres composants (CartDropdown, badge TopBar)
+      if (typeof window !== "undefined") window.dispatchEvent(new Event("av-cart-change"));
+    } catch {}
   }, []);
 
   const add = useCallback((promo) => {
@@ -21,7 +38,10 @@ export function useCart() {
       const next = exist
         ? cur.map((i) => i.id === promo.id ? { ...i, qte: i.qte + 1 } : i)
         : [...cur, { id: promo.id, titre: promo.titre, prix: promo.prix_apres, unite: promo.unite, magasin_id: promo.magasin_id, qte: 1 }];
-      try { localStorage.setItem(KEY, JSON.stringify(next)); } catch {}
+      try {
+        localStorage.setItem(KEY, JSON.stringify(next));
+        if (typeof window !== "undefined") window.dispatchEvent(new Event("av-cart-change"));
+      } catch {}
       return next;
     });
   }, []);

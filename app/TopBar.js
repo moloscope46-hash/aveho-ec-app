@@ -7,7 +7,7 @@
 //  - Drawer mobile inchangé mais réorganisé
 //  Alpha 0.49.0 : + badge version cliquable dans le header
 // =============================================================
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import pkg from "../package.json";
@@ -21,6 +21,8 @@ import StatusIcons from "./StatusIcons";
 import Modal from "./components/Modal";
 // 0.58.35 : sélecteurs bâtiment + service dans la TopBar (desktop only)
 import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
+// 0.58.87 : mini-panier dropdown style Amazon
+import CartDropdown from "./components/CartDropdown";
 
 // 0.56.15 : réorganisation par 5 sections métier dans l'ordre du workflow :
 // 1. COLLECTIVITÉ (vue globale, hiérarchie, équipes, patients, matériel)
@@ -179,6 +181,9 @@ export default function TopBar({ cartCount = 0, auth }) {
   // (isPageNew lit localStorage → résultat différent serveur/client)
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  // 0.58.87 : mini-panier dropdown style Amazon
+  const [cartOpen, setCartOpen] = useState(false);
+  const cartBtnRef = useRef(null);
   // Alpha 0.48.0 : swipe-to-close gesture pour drawer mobile
   const [touchStart, setTouchStart] = useState(null);
   // 0.58.56 : état de collapse par section du menu (sticky en localStorage)
@@ -287,9 +292,12 @@ export default function TopBar({ cartCount = 0, auth }) {
         {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
         {mounted && auth && <NotifBell structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
-          <button className="tb-icon" onClick={() => router.push("/panier")} aria-label="Panier">
-            <i className="ti ti-shopping-cart" />{cartCount > 0 && <span className="tb-badge">{cartCount}</span>}
-          </button>
+          <div style={{ position: "relative" }}>
+            <button ref={cartBtnRef} className="tb-icon" onClick={() => setCartOpen(o => !o)} aria-label="Panier" aria-expanded={cartOpen}>
+              <i className="ti ti-shopping-cart" />{cartCount > 0 && <span className="tb-badge">{cartCount}</span>}
+            </button>
+            <CartDropdown open={cartOpen} onClose={() => setCartOpen(false)} anchorRef={cartBtnRef} />
+          </div>
         )}
         {/* 0.55.19 : icônes de statut (réseau, perm, bio…) */}
         {mounted && auth && <StatusIcons auth={auth} />}

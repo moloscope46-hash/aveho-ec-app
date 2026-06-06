@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.86 — Onglets Véhicules + Dépôts</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1a3a4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.b{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(24,95,165,.55) 0%,transparent 70%)}
+.bg-blob.r{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(227,93,91,.40) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(24,95,165,.20));backdrop-filter:blur(28px);border:1px solid rgba(124,200,200,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#e35d5b)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.feat{border-left:4px solid #185FA5;background:linear-gradient(135deg,rgba(24,95,165,.10),rgba(20,33,49,.6))}
+
+/* Onglets demo */
+.tabs-demo{display:flex;gap:4px;background:rgba(255,255,255,.04);padding:6px;border-radius:14px;border:1px solid rgba(255,255,255,.08);margin:14px 0}
+.tab{padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:#bfe6e6;cursor:pointer}
+.tab.on{background:#fff;color:var(--c);border-left:3px solid var(--c);box-shadow:0 4px 10px var(--c)22}
+
+/* Cards demo */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:14px 0}
+.card{background:#fff;color:#142131;border:1px solid var(--c)33;border-left:4px solid var(--c);border-radius:12px;padding:14px 16px}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.card-ic{width:38px;height:38px;background:var(--bg);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--c);font-size:20px}
+.card-t{font-size:14px;font-weight:700}
+.card-s{font-size:10.5px;color:#5a6878}
+.card-badge{background:var(--c)22;color:var(--c);padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;text-transform:uppercase}
+.card-meta{display:flex;gap:8px;font-size:11px;color:#5a6878;flex-wrap:wrap}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg"><div class="bg-blob b"></div><div class="bg-blob r"></div></div>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#7CC8C8"></span>0.58.86 · ETABLISSEMENT + VEHICULES</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🏥 Onglets Véhicules + Dépôts dans /etablissement<small>+ Page /vehicules CRUD complète · Modèle relationnel véhicule ↔ établissement · Dépôt mobile sur véhicule</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.86-alpha</code></span>
+    <span><b>SQL :</b> ✅ aucun (utilise 0.58.85)</span>
+    <span><b>Type :</b> Feature</span>
+  </div>
+</header>
+
+<h2>🎯 La page /etablissement avec 3 onglets</h2>
+
+<div class="tabs-demo">
+  <span class="tab" style="--c:#185FA5"><i class="ti ti-layout-grid"></i> Aperçu</span>
+  <span class="tab on" style="--c:#e35d5b"><i class="ti ti-ambulance"></i> Véhicules (4)</span>
+  <span class="tab" style="--c:#EF9F27"><i class="ti ti-building-warehouse"></i> Dépôts (12)</span>
+</div>
+
+<p style="color:#bfe6e6;font-size:13px;margin:0">L'onglet <b>Aperçu</b> garde tout l'existant (KPI tiles, plan/arbre, listes patients/matériel/DI). Les 2 nouveaux onglets affichent les véhicules et dépôts rattachés à l'établissement courant.</p>
+
+<h2>🚑 Onglet Véhicules — cards riches</h2>
+
+<div class="card-grid">
+  <div class="card" style="--c:#e35d5b;--bg:rgba(227,93,91,.18)">
+    <div class="card-h">
+      <div class="card-ic"><i class="ti ti-ambulance"></i></div>
+      <div style="flex:1"><div class="card-t">Ambulance Alpha</div><div class="card-s">Ambulance · <span style="font-family:Consolas,monospace">AB-123-CD</span></div></div>
+      <span class="card-badge" style="--c:#5aa05a">Disponible</span>
+    </div>
+    <div class="card-meta">
+      <span>Renault Master</span><span>🛣 45 234 km</span><span>👥 4 pers</span><span>🛏 2 bran.</span>
+    </div>
+  </div>
+  <div class="card" style="--c:#7CC8C8;--bg:rgba(124,200,200,.18)">
+    <div class="card-h">
+      <div class="card-ic"><i class="ti ti-car"></i></div>
+      <div style="flex:1"><div class="card-t">VSL Bravo</div><div class="card-s">VSL · <span style="font-family:Consolas,monospace">EF-456-GH</span></div></div>
+      <span class="card-badge" style="--c:#185FA5">En mission</span>
+    </div>
+    <div class="card-meta">
+      <span>Peugeot 5008</span><span>🛣 89 102 km</span><span>👥 6 pers</span>
+    </div>
+  </div>
+  <div class="card" style="--c:#EF9F27;--bg:rgba(239,159,39,.18)">
+    <div class="card-h">
+      <div class="card-ic"><i class="ti ti-cab"></i></div>
+      <div style="flex:1"><div class="card-t">Taxi Charlie</div><div class="card-s">Taxi · <span style="font-family:Consolas,monospace">IJ-789-KL</span></div></div>
+      <span class="card-badge" style="--c:#EF9F27">Maintenance</span>
+    </div>
+    <div class="card-meta">
+      <span>Citroën C5</span><span>🛣 120 450 km</span><span>👥 4 pers</span>
+    </div>
+    <div style="margin-top:8px;padding:4px 8px;background:rgba(239,159,39,.10);border:1px solid rgba(239,159,39,.30);border-radius:6px;font-size:10.5px;color:#d48820">
+      📅 Prochaine révision : 15/07/2026
+    </div>
+  </div>
+</div>
+
+<h2>🏪 Onglet Dépôts — avec rattachement véhicule</h2>
+
+<div class="card-grid">
+  <div class="card" style="--c:#7CC8C8;--bg:rgba(124,200,200,.18)">
+    <div class="card-h">
+      <div class="card-ic"><i class="ti ti-building-warehouse"></i></div>
+      <div style="flex:1"><div class="card-t">Réserve Principale</div><div class="card-s" style="font-family:Consolas,monospace">DEP-001</div></div>
+    </div>
+    <div class="card-meta"><span>🏷 Stock</span><span>📍 1er étage</span><span>👤 Jean Martin</span></div>
+    <div style="margin-top:6px;font-size:10.5px;color:#5a6878">📋 Dernier inventaire : 28/05/2026</div>
+  </div>
+  <div class="card" style="--c:#5aa05a;--bg:rgba(90,160,90,.18)">
+    <div class="card-h">
+      <div class="card-ic"><i class="ti ti-truck"></i></div>
+      <div style="flex:1"><div class="card-t">Dépôt mobile A1</div><div class="card-s" style="font-family:Consolas,monospace">DEP-MOB-A1</div></div>
+    </div>
+    <div class="card-meta"><span>🏷 Mobile</span><span>📍 Sur véhicule</span></div>
+    <div style="margin-top:8px;padding:5px 10px;background:rgba(227,93,91,.08);border:1px solid rgba(227,93,91,.20);border-radius:6px;font-size:11px">
+      <i class="ti ti-ambulance" style="color:#e35d5b"></i> <b>Dépôt mobile sur véhicule : Ambulance Alpha</b>
+    </div>
+  </div>
+</div>
+
+<h2>🔗 Modèle relationnel</h2>
+
+<div class="panel feat">
+  <p style="margin:0;color:#fff;font-size:13.5px">Le modèle gère 3 types de relations :</p>
+  <ul style="color:#bfe6e6;font-size:12.5px;margin:10px 0 0">
+    <li><b>Véhicule → Établissement</b> : <code>vehicules.etablissement_id</code> indique quel établissement possède le véhicule</li>
+    <li><b>Dépôt → Véhicule</b> : <code>depots.vehicule_id</code> (0.58.85) indique si un dépôt mobile est installé sur un véhicule</li>
+    <li><b>Dépôt → Établissement</b> : <code>depots.etablissement_id</code> (existant)</li>
+  </ul>
+  <p style="margin:10px 0 0;color:#fff;font-size:13px">Permet de modéliser : <i>"Une ambulance appartient à l'EHPAD X et embarque une réserve mobile Y"</i> → visible dans les 2 onglets de l'établissement avec liens croisés.</p>
+</div>
+
+<h2>🚛 Page /vehicules CRUD complète</h2>
+
+<div class="panel feat">
+  <p style="margin:0 0 8px;color:#fff;font-size:13px"><b>Modal de création/édition</b> avec champs :</p>
+  <ul style="color:#bfe6e6;font-size:12.5px;margin:0">
+    <li>Nom, couleur picker (intégré au card)</li>
+    <li>Type (Sanitaire / Ambulance / VSL / Taxi / Utilitaire / Autre)</li>
+    <li>Statut (Disponible / En mission / Maintenance / Hors service)</li>
+    <li>Établissement de rattachement</li>
+    <li>Immatriculation (auto-uppercase, mono) + N° agrément ARS</li>
+    <li>Marque, modèle, année</li>
+    <li>Capacités : personnes, brancards, kilométrage</li>
+    <li>Prochaine révision + Prochain CT</li>
+    <li>Notes</li>
+  </ul>
+  <p style="margin:10px 0 0;color:#fff;font-size:12.5px"><b>Consomme `?new=1&etablissement_id=X`</b> depuis l'onglet Véhicules : le modal s'ouvre directement pré-rempli avec l'établissement courant</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run test
+git add -A
+git commit -m "0.58.86 - Onglets vehicules+depots dans etablissement"
+git push origin main</pre>
+
+<p style="color:#bfe6e6;font-size:13px"><b>Pas de SQL</b> — utilise les tables et colonnes du 0.58.85 (vehicules, cuves_oxygene, depots.vehicule_id). Si tu n'as pas appliqué le SQL 0.58.85, fais-le maintenant sinon les onglets seront vides.</p>
+
+<footer>Aveho — Espace Collectivité · 0.58.86 · 6 juin 2026 · 🏥 ETABLISSEMENT MULTI-TABS</footer>
+</div></body></html>

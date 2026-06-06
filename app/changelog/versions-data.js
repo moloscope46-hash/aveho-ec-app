@@ -240,6 +240,52 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.87",
+    "kind": "feat",
+    "titre": "🛒 Mini-panier dropdown style Amazon + Popup articles dépôt avec recherche vocale 🎤",
+    "chantiers": [
+      { "code": "AI", "txt": "🛍 **CartDropdown** — l'icône panier de la TopBar ouvre maintenant un dropdown style Amazon (380×max60vh, position absolute coin haut-droite, animation slide-fade-in 0.18s). Affiche : header avec compteur articles + sous-total, liste scrollable des items (photo/icône, libellé, code, dépôt origine, contrôles +/− pour la quantité, prix par ligne, bouton trash), footer avec sous-total HT, bouton CTA rouge **'Voir mon panier · Commander'**, bouton ghost 'Continuer mes achats', bouton 'Vider'. Auto-close au click extérieur ou Escape. Empty state si panier vide" },
+      { "code": "AI", "txt": "📦 **DepotArticlesModal** — bouton 'Voir les articles' (couleur du dépôt) sur chaque card dépôt dans l'onglet Dépôts de /etablissement. Ouvre une popup full-screen 800×max90vh avec : header coloré nom dépôt + stats (X matériels · Y disponibles · Z références), <b>barre de recherche</b> avec placeholder dynamique, <b>bouton micro 🎤 pour recherche vocale (Web Speech API, langue fr-FR)</b> avec animation pulse rouge quand en écoute, liste cards articles avec photo/icône + libellé + code + ratio dispo/total + prix HT + warning stock min, <b>bouton 'Ajouter au panier' vert</b> (désactivé si 0 dispo), <b>détails matériels associés en `<details>`</b> avec N° série/parc/lot + badge état coloré",
+        "code_snippet": {
+          "file": "app/components/DepotArticlesModal.js",
+          "note": "Recherche vocale Web Speech API",
+          "lang": "javascript",
+          "after": "const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;\nif (!SpeechRecognition) { setVoiceSupported(false); return; }\nsetVoiceSupported(true);\nconst recognition = new SpeechRecognition();\nrecognition.lang = 'fr-FR';\nrecognition.continuous = false;\nrecognition.interimResults = false;\nrecognition.maxAlternatives = 1;\nrecognition.onresult = (e) => {\n  const transcript = e.results[0][0].transcript;\n  setSearch(transcript);\n  setVoiceListening(false);\n};\nrecognitionRef.current = recognition;"
+        }
+      },
+      { "code": "AI", "txt": "🔗 **Sync localStorage entre TopBar et autres composants** — `useCart` écoute désormais les events `av-cart-change` (custom) et `storage` (cross-tab). Le compteur badge dans la TopBar se met à jour instantanément quand on ajoute un article depuis la popup dépôt. Compatible avec les 2 formats d'item (legacy `{titre, prix}` et nouveau `{libelle, prix_vente_ht}`)" },
+      { "code": "AI", "txt": "🔁 **Recherche cross-matériels** dans le modal : la recherche scanne à la fois libellé/code de l'article ET les n° série/parc/lot/libellé des matériels associés. Cherche 'AB1234' → matche l'article qui contient un matériel avec ce numéro de série" },
+      { "code": "AI", "txt": "🎨 **Style Amazon** : le dropdown panier reproduit l'UX Amazon : positionnement relatif à l'icône, fermeture intelligente (click outside / Escape / bouton X), animation d'entrée, CTA contrasté, footer sticky avec subtotal" },
+      { "code": "INFO", "txt": "🎯 **Usage** : (1) Va dans /etablissement onglet Dépôts · (2) Clique 'Voir les articles' sur la tuile d'un dépôt · (3) Tape ou clique 🎤 pour la recherche vocale ('lit médicalisé', 'oxygène', 'AB-1234'...) · (4) Click '+ Ajouter' sur l'article voulu · (5) L'icône panier en haut clignote (badge incrémenté) · (6) Click panier → mini-dropdown s'ouvre · (7) Tu valides ou continues. Pas besoin de quitter la popup du dépôt entre chaque ajout" },
+      { "code": "INFO", "txt": "⚠ **Recherche vocale** nécessite Chrome/Edge/Safari récent (Web Speech API). Sur Firefox c'est pas supporté → le bouton micro est caché et un message s'affiche en footer" }
+    ],
+    "themes": ["feat", "ux", "panier", "depot", "voice"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.87.html"
+  },
+  {
+    "v": "0.58.86",
+    "kind": "feat",
+    "titre": "🏥 Onglets Véhicules + Dépôts dans /etablissement + Page /vehicules CRUD complète",
+    "chantiers": [
+      { "code": "AI", "txt": "🏬 **Refonte /etablissement avec 3 onglets** : <b>Aperçu</b> (l'existant : KPI tiles + plan/arbre + listes patients/matériel/DI), <b>Véhicules</b> (cards des véhicules rattachés à l'établissement, badge compteur dans l'onglet), <b>Dépôts</b> (cards des dépôts rattachés). Le badge dans chaque onglet montre le compteur en temps réel" },
+      { "code": "AI", "txt": "🚑 **Onglet Véhicules** dans /etablissement — cards riches avec icône colorée selon type (sanitaire bleu/ambulance rouge/VSL teal/taxi ambre/utilitaire vert), badge statut (Disponible vert / En mission bleu / Maintenance ambre / Hors service rouge), affichage marque/modèle, immatriculation en mono, kilométrage, capacités personnes+brancards, n° agrément ARS, **bandeau ambre 'Prochaine révision' si proche**. Bouton 'Nouveau véhicule' qui pré-remplit etablissement_id" },
+      { "code": "AI", "txt": "🏪 **Onglet Dépôts** dans /etablissement — cards par dépôt avec icône colorée custom (icone/couleur depuis depots), code en mono, type, adresse, responsable, badge inactif rouge si désactivé, **bandeau rouge 'Dépôt mobile sur véhicule [X]'** si dépôt mobile rattaché à un véhicule (via depots.vehicule_id), date dernier inventaire + compteur écarts. Bouton 'Nouveau dépôt' pré-rempli + bouton 'Voir tous les dépôts'" },
+      { "code": "AI", "txt": "🚛 **Nouvelle page `/vehicules`** — CRUD complet : liste cards par type/statut + modal Créer/Éditer avec tous les champs (nom, couleur picker, type dropdown, statut, **établissement de rattachement**, immatriculation auto-uppercase, n° agrément ARS, marque/modèle/année, capacités personnes+brancards, kilométrage, prochaine révision, prochain CT, notes). Consomme `?new=1&etablissement_id=X` pour ouverture automatique du modal pré-rempli depuis l'onglet Véhicules de l'établissement",
+        "code_snippet": {
+          "file": "app/vehicules/page.js",
+          "note": "Auto-open modal depuis lien établissement",
+          "lang": "javascript",
+          "after": "// Ouvrir modal new auto si ?new=1\nuseEffect(() => {\n  if (sp.get('new') === '1') {\n    setForm({\n      type: 'sanitaire', statut: 'disponible', couleur: '#185FA5', actif: true,\n      etablissement_id: sp.get('etablissement_id') || auth.etabId || '',\n    });\n    setModal('new');\n  }\n}, [sp, auth.etabId]);"
+        }
+      },
+      { "code": "INFO", "txt": "🔗 **Modèle relationnel** : véhicule → etablissement_id (qui établissement le possède) · dépôt → vehicule_id (si dépôt mobile installé sur véhicule) · dépôt → etablissement_id. Permet de modéliser : ambulance de l'EHPAD X avec sa réserve embarquée Y" }
+    ],
+    "themes": ["feat", "vehicules", "etablissement"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.86.html"
+  },
+  {
     "v": "0.58.85",
     "kind": "feat",
     "titre": "🚛 Véhicules sanitaires + Cuves O₂ + Refonte /stock avec onglets + Mobile remplissage cuve + Fix services/etages",

@@ -10,6 +10,8 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { flatten, computeRows, kpisFromRows } from "./lib";
 import { logger } from "../../lib/logger";
+// 0.58.87 : popup articles dépôt avec recherche vocale + ajout panier
+import DepotArticlesModal from "../components/DepotArticlesModal";
 
 export default function Etablissement() {
   const supabase = createClient();
@@ -25,6 +27,31 @@ export default function Etablissement() {
   const [view, setView] = useState("plan");
   const [list, setList] = useState("patients");
   const [st, setSt] = useState({ bat: "", etage: "", service: "", chambre: "", patient: "", materiel: "" });
+  // 0.58.86 : onglets sur la page établissement
+  const [tab, setTab] = useState("apercu");
+  const [vehs, setVehs] = useState([]);
+  const [depots, setDepots] = useState([]);
+  // 0.58.87 : modal articles du dépôt
+  const [depotModal, setDepotModal] = useState(null);
+
+  // 0.58.86 : chargement véhicules + dépôts au mount
+  useEffect(() => {
+    if (!auth.ready || !auth.etabId) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const [v, d] = await Promise.all([
+          supabase.from("vehicules").select("*").eq("etablissement_id", auth.etabId).order("nom").then(r => r).catch(() => ({ data: [] })),
+          supabase.from("depots").select("*").eq("etablissement_id", auth.etabId).order("nom").then(r => r).catch(() => ({ data: [] })),
+        ]);
+        if (mounted) {
+          setVehs(v.data || []);
+          setDepots(d.data || []);
+        }
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, [auth.ready, auth.etabId]);
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -118,6 +145,33 @@ export default function Etablissement() {
               ))}
             </div>
 
+            {/* 0.58.86 : Onglets */}
+            <div style={{ display: "flex", gap: 4, marginTop: 18, marginBottom: 8, flexWrap: "wrap", background: "rgba(20,33,49,.04)", padding: 6, borderRadius: 14, border: "1px solid #e3e9ee" }}>
+              {[
+                { k: "apercu",    lbl: "Aperçu",   ic: "ti-layout-grid", c: "#185FA5" },
+                { k: "vehicules", lbl: `Véhicules (${vehs.length})`, ic: "ti-ambulance", c: "#e35d5b" },
+                { k: "depots",    lbl: `Dépôts (${depots.length})`,    ic: "ti-building-warehouse", c: "#EF9F27" },
+              ].map(t => {
+                const active = tab === t.k;
+                return (
+                  <button key={t.k} onClick={() => setTab(t.k)} style={{
+                    background: active ? "#fff" : "transparent",
+                    color: active ? t.c : "#5a6878",
+                    border: active ? `1px solid ${t.c}33` : "1px solid transparent",
+                    borderLeft: active ? `3px solid ${t.c}` : "1px solid transparent",
+                    padding: "9px 14px", borderRadius: 10,
+                    fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer",
+                    transition: "all .15s",
+                    boxShadow: active ? `0 4px 10px ${t.c}22` : "none",
+                  }}>
+                    <i className={`ti ${t.ic}`} style={{ marginRight: 5 }} /> {t.lbl}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* === ONGLET APERÇU (existant) === */}
+            {tab === "apercu" && (<>
             <Panel style={{ marginTop: 18 }}>
               <div className="etab-bar">
                 <div className="etab-filters">
@@ -159,8 +213,67 @@ export default function Etablissement() {
               </div>
               <ListView list={list} rows={rows} patients={patients} materiels={materiels} dis={dis} pName={pName} matsOf={matsOf} st={st} setFilter={setFilter} />
             </Panel>
+            </>)}
+
+            {/* === ONGLET VÉHICULES === */}
+            {tab === "vehicules" && (
+              <Panel style={{ marginTop: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
+                  <h2 style={{ margin: 0, flex: 1, fontSize: 16 }}>
+                    <i className="ti ti-ambulance" style={{ color: "#e35d5b" }} /> Véhicules rattachés
+                  </h2>
+                  <button onClick={() => router.push(`/vehicules?new=1&etablissement_id=${auth.etabId}`)} className="btn-primary"
+                    style={{ background: "linear-gradient(135deg,#e35d5b,#c0494a)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 12.5 }}>
+                    <i className="ti ti-plus" /> Nouveau véhicule
+                  </button>
+                </div>
+                {vehs.length === 0 ? (
+                  <div style={{ padding: 30, textAlign: "center", color: "#5a6878" }}>
+                    <i className="ti ti-ambulance" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Aucun véhicule rattaché</div>
+                    <div style={{ fontSize: 12 }}>Crée un véhicule sanitaire, ambulance, VSL, taxi ou utilitaire avec le bouton ci-dessus.</div>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+                    {vehs.map(v => <VehiculeCard key={v.id} v={v} router={router} />)}
+                  </div>
+                )}
+              </Panel>
+            )}
+
+            {/* === ONGLET DÉPÔTS === */}
+            {tab === "depots" && (
+              <Panel style={{ marginTop: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
+                  <h2 style={{ margin: 0, flex: 1, fontSize: 16 }}>
+                    <i className="ti ti-building-warehouse" style={{ color: "#EF9F27" }} /> Dépôts rattachés
+                  </h2>
+                  <button onClick={() => router.push(`/depots?new=1&etablissement_id=${auth.etabId}`)}
+                    style={{ background: "linear-gradient(135deg,#EF9F27,#d48820)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 12.5 }}>
+                    <i className="ti ti-plus" /> Nouveau dépôt
+                  </button>
+                  <button onClick={() => router.push("/depots")}
+                    style={{ background: "rgba(255,255,255,.06)", color: "#142131", border: "1px solid #cfd8e0", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 12.5 }}>
+                    <i className="ti ti-external-link" /> Voir tous les dépôts
+                  </button>
+                </div>
+                {depots.length === 0 ? (
+                  <div style={{ padding: 30, textAlign: "center", color: "#5a6878" }}>
+                    <i className="ti ti-building-warehouse" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>Aucun dépôt rattaché</div>
+                    <div style={{ fontSize: 12 }}>Crée un dépôt (réserve, pharmacie, dépôt mobile sur véhicule, etc.).</div>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+                    {depots.map(d => <DepotCard key={d.id} d={d} vehs={vehs} router={router} onOpenArticles={() => setDepotModal(d)} />)}
+                  </div>
+                )}
+              </Panel>
+            )}
           </>
         )}
+        {/* 0.58.87 : Modal articles du dépôt sélectionné */}
+        {depotModal && <DepotArticlesModal depot={depotModal} onClose={() => setDepotModal(null)} />}
       </div>
     </div>
   );
@@ -269,4 +382,119 @@ function ListView({ list, rows, patients, materiels, dis, pName, matsOf, st, set
   return <div className="panel-table"><table><thead><tr><th>N°</th><th>Type</th><th>Urgence</th><th>Patient</th><th>Statut</th></tr></thead><tbody>
     {ds.map((d) => <tr key={d.id}><td style={{ fontWeight: 600 }}>{d.numero}</td><td><span className="tag-type">{d.type}</span></td><td><span className={`urg ${d.urgence === "Urgent" ? "urg-urgent" : "urg-normal"}`}>{d.urgence}</span></td><td>{pName(d.patient_id)}</td><td><span className="statut s-validee">{d.statut}</span></td></tr>)}
   </tbody></table></div>;
+}
+
+// 0.58.86 : composants pour les nouveaux onglets Véhicules et Dépôts
+const VEHICULE_TYPES = {
+  sanitaire:  { c: "#185FA5", i: "ti-ambulance",  lbl: "Sanitaire" },
+  ambulance:  { c: "#e35d5b", i: "ti-ambulance",  lbl: "Ambulance" },
+  vsl:        { c: "#7CC8C8", i: "ti-car",        lbl: "VSL" },
+  taxi:       { c: "#EF9F27", i: "ti-cab",        lbl: "Taxi" },
+  utilitaire: { c: "#5aa05a", i: "ti-truck",      lbl: "Utilitaire" },
+  autre:      { c: "#8a98a8", i: "ti-car-suv",    lbl: "Autre" },
+};
+const VEHICULE_STATUTS = {
+  disponible:     { c: "#5aa05a", lbl: "Disponible" },
+  en_mission:     { c: "#185FA5", lbl: "En mission" },
+  en_maintenance: { c: "#EF9F27", lbl: "Maintenance" },
+  hors_service:   { c: "#e35d5b", lbl: "Hors service" },
+};
+
+function VehiculeCard({ v, router }) {
+  const t = VEHICULE_TYPES[v.type] || VEHICULE_TYPES.autre;
+  const s = VEHICULE_STATUTS[v.statut] || VEHICULE_STATUTS.disponible;
+  return (
+    <div onClick={() => router.push(`/vehicules/${v.id}`)} style={{
+      background: "#fff", border: `1px solid ${t.c}33`, borderLeft: `4px solid ${v.couleur || t.c}`,
+      borderRadius: 12, padding: "14px 16px", cursor: "pointer",
+      transition: "all .15s",
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 16px ${t.c}33`; }}
+    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+        <div style={{ width: 38, height: 38, background: `${v.couleur || t.c}22`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <i className={`ti ${v.icone || t.i}`} style={{ color: v.couleur || t.c, fontSize: 20 }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#142131" }}>{v.nom}</div>
+          <div style={{ fontSize: 10.5, color: "#5a6878" }}>{t.lbl}{v.immatriculation ? <> · <span style={{ fontFamily: "Consolas, monospace" }}>{v.immatriculation}</span></> : null}</div>
+        </div>
+        <span style={{ background: `${s.c}22`, color: s.c, padding: "2px 8px", borderRadius: 8, fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>{s.lbl}</span>
+      </div>
+      <div style={{ display: "flex", gap: 10, fontSize: 11, color: "#5a6878", flexWrap: "wrap" }}>
+        {v.marque && <span>{v.marque} {v.modele}</span>}
+        {v.kilometrage != null && <span><i className="ti ti-route" /> {v.kilometrage.toLocaleString()} km</span>}
+        {v.capacite_personnes && <span><i className="ti ti-users" /> {v.capacite_personnes} pers</span>}
+        {v.capacite_brancards > 0 && <span><i className="ti ti-bed" /> {v.capacite_brancards} bran.</span>}
+        {v.numero_agrement && <span style={{ fontFamily: "Consolas, monospace", color: "#185FA5" }}>{v.numero_agrement}</span>}
+      </div>
+      {v.prochaine_revision && (
+        <div style={{ marginTop: 8, padding: "4px 8px", background: "rgba(239,159,39,.10)", border: "1px solid rgba(239,159,39,.30)", borderRadius: 6, fontSize: 10.5, color: "#d48820" }}>
+          <i className="ti ti-calendar" /> Prochaine révision : {new Date(v.prochaine_revision).toLocaleDateString("fr-FR")}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DepotCard({ d, vehs, router, onOpenArticles }) {
+  const vehAttache = vehs.find(v => v.id === d.vehicule_id);
+  const couleur = d.couleur || "#7CC8C8";
+  return (
+    <div style={{
+      background: "#fff", border: `1px solid ${couleur}33`, borderLeft: `4px solid ${couleur}`,
+      borderRadius: 12, padding: "14px 16px", transition: "all .15s",
+    }}>
+      <div onClick={() => router.push(`/depots/${d.id}`)} style={{ cursor: "pointer" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <div style={{ width: 38, height: 38, background: `${couleur}22`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <i className={`ti ${d.icone || "ti-building-warehouse"}`} style={{ color: couleur, fontSize: 20 }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#142131" }}>{d.nom}</div>
+            {d.code && <div style={{ fontSize: 10.5, color: "#5a6878", fontFamily: "Consolas, monospace" }}>{d.code}</div>}
+          </div>
+          {d.actif === false && (
+            <span style={{ background: "#e35d5b22", color: "#e35d5b", padding: "2px 8px", borderRadius: 8, fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>Inactif</span>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 10, fontSize: 11, color: "#5a6878", flexWrap: "wrap" }}>
+          {d.type && <span><i className="ti ti-tag" /> {d.type}</span>}
+          {d.adresse && <span><i className="ti ti-map-pin" /> {d.adresse}</span>}
+          {d.responsable && <span><i className="ti ti-user" /> {d.responsable}</span>}
+        </div>
+        {vehAttache && (
+          <div style={{ marginTop: 8, padding: "5px 10px", background: "rgba(227,93,91,.08)", border: "1px solid rgba(227,93,91,.20)", borderRadius: 6, fontSize: 11, color: "#142131" }}>
+            <i className="ti ti-ambulance" style={{ color: "#e35d5b" }} /> Dépôt mobile sur véhicule : <b>{vehAttache.nom}</b>
+          </div>
+        )}
+        {d.inventaire_dernier && (
+          <div style={{ marginTop: 6, fontSize: 10.5, color: "#5a6878" }}>
+            <i className="ti ti-clipboard-check" /> Dernier inventaire : {new Date(d.inventaire_dernier).toLocaleDateString("fr-FR")}
+            {d.inventaire_ecarts_count > 0 && <span style={{ color: "#e35d5b", marginLeft: 4 }}>· {d.inventaire_ecarts_count} écarts</span>}
+          </div>
+        )}
+      </div>
+      {/* 0.58.87 : Bouton voir articles disponibles */}
+      <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px dashed #e3e9ee", display: "flex", gap: 6 }}>
+        <button onClick={(e) => { e.stopPropagation(); onOpenArticles && onOpenArticles(); }} style={{
+          flex: 1, background: `linear-gradient(135deg, ${couleur}, ${couleur}cc)`,
+          color: "#142131", border: "none",
+          padding: "8px 12px", borderRadius: 8,
+          fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer",
+          boxShadow: `0 2px 6px ${couleur}33`,
+        }}>
+          <i className="ti ti-package" /> Voir les articles
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); router.push(`/inventaire/${d.id}`); }} style={{
+          background: "rgba(20,33,49,.04)", color: "#142131",
+          border: "1px solid #cfd8e0",
+          padding: "8px 12px", borderRadius: 8,
+          fontFamily: "inherit", fontSize: 12, fontWeight: 600, cursor: "pointer",
+        }} title="Faire un inventaire">
+          <i className="ti ti-clipboard-check" />
+        </button>
+      </div>
+    </div>
+  );
 }
