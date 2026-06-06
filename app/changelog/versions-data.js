@@ -240,6 +240,28 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.92",
+    "kind": "fix",
+    "titre": "🔍 Création véhicule : feedback erreur détaillé dans le modal + SQL fix RLS de secours",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Avant** : si la création de véhicule échouait, un `alert()` disparaissait et tu ne voyais rien · **Maintenant** : un banner rouge s'affiche dans le modal avec le message d'erreur exact, le code Postgres et un conseil ciblé selon le code détecté",
+        "code_snippet": {
+          "file": "app/vehicules/page.js",
+          "note": "Détection erreurs courantes",
+          "lang": "javascript",
+          "after": "if (result.error.code === '42P01') {\n  throw new Error('⚠ La table vehicules n\\'existe pas. Applique migration-0.58.85 dans Supabase.');\n}\nif (result.error.code === '42501') {\n  throw new Error('⚠ RLS bloque l\\'insertion. Applique fix-rls-vehicules-cuves-0.58.92.sql.');\n}\nif (result.error.code === '23502') {\n  throw new Error('⚠ Champ obligatoire manquant : ' + result.error.details);\n}"
+        }
+      },
+      { "code": "AI", "txt": "💾 **Console.log détaillé** : le payload envoyé est loggé en console (`[Vehicules] Save payload:` et `[Vehicules] Erreur save:`). Tu pourras copier-coller l'erreur exacte si jamais ça plante encore" },
+      { "code": "AI", "txt": "🎨 **Bouton 'Enregistrer' désactivé pendant le save** (label devient 'Enregistrement...'), modal ferme uniquement si save OK" },
+      { "code": "SQL", "txt": "🔓 **Nouveau fichier `fix-rls-vehicules-cuves-0.58.92.sql`** — au cas où la RLS bloque parce que `membres_structure` n'existe pas chez toi ou a un nom différent. Remplace par une RLS permissive `structure_id IS NOT NULL` pour les 3 tables (vehicules, cuves_oxygene, cuves_remplissages). À appliquer SI tu vois le message '⚠ RLS bloque'" },
+      { "code": "INFO", "txt": "🎯 **Ce qu'il faut faire** : (1) Réessaye de créer un véhicule · (2) Si erreur, lis le message du banner rouge · (3) Si '⚠ La table vehicules n'existe pas' → applique migration-0.58.85 · (4) Si '⚠ RLS bloque' → applique fix-rls-vehicules-cuves-0.58.92.sql · (5) Pour tout autre code, copie l'erreur console et reviens vers moi" }
+    ],
+    "themes": ["fix", "ux", "vehicules"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.92.html"
+  },
+  {
     "v": "0.58.91",
     "kind": "hotfix",
     "titre": "🆘 HOTFIX : `router is not defined` sur /profil (bouton Rouvrir popup choix-mode)",

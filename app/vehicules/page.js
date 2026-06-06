@@ -37,6 +37,8 @@ function VehiculesPageInner() {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null); // null | "new" | row
   const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -77,7 +79,9 @@ function VehiculesPageInner() {
   }
 
   async function save() {
-    if (!form.nom?.trim()) { alert("Le nom est obligatoire"); return; }
+    setSaveError("");
+    if (!form.nom?.trim()) { setSaveError("Le nom est obligatoire"); return; }
+    setSaving(true);
     try {
       const payload = {
         structure_id: auth.structureId,
@@ -99,18 +103,37 @@ function VehiculesPageInner() {
         prochaine_revision: form.prochaine_revision || null,
         prochain_controle_technique: form.prochain_controle_technique || null,
       };
+      console.log("[Vehicules] Save payload:", payload);
+      let result;
       if (modal === "new") {
-        const { error } = await supabase.from("vehicules").insert({ ...payload, created_by: auth.user?.id });
-        if (error) throw error;
+        result = await supabase.from("vehicules").insert({ ...payload, created_by: auth.user?.id }).select();
       } else {
-        const { error } = await supabase.from("vehicules").update({ ...payload, updated_by: auth.user?.id, updated_at: new Date().toISOString() }).eq("id", modal.id);
-        if (error) throw error;
+        result = await supabase.from("vehicules").update({ ...payload, updated_by: auth.user?.id, updated_at: new Date().toISOString() }).eq("id", modal.id).select();
+      }
+      if (result.error) {
+        console.error("[Vehicules] Erreur save:", result.error);
+        // Détection des erreurs courantes
+        if (result.error.code === "42P01" || /relation.*does not exist/i.test(result.error.message || "")) {
+          throw new Error("⚠ La table 'vehicules' n'existe pas dans ta base. Applique d'abord migration-0.58.85-vehicules-cuves-stock.sql dans Supabase SQL Editor.");
+        }
+        if (result.error.code === "42501" || /row-level security/i.test(result.error.message || "")) {
+          throw new Error("⚠ La sécurité RLS bloque l'insertion. Applique fix-rls-vehicules-cuves-0.58.92.sql dans Supabase SQL Editor.");
+        }
+        if (result.error.code === "23502") {
+          throw new Error("⚠ Champ obligatoire manquant : " + (result.error.details || result.error.message));
+        }
+        throw new Error(`${result.error.message || "Erreur inconnue"} (code: ${result.error.code || "?"})`);
       }
       setModal(null);
       // reload
       const { data } = await supabase.from("vehicules").select("*, etablissements(nom)").eq("structure_id", auth.structureId).order("nom");
       setVehs(data || []);
-    } catch (e) { alert("Erreur : " + e.message); }
+    } catch (e) {
+      console.error("[Vehicules] Catch:", e);
+      setSaveError(e.message || "Erreur inconnue");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!auth.ready) return null;
@@ -174,11 +197,26 @@ function VehiculesPageInner() {
 
         {/* Modal new/edit */}
         {modal && (
-          <Modal title={modal === "new" ? "Nouveau véhicule" : `Éditer ${modal.nom}`} onClose={() => setModal(null)}
+          <Modal title={modal === "new" ? "Nouveau véhicule" : `Éditer ${modal.nom}`} onClose={() => { setModal(null); setSaveError(""); }}
             footer={<>
-              <Btn variant="ghost" onClick={() => setModal(null)}>Annuler</Btn>
-              <Btn variant="primary" icon="ti-device-floppy" onClick={save}>Enregistrer</Btn>
+              <Btn variant="ghost" onClick={() => { setModal(null); setSaveError(""); }}>Annuler</Btn>
+              <Btn variant="primary" icon="ti-device-floppy" onClick={save}>{saving ? "Enregistrement..." : "Enregistrer"}</Btn>
             </>}>
+            {/* 0.58.92 : feedback erreur visible dans le modal */}
+            {saveError && (
+              <div style={{
+                background: "rgba(227,93,91,.10)",
+                border: "1px solid #e35d5b",
+                borderRadius: 8,
+                padding: "10px 14px",
+                marginBottom: 14,
+                color: "#c0392b",
+                fontSize: 13,
+                fontWeight: 600,
+              }}>
+                <i className="ti ti-alert-triangle" /> {saveError}
+              </div>
+            )}
             <div className="fld-row">
               <div className="fld" style={{ flex: 2 }}>
                 <label>Nom *</label>
