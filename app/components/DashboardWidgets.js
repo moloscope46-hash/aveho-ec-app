@@ -1814,6 +1814,10 @@ export function ObjectifsWidget() {
   const [presentMode, setPresentMode] = useState(false);
   // 0.58.52 : sync Supabase (état d'affichage du statut)
   const [syncStatus, setSyncStatus] = useState("local");  // "local" | "syncing" | "synced" | "error"
+  // 0.58.57 : modal de sélection d'équipe pour partager un objectif
+  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
+  const [teamPickerGoal, setTeamPickerGoal] = useState(null);
+  const [availableTeams, setAvailableTeams] = useState([]);
 
   useEffect(() => {
     // 0.58.52 : load avec stratégie hybride
@@ -1947,7 +1951,7 @@ export function ObjectifsWidget() {
       if (!user) return;
       const { data: memb, error } = await supabase
         .from("membres_equipe")
-        .select("equipe_id, equipes(id, nom)")
+        .select("equipe_id, equipes(id, nom, couleur)")
         .eq("user_id", user.id);
       if (error || !memb || memb.length === 0) {
         await dialogs.alert({
@@ -1968,23 +1972,10 @@ export function ObjectifsWidget() {
         });
         return;
       }
-      // Plusieurs équipes → on demande laquelle
-      const teamsList = memb.map((m, i) => `${i + 1}. ${m.equipes?.nom || "Équipe"}`).join("\n");
-      const choice = await dialogs.prompt({
-        title: "Choisir l'équipe",
-        message: `Avec quelle équipe veux-tu partager "${goal.label}" ?\n\n${teamsList}\n\nTape le numéro :`,
-        placeholder: "1",
-      });
-      const idx = parseInt(choice, 10) - 1;
-      if (isNaN(idx) || idx < 0 || idx >= memb.length) return;
-      const eq = memb[idx].equipes;
-      const next = goals.map(g => g.id === goalId ? { ...g, shared: true, teamId: eq.id } : g);
-      setGoals(next);
-      saveAndSync(next);
-      await dialogs.alert({
-        title: "Objectif partagé",
-        message: `"${goal.label}" est maintenant visible par les membres de l'équipe "${eq.nom}".`,
-      });
+      // 0.58.57 : Plusieurs équipes → modal de sélection joli (vs prompt)
+      setAvailableTeams(memb.map(m => m.equipes).filter(Boolean));
+      setTeamPickerGoal(goal);
+      setTeamPickerOpen(true);
     } catch (e) {
       await dialogs.alert({
         title: "Erreur",
@@ -1992,6 +1983,19 @@ export function ObjectifsWidget() {
         variant: "danger",
       });
     }
+  }
+
+  // 0.58.57 : valide le choix d'équipe depuis le modal picker
+  function pickTeam(team) {
+    if (!teamPickerGoal) {
+      setTeamPickerOpen(false);
+      return;
+    }
+    const next = goals.map(g => g.id === teamPickerGoal.id ? { ...g, shared: true, teamId: team.id } : g);
+    setGoals(next);
+    saveAndSync(next);
+    setTeamPickerOpen(false);
+    setTeamPickerGoal(null);
   }
 
   async function setCurrent(goalId) {
@@ -2281,6 +2285,285 @@ export function ObjectifsWidget() {
           </div>
         );
       })()}
+
+      {/* 0.58.57 : Modal sélection équipe pour partage objectif (remplace l'ancien prompt) */}
+      {teamPickerOpen && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setTeamPickerOpen(false); setTeamPickerGoal(null); } }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 99997,
+            background: "rgba(13, 24, 34, 0.55)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 20,
+            animation: "av-modal-fade-in 200ms ease-out",
+          }}
+        >
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setTeamPickerOpen(false); setTeamPickerGoal(null); } }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 99997,
+            background: "rgba(13, 24, 34, 0.55)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 20,
+            animation: "av-modal-fade-in 200ms ease-out",
+          }}
+        >
+          <div style={{
+            background: "#fff",
+            borderRadius: 16,
+            maxWidth: 480,
+            width: "100%",
+            maxHeight: "85vh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "0 30px 80px rgba(0,0,0,.30)",
+            animation: "av-modal-slide-up 250ms ease-out",
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: "18px 20px",
+              background: "linear-gradient(135deg, #185FA5, #134e87)",
+              color: "#fff",
+              display: "flex", alignItems: "center", gap: 12,
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <i className="ti ti-users-group" style={{ fontSize: 20 }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Partager avec une équipe</div>
+                <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.78)", marginTop: 2 }}>
+                  Choisis l'équipe avec laquelle partager "{teamPickerGoal?.label}"
+                </div>
+              </div>
+              <button
+                onClick={() => { setTeamPickerOpen(false); setTeamPickerGoal(null); }}
+                style={{ background: "transparent", color: "#fff", border: "none", cursor: "pointer", padding: 4, fontSize: 18 }}
+                aria-label="Fermer"
+              >
+                <i className="ti ti-x" />
+              </button>
+            </div>
+            {/* Liste équipes */}
+            <div style={{ padding: 16, overflowY: "auto", flex: 1 }}>
+              <p style={{ fontSize: 12, color: "#6c7a89", margin: "0 0 12px", lineHeight: 1.5 }}>
+                Les membres de l'équipe sélectionnée pourront voir la progression de cet objectif (lecture seule). Tu restes le seul à pouvoir le modifier.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {availableTeams.map(team => (
+                  <button
+                    key={team.id}
+                    onClick={() => pickTeam(team)}
+                    style={{
+                      background: "#fff",
+                      border: `1px solid #e3e9ee`,
+                      borderLeft: `4px solid ${team.couleur || "#185FA5"}`,
+                      borderRadius: 10,
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      textAlign: "left",
+                      transition: "all 150ms",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = (team.couleur || "#185FA5") + "10";
+                      e.currentTarget.style.transform = "translateX(2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#fff";
+                      e.currentTarget.style.transform = "translateX(0)";
+                    }}
+                  >
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 8,
+                      background: (team.couleur || "#185FA5") + "20",
+                      color: team.couleur || "#185FA5",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      <i className="ti ti-users-group" style={{ fontSize: 16 }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142131" }}>{team.nom}</div>
+                      <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 1 }}>Cliquer pour partager avec cette équipe</div>
+                    </div>
+                    <i className="ti ti-chevron-right" style={{ color: "#a0aeb9", fontSize: 16 }} />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <style jsx global>{`
+              @keyframes av-modal-fade-in {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              @keyframes av-modal-slide-up {
+                from { opacity: 0; transform: translateY(20px) scale(.97); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// ============================================================
+//  0.58.57 : TeamGoalsWidget — vue des objectifs partagés par
+//  les membres de tes équipes (read-only)
+// ============================================================
+export function TeamGoalsWidget() {
+  const [teamGoals, setTeamGoals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    let alive = true;
+    (async () => {
+      try {
+        const { createClient } = await import("../../lib/supabase");
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          if (alive) { setTeamGoals([]); setLoading(false); }
+          return;
+        }
+        // 1) Mes équipes
+        const { data: memb } = await supabase
+          .from("membres_equipe")
+          .select("equipe_id, equipes(id, nom, couleur)")
+          .eq("user_id", user.id);
+        if (!alive) return;
+        const teamIds = (memb || []).map(m => m.equipe_id);
+        const teamsMap = {};
+        (memb || []).forEach(m => { if (m.equipes) teamsMap[m.equipes.id] = m.equipes; });
+        if (teamIds.length === 0) {
+          setTeamGoals([]);
+          setLoading(false);
+          return;
+        }
+        // 2) Objectifs partagés sur ces équipes (excluant les miens)
+        //    La RLS du SQL 0.58.55 garantit qu'on ne voit que les goals
+        //    partagés avec une équipe dont on est membre.
+        const { data: goals } = await supabase
+          .from("user_goals")
+          .select("*")
+          .eq("shared", true)
+          .in("team_id", teamIds)
+          .neq("user_id", user.id)
+          .order("position", { ascending: true });
+        if (!alive) return;
+        // 3) Récupère les noms des owners des goals (jointure user_id → profil)
+        const ownerIds = [...new Set((goals || []).map(g => g.user_id))];
+        let ownersMap = {};
+        if (ownerIds.length > 0) {
+          const { data: mss } = await supabase
+            .from("membres_structure")
+            .select("user_id, nom_affiche, prenom")
+            .in("user_id", ownerIds);
+          (mss || []).forEach(ms => {
+            ownersMap[ms.user_id] = ms.nom_affiche || `${ms.prenom || ""}`.trim() || "Collègue";
+          });
+        }
+        // 4) Enrich + set
+        const enriched = (goals || []).map(g => ({
+          ...g,
+          team: teamsMap[g.team_id],
+          ownerName: ownersMap[g.user_id] || "Collègue",
+        }));
+        setTeamGoals(enriched);
+        setLoading(false);
+      } catch (e) {
+        if (alive) {
+          setTeamGoals([]);
+          setLoading(false);
+        }
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  if (!mounted) return null;
+
+  return (
+    <Panel style={{
+      marginTop: 0,
+      background: "linear-gradient(135deg, #f0fafa 0%, #fff 100%)",
+      borderColor: "#cfe0e0",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <h2 style={{ margin: 0, fontSize: 15, color: "#142131", display: "flex", alignItems: "center", gap: 6 }}>
+          <i className="ti ti-users-group" style={{ color: "#7CC8C8" }} /> Objectifs équipe
+          <span style={{ fontSize: 11, fontWeight: 500, color: "#8a98a8" }}>
+            ({teamGoals.length} partagé{teamGoals.length > 1 ? "s" : ""})
+          </span>
+        </h2>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12.5 }}>
+          <i className="ti ti-loader-2 ti-spin" style={{ fontSize: 22 }} />
+        </div>
+      ) : teamGoals.length === 0 ? (
+        <div style={{ padding: "20px 12px", textAlign: "center", color: "#8a98a8", fontSize: 12.5 }}>
+          <i className="ti ti-users-off" style={{ fontSize: 28, display: "block", marginBottom: 8, color: "#cfe0e0" }} />
+          Aucun objectif partagé par tes équipes pour le moment.
+          <p style={{ margin: "8px 0 0", fontSize: 11, fontStyle: "italic" }}>
+            Les membres de tes équipes peuvent partager leurs objectifs depuis le widget "Mes objectifs".
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {teamGoals.map((g) => {
+            const pct = g.target > 0 ? Math.min(100, Math.max(0, (g.current / g.target) * 100)) : 0;
+            const isComplete = g.current >= g.target;
+            const teamColor = g.team?.couleur || "#7CC8C8";
+            return (
+              <div
+                key={g.id}
+                style={{
+                  padding: 10,
+                  background: "#fff",
+                  border: `1px solid #e3e9ee`,
+                  borderLeft: `3px solid ${teamColor}`,
+                  borderRadius: 8,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#142131", display: "flex", alignItems: "center", gap: 4 }}>
+                      {isComplete && <i className="ti ti-check" style={{ color: "#5aa05a" }} />}
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.label}</span>
+                    </div>
+                    <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 1 }}>
+                      <i className="ti ti-user" /> {g.ownerName}
+                      {g.team && <> · <span style={{ color: teamColor, fontWeight: 600 }}>{g.team.nom}</span></>}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 11.5, fontFamily: "Consolas, monospace", color: "#5a6878", flexShrink: 0 }}>
+                    <b style={{ color: isComplete ? "#5aa05a" : teamColor, fontSize: 13 }}>{g.current}</b>
+                    <span style={{ opacity: 0.6 }}> / {g.target}{g.unit ? ` ${g.unit}` : ""}</span>
+                  </span>
+                </div>
+                <div style={{ width: "100%", height: 8, background: "#e3e9ee", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{
+                    width: `${pct}%`, height: "100%",
+                    background: isComplete ? "linear-gradient(90deg, #5aa05a, #4a8a4a)" : `linear-gradient(90deg, ${teamColor}, ${teamColor}cc)`,
+                    borderRadius: 4,
+                    transition: "width 400ms ease-out",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Panel>
   );
 }

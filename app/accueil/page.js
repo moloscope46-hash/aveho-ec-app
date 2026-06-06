@@ -24,7 +24,7 @@ import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
 // 0.58.39 : + widget météo (Open-Meteo + géolocalisation)
 // 0.58.40 : + widget Notes personnelles (markdown léger)
 // 0.58.43 : + widget Mes objectifs (progress bars + milestones)
-import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget, ObjectifsWidget } from "../components/DashboardWidgets";
+import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget, ObjectifsWidget, TeamGoalsWidget } from "../components/DashboardWidgets";
 import {
   getDashboardLayout, setDashboardLayout, resetDashboardLayout,
   DEFAULT_ACTIVE, DEFAULT_ORDER, ALL_WIDGETS,
@@ -611,6 +611,7 @@ export default function Accueil() {
               if (k === "meteo") return wrapWithDrag(<WeatherWidget />);
               if (k === "notes") return wrapWithDrag(<NotesWidget />);
               if (k === "objectifs") return wrapWithDrag(<ObjectifsWidget />);
+              if (k === "objectifs-equipe") return wrapWithDrag(<TeamGoalsWidget />);
               return null;
             })}
           </>

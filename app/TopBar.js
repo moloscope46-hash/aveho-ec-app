@@ -59,7 +59,8 @@ const MENU = [
   { section: "Mes partenaires", items: [
     { p: "/partenaires-rpps?type=prescripteur", ic: "ti-stethoscope", lbl: "Prescripteurs (médecins)", col: "#5a4a90" },
     { p: "/partenaires-rpps?type=infirmiere", ic: "ti-heart-rate-monitor", lbl: "Infirmières", col: "#C9867F" },
-    { p: "/partenaires-rpps?type=pharmacie", ic: "ti-prescription", lbl: "Pharmacies", col: "#5aa05a" },
+    // 0.58.57 : page dédiée pharmacies (table séparée avec horaires + garde)
+    { p: "/pharmacies", ic: "ti-prescription", lbl: "Pharmacies", col: "#5aa05a" },
     { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Établissements partenaires", col: "#7a6fb0" },
     // Raccourcis vers les annuaires officiels (déplacés de "Collectivité")
     { p: "/annuaire-rpps?metier=medecin", ic: "ti-list-search", lbl: "🔍 Annuaire RPPS (médecins)", col: "#8a98a8" },

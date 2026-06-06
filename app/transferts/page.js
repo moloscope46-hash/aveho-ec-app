@@ -10,6 +10,8 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
+// 0.58.57 : filtre ctx via depots.batiment_id
+import { useCurrentContext } from "../../lib/useCurrentContext";
 // 0.58.45 : hook pour les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 import BulkActions, { useBulkSelection } from "../BulkActions";
@@ -37,6 +39,27 @@ export default function Transferts() {
   const [form, setForm] = useState({ motif: "Réapprovisionnement", contenu: "article", quantite: 1 });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // 0.58.57 : filtre ctx via depots.batiment_id
+  const [depotsCtx, setDepotsCtx] = useState(null);  // Set des depot_ids du bât/svc actif, ou null = pas de filtre
+  const ctx = useCurrentContext();
+  useEffect(() => {
+    if (!ctx.active || !ctx.batimentId) {
+      setDepotsCtx(null);
+      return;
+    }
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await supabase.from("depots").select("id").eq("batiment_id", ctx.batimentId);
+        if (alive) {
+          setDepotsCtx(new Set((data || []).map(d => d.id)));
+        }
+      } catch {
+        if (alive) setDepotsCtx(null);
+      }
+    })();
+    return () => { alive = false; };
+  }, [ctx.active, ctx.batimentId]);
 
   // 0.58.45 : export CSV des transferts + page-actions Cmd+K
   async function exportTransfertsCsv() {
@@ -189,11 +212,25 @@ export default function Transferts() {
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
         <PageHead small title="Transferts de stock" sub="Magasin ↔ dépôt déporté · chambre ↔ dépôt — suivi par statut" />
+        {(() => {
+          // 0.58.57 : filtrage ctx via depots du bâtiment actif
+          const rowsFiltered = ctx.active && depotsCtx
+            ? rows.filter(r => {
+                // Garde les transferts dont la source OU la destination est un dépôt du bâtiment
+                const srcMatch = r.src_type === "depot" && r.src_id && depotsCtx.has(r.src_id);
+                const dstMatch = r.dst_type === "depot" && r.dst_id && depotsCtx.has(r.dst_id);
+                // Si aucun des deux n'est un dépôt → on garde (transfert chambre↔chambre)
+                if (r.src_type !== "depot" && r.dst_type !== "depot") return true;
+                return srcMatch || dstMatch;
+              })
+            : rows;
+          return (
+            <>
         <KpiRow tiles={[
-          { label: "Transferts", value: rows.length, icon: "ti-transfer", color: "#7a6fb0" },
-          { label: "Demandés", value: rows.filter((r) => r.statut === "Demandé").length, icon: "ti-clock", color: "#EF9F27" },
-          { label: "Validés", value: rows.filter((r) => r.statut === "Validé").length, icon: "ti-checks", color: "#185FA5" },
-          { label: "Reçus", value: rows.filter((r) => r.statut === "Reçu").length, icon: "ti-package-import", color: "#5aa05a" },
+          { label: "Transferts", value: rowsFiltered.length, icon: "ti-transfer", color: "#7a6fb0" },
+          { label: "Demandés", value: rowsFiltered.filter((r) => r.statut === "Demandé").length, icon: "ti-clock", color: "#EF9F27" },
+          { label: "Validés", value: rowsFiltered.filter((r) => r.statut === "Validé").length, icon: "ti-checks", color: "#185FA5" },
+          { label: "Reçus", value: rowsFiltered.filter((r) => r.statut === "Reçu").length, icon: "ti-package-import", color: "#5aa05a" },
         ]} />
         <Panel>
           <div className="di-toolbar">
@@ -208,10 +245,24 @@ export default function Transferts() {
                 Nouveau transfert
               </NeonButton>
             )}
+            {/* 0.58.57 : indicateur de filtrage ctx actif */}
+            {ctx.active && depotsCtx && (
+              <span style={{
+                marginLeft: 8, padding: "4px 10px",
+                background: "rgba(124,200,200,.15)",
+                color: "#185FA5",
+                border: "1px solid #7CC8C8",
+                borderRadius: 8, fontSize: 11.5, fontWeight: 600,
+                display: "inline-flex", alignItems: "center", gap: 4,
+              }}>
+                <i className="ti ti-filter" />
+                Filtré sur le bâtiment ({depotsCtx.size} dépôt{depotsCtx.size > 1 ? "s" : ""})
+              </span>
+            )}
           </div>
 
           {loading ? <StateMsg>Chargement…</StateMsg>
-            : rows.length === 0 ? <StateMsg>Aucun transfert. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => setModal(true)}>Créer le premier</a></StateMsg>
+            : rowsFiltered.length === 0 ? <StateMsg>{ctx.active && rows.length > 0 ? `Aucun transfert dans ce bâtiment (${rows.length} au total dans l'établissement)` : <>Aucun transfert. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => setModal(true)}>Créer le premier</a></>}</StateMsg>
             : (
               <>
               {/* Alpha 0.49.0 : bulk actions transferts */}
@@ -219,7 +270,7 @@ export default function Transferts() {
                 <BulkActions
                   selectedIds={bulkSel.selectedIds}
                   setSelectedIds={bulkSel.setSelectedIds}
-                  rows={rows}
+                  rows={rowsFiltered}
                   label="transfert"
                   csvHeaders={["Numéro", "Date", "De", "Vers", "Contenu", "Motif", "Statut"]}
                   csvRow={(r) => [r.numero, fmtDate(r.created_at), r.src_label, r.dst_label, r.libelle, r.motif, r.statut]}
@@ -234,15 +285,15 @@ export default function Transferts() {
                   <th style={{ width: 32 }}>
                     <input
                       type="checkbox"
-                      checked={rows.length > 0 && rows.every(r => bulkSel.selectedIds.has(r.id))}
-                      onChange={() => bulkSel.toggleAll(rows)}
+                      checked={rowsFiltered.length > 0 && rowsFiltered.every(r => bulkSel.selectedIds.has(r.id))}
+                      onChange={() => bulkSel.toggleAll(rowsFiltered)}
                       aria-label="Sélectionner tous les transferts"
                     />
                   </th>
                   <th>N°</th><th>Date</th><th>De</th><th>Vers</th><th>Contenu</th><th>Motif</th><th>Statut</th><th></th>
                 </tr></thead>
                 <tbody>
-                  {rows.map((r) => (
+                  {rowsFiltered.map((r) => (
                     <tr key={r.id}>
                       <td>
                         <input
@@ -273,6 +324,9 @@ export default function Transferts() {
               </>
             )}
         </Panel>
+            </>
+          );
+        })()}
       </div>
 
       {modal && (

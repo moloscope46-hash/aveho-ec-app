@@ -110,6 +110,72 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
     setDraggedColKey(null); setDragOverColKey(null);
   }
 
+  // 0.58.58 : ordre des CHAMPS du formulaire modal (drag&drop), persisté par table en localStorage
+  const fieldsStorageKey = `av-crud-fields-${table}`;
+  const [fieldOrder, setFieldOrder] = useState(null);
+  const [draggedFieldKey, setDraggedFieldKey] = useState(null);
+  const [dragOverFieldKey, setDragOverFieldKey] = useState(null);
+  const [fieldsEditMode, setFieldsEditMode] = useState(false);  // toggle pour activer le drag dans le modal
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(fieldsStorageKey);
+      const stored = raw ? JSON.parse(raw) : [];
+      const currentKeys = (fields || []).map(f => f.key);
+      const validStored = stored.filter(k => currentKeys.includes(k));
+      const missing = currentKeys.filter(k => !validStored.includes(k));
+      setFieldOrder([...validStored, ...missing]);
+    } catch {
+      setFieldOrder((fields || []).map(f => f.key));
+    }
+  }, [fieldsStorageKey, fields?.length]);
+  useEffect(() => {
+    if (!fieldOrder || fieldOrder.length === 0) return;
+    try { localStorage.setItem(fieldsStorageKey, JSON.stringify(fieldOrder)); } catch {}
+  }, [fieldOrder, fieldsStorageKey]);
+
+  // Fields effectivement rendus dans l'ordre courant
+  const orderedFields = fieldOrder
+    ? fieldOrder.map(k => (fields || []).find(f => f.key === k)).filter(Boolean)
+    : (fields || []);
+
+  function resetFieldOrder() {
+    setFieldOrder((fields || []).map(f => f.key));
+    try { localStorage.removeItem(fieldsStorageKey); } catch {}
+  }
+  const isFieldOrderModified = fieldOrder && fields && fieldOrder.join(",") !== fields.map(f => f.key).join(",");
+
+  function handleFieldDragStart(e, key) {
+    setDraggedFieldKey(key);
+    try { e.dataTransfer.effectAllowed = "move"; } catch {}
+  }
+  function handleFieldDragOver(e, key) {
+    e.preventDefault();
+    if (key !== draggedFieldKey) setDragOverFieldKey(key);
+  }
+  function handleFieldDragLeave() {
+    setDragOverFieldKey(null);
+  }
+  function handleFieldDrop(e, targetKey) {
+    e.preventDefault();
+    if (!draggedFieldKey || draggedFieldKey === targetKey) {
+      setDraggedFieldKey(null); setDragOverFieldKey(null);
+      return;
+    }
+    setFieldOrder(prev => {
+      const arr = [...prev];
+      const fromIdx = arr.indexOf(draggedFieldKey);
+      const toIdx = arr.indexOf(targetKey);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, draggedFieldKey);
+      return arr;
+    });
+    setDraggedFieldKey(null); setDragOverFieldKey(null);
+  }
+  function handleFieldDragEnd() {
+    setDraggedFieldKey(null); setDragOverFieldKey(null);
+  }
+
   async function load() {
     let q = supabase.from(table).select(select).order("created_at", { ascending: false });
     if (etabId) q = q.eq("etablissement_id", etabId);
@@ -145,7 +211,7 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
         const { error } = await safeInsert(supabase, table, insertPayload, { userId });
         if (error) throw error;
       }
-      setModal(null); await load();
+      setModal(null); setFieldsEditMode(false); await load();
     } catch (e) { setErr(e.message); } finally { setBusy(false); }
   }
 
@@ -433,28 +499,124 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
       {modal && (
         <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setModal(null)}>
           <div className="modal">
-            <div className="modal-head">{modal.id ? "Modifier" : title} <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setModal(null)} /></div>
+            <div className="modal-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>{modal.id ? "Modifier" : title}</span>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                {/* 0.58.58 : toggle mode édition pour drag&drop des champs */}
+                <button
+                  onClick={() => setFieldsEditMode(!fieldsEditMode)}
+                  title={fieldsEditMode ? "Désactiver le réordonnancement" : "Réorganiser les champs du formulaire (drag&drop)"}
+                  style={{
+                    background: fieldsEditMode ? "linear-gradient(135deg, #7CC8C8, #5da8a8)" : "transparent",
+                    color: fieldsEditMode ? "#fff" : "#5a6878",
+                    border: `1px solid ${fieldsEditMode ? "#7CC8C8" : "#d3d9e0"}`,
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
+                    cursor: "pointer", fontFamily: "inherit",
+                    display: "inline-flex", alignItems: "center", gap: 4,
+                  }}
+                >
+                  <i className={fieldsEditMode ? "ti ti-check" : "ti ti-arrows-up-down"} />
+                  {fieldsEditMode ? "Terminer" : "Réorganiser"}
+                </button>
+                {isFieldOrderModified && (
+                  <button
+                    onClick={resetFieldOrder}
+                    title="Réinitialiser l'ordre des champs au défaut"
+                    style={{
+                      background: "transparent", color: "#c0392b",
+                      border: "1px solid #fcc",
+                      padding: "4px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 600,
+                      cursor: "pointer", fontFamily: "inherit",
+                    }}
+                  >
+                    <i className="ti ti-restore" /> Réinit.
+                  </button>
+                )}
+                <i className="ti ti-x" style={{ cursor: "pointer", marginLeft: 4 }} onClick={() => { setModal(null); setFieldsEditMode(false); }} />
+              </div>
+            </div>
             <div className="modal-body">
               {err && <div className="err">{err}</div>}
-              {fields.map((f) => (
-                <div className="fld" key={f.key}>
+              {/* 0.58.58 : bandeau d'instruction en mode édition */}
+              {fieldsEditMode && (
+                <div style={{
+                  padding: "8px 12px",
+                  background: "linear-gradient(135deg, #f0fafa, #e8f5f5)",
+                  border: "1px dashed #7CC8C8",
+                  borderRadius: 8,
+                  marginBottom: 10,
+                  fontSize: 11.5,
+                  color: "#185FA5",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}>
+                  <i className="ti ti-info-circle" />
+                  Glisse les champs avec la poignée <code style={{ background: "#fff", padding: "1px 4px", borderRadius: 3, fontFamily: "monospace" }}>⋮⋮</code> pour les réorganiser. L'ordre est sauvegardé pour la prochaine ouverture.
+                </div>
+              )}
+              {orderedFields.map((f) => (
+                <div
+                  className="fld"
+                  key={f.key}
+                  draggable={fieldsEditMode}
+                  onDragStart={fieldsEditMode ? (e) => handleFieldDragStart(e, f.key) : undefined}
+                  onDragOver={fieldsEditMode ? (e) => handleFieldDragOver(e, f.key) : undefined}
+                  onDragLeave={fieldsEditMode ? handleFieldDragLeave : undefined}
+                  onDrop={fieldsEditMode ? (e) => handleFieldDrop(e, f.key) : undefined}
+                  onDragEnd={fieldsEditMode ? handleFieldDragEnd : undefined}
+                  style={{
+                    position: "relative",
+                    opacity: draggedFieldKey === f.key ? 0.4 : 1,
+                    transition: "opacity 150ms, transform 200ms",
+                    transform: dragOverFieldKey === f.key && draggedFieldKey !== f.key ? "translateY(-2px)" : "none",
+                    borderTop: dragOverFieldKey === f.key && draggedFieldKey !== f.key ? "2px solid #7CC8C8" : "2px solid transparent",
+                    paddingLeft: fieldsEditMode ? 24 : 0,
+                    background: fieldsEditMode ? "linear-gradient(90deg, rgba(124,200,200,.06), transparent)" : "transparent",
+                    borderRadius: fieldsEditMode ? 6 : 0,
+                    marginBottom: fieldsEditMode ? 8 : undefined,
+                  }}
+                >
+                  {/* 0.58.58 : poignée drag visible uniquement en mode édition */}
+                  {fieldsEditMode && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: 4,
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        color: "#7CC8C8",
+                        cursor: "grab",
+                        userSelect: "none",
+                        fontSize: 16,
+                        fontWeight: 900,
+                        lineHeight: 1,
+                        letterSpacing: -2,
+                      }}
+                      title="Glisser pour réorganiser"
+                    >
+                      ⋮⋮
+                    </span>
+                  )}
                   <label>{f.label}{f.required ? " *" : ""}</label>
                   {f.type === "select" ? (
-                    <select value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}>
+                    <select value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} disabled={fieldsEditMode}>
                       <option value="">— Aucun —</option>
                       {(f.options || relations[f.key] || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   ) : f.type === "textarea" ? (
-                    <textarea value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
+                    <textarea value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} disabled={fieldsEditMode} />
                   ) : (
-                    <input type={f.type || "text"} value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
+                    <input type={f.type || "text"} value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} disabled={fieldsEditMode} />
                   )}
                 </div>
               ))}
             </div>
             <div className="modal-foot">
-              <button className="btn-ghost" onClick={() => setModal(null)}>Annuler</button>
-              <button className="btn-save" onClick={save} disabled={busy}>{busy ? "…" : "Enregistrer"}</button>
+              <button className="btn-ghost" onClick={() => { setModal(null); setFieldsEditMode(false); }}>Annuler</button>
+              <button className="btn-save" onClick={save} disabled={busy || fieldsEditMode}>
+                {busy ? "…" : fieldsEditMode ? "Termine d'abord le réordonnancement" : "Enregistrer"}
+              </button>
             </div>
           </div>
         </div>
