@@ -240,6 +240,34 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.84",
+    "kind": "hotfix",
+    "titre": "🆘 HOTFIX : sondage services.batiment_id (élimine 400 cascade) + mounted ref /materiels (React #310)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Nouveau helper `lib/services.js`** avec `servicesHasBatimentCol()` + `selectServicesContexte()` — même pattern que `lib/chambres.js` de 0.58.70 qu'on avait fait pour `chambres.batiment_id`. Avant la requête, on **sonde** une fois si la colonne `batiment_id` existe sur ta table services (cache mémoire + localStorage). Si non → fallback structure_id direct. **Plus jamais de 400** sur services parce qu'on ne fera plus de `eq('batiment_id', ...)` aveugle",
+        "code_snippet": {
+          "file": "lib/services.js (nouveau)",
+          "note": "Sondage avec cache",
+          "lang": "javascript",
+          "after": "let memCache = null;\n\nexport async function servicesHasBatimentCol(supabase) {\n  if (memCache !== null) return memCache;\n  const cached = localStorage.getItem('av-services-has-batiment-col');\n  if (cached === 'true') return memCache = true;\n  if (cached === 'false') return memCache = false;\n  \n  const r = await supabase.from('services')\n    .select('batiment_id', { head: true, count: 'exact' }).limit(1);\n  if (r.error?.code === '42703') {\n    memCache = false;\n    localStorage.setItem('av-services-has-batiment-col', 'false');\n    return false;\n  }\n  memCache = true;\n  localStorage.setItem('av-services-has-batiment-col', 'true');\n  return true;\n}"
+        }
+      },
+      { "code": "FIX", "txt": "🔧 **Refactor `BatimentServiceSwitcher`** : utilise maintenant `selectServicesContexte()` qui gère le sondage automatiquement. Plus de try/catch foireux avec eq() aveugle. La première sonde se fait 1 fois par session, puis tout est en cache" },
+      { "code": "FIX", "txt": "🩹 **Mounted ref dans `/materiels`** — le React #310 (\"Should have a queue. This is likely a bug in React.\") est typiquement causé par un setState appelé sur un composant déjà démonté (race condition entre fetch et navigation rapide). Ajouté `let mounted = true; return () => { mounted = false; }` dans le useEffect principal de Materiels + check `if (!mounted) return` avant tous les setState. Devrait neutraliser le #310 sur cette page",
+        "code_snippet": {
+          "file": "app/materiels/page.js",
+          "note": "Mounted ref",
+          "lang": "javascript",
+          "after": "useEffect(() => {\n  if (!auth.ready) return;\n  let mounted = true;\n  (async () => {\n    // ... fetch ...\n    if (!mounted) return;  // 0.58.84 : check avant setState\n    setRel(...);\n    setRelReady(true);\n  })();\n  return () => { mounted = false; };\n}, [auth.ready]);"
+        }
+      },
+      { "code": "INFO", "txt": "🔍 **Diagnostic** : tu peux vérifier que le sondage marche en regardant la console — au premier chargement après le déploiement, tu verras 1 seul WARN `[services] colonne batiment_id absente. Fallback structure_id.` puis plus rien. Le helper a mis 'false' en cache localStorage. Pour reset le cache (si tu rajoutes la colonne plus tard) : `localStorage.removeItem('av-services-has-batiment-col')` dans la console" }
+    ],
+    "themes": ["fix", "supabase"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.84.html"
+  },
+  {
     "v": "0.58.83",
     "kind": "feat",
     "titre": "📲 FAB \"Continuer sur mon téléphone\" : bouton flottant universel avec QR code de la page courante",

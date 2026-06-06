@@ -64,9 +64,11 @@ export default function Materiels() {
 
   useEffect(() => {
     if (!auth.ready) return;
+    let mounted = true;
     (async () => {
       // 0.58.79 : tryFetch individuel — si UNE requête échoue (colonne/table absente),
       // les autres continuent. Avant : Promise.all → un fail = tout fail = relReady jamais true
+      // 0.58.84 : mounted ref pour éviter setState après unmount (cause React #310)
       const tryFetch = async (q, fallback = []) => {
         try { const r = await q; return r.data || fallback; }
         catch (e) {
@@ -87,6 +89,7 @@ export default function Materiels() {
           tryFetch(supabase.from("depots").select("id, nom").order("nom")),
           tryFetch(supabase.from("equipes").select("id, nom").order("nom")),
         ]);
+        if (!mounted) return;  // 0.58.84
         setRel({
           article_id: arts.map((a) => ({ value: a.id, label: a.libelle })),
           patient_id: pats.map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
@@ -105,9 +108,10 @@ export default function Materiels() {
         logger.error("[Materiels] load failed:", e);
         // 0.58.79 : même en cas d'erreur globale, on flag relReady à true
         // pour ne pas bloquer la page sur return null indéfiniment
-        setRelReady(true);
+        if (mounted) setRelReady(true);
       }
     })();
+    return () => { mounted = false; };
   }, [auth.ready]);
 
   if (!auth.ready || !relReady) return null;

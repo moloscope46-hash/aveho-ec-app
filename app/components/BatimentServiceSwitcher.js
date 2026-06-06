@@ -14,6 +14,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
+// 0.58.84 : helper sondage batiment_id (évite 400 cascadants)
+import { selectServicesContexte } from "../../lib/services";
 
 const STORAGE_BAT = "av-current-batiment-id";
 const STORAGE_SVC = "av-current-service-id";
@@ -86,26 +88,14 @@ export default function BatimentServiceSwitcher({ auth }) {
     let alive = true;
     (async () => {
       try {
-        // 0.58.81 : SELECT minimal sans icone (pas garanti d'exister sur services)
-        // Si batiment_id absent sur services → fallback structure
-        let svcs = [];
-        try {
-          const r = await supabase
-            .from("services")
-            .select("id, nom")
-            .eq("batiment_id", batId)
-            .order("nom");
-          if (r.error) throw r.error;
-          svcs = r.data || [];
-        } catch (err) {
-          // Fallback : tous les services de la structure
-          try {
-            const fb = await supabase.from("services").select("id, nom").eq("structure_id", structureId).order("nom");
-            svcs = fb.data || [];
-          } catch { svcs = []; }
-        }
+        // 0.58.84 : helper qui sonde si batiment_id existe avant le filter
+        // Plus de 400 cascadants. Si pas de batiment_id en DB → fallback structure.
+        const r = await selectServicesContexte(supabase, {
+          structureId,
+          batimentId: batId,
+        });
         if (!alive) return;
-        const list = svcs;
+        const list = r?.data || [];
         setServices(list);
         try {
           const saved = localStorage.getItem(STORAGE_SVC);
@@ -117,7 +107,7 @@ export default function BatimentServiceSwitcher({ auth }) {
         } catch {
           setSvcId(list[0]?.id || "");
         }
-      } catch {
+      } catch (err) {
         if (alive) { setServices([]); setSvcId(""); }
       }
     })();
