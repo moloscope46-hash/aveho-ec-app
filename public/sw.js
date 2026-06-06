@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.58.74";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.58.75";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -84,6 +84,21 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(req.url);
+
+  // 0.58.75 : bypass des CDN tiers connus (CORS bloque le SW sur ces domaines).
+  // Le SW ne peut pas intercepter ces requêtes — on les laisse passer au navigateur.
+  // qrserver.com (QR codes 0.58.72), Tabler Icons CDN, Google Fonts si jamais utilisé, etc.
+  const EXTERNAL_CDNS = [
+    "api.qrserver.com",       // 0.58.72 — génération QR matériel
+    "cdn.jsdelivr.net",       // libs occasionnelles
+    "unpkg.com",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+    "cdnjs.cloudflare.com",
+  ];
+  if (EXTERNAL_CDNS.includes(url.hostname)) {
+    return;  // Le navigateur fait son fetch normal sans interception SW
+  }
 
   // 0.55.52 : aussi ignorer les requêtes cross-origin qu'on ne contrôle pas
   // (sauf Supabase qu'on cache exprès plus bas)

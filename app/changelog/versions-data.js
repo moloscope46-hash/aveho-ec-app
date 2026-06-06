@@ -240,6 +240,38 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.75",
+    "kind": "feature",
+    "titre": "🚨🏢📦🔄 HOTFIX SW + Page Groupements + Refonte Dépôts hiérarchique + Refonte Transferts scan",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 **HOTFIX Service Worker** : `Failed to fetch at networkFirst (sw.js:168:23)` au boot — le SW interceptait `api.qrserver.com` (introduit en 0.58.72) et CORS bloquait la requête. **Fix** : ajout d'un array `EXTERNAL_CDNS` qui bypass complètement le SW pour les domaines tiers connus (qrserver, jsdelivr, unpkg, fonts.googleapis, fonts.gstatic, cdnjs). Le navigateur fait son fetch normal sans interception",
+        "code_snippet": {
+          "file": "public/sw.js",
+          "note": "Bypass des CDN externes pour fix CORS",
+          "lang": "javascript",
+          "before": "// ❌ AVANT 0.58.75 — tous les fetch HTTPS passent par networkFirst\nself.addEventListener('fetch', (event) => {\n  const req = event.request;\n  const url = new URL(req.url);\n  // Tombe par défaut dans networkFirst → fetch api.qrserver.com\n  // → CORS bloque → TypeError: Failed to fetch\n  event.respondWith(networkFirst(req, DATA_CACHE));\n});",
+          "after": "// ✅ APRÈS 0.58.75 — bypass des CDN tiers AVANT routing\nself.addEventListener('fetch', (event) => {\n  const req = event.request;\n  const url = new URL(req.url);\n\n  const EXTERNAL_CDNS = [\n    'api.qrserver.com',       // 0.58.72 — génération QR matériel\n    'cdn.jsdelivr.net',\n    'unpkg.com',\n    'fonts.googleapis.com',\n    'fonts.gstatic.com',\n    'cdnjs.cloudflare.com',\n  ];\n  if (EXTERNAL_CDNS.includes(url.hostname)) {\n    return;  // Le navigateur fait son fetch normal\n  }\n  // ... reste du routing\n});"
+        }
+      },
+      { "code": "FEAT", "txt": "🏢 **Nouvelle page `/groupements`** — CRUD complet pour gérer les groupements clients (EHPAD, hôpitaux, cliniques, réseaux de santé, maisons de santé). Cards par groupement avec icône colorée, type badge, code interne, ville, SIRET, badges nb établissements/dépôts rattachés. **5 stats cards filtrables** par type (cliquables). **Modal édition** avec 4 sections : Infos générales, Coordonnées juridiques (raison sociale, SIRET 14 chiffres, FINESS juridique 9 chiffres, adresse complète), Contact (nom, email, téléphone), Personnalisation (color picker 8 couleurs, toggle actif). BackButton en haut. Recherche full-text + filtre type" },
+      { "code": "REFACTOR", "txt": "🏢 **Page `/depots` complètement refondue** (ancien backé en `_old-page-v0.58.74.js.bak`). Affiche maintenant la **hiérarchie complète** : Groupement → Bâtiment → Étage → Service → Chambre → Magasin avec icônes et couleurs. **6 niveaux hiérarchiques** : groupement / batiment / etage / service / chambre / mobile. **6 types de dépôt** : général EHPAD / déporté / pharmacie / infirmerie / froid / stupéfiants. **Modal édition** avec 4 sections : Infos + Type + Niveau, Rattachements hiérarchiques (cascade `bâtiment → étage/service → chambre`), Capacités & contrôles (T° min/max, humidité, sécurisé), Notes. **InventaireModal** intégré pour voir la liste matériels d'un dépôt avec recherche + lien fiche matériel + boutons Scanner + Créer transfert. Cards avec stats matériels + % remplissage + badges sécurisé/T°" },
+      { "code": "REFACTOR", "txt": "🔄 **Page `/transferts` complètement refondue** (ancien backé). Workflow **Demandé → Validé → Reçu → Annulé** avec 4 stats cards filtrables. **Multi-source/destination** : dépôt OU service OU chambre (croisé). **4 priorités** : basse / normale / haute / urgente. **8 motifs** : Réapprovisionnement / Retour location / Prêt inter-service / Échange matériel défectueux / Régularisation inventaire / Mise en quarantaine / Envoi SAV / Retour SAV. **Préset URL** : `?depot=X` (dest), `?depot_source=X`, `?materiel=X` → ouvre directement le modal. Affichage source → destination visuel avec icônes hiérarchiques. Actions inline conditionnelles selon statut : Valider/Réceptionner/Annuler/Éditer. `changeStatut()` set automatiquement `date_validation` + `valide_par` (sur Validé) et `date_reception` + `recu_par` (sur Reçu). Bouton Scanner intégré dans modal pour scan UUID matériel" },
+      { "code": "ARCH", "txt": "🗄️ **Nouveau SQL `migration-0.58.75-groupements-etages-depots-hierarchie.sql`** — créé **3 tables** (`groupements`, `groupement_etablissements` lien composite, `etages` rattachée aux bâtiments), **ALTER chambres + services** ADD `etage_id` pour la hiérarchie. **ALTER depots** : `groupement_id`, `etage_id`, `service_id`, `chambre_id`, `code`, `niveau_hierarchique`, `capacite_max`, `temperature_min/max`, `humidite_max`, `securise` BOOLEAN, `responsable_id`, adresse/ville, `couleur`/`icone`, `notes`, `actif`. **ALTER transferts** : `depot_source_id`, `depot_destination_id`, `chambre_source/dest_id`, `service_source/dest_id`, `materiel_id`, `scan_source`, `priorite`, `date_validation`, `date_reception`, `valide_par`, `recu_par`. **Vue `v_depots_hierarchie`** avec `chemin_complet` calculé `Groupement > Bâtiment > Étage X > Service > Ch. N`. Tous RLS en DROP+CREATE (compat PG<17). Indexes partiels pour perf",
+        "code_snippet": {
+          "file": "public/sql/migration-0.58.75-groupements-etages-depots-hierarchie.sql",
+          "note": "Vue hiérarchique pour affichage rapide",
+          "lang": "sql",
+          "after": "CREATE OR REPLACE VIEW v_depots_hierarchie AS\nSELECT\n  d.id, d.nom, d.code, d.type,\n  d.niveau_hierarchique, d.actif, d.securise,\n  g.nom AS groupement_nom,\n  b.nom AS batiment_nom,\n  e.nom AS etage_nom, e.numero AS etage_numero,\n  s.nom AS service_nom,\n  c.numero AS chambre_numero,\n  CONCAT_WS(' > ',\n    g.nom,\n    b.nom,\n    CASE WHEN e.numero IS NOT NULL\n         THEN CONCAT('Étage ', e.numero) ELSE e.nom END,\n    s.nom,\n    CASE WHEN c.numero IS NOT NULL\n         THEN CONCAT('Ch. ', c.numero) ELSE c.nom END\n  ) AS chemin_complet\nFROM depots d\nLEFT JOIN groupements g ON g.id = d.groupement_id\nLEFT JOIN batiments b ON b.id = d.batiment_id\nLEFT JOIN etages e ON e.id = d.etage_id\nLEFT JOIN services s ON s.id = d.service_id\nLEFT JOIN chambres c ON c.id = d.chambre_id;"
+        }
+      },
+      { "code": "AI", "txt": "🧪 **Tests Vitest + Playwright** : nouveau `__tests__/v058-75-bundle.test.js` avec ~33 tests (version+SW, HOTFIX SW EXTERNAL_CDNS, 6 sections SQL, page groupements, page dépôts refonte avec cascade, page transferts workflow). Extension de `tests/e2e/materiel-articles-scan.spec.js` avec section 0.58.75 : `/groupements` accessible + modal sections, `/depots` cascade hiérarchique + InventaireModal, `/transferts` 4 stats cards + preset URL + sections Source/Destination/Contenu, anti-régression SW (pas de TypeError au boot), smoke 3 nouvelles routes" },
+      { "code": "INFO", "txt": "⚠ **UN nouveau SQL à appliquer** : `public/sql/migration-0.58.75-groupements-etages-depots-hierarchie.sql` — c'est le premier nouveau depuis que tu as appliqué les 21 précédents. Sans lui, les colonnes `groupement_id`, `etage_id`, `niveau_hierarchique`, `securise`, etc. n'existent pas en base et les nouvelles pages auront des SELECT qui retournent 400. Applique-le AVANT de tester en local" }
+    ],
+    "themes": ["fix", "feature", "refactor", "ui", "supabase", "scan", "groupements", "depots", "transferts"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.75.html"
+  },
+  {
     "v": "0.58.74",
     "kind": "feature",
     "titre": "🧪 Tests Vitest + Playwright pour 0.58.71→0.58.73 + script `npm run test:all`",

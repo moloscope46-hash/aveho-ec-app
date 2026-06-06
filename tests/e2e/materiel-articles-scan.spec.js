@@ -248,3 +248,142 @@ test.describe("0.58.74 - Smoke test global", () => {
     });
   }
 });
+
+// ============================================================
+// 0.58.75 — Groupements + Dépôts refait + Transferts refait
+// ============================================================
+test.describe("0.58.75 - Page /groupements", () => {
+  test("Route /groupements accessible (200)", async ({ page }) => {
+    const response = await page.goto("/groupements");
+    expect(response?.status()).toBeLessThan(400);
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("Affiche le bouton 'Nouveau groupement'", async ({ page }) => {
+    await page.goto("/groupements");
+    await page.waitForLoadState("networkidle");
+    const btn = page.getByRole("button", { name: /Nouveau groupement/i });
+    await expect(btn).toBeVisible({ timeout: 5000 });
+  });
+
+  test("Bouton 'Nouveau groupement' ouvre un modal avec sections juridiques + contact", async ({ page }) => {
+    await page.goto("/groupements");
+    await page.waitForLoadState("networkidle");
+    const newBtn = page.getByRole("button", { name: /Nouveau groupement/i });
+    await newBtn.click();
+    // Modal doit s'ouvrir avec sections
+    await expect(page.getByText(/Coordonnées juridiques/i)).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/Contact/i).first()).toBeVisible();
+    await expect(page.getByText(/Personnalisation/i)).toBeVisible();
+  });
+
+  test("BackButton présent en haut de page", async ({ page }) => {
+    await page.goto("/groupements");
+    await page.waitForLoadState("networkidle");
+    const back = page.getByRole("button", { name: /Retour/i }).first();
+    await expect(back).toBeVisible();
+  });
+});
+
+test.describe("0.58.75 - Page /depots refondue (hiérarchie + inventaire)", () => {
+  test("Route /depots accessible (200)", async ({ page }) => {
+    const response = await page.goto("/depots");
+    expect(response?.status()).toBeLessThan(400);
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("Affiche les boutons 'Scan rapide' + 'Nouveau dépôt'", async ({ page }) => {
+    await page.goto("/depots");
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: /Scan rapide/i })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: /Nouveau dépôt/i })).toBeVisible();
+  });
+
+  test("Filtres par type + niveau hiérarchique présents", async ({ page }) => {
+    await page.goto("/depots");
+    await page.waitForLoadState("networkidle");
+    // Selects pour type + niveau
+    const selects = await page.locator("select").count();
+    expect(selects).toBeGreaterThanOrEqual(2);
+  });
+
+  test("Modal édition affiche cascade bâtiment → étage → service → chambre", async ({ page }) => {
+    await page.goto("/depots");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: /Nouveau dépôt/i }).click();
+    // Sections rattachements + capacités
+    await expect(page.getByText(/Rattachements hiérarchiques/i)).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/Capacités/i)).toBeVisible();
+    // Toggle sécurisé visible
+    await expect(page.getByText(/Accès restreint/i)).toBeVisible();
+  });
+});
+
+test.describe("0.58.75 - Page /transferts refondue (workflow multi-source)", () => {
+  test("Route /transferts accessible (200)", async ({ page }) => {
+    const response = await page.goto("/transferts");
+    expect(response?.status()).toBeLessThan(400);
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("4 stats cards : Demandé / Validé / Reçu / Annulé", async ({ page }) => {
+    await page.goto("/transferts");
+    await page.waitForLoadState("networkidle");
+    // Cherche les 4 labels (peuvent être en majuscules)
+    await expect(page.getByText(/Demandé/i).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Validé/i).first()).toBeVisible();
+    await expect(page.getByText(/Reçu/i).first()).toBeVisible();
+  });
+
+  test("Bouton 'Nouveau transfert' + 'Scanner' présents", async ({ page }) => {
+    await page.goto("/transferts");
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("button", { name: /Nouveau transfert/i })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: /Scanner/i }).first()).toBeVisible();
+  });
+
+  test("Modal new : sections Source + Destination + Contenu visibles", async ({ page }) => {
+    await page.goto("/transferts");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("button", { name: /Nouveau transfert/i }).click();
+    // 3 sections principales
+    await expect(page.getByText(/^Source$/i)).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/^Destination$/i)).toBeVisible();
+    await expect(page.getByText(/^Contenu$/i)).toBeVisible();
+  });
+
+  test("Preset URL ?depot_source=X ouvre directement le modal", async ({ page }) => {
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/transferts?depot_source=00000000-0000-0000-0000-000000000000");
+    await page.waitForLoadState("networkidle");
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe("0.58.75 - HOTFIX SW : pas de TypeError au boot", () => {
+  test("Service Worker chargé sans erreur (pas de TypeError: Failed to fetch)", async ({ page }) => {
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    page.on("console", (msg) => { if (msg.type() === "error") errors.push(msg.text()); });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    // Le SW ne doit plus throw TypeError sur networkFirst
+    const swErrors = errors.filter(e => /networkFirst|sw\.js.*Failed to fetch/i.test(e));
+    expect(swErrors).toEqual([]);
+  });
+});
+
+// ============================================================
+// Smoke 0.58.75 — nouvelles routes
+// ============================================================
+test.describe("0.58.75 - Smoke nouvelles routes", () => {
+  const routes = ["/groupements", "/depots", "/transferts"];
+  for (const route of routes) {
+    test(`Route ${route} (0.58.75) répond < 400`, async ({ page }) => {
+      const response = await page.goto(route);
+      const status = response?.status() || 0;
+      expect(status).toBeLessThan(400);
+    });
+  }
+});

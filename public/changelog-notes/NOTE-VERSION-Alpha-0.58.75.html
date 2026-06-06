@@ -1,0 +1,296 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.75 — Groupements + Dépôts + Transferts refondus</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,'Segoe UI',sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1a3a4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 12px rgba(124,200,200,0)}}
+@keyframes blob{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(40px,-30px)scale(1.08)}}
+@keyframes flow{0%{stroke-dashoffset:24}100%{stroke-dashoffset:0}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.violet{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(94,74,140,.45) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,74,140,.30));backdrop-filter:blur(28px);border:1px solid rgba(124,200,200,.30);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.16);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7);display:inline-block}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.25}
+h1 small{font-size:13.5px;font-weight:500;color:#a5cce0;display:block;margin-top:8px;opacity:.95}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#a5cce0}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#5e4a8c)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.bug{border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.14),rgba(20,33,49,.6))}
+.panel.ok{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.teal{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(20,33,49,.6))}
+.panel.violet{border-left:4px solid #7a6fb0;background:linear-gradient(135deg,rgba(122,111,176,.12),rgba(20,33,49,.6))}
+.panel.amber{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+pre.bad{border-left-color:#e35d5b}
+pre.good{border-left-color:#5aa05a}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* SVG hierarchy preview */
+.hierarchy-svg{background:#fff;border-radius:12px;padding:16px;margin:14px 0}
+.hier-node{font-family:'Quicksand',sans-serif}
+
+/* Workflow */
+.workflow-pills{display:flex;gap:0;align-items:center;justify-content:center;margin:18px 0;flex-wrap:wrap}
+.wf-pill{padding:10px 18px;color:#fff;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;border-radius:8px}
+.wf-pill.demande{background:linear-gradient(135deg,#EF9F27,#d68a1f)}
+.wf-pill.valide{background:linear-gradient(135deg,#185FA5,#134e87)}
+.wf-pill.recu{background:linear-gradient(135deg,#5aa05a,#4a8a4a)}
+.wf-pill.annule{background:linear-gradient(135deg,#e35d5b,#c0392b)}
+.wf-arrow{color:#7CC8C8;font-size:24px;margin:0 8px}
+
+/* Cards type groupement */
+.type-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0}
+.type-card{padding:12px;background:#fff;border-radius:10px;text-align:center;border:2px solid}
+.type-card .icon-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:18px;color:#fff}
+.type-card .lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Cmd box */
+.cmd-box{background:linear-gradient(135deg,#050a14,#0a1525);border:2px solid #7CC8C8;border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 8px 30px rgba(124,200,200,.15)}
+.cmd-box .title{color:#7CC8C8;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+.cmd-box pre{background:#020610;border-left:3px solid #7CC8C8;margin:6px 0}
+.cmd-comment{color:#5a8a9a}
+.cmd-flag{color:#EF9F27}
+.cmd-new{color:#5aa05a;font-weight:700}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#a5cce0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob teal"></div>
+  <div class="bg-blob violet"></div>
+</div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>RELEASE 0.58.75 · GROS CHANTIER</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🚨 HOTFIX SW · 🏢 Page Groupements · 📦 Refonte Dépôts hiérarchique · 🔄 Refonte Transferts scan<small>4 features majeures en une release · 1 nouveau SQL à appliquer</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.75-alpha</code></span>
+    <span><b>Type :</b> Feature + Fix</span>
+    <span><b>SQL :</b> 🔴 1 nouveau à appliquer</span>
+  </div>
+</header>
+
+<h2>🚨 1. HOTFIX Service Worker (bug que tu as remonté)</h2>
+
+<div class="panel bug">
+  <p style="margin:0 0 10px;color:#fff;font-size:13px"><b>L'erreur</b> :</p>
+  <pre class="bad" style="margin:0">Failed to load resource: the server responded with a status of 400 ()
+sw.js:168  Uncaught (in promise) TypeError: Failed to fetch
+    at networkFirst (sw.js:168:23)</pre>
+  <p style="margin:14px 0 8px;color:#fff;font-size:13px"><b>Cause</b> : depuis 0.58.72 j'ai introduit <code>api.qrserver.com</code> pour générer les QR codes des matériels. Le SW interceptait <b>tous</b> les fetch HTTPS, y compris ceux vers qrserver.com → CORS bloquait → TypeError dans le SW.</p>
+  <p style="margin:0 0 8px;color:#fff;font-size:13px"><b>Fix</b> : array <code>EXTERNAL_CDNS</code> qui bypass complètement le SW pour 6 domaines tiers connus.</p>
+  <pre class="good">// public/sw.js — AVANT le routing networkFirst/cacheFirst
+const EXTERNAL_CDNS = [
+  'api.qrserver.com',       // 0.58.72 — QR matériel
+  'cdn.jsdelivr.net',
+  'unpkg.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+  'cdnjs.cloudflare.com',
+];
+if (EXTERNAL_CDNS.includes(url.hostname)) {
+  return;  // Le navigateur fait son fetch normal sans interception
+}</pre>
+</div>
+
+<h2>🏢 2. Nouvelle page <code>/groupements</code></h2>
+
+<div class="panel violet">
+  <p style="margin:0 0 14px;color:#fff;font-size:13px">CRUD complet pour gérer les <b>groupements clients</b> : EHPAD, hôpitaux, cliniques, réseaux de santé, maisons de santé. <b>5 stats cards filtrables</b> par type (cliquables), recherche full-text, BackButton.</p>
+
+  <div class="type-grid">
+    <div class="type-card" style="border-color:#7CC8C8"><div class="icon-circle" style="background:#7CC8C8">🏥</div><div class="lbl" style="color:#7CC8C8">EHPAD</div></div>
+    <div class="type-card" style="border-color:#185FA5"><div class="icon-circle" style="background:#185FA5">🩺</div><div class="lbl" style="color:#185FA5">Hôpital</div></div>
+    <div class="type-card" style="border-color:#7a6fb0"><div class="icon-circle" style="background:#7a6fb0">➕</div><div class="lbl" style="color:#7a6fb0">Clinique</div></div>
+    <div class="type-card" style="border-color:#5aa05a"><div class="icon-circle" style="background:#5aa05a">🔗</div><div class="lbl" style="color:#5aa05a">Réseau</div></div>
+    <div class="type-card" style="border-color:#EF9F27"><div class="icon-circle" style="background:#EF9F27">🏠</div><div class="lbl" style="color:#EF9F27">Maison santé</div></div>
+  </div>
+
+  <p style="margin:14px 0 6px;color:#fff;font-size:12.5px"><b>Modal édition</b> avec 4 sections :</p>
+  <ul style="color:#fff;font-size:12.5px;margin:0">
+    <li><b>Infos générales</b> : nom, code interne, type (badges colorés), description</li>
+    <li><b>Coordonnées juridiques</b> : raison sociale, SIRET (14 chiffres), FINESS juridique (9 chiffres), adresse complète</li>
+    <li><b>Contact</b> : nom, email, téléphone</li>
+    <li><b>Personnalisation</b> : color picker 8 couleurs, toggle actif</li>
+  </ul>
+</div>
+
+<h2>📦 3. Page <code>/depots</code> complètement refondue</h2>
+
+<div class="panel teal">
+  <p style="margin:0 0 14px;color:#fff;font-size:13px">L'ancienne version utilisait simplement <code>Crud</code>. La nouvelle affiche la <b>hiérarchie complète</b> avec rattachement multi-niveaux + inventaire intégré + scan rapide.</p>
+
+  <p style="margin:14px 0 8px;color:#7CC8C8;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:1px">📐 Hiérarchie complète</p>
+
+  <div class="hierarchy-svg">
+    <svg viewBox="0 0 920 200" style="width:100%;height:auto">
+      <!-- Groupement -->
+      <rect x="20" y="80" width="130" height="50" rx="8" fill="#7a6fb0"/>
+      <text x="85" y="100" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🏥 GROUPEMENT</text>
+      <text x="85" y="118" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" class="hier-node">EHPAD Les Tilleuls</text>
+
+      <line x1="150" y1="105" x2="180" y2="105" stroke="#7CC8C8" stroke-width="2" stroke-dasharray="4 2"/>
+
+      <!-- Bâtiment -->
+      <rect x="180" y="80" width="130" height="50" rx="8" fill="#185FA5"/>
+      <text x="245" y="100" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🏢 BÂTIMENT</text>
+      <text x="245" y="118" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" class="hier-node">Aile Nord</text>
+
+      <line x1="310" y1="105" x2="340" y2="105" stroke="#7CC8C8" stroke-width="2" stroke-dasharray="4 2"/>
+
+      <!-- Étage -->
+      <rect x="340" y="80" width="130" height="50" rx="8" fill="#7CC8C8"/>
+      <text x="405" y="100" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🏛️ ÉTAGE</text>
+      <text x="405" y="118" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" class="hier-node">2ᵉ étage</text>
+
+      <line x1="470" y1="105" x2="500" y2="105" stroke="#7CC8C8" stroke-width="2" stroke-dasharray="4 2"/>
+
+      <!-- Service -->
+      <rect x="500" y="80" width="130" height="50" rx="8" fill="#5aa05a"/>
+      <text x="565" y="100" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🩺 SERVICE</text>
+      <text x="565" y="118" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" class="hier-node">Neurologie</text>
+
+      <line x1="630" y1="105" x2="660" y2="105" stroke="#7CC8C8" stroke-width="2" stroke-dasharray="4 2"/>
+
+      <!-- Chambre -->
+      <rect x="660" y="80" width="120" height="50" rx="8" fill="#EF9F27"/>
+      <text x="720" y="100" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">🛏️ CHAMBRE</text>
+      <text x="720" y="118" text-anchor="middle" fill="#fff" font-size="11" font-weight="600" class="hier-node">Ch. 207</text>
+
+      <line x1="780" y1="105" x2="810" y2="105" stroke="#7CC8C8" stroke-width="2" stroke-dasharray="4 2"/>
+
+      <!-- Dépôt -->
+      <rect x="810" y="75" width="100" height="60" rx="8" fill="#142131" stroke="#7CC8C8" stroke-width="2"/>
+      <text x="860" y="98" text-anchor="middle" fill="#7CC8C8" font-size="10" font-weight="700">📦 DÉPÔT</text>
+      <text x="860" y="115" text-anchor="middle" fill="#fff" font-size="10" font-weight="600">Stock chambre</text>
+      <text x="860" y="128" text-anchor="middle" fill="#5aa05a" font-size="9" font-weight="700">12 mat.</text>
+
+      <!-- Title -->
+      <text x="460" y="30" text-anchor="middle" fill="#142131" font-size="14" font-weight="700">Rattachement hiérarchique d'un dépôt</text>
+      <text x="460" y="48" text-anchor="middle" fill="#5a6878" font-size="11">Chaque dépôt peut être rattaché à un ou plusieurs niveaux de la hiérarchie</text>
+
+      <!-- Hierarchy levels indicator -->
+      <text x="460" y="170" text-anchor="middle" fill="#5a6878" font-size="10">6 niveaux possibles · 6 types de dépôt · Cascade automatique dans le modal</text>
+    </svg>
+  </div>
+
+  <p style="margin:14px 0 8px;color:#7CC8C8;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:1px">📦 6 types de dépôt</p>
+  <ul style="color:#fff;font-size:12.5px;margin:0">
+    <li><b>Général EHPAD</b> · <b>Déporté</b> (magasin) · <b>Pharmacie</b>/PUI · <b>Infirmerie</b> · <b>Stock réfrigéré</b> ❄ · <b>Stupéfiants</b> 🔒</li>
+  </ul>
+
+  <p style="margin:14px 0 8px;color:#7CC8C8;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:1px">📋 Inventaire intégré</p>
+  <p style="margin:0;color:#fff;font-size:12.5px">Bouton <b>Inventaire</b> sur chaque card → modal avec liste matériels du dépôt + recherche + lien vers fiche + boutons <b>Scanner</b> (vers /scan/quick) et <b>Créer transfert</b> (préset URL).</p>
+</div>
+
+<h2>🔄 4. Page <code>/transferts</code> complètement refondue</h2>
+
+<div class="panel ok">
+  <p style="margin:0 0 14px;color:#fff;font-size:13px">Workflow visuel <b>Demandé → Validé → Reçu</b> avec actions inline, priorités, multi-source/destination et scan QR matériel.</p>
+
+  <div class="workflow-pills">
+    <div class="wf-pill demande"><i>⏱</i> Demandé</div>
+    <span class="wf-arrow">→</span>
+    <div class="wf-pill valide"><i>✓</i> Validé</div>
+    <span class="wf-arrow">→</span>
+    <div class="wf-pill recu"><i>✓✓</i> Reçu</div>
+    <span class="wf-arrow">·</span>
+    <div class="wf-pill annule"><i>✗</i> Annulé</div>
+  </div>
+
+  <p style="margin:14px 0 8px;color:#cfeacb;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:1px">⚙️ Workflow</p>
+  <ul style="color:#fff;font-size:12.5px;margin:0">
+    <li><b>4 stats cards filtrables</b> par statut (cliquables)</li>
+    <li><b>Multi-source/destination</b> : dépôt OU service OU chambre (croisé)</li>
+    <li><b>4 priorités</b> : basse / normale / haute / urgente (boutons radio colorés)</li>
+    <li><b>8 motifs</b> : Réapprovisionnement, Retour location, Prêt inter-service, Échange matériel défectueux, Régularisation, Quarantaine, Envoi SAV, Retour SAV</li>
+    <li><b>Actions inline conditionnelles</b> selon statut : Valider/Réceptionner/Annuler/Éditer</li>
+    <li><code>changeStatut()</code> set automatiquement <code>date_validation</code> + <code>valide_par</code> (sur Validé) et <code>date_reception</code> + <code>recu_par</code> (sur Reçu)</li>
+  </ul>
+
+  <p style="margin:14px 0 8px;color:#cfeacb;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:1px">🔗 Préset URL</p>
+  <ul style="color:#fff;font-size:12.5px;margin:0">
+    <li><code>/transferts?depot=X</code> → modal new avec destination préremplie</li>
+    <li><code>/transferts?depot_source=X</code> → modal new avec source préremplie</li>
+    <li><code>/transferts?materiel=UUID</code> → modal new avec matériel précis (post-scan)</li>
+  </ul>
+
+  <p style="margin:14px 0 8px;color:#cfeacb;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:1px">📱 Scan QR matériel</p>
+  <p style="margin:0;color:#fff;font-size:12.5px">Dans le modal "Contenu", section Matériel a un bouton <b>Scan</b> qui redirige vers <code>/scan/quick</code>. Affichage visuel <b>source → destination</b> dans la liste avec icônes hiérarchiques.</p>
+</div>
+
+<h2>🗄️ 5. SQL à appliquer (UN nouveau)</h2>
+
+<div class="panel amber">
+  <p style="margin:0 0 10px;color:#fff;font-size:13px">⚠ <b>UN nouveau SQL</b> — premier depuis tes 21 précédents :</p>
+  <pre>📄 public/sql/migration-0.58.75-groupements-etages-depots-hierarchie.sql</pre>
+  <p style="margin:12px 0 6px;color:#fff;font-size:12.5px"><b>Contenu</b> :</p>
+  <ul style="color:#fff;font-size:12px;margin:0">
+    <li><b>3 nouvelles tables</b> : <code>groupements</code> (avec FINESS juridique + SIRET + couleur/icone), <code>groupement_etablissements</code> (lien composite avec rôle), <code>etages</code> (rattaché à <code>batiments</code>)</li>
+    <li><b>ALTER chambres + services</b> : ADD <code>etage_id</code> pour la hiérarchie complète</li>
+    <li><b>ALTER depots</b> : <code>groupement_id</code>, <code>etage_id</code>, <code>service_id</code>, <code>chambre_id</code>, <code>code</code>, <code>niveau_hierarchique</code>, <code>capacite_max</code>, <code>temperature_min</code>/<code>max</code>, <code>humidite_max</code>, <code>securise</code> BOOLEAN, <code>responsable_id</code>, adresse/ville, <code>couleur</code>/<code>icone</code>, <code>notes</code>, <code>actif</code></li>
+    <li><b>ALTER transferts</b> : <code>depot_source_id</code>, <code>depot_destination_id</code>, <code>chambre_source/dest_id</code>, <code>service_source/dest_id</code>, <code>materiel_id</code>, <code>scan_source</code>, <code>priorite</code>, <code>date_validation/reception</code>, <code>valide_par/recu_par</code></li>
+    <li><b>Vue <code>v_depots_hierarchie</code></b> avec <code>chemin_complet</code> calculé : "Groupement > Bâtiment > Étage X > Service > Ch. N"</li>
+    <li>Tous RLS en <b>DROP + CREATE</b> (compat PG&lt;17) · Indexes partiels pour perf</li>
+  </ul>
+  <p style="margin:12px 0 0;color:#ffd5a8;font-size:12.5px;font-weight:600">⚠ Sans ce SQL, les nouvelles pages <code>/groupements</code>, <code>/depots</code>, <code>/transferts</code> auront des <b>SELECT 400</b> (colonnes manquantes). Applique-le AVANT de tester.</p>
+</div>
+
+<h2>🚀 LA COMMANDE</h2>
+
+<div class="cmd-box">
+  <div class="title">🎯 Build + tests + déploiement</div>
+<pre><span class="cmd-comment"># 1. Appliquer le NOUVEAU SQL d'abord (Supabase Studio → SQL editor)</span>
+<span class="cmd-new">cat public/sql/migration-0.58.75-groupements-etages-depots-hierarchie.sql</span>
+<span class="cmd-comment"># → Copier-coller dans Supabase et exécuter</span>
+
+<span class="cmd-comment"># 2. Setup local</span>
+cd C:\aveho-ec-app
+npm install <span class="cmd-flag">--legacy-peer-deps</span>
+
+<span class="cmd-comment"># 3. Build (anti-régression 0.58.73)</span>
+npm run build
+
+<span class="cmd-comment"># 4. Tests</span>
+npm run test                  <span class="cmd-comment"># Vitest (~5300+33 nouveaux)</span>
+npm run test:e2e              <span class="cmd-comment"># Playwright + section 0.58.75</span>
+npm run test:all              <span class="cmd-comment"># Tout en séquence</span>
+
+<span class="cmd-comment"># 5. Vérifier les nouvelles pages en local</span>
+npm run dev
+<span class="cmd-comment"># → http://localhost:3000/groupements (créer un groupement test)
+# → http://localhost:3000/depots (voir hiérarchie)
+# → http://localhost:3000/transferts (workflow scan)</span>
+
+<span class="cmd-comment"># 6. Si tout vert, déployer</span>
+git add -A
+git commit -m "0.58.75 - HOTFIX SW + Groupements + Refonte Dépôts/Transferts"
+git push origin main</pre>
+</div>
+
+<div class="panel" style="border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))">
+  <p style="margin:0;font-size:12.5px;color:#fff;line-height:1.6">
+    ⚠ <b>Sur PowerShell, n'utilise pas <code>&&</code></b>. Pour <code>test:all</code>, utilise Git Bash ou WSL. Sinon lance les 2 commandes séparément.<br/>
+    ⚠ Les anciennes pages <code>/depots/page.js</code> et <code>/transferts/page.js</code> sont sauvegardées en <code>_old-page-v0.58.74.js.bak</code> au cas où.
+  </p>
+</div>
+
+<footer>
+Aveho — Espace Collectivité · 0.58.75 · 6 juin 2026 · 🚨🏢📦🔄 GROS CHANTIER
+</footer>
+
+</div></body></html>
