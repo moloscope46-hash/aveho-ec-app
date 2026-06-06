@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.97",
+    "kind": "hotfix",
+    "titre": "🚨 HOTFIX React #418 — hydration mismatch sur /profil (localStorage direct dans JSX)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **React error #418 (hydration mismatch)** : la section 'Mode de démarrage' dans /profil lisait `localStorage.getItem('av-launch-mode')` directement dans le JSX. Server (sans localStorage) → rendait vide. Client → rendait du texte. **Différent = crash hydratation**",
+        "code_snippet": {
+          "file": "app/profil/page.js",
+          "note": "Avant / Après",
+          "lang": "diff",
+          "after": "- {typeof window !== 'undefined' && (\n-   <> Mode actuel : <b>{localStorage.getItem('av-launch-mode') === 'mobile' ? '📱 Mobile' : '💻 Logiciel'}</b></>\n- )}\n+ const [launchMode, setLaunchMode] = useState(null);\n+ useEffect(() => { setLaunchMode(localStorage.getItem('av-launch-mode')); }, []);\n+ {launchMode !== null && <> Mode actuel : <b>...</b></>}"
+        }
+      },
+      { "code": "INFO", "txt": "🔧 **Pattern** : ne JAMAIS lire localStorage/window/Date directement dans le rendu JSX. Toujours initialiser un state vide puis mettre à jour dans un useEffect. Le useEffect ne tourne que côté client → SSR initial reste vide → pas de mismatch" },
+      { "code": "INFO", "txt": "🎯 **À faire maintenant** : (1) Extraire le zip 0.58.97 · (2) Vérifier que `useEffect` est bien dans l'import de `app/mobile/patient/new/page.js` (sinon refaire le sed) · (3) `npm run build` doit passer · (4) `git push` · (5) Vercel redéploie · (6) Toutes les corrections accumulées 0.58.91→0.58.97 partent ensemble" }
+    ],
+    "themes": ["hotfix", "hydration", "profil"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.97.html"
+  },
+  {
     "v": "0.58.95",
     "kind": "fix",
     "titre": "🩹 Création patient mobile : INSERT défensif 2 niveaux + détection colonnes absentes",
