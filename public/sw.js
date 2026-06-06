@@ -16,7 +16,7 @@
 //  Procédure automatique : voir scripts/sync-sw-version.js
 // =============================================================
 
-const VERSION = "aveho-ec-0.58.76";  // ← À synchroniser avec package.json à chaque release
+const VERSION = "aveho-ec-0.58.78";  // ← À synchroniser avec package.json à chaque release
 const STATIC_CACHE = `${VERSION}-static`;
 const DATA_CACHE = `${VERSION}-data`;
 const PAGE_CACHE = `${VERSION}-pages`;
@@ -229,11 +229,15 @@ async function networkFirst(req, cacheName) {
         { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
       );
     }
-    // 0.58.24 : pas de 504 forcé qui pollue la console — on relance simplement
-    // l'erreur réseau native. Le navigateur loggera "Failed to load resource"
-    // une seule fois (au lieu du 504 explicite + ce log). Next.js gère son retry
-    // tout seul via Next's automatic chunk retry.
-    throw e;
+    // 0.58.77 : ne plus throw l'erreur réseau native — ça pollue la console
+    // avec "Uncaught (in promise) TypeError: Failed to fetch". À la place on
+    // retourne une Response 503 silencieuse que l'appelant peut gérer.
+    // Si l'erreur est CORS/Failed to fetch sur un fetch programmatique JS,
+    // le code appelant (Supabase client par ex) gérera son fallback proprement.
+    return new Response(
+      JSON.stringify({ error: "Service indisponible — hors ligne ou erreur réseau", offline: true }),
+      { status: 503, statusText: "Service Unavailable", headers: { "Content-Type": "application/json" } }
+    );
   }
 }
 

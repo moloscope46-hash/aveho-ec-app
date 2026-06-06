@@ -96,7 +96,7 @@ function TransfertsInner() {
       const [d, s, c, m, a] = await Promise.all([
         tryFetch(supabase.from("depots").select("id, nom, niveau_hierarchique, couleur, icone, type").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("services").select("id, nom").eq("structure_id", auth.structureId)),
-        tryFetch(supabase.from("chambres").select("id, numero, nom").eq("structure_id", auth.structureId).limit(500)),
+        tryFetch(supabase.from("chambres").select("id, nom").eq("structure_id", auth.structureId).limit(500)),
         tryFetch(supabase.from("magasins").select("id, nom").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("articles").select("id, libelle, reference").eq("structure_id", auth.structureId).limit(500)),
       ]);
@@ -256,7 +256,7 @@ function TransfertsInner() {
     }
     if (chambreId) {
       const c = chambres.find(x => x.id === chambreId);
-      if (c) parts.push({ label: `Ch. ${c.numero ?? c.nom}`, icon: "ti-bed", color: "#EF9F27" });
+      if (c) parts.push({ label: `Ch. ${c.nom || ""}`, icon: "ti-bed", color: "#EF9F27" });
     }
     return parts;
   }
@@ -468,7 +468,7 @@ function TransfertsInner() {
                 <label>Chambre source</label>
                 <select value={form.chambre_source_id || ""} onChange={(e) => setForm({ ...form, chambre_source_id: e.target.value || null })}>
                   <option value="">—</option>
-                  {chambres.map(c => <option key={c.id} value={c.id}>Ch. {c.numero ?? c.nom}</option>)}
+                  {chambres.map(c => <option key={c.id} value={c.id}>Ch. {c.nom || ""}</option>)}
                 </select>
               </div>
             </div>
@@ -495,7 +495,7 @@ function TransfertsInner() {
                 <label>Chambre destination</label>
                 <select value={form.chambre_destination_id || ""} onChange={(e) => setForm({ ...form, chambre_destination_id: e.target.value || null })}>
                   <option value="">—</option>
-                  {chambres.map(c => <option key={c.id} value={c.id}>Ch. {c.numero ?? c.nom}</option>)}
+                  {chambres.map(c => <option key={c.id} value={c.id}>Ch. {c.nom || ""}</option>)}
                 </select>
               </div>
             </div>

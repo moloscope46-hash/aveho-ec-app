@@ -1,15 +1,8 @@
 "use client";
 // =============================================================
-//  /depots — Page complète refondue (0.58.75)
-//
-//  Fonctionnalités :
-//   - Liste des dépôts avec hiérarchie complète :
-//     Groupement → Bâtiment → Étage → Service → Stock / Chambre
-//   - Création d'un dépôt avec rattachement multi-niveaux
-//   - Inventaire intégré : voir tous les matériels d'un dépôt
-//   - Scan rapide pour déplacer du matériel (lien vers /scan/quick)
-//   - Filtres par type, niveau hiérarchique, bâtiment
-//   - Indicateurs sécurité, T°, humidité
+//  /depots — Page complète refondue (0.58.78)
+//  Hiérarchie SIMPLIFIÉE : Bâtiment → Service → Chambre / Magasin
+//  (plus de groupements ni d'étages — tables non créées)
 // =============================================================
 
 import { useEffect, useState, useMemo } from "react";
@@ -24,12 +17,11 @@ import BackButton from "../components/BackButton";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 
 const NIVEAUX_HIERARCHIQUES = [
-  { value: "groupement", lbl: "Groupement", icon: "ti-building-community", color: "#7a6fb0" },
   { value: "batiment", lbl: "Bâtiment", icon: "ti-building", color: "#185FA5" },
-  { value: "etage", lbl: "Étage", icon: "ti-stairs", color: "#7CC8C8" },
   { value: "service", lbl: "Service", icon: "ti-stethoscope", color: "#5aa05a" },
   { value: "chambre", lbl: "Chambre", icon: "ti-bed", color: "#EF9F27" },
-  { value: "mobile", lbl: "Mobile", icon: "ti-truck", color: "#C9867F" },
+  { value: "magasin", lbl: "Magasin", icon: "ti-truck", color: "#C9867F" },
+  { value: "mobile", lbl: "Mobile", icon: "ti-package", color: "#7a6fb0" },
 ];
 
 const TYPES_DEPOT = [
@@ -41,7 +33,7 @@ const TYPES_DEPOT = [
   { value: "stupefiant", lbl: "Stupéfiants", icon: "ti-lock" },
 ];
 
-function niveauMeta(n) { return NIVEAUX_HIERARCHIQUES.find(x => x.value === n) || NIVEAUX_HIERARCHIQUES[1]; }
+function niveauMeta(n) { return NIVEAUX_HIERARCHIQUES.find(x => x.value === n) || NIVEAUX_HIERARCHIQUES[0]; }
 function typeMeta(t) { return TYPES_DEPOT.find(x => x.value === t) || TYPES_DEPOT[0]; }
 
 export default function DepotsPage() {
@@ -50,9 +42,7 @@ export default function DepotsPage() {
   const auth = useAuth();
   const cart = useCart();
 
-  const [groupements, setGroupements] = useState([]);
   const [batiments, setBatiments] = useState([]);
-  const [etages, setEtages] = useState([]);
   const [services, setServices] = useState([]);
   const [chambres, setChambres] = useState([]);
   const [magasins, setMagasins] = useState([]);
@@ -74,24 +64,17 @@ export default function DepotsPage() {
   async function loadRefs() {
     if (!auth.ready || !auth.structureId) return;
     try {
-      const tryFetch = async (table, query) => {
-        try {
-          const res = await query;
-          return res.data || [];
-        } catch (e) {
-          if (e.code === "42P01" || /does not exist/i.test(e.message || "")) return [];
-          throw e;
-        }
+      const tryFetch = async (q) => {
+        try { const r = await q; return r.data || []; }
+        catch (e) { if (e.code === "42P01" || e.code === "42703") return []; throw e; }
       };
-      const [g, b, e, s, c, m] = await Promise.all([
-        tryFetch("groupements", supabase.from("groupements").select("id, nom, couleur, icone").eq("structure_id", auth.structureId)),
-        tryFetch("batiments", supabase.from("batiments").select("id, nom, couleur, icone").eq("structure_id", auth.structureId)),
-        tryFetch("etages", supabase.from("etages").select("id, nom, numero, batiment_id").eq("structure_id", auth.structureId)),
-        tryFetch("services", supabase.from("services").select("id, nom, batiment_id").eq("structure_id", auth.structureId)),
-        tryFetch("chambres", supabase.from("chambres").select("id, numero, nom, service_id").eq("structure_id", auth.structureId).limit(500)),
-        tryFetch("magasins", supabase.from("magasins").select("id, nom").eq("structure_id", auth.structureId)),
+      const [b, s, c, m] = await Promise.all([
+        tryFetch(supabase.from("batiments").select("id, nom").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("services").select("id, nom, batiment_id").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("chambres").select("id, nom, service_id").eq("structure_id", auth.structureId).limit(500)),
+        tryFetch(supabase.from("magasins").select("id, nom").eq("structure_id", auth.structureId)),
       ]);
-      setGroupements(g); setBatiments(b); setEtages(e); setServices(s); setChambres(c); setMagasins(m);
+      setBatiments(b); setServices(s); setChambres(c); setMagasins(m);
     } catch (err) {
       console.error("[depots] refs:", err);
     }
@@ -142,19 +125,12 @@ export default function DepotsPage() {
     });
   }, [depots, search, filterType, filterNiveau, filterBatiment]);
 
+  // Chemin hiérarchique : Bâtiment > Service > Chambre > Magasin
   function getHierarchy(d) {
     const path = [];
-    if (d.groupement_id) {
-      const g = groupements.find(x => x.id === d.groupement_id);
-      if (g) path.push({ label: g.nom, icon: g.icone || "ti-building-community", color: g.couleur || "#7a6fb0" });
-    }
     if (d.batiment_id) {
       const b = batiments.find(x => x.id === d.batiment_id);
-      if (b) path.push({ label: b.nom, icon: b.icone || "ti-building", color: b.couleur || "#185FA5" });
-    }
-    if (d.etage_id) {
-      const e = etages.find(x => x.id === d.etage_id);
-      if (e) path.push({ label: `Étage ${e.numero ?? "?"} · ${e.nom}`, icon: "ti-stairs", color: "#7CC8C8" });
+      if (b) path.push({ label: b.nom, icon: "ti-building", color: "#185FA5" });
     }
     if (d.service_id) {
       const s = services.find(x => x.id === d.service_id);
@@ -162,7 +138,7 @@ export default function DepotsPage() {
     }
     if (d.chambre_id) {
       const c = chambres.find(x => x.id === d.chambre_id);
-      if (c) path.push({ label: `Ch. ${c.numero ?? c.nom}`, icon: "ti-bed", color: "#EF9F27" });
+      if (c) path.push({ label: `Ch. ${c.nom || ""}`, icon: "ti-bed", color: "#EF9F27" });
     }
     if (d.magasin_id) {
       const m = magasins.find(x => x.id === d.magasin_id);
@@ -170,11 +146,6 @@ export default function DepotsPage() {
     }
     return path;
   }
-
-  const etagesForBatiment = useMemo(() => {
-    if (!form.batiment_id) return [];
-    return etages.filter(e => e.batiment_id === form.batiment_id);
-  }, [etages, form.batiment_id]);
 
   const servicesForBatiment = useMemo(() => {
     if (!form.batiment_id) return services;
@@ -207,16 +178,14 @@ export default function DepotsPage() {
         code: form.code || null,
         type: form.type || "general",
         niveau_hierarchique: form.niveau_hierarchique || null,
-        groupement_id: form.groupement_id || null,
         batiment_id: form.batiment_id || null,
-        etage_id: form.etage_id || null,
         service_id: form.service_id || null,
         chambre_id: form.chambre_id || null,
         magasin_id: form.magasin_id || null,
         capacite_max: form.capacite_max ? parseInt(form.capacite_max, 10) : null,
-        temperature_min: form.temperature_min !== "" && form.temperature_min !== undefined && form.temperature_min !== null ? parseFloat(form.temperature_min) : null,
-        temperature_max: form.temperature_max !== "" && form.temperature_max !== undefined && form.temperature_max !== null ? parseFloat(form.temperature_max) : null,
-        humidite_max: form.humidite_max !== "" && form.humidite_max !== undefined && form.humidite_max !== null ? parseFloat(form.humidite_max) : null,
+        temperature_min: form.temperature_min !== "" && form.temperature_min != null ? parseFloat(form.temperature_min) : null,
+        temperature_max: form.temperature_max !== "" && form.temperature_max != null ? parseFloat(form.temperature_max) : null,
+        humidite_max: form.humidite_max !== "" && form.humidite_max != null ? parseFloat(form.humidite_max) : null,
         securise: !!form.securise,
         adresse: form.adresse || null,
         code_postal: form.code_postal || null,
@@ -257,7 +226,7 @@ export default function DepotsPage() {
           icon="ti-building-warehouse"
           title="Dépôts"
           accent={`${depots.length} dépôt${depots.length > 1 ? "s" : ""}`}
-          sub="Hiérarchie complète : Groupement → Bâtiment → Étage → Service → Chambre / Stock · Inventaire intégré + scan rapide"
+          sub="Hiérarchie : Bâtiment → Service → Chambre / Magasin · Inventaire intégré + scan rapide"
         />
 
         <Panel style={{ marginBottom: 14, padding: "12px 14px" }}>
@@ -294,7 +263,7 @@ export default function DepotsPage() {
           <EmptyState
             illustration="package"
             title={depots.length === 0 ? "Aucun dépôt" : "Aucun résultat"}
-            message={depots.length === 0 ? "Crée ton premier dépôt pour organiser ton stock." : "Essaie d'élargir tes filtres."}
+            message={depots.length === 0 ? "Crée ton premier dépôt." : "Essaie d'élargir tes filtres."}
             actionLabel={depots.length === 0 ? "Créer un dépôt" : null}
             onAction={depots.length === 0 ? openNew : null}
           />
@@ -310,10 +279,8 @@ export default function DepotsPage() {
                   background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12,
                   borderLeft: `4px solid ${d.couleur || niveau.color}`,
                   padding: "14px 16px", transition: "all .15s",
-                  opacity: d.actif === false ? 0.6 : 1, position: "relative",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 6px 18px rgba(20,33,49,.12)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "none"; }}>
+                  opacity: d.actif === false ? 0.6 : 1,
+                }}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
                     <div style={{ width: 44, height: 44, borderRadius: 10, background: `${d.couleur || niveau.color}22`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <i className={`ti ${d.icone || type.icon}`} style={{ color: d.couleur || niveau.color, fontSize: 22 }} />
@@ -329,7 +296,7 @@ export default function DepotsPage() {
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
                       {d.securise && <span title="Accès restreint" style={{ background: "#fde4e1", color: "#c0392b", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>🔒 SÉCURISÉ</span>}
-                      {(d.temperature_min !== null && d.temperature_min !== undefined) && <span title="Température contrôlée" style={{ background: "rgba(124,200,200,.18)", color: "#1c5454", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>❄ {d.temperature_min}°/{d.temperature_max}°</span>}
+                      {(d.temperature_min != null) && <span style={{ background: "rgba(124,200,200,.18)", color: "#1c5454", padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}>❄ {d.temperature_min}°/{d.temperature_max}°</span>}
                     </div>
                   </div>
 
@@ -381,7 +348,7 @@ export default function DepotsPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld" style={{ gridColumn: "span 2" }}>
                 <label>Nom du dépôt *</label>
-                <input value={form.nom || ""} onChange={(e) => setForm({ ...form, nom: e.target.value })} placeholder="Ex: Dépôt principal Bât. A · Stock pharmacie service neuro" />
+                <input value={form.nom || ""} onChange={(e) => setForm({ ...form, nom: e.target.value })} placeholder="Ex: Dépôt principal Bât. A" />
               </div>
               <div className="fld">
                 <label>Code interne</label>
@@ -413,28 +380,14 @@ export default function DepotsPage() {
             </div>
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#7a6fb0", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3d8f5", paddingBottom: 4 }}>
-              <i className="ti ti-hierarchy" /> Rattachements hiérarchiques
+              <i className="ti ti-hierarchy" /> Rattachements
             </h4>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld">
-                <label>Groupement</label>
-                <select value={form.groupement_id || ""} onChange={(e) => setForm({ ...form, groupement_id: e.target.value || null })}>
-                  <option value="">— Aucun —</option>
-                  {groupements.map(g => <option key={g.id} value={g.id}>{g.nom}</option>)}
-                </select>
-              </div>
-              <div className="fld">
                 <label>Bâtiment</label>
-                <select value={form.batiment_id || ""} onChange={(e) => setForm({ ...form, batiment_id: e.target.value || null, etage_id: null, service_id: null, chambre_id: null })}>
+                <select value={form.batiment_id || ""} onChange={(e) => setForm({ ...form, batiment_id: e.target.value || null, service_id: null, chambre_id: null })}>
                   <option value="">— Aucun —</option>
                   {batiments.map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
-                </select>
-              </div>
-              <div className="fld">
-                <label>Étage</label>
-                <select value={form.etage_id || ""} onChange={(e) => setForm({ ...form, etage_id: e.target.value || null })} disabled={!form.batiment_id}>
-                  <option value="">— Aucun —</option>
-                  {etagesForBatiment.map(e => <option key={e.id} value={e.id}>{e.nom} {e.numero !== null ? `(${e.numero})` : ""}</option>)}
                 </select>
               </div>
               <div className="fld">
@@ -448,7 +401,7 @@ export default function DepotsPage() {
                 <label>Chambre (stock chambre)</label>
                 <select value={form.chambre_id || ""} onChange={(e) => setForm({ ...form, chambre_id: e.target.value || null })} disabled={!form.service_id}>
                   <option value="">— Aucune —</option>
-                  {chambresForService.map(c => <option key={c.id} value={c.id}>Ch. {c.numero ?? c.nom}</option>)}
+                  {chambresForService.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
                 </select>
               </div>
               {form.type === "deporte" && (
@@ -485,7 +438,7 @@ export default function DepotsPage() {
             </div>
             <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: form.securise ? "rgba(227,93,91,.10)" : "#fafbfc", border: `1px solid ${form.securise ? "#e35d5b" : "#e3e9ee"}`, borderRadius: 6, cursor: "pointer", fontSize: 12.5, marginTop: 8 }}>
               <input type="checkbox" checked={!!form.securise} onChange={(e) => setForm({ ...form, securise: e.target.checked })} />
-              <span><i className="ti ti-lock" /> <b>Accès restreint</b> (médicaments contrôlés, coffres, stupéfiants)</span>
+              <span><i className="ti ti-lock" /> <b>Accès restreint</b> (médicaments, coffres, stupéfiants)</span>
             </label>
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3e9ee", paddingBottom: 4 }}>
@@ -516,9 +469,10 @@ function InventaireModal({ depot, onClose, supabase, auth, router }) {
   useEffect(() => {
     (async () => {
       try {
+        // 0.58.78 : SELECT minimal pour éviter les 400 sur colonnes potentiellement absentes
         const { data } = await supabase
           .from("materiels")
-          .select("id, libelle, numero_serie, numero_lot, etat, patient_id, article_id, date_peremption")
+          .select("id, libelle, etat, depot_id")
           .eq("structure_id", auth.structureId)
           .eq("depot_id", depot.id)
           .limit(500);
@@ -534,11 +488,7 @@ function InventaireModal({ depot, onClose, supabase, auth, router }) {
   const filtered = useMemo(() => {
     if (!search.trim()) return materiels;
     const q = search.toLowerCase();
-    return materiels.filter(m =>
-      (m.libelle || "").toLowerCase().includes(q) ||
-      (m.numero_serie || "").toLowerCase().includes(q) ||
-      (m.numero_lot || "").toLowerCase().includes(q)
-    );
+    return materiels.filter(m => (m.libelle || "").toLowerCase().includes(q));
   }, [materiels, search]);
 
   return (
@@ -552,11 +502,11 @@ function InventaireModal({ depot, onClose, supabase, auth, router }) {
         </>
       }>
       <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(124,200,200,.10)", borderRadius: 8, fontSize: 12.5, color: "#1c5454" }}>
-        <i className="ti ti-info-circle" /> <b>{materiels.length} matériels</b> dans ce dépôt. Tu peux scanner un QR matériel pour le déplacer rapidement.
+        <i className="ti ti-info-circle" /> <b>{materiels.length} matériels</b> dans ce dépôt.
       </div>
       <input
         type="search"
-        placeholder="🔍 Rechercher (libellé, S/N, lot...)"
+        placeholder="🔍 Rechercher..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{ width: "100%", padding: "8px 12px", border: "1px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit", marginBottom: 10 }}
@@ -576,10 +526,6 @@ function InventaireModal({ depot, onClose, supabase, auth, router }) {
               <i className="ti ti-package" style={{ color: "#185FA5", fontSize: 18 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#142131" }}>{m.libelle || "Matériel"}</div>
-                <div style={{ fontSize: 11, color: "#5a6878" }}>
-                  {m.numero_serie && <span>S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{m.numero_serie}</code></span>}
-                  {m.numero_lot && <span> · Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{m.numero_lot}</code></span>}
-                </div>
               </div>
               <span style={{ background: m.etat === "Disponible" ? "rgba(90,160,90,.15)" : "rgba(239,159,39,.15)", color: m.etat === "Disponible" ? "#5aa05a" : "#EF9F27", padding: "2px 7px", borderRadius: 4, fontSize: 10, fontWeight: 700 }}>
                 {m.etat || "—"}

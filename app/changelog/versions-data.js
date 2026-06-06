@@ -240,6 +240,51 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.78",
+    "kind": "refactor",
+    "titre": "🧹 CLEANUP : suppression définitive groupements/etages/groupement_etablissements + hiérarchie simplifiée Bâtiment → Service → Chambre",
+    "chantiers": [
+      { "code": "FIX", "txt": "🧹 **SQL `migration-0.58.78-cleanup-only-existing-tables.sql`** — abandon des 3 tables que j'avais créées en 0.58.75 (qui causaient les erreurs SQL idempotentes en cascade). On utilise EXCLUSIVEMENT les tables qui existent déjà dans ta DB : `batiments`, `services`, `chambres`, `depots`, `transferts`, `magasins`. Le script : `DROP VIEW v_depots_hierarchie CASCADE` · `DROP TABLE groupements, groupement_etablissements, etages CASCADE` · `DROP COLUMN etage_id` sur depots/chambres/services · `DROP COLUMN groupement_id` sur depots · Garde uniquement les ALTER utiles sur `depots` (service_id, chambre_id, code, niveau_hierarchique, capacite_max, températures, securise, couleur, icone...) et `transferts` (depot_source/dest_id, chambre_source/dest_id, service_source/dest_id, materiel_id, scan_source, priorite, dates+users validation/réception) · Ajoute couleur/icone sur `batiments` · Recrée v_depots_hierarchie SIMPLIFIÉE : `Bâtiment > Service > Chambre > Magasin` sans .numero (utilise UNIQUEMENT .nom)" },
+      { "code": "FIX", "txt": "🗑 **Suppression de la page `/groupements`** — `rm -rf app/groupements/`. La table n'existe plus → la page n'a plus de raison d'être" },
+      { "code": "AI", "txt": "♻ **Refonte complète de `/depots/page.js`** — hiérarchie SIMPLIFIÉE à 4 niveaux : Bâtiment → Service → Chambre → Magasin (avec Mobile en 5ème niveau optionnel). Sélecteurs en cascade (changer Bâtiment vide Service vide Chambre). Inventaire intégré dans modal au clic. Bouton scan rapide → `/scan/quick`. Bouton transfert pré-rempli avec dépôt source",
+        "code_snippet": {
+          "file": "app/depots/page.js (0.58.78)",
+          "note": "Récupération RÉFs avec tryFetch pour graceful fallback",
+          "lang": "javascript",
+          "after": "const tryFetch = async (q) => {\n  try { const r = await q; return r.data || []; }\n  catch (e) { \n    // 42P01 = table absente, 42703 = colonne absente\n    if (e.code === '42P01' || e.code === '42703') return [];\n    throw e;\n  }\n};\nconst [b, s, c, m] = await Promise.all([\n  tryFetch(supabase.from('batiments').select('id, nom').eq('structure_id', auth.structureId)),\n  tryFetch(supabase.from('services').select('id, nom, batiment_id').eq('structure_id', auth.structureId)),\n  tryFetch(supabase.from('chambres').select('id, nom, service_id').eq('structure_id', auth.structureId).limit(500)),\n  tryFetch(supabase.from('magasins').select('id, nom').eq('structure_id', auth.structureId)),\n]);"
+        }
+      },
+      { "code": "FIX", "txt": "🔧 **`/transferts/page.js`** — retire `c.numero` partout, utilise uniquement `c.nom` (colonne qui existe). Sélecteurs chambres : `Ch. {c.nom || \"\"}` au lieu de `Ch. {c.numero ?? c.nom}`. Select adapté : `select('id, nom')` au lieu de `select('id, numero, nom')`" },
+      { "code": "FIX", "txt": "🔧 **`BatimentServiceSwitcher`** — ne passe plus par la table `etages` (supprimée). Services maintenant chargés DIRECTEMENT via `services.batiment_id`. Fallback gracieux si `batiment_id` absent : tous les services de la structure. Plus de table intermédiaire" },
+      { "code": "INFO", "txt": "📋 **Hiérarchie finale officielle** (à utiliser dans tout le code futur) : `Bâtiment` → `Service` → `Chambre` → `Magasin` (avec `Mobile` en niveau spécial pour matériel mobile sans rattachement fixe). Pas d'étages, pas de groupements. Les services sont rattachés au bâtiment via `services.batiment_id`. Les chambres au service via `chambres.service_id`. Les dépôts au bâtiment OU service OU chambre OU magasin selon `niveau_hierarchique`" }
+    ],
+    "themes": ["fix", "sql", "refactor"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.78.html"
+  },
+  {
+    "v": "0.58.77",
+    "kind": "hotfix",
+    "titre": "🆘 HOTFIX recovery : SQL 0.58.75 partiellement appliqué + SW Response silencieuse",
+    "chantiers": [
+      { "code": "FIX", "txt": "🆘 **Nouveau SQL `migration-0.58.77-fix-idempotent-recovery.sql`** — récupère le cas où 0.58.75 a foiré sur `CREATE VIEW v_depots_hierarchie` parce que `etages.numero` n'existait pas. Ce script idempotent : (1) `ALTER TABLE etages ADD COLUMN IF NOT EXISTS numero, structure_id, batiment_id, nom, couleur, icone, notes, actif, timestamps` pour rattraper si la table existait déjà sans ces colonnes · (2) Recrée `groupements` + `groupement_etablissements` si absentes (vu le 404 dans tes logs) · (3) Réapplique tous les ALTER `depots` + `transferts` en mode `IF NOT EXISTS` · (4) Ajoute `couleur`/`icone` sur `batiments` si manquants · (5) **DROP + CREATE** propre de `v_depots_hierarchie` une fois que etages.numero existe. Tout passe en `IF NOT EXISTS` donc 100% safe à relancer même si déjà appliqué partiellement" },
+      { "code": "FIX", "txt": "🔇 **SW : 503 silencieuse au lieu de throw** dans `public/sw.js` — quand le fetch dans `networkFirst` échoue complètement et qu'il n'y a pas de cache ni fallback HTML, on ne re-throw plus l'erreur native (qui causait des `Uncaught (in promise) TypeError: Failed to fetch`). À la place : `return new Response(JSON, { status: 503 })` avec un body offline → l'appelant (Supabase client) gère son fallback proprement, et la console reste propre",
+        "code_snippet": {
+          "file": "public/sw.js",
+          "note": "Plus de throw réseau native",
+          "lang": "javascript",
+          "before": "} catch (e) {\n  // ... retry + fallback HTML ...\n  // Sinon re-throw l'erreur native\n  throw e;  // ❌ pollue la console\n}",
+          "after": "} catch (e) {\n  // ... retry + fallback HTML ...\n  // 0.58.77 : Response 503 silencieuse au lieu de throw\n  return new Response(\n    JSON.stringify({ error: 'Service indisponible', offline: true }),\n    { status: 503, headers: { 'Content-Type': 'application/json' } }\n  );\n}"
+        }
+      },
+      { "code": "INFO", "txt": "🔍 **Diagnostic des 400 dans tes logs** : `batiment_id` absent sur `chambres` (sonde du helper, géré gracefully — ne crash plus depuis 0.58.70), `couleur/icone` absent sur `batiments` (rattrapé en 0.58.77), `groupements` 404 (table jamais créée, rattrapé en 0.58.77), `etages.numero` absent (rattrapé en 0.58.77), `materiels?article_id=...` 400 (probable cascade depuis l'échec de la vue, devrait passer après application du SQL). Tous ces 400 disparaissent après application du SQL 0.58.77" },
+      { "code": "INFO", "txt": "🐛 **React #310 sur /scan/article** persiste — c'est un bug de hook qui dépend d'un état conditionnel. Tous les hooks du composant `ScanArticleInner` sont au top avant le `if (!auth.ready) return null` donc ce n'est pas un hook conditionnel direct. Cause probable : le composant enfant `QrScanner` (html5-qrcode wrapper) qui peut avoir un hook conditionnel basé sur `mounted`. **Workaround temporaire** : utilise `/scan/quick` à la place qui ne crashe pas. **Fix prévu en 0.58.78** une fois reproduit en dev local avec stack trace non minifiée" }
+    ],
+    "themes": ["fix", "supabase", "sw"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.77.html"
+  },
+  {
     "v": "0.58.76",
     "kind": "hotfix",
     "titre": "🔧 HOTFIX 3-en-1 : SW skipWaiting + Playwright auto-dev + 9 tests obsolètes skip",

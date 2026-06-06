@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.77 — Recovery SQL 0.58.75</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1a3a4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1000px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
+.bg-blob.r{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.55) 0%,transparent 70%)}
+.bg-blob.t{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%)}
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20));backdrop-filter:blur(28px);border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#ff8a85;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.3}
+h1 small{font-size:13px;font-weight:500;color:#ffb4b0;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#ffb4b0}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.bug{border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.14),rgba(20,33,49,.6))}
+.panel.fix{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.warn{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.12),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+pre.bad{border-left-color:#e35d5b}pre.good{border-left-color:#5aa05a}
+ul{padding-left:20px}li{margin:6px 0}
+.step{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:rgba(255,255,255,.04);border-radius:10px;margin:8px 0;border-left:3px solid #7CC8C8}
+.step-num{background:linear-gradient(135deg,#7CC8C8,#5da8a8);color:#142131;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.step-body{flex:1;color:#fff;font-size:13px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+
+<div class="bg">
+  <div class="bg-blob r"></div>
+  <div class="bg-blob t"></div>
+</div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:#ff8a85"></span>HOTFIX 0.58.77 · RECOVERY</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🆘 Recovery du SQL 0.58.75 partiellement appliqué + SW Response silencieuse<small>Réponse aux 400 cascade : etages.numero, groupements 404, batiments.couleur, vue v_depots_hierarchie</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.77-alpha</code></span>
+    <span><b>Type :</b> Hotfix recovery</span>
+    <span><b>SQL :</b> 🔴 1 nouveau à appliquer</span>
+  </div>
+</header>
+
+<h2>🩺 Diagnostic des 400 dans tes logs</h2>
+
+<div class="panel bug">
+  <pre class="bad">Failed to run sql query: ERROR: 42703: column e.numero does not exist
+LINE 205:   e.numero AS etage_numero,</pre>
+  <p style="margin:10px 0 0;color:#fff;font-size:13px"><b>Cause</b> : le SQL 0.58.75 contenait <code>CREATE TABLE IF NOT EXISTS etages (... numero INTEGER ...)</code>. Mais une table <code>etages</code> existait <b>déjà dans ta DB</b> (créée par un autre process avant) sans la colonne <code>numero</code>. Donc le CREATE n'a rien fait (IF NOT EXISTS), et plus tard la vue <code>v_depots_hierarchie</code> a essayé d'accéder à <code>e.numero</code> → 42703.</p>
+  <p style="margin:10px 0 0;color:#fff;font-size:13px">Conséquence : la transaction a échoué, plusieurs tables/colonnes ne se sont pas créées, d'où la cascade de 400 sur <code>batiments.couleur</code>, <code>groupements</code> (404), <code>etages.numero</code>, etc.</p>
+</div>
+
+<h2>✅ Le fix : SQL 0.58.77 idempotent</h2>
+
+<div class="panel fix">
+  <p style="margin:0 0 12px;color:#fff;font-size:13px"><b>Script de récupération</b> à appliquer en l'état (safe à relancer même si partiellement appliqué) :</p>
+  <pre>📄 public/sql/migration-0.58.77-fix-idempotent-recovery.sql</pre>
+  <p style="margin:12px 0 6px;color:#fff;font-size:12.5px"><b>Ce qu'il fait</b> :</p>
+  <ul style="margin:0;color:#fff;font-size:12.5px">
+    <li><b>ALTER TABLE etages</b> : ADD COLUMN IF NOT EXISTS <code>numero</code>, <code>structure_id</code>, <code>batiment_id</code>, <code>nom</code>, <code>couleur</code>, <code>icone</code>, <code>notes</code>, <code>actif</code>, timestamps — rattrape la table existante</li>
+    <li><b>CREATE TABLE IF NOT EXISTS groupements</b> + RLS — vu le 404 dans tes logs</li>
+    <li><b>CREATE TABLE IF NOT EXISTS groupement_etablissements</b> + RLS</li>
+    <li><b>ALTER TABLE chambres + services</b> : ADD <code>etage_id</code></li>
+    <li><b>ALTER TABLE depots</b> : tous les ALTER de 0.58.75 en mode IF NOT EXISTS (rejoue safe)</li>
+    <li><b>ALTER TABLE transferts</b> : idem (rejoue safe)</li>
+    <li><b>ALTER TABLE batiments</b> : ADD <code>couleur</code>, <code>icone</code> si manquants</li>
+    <li><b>DROP + CREATE VIEW v_depots_hierarchie</b> propre une fois etages.numero présent</li>
+  </ul>
+  <p style="margin:12px 0 0;color:#bfe6e6;font-size:12px;font-style:italic">100% safe à relancer plusieurs fois. Si tu as déjà appliqué partiellement, ça complète juste ce qui manque.</p>
+</div>
+
+<h2>🔇 SW : 503 silencieuse au lieu de throw</h2>
+
+<div class="panel warn">
+  <p style="margin:0 0 10px;color:#fff;font-size:13px">Le SW ligne 183 (<code>await fetch(req)</code>) re-throwait l'erreur native quand le réseau échouait sans cache. Résultat : <code>Uncaught (in promise) TypeError: Failed to fetch</code> dans la console à chaque échec réseau.</p>
+  <p style="margin:0 0 10px;color:#fff;font-size:13px"><b>Fix</b> : on retourne une <code>Response(503)</code> avec body JSON <code>{ offline: true }</code>. L'appelant (Supabase client) reçoit une 503 propre au lieu d'un network error → il gère son fallback sans polluer la console.</p>
+  <pre class="good">// 0.58.77 — SW networkFirst catch
+return new Response(
+  JSON.stringify({ error: 'Service indisponible', offline: true }),
+  { status: 503, headers: { 'Content-Type': 'application/json' } }
+);</pre>
+</div>
+
+<h2>🐛 React #310 sur /scan/article (en attente)</h2>
+
+<div class="panel warn">
+  <p style="margin:0 0 8px;color:#fff;font-size:13px">Le bug persiste sur cette page. Le composant <code>ScanArticleInner</code> a tous ses hooks au top avant <code>if (!auth.ready) return null</code> donc pas de hook conditionnel direct. Cause probable : <code>QrScanner</code> enfant.</p>
+  <p style="margin:0;color:#fff;font-size:13px"><b>Workaround</b> : utilise <code>/scan/quick</code> qui fait la même chose sans crash. <b>Fix prévu 0.58.78</b> une fois reproduit en dev local avec stack non minifiée.</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body"><b>Applique le SQL 0.58.77</b> dans Supabase Studio → SQL editor (copy-paste du fichier)</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body"><b>Vérifie</b> avec :<br/><code>SELECT COUNT(*) FROM groupements; SELECT * FROM v_depots_hierarchie LIMIT 1;</code></div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body"><b>Décompresse le zip 0.58.77</b> ou git pull</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body"><b>Tests</b> : <code>npm run test &amp;&amp; npm run test:e2e</code></div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body"><b>Push + Vercel</b> : <code>git add -A &amp;&amp; git commit -m "0.58.77 - SQL recovery" &amp;&amp; git push</code></div>
+</div>
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-body"><b>Hard refresh navigateur</b> (Ctrl+Shift+R) + unregister SW. Les <code>/groupements</code>, <code>/depots</code>, <code>/transferts</code> doivent maintenant charger sans 400</div>
+</div>
+
+<footer>
+Aveho — Espace Collectivité · 0.58.77 · 6 juin 2026 · 🆘 RECOVERY
+</footer>
+
+</div></body></html>

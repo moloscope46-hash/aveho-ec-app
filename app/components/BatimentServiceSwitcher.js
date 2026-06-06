@@ -86,28 +86,28 @@ export default function BatimentServiceSwitcher({ auth }) {
     let alive = true;
     (async () => {
       try {
-        // services rattachés via étages
-        const { data: etages } = await supabase
-          .from("etages")
-          .select("id")
-          .eq("batiment_id", batId);
-        const etageIds = (etages || []).map(e => e.id);
-        if (etageIds.length === 0) {
-          if (alive) { setServices([]); setSvcId(""); }
-          return;
+        // 0.58.78 : services rattachés DIRECTEMENT au bâtiment (plus d'étages)
+        // Si la colonne batiment_id n'existe pas sur services, on prend tout
+        let svcs = null, svcErr = null;
+        try {
+          const r = await supabase
+            .from("services")
+            .select("id, nom, icone")
+            .eq("batiment_id", batId)
+            .order("nom");
+          svcs = r.data; svcErr = r.error;
+        } catch (e) {
+          svcErr = e;
         }
-        const { data: svcs, error: svcErr } = await supabase
-          .from("services")
-          .select("id, nom, icone")
-          .in("etage_id", etageIds)
-          .order("nom");
+        // Fallback 1 : services sans batiment_id → on prend tous les services de la structure
+        if (svcErr && (svcErr.code === "42703" || /batiment_id|icone/i.test(svcErr.message || ""))) {
+          try {
+            const fb = await supabase.from("services").select("id, nom").eq("structure_id", structureId).order("nom");
+            svcs = fb.data || [];
+          } catch { svcs = []; }
+        }
         if (!alive) return;
-        let list = svcs || [];
-        // Fallback si icone n'existe pas
-        if (svcErr && (svcErr.code === "42703" || /icone/i.test(svcErr.message || ""))) {
-          const fb = await supabase.from("services").select("id, nom").in("etage_id", etageIds).order("nom");
-          list = fb.data || [];
-        }
+        const list = svcs || [];
         setServices(list);
         try {
           const saved = localStorage.getItem(STORAGE_SVC);
