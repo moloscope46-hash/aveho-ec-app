@@ -43,6 +43,73 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
   const [selected, setSelected] = useState(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
 
+  // 0.58.46 : ordre des colonnes (drag&drop), persisté par table en localStorage
+  const colsStorageKey = `av-crud-cols-${table}`;
+  const [colOrder, setColOrder] = useState(null);  // null = pas chargé encore, [] = chargé
+  const [draggedColKey, setDraggedColKey] = useState(null);
+  const [dragOverColKey, setDragOverColKey] = useState(null);
+  useEffect(() => {
+    // Charge l'ordre stocké au mount + sync avec les colonnes courantes
+    try {
+      const raw = localStorage.getItem(colsStorageKey);
+      const stored = raw ? JSON.parse(raw) : [];
+      // Réconcilie : garde l'ordre stocké, ajoute les nouvelles colonnes à la fin, retire les disparues
+      const currentKeys = columns.map(c => c.key);
+      const validStored = stored.filter(k => currentKeys.includes(k));
+      const missing = currentKeys.filter(k => !validStored.includes(k));
+      setColOrder([...validStored, ...missing]);
+    } catch {
+      setColOrder(columns.map(c => c.key));
+    }
+  }, [colsStorageKey, columns.length]);  // re-sync si on ajoute/retire des colonnes
+  // Persiste à chaque changement
+  useEffect(() => {
+    if (!colOrder || colOrder.length === 0) return;
+    try { localStorage.setItem(colsStorageKey, JSON.stringify(colOrder)); } catch {}
+  }, [colOrder, colsStorageKey]);
+  // Colonnes effectivement affichées dans l'ordre courant
+  const orderedColumns = colOrder
+    ? colOrder.map(k => columns.find(c => c.key === k)).filter(Boolean)
+    : columns;
+  // Reset = remettre l'ordre par défaut (celui de columns prop)
+  function resetColOrder() {
+    setColOrder(columns.map(c => c.key));
+    try { localStorage.removeItem(colsStorageKey); } catch {}
+  }
+  const isColOrderModified = colOrder && colOrder.join(",") !== columns.map(c => c.key).join(",");
+  // Handlers drag&drop
+  function handleColDragStart(e, key) {
+    setDraggedColKey(key);
+    try { e.dataTransfer.effectAllowed = "move"; } catch {}
+  }
+  function handleColDragOver(e, key) {
+    e.preventDefault();
+    if (key !== draggedColKey) setDragOverColKey(key);
+  }
+  function handleColDragLeave() {
+    setDragOverColKey(null);
+  }
+  function handleColDrop(e, targetKey) {
+    e.preventDefault();
+    if (!draggedColKey || draggedColKey === targetKey) {
+      setDraggedColKey(null); setDragOverColKey(null);
+      return;
+    }
+    setColOrder(prev => {
+      const arr = [...prev];
+      const fromIdx = arr.indexOf(draggedColKey);
+      const toIdx = arr.indexOf(targetKey);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+      arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, draggedColKey);
+      return arr;
+    });
+    setDraggedColKey(null); setDragOverColKey(null);
+  }
+  function handleColDragEnd() {
+    setDraggedColKey(null); setDragOverColKey(null);
+  }
+
   async function load() {
     let q = supabase.from(table).select(select).order("created_at", { ascending: false });
     if (etabId) q = q.eq("etablissement_id", etabId);
@@ -184,6 +251,17 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
           </button>
         )}
         {filterFields && <AdvFilters fields={filterFields} values={filters} onChange={(v) => { setFilters(v); setPage(0); }} />}
+        {/* 0.58.46 : bouton Réinitialiser l'ordre des colonnes (visible seulement si l'ordre a été modifié) */}
+        {isColOrderModified && (
+          <button
+            className="btn-ghost"
+            onClick={resetColOrder}
+            title="Remettre les colonnes dans leur ordre par défaut"
+            style={{ color: "#7CC8C8", borderColor: "rgba(124,200,200,.4)" }}
+          >
+            <i className="ti ti-arrows-shuffle" /> Réinitialiser colonnes
+          </button>
+        )}
       </div>
 
       {loading ? <StateMsg>Chargement…</StateMsg>
@@ -265,12 +343,35 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
                           onChange={() => toggleAllVisible(pageRows)}
                           title="Tout sélectionner (page courante)" />
                       </th>
-                      {columns.map((c) => (
+                      {orderedColumns.map((c) => (
                         <th key={c.key}
+                          draggable
+                          onDragStart={(e) => handleColDragStart(e, c.key)}
+                          onDragOver={(e) => handleColDragOver(e, c.key)}
+                          onDragLeave={handleColDragLeave}
+                          onDrop={(e) => handleColDrop(e, c.key)}
+                          onDragEnd={handleColDragEnd}
                           onClick={() => clickHeader(c)}
-                          style={{ cursor: c.skipSort ? "default" : "pointer", userSelect: "none" }}
-                          title={c.skipSort ? undefined : "Cliquer pour trier"}
+                          style={{
+                            cursor: c.skipSort ? "move" : "pointer",
+                            userSelect: "none",
+                            // 0.58.46 : indicateurs visuels drag
+                            opacity: draggedColKey === c.key ? 0.3 : 1,
+                            background: dragOverColKey === c.key ? "linear-gradient(135deg, rgba(124,200,200,.25), rgba(24,95,165,.15))" : undefined,
+                            borderLeft: dragOverColKey === c.key ? "2px solid #7CC8C8" : undefined,
+                            transition: "opacity 120ms, background 120ms",
+                          }}
+                          title={c.skipSort ? "Glisser pour réordonner" : "Cliquer pour trier · Glisser pour réordonner"}
                         >
+                          {/* 0.58.46 : poignée de drag visible au hover (ne déclenche rien, juste indicateur) */}
+                          <span style={{
+                            display: "inline-block",
+                            marginRight: 4,
+                            color: "#cfd5db",
+                            fontSize: 13,
+                            verticalAlign: "middle",
+                            cursor: "grab",
+                          }} aria-hidden="true">⋮⋮</span>
                           {c.label}
                           {sortBy === c.key && <i className={`ti ${sortDir === "asc" ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ marginLeft: 4, fontSize: 14, color: "#2a5a5a" }} />}
                           {sortBy !== c.key && !c.skipSort && <i className="ti ti-arrows-sort" style={{ marginLeft: 4, fontSize: 12, color: "#cfd5db" }} />}
@@ -283,7 +384,7 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
                     {pageRows.map((r) => (
                       <tr key={r.id} className={selected.has(r.id) ? "tr-selected" : ""}>
                         <td><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleRow(r.id)} /></td>
-                        {columns.map((c) => <td key={c.key}>{c.render ? c.render(r) : (r[c.key] ?? "—")}</td>)}
+                        {orderedColumns.map((c) => <td key={c.key}>{c.render ? c.render(r) : (r[c.key] ?? "—")}</td>)}
                         <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                           {canWrite && <i className="ti ti-edit" style={{ color: "#2a5a5a", cursor: "pointer", marginRight: 12 }} onClick={() => openEdit(r)} />}
                           {canDelete && <i className="ti ti-trash" style={{ color: "#C9867F", cursor: "pointer" }} onClick={() => del(r)} />}

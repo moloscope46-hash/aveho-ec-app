@@ -10,6 +10,8 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg } from "../ui";
 import { KpiRow } from "../kpis";
 import { logEvent } from "../../lib/events";
+// 0.58.45 : hook pour les page-actions du Cmd+K
+import { usePageAction } from "../../lib/usePageAction";
 import BulkActions, { useBulkSelection } from "../BulkActions";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 import { logger } from "../../lib/logger";
@@ -35,6 +37,30 @@ export default function Transferts() {
   const [form, setForm] = useState({ motif: "Réapprovisionnement", contenu: "article", quantite: 1 });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  // 0.58.45 : export CSV des transferts + page-actions Cmd+K
+  async function exportTransfertsCsv() {
+    try {
+      const { exportRows } = await import("../../lib/exportExcel");
+      await exportRows(rows || [], {
+        filename: `transferts_${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Transferts",
+        columns: {
+          "Date": (r) => r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "",
+          "Motif": "motif",
+          "Type": "contenu",
+          "Quantité": "quantite",
+          "Origine": (r) => r.origine_libelle || "",
+          "Destination": (r) => r.destination_libelle || "",
+          "Statut": "statut",
+        },
+      });
+    } catch (e) {
+      console.error("Export CSV transferts :", e);
+    }
+  }
+  usePageAction("open-new", () => { setErr(""); setModal(true); });
+  usePageAction("export-csv", () => exportTransfertsCsv());
 
   async function load() {
     const { data } = await supabase.from("transferts").select("*").order("created_at", { ascending: false });

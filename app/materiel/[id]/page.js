@@ -128,7 +128,8 @@ export default function FicheMateriel() {
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
                   {tags.map((t) => (
                     <span key={t.id} className="etq-tag" style={{ background: t.couleur + "22", color: t.couleur, border: `1px solid ${t.couleur}44` }}>
-                      <i className="ti ti-tag" /> {t.libelle}
+                      {/* 0.58.47 : icône custom */}
+                      <i className={`ti ${t.icone || "ti-tag"}`} /> {t.libelle}
                     </span>
                   ))}
                 </div>

@@ -648,7 +648,8 @@ export default function Patients() {
                                 if (!e) return null;
                                 return (
                                   <span key={eid} className="etq-tag" style={{ background: e.couleur + "22", color: e.couleur, border: `1px solid ${e.couleur}44` }}>
-                                    <i className="ti ti-tag" /> {e.libelle}
+                                    {/* 0.58.47 : icône custom de l'étiquette */}
+                                    <i className={`ti ${e.icone || "ti-tag"}`} /> {e.libelle}
                                   </span>
                                 );
                               })}
@@ -792,7 +793,7 @@ export default function Patients() {
                   }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <span className="etq-tag" style={{ background: e.couleur + "22", color: e.couleur, border: `1px solid ${e.couleur}44` }}>
-                        <i className="ti ti-tag" /> {e.libelle}
+                        <i className={`ti ${e.icone || "ti-tag"}`} /> {e.libelle}
                       </span>
                       {e.description && <span style={{ color: "#8a98a8", fontSize: 12 }}>{e.description}</span>}
                     </span>

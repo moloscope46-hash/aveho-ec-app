@@ -1,0 +1,278 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.47</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 30% -10%, #3a2a40 0%, #1a1224 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(201,134,127,.5)}70%{box-shadow:0 0 0 10px rgba(201,134,127,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes scale-in{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.terra{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(201,134,127,.55) 0%,transparent 70%)}
+.bg-blob.purple{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(122,111,176,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(201,134,127,.30),rgba(122,111,176,.20));backdrop-filter:blur(30px);border:1px solid rgba(201,134,127,.28);box-shadow:0 30px 80px rgba(58,42,64,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f0c5be;font-weight:700;background:rgba(201,134,127,.14);border:1px solid rgba(201,134,127,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#C9867F;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#C9867F;text-shadow:0 0 18px rgba(201,134,127,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#f0c5be;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#f0c5be}
+.meta b{color:#fff}
+.meta code{background:rgba(201,134,127,.12);color:#f0c5be;border:1px solid rgba(201,134,127,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#C9867F,#7a6fb0)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(201,134,127,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(201,134,127,.12);color:#f0c5be;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #C9867F}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO tags avec icônes */
+.tag-demo-grid{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;padding:16px;background:#fff;border-radius:12px;color:#142131}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid;animation:scale-in 300ms ease-out}
+.tag-tools{background:#185FA522;color:#185FA5;border-color:#185FA544}
+.tag-shield{background:#5aa05a22;color:#5aa05a;border-color:#5aa05a44}
+.tag-truck{background:#EF9F2722;color:#EF9F27;border-color:#EF9F2744}
+.tag-bolt{background:#e35d5b22;color:#e35d5b;border-color:#e35d5b44}
+.tag-medical{background:#7CC8C822;color:#7CC8C8;border-color:#7CC8C844}
+.tag-stetho{background:#C9867F22;color:#C9867F;border-color:#C9867F44}
+.tag-pill{background:#7a6fb022;color:#7a6fb0;border-color:#7a6fb044}
+.tag-wheel{background:#185FA522;color:#185FA5;border-color:#185FA544}
+
+/* DEMO IconPicker */
+.picker-demo{background:#fff;padding:14px;border-radius:14px;color:#142131;margin:14px 0;max-width:580px;box-shadow:0 8px 30px rgba(0,0,0,.30)}
+.picker-search{padding:8px 10px 8px 32px;border:1px solid #e3e9ee;border-radius:8px;width:100%;font-size:12.5px;position:relative}
+.picker-search-wrap{position:relative;margin-bottom:10px}
+.picker-search-wrap::before{content:"🔍";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px}
+.picker-cat{padding:8px;background:#fafbfc;border:1px solid #e3e9ee;border-radius:8px;margin-top:8px;max-height:220px;overflow-y:auto}
+.picker-cat-h{font-size:10.5px;color:#8a98a8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px}
+.picker-grid{display:flex;flex-wrap:wrap;gap:4px}
+.picker-btn{width:34px;height:34px;border-radius:8px;border:1px solid #e3e9ee;background:#fff;color:#5a6878;display:inline-flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+.picker-btn.selected{border:2px solid #185FA5;background:#185FA515;color:#185FA5;box-shadow:0 2px 8px #185FA540}
+
+/* DEMO annonce avec icone custom */
+.annonce-demo{background:linear-gradient(135deg,#fff8ec 0%,#fceedb 100%);border:1px solid #f0d59f;border-left:4px solid #EF9F27;border-radius:10px;padding:12px 14px;margin:10px 0;display:flex;align-items:center;gap:10px;color:#142131}
+.annonce-icon{flex-shrink:0;width:38px;height:38px;border-radius:50%;background:#EF9F2722;display:flex;align-items:center;justify-content:center;color:#EF9F27;font-size:20px}
+.annonce-body{flex:1;font-size:13px}
+.annonce-body b{display:block;margin-bottom:2px}
+.annonce-body span{font-size:11.5px;color:#8a98a8}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(201,134,127,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob terra"></div><div class="bg-blob purple"></div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.47</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.47 — Icônes personnalisables<small>Tags matériel · Étiquettes patient · Annonces · 70+ icônes Tabler organisées par catégorie</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.47-alpha</code></span>
+    <span><b>Tests :</b> ~4540 verts estimés</span>
+    <span><b>SQL :</b> <code>migration-0.58.47-tags-icone.sql</code></span>
+  </div>
+</header>
+
+<h2>🎨 1. Tags matériel avec icônes personnalisées</h2>
+
+<div class="panel">
+<p style="margin:0">Au lieu de la même icône <code>ti-tag</code> grise pour tous les tags, tu peux maintenant choisir une icône spécifique parmi 70+ icônes Tabler organisées par catégorie. Exemples concrets pour ton parc matériel :</p>
+</div>
+
+<div class="tag-demo-grid">
+<span class="tag tag-tools">🔧 En maintenance</span>
+<span class="tag tag-shield">🛡 Sous garantie</span>
+<span class="tag tag-truck">🚛 En livraison</span>
+<span class="tag tag-bolt">⚡ Urgent</span>
+<span class="tag tag-medical">➕ Stérile</span>
+<span class="tag tag-stetho">🩺 Diagnostic OK</span>
+<span class="tag tag-pill">💊 Médication</span>
+<span class="tag tag-wheel">♿ Mobilité réduite</span>
+</div>
+
+<p style="font-size:13px;color:#bfe6e6">↑ Aperçu de ce que tu peux faire — chaque tag = libellé + couleur + icône custom (avec fallback sur ti-tag par défaut)</p>
+
+<h2>🎯 2. Le composant IconPicker (sélecteur réutilisable)</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau composant <code>IconPicker</code> avec champ de recherche live, catégories pliables, bouton "Aucune icône" pour revenir au défaut. Réutilisable partout dans l'app (tags, étiquettes, annonces, et facilement extensible).</p>
+</div>
+
+<div class="picker-demo">
+<div class="picker-search-wrap"><input class="picker-search" placeholder="    Rechercher une icône (ex : bell, alert, user)…" value="medical" /></div>
+
+<button style="padding:4px 10px;border:1px solid #e3e9ee;background:#fff;color:#5a6878;border-radius:6px;font-size:11.5px;font-weight:500;cursor:pointer">🚫 Aucune icône</button>
+
+<div class="picker-cat">
+<div class="picker-cat-h">Médical & soins</div>
+<div class="picker-grid">
+  <button class="picker-btn">🩺</button>
+  <button class="picker-btn selected">❤</button>
+  <button class="picker-btn">➕</button>
+  <button class="picker-btn">💊</button>
+  <button class="picker-btn">💉</button>
+  <button class="picker-btn">🩹</button>
+  <button class="picker-btn">😷</button>
+  <button class="picker-btn">🛏</button>
+  <button class="picker-btn">♿</button>
+</div>
+
+<div class="picker-cat-h">Matériel & équipement</div>
+<div class="picker-grid">
+  <button class="picker-btn">🪑</button>
+  <button class="picker-btn">🛏</button>
+  <button class="picker-btn">🔧</button>
+  <button class="picker-btn">🪛</button>
+  <button class="picker-btn">⚙</button>
+  <button class="picker-btn">📦</button>
+  <button class="picker-btn">📋</button>
+</div>
+</div>
+</div>
+
+<pre>// 0.58.47 - app/components/IconPicker.js (NEW)
+export const ICON_CATALOG = {
+  'Tags & marqueurs': ['ti-tag', 'ti-bookmark', 'ti-star', 'ti-flag', 'ti-pin', 'ti-heart'],
+  'Statut & état':    ['ti-check', 'ti-x', 'ti-alert-triangle', 'ti-shield-check', 'ti-shield-x'],
+  'Médical & soins':  ['ti-stethoscope', 'ti-heartbeat', 'ti-medical-cross', 'ti-pill', 'ti-vaccine', 'ti-bandage', 'ti-mask', 'ti-emergency-bed', 'ti-wheelchair'],
+  'Matériel & équipement': ['ti-armchair-2', 'ti-bed', 'ti-tools', 'ti-screwdriver', 'ti-settings', 'ti-package', 'ti-box', 'ti-barcode', 'ti-device-tablet'],
+  'Urgence & priorité': ['ti-bolt', 'ti-flame', 'ti-clock-hour-3', 'ti-hourglass-high', 'ti-urgent', 'ti-fire-extinguisher'],
+  'Communication':    ['ti-bell', 'ti-mail', 'ti-phone', 'ti-message-circle', 'ti-megaphone'],
+  'Personnes':        ['ti-user', 'ti-users', 'ti-user-plus', 'ti-user-check', 'ti-user-star'],
+  'Lieux':            ['ti-home', 'ti-building-hospital', 'ti-building-warehouse', 'ti-map-pin'],
+  'Documents':        ['ti-file-text', 'ti-file-check', 'ti-clipboard', 'ti-receipt', 'ti-certificate'],
+  'Symboles':         ['ti-circle-filled', 'ti-rosette', 'ti-sparkles', 'ti-crown', 'ti-rocket', 'ti-target'],
+};
+
+export default function IconPicker({ value, onChange, color = '#185FA5', allowEmpty = true }) {
+  const [query, setQuery] = useState('');
+  const filteredCatalog = !query ? ICON_CATALOG : (...);
+
+  return (
+    &lt;div&gt;
+      &lt;input placeholder='Rechercher…' value={query} onChange={...} /&gt;
+      {allowEmpty &amp;&amp; &lt;button onClick={() => onChange(null)}&gt;Aucune icône&lt;/button&gt;}
+
+      {Object.entries(filteredCatalog).map(([cat, icons]) => (
+        &lt;div&gt;
+          &lt;h4&gt;{cat}&lt;/h4&gt;
+          {icons.map(icon => (
+            &lt;button onClick={() => onChange(icon)}
+              style={{ border: value === icon ? `2px solid ${color}` : '1px solid #e3e9ee' }}&gt;
+              &lt;i className={`ti ${icon}`} /&gt;
+            &lt;/button&gt;
+          ))}
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</pre>
+
+<h2>🏥 3. Étiquettes patient personnalisables</h2>
+
+<div class="panel">
+<p style="margin:0">Sur la page <code>/etiquettes</code>, ajoute des icônes parlantes à tes étiquettes patients : 🩺 ti-stethoscope pour 'Sortie clinique', 💊 ti-pill pour 'Traitement complexe', ♿ ti-wheelchair pour 'Mobilité réduite', 🚨 ti-emergency-bed pour 'Hospitalisation récente', etc.</p>
+</div>
+
+<div class="tag-demo-grid">
+<span class="tag tag-stetho">🩺 Sortie clinique</span>
+<span class="tag tag-medical">➕ Sortie hôpital récente</span>
+<span class="tag tag-pill">💊 Traitement complexe</span>
+<span class="tag tag-wheel">♿ Mobilité réduite</span>
+<span class="tag tag-bolt">⚡ Priorité élevée</span>
+</div>
+
+<h2>📢 4. Annonces avec icônes contextuelles</h2>
+
+<div class="panel">
+<p style="margin:0">L'icône d'une annonce peut <b>surcharger l'icône par défaut du niveau</b>. Si tu mets une icône custom dans la modal d'annonce, c'est celle-ci qui apparaît dans la bannière sticky (en haut sur desktop, en bas sur mobile).</p>
+</div>
+
+<div class="annonce-demo">
+<div class="annonce-icon">🔧</div>
+<div class="annonce-body">
+  <b>Maintenance prévue dimanche 9 juin de 8h à 12h</b>
+  <span>Coupure du serveur pour mise à jour. Pensez à sauvegarder votre travail avant.</span>
+</div>
+</div>
+
+<div class="annonce-demo" style="background:linear-gradient(135deg,#eef5fc 0%,#d6e8f7 100%);border-color:#bfd6f0;border-left-color:#185FA5">
+<div class="annonce-icon" style="background:#185FA522;color:#185FA5">🎉</div>
+<div class="annonce-body">
+  <b>Bravo équipe — objectif Q2 atteint !</b>
+  <span>Toutes les agences ont validé leurs DI dans les temps. Pot offert vendredi.</span>
+</div>
+</div>
+
+<div class="annonce-demo" style="background:linear-gradient(135deg,#fef0ee 0%,#fcdcd6 100%);border-color:#f0c4be;border-left-color:#c0392b">
+<div class="annonce-icon" style="background:#c0392b22;color:#c0392b">⚡</div>
+<div class="annonce-body">
+  <b>Coupure réseau en cours — agence de Toulouse</b>
+  <span>Bascule en mode dégradé activée. Reprise des services prévue à 14h.</span>
+</div>
+</div>
+
+<h2>📦 5. Migration SQL à exécuter</h2>
+
+<div class="panel sql">
+<p style="margin:0 0 8px"><b>À copier-coller dans Supabase SQL Editor</b> (ou utilise le fichier <code>public/sql/migration-0.58.47-tags-icone.sql</code>) :</p>
+<pre style="margin:0;background:#1a1410;color:#f0c5be">ALTER TABLE tags_materiel
+ADD COLUMN IF NOT EXISTS icone TEXT;
+
+ALTER TABLE etiquettes
+ADD COLUMN IF NOT EXISTS icone TEXT;
+
+ALTER TABLE annonces
+ADD COLUMN IF NOT EXISTS icone TEXT;</pre>
+<p style="margin:8px 0 0;font-size:11.5px;color:#bfe6e6">⚠ Sans cette migration, l'app continue de fonctionner mais le champ <code>icone</code> sera ignoré par Supabase — tous les tags garderont l'icône par défaut.</p>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Composant IconPicker</b> réutilisable avec 70+ icônes Tabler en 10 catégories (Médical, Matériel, Urgence, etc.)</li>
+<li><b>3 tables enrichies</b> : <code>tags_materiel</code>, <code>etiquettes</code>, <code>annonces</code> ont une colonne <code>icone</code> optionnelle</li>
+<li><b>6 endroits d'affichage patchés</b> : tags-materiel, etiquettes, annonces (admin) + materiels, materiel/[id], patients, AnnoncesBanner</li>
+<li><b>+30 tests</b> Vitest (~4540 verts estimés)</li>
+<li><b>SQL migration</b> : <code>migration-0.58.47-tags-icone.sql</code></li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4540 verts attendus
+npm run build           # OK attendu
+
+# 1) D'ABORD : exécuter la migration SQL dans Supabase SQL Editor
+# (sinon le champ icone sera ignoré par les inserts/updates)
+
+# 2) Ensuite : push
+git add -A
+git commit -m "Alpha 0.58.47 - Icônes personnalisables pour tags matériel, étiquettes patient, annonces"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.48+)</h2>
+<div class="panel">
+<ul>
+<li>Widget Trafic routier <b>si</b> clé Mappy/TomTom obtenue</li>
+<li>Sélecteur de couleur custom (au-delà de la palette de 9)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Drag&drop pour ordonner les étiquettes/tags dans la modal de sélection</li>
+<li>Auto-suggestion d'icônes basée sur le libellé du tag (ex : 'urgent' → ti-bolt automatique)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.47 · 5 juin 2026 · ICÔNES PARTOUT 🎨</footer>
+</div>
+
+</body></html>

@@ -46,20 +46,41 @@ export default function StatistiquesInterventions() {
       return;
     }
     setLoading(true);
+    // 0.58.48 : helper qui swallow les 404 (vue manquante) sans casser les autres
+    //   → si une vue n'existe pas en base, on log juste un warn et on retourne []
+    async function safeViewQuery(viewName, builderFn) {
+      try {
+        const builder = supabase.from(viewName).select("*").eq("structure_id", auth.structureId);
+        const finalQuery = builderFn ? builderFn(builder) : builder;
+        const { data, error } = await finalQuery;
+        if (error) {
+          // 404 ou colonne manquante → la vue n'est pas déployée
+          if (error.code === "PGRST205" || error.code === "42P01" || /not found/i.test(error.message || "")) {
+            console.warn(`[stats] Vue '${viewName}' indisponible (migration manquante). Retour [].`);
+            return null;
+          }
+          throw error;
+        }
+        return data;
+      } catch (e) {
+        console.warn(`[stats] Erreur vue '${viewName}':`, e?.message || e);
+        return null;
+      }
+    }
     const [gResp, tResp, uResp, hResp, dResp, mResp] = await Promise.all([
-      supabase.from("v_stats_di_global").select("*").eq("structure_id", auth.structureId).maybeSingle(),
-      supabase.from("v_stats_di_par_type").select("*").eq("structure_id", auth.structureId).order("nb_total", { ascending: false }).limit(10),
-      supabase.from("v_stats_di_par_urgence").select("*").eq("structure_id", auth.structureId),
-      supabase.from("v_stats_di_heatmap").select("*").eq("structure_id", auth.structureId),
-      supabase.from("v_stats_di_top_demandeurs").select("*").eq("structure_id", auth.structureId).order("nb_di", { ascending: false }).limit(10),
-      supabase.from("v_stats_di_par_mois").select("*").eq("structure_id", auth.structureId).order("mois_debut"),
+      safeViewQuery("v_stats_di_global", b => b.maybeSingle()),
+      safeViewQuery("v_stats_di_par_type", b => b.order("nb_total", { ascending: false }).limit(10)),
+      safeViewQuery("v_stats_di_par_urgence"),
+      safeViewQuery("v_stats_di_heatmap"),
+      safeViewQuery("v_stats_di_top_demandeurs", b => b.order("nb_di", { ascending: false }).limit(10)),
+      safeViewQuery("v_stats_di_par_mois", b => b.order("mois_debut")),
     ]);
-    setGlobal(gResp.data);
-    setParType(tResp.data || []);
-    setParUrgence(uResp.data || []);
-    setHeatmap(hResp.data || []);
-    setTopDemandeurs(dResp.data || []);
-    setParMois(mResp.data || []);
+    setGlobal(gResp);
+    setParType(tResp || []);
+    setParUrgence(uResp || []);
+    setHeatmap(hResp || []);
+    setTopDemandeurs(dResp || []);
+    setParMois(mResp || []);
     setLoading(false);
   }
 

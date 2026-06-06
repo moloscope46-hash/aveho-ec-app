@@ -1,0 +1,315 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.45</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #3a2a1a 0%, #1a1410 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(227,93,91,.5)}70%{box-shadow:0 0 0 10px rgba(227,93,91,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes blink-warn{0%,100%{opacity:1}50%{opacity:.4}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.orange{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.55) 0%,transparent 70%)}
+.bg-blob.amber{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(227,93,91,.30),rgba(239,159,39,.25));backdrop-filter:blur(30px);border:1px solid rgba(227,93,91,.28);box-shadow:0 30px 80px rgba(58,42,26,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#ffd0c5;font-weight:700;background:rgba(227,93,91,.14);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#e35d5b;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#e35d5b;text-shadow:0 0 18px rgba(227,93,91,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#ffd0c5;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#ffd0c5}
+.meta b{color:#fff}
+.meta code{background:rgba(227,93,91,.12);color:#ffd0c5;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#EF9F27)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(227,93,91,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(227,93,91,.12);color:#ffd0c5;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #e35d5b}
+ul{padding-left:20px}li{margin:6px 0}
+kbd{background:rgba(20,33,49,.8);color:#ffd0c5;border:1px solid rgba(255,208,197,.30);border-bottom:2px solid rgba(255,208,197,.30);padding:2px 7px;border-radius:4px;font-family:Consolas,monospace;font-size:11.5px;font-weight:600}
+
+/* DEMO vigilance */
+.vig{border-radius:8px;padding:10px 14px;margin:14px 0;border-left:4px solid;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vig-jaune{background:linear-gradient(135deg,#fef9c3,#fef3c7);color:#7a4f15;border-color:#EF9F27}
+.vig-orange{background:linear-gradient(135deg,#fed7aa,#fdba74);color:#7a3030;border-color:#e35d5b}
+.vig-rouge{background:linear-gradient(135deg,#fecaca,#fca5a5);color:#5c1818;border-color:#7a3030}
+.vig-tag{font-size:10px;font-weight:800;letter-spacing:1px;padding:3px 8px;border-radius:4px;text-transform:uppercase;color:#fff;animation:blink-warn 3s ease-in-out infinite}
+.tag-j{background:#EF9F27}.tag-o{background:#e35d5b}.tag-r{background:#7a3030}
+.vig-list{flex:1;font-size:12px;display:flex;flex-wrap:wrap;gap:10px}
+
+/* DEMO météo card avec vigilance */
+.weather-card{background:linear-gradient(135deg,#e0f4ff 0%,#fff 100%);border:1px solid #bce0f7;border-radius:14px;padding:14px;color:#142131;margin:14px 0;max-width:560px}
+
+/* DEMO Notes paste image */
+.notes-demo{background:linear-gradient(135deg,#fffef0,#fff);border:1px solid #f0e0a0;border-radius:14px;padding:18px;color:#142131;margin:14px 0;max-width:560px}
+.note-img{max-width:100%;max-height:200px;border-radius:8px;border:1px solid #f0d59f;display:block;margin:8px 0;background:linear-gradient(135deg,#7CC8C8,#185FA5);height:160px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;letter-spacing:.5px}
+.paste-bubble{background:#142131;color:#fff;padding:6px 12px;border-radius:20px;font-size:11.5px;display:inline-block;font-family:Consolas,monospace;margin:8px 0}
+
+/* DEMO Cmd+K */
+.cmdk-card{background:#fff;border-radius:14px;color:#142131;max-width:520px;margin:14px 0;box-shadow:0 8px 30px rgba(0,0,0,.30);overflow:hidden}
+.cmdk-input{padding:14px 18px;border-bottom:1px solid #e3e9ee;font-size:14px;color:#8a98a8}
+.cmdk-section{padding:10px 14px;border-bottom:1px solid #f4f7fa}
+.cmdk-section h4{margin:0 0 6px;font-size:11px;font-weight:700;color:#142131;text-transform:uppercase;letter-spacing:.5px}
+.cmdk-action{padding:8px 10px;display:flex;align-items:center;gap:12px;border-radius:8px;font-size:12.5px}
+.cmdk-action:hover{background:#eaf7f7}
+.cmdk-icon{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;background:#5aa05a22;color:#5aa05a}
+.cmdk-content{flex:1}
+.cmdk-content .title{font-weight:600}
+.cmdk-content .sub{font-size:10px;color:#8a98a8;margin-top:2px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(227,93,91,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob orange"></div><div class="bg-blob amber"></div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.45</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.45 — Vigilance météo + Notes Ctrl+V image + usePageAction ×7<small>Alertes orange/rouge automatiques · Coller une capture d'écran direct · Cmd+K export sur 7 pages</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.45-alpha</code></span>
+    <span><b>Tests :</b> ~4480 verts estimés</span>
+  </div>
+</header>
+
+<h2>⚠️ 1. Vigilance météo automatique (3 niveaux)</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px"><b>Approche pragmatique</b> : pas de clé Météo France (payante) → la vigilance est calculée localement à partir des données Open-Meteo déjà récupérées. Trois niveaux calqués sur Météo France :</p>
+<p style="margin:0;color:#e35d5b;font-weight:600">🟡 JAUNE · 🟠 ORANGE · 🔴 ROUGE</p>
+</div>
+
+<h3 style="color:#fff;margin-top:18px;font-size:16px">Exemple : ORANGE</h3>
+
+<div class="weather-card">
+<div class="vig vig-orange">
+  <span class="vig-tag tag-o">⚠ Vigilance ORANGE</span>
+  <span class="vig-list">
+    <span>💨 <b>Vent fort</b> (78 km/h)</span>
+    <span>🌧 <b>Forte pluie</b> (35 mm)</span>
+  </span>
+</div>
+<div style="display:flex;align-items:center;gap:14px;padding:8px 0">
+  <div style="font-size:54px">⛈</div>
+  <div>
+    <div style="font-size:30px;font-weight:700;color:#185FA5">14°<small style="font-size:16px;color:#5a8888">C</small></div>
+    <div style="font-size:12px;color:#5a8888;font-weight:600">Orage modéré</div>
+    <div style="font-size:11px;color:#8a98a8;margin-top:3px">Ressenti <b>11°C</b></div>
+  </div>
+  <div style="margin-left:auto;text-align:right;border-left:1px solid #bce0f7;padding-left:10px">
+    <div style="font-size:10.5px;color:#8a98a8;text-transform:uppercase">Aujourd'hui</div>
+    <div><span style="color:#e35d5b">↑</span> <b style="color:#e35d5b">18°</b></div>
+    <div><span style="color:#2a7ed1">↓</span> <b style="color:#2a7ed1">8°</b></div>
+  </div>
+</div>
+</div>
+
+<h3 style="color:#fff;margin-top:18px;font-size:16px">Exemple : JAUNE</h3>
+
+<div class="weather-card">
+<div class="vig vig-jaune">
+  <span class="vig-tag tag-j">⚠ Vigilance JAUNE</span>
+  <span class="vig-list">
+    <span>☀ <b>Chaleur</b> (31°C)</span>
+  </span>
+</div>
+<div style="display:flex;align-items:center;gap:14px;padding:8px 0">
+  <div style="font-size:54px">☀️</div>
+  <div>
+    <div style="font-size:30px;font-weight:700;color:#185FA5">29°<small style="font-size:16px;color:#5a8888">C</small></div>
+    <div style="font-size:12px;color:#5a8888;font-weight:600">Ciel dégagé</div>
+  </div>
+</div>
+</div>
+
+<h3 style="color:#fff;margin-top:18px;font-size:16px">Exemple : ROUGE</h3>
+
+<div class="weather-card">
+<div class="vig vig-rouge">
+  <span class="vig-tag tag-r">⚠ Vigilance ROUGE</span>
+  <span class="vig-list">
+    <span>🌡 <b>Canicule extrême</b> (39°C)</span>
+    <span>☀ <b>UV extrême</b> (Indice 10)</span>
+  </span>
+</div>
+<div style="display:flex;align-items:center;gap:14px;padding:8px 0">
+  <div style="font-size:54px">☀️</div>
+  <div>
+    <div style="font-size:30px;font-weight:700;color:#e35d5b">38°<small style="font-size:16px;color:#5a8888">C</small></div>
+    <div style="font-size:12px;color:#7a3030;font-weight:600">Ciel dégagé</div>
+    <div style="font-size:11px;color:#8a98a8;margin-top:3px">Ressenti <b>41°C</b></div>
+  </div>
+</div>
+</div>
+
+<pre>// 0.58.45 - Seuils de vigilance basés sur les données récupérées
+const alerts = [];
+
+// Vent (combine wind_speed_10m actuel + wind_speed_10m_max prévu)
+const windToCheck = Math.max(state.data.wind_speed_10m, windMax);
+if (windToCheck >= 90) alerts.push({ level: 3, label: 'Vent violent', value: `${windToCheck} km/h` });
+else if (windToCheck >= 70) alerts.push({ level: 2, label: 'Vent fort' });
+else if (windToCheck >= 50) alerts.push({ level: 1, label: 'Vent soutenu' });
+
+// Précipitations cumulées du jour
+if (precipSum >= 50) alerts.push({ level: 3, label: 'Pluie extrême' });
+
+// Canicule
+if (tempMax >= 38) alerts.push({ level: 3, label: 'Canicule extrême' });
+else if (tempMax >= 33) alerts.push({ level: 2, label: 'Forte chaleur' });
+
+// UV
+if (uv >= 10) alerts.push({ level: 3, label: 'UV extrême' });
+
+// Grand froid
+if (tempMin &lt;= -10) alerts.push({ level: 3, label: 'Grand froid' });
+
+// Codes WMO dangereux (orages 95-99, neige forte 75/86)
+const dangerousCodes = [95, 96, 99, 75, 86];
+if (dangerousCodes.includes(code)) alerts.push({ level: 2, label: wmo.l });
+
+// Niveau global = max
+const maxLevel = Math.max(...alerts.map(a =&gt; a.level));</pre>
+
+<h2>📋 2. Notes : <kbd>Ctrl</kbd>+<kbd>V</kbd> pour insérer une image</h2>
+
+<div class="panel">
+<p style="margin:0">En mode édition de note, <b>colle directement une capture d'écran</b> (Win+Shift+S, ⌘+Shift+4) ou n'importe quelle image du presse-papier. Elle est compressée auto via canvas (max 800px, qualité 0.78) puis insérée en markdown <code>![alt](data:image/jpeg;base64,...)</code> à la position du curseur. Limite par image : 250 Ko (auto re-compression à qualité réduite si dépasse).</p>
+</div>
+
+<div class="notes-demo">
+<h4 style="margin:0 0 8px;font-size:13px;color:#7a4f15">📝 Mes notes — Sprint 0.58</h4>
+<p style="margin:0;font-size:12.5px">## Réunion roadmap du 5 juin</p>
+<p style="margin:4px 0;font-size:12.5px">Voici la maquette discutée :</p>
+<div class="note-img">🖼 Image collée (compressée 78% qualité, 800px max)</div>
+<p style="margin:4px 0;font-size:12.5px">- [ ] Valider le wireframe avec Hélène</p>
+<p style="margin:4px 0;font-size:12.5px">- [x] Compresser les assets</p>
+<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+  <span class="paste-bubble">📋 Ctrl+V</span>
+  <span style="font-size:11.5px;color:#8a98a8">→ image insérée auto</span>
+</div>
+</div>
+
+<pre>// 0.58.45 - Compression auto via canvas
+async function compressImageToDataUrl(blob) {
+  return new Promise(resolve =&gt; {
+    const reader = new FileReader();
+    reader.onload = () =&gt; {
+      const img = new Image();
+      img.onload = () =&gt; {
+        const ratio = img.width &gt; 800 ? 800 / img.width : 1;
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';  // fond blanc pour les PNG transparents
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+        // Re-tente avec qualité plus basse si dépasse 250 Ko
+        if (estimateKB(dataUrl) &gt; 250) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.55);
+        }
+        resolve(estimateKB(dataUrl) &gt; 250 ? null : dataUrl);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Textarea onPaste
+&lt;textarea
+  onPaste={async (e) =&gt; {
+    const imageItem = Array.from(e.clipboardData.items)
+      .find(it =&gt; it.type.startsWith('image/'));
+    if (!imageItem) return;  // collage texte normal
+    e.preventDefault();
+    const dataUrl = await compressImageToDataUrl(imageItem.getAsFile());
+    if (!dataUrl) { dialogs.alert({ title: 'Image trop volumineuse' }); return; }
+    const pos = e.target.selectionStart;
+    const md = `![Image collée](${dataUrl})`;
+    updateActiveText(text.slice(0, pos) + md + text.slice(pos));
+  }}
+/&gt;</pre>
+
+<h2>🎯 3. Cmd+K : export-csv sur 7 pages (+3)</h2>
+
+<div class="panel">
+<p style="margin:0">Cmd+K + tape <code>export csv</code> → fonctionne maintenant aussi sur <code>/commandes</code>, <code>/achats</code>, <code>/transferts</code>. Les exports respectent les filtres actifs.</p>
+</div>
+
+<div class="cmdk-card">
+<div class="cmdk-input">⌘ Tapez : "export csv"…</div>
+<div class="cmdk-section">
+  <h4>⚡ Sur cette page · /achats</h4>
+  <div class="cmdk-action">
+    <span class="cmdk-icon">📊</span>
+    <div class="cmdk-content">
+      <div class="title">Exporter les achats en CSV</div>
+      <div class="sub">→ #page-action:export-csv (8 colonnes, respecte filtre statut)</div>
+    </div>
+  </div>
+</div>
+<div class="cmdk-section">
+  <h4>🔎 Autres pages</h4>
+  <div class="cmdk-action">
+    <span class="cmdk-icon">📊</span>
+    <div class="cmdk-content">
+      <div class="title">Exporter les commandes en CSV</div>
+      <div class="sub">→ /commandes</div>
+    </div>
+  </div>
+  <div class="cmdk-action">
+    <span class="cmdk-icon">📊</span>
+    <div class="cmdk-content">
+      <div class="title">Exporter les transferts en CSV</div>
+      <div class="sub">→ /transferts (+ open-new dispo)</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Vigilance météo</b> : 3 niveaux (jaune/orange/rouge), calcul local, zéro dépendance API</li>
+<li><b>Notes Ctrl+V image</b> : compression auto via canvas, max 250 Ko/image, lightbox au clic</li>
+<li><b>Cmd+K export-csv</b> sur <b>7 pages</b> : patients, interventions, materiels, maintenance, commandes, achats, transferts</li>
+<li><b>+30 tests</b> Vitest (~4480 verts estimés)</li>
+<li><b>Cmd+K</b> : 33 actions au total (vs 30)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4480 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.45 - Vigilance météo + Notes Ctrl+V image + usePageAction sur 3 pages de plus"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.46+)</h2>
+<div class="panel">
+<ul>
+<li>Widget Trafic routier <b>si</b> tu obtiens une clé API Mappy/TomTom</li>
+<li>Drag&drop colonnes Crud (paramètres profil)</li>
+<li>Carrousel meteo : touch/swipe pour switcher entre jours</li>
+<li>Mode 'présentation' pour widget Objectifs (grand affichage réunions)</li>
+<li>Étendre filtre contexte quand le schéma le permet (signalements + linked patient/materiel ?)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.45 · 5 juin 2026 · VIGILANCE + PASTE IMAGE + EXPORT CSV ×7</footer>
+</div>
+
+</body></html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.46</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3a50 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes drag-hint{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes swipe-hint{0%,100%{transform:translateX(0)}50%{transform:translateX(20px);opacity:.5}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.blue{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(24,95,165,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(42,58,80,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+kbd{background:rgba(20,33,49,.8);color:#bfe6e6;border:1px solid rgba(191,230,230,.30);border-bottom:2px solid rgba(191,230,230,.30);padding:2px 7px;border-radius:4px;font-family:Consolas,monospace;font-size:11.5px;font-weight:600}
+
+/* DEMO Tableau drag&drop */
+.table-demo{background:#fff;border-radius:10px;color:#142131;margin:14px 0;max-width:640px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.30)}
+.table-demo table{width:100%;border-collapse:collapse;font-size:12.5px}
+.table-demo th{padding:10px 12px;background:#eaf7f7;color:#142131;font-weight:700;text-align:left;border-bottom:2px solid #cfd5db;font-size:11.5px;cursor:grab}
+.table-demo th.dragged{opacity:.3;animation:drag-hint .6s ease-in-out infinite}
+.table-demo th.target{background:linear-gradient(135deg,rgba(124,200,200,.25),rgba(24,95,165,.15));border-left:2px solid #7CC8C8}
+.table-demo th .handle{color:#cfd5db;margin-right:4px;font-size:14px;letter-spacing:-2px}
+.table-demo th.target .handle{color:#7CC8C8}
+.table-demo td{padding:10px 12px;border-bottom:1px solid #f0f3f6;font-size:12px;color:#5a6878}
+.reset-btn{display:inline-flex;align-items:center;gap:4px;background:transparent;color:#7CC8C8;border:1px solid rgba(124,200,200,.4);padding:5px 11px;border-radius:8px;font-size:11.5px;font-weight:600}
+
+/* DEMO Mode présentation */
+.present-demo{background:radial-gradient(800px 400px at 70% -10%,#1f2a3a 0%,#0d1322 50%,#050a14 100%);border-radius:18px;padding:28px;color:#fff;margin:14px 0;max-width:640px;border:1px solid rgba(124,200,200,.20)}
+.present-eyebrow{font-size:11px;color:#7CC8C8;letter-spacing:3px;font-weight:700;margin-bottom:6px}
+.present-h1{margin:0;font-size:24px;font-weight:700}
+.present-sub{margin-top:6px;font-size:14px;color:#bfe6e6}
+.present-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px}
+.present-card{padding:14px;background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:12px}
+.present-card.done{border-color:rgba(90,160,90,.5);box-shadow:0 0 20px rgba(90,160,90,.20)}
+.present-card-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.present-label{font-size:14px;font-weight:700;color:#fff}
+.present-vals{font-size:13px;font-family:Consolas,monospace;color:#bfe6e6}
+.present-vals b{font-size:24px}
+.present-bar{height:16px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden;position:relative;margin-bottom:6px}
+.present-fill{height:100%;border-radius:8px;transition:width 400ms}
+.present-pct{text-align:right;font-size:18px;font-weight:700}
+
+/* DEMO Météo prévisions interactives */
+.fc-demo{background:linear-gradient(135deg,#e0f4ff,#fff);border:1px solid #bce0f7;border-radius:14px;padding:14px;color:#142131;margin:14px 0;max-width:560px}
+.fc-head{font-size:10.5px;color:#8a98a8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;justify-content:space-between}
+.fc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.fc-day{text-align:center;padding:8px 6px;background:rgba(255,255,255,.6);border-radius:8px;border:1px solid rgba(188,224,247,.5);transition:all 150ms;cursor:pointer}
+.fc-day.focus{background:linear-gradient(135deg,rgba(24,95,165,.18),rgba(124,200,200,.15));border:1px solid #185FA5;transform:scale(1.04);box-shadow:0 4px 12px rgba(24,95,165,.20)}
+.fc-detail{padding:10px 12px;background:linear-gradient(135deg,rgba(24,95,165,.08),rgba(124,200,200,.10));border:1px solid rgba(24,95,165,.20);border-radius:10px}
+.fc-detail-title{font-size:11.5px;color:#185FA5;font-weight:700;margin-bottom:6px;text-transform:capitalize}
+.fc-detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11px}
+.fc-detail-grid > div > div{color:#8a98a8}
+.fc-detail-grid > div > b{color:#185FA5}
+.swipe-hint{font-size:11.5px;color:#185FA5;margin-top:8px;display:inline-flex;align-items:center;gap:6px}
+.swipe-hint span{animation:swipe-hint 1.5s ease-in-out infinite;display:inline-block}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob blue"></div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.46</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.46 — Drag&drop colonnes + Mode présentation + Swipe météo<small>Réordonner les colonnes de tous les tableaux · Affichage plein écran réunion · Prévisions interactives</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.46-alpha</code></span>
+    <span><b>Tests :</b> ~4510 verts estimés</span>
+  </div>
+</header>
+
+<h2>🎛 1. Drag&drop colonnes — tous les tableaux Crud</h2>
+
+<div class="panel">
+<p style="margin:0">Sur tous les tableaux Crud du projet (matériels, articles, dépôts, types intervention, etc.), tu peux maintenant <b>réordonner les colonnes à la souris</b>. L'ordre est sauvegardé par table en localStorage. Une nouvelle colonne ajoutée plus tard apparaîtra à la fin de ton ordre custom — pas besoin de tout refaire.</p>
+</div>
+
+<div class="table-demo">
+<table>
+<thead>
+<tr>
+  <th><span class="handle">⋮⋮</span>Libellé</th>
+  <th><span class="handle">⋮⋮</span>Article</th>
+  <th class="dragged"><span class="handle">⋮⋮</span>N° série</th>
+  <th class="target"><span class="handle">⋮⋮</span>État ⬅</th>
+  <th><span class="handle">⋮⋮</span>Marque</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lit médical</td><td>LIT-001</td><td>SN-2024-058</td><td>Actif</td><td>Hill-Rom</td>
+</tr>
+<tr>
+<td>Concentrateur O₂</td><td>O2-INV</td><td>SN-2023-142</td><td>Maintenance</td><td>Invacare</td>
+</tr>
+<tr>
+<td>Pousse-seringue</td><td>POMPE</td><td>SN-2024-091</td><td>Actif</td><td>Fresenius</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<p style="font-size:13px;color:#bfe6e6">↑ Colonne <code>N° série</code> en cours de glissement (opacity 0.3) sur <code>État</code> (bordure teal + gradient) — quand on lâche, N° série va se positionner à la place d'État.</p>
+
+<div style="margin:12px 0">
+<button class="reset-btn">🔄 Réinitialiser colonnes</button>
+<span style="font-size:11.5px;color:#8aa0b0;margin-left:10px">↑ Apparaît seulement si l'ordre a été modifié</span>
+</div>
+
+<pre>// 0.58.46 - app/crud.js
+const colsStorageKey = `av-crud-cols-${table}`;  // par table
+const [colOrder, setColOrder] = useState(null);
+const [draggedColKey, setDraggedColKey] = useState(null);
+const [dragOverColKey, setDragOverColKey] = useState(null);
+
+// Réconciliation intelligente au mount
+useEffect(() =&gt; {
+  const stored = JSON.parse(localStorage.getItem(colsStorageKey) || '[]');
+  const currentKeys = columns.map(c =&gt; c.key);
+  // Garde l'ordre stocké pour les colonnes qui existent encore
+  const validStored = stored.filter(k =&gt; currentKeys.includes(k));
+  // Ajoute les nouvelles colonnes (ajoutées en dev plus tard) à la fin
+  const missing = currentKeys.filter(k =&gt; !validStored.includes(k));
+  setColOrder([...validStored, ...missing]);
+}, [colsStorageKey, columns.length]);
+
+const orderedColumns = colOrder
+  ? colOrder.map(k =&gt; columns.find(c =&gt; c.key === k)).filter(Boolean)
+  : columns;
+
+// Handler drop : swap
+function handleColDrop(e, targetKey) {
+  e.preventDefault();
+  setColOrder(prev =&gt; {
+    const arr = [...prev];
+    const fromIdx = arr.indexOf(draggedColKey);
+    const toIdx = arr.indexOf(targetKey);
+    arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, draggedColKey);
+    return arr;
+  });
+}</pre>
+
+<h2>🎬 2. Mode présentation widget Objectifs</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau bouton <b>"Présentation"</b> sur le widget Objectifs. Ouvre un overlay plein écran sur fond dégradé sombre — idéal pour montrer l'avancement de l'équipe en réunion. Header avec score global, grille de cartes XL, progress bars géantes (22px) avec glow vert pour les objectifs atteints. Fermeture : <kbd>ESC</kbd>, bouton fermer, ou clic en dehors.</p>
+</div>
+
+<div class="present-demo">
+<div class="present-eyebrow">🎯 MES OBJECTIFS</div>
+<h1 class="present-h1">3 / 4 objectifs atteints</h1>
+<div class="present-sub">Avancement global : <b style="color:#7CC8C8;font-size:20px">82%</b></div>
+
+<div class="present-grid">
+<div class="present-card done">
+  <div class="present-card-row">
+    <span class="present-label">✓ Visites clients ce mois</span>
+    <span class="present-vals"><b style="color:#5aa05a">22</b> / 20 visites</span>
+  </div>
+  <div class="present-bar"><div class="present-fill" style="width:100%;background:linear-gradient(90deg,#5aa05a,#4a8a4a);box-shadow:0 0 16px rgba(90,160,90,.60)"></div></div>
+  <div class="present-pct" style="color:#5aa05a">110%</div>
+</div>
+<div class="present-card done">
+  <div class="present-card-row">
+    <span class="present-label">✓ DI clôturées</span>
+    <span class="present-vals"><b style="color:#5aa05a">48</b> / 40</span>
+  </div>
+  <div class="present-bar"><div class="present-fill" style="width:100%;background:linear-gradient(90deg,#5aa05a,#4a8a4a);box-shadow:0 0 16px rgba(90,160,90,.60)"></div></div>
+  <div class="present-pct" style="color:#5aa05a">120%</div>
+</div>
+<div class="present-card done">
+  <div class="present-card-row">
+    <span class="present-label">✓ Patients suivis</span>
+    <span class="present-vals"><b style="color:#5aa05a">126</b> / 100</span>
+  </div>
+  <div class="present-bar"><div class="present-fill" style="width:100%;background:linear-gradient(90deg,#5aa05a,#4a8a4a);box-shadow:0 0 16px rgba(90,160,90,.60)"></div></div>
+  <div class="present-pct" style="color:#5aa05a">126%</div>
+</div>
+<div class="present-card">
+  <div class="present-card-row">
+    <span class="present-label">Articles écrits</span>
+    <span class="present-vals"><b style="color:#7CC8C8">7</b> / 10</span>
+  </div>
+  <div class="present-bar"><div class="present-fill" style="width:70%;background:linear-gradient(90deg,#7CC8C8,#5da8a8);box-shadow:0 0 12px rgba(124,200,200,.50)"></div></div>
+  <div class="present-pct" style="color:#7CC8C8">70%</div>
+</div>
+</div>
+</div>
+
+<h2>📱 3. Prévisions météo interactives (clic + swipe)</h2>
+
+<div class="panel">
+<p style="margin:0">Sur la grille des 3 prochains jours du widget Météo : <b>clique sur un jour</b> pour le mettre en focus (scale 1.04 + bordure bleue) et voir un panneau détails (Vent max, Précip, UV, Lever, Coucher). Sur mobile, <b>swipe horizontal</b> pour naviguer entre les jours.</p>
+</div>
+
+<div class="fc-demo">
+<div class="fc-head">
+  <span>📅 Prévisions 3 jours</span>
+  <span style="color:#185FA5;font-weight:600">✕ Désélectionner</span>
+</div>
+
+<div class="fc-grid">
+  <div class="fc-day">
+    <div style="font-size:11;color:#8a98a8;font-weight:600">Lun</div>
+    <div style="font-size:26px;margin:4px 0">🌧</div>
+    <div style="font-size:11"><b style="color:#e35d5b">18°</b> / <b style="color:#2a7ed1">10°</b></div>
+  </div>
+  <div class="fc-day focus">
+    <div style="font-size:11;color:#185FA5;font-weight:600">Mar</div>
+    <div style="font-size:30px;margin:4px 0">☀️</div>
+    <div style="font-size:11"><b style="color:#e35d5b">24°</b> / <b style="color:#2a7ed1">13°</b></div>
+  </div>
+  <div class="fc-day">
+    <div style="font-size:11;color:#8a98a8;font-weight:600">Mer</div>
+    <div style="font-size:26px;margin:4px 0">⛅</div>
+    <div style="font-size:11"><b style="color:#e35d5b">22°</b> / <b style="color:#2a7ed1">11°</b></div>
+  </div>
+</div>
+
+<div class="fc-detail">
+  <div class="fc-detail-title">ℹ mardi 7 juin — Ciel dégagé</div>
+  <div class="fc-detail-grid">
+    <div><div>💨 Vent max</div><b>18 km/h</b></div>
+    <div><div>🌧 Précip.</div><b>0.0 mm</b></div>
+    <div><div>☀ UV max</div><b>Indice 7</b></div>
+    <div><div>🌅 Lever</div><b style="color:#EF9F27">06:24</b></div>
+  </div>
+</div>
+
+<div class="swipe-hint">
+  📱 Swipe horizontal pour changer de jour <span>→</span>
+</div>
+</div>
+
+<pre>// 0.58.46 - clic + swipe touch
+const [focusForecastIdx, setFocusForecastIdx] = useState(null);
+const touchStartX = useRef(null);
+
+&lt;div
+  onTouchStart={(e) =&gt; { touchStartX.current = e.touches[0].clientX; }}
+  onTouchEnd={(e) =&gt; {
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(dx) &lt; 40) return;  // pas un swipe
+    const dir = dx &lt; 0 ? 1 : -1;     // gauche = jour suivant
+    setFocusForecastIdx(curr =&gt; {
+      const next = (curr ?? 0) + dir;
+      if (next &lt; 0 || next &gt;= 3) return curr;
+      return next;
+    });
+  }}
+&gt;
+  {state.forecast.time.slice(1, 4).map((iso, i) =&gt; (
+    &lt;div onClick={() =&gt; setFocusForecastIdx(focusForecastIdx === i ? null : i)}
+         style={{
+           transform: focusForecastIdx === i ? 'scale(1.04)' : 'scale(1)',
+           border: focusForecastIdx === i ? '1px solid #185FA5' : '1px solid rgba(188,224,247,.5)',
+         }}&gt;
+      ...
+    &lt;/div&gt;
+  ))}
+&lt;/div&gt;
+
+{focusForecastIdx !== null &amp;&amp; (
+  &lt;div className='detail-panel'&gt;
+    Vent max · Précip · UV · Lever · Coucher
+  &lt;/div&gt;
+)}</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Drag&drop colonnes</b> sur tous les Crud · Storage par table · Réconciliation auto · Bouton reset</li>
+<li><b>Mode présentation Objectifs</b> · Plein écran sombre · ESC pour fermer · Score global</li>
+<li><b>Prévisions météo interactives</b> · Clic = focus + détails · Swipe mobile</li>
+<li><b>+30 tests</b> Vitest (~4510 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4510 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.46 - Drag&drop colonnes Crud + Mode présentation Objectifs + Swipe météo"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.47+)</h2>
+<div class="panel">
+<ul>
+<li>Widget Trafic routier <b>si</b> tu obtiens une clé Mappy/TomTom</li>
+<li>Notes : sélection multi-onglets pour merge ou export</li>
+<li>Mode présentation pour widget météo aussi</li>
+<li>Synchronisation Objectifs avec Supabase (pour partage équipe)</li>
+<li>Drag&drop : étendre aux fields du formulaire dans le modal Crud</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.46 · 5 juin 2026 · DRAG COLS + PRÉSENTATION + SWIPE MÉTÉO</footer>
+</div>
+
+</body></html>

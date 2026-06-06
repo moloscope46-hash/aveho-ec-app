@@ -14,6 +14,8 @@ import { useCart } from "../useCart";
 import TopBar from "../TopBar";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
 import { dialogs } from "../dialogs";
+// 0.58.47 : sélecteur d'icône (l'annonce peut surcharger l'icône par défaut du niveau)
+import IconPicker from "../components/IconPicker";
 
 const NIVEAU_OPTS = [
   { v: "info", lbl: "Info (bleu)", color: "#185FA5" },
@@ -104,6 +106,8 @@ export default function AnnoncesAdminPage() {
         titre: form.titre.trim(),
         message: form.message.trim(),
         niveau: form.niveau || "info",
+        // 0.58.47 : icône personnalisée (surcharge l'icône par défaut du niveau)
+        icone: form.icone || null,
         etablissement_id: form.etablissement_id || null,  // Alpha 0.52.5
         active: form.active !== false,
         date_debut: form.date_debut ? new Date(form.date_debut).toISOString() : new Date().toISOString(),
@@ -199,7 +203,9 @@ export default function AnnoncesAdminPage() {
                   return (
                     <tr key={r.id} style={{ opacity: r.active ? 1 : 0.5 }}>
                       <td>
-                        <span style={{ background: niveau.color + "22", color: niveau.color, padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: ".4px" }}>
+                        <span style={{ background: niveau.color + "22", color: niveau.color, padding: "2px 8px", borderRadius: 8, fontSize: 11, fontWeight: 700, letterSpacing: ".4px", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          {/* 0.58.47 : icône custom de l'annonce ou icône par défaut du niveau */}
+                          <i className={`ti ${r.icone || (r.niveau === "critique" ? "ti-alert-octagon" : r.niveau === "warning" ? "ti-alert-triangle" : "ti-info-circle")}`} />
                           {r.niveau}
                         </span>
                       </td>
@@ -282,6 +288,18 @@ export default function AnnoncesAdminPage() {
                   <select value={form.niveau || "info"} onChange={(e) => setForm({ ...form, niveau: e.target.value })} style={{ width: "100%", padding: 8, border: "1px solid #e3e9ee", borderRadius: 6, fontFamily: "inherit" }}>
                     {NIVEAU_OPTS.map(n => <option key={n.v} value={n.v}>{n.lbl}</option>)}
                   </select>
+                </div>
+                {/* 0.58.47 : icône personnalisée pour l'annonce */}
+                <div>
+                  <label style={{ display: "block", fontSize: 11, color: "#6c7a89", fontWeight: 600, marginBottom: 4 }}>
+                    Icône <span style={{ fontSize: 10.5, color: "#8a98a8", fontWeight: 400 }}>(optionnel — par défaut selon le niveau)</span>
+                  </label>
+                  <IconPicker
+                    value={form.icone}
+                    onChange={(icon) => setForm({ ...form, icone: icon })}
+                    color={NIVEAU_OPTS.find(n => n.v === (form.niveau || "info"))?.color || "#185FA5"}
+                    suggestFor={`${form.titre || ""} ${form.message || ""}`}
+                  />
                 </div>
                 {/* Alpha 0.52.5 : ciblage par établissement */}
                 <div>

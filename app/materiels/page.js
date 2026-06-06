@@ -235,7 +235,8 @@ export default function Materiels() {
                       if (!t) return null;
                       return (
                         <span key={tid} className="etq-tag" style={{ background: t.couleur + "22", color: t.couleur, border: `1px solid ${t.couleur}44`, fontSize: 11 }}>
-                          {t.libelle}
+                          {/* 0.58.47 : icône custom du tag */}
+                          <i className={`ti ${t.icone || "ti-tag"}`} style={{ fontSize: 10, marginRight: 2 }} /> {t.libelle}
                         </span>
                       );
                     })}
@@ -318,7 +319,7 @@ export default function Materiels() {
                   }}>
                     <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <span className="etq-tag" style={{ background: t.couleur + "22", color: t.couleur, border: `1px solid ${t.couleur}44` }}>
-                        <i className="ti ti-tag" /> {t.libelle}
+                        <i className={`ti ${t.icone || "ti-tag"}`} /> {t.libelle}
                       </span>
                       {t.description && <span style={{ color: "#8a98a8", fontSize: 12 }}>{t.description}</span>}
                     </span>

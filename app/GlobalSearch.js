@@ -80,6 +80,10 @@ const ACTIONS = [
   { id: "export-di-csv", lbl: "Exporter les DI en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "interventions"], pageContext: /^\/interventions$/ },
   { id: "export-mat-csv", lbl: "Exporter les matériels en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "matériels"], pageContext: /^\/materiels/ },
   { id: "export-signal-csv", lbl: "Exporter les signalements en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "signalements"], pageContext: /^\/signalements/ },
+  // 0.58.45 : étendre export-csv et open-new à /commandes, /achats, /transferts
+  { id: "export-commandes-csv", lbl: "Exporter les commandes en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "commandes"], pageContext: /^\/commandes/ },
+  { id: "export-achats-csv", lbl: "Exporter les achats en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "achats"], pageContext: /^\/achats/ },
+  { id: "export-transferts-csv", lbl: "Exporter les transferts en CSV", icon: "ti-file-spreadsheet", color: "#5aa05a", url: "#page-action:export-csv", keywords: ["export", "csv", "exporter", "transferts"], pageContext: /^\/transferts/ },
 
   { id: "toggle-ctx-filter", lbl: "Activer/désactiver le filtre par contexte", icon: "ti-eye", color: "#7CC8C8", url: "#page-action:toggle-ctx-filter", keywords: ["contexte", "filtre", "bâtiment", "service", "ctx"], pageContext: /^\/(patients|interventions|materiels|maintenance)/ },
 

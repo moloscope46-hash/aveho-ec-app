@@ -10,6 +10,8 @@ import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 
 import { dialogs } from "../dialogs";
 import { safeUpdate, safeInsert, safeDelete } from "../../lib/safeWrite";
+// 0.58.47 : sélecteur d'icône
+import IconPicker, { DEFAULT_ICON } from "../components/IconPicker";
 // Palette suggérée pour la sélection
 const PALETTE = ["#7CC8C8", "#7a6fb0", "#5aa05a", "#e35d5b", "#EF9F27", "#C9867F", "#185FA5", "#2a5a5a", "#142131"];
 
@@ -40,6 +42,8 @@ export default function EtiquettesPage() {
       structure_id: auth.structureId,
       libelle: form.libelle.trim(),
       couleur: form.couleur || PALETTE[0],
+      // 0.58.47 : icône Tabler personnalisée
+      icone: form.icone || null,
       description: form.description || null,
     };
     if (modal?.id) {
@@ -91,7 +95,7 @@ export default function EtiquettesPage() {
                     <tr key={r.id}>
                       <td>
                         <span className="etq-tag" style={{ background: r.couleur + "22", color: r.couleur, border: `1px solid ${r.couleur}44` }}>
-                          <i className="ti ti-tag" /> {r.libelle}
+                          <i className={`ti ${r.icone || DEFAULT_ICON}`} /> {r.libelle}
                         </span>
                       </td>
                       <td style={{ fontSize: 13, color: "#6c7a89" }}>{r.description || "—"}</td>
@@ -141,10 +145,20 @@ export default function EtiquettesPage() {
             <div style={{ marginTop: 12 }}>
               <span style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", letterSpacing: ".5px", marginRight: 8 }}>Aperçu :</span>
               <span className="etq-tag" style={{ background: form.couleur + "22", color: form.couleur, border: `1px solid ${form.couleur}44` }}>
-                <i className="ti ti-tag" /> {form.libelle}
+                <i className={`ti ${form.icone || DEFAULT_ICON}`} /> {form.libelle}
               </span>
             </div>
           )}
+        </div>
+        {/* 0.58.47 : sélecteur d'icône */}
+        <div className="fld">
+          <label>Icône <span style={{ fontWeight: 400, fontSize: 11, color: "#8a98a8" }}>(optionnel — par défaut ti-tag)</span></label>
+          <IconPicker
+            value={form.icone}
+            onChange={(icon) => setForm({ ...form, icone: icon })}
+            color={form.couleur || "#7CC8C8"}
+            suggestFor={form.libelle}
+          />
         </div>
         <div className="fld">
           <label>Description (optionnelle)</label>

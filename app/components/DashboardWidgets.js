@@ -8,7 +8,7 @@
 //   - LiensFavorisWidget : 8 slots configurables (localStorage av-favorite-links)
 // =============================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Panel } from "../ui";
 import { dialogs } from "../dialogs";
 
@@ -482,6 +482,10 @@ export function WeatherWidget() {
   const [refreshTick, setRefreshTick] = useState(0);
   // 0.58.44 : toggle pour afficher les prévisions des 3 prochains jours
   const [showForecast, setShowForecast] = useState(false);
+  // 0.58.46 : focus sur un jour des prévisions (0/1/2) pour afficher détails
+  const [focusForecastIdx, setFocusForecastIdx] = useState(null);
+  // 0.58.46 : ref pour le touchstart (swipe mobile)
+  const touchStartX = useRef(null);
 
   useEffect(() => {
     // Auto-refresh toutes les 30min : déclenche un re-fetch
@@ -694,13 +698,90 @@ export function WeatherWidget() {
         const visKm = state.data.visibility != null ? Math.round(state.data.visibility / 1000) : null;
         const apparent = state.data.apparent_temperature;
         const dirCard = windDirCardinal(state.data.wind_direction_10m);
+        const windMax = state.forecast?.wind_speed_10m_max?.[0];
 
         // 0.58.44 : couleur UV
         const uvColor = uv == null ? "#8a98a8" : (uv <= 2 ? "#5aa05a" : uv <= 5 ? "#EF9F27" : uv <= 7 ? "#e35d5b" : "#7a3030");
         const uvLabel = uv == null ? "" : (uv <= 2 ? "Faible" : uv <= 5 ? "Modéré" : uv <= 7 ? "Élevé" : "Très élevé");
 
+        // 0.58.45 : vigilance "maison" basée sur les seuils des données récupérées
+        // Niveaux : 0=vert, 1=jaune, 2=orange, 3=rouge (calque sur les couleurs Météo France)
+        const alerts = [];
+        const tempMax = dailyMax;
+        const tempMin = dailyMin;
+        const windToCheck = Math.max(state.data.wind_speed_10m || 0, windMax || 0);
+        // Codes WMO dangereux (orages, neige forte, grêle)
+        const dangerousCodes = [95, 96, 99, 75, 86]; // 95-99=orages, 75=neige forte, 86=averses neige fortes
+        // Vent
+        if (windToCheck >= 90) alerts.push({ level: 3, icon: "ti-wind", label: "Vent violent", value: `${Math.round(windToCheck)} km/h` });
+        else if (windToCheck >= 70) alerts.push({ level: 2, icon: "ti-wind", label: "Vent fort", value: `${Math.round(windToCheck)} km/h` });
+        else if (windToCheck >= 50) alerts.push({ level: 1, icon: "ti-wind", label: "Vent soutenu", value: `${Math.round(windToCheck)} km/h` });
+        // Précipitations
+        if (precipSum >= 50) alerts.push({ level: 3, icon: "ti-cloud-rain", label: "Pluie extrême", value: `${precipSum.toFixed(0)} mm` });
+        else if (precipSum >= 30) alerts.push({ level: 2, icon: "ti-cloud-rain", label: "Forte pluie", value: `${precipSum.toFixed(0)} mm` });
+        else if (precipSum >= 15) alerts.push({ level: 1, icon: "ti-cloud-rain", label: "Pluie soutenue", value: `${precipSum.toFixed(0)} mm` });
+        // UV
+        if (uv >= 10) alerts.push({ level: 3, icon: "ti-sun", label: "UV extrême", value: `Indice ${Math.round(uv)}` });
+        else if (uv >= 8) alerts.push({ level: 2, icon: "ti-sun", label: "UV très élevé", value: `Indice ${Math.round(uv)}` });
+        // Canicule
+        if (tempMax >= 38) alerts.push({ level: 3, icon: "ti-temperature-sun", label: "Canicule extrême", value: `${Math.round(tempMax)}°C` });
+        else if (tempMax >= 33) alerts.push({ level: 2, icon: "ti-temperature-sun", label: "Forte chaleur", value: `${Math.round(tempMax)}°C` });
+        else if (tempMax >= 28) alerts.push({ level: 1, icon: "ti-temperature-sun", label: "Chaleur", value: `${Math.round(tempMax)}°C` });
+        // Grand froid
+        if (tempMin <= -10) alerts.push({ level: 3, icon: "ti-temperature-snow", label: "Grand froid", value: `${Math.round(tempMin)}°C` });
+        else if (tempMin <= -5) alerts.push({ level: 2, icon: "ti-temperature-snow", label: "Froid sévère", value: `${Math.round(tempMin)}°C` });
+        else if (tempMin <= 0) alerts.push({ level: 1, icon: "ti-snowflake", label: "Gel", value: `${Math.round(tempMin)}°C` });
+        // Orage / phénomène dangereux
+        if (dangerousCodes.includes(code)) alerts.push({ level: 2, icon: "ti-bolt", label: wmo.l, value: "En cours" });
+        // Niveau global = max des niveaux
+        const maxLevel = alerts.length ? Math.max(...alerts.map(a => a.level)) : 0;
+        const vigilanceColors = {
+          1: { bg: "linear-gradient(135deg, #fef9c3, #fef3c7)", border: "#EF9F27", text: "#7a4f15", label: "JAUNE" },
+          2: { bg: "linear-gradient(135deg, #fed7aa, #fdba74)", border: "#e35d5b", text: "#7a3030", label: "ORANGE" },
+          3: { bg: "linear-gradient(135deg, #fecaca, #fca5a5)", border: "#7a3030", text: "#5c1818", label: "ROUGE" },
+        };
+        const vigColors = vigilanceColors[maxLevel];
+
         return (
           <>
+            {/* 0.58.45 : bannière vigilance météo si niveau >= 1 */}
+            {maxLevel >= 1 && vigColors && (
+              <div style={{
+                background: vigColors.bg,
+                border: `1px solid ${vigColors.border}`,
+                borderLeft: `4px solid ${vigColors.border}`,
+                borderRadius: 8,
+                padding: "8px 12px",
+                marginBottom: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                flexWrap: "wrap",
+              }}>
+                <span style={{
+                  background: vigColors.border,
+                  color: "#fff",
+                  fontSize: 10,
+                  fontWeight: 800,
+                  letterSpacing: 1,
+                  padding: "3px 8px",
+                  borderRadius: 4,
+                  textTransform: "uppercase",
+                }}>
+                  <i className="ti ti-alert-triangle" /> Vigilance {vigColors.label}
+                </span>
+                <span style={{ flex: 1, fontSize: 12, color: vigColors.text, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {alerts.filter(a => a.level === maxLevel).map((a, i) => (
+                    <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                      <i className={`ti ${a.icon}`} />
+                      <b>{a.label}</b>
+                      <span style={{ opacity: 0.75 }}>({a.value})</span>
+                    </span>
+                  ))}
+                </span>
+              </div>
+            )}
+
             {/* Bloc principal : emoji + temp + résumé */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 14 }}>
               <div style={{ fontSize: 64, lineHeight: 1, filter: "drop-shadow(0 4px 12px rgba(24,95,165,.30))" }}>
@@ -819,27 +900,63 @@ export function WeatherWidget() {
             )}
 
             {/* 0.58.44 : prévisions 3 prochains jours (toggle) */}
+            {/* 0.58.46 : ajout focus jour (clic ou swipe) → mini-panneau détails */}
             {showForecast && state.forecast && state.forecast.time && state.forecast.time.length > 1 && (
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #bce0f7" }}>
-                <div style={{ fontSize: 10.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>
-                  <i className="ti ti-calendar" /> Prévisions 3 jours
+                <div style={{ fontSize: 10.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span><i className="ti ti-calendar" /> Prévisions 3 jours</span>
+                  {focusForecastIdx !== null && (
+                    <button
+                      onClick={() => setFocusForecastIdx(null)}
+                      style={{ background: "transparent", border: "none", color: "#185FA5", cursor: "pointer", fontSize: 11, padding: 0, fontFamily: "inherit", fontWeight: 600 }}
+                    >
+                      <i className="ti ti-x" /> Désélectionner
+                    </button>
+                  )}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+                <div
+                  style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, touchAction: "pan-y" }}
+                  // 0.58.46 : swipe horizontal pour changer le jour focus (mobile-friendly)
+                  onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                  onTouchEnd={(e) => {
+                    if (touchStartX.current == null) return;
+                    const dx = e.changedTouches[0].clientX - touchStartX.current;
+                    touchStartX.current = null;
+                    if (Math.abs(dx) < 40) return;  // pas un swipe significatif
+                    const dir = dx < 0 ? 1 : -1;  // swipe gauche = jour suivant
+                    setFocusForecastIdx((curr) => {
+                      const nb = 3;
+                      const next = (curr == null ? 0 : curr) + dir;
+                      if (next < 0 || next >= nb) return curr;
+                      return next;
+                    });
+                  }}
+                >
                   {state.forecast.time.slice(1, 4).map((iso, i) => {
                     const fcCode = state.forecast.weather_code[i + 1];
                     const fcWmo = WMO[fcCode] || { e: "🌡", l: "—" };
                     const fcMax = state.forecast.temperature_2m_max[i + 1];
                     const fcMin = state.forecast.temperature_2m_min[i + 1];
+                    const isFocus = focusForecastIdx === i;
                     return (
-                      <div key={iso} style={{
-                        textAlign: "center",
-                        padding: "8px 6px",
-                        background: "rgba(255,255,255,.6)",
-                        borderRadius: 8,
-                        border: "1px solid rgba(188,224,247,.5)",
-                      }}>
-                        <div style={{ fontSize: 11, color: "#8a98a8", fontWeight: 600, textTransform: "capitalize" }}>{formatDayShort(iso)}</div>
-                        <div style={{ fontSize: 26, lineHeight: 1, margin: "4px 0" }}>{fcWmo.e}</div>
+                      <div
+                        key={iso}
+                        onClick={() => setFocusForecastIdx(isFocus ? null : i)}
+                        style={{
+                          textAlign: "center",
+                          padding: "8px 6px",
+                          background: isFocus ? "linear-gradient(135deg, rgba(24,95,165,.18), rgba(124,200,200,.15))" : "rgba(255,255,255,.6)",
+                          borderRadius: 8,
+                          border: `1px solid ${isFocus ? "#185FA5" : "rgba(188,224,247,.5)"}`,
+                          cursor: "pointer",
+                          transition: "all 150ms",
+                          transform: isFocus ? "scale(1.04)" : "scale(1)",
+                          boxShadow: isFocus ? "0 4px 12px rgba(24,95,165,.20)" : "none",
+                        }}
+                        title="Cliquer pour voir les détails"
+                      >
+                        <div style={{ fontSize: 11, color: isFocus ? "#185FA5" : "#8a98a8", fontWeight: 600, textTransform: "capitalize" }}>{formatDayShort(iso)}</div>
+                        <div style={{ fontSize: isFocus ? 30 : 26, lineHeight: 1, margin: "4px 0", transition: "font-size 150ms" }}>{fcWmo.e}</div>
                         <div style={{ fontSize: 11 }}>
                           <b style={{ color: "#e35d5b" }}>{Math.round(fcMax)}°</b>
                           <span style={{ color: "#8a98a8", margin: "0 3px" }}>/</span>
@@ -849,6 +966,67 @@ export function WeatherWidget() {
                     );
                   })}
                 </div>
+                {/* 0.58.46 : panneau détails du jour focus */}
+                {focusForecastIdx !== null && state.forecast.time[focusForecastIdx + 1] && (() => {
+                  const i = focusForecastIdx + 1;
+                  const iso = state.forecast.time[i];
+                  const fcCode = state.forecast.weather_code[i];
+                  const fcWmo = WMO[fcCode] || { e: "🌡", l: "—" };
+                  const fcMax = state.forecast.temperature_2m_max[i];
+                  const fcMin = state.forecast.temperature_2m_min[i];
+                  const fcWind = state.forecast.wind_speed_10m_max?.[i];
+                  const fcPrecip = state.forecast.precipitation_sum?.[i];
+                  const fcUv = state.forecast.uv_index_max?.[i];
+                  const fcSunrise = state.forecast.sunrise?.[i];
+                  const fcSunset = state.forecast.sunset?.[i];
+                  const dayLabel = new Date(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+                  return (
+                    <div style={{
+                      marginTop: 8,
+                      padding: "10px 12px",
+                      background: "linear-gradient(135deg, rgba(24,95,165,.08), rgba(124,200,200,.10))",
+                      border: "1px solid rgba(24,95,165,.20)",
+                      borderRadius: 10,
+                      animation: "av-fc-expand 200ms ease-out",
+                    }}>
+                      <div style={{ fontSize: 11.5, color: "#185FA5", fontWeight: 700, marginBottom: 6, textTransform: "capitalize" }}>
+                        <i className="ti ti-info-circle" /> {dayLabel} — {fcWmo.l}
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, fontSize: 11 }}>
+                        {fcWind != null && (
+                          <div>
+                            <div style={{ color: "#8a98a8" }}><i className="ti ti-wind" /> Vent max</div>
+                            <b style={{ color: "#185FA5" }}>{Math.round(fcWind)} km/h</b>
+                          </div>
+                        )}
+                        {fcPrecip != null && (
+                          <div>
+                            <div style={{ color: "#8a98a8" }}><i className="ti ti-cloud-rain" /> Précip.</div>
+                            <b style={{ color: "#185FA5" }}>{fcPrecip.toFixed(1)} mm</b>
+                          </div>
+                        )}
+                        {fcUv != null && (
+                          <div>
+                            <div style={{ color: "#8a98a8" }}><i className="ti ti-sun" /> UV max</div>
+                            <b style={{ color: "#185FA5" }}>Indice {Math.round(fcUv)}</b>
+                          </div>
+                        )}
+                        {fcSunrise && (
+                          <div>
+                            <div style={{ color: "#8a98a8" }}><i className="ti ti-sunrise" /> Lever</div>
+                            <b style={{ color: "#EF9F27" }}>{formatTime(fcSunrise)}</b>
+                          </div>
+                        )}
+                        {fcSunset && (
+                          <div>
+                            <div style={{ color: "#8a98a8" }}><i className="ti ti-sunset" /> Coucher</div>
+                            <b style={{ color: "#C9867F" }}>{formatTime(fcSunset)}</b>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </>
@@ -863,6 +1041,10 @@ export function WeatherWidget() {
         @keyframes av-weather-spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes av-fc-expand {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </Panel>
@@ -880,11 +1062,63 @@ export function WeatherWidget() {
 // ============================================================
 
 // 0.58.42 : refonte pour supporter multi-onglets (jusqu'à 4 notes)
+// 0.58.45 : limite augmentée pour permettre l'insertion d'images compressées (~50KB par note)
 const NOTES_STORAGE_KEY = "av-personal-notes-v2"; // v2 pour migration depuis ancien format string
 const NOTES_LEGACY_KEY = "av-personal-notes"; // ancien format (string simple)
-const NOTES_MAX_LEN = 4000;
+const NOTES_MAX_LEN = 50000;
 const NOTES_MAX_TABS = 4;
 const NOTES_DEFAULT_LABEL = "Note";
+// 0.58.45 : pour la compression d'images en paste
+const NOTES_IMG_MAX_WIDTH = 800;     // largeur max après compression
+const NOTES_IMG_QUALITY = 0.78;      // qualité JPEG (0-1)
+const NOTES_IMG_MAX_KB = 250;        // taille max après compression (avant refus)
+
+// 0.58.45 : compresse une image (Blob ou File) en dataURL JPEG via canvas
+//   Retourne null si l'image compressée dépasse encore NOTES_IMG_MAX_KB
+async function compressImageToDataUrl(blob) {
+  if (typeof window === "undefined" || !blob) return null;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onerror = () => resolve(null);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => resolve(null);
+      img.onload = () => {
+        try {
+          // Redimensionne en gardant le ratio
+          const ratio = img.width > NOTES_IMG_MAX_WIDTH ? NOTES_IMG_MAX_WIDTH / img.width : 1;
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          // Fond blanc (utile pour les PNG transparents convertis en JPG)
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          // Tente JPEG d'abord (compression efficace)
+          let dataUrl = canvas.toDataURL("image/jpeg", NOTES_IMG_QUALITY);
+          // dataUrl ≈ 4/3 de la taille réelle → estime taille en KB
+          const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+          if (sizeKB > NOTES_IMG_MAX_KB) {
+            // Re-tente avec qualité plus basse
+            dataUrl = canvas.toDataURL("image/jpeg", 0.55);
+            const newSize = Math.round(dataUrl.length * 0.75 / 1024);
+            if (newSize > NOTES_IMG_MAX_KB) {
+              resolve(null);
+              return;
+            }
+          }
+          resolve(dataUrl);
+        } catch {
+          resolve(null);
+        }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(blob);
+  });
+}
 
 // Format v2 : { tabs: [{ id, label, text }], activeId }
 function getNotesData() {
@@ -1026,6 +1260,51 @@ function inlineMd(text) {
       const end = text.indexOf("*", i + 1);
       if (end !== -1) { parts.push(<i key={i} style={{ fontStyle: "italic" }}>{text.slice(i + 1, end)}</i>); i = end + 1; continue; }
     }
+    // 0.58.45 : ![alt](url) — image (markdown syntax)
+    if (text[i] === "!" && text[i + 1] === "[") {
+      const closeBr = text.indexOf("]", i + 2);
+      if (closeBr !== -1 && text[closeBr + 1] === "(") {
+        const closePar = text.indexOf(")", closeBr + 2);
+        if (closePar !== -1) {
+          const alt = text.slice(i + 2, closeBr);
+          const src = text.slice(closeBr + 2, closePar);
+          // Sécurité : seules les data:image/, http(s) ou URLs relatives
+          if (/^(data:image\/|https?:\/\/|\/)/.test(src)) {
+            parts.push(
+              <img
+                key={i}
+                src={src}
+                alt={alt || ""}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: 240,
+                  borderRadius: 8,
+                  margin: "4px 0",
+                  display: "block",
+                  border: "1px solid #f0d59f",
+                  cursor: "pointer",
+                }}
+                title={alt ? `${alt} (cliquer pour ouvrir en grand)` : "Cliquer pour ouvrir en grand"}
+                onClick={(e) => {
+                  // Ouvre l'image en grand dans un nouvel onglet ou modal léger
+                  if (src.startsWith("data:")) {
+                    // Pour les data URL : ouvre une lightbox modale légère
+                    const overlay = document.createElement("div");
+                    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px";
+                    overlay.innerHTML = `<img src="${src}" style="max-width:96vw;max-height:96vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)" alt="${(alt || "").replace(/"/g, "&quot;")}" />`;
+                    overlay.addEventListener("click", () => overlay.remove());
+                    document.body.appendChild(overlay);
+                  } else {
+                    window.open(src, "_blank", "noopener,noreferrer");
+                  }
+                }}
+              />
+            );
+            i = closePar + 1; continue;
+          }
+        }
+      }
+    }
     // [link](url)
     if (text[i] === "[") {
       const closeBr = text.indexOf("]", i + 1);
@@ -1050,7 +1329,9 @@ function inlineMd(text) {
     }
     // Texte normal — accumule jusqu'au prochain pattern
     let j = i;
-    while (j < text.length && text[j] !== "*" && text[j] !== "[") j++;
+    while (j < text.length && text[j] !== "*" && text[j] !== "[" && text[j] !== "!") j++;
+    // Si on s'est arrêté sur "!" mais que ce n'est pas suivi de "[", consomme aussi le "!"
+    if (j === i && text[j] === "!") { j++; }
     parts.push(text.slice(i, j));
     i = j;
   }
@@ -1282,6 +1563,47 @@ export function NotesWidget() {
           <textarea
             value={text}
             onChange={(e) => updateActiveText(e.target.value)}
+            // 0.58.45 : Ctrl+V intercepte les images du presse-papier et les compresse en dataURL
+            onPaste={async (e) => {
+              const items = e.clipboardData?.items;
+              if (!items) return;
+              let imageItem = null;
+              for (let i = 0; i < items.length; i++) {
+                if (items[i].type && items[i].type.startsWith("image/")) {
+                  imageItem = items[i];
+                  break;
+                }
+              }
+              if (!imageItem) return; // pas d'image → comportement paste normal
+              e.preventDefault();
+              const blob = imageItem.getAsFile();
+              if (!blob) return;
+              try {
+                // Compresse via canvas
+                const dataUrl = await compressImageToDataUrl(blob);
+                if (!dataUrl) {
+                  await dialogs.alert({ title: "Image trop volumineuse", message: `Impossible de compresser sous ${NOTES_IMG_MAX_KB} Ko. Essaie une image plus petite.`, variant: "warning" });
+                  return;
+                }
+                // Insère à la position du curseur
+                const ta = e.target;
+                const start = ta.selectionStart || 0;
+                const end = ta.selectionEnd || 0;
+                const markdownImg = `![Image collée](${dataUrl})`;
+                const newText = text.slice(0, start) + markdownImg + text.slice(end);
+                if (newText.length > NOTES_MAX_LEN) {
+                  await dialogs.alert({ title: "Note trop longue", message: `L'image ferait dépasser ${NOTES_MAX_LEN} caractères. Supprime du contenu d'abord.`, variant: "warning" });
+                  return;
+                }
+                updateActiveText(newText);
+                // Restaure le curseur après l'image insérée
+                setTimeout(() => {
+                  if (ta) ta.setSelectionRange(start + markdownImg.length, start + markdownImg.length);
+                }, 0);
+              } catch (err) {
+                console.error("Paste image error:", err);
+              }
+            }}
             // 0.58.43 : raccourci Ctrl+Shift+X (et Cmd+Shift+X sur Mac) pour toggle la checkbox sur la ligne du curseur
             onKeyDown={(e) => {
               if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "x" || e.key === "X")) {
@@ -1320,7 +1642,7 @@ export function NotesWidget() {
                 }, 0);
               }
             }}
-            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;- [ ] todo (Ctrl+Shift+X pour cocher)&#10;- [x] fait&#10;[texte](https://lien)"
+            placeholder="Tes notes ici…&#10;&#10;Markdown supporté :&#10;## Titre&#10;**gras**, *italique*&#10;- liste&#10;- [ ] todo (Ctrl+Shift+X pour cocher)&#10;- [x] fait&#10;[texte](https://lien)&#10;![alt](image-url) — ou colle direct une image (Ctrl+V)"
             style={{
               width: "100%",
               minHeight: 140,
@@ -1339,7 +1661,7 @@ export function NotesWidget() {
             autoFocus
           />
           <p style={{ margin: "6px 0 0", fontSize: 10.5, color: "#8a98a8", display: "flex", justifyContent: "space-between" }}>
-            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, - [ ] / [x] (Ctrl+Shift+X), [lien](url)</span>
+            <span><i className="ti ti-info-circle" /> Markdown : **gras**, *italique*, ## titre, - liste, [ ]/[x] (Ctrl+Shift+X), [lien](url), 📋 Ctrl+V pour coller une image</span>
             <span>{text.length} / {NOTES_MAX_LEN}</span>
           </p>
         </>
@@ -1398,11 +1720,21 @@ const GOAL_COLORS = [
 export function ObjectifsWidget() {
   const [goals, setGoals] = useState([]);
   const [mounted, setMounted] = useState(false);
+  // 0.58.46 : mode présentation (overlay plein écran pour les réunions d'équipe)
+  const [presentMode, setPresentMode] = useState(false);
 
   useEffect(() => {
     setGoals(getGoals());
     setMounted(true);
   }, []);
+
+  // 0.58.46 : ESC pour quitter le mode présentation
+  useEffect(() => {
+    if (!presentMode) return;
+    function onKey(e) { if (e.key === "Escape") setPresentMode(false); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [presentMode]);
 
   async function addGoal() {
     if (goals.length >= GOALS_MAX) {
@@ -1485,15 +1817,34 @@ export function ObjectifsWidget() {
         <h2 style={{ margin: 0, fontSize: 15, color: "#142131" }}>
           <i className="ti ti-target" style={{ marginRight: 6, color: "#185FA5" }} /> Mes objectifs
         </h2>
-        <button onClick={addGoal} disabled={goals.length >= GOALS_MAX} style={{
-          background: goals.length >= GOALS_MAX ? "#cfd8e0" : "linear-gradient(135deg, #185FA5, #134e87)",
-          color: "#fff", border: "none",
-          padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
-          cursor: goals.length >= GOALS_MAX ? "not-allowed" : "pointer",
-          fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 4,
-        }}>
-          <i className="ti ti-plus" /> Ajouter
-        </button>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {/* 0.58.46 : bouton mode présentation (visible seulement si au moins 1 objectif) */}
+          {goals.length > 0 && (
+            <button
+              onClick={() => setPresentMode(true)}
+              title="Affichage plein écran pour réunion d'équipe (ESC pour fermer)"
+              style={{
+                background: "transparent",
+                color: "#7CC8C8",
+                border: "1px solid rgba(124,200,200,.4)",
+                padding: "4px 10px", borderRadius: 8, fontSize: 11.5, fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 4,
+              }}
+            >
+              <i className="ti ti-presentation" /> Présentation
+            </button>
+          )}
+          <button onClick={addGoal} disabled={goals.length >= GOALS_MAX} style={{
+            background: goals.length >= GOALS_MAX ? "#cfd8e0" : "linear-gradient(135deg, #185FA5, #134e87)",
+            color: "#fff", border: "none",
+            padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+            cursor: goals.length >= GOALS_MAX ? "not-allowed" : "pointer",
+            fontFamily: "inherit", display: "inline-flex", alignItems: "center", gap: 4,
+          }}>
+            <i className="ti ti-plus" /> Ajouter
+          </button>
+        </div>
       </div>
 
       {goals.length === 0 ? (
@@ -1572,6 +1923,108 @@ export function ObjectifsWidget() {
           })}
         </div>
       )}
+
+      {/* 0.58.46 : overlay mode présentation (plein écran pour réunions) */}
+      {presentMode && (() => {
+        // Calcul du score global = moyenne des % par objectif
+        const totalPct = goals.length > 0
+          ? Math.round(goals.reduce((acc, g) => acc + (g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0), 0) / goals.length)
+          : 0;
+        const completedCount = goals.filter(g => g.current >= g.target).length;
+        return (
+          <div
+            onClick={(e) => { if (e.target === e.currentTarget) setPresentMode(false); }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 99998,
+              background: "radial-gradient(1400px 800px at 70% -10%, #1f2a3a 0%, #0d1322 50%, #050a14 100%)",
+              padding: "40px 24px", overflowY: "auto",
+              display: "flex", flexDirection: "column", gap: 24,
+              animation: "av-present-fade-in 250ms ease-out",
+            }}
+          >
+            {/* Header avec titre + bouton close */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+              <div>
+                <div style={{ fontSize: 13, color: "#7CC8C8", letterSpacing: 3, fontWeight: 700, marginBottom: 4 }}>
+                  <i className="ti ti-target" /> MES OBJECTIFS
+                </div>
+                <h1 style={{ margin: 0, color: "#fff", fontSize: 36, fontWeight: 700 }}>
+                  {completedCount === goals.length ? "🎉 Tous les objectifs atteints !" : `${completedCount} / ${goals.length} objectifs atteints`}
+                </h1>
+                <div style={{ marginTop: 8, fontSize: 18, color: "#bfe6e6" }}>
+                  Avancement global : <b style={{ color: "#7CC8C8", fontSize: 24 }}>{totalPct}%</b>
+                </div>
+              </div>
+              <button
+                onClick={() => setPresentMode(false)}
+                style={{
+                  background: "rgba(124,200,200,.10)",
+                  color: "#7CC8C8",
+                  border: "1px solid rgba(124,200,200,.3)",
+                  padding: "8px 16px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", fontFamily: "inherit",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <i className="ti ti-x" /> Fermer (ESC)
+              </button>
+            </div>
+
+            {/* Grille des objectifs en grand */}
+            <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%", display: "grid", gridTemplateColumns: goals.length <= 3 ? "1fr" : "repeat(auto-fit, minmax(420px, 1fr))", gap: 20 }}>
+              {goals.map((g) => {
+                const pct = g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
+                const color = GOAL_COLORS.find(c => c.id === g.colorId) || GOAL_COLORS[0];
+                const isComplete = g.current >= g.target;
+                return (
+                  <div key={g.id} style={{
+                    background: "rgba(20,33,49,.6)",
+                    border: `1px solid ${isComplete ? "rgba(90,160,90,.5)" : "rgba(124,200,200,.18)"}`,
+                    borderRadius: 16,
+                    padding: 24,
+                    backdropFilter: "blur(20px)",
+                    boxShadow: isComplete ? "0 0 30px rgba(90,160,90,.25)" : "0 8px 30px rgba(0,0,0,.30)",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>
+                        {isComplete && <i className="ti ti-check" style={{ color: "#5aa05a", fontSize: 26 }} />}
+                        {g.label}
+                      </div>
+                      <div style={{ fontSize: 18, fontFamily: "Consolas, monospace", color: "#bfe6e6" }}>
+                        <b style={{ color: isComplete ? "#5aa05a" : color.bg, fontSize: 32 }}>{g.current}</b>
+                        <span style={{ opacity: 0.7 }}> / {g.target}{g.unit ? ` ${g.unit}` : ""}</span>
+                      </div>
+                    </div>
+                    {/* Barre XL */}
+                    <div style={{ width: "100%", height: 22, background: "rgba(255,255,255,.08)", borderRadius: 11, overflow: "hidden", position: "relative", marginBottom: 8 }}>
+                      <div style={{
+                        width: `${pct}%`, height: "100%",
+                        background: isComplete ? "linear-gradient(90deg, #5aa05a, #4a8a4a)" : color.grad,
+                        borderRadius: 11,
+                        transition: "width 600ms ease-out",
+                        boxShadow: isComplete ? "0 0 16px rgba(90,160,90,.6)" : `0 0 12px ${color.bg}80`,
+                      }} />
+                      {[25, 50, 75].map((m) => (
+                        <div key={m} style={{ position: "absolute", left: `${m}%`, top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,.20)" }} />
+                      ))}
+                    </div>
+                    <div style={{ textAlign: "right", fontSize: 36, fontWeight: 700, color: isComplete ? "#5aa05a" : color.bg }}>
+                      {Math.round(pct)}%
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <style jsx global>{`
+              @keyframes av-present-fade-in {
+                from { opacity: 0; transform: scale(.98); }
+                to { opacity: 1; transform: scale(1); }
+              }
+            `}</style>
+          </div>
+        );
+      })()}
     </Panel>
   );
 }

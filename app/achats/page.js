@@ -18,6 +18,8 @@ import AchatPreview from "../AchatPreview";
 import { safeFetch } from "../../lib/offlineCache";
 import StaleDataBanner from "../StaleDataBanner";
 import { useStickyState } from "../../lib/useStickyState";
+// 0.58.45 : hook pour les page-actions du Cmd+K
+import { usePageAction } from "../../lib/usePageAction";
 // 0.58.22 : NeonButton premium pour boutons d'action principaux
 import { NeonButton } from "../components/ui-premium";
 
@@ -63,6 +65,33 @@ function AchatsInner() {
   const isManager = auth.role?.nom === "Administrateur" || auth.can?.("gerer_roles");
 
   const [staleData, setStaleData] = useState(false);
+
+  // 0.58.45 : export CSV des achats + page-actions Cmd+K
+  async function exportAchatsCsv() {
+    try {
+      // Respecte le filtre fStatut courant si actif
+      const data = fStatut ? (rows || []).filter(r => r.statut === fStatut) : (rows || []);
+      const { exportRows } = await import("../../lib/exportExcel");
+      await exportRows(data, {
+        filename: `achats_${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Achats",
+        columns: {
+          "Numéro": (r) => r.numero || r.id || "",
+          "Date demande": (r) => r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "",
+          "Demandeur": (r) => r.demandeur_nom || "",
+          "Fournisseur": (r) => r.fournisseur || "",
+          "Statut": "statut",
+          "Total estimé": (r) => Number(r.total_estime || r.montant || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          "Motif": "motif",
+          "Date validation": (r) => r.date_validation || "",
+        },
+      });
+    } catch (e) {
+      console.error("Export CSV achats :", e);
+    }
+  }
+  usePageAction("open-new", () => { setForm({}); setFormLignes([]); setModal({}); setErr(""); });
+  usePageAction("export-csv", () => exportAchatsCsv());
 
   async function load() {
     if (!auth.structureId) { setLoading(false); return; }

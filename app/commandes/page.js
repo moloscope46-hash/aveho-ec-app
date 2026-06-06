@@ -4,6 +4,8 @@ import { useEffect, useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+// 0.58.45 : hook pour les page-actions du Cmd+K (export-csv)
+import { usePageAction } from "../../lib/usePageAction";
 import { fmtEur, fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -21,6 +23,27 @@ export default function Commandes() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
   const [lignes, setLignes] = useState({});
+
+  // 0.58.45 : export CSV des commandes (pour Cmd+K)
+  async function exportCommandesCsv() {
+    try {
+      const { exportRows } = await import("../../lib/exportExcel");
+      await exportRows(cmds || [], {
+        filename: `commandes_${new Date().toISOString().slice(0, 10)}`,
+        sheetName: "Commandes",
+        columns: {
+          "Numéro": (r) => r.numero || r.id || "",
+          "Date": (r) => r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR") : "",
+          "Statut": "statut",
+          "Total": (r) => Number(r.total || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          "Magasin": (r) => r.magasins?.nom || "",
+        },
+      });
+    } catch (e) {
+      console.error("Export CSV commandes :", e);
+    }
+  }
+  usePageAction("export-csv", () => exportCommandesCsv());
 
   useEffect(() => {
     if (!auth.ready) return;

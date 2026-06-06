@@ -1,0 +1,270 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.48 — Hotfix stats + Auto-suggestion d'icône</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3a2a 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(90,160,90,.5)}70%{box-shadow:0 0 0 10px rgba(90,160,90,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes sparkle{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.1)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.green{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(90,160,90,.55) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(90,160,90,.30),rgba(124,200,200,.20));backdrop-filter:blur(30px);border:1px solid rgba(90,160,90,.28);box-shadow:0 30px 80px rgba(42,58,42,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6bf;font-weight:700;background:rgba(90,160,90,.14);border:1px solid rgba(90,160,90,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#5aa05a;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#5aa05a;text-shadow:0 0 18px rgba(90,160,90,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6bf;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6bf}
+.meta b{color:#fff}
+.meta code{background:rgba(90,160,90,.12);color:#bfe6bf;border:1px solid rgba(90,160,90,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5aa05a,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(90,160,90,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+.panel.fix{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(90,160,90,.12);color:#bfe6bf;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #5aa05a}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO suggestion */
+.suggest-demo{background:#fff;border-radius:14px;padding:18px;color:#142131;margin:14px 0;max-width:560px}
+.suggest-input{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #e3e9ee;border-radius:8px;font-size:13px;color:#142131;margin-bottom:12px}
+.suggest-input b{color:#185FA5}
+.suggest-banner{padding:8px 12px;background:linear-gradient(135deg,#185FA515,#185FA505);border:1px solid #185FA530;border-radius:8px;display:flex;align-items:center;gap:10px;font-size:12px;animation:sparkle 2s ease-in-out infinite}
+.suggest-banner .sparkle-icon{color:#185FA5;font-size:14px}
+.suggest-banner .label{flex:1;color:#5a6878}
+.suggest-banner .label b{color:#185FA5}
+.suggest-banner button{background:#185FA5;color:#fff;border:none;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer}
+
+/* DEMO console fix */
+.console-bad{background:#1a1410;color:#e35d5b;padding:10px 14px;border-radius:8px;font-family:Consolas,monospace;font-size:11.5px;margin:8px 0}
+.console-good{background:#0d2a14;color:#bfe6bf;padding:10px 14px;border-radius:8px;font-family:Consolas,monospace;font-size:11.5px;margin:8px 0;border-left:3px solid #5aa05a}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(90,160,90,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob green"></div><div class="bg-blob teal"></div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX + UI · 0.58.48</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.48 — Fix 404 stats + Auto-suggestion d'icône<small>Vues stats robustes · Suggestion d'icône depuis le libellé · ~40 mots-clés PSAD</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.48-alpha</code></span>
+    <span><b>Tests :</b> ~4570 verts estimés</span>
+    <span><b>SQL :</b> <code>migration-0.58.48-stats-di-views.sql</code></span>
+  </div>
+</header>
+
+<h2>🩹 1. Fix 404 prod — vues stats DI</h2>
+
+<div class="panel fix">
+<p style="margin:0 0 8px"><b>Bug observé</b> :</p>
+<div class="console-bad">GET https://[supabase]/rest/v1/v_stats_di_top_demandeurs?...&order=nb_di.desc&limit=10
+<b>404 (Not Found)</b></div>
+<p style="margin:8px 0 0">La vue est définie dans <code>aveho-PATCH-vers-0.43.sql</code> mais n'a apparemment jamais été déployée sur l'instance Supabase de prod. Fix en 2 étapes :</p>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">A. SQL : (re)création des 6 vues stats DI</h3>
+
+<div class="panel sql">
+<p style="margin:0 0 8px"><b>À copier-coller dans Supabase SQL Editor</b> (ou utilise le fichier <code>public/sql/migration-0.58.48-stats-di-views.sql</code>) :</p>
+<pre style="margin:0;background:#1a1410;color:#bfe6bf;font-size:11px">CREATE OR REPLACE VIEW v_stats_di_global AS ...
+CREATE OR REPLACE VIEW v_stats_di_par_type AS ...
+CREATE OR REPLACE VIEW v_stats_di_par_urgence AS ...
+CREATE OR REPLACE VIEW v_stats_di_heatmap AS ...
+CREATE OR REPLACE VIEW v_stats_di_top_demandeurs AS ...  ← celle qui manquait
+CREATE OR REPLACE VIEW v_stats_di_par_mois AS ...</pre>
+<p style="margin:8px 0 0;font-size:11.5px">CREATE OR REPLACE → safe sur les vues existantes (juste un refresh de la définition), crée celles manquantes.</p>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">B. Front : helper safeViewQuery pour swallow les 404</h3>
+
+<div class="panel">
+<p style="margin:0">Si à l'avenir une autre vue manque, plus de GET 404 dans la console — juste un <code>console.warn</code> discret et les autres stats continuent de s'afficher.</p>
+</div>
+
+<div class="console-good">[stats] Vue 'v_stats_di_top_demandeurs' indisponible (migration manquante). Retour [].</div>
+
+<pre>// 0.58.48 - app/statistiques-interventions/page.js
+async function safeViewQuery(viewName, builderFn) {
+  try {
+    const builder = supabase.from(viewName).select('*').eq('structure_id', auth.structureId);
+    const finalQuery = builderFn ? builderFn(builder) : builder;
+    const { data, error } = await finalQuery;
+    if (error) {
+      // 404 vue manquante → warn discret, pas de GET 404 dans la console
+      if (error.code === 'PGRST205' || error.code === '42P01' || /not found/i.test(error.message || '')) {
+        console.warn(`[stats] Vue '${viewName}' indisponible (migration manquante). Retour [].`);
+        return null;
+      }
+      throw error;
+    }
+    return data;
+  } catch (e) {
+    console.warn(`[stats] Erreur vue '${viewName}':`, e?.message || e);
+    return null;
+  }
+}
+
+// Tous les appels passent par le helper
+const [gResp, tResp, uResp, hResp, dResp, mResp] = await Promise.all([
+  safeViewQuery('v_stats_di_global', b => b.maybeSingle()),
+  safeViewQuery('v_stats_di_par_type', b => b.order('nb_total', { ascending: false }).limit(10)),
+  safeViewQuery('v_stats_di_par_urgence'),
+  safeViewQuery('v_stats_di_heatmap'),
+  safeViewQuery('v_stats_di_top_demandeurs', b => b.order('nb_di', { ascending: false }).limit(10)),
+  safeViewQuery('v_stats_di_par_mois', b => b.order('mois_debut')),
+]);</pre>
+
+<h2>🎯 2. Auto-suggestion d'icône depuis le libellé</h2>
+
+<div class="panel">
+<p style="margin:0">Plus besoin de chercher manuellement parmi 70+ icônes. Dès que tu tapes un libellé, IconPicker te propose l'icône la plus pertinente avec un bouton "Utiliser". Couvre <b>~40 mots-clés</b> spécifiques au domaine PSAD.</p>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">Démo : page Tags matériel</h3>
+
+<div class="suggest-demo">
+<div class="suggest-input">Libellé : <b>Sous garantie</b></div>
+<div class="suggest-banner">
+  <i style="color:#185FA5;font-size:14px">✨</i>
+  <span class="label">Suggestion : <b>🛡 ti-shield-check</b></span>
+  <button>Utiliser</button>
+</div>
+</div>
+
+<div class="suggest-demo">
+<div class="suggest-input">Libellé : <b>En maintenance</b></div>
+<div class="suggest-banner">
+  <i style="color:#185FA5;font-size:14px">✨</i>
+  <span class="label">Suggestion : <b>🔧 ti-tools</b></span>
+  <button>Utiliser</button>
+</div>
+</div>
+
+<div class="suggest-demo">
+<div class="suggest-input">Libellé : <b>Fauteuil roulant</b></div>
+<div class="suggest-banner">
+  <i style="color:#185FA5;font-size:14px">✨</i>
+  <span class="label">Suggestion : <b>♿ ti-wheelchair</b></span>
+  <button>Utiliser</button>
+</div>
+</div>
+
+<div class="suggest-demo">
+<div class="suggest-input">Libellé : <b>Urgent / Critique</b></div>
+<div class="suggest-banner">
+  <i style="color:#185FA5;font-size:14px">✨</i>
+  <span class="label">Suggestion : <b>⚡ ti-bolt</b></span>
+  <button>Utiliser</button>
+</div>
+</div>
+
+<pre>// 0.58.48 - Dictionnaire de ~40 entrées icône → keywords
+const SUGGESTION_KEYWORDS = {
+  // Médical
+  'ti-stethoscope': ['stetho', 'consult', 'examen', 'diagnos', 'auscult'],
+  'ti-heartbeat':   ['cardiaque', 'coeur', 'cardio', 'ecg'],
+  'ti-pill':        ['medicament', 'traitement', 'comprime', 'pill'],
+  'ti-vaccine':     ['vaccin', 'injection', 'piqure', 'seringue'],
+  'ti-bandage':     ['pansement', 'cicatris', 'plaie', 'blessure'],
+  'ti-emergency-bed': ['hospital', 'hospitalis', 'urgence', 'samu'],
+  'ti-wheelchair':  ['fauteuil', 'mobilité', 'handicap', 'vph', 'roulant'],
+  // Matériel
+  'ti-tools':       ['maintenance', 'outil', 'réparation', 'sav'],
+  'ti-package':     ['livraison', 'colis', 'expédition'],
+  'ti-barcode':     ['code-barre', 'scan', 'gs1', 'traçabilité'],
+  // Urgence
+  'ti-bolt':        ['urgent', 'critique', 'express', 'priorité'],
+  'ti-flame':       ['incendie', 'feu', 'brulure'],
+  // Statut
+  'ti-shield-check':['sous garantie', 'garantie', 'protégé', 'sécurisé'],
+  // ... ~40 icônes au total
+};
+
+export function suggestIcon(label) {
+  if (!label) return null;
+  const normalized = label.toLowerCase().trim();
+  // Trie par longueur de keyword (longest match first)
+  // 'sous garantie' (13 chars) matche AVANT 'garantie' (8 chars)
+  const entries = Object.entries(SUGGESTION_KEYWORDS).flatMap(([icon, keywords]) =>
+    keywords.map(kw => ({ icon, kw, len: kw.length }))
+  );
+  entries.sort((a, b) => b.len - a.len);
+  for (const { icon, kw } of entries) {
+    if (normalized.includes(kw)) return icon;
+  }
+  return null;
+}
+
+// Usage dans les 3 pages
+&lt;IconPicker
+  value={form.icone}
+  onChange={(icon) => setForm({ ...form, icone: icon })}
+  suggestFor={form.libelle}   // ← magie : suggère pendant que tu tapes
+/&gt;</pre>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">Branchement dans les 3 pages</h3>
+
+<div class="panel">
+<ul>
+<li><b>/tags-materiel</b> : <code>suggestFor={form.libelle}</code></li>
+<li><b>/etiquettes</b> : <code>suggestFor={form.libelle}</code></li>
+<li><b>/annonces</b> : <code>suggestFor={`${form.titre} ${form.message}`}</code> — combine titre + message pour plus de précision</li>
+</ul>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Fix 404</b> v_stats_di_top_demandeurs + 5 autres vues recréées via CREATE OR REPLACE</li>
+<li><b>Front robuste</b> : helper safeViewQuery swallow les 404 avec warn discret</li>
+<li><b>Auto-suggestion d'icône</b> : ~40 mots-clés PSAD → icône recommandée avec bouton "Utiliser"</li>
+<li><b>+30 tests</b> Vitest (~4570 verts estimés)</li>
+<li><b>SQL migration</b> : <code>migration-0.58.48-stats-di-views.sql</code> à exécuter en prod</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4570 verts attendus
+npm run build           # OK attendu
+
+# 1) D'ABORD : exécuter les DEUX migrations SQL dans Supabase SQL Editor
+#    (a) migration-0.58.47-tags-icone.sql       (3 ALTER TABLE)
+#    (b) migration-0.58.48-stats-di-views.sql   (6 CREATE OR REPLACE VIEW)
+
+# 2) Push
+git add -A
+git commit -m "Alpha 0.58.48 HOTFIX - Vues stats robustes + Auto-suggestion d'icône"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.49+)</h2>
+<div class="panel">
+<ul>
+<li>Widget Trafic routier <b>si</b> clé Mappy/TomTom obtenue</li>
+<li>Sélecteur de couleur custom (au-delà des 9 par défaut)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Drag&drop ordonner les étiquettes/tags dans la modal de sélection</li>
+<li>Mode présentation pour widget Météo aussi</li>
+<li>Synchronisation Objectifs avec Supabase (partage équipe)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.48 · 5 juin 2026 · FIX STATS + AUTO-SUGGEST ICÔNE ✨</footer>
+</div>
+
+</body></html>

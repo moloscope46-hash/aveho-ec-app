@@ -200,7 +200,8 @@ export default function AnnoncesBanner() {
             background: niveau.accentColor + "22",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <i className={`ti ${niveau.icon}`} style={{ fontSize: isMobile ? 16 : 20, color: niveau.accentColor }} aria-hidden="true" />
+            {/* 0.58.47 : icône custom de l'annonce sinon icône par défaut du niveau */}
+            <i className={`ti ${current.icone || niveau.icon}`} style={{ fontSize: isMobile ? 16 : 20, color: niveau.accentColor }} aria-hidden="true" />
           </div>
 
           {/* Contenu */}
