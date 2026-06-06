@@ -228,6 +228,10 @@ export default function FloatingActionBar() {
           70% { transform: scale(1.35); opacity: 0; }
           100% { transform: scale(1.35); opacity: 0; }
         }
+        @keyframes av-popup-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
         @media (max-width: 768px) {
           .av-shortcuts-bar {
             top: calc(66px + env(safe-area-inset-top, 0px)) !important;
@@ -309,12 +313,6 @@ export default function FloatingActionBar() {
               background: "#fff",
             }}
           />
-          <style jsx global>{`
-            @keyframes av-popup-fade-in {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-          `}</style>
         </div>
       )}
     </>

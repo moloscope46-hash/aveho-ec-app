@@ -1,0 +1,242 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.61</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #1a3a40 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes line-pulse{0%,100%{opacity:.6;transform:scaleX(1)}50%{opacity:1;transform:scaleX(1.05)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.blue{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(24,95,165,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Demo notif persistante */
+.notif-demo{background:#fff;color:#142131;border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin:8px 0;border-left:4px solid #5aa05a;box-shadow:0 4px 12px rgba(0,0,0,.10);max-width:420px}
+.notif-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5aa05a,#4a8a4a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.notif-body{flex:1}
+.notif-title{font-size:13px;font-weight:700}
+.notif-msg{font-size:11.5px;color:#5a6878;margin-top:2px}
+.notif-time{font-size:10px;color:#a0aeb9;margin-top:3px}
+
+/* Demo popup pharmacie */
+.popup-demo{background:#fff;color:#142131;border-radius:10px;padding:14px;max-width:300px;box-shadow:0 12px 30px rgba(0,0,0,.30);margin:14px 0}
+.popup-distance{font-size:12px;color:#185FA5;font-weight:600;margin-bottom:6px;display:inline-flex;align-items:center;gap:4px}
+.popup-badges{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.badge-open{background:#dff5e0;color:#2e6f33;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700}
+.badge-garde{background:#f3effa;color:#5a4a90;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700}
+.btn-itineraire{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#185FA5,#134e87);color:#fff;text-decoration:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;margin-top:8px;border:none;cursor:pointer}
+.btn-nearest{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#7a6fb0,#5a4a90);color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;margin-top:14px}
+
+/* Demo drag&drop */
+.dnd-demo{display:flex;flex-direction:column;gap:12px;margin:14px 0;max-width:420px}
+.widget-card{background:#fff;color:#142131;border:2px dashed rgba(124,200,200,.40);border-radius:12px;padding:14px;position:relative;transition:all 280ms cubic-bezier(.2,.8,.2,1)}
+.widget-card.dragging{opacity:.5;transform:scale(.98);box-shadow:0 14px 30px rgba(124,200,200,.45),0 0 0 2px rgba(124,200,200,.33)}
+.widget-card.drop-target{transform:translateY(8px) scale(1.01);outline:3px solid #7CC8C8;box-shadow:0 8px 22px rgba(124,200,200,.55)}
+.drop-line{position:absolute;top:-8px;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,#7CC8C8,transparent);border-radius:2px;animation:line-pulse 1.2s ease-in-out infinite}
+
+/* Demo tuiles changelog */
+.tiles-demo{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin:14px 0}
+.tile-card{background:#fff;color:#142131;border:1px solid #e3e9ee;border-left:4px solid #185FA5;border-radius:10px;padding:14px}
+.tile-card.green{border-left-color:#5aa05a;background:linear-gradient(135deg,#eef9ef 0%,#fff 100%)}
+.tile-vname{display:inline-block;background:#185FA5;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-family:Consolas,monospace;font-weight:700}
+.tile-current{background:#cfeacb;color:#2e6f33;padding:2px 8px;border-radius:8px;font-size:9.5px;font-weight:700;letter-spacing:.4px;margin-left:6px}
+.tile-title{font-size:13px;font-weight:700;margin:6px 0;line-height:1.3}
+.tile-tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:6px;display:inline-flex;align-items:center;gap:3px}
+.tag.feature{background:rgba(124,200,200,.15);color:#5da8a8}
+.tag.wow{background:rgba(239,159,39,.15);color:#a06820}
+.tag.ui{background:rgba(122,111,176,.15);color:#5a4a90}
+.tag.team{background:rgba(24,95,165,.15);color:#185FA5}
+.tag.fix{background:rgba(227,93,91,.15);color:#c0392b}
+.tag.notif{background:rgba(239,159,39,.15);color:#a06820}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob blue"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.61</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.61 — Notif persistante goal + Itinéraire pharmacie + Drag&drop dashboard peaufiné + Changelog refondu<small>Notif dans la cloche · Distance + Google Maps · UX drag plus polish · Vue Tuiles + 16 nouveaux tags</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.61-alpha</code></span>
+    <span><b>Tests :</b> ~4980 verts</span>
+    <span><b>SQL :</b> aucun</span>
+  </div>
+</header>
+
+<h2>🔔 1. Notification persistante goal atteint</h2>
+
+<div class="panel">
+<p style="margin:0">En complément du toast festif (0.58.59), une <b>vraie notification</b> est maintenant insérée dans la table <code>notifications</code> quand un membre de l'équipe atteint un objectif partagé. Visible dans la cloche TopBar avec dédup intelligent (max 100 entrées par user).</p>
+</div>
+
+<div class="notif-demo">
+<div class="notif-icon">🎯</div>
+<div class="notif-body">
+<div class="notif-title">Objectif d'équipe atteint</div>
+<div class="notif-msg">Hugo Martin a atteint son objectif "Articles écrits" (Équipe Sud-Ouest).</div>
+<div class="notif-time">Il y a 2 min · objectif_atteint</div>
+</div>
+</div>
+
+<h2>🗺️ 2. Itinéraire pharmacie de garde</h2>
+
+<div class="panel">
+<p style="margin:0">Le popup d'une pharmacie sur <code>/carte</code> affiche maintenant la <b>distance Haversine</b> par rapport à ta position + un bouton <b>Itinéraire</b> qui ouvre Google Maps en mode directions. Bonus : bouton <b>"Pharmacie de garde la plus proche"</b> dans la sidebar qui zoom sur le marker et ouvre directement les directions.</p>
+</div>
+
+<div class="popup-demo">
+<div style="font-weight:700;font-size:14px;margin-bottom:4px">Pharmacie Centrale du Lot</div>
+<div style="font-size:11.5px;color:#8a98a8;margin-bottom:6px">46500 Saint-Céré · 05 65 38 12 34</div>
+<div class="popup-distance">📍 À 2.3 km de vous</div>
+<div class="popup-badges">
+<span class="badge-open">▶ OUVERTE</span>
+<span class="badge-garde">🌙 GARDE</span>
+</div>
+<div style="font-size:11px;color:#5a4a90;margin-bottom:6px"><b>Spécialités :</b> LPP, VPH, Orthopédie</div>
+<button class="btn-itineraire"><i class="ti ti-route"></i> Itinéraire</button>
+</div>
+
+<button class="btn-nearest"><i class="ti ti-route"></i> Pharmacie de garde la plus proche</button>
+
+<p style="font-size:11.5px;color:#9fb6c2">↑ Le bouton sidebar trouve la garde la plus proche par Haversine, zoome dessus, et ouvre Google Maps directions.</p>
+
+<h2>🎯 3. Drag&drop dashboard peaufiné</h2>
+
+<div class="panel">
+<p style="margin:0">Améliorations visuelles du drag&drop des widgets sur <code>/accueil</code> : box-shadow plus élégants, transition 280ms cubic-bezier plus douce, scale 0.98 sur l'élément draggé pour effet 'soulevé', et nouvelle <b>ligne d'insertion teal pulsante</b> au-dessus du drop target.</p>
+</div>
+
+<div class="dnd-demo">
+<div class="widget-card">
+<i class="ti ti-grip-vertical" style="position:absolute;top:6px;right:8px;color:#7CC8C8"></i>
+<b style="font-size:13px">🎯 Mes objectifs</b>
+<div style="font-size:11px;color:#8a98a8;margin-top:4px">Widget normal</div>
+</div>
+<div class="widget-card drop-target">
+<div class="drop-line"></div>
+<b style="font-size:13px">📊 Activité à traiter</b>
+<div style="font-size:11px;color:#8a98a8;margin-top:4px">Drop target avec ligne pulsante teal</div>
+</div>
+<div class="widget-card dragging">
+<i class="ti ti-grip-vertical" style="position:absolute;top:6px;right:8px;color:#7CC8C8"></i>
+<b style="font-size:13px">⭐ KPI principaux</b>
+<div style="font-size:11px;color:#8a98a8;margin-top:4px">En cours de drag (opacity 0.5 + scale 0.98)</div>
+</div>
+</div>
+
+<h2>📰 4. Page changelog : Vue Tuiles + 16 nouveaux tags</h2>
+
+<div class="panel">
+<p style="margin:0"><b>Toggle Liste/Tuiles</b> dans la barre de filtres avec persistance. Mode tuiles = grid CSS responsive (auto-fill minmax 320px). Et <b>16 nouveaux tags</b> ajoutés à THEME_LABELS pour un filtrage ultra-fin.</p>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">Vue Tuiles</h3>
+
+<div class="tiles-demo">
+<div class="tile-card green">
+<span class="tile-vname">v0.58.61</span>
+<span class="tile-current">ACTUELLE</span>
+<div class="tile-title">🎁 Notif persistante + Itinéraire pharmacie + Drag&drop dashboard peaufiné</div>
+<div class="tile-tags">
+<span class="tag feature"><i class="ti ti-sparkles"></i> Feature</span>
+<span class="tag wow"><i class="ti ti-stars"></i> Wow</span>
+<span class="tag notif"><i class="ti ti-bell"></i> Notifs</span>
+<span class="tag ui"><i class="ti ti-color-swatch"></i> UI</span>
+</div>
+</div>
+<div class="tile-card">
+<span class="tile-vname">v0.58.60</span>
+<div class="tile-title">🔧 FIX build + Galaxies + Icônes bât/svc + Filtre équipe</div>
+<div class="tile-tags">
+<span class="tag fix"><i class="ti ti-bug"></i> Fix</span>
+<span class="tag wow"><i class="ti ti-stars"></i> Wow</span>
+<span class="tag team"><i class="ti ti-users-group"></i> Team</span>
+<span class="tag ui"><i class="ti ti-color-swatch"></i> UI</span>
+</div>
+</div>
+<div class="tile-card">
+<span class="tile-vname">v0.58.59</span>
+<div class="tile-title">📊 Stats équipe + Notif goal + Carte pharmacies garde + DnD onglets</div>
+<div class="tile-tags">
+<span class="tag feature"><i class="ti ti-sparkles"></i> Feature</span>
+<span class="tag team"><i class="ti ti-users-group"></i> Team</span>
+<span class="tag wow"><i class="ti ti-stars"></i> Wow</span>
+</div>
+</div>
+</div>
+
+<h3 style="color:#fff;font-size:15px;margin-top:18px">38 tags disponibles (16 nouveaux)</h3>
+
+<div class="panel">
+<p style="margin:0 0 8px;font-size:12px;color:#bfd6e6">Anciens : rgpd, achats, pwa, ux, audit, notifications, rls_securite, patients, maintenance, perf_qualite, realtime, stats_dashboard, transferts, recherche, infrastructure, documentation, geoloc, templates, fixes, offline_pwa, geographique, divers</p>
+<p style="margin:0;font-size:12px;color:#bfe6bf"><b>Nouveaux :</b> feature, fix, wow, ui, team, dashboard, objectifs, pharmacie, carte, dnd, raccourcis, menu, partenaires, build, supabase, mobile, animation</p>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Notif persistante</b> goal atteint dans la table notifications + dédup intelligent</li>
+<li><b>Itinéraire Google Maps</b> depuis position user + distance Haversine</li>
+<li><b>Pharmacie la plus proche</b> bouton sidebar avec zoom + directions</li>
+<li><b>Drag&drop dashboard</b> peaufiné : ligne pulsante, box-shadow élévation, transitions plus douces</li>
+<li><b>Vue Tuiles changelog</b> + toggle Liste/Tuiles persisté</li>
+<li><b>+16 nouveaux tags</b> (38 total) pour catégoriser finement</li>
+<li><b>+40 tests</b> Vitest (~4980 verts estimés)</li>
+<li><b>Aucun SQL</b> nouveau — réutilise table notifications existante</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4980 verts attendus
+npm run build           # OK attendu
+
+# Aucun SQL nouveau
+git add -A
+git commit -m "Alpha 0.58.61 - Notif persistante + Itinéraire pharma + DnD peaufine + Changelog tuiles"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.62+)</h2>
+<div class="panel">
+<ul>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Export PDF des stats équipe</li>
+<li>Filtrer Patients/Interventions/Materiels par <code>equipe_id</code> (colonne table à ajouter)</li>
+<li>Filtres avancés dans la vue Tuiles (tri par tag, par date)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.61 · 6 juin 2026 · NOTIF + ROUTE + DND + TILES 🎯</footer>
+</div>
+
+</body></html>

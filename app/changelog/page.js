@@ -37,6 +37,15 @@ export default function ChangelogPage() {
   const [search, setSearch] = useState("");
   const [selectedThemes, setSelectedThemes] = useState([]);  // multi-select
   const [expandedV, setExpandedV] = useState(null);  // version dont les détails sont ouverts
+  // 0.58.61 : mode d'affichage liste classique vs tuiles compactes
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window === "undefined") return "list";
+    try { return localStorage.getItem("av-changelog-view") || "list"; } catch { return "list"; }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem("av-changelog-view", viewMode); } catch {}
+  }, [viewMode]);
   // 0.55.16 : modale d'affichage de la note HTML avec highlight des termes
   // Remplace le hover preview (qui se coupait sur mobile et flashait sur PC)
   const [noteModal, setNoteModal] = useState(null);
@@ -514,11 +523,66 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
               )}
             </div>
           )}
+
+          {/* 0.58.61 : toggle vue Liste / Tuiles */}
+          <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 4 }}>
+            <button
+              onClick={() => setViewMode("list")}
+              title="Vue chronologique en liste"
+              style={{
+                background: viewMode === "list" ? "linear-gradient(135deg, #185FA5, #134e87)" : "#fff",
+                color: viewMode === "list" ? "#fff" : "#5a6878",
+                border: `1px solid ${viewMode === "list" ? "#185FA5" : "#d3d9e0"}`,
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <i className="ti ti-list" /> Liste
+            </button>
+            <button
+              onClick={() => setViewMode("tiles")}
+              title="Vue tuiles compactes"
+              style={{
+                background: viewMode === "tiles" ? "linear-gradient(135deg, #7CC8C8, #5da8a8)" : "#fff",
+                color: viewMode === "tiles" ? "#fff" : "#5a6878",
+                border: `1px solid ${viewMode === "tiles" ? "#7CC8C8" : "#d3d9e0"}`,
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <i className="ti ti-layout-grid" /> Tuiles
+            </button>
+          </div>
         </Panel>
 
-        {/* Timeline */}
-        <div style={{ position: "relative", paddingLeft: 26 }}>
-          <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 2, background: "#e3e9ee" }} aria-hidden="true" />
+        {/* Timeline ou Tuiles selon viewMode */}
+        <div style={
+          viewMode === "tiles"
+            ? {
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gap: 14,
+                marginTop: 14,
+              }
+            : { position: "relative", paddingLeft: 26 }
+        }>
+          {viewMode === "list" && (
+            <div style={{ position: "absolute", left: 7, top: 8, bottom: 8, width: 2, background: "#e3e9ee" }} aria-hidden="true" />
+          )}
 
           {/* 0.57.11 : loader pendant le fetch initial de versions-index.json */}
           {!versionsLoaded && (
@@ -541,19 +605,25 @@ footer{margin-top:18px;text-align:center;color:#8a98a8;font-size:12px}
             const isExpanded = expandedV === v.v + v.kind;
             
             return (
-              <div key={v.v + v.kind} style={{ position: "relative", marginBottom: 14, paddingBottom: 4 }}>
-                <div style={{
-                  position: "absolute", left: -23, top: 6,
-                  width: 16, height: 16, borderRadius: "50%",
-                  background: color, border: "3px solid #fff",
-                  boxShadow: `0 0 0 1px ${color}44`,
-                }} aria-hidden="true" />
+              <div key={v.v + v.kind} style={{ position: "relative", marginBottom: viewMode === "tiles" ? 0 : 14, paddingBottom: 4 }}>
+                {viewMode === "list" && (
+                  <div style={{
+                    position: "absolute", left: -23, top: 6,
+                    width: 16, height: 16, borderRadius: "50%",
+                    background: color, border: "3px solid #fff",
+                    boxShadow: `0 0 0 1px ${color}44`,
+                  }} aria-hidden="true" />
+                )}
 
-                <div style={{ 
+                <div style={{
                   background: isCurrent ? "linear-gradient(135deg, #eef9ef 0%, #fff 100%)" : "#fff",
                   border: `1px solid ${isCurrent ? "#bfe2bf" : "#e3e9ee"}`,
                   borderLeft: `4px solid ${color}`,
-                  borderRadius: 10, padding: "12px 16px",
+                  borderRadius: 10,
+                  padding: viewMode === "tiles" ? "14px 16px" : "12px 16px",
+                  height: viewMode === "tiles" ? "100%" : "auto",
+                  display: viewMode === "tiles" ? "flex" : "block",
+                  flexDirection: viewMode === "tiles" ? "column" : "initial",
                 }}>
                   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
                     <h3 

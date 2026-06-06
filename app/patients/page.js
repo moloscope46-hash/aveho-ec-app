@@ -463,6 +463,10 @@ export default function Patients() {
                     if (ctxFilter.serviceId && ch.service_id !== ctxFilter.serviceId) return false;
                     if (ctxFilter.batimentId && ch.batiment_id !== ctxFilter.batimentId) return false;
                   }
+                  // 0.58.62 : filtre par équipe si une équipe est sélectionnée dans la TopBar
+                  if (ctxFilter.active && ctxFilter.equipeId && r.equipe_id !== ctxFilter.equipeId) {
+                    return false;
+                  }
                   return true;
                 });
                 if (filtered.length === 0) {

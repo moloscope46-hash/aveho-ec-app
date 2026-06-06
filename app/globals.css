@@ -3289,3 +3289,9 @@ html.av-presentation-mode.av-presentation-hide-notifs [data-focus-hide-on-notifs
   0%, 100% { opacity: 0.45; transform: scale(1); }
   50% { opacity: 0.20; transform: scale(1.30); }
 }
+
+/* 0.58.61 : ligne d'insertion pulsante pour drag&drop dashboard */
+@keyframes av-drop-line-pulse {
+  0%, 100% { opacity: 0.6; transform: scaleX(1); }
+  50% { opacity: 1; transform: scaleX(1.05); }
+}

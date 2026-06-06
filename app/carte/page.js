@@ -313,13 +313,39 @@ export default function CartePage() {
       const openBadge = isOpen
         ? `<span style="background:#dff5e0;color:#2e6f33;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">▶ OUVERTE</span>`
         : `<span style="background:#fde4e1;color:#c0392b;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700">⬛ FERMÉE</span>`;
+
+      // 0.58.61 : calcul distance + bouton itinéraire si position user dispo
+      const userPos = (typeof window !== "undefined" && window._avehoUserPosition) || getStoredPosition();
+      let distanceHtml = "";
+      let itineraireBtn = "";
+      if (userPos && userPos.lat && userPos.lng) {
+        // Haversine
+        const toRad = (d) => d * Math.PI / 180;
+        const R = 6371;  // km
+        const dLat = toRad(p.latitude - userPos.lat);
+        const dLng = toRad(p.longitude - userPos.lng);
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(userPos.lat)) * Math.cos(toRad(p.latitude)) * Math.sin(dLng / 2) ** 2;
+        const d = 2 * R * Math.asin(Math.sqrt(a));
+        const distLabel = d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`;
+        distanceHtml = `<div style="font-size:11px;color:#185FA5;font-weight:600;margin-bottom:6px"><i class="ti ti-route" style="margin-right:3px"></i> À ${distLabel} de vous</div>`;
+        // Bouton itinéraire (ouvre Google Maps en directions)
+        const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${p.latitude},${p.longitude}&travelmode=driving`;
+        itineraireBtn = `<a href="${directionsUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#185FA5,#134e87);color:#fff;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:700;margin-top:8px"><i class="ti ti-route" style="font-size:14px"></i> Itinéraire</a>`;
+      } else {
+        // Bouton "ouvrir dans Google Maps" sans direction
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`;
+        itineraireBtn = `<a href="${mapsUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#185FA5,#134e87);color:#fff;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:11.5px;font-weight:700;margin-top:8px"><i class="ti ti-map-pin" style="font-size:14px"></i> Voir sur Google Maps</a>`;
+      }
+
       marker.bindPopup(`
         <div style="font-family:Quicksand,sans-serif;min-width:230px">
           <div style="font-weight:700;font-size:14px;color:#142131;margin-bottom:4px">${p.nom}</div>
           <div style="font-size:11.5px;color:#8a98a8;margin-bottom:6px">${p.ville || ""}${p.telephone ? ` · ${p.telephone}` : ""}</div>
+          ${distanceHtml}
           <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${openBadge}${gardeBadge}</div>
           ${speciaText ? `<div style="font-size:11px;color:#5a4a90;margin-bottom:6px"><b>Spécialités :</b> ${speciaText}</div>` : ""}
           ${p.garde_notes ? `<div style="font-size:11px;color:#5a4a90;background:#f3effa;padding:6px 8px;border-radius:6px;margin-top:4px"><b>🌙 Note garde :</b> ${p.garde_notes}</div>` : ""}
+          ${itineraireBtn}
         </div>
       `);
     });
@@ -1366,6 +1392,58 @@ export default function CartePage() {
                     <p style={{ fontSize: 11, color: "#8a98a8", margin: "8px 0 0", fontStyle: "italic" }}>
                       Aucune pharmacie géolocalisée. Ajoute-les depuis <code style={{ fontSize: 10 }}>/pharmacies</code> avec coordonnées.
                     </p>
+                  )}
+                  {/* 0.58.61 : bouton pharmacie de garde la plus proche */}
+                  {pharmacies.filter(p => p.garde_disponible || p.garde_24h).length > 0 && (
+                    <button
+                      onClick={() => {
+                        const userPos = (typeof window !== "undefined" && window._avehoUserPosition) || getStoredPosition();
+                        if (!userPos || !userPos.lat || !userPos.lng) {
+                          alert("Position non disponible. Active la géolocalisation pour trouver la pharmacie la plus proche.");
+                          return;
+                        }
+                        const gardes = pharmacies.filter(p => (p.garde_disponible || p.garde_24h) && p.latitude && p.longitude);
+                        if (gardes.length === 0) return;
+                        const toRad = (d) => d * Math.PI / 180;
+                        const R = 6371;
+                        const distances = gardes.map(p => {
+                          const dLat = toRad(p.latitude - userPos.lat);
+                          const dLng = toRad(p.longitude - userPos.lng);
+                          const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(userPos.lat)) * Math.cos(toRad(p.latitude)) * Math.sin(dLng / 2) ** 2;
+                          return { p, d: 2 * R * Math.asin(Math.sqrt(a)) };
+                        });
+                        distances.sort((a, b) => a.d - b.d);
+                        const nearest = distances[0];
+                        // Zoom sur le marker
+                        const L = window.L;
+                        const map = mapInstanceRef.current;
+                        if (L && map) {
+                          map.setView([nearest.p.latitude, nearest.p.longitude], 14, { animate: true });
+                        }
+                        // Ouvre Google Maps directions
+                        const url = `https://www.google.com/maps/dir/?api=1&origin=${userPos.lat},${userPos.lng}&destination=${nearest.p.latitude},${nearest.p.longitude}&travelmode=driving`;
+                        window.open(url, "_blank", "noopener");
+                      }}
+                      style={{
+                        marginTop: 8,
+                        width: "100%",
+                        padding: "8px 12px",
+                        background: "linear-gradient(135deg, #7a6fb0, #5a4a90)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 8,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <i className="ti ti-route" /> Pharmacie de garde la plus proche
+                    </button>
                   )}
                 </>
               )}

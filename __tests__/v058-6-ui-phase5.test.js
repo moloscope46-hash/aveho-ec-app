@@ -73,10 +73,12 @@ describe("0.58.6 - Profil refondu avec PageHero + Tabs", () => {
 describe("0.58.6 - EmptyState sur achats + maintenance + commandes", () => {
   function checkEmptyState(file, expectedAction) {
     const src = fs.readFileSync(path.resolve(process.cwd(), file), "utf-8");
+    // 0.58.62 : accepte actionLabel="..." OU actionLabel={... "..." ...} (expression dynamique)
+    const actionRegex = new RegExp(`actionLabel=(?:["']${expectedAction}|\\{[^}]*["']${expectedAction})`);
     return {
       hasImport: /import\s+\{[^}]*EmptyState[^}]*\}\s+from\s+["'][^"']*ui-premium["']/.test(src),
       hasUsage: /<EmptyState/.test(src),
-      hasAction: new RegExp(`actionLabel=["']${expectedAction}`).test(src),
+      hasAction: actionRegex.test(src),
     };
   }
 

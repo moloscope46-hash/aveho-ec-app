@@ -364,6 +364,8 @@ export default function Interventions() {
     if (ctx.active && ctxPatientIds) {
       if (!r.patient_id || !ctxPatientIds.has(r.patient_id)) return false;
     }
+    // 0.58.62 : filtre par équipe si une équipe est sélectionnée
+    if (ctx.active && ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
     return true;
   });
 

@@ -220,7 +220,12 @@ export default function Materiels() {
           table="materiels"
           title="Nouveau matériel"
           relations={rel}
-          extraFilter={ctx.active && ctxPatientIds ? (r) => r.patient_id && ctxPatientIds.has(r.patient_id) : null}
+          extraFilter={ctx.active ? (r) => {
+            // 0.58.62 : combine filtre patient (bât/svc) ET filtre équipe
+            if (ctxPatientIds && (!r.patient_id || !ctxPatientIds.has(r.patient_id))) return false;
+            if (ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
+            return true;
+          } : null}
           columns={[
             { key: "libelle", label: "Article", render: (r) => (
               <>

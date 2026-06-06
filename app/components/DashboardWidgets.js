@@ -11,6 +11,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Panel } from "../ui";
 import { dialogs } from "../dialogs";
+import TeamStatsPdfExport from "./TeamStatsPdfExport";  // 0.58.62
 
 // 30 citations soigneusement choisies (pas trop perso, pas trop corporate)
 const CITATIONS = [
@@ -2511,15 +2512,52 @@ export function TeamGoalsWidget() {
     let toastFn = null;
     // Charge dynamiquement le toast pour éviter cycle d'imports
     import("../components/ui-premium/Toast").then(mod => { toastFn = mod.toast || mod.showToast; });
-    function onAchieved(e) {
-      const { goalLabel, ownerName, teamName } = e.detail || {};
-      if (!toastFn) return;
-      const fn = toastFn.success || toastFn;
-      fn(
-        "🎯 Objectif atteint !",
-        `${ownerName} a atteint son objectif "${goalLabel}"${teamName ? ` (${teamName})` : ""}.`,
-        { duration: 6000 }
-      );
+    async function onAchieved(e) {
+      const { goalLabel, ownerName, teamName, goalId } = e.detail || {};
+      // (1) Toast festif éphémère
+      if (toastFn) {
+        const fn = toastFn.success || toastFn;
+        fn(
+          "🎯 Objectif atteint !",
+          `${ownerName} a atteint son objectif "${goalLabel}"${teamName ? ` (${teamName})` : ""}.`,
+          { duration: 6000 }
+        );
+      }
+      // 0.58.61 : (2) Notification persistante dans le centre de notifs
+      try {
+        const { createClient } = await import("../../lib/supabase");
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        // Dédup : on stocke les goalIds déjà notifiés en localStorage pour
+        // ne pas insérer en double si la page est rechargée
+        const NOTIFIED_KEY = "av-team-goals-notified";
+        let notified = [];
+        try { notified = JSON.parse(localStorage.getItem(NOTIFIED_KEY) || "[]"); } catch {}
+        if (goalId && notified.includes(goalId)) return;
+        // Récupère structure_id depuis le membre courant
+        const { data: ms } = await supabase
+          .from("membres_structure")
+          .select("structure_id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+        if (!ms?.structure_id) return;
+        await supabase.from("notifications").insert({
+          structure_id: ms.structure_id,
+          user_id: user.id,  // notif ciblée pour moi
+          type: "objectif_atteint",
+          titre: "🎯 Objectif d'équipe atteint",
+          message: `${ownerName || "Un collègue"} a atteint son objectif "${goalLabel}"${teamName ? ` (${teamName})` : ""}.`,
+          lien: "/accueil",
+        });
+        notified.push(goalId);
+        // Garde max 100 entrées pour éviter croissance infinie
+        if (notified.length > 100) notified = notified.slice(-100);
+        localStorage.setItem(NOTIFIED_KEY, JSON.stringify(notified));
+      } catch {
+        // Échec silencieux (table notifications peut être absente)
+      }
     }
     window.addEventListener("av-team-goal-achieved", onAchieved);
     return () => window.removeEventListener("av-team-goal-achieved", onAchieved);
@@ -2564,6 +2602,10 @@ export function TeamGoalsWidget() {
             ({teamGoals.length} partagé{teamGoals.length > 1 ? "s" : ""})
           </span>
         </h2>
+        {/* 0.58.62 : bouton export PDF des stats */}
+        {teamGoals.length > 0 && stats && (
+          <TeamStatsPdfExport stats={stats} teamGoals={teamGoals} />
+        )}
       </div>
 
       {/* 0.58.59 : Bandeau de stats agrégées */}

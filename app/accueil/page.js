@@ -480,15 +480,46 @@ export default function Accueil() {
                   style={{
                     position: "relative",
                     marginTop: 18,
-                    opacity: isDragged ? 0.4 : 1,
-                    transform: isDragOver ? "translateY(6px) scale(1.005)" : "translateY(0) scale(1)",
-                    transition: "transform 220ms cubic-bezier(.2,.8,.2,1), opacity 150ms",
-                    outline: editLayout ? (isDragOver ? `3px dashed ${meta.color}` : `2px dashed ${meta.color}55`) : "none",
+                    opacity: isDragged ? 0.35 : 1,
+                    // 0.58.61 : transitions plus fluides + élévation au survol drag
+                    transform: isDragOver
+                      ? "translateY(8px) scale(1.01)"
+                      : isDragged
+                      ? "scale(0.98)"
+                      : "translateY(0) scale(1)",
+                    transition: "transform 280ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease-out, box-shadow 220ms",
+                    outline: editLayout
+                      ? isDragOver
+                        ? `3px solid ${meta.color}`
+                        : isDragged
+                        ? `2px dashed ${meta.color}88`
+                        : `2px dashed ${meta.color}55`
+                      : "none",
                     outlineOffset: editLayout ? 4 : 0,
                     borderRadius: 14,
                     cursor: editLayout ? (isDragged ? "grabbing" : "grab") : "default",
+                    // 0.58.61 : box-shadow accent quand draggé / drop target
+                    boxShadow: isDragged
+                      ? `0 14px 30px ${meta.color}44, 0 0 0 2px ${meta.color}33`
+                      : isDragOver
+                      ? `0 8px 22px ${meta.color}55`
+                      : "none",
                   }}
                 >
+                  {/* 0.58.61 : ligne d'insertion teal au-dessus du drop target */}
+                  {editLayout && isDragOver && (
+                    <div style={{
+                      position: "absolute",
+                      top: -8,
+                      left: 0,
+                      right: 0,
+                      height: 4,
+                      background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)`,
+                      borderRadius: 2,
+                      animation: "av-drop-line-pulse 1.2s ease-in-out infinite",
+                      pointerEvents: "none",
+                    }} />
+                  )}
                   {/* 0.58.33 : drag label + close button en mode édition */}
                   {editLayout && (
                     <>
