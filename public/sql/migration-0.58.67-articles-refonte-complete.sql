@@ -125,11 +125,14 @@ CREATE TRIGGER articles_set_updated_at_trigger
 -- 4) RLS sur tva_taux (lecture pour la structure, écriture pour les admins)
 ALTER TABLE tva_taux ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "tva_taux_read_struct"
+-- PostgreSQL ne supporte pas CREATE POLICY IF NOT EXISTS → DROP puis CREATE
+DROP POLICY IF EXISTS "tva_taux_read_struct" ON tva_taux;
+CREATE POLICY "tva_taux_read_struct"
   ON tva_taux FOR SELECT
   USING (structure_id IN (SELECT structure_id FROM membres_structure WHERE user_id = auth.uid()));
 
-CREATE POLICY IF NOT EXISTS "tva_taux_write_admin"
+DROP POLICY IF EXISTS "tva_taux_write_admin" ON tva_taux;
+CREATE POLICY "tva_taux_write_admin"
   ON tva_taux FOR ALL
   USING (
     structure_id IN (

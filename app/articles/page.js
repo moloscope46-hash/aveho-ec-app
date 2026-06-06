@@ -11,6 +11,7 @@
 // =============================================================
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
@@ -28,6 +29,7 @@ const TYPES_BARCODE = ["EAN13", "EAN8", "CODE128", "GS1-128", "DATAMATRIX"];
 
 export default function Articles() {
   const supabase = createClient();
+  const router = useRouter();
   const auth = useAuth();
   const cart = useCart();
   const [items, setItems] = useState([]);
@@ -300,6 +302,20 @@ export default function Articles() {
             }}>
               <i className="ti ti-plus" /> Nouvel article
             </button>
+            <button onClick={() => router.push("/scan/article")} title="Scanner un code-barres pour une entrée stock" style={{
+              background: "linear-gradient(135deg, #7CC8C8, #5da8a8)",
+              color: "#fff", border: "none", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", gap: 5,
+            }}>
+              <i className="ti ti-scan" /> Scan
+            </button>
+            <button onClick={() => router.push("/articles/etiquettes")} title="Imprimer des étiquettes prix" style={{
+              background: "linear-gradient(135deg, #EF9F27, #d28818)",
+              color: "#fff", border: "none", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", gap: 5,
+            }}>
+              <i className="ti ti-printer" /> Étiquettes
+            </button>
           </div>
         </Panel>
 
@@ -344,7 +360,7 @@ export default function Articles() {
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
                       <td style={{ padding: "8px", fontFamily: "Consolas, monospace", fontSize: 11.5, color: "#185FA5" }}>{a.reference || "—"}</td>
                       <td style={{ padding: "8px" }}>
-                        <a onClick={() => editArticle(a)} style={{ cursor: "pointer", color: "#142131", fontWeight: 600, textDecoration: "none" }}>{a.libelle}</a>
+                        <a onClick={() => router.push(`/article/${a.id}`)} style={{ cursor: "pointer", color: "#142131", fontWeight: 600, textDecoration: "none" }} title="Ouvrir la fiche détaillée">{a.libelle}</a>
                         {a.dispositif_medical && <span style={{ marginLeft: 5, fontSize: 9, background: "#fde4e1", color: "#c0392b", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>DM{a.classe_dm ? ` ${a.classe_dm}` : ""}</span>}
                         {a.sterile && <span style={{ marginLeft: 4, fontSize: 9, background: "#dbe7f5", color: "#185FA5", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }} title="Stérile">✦</span>}
                         {a.usage_unique && <span style={{ marginLeft: 4, fontSize: 9, background: "#fff8ec", color: "#7a4f15", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }} title="Usage unique">UU</span>}

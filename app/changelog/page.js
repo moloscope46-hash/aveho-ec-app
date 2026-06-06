@@ -77,12 +77,18 @@ export default function ChangelogPage() {
     // 0.57.11 : fetch parallèle versions-index + chantiers-extra. Les 2 fichiers
     // sont mis en cache HTTP par Vercel (immutable JSON dans /public).
     // En attendant le fetch, page.js affiche un skeleton léger.
+    // 0.58.68 : FIX BUG MAJ MANQUANTES — `cache:"force-cache"` empêchait le navigateur
+    //   de récupérer les nouvelles versions à chaque release (cache HTTP infini).
+    //   Solution : cache-busting via `?v={pkg.version}` qui change à chaque release
+    //   → l'URL diffère, le navigateur fetch frais. Bonus : cache "default" qui
+    //   respecte les headers Cache-Control normaux.
     let cancelled = false;
     (async () => {
       try {
+        const v = pkg.version || "dev";
         const [versionsRes, extraRes] = await Promise.all([
-          fetch("/changelog-data/versions-index.json", { cache: "force-cache" }),
-          fetch("/changelog-data/chantiers-extra.json", { cache: "force-cache" }),
+          fetch(`/changelog-data/versions-index.json?v=${encodeURIComponent(v)}`, { cache: "default" }),
+          fetch(`/changelog-data/chantiers-extra.json?v=${encodeURIComponent(v)}`, { cache: "default" }),
         ]);
         if (!versionsRes.ok) throw new Error(`versions-index HTTP ${versionsRes.status}`);
         const index = await versionsRes.json();
