@@ -1,20 +1,25 @@
 "use client";
 // =============================================================
 //  /choix-mode — Choix entre logiciel complet ou Action Mobile
-//  Page affichée juste après login
+//  0.58.90 : Page affichée à CHAQUE login (force visibilité du popup)
+//             Affiche le mode mémorisé pour info
 // =============================================================
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/useAuth";
 
 export default function ChoixModePage() {
   const router = useRouter();
   const auth = useAuth();
+  const [savedMode, setSavedMode] = useState(null);
 
   useEffect(() => {
     if (auth.ready && !auth.user) {
       router.push("/login");
     }
+    try {
+      setSavedMode(localStorage.getItem("av-launch-mode"));
+    } catch {}
   }, [auth.ready, auth.user]);
 
   function choose(mode) {
@@ -42,9 +47,34 @@ export default function ChoixModePage() {
         </div>
 
         <h1 style={{ color: "#fff", fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Bonjour {auth.user?.email?.split("@")[0]} 👋</h1>
-        <p style={{ color: "#bfe6e6", fontSize: 14.5, marginBottom: 38 }}>
+        <p style={{ color: "#bfe6e6", fontSize: 14.5, marginBottom: 24 }}>
           Que voulez-vous faire ?
         </p>
+
+        {/* 0.58.90 : Banner mode mémorisé + bouton rapide */}
+        {savedMode && (
+          <div style={{
+            background: "rgba(124,200,200,.08)",
+            border: "1px solid rgba(124,200,200,.22)",
+            borderRadius: 14, padding: "12px 18px",
+            marginBottom: 22,
+            display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+            justifyContent: "center",
+          }}>
+            <i className={`ti ${savedMode === "mobile" ? "ti-scan" : "ti-device-desktop"}`} style={{ color: savedMode === "mobile" ? "#EF9F27" : "#7CC8C8", fontSize: 20 }} />
+            <span style={{ color: "#bfe6e6", fontSize: 13 }}>
+              Dernier mode utilisé : <b style={{ color: "#fff" }}>{savedMode === "mobile" ? "📱 Action Mobile" : "💻 Logiciel"}</b>
+            </span>
+            <button onClick={() => choose(savedMode)} style={{
+              background: savedMode === "mobile" ? "linear-gradient(135deg,#EF9F27,#d48820)" : "linear-gradient(135deg,#7CC8C8,#5db5b5)",
+              color: savedMode === "mobile" ? "#fff" : "#142131",
+              border: "none", padding: "8px 16px", borderRadius: 8,
+              fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+            }}>
+              <i className="ti ti-arrow-right" /> Continuer avec ce mode
+            </button>
+          </div>
+        )}
 
         {/* 2 cartes */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>

@@ -73,21 +73,10 @@ export default function Accueil() {
   const cart = useCart();
   const [loading, setLoading] = useState(true);
 
-  // 0.58.82 : redirection automatique si mode 'mobile' choisi au login précédent
-  useEffect(() => {
-    if (!auth.ready || !auth.user) return;
-    try {
-      const mode = localStorage.getItem("av-launch-mode");
-      // Si pas de mode défini → on propose le choix
-      if (!mode) {
-        router.push("/choix-mode");
-      } else if (mode === "mobile") {
-        // Mode mobile choisi → on bascule sur /mobile
-        router.push("/mobile");
-      }
-      // Sinon mode "desktop" : on reste sur /accueil
-    } catch { /* localStorage indispo : on reste */ }
-  }, [auth.ready, auth.user, router]);
+  // 0.58.82 → 0.58.90 : DÉSACTIVÉ — la redirection est faite par /login → /choix-mode
+  // Si /accueil redirige auto vers /choix-mode, on contourne le popup à chaque login.
+  // Maintenant /login redirige directement vers /choix-mode, donc on n'a plus besoin de ce useEffect.
+  // Si quelqu'un arrive sur /accueil directement (URL tapée), on le laisse là.
 
   const [kpis, setKpis] = useState({ promos: 0, commandes: 0, enCours: 0, aRegler: 0 });
   const [dernieres, setDernieres] = useState([]);

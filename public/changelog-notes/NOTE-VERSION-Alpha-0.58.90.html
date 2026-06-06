@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.90 — Popup choix-mode toujours visible</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4256 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(124,200,200,.20));border:1px solid rgba(124,200,200,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:#7CC8C8}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.20);border-left:4px solid #7CC8C8;border-radius:14px;padding:20px 24px;margin:14px 0}
+pre{background:#050a14;color:#e8edf2;padding:16px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+
+.banner-demo{background:rgba(124,200,200,.10);border:1px solid rgba(124,200,200,.25);border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;margin:14px 0;color:#fff}
+.cta{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🔁 0.58.90 · POPUP CHOIX-MODE</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🔁 Le popup choix-mode s'affiche maintenant à chaque login<small>Avant : bypassé dès qu'un mode était mémorisé · Après : toujours visible + bandeau "Continuer" rapide</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.90-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Fix UX</span>
+  </div>
+</header>
+
+<h2>🐛 Le problème</h2>
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5px">Quand tu cliquais "Démarrer en Logiciel" dans le profil (ou ailleurs), localStorage mémorisait <code>av-launch-mode='desktop'</code>. À toutes les connexions suivantes, l'app détectait ce mode et te redirigeait direct sur /accueil sans afficher le popup. Cédric voulait que le popup soit <b>toujours visible à chaque login</b> pour pouvoir basculer rapidement entre les 2 modes.</p>
+</div>
+
+<h2>🔧 Le fix</h2>
+
+<pre>// app/login/page.js
+- router.push("/vue-globale");
++ router.push("/choix-mode");  // popup choix mode après login
+
+// app/accueil/page.js
+- useEffect → redirige vers /choix-mode si pas de mode  (DÉSACTIVÉ)</pre>
+
+<h2>✨ Bonus UX : bandeau "Continuer rapide"</h2>
+
+<p style="color:#bfe6e6;font-size:13px;margin:0 0 8px">Sur le popup choix-mode, si tu as déjà un mode mémorisé, ce bandeau apparaît en haut :</p>
+
+<div class="banner-demo">
+  <i class="ti ti-device-desktop" style="color:#7CC8C8;font-size:20px"></i>
+  <span style="color:#bfe6e6;font-size:13px">Dernier mode utilisé : <b style="color:#fff">💻 Logiciel</b></span>
+  <span class="cta">→ Continuer avec ce mode</span>
+</div>
+
+<p style="color:#bfe6e6;font-size:13px;margin:8px 0 0">Un seul click suffit pour repartir comme avant — sans devoir re-choisir entre les 2 grandes cartes. Si tu veux changer, les 2 cartes Logiciel / Mobile sont toujours là en-dessous.</p>
+
+<h2>🎯 Comportement attendu</h2>
+
+<div class="panel">
+<ol style="color:#bfe6e6;font-size:13px;margin:0;padding-left:20px;line-height:1.8">
+  <li>Tu te connectes → tu vois <b>toujours</b> le popup avec les 2 cartes (Logiciel teal / Action Mobile ambre)</li>
+  <li>Si tu as déjà choisi avant : bandeau en haut avec ton mode précédent + bouton "Continuer avec ce mode"</li>
+  <li>Tu peux soit cliquer ce bouton (rapide), soit changer de mode en cliquant l'autre carte</li>
+  <li>Ton nouveau choix est mémorisé pour le prochain login (mais le popup s'affichera quand même)</li>
+</ol>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.58.90 - Fix popup choix-mode toujours visible"
+git push origin main</pre>
+
+<footer>Aveho — Espace Collectivité · 0.58.90 · 6 juin 2026 · 🔁 POPUP CHOIX-MODE</footer>
+</div></body></html>

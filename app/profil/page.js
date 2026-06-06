@@ -33,6 +33,7 @@ import { getShortcutsConfig, setShortcutsConfig, resetShortcutsConfig, SHORTCUT_
 export default function Profil() {
   const supabase = createClient();
   const auth = useAuth();
+  const router = useRouter();  // 0.58.91 : manquant — utilisé par le bouton Rouvrir popup choix-mode
   const cart = useCart();
   const [nom, setNom] = useState("");
   // 0.58.83 : numéro de téléphone perso pour le FAB "Continuer sur mon téléphone"

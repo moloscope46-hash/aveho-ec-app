@@ -160,7 +160,7 @@ export default function Login() {
         } catch (_) { /* non-bloquant */ }
         // 0.55.13 : signaler login pour déclencher modale opt-in biométrie
         try { window.dispatchEvent(new CustomEvent("aveho:login-success")); } catch (_) {}
-        router.push("/vue-globale");
+        router.push("/choix-mode");  // 0.58.90 : popup choix mode après login
       }
     } catch (e) {
       setErr(e.message || "Erreur");
@@ -175,7 +175,7 @@ export default function Login() {
     try {
       const r = await authenticateBiometric({ supabase, email, method });
       if (!r?.ok) throw new Error("Échec authentification biométrique");
-      router.push("/vue-globale");
+      router.push("/choix-mode");  // 0.58.90 : popup choix mode après login
     } catch (e) {
       setErr(e.message || "Erreur authentification biométrique");
     } finally {

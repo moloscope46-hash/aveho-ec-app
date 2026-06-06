@@ -240,6 +240,47 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.91",
+    "kind": "hotfix",
+    "titre": "🆘 HOTFIX : `router is not defined` sur /profil (bouton Rouvrir popup choix-mode)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Crash JS dans /profil** : le bouton 'Rouvrir le popup de choix' que j'avais ajouté en 0.58.85 utilisait `router.push('/choix-mode')` mais le composant Profil n'avait pas `const router = useRouter()` (l'import était bien là ligne 7 mais l'initialisation manquait dans le composant principal — il y en avait une dans un sous-composant ligne 736 mais scope différent). Au click → `ReferenceError: router is not defined` + page profil crashe en 503",
+        "code_snippet": {
+          "file": "app/profil/page.js",
+          "note": "Ajout d'une ligne",
+          "lang": "diff",
+          "after": "export default function Profil() {\n  const supabase = createClient();\n  const auth = useAuth();\n+ const router = useRouter();  // manquant"
+        }
+      },
+      { "code": "INFO", "txt": "🔍 **Sanity check** sur tous les autres fichiers : aucun autre cas similaire dans les pages. Les composants `AlertToast`, `ui-premium/*` flagués reçoivent `router` en prop, ce qui est normal" },
+      { "code": "INFO", "txt": "💡 **À refaire après push** : si tu veux retester le popup, va dans /profil → section Mode de démarrage → bouton 'Rouvrir le popup de choix'. Tu seras redirigé sur /choix-mode et le localStorage `av-launch-mode` sera vidé pour repartir de zéro" }
+    ],
+    "themes": ["hotfix", "profil"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.91.html"
+  },
+  {
+    "v": "0.58.90",
+    "kind": "fix",
+    "titre": "🔁 Le popup choix-mode s'affiche maintenant à CHAQUE login (était bypassé par la mémorisation)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 **Problème** : tu choisissais ton mode une fois (ex: Logiciel via le profil), localStorage gardait `av-launch-mode='desktop'`, et à toutes les connexions suivantes tu arrivais direct sur l'app sans voir le popup. C'était logique mais Cédric voulait pouvoir choisir à chaque login" },
+      { "code": "FIX", "txt": "🔧 **Fix** : `/login` après succès redirige maintenant vers `/choix-mode` (au lieu de `/vue-globale`). Le popup s'affiche **systématiquement**. La redirection auto qui était dans `/accueil` a été désactivée pour ne pas la contourner",
+        "code_snippet": {
+          "file": "app/login/page.js",
+          "note": "Avant / Après",
+          "lang": "diff",
+          "after": "- router.push('/vue-globale');\n+ router.push('/choix-mode');  // popup choix mode après login"
+        }
+      },
+      { "code": "AI", "txt": "✨ **Bonus UX** : sur le popup choix-mode, si tu as déjà un mode mémorisé, un bandeau en haut affiche : <i>'Dernier mode utilisé : 💻 Logiciel'</i> avec un bouton <b>'Continuer avec ce mode'</b>. Un seul click suffit pour repartir comme avant — sans devoir re-choisir entièrement. Si tu veux changer, les 2 grandes cartes Logiciel / Mobile sont toujours là en-dessous" },
+      { "code": "INFO", "txt": "🎯 **Comportement attendu maintenant** : (1) Tu te connectes → tu vois TOUJOURS le popup avec les 2 cartes · (2) Si tu as déjà choisi avant, bandeau en haut avec ton mode précédent + bouton 'Continuer' · (3) Tu peux soit cliquer ce bouton (rapide), soit changer de mode en cliquant l'autre carte" }
+    ],
+    "themes": ["fix", "ux", "login"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.90.html"
+  },
+  {
     "v": "0.58.88",
     "kind": "hotfix",
     "titre": "🚨 HOTFIX BUILD : fragment JSX orphelin dans /mobile/patient/new (introduit en 0.58.85)",
