@@ -68,7 +68,7 @@ export default function ArticleDetailPage({ params }) {
       // Matériels rattachés - 0.58.71 : helper avec fallback article_id absent
       // (évite le 400 si SQL 0.58.67 pas appliqué)
       const matResultPromise = selectMaterielsByArticle(supabase, id,
-        "id, libelle, numero_serie, numero_lot, etat, date_peremption, patient_id, depot_id, created_at"
+        "id, libelle, num_serie, num_lot, etat, date_peremption, patient_id, depot_id, created_at"
       );
       promises.push(matResultPromise);
 
@@ -85,7 +85,7 @@ export default function ArticleDetailPage({ params }) {
       try {
         const { data: mvts } = await supabase
           .from("stock_mouvements")
-          .select("id, type, quantite, lot, numero_serie, date_peremption, created_at, notes, user_email")
+          .select("id, type, quantite, lot, num_serie, date_peremption, created_at, notes, user_email")
           .eq("article_id", id)
           .order("created_at", { ascending: false })
           .limit(50);
@@ -407,7 +407,7 @@ export default function ArticleDetailPage({ params }) {
                           <a onClick={() => router.push(`/materiel/${m.id}`)} style={{ cursor: "pointer", color: "#185FA5", fontWeight: 600, textDecoration: "none" }}>{m.libelle || "Sans libellé"}</a>
                         </td>
                         <td style={{ padding: "8px", fontFamily: "Consolas, monospace", fontSize: 11 }}>
-                          {m.numero_serie ? <span><i className="ti ti-hash" style={{ color: "#7a6fb0" }} /> {m.numero_serie}</span> : m.numero_lot ? <span><i className="ti ti-tag" style={{ color: "#7CC8C8" }} /> {m.numero_lot}</span> : <span style={{ color: "#cfd8e0" }}>—</span>}
+                          {m.num_serie ? <span><i className="ti ti-hash" style={{ color: "#7a6fb0" }} /> {m.num_serie}</span> : m.num_lot ? <span><i className="ti ti-tag" style={{ color: "#7CC8C8" }} /> {m.num_lot}</span> : <span style={{ color: "#cfd8e0" }}>—</span>}
                         </td>
                         <td style={{ padding: "8px", color: "#5a6878" }}>{m.etat || "—"}</td>
                         <td style={{ padding: "8px", fontSize: 11, color: "#5a6878" }}>
@@ -485,7 +485,7 @@ export default function ArticleDetailPage({ params }) {
                           {m.type === "entree" || m.type === "in" ? "+" : "-"}{m.quantite || 0}
                         </td>
                         <td style={{ padding: "8px", fontFamily: "Consolas, monospace", fontSize: 11, color: "#5a6878" }}>
-                          {m.numero_serie || m.lot || "—"}
+                          {m.num_serie || m.lot || "—"}
                         </td>
                         <td style={{ padding: "8px", fontSize: 11, color: "#5a6878" }}>
                           {m.date_peremption ? new Date(m.date_peremption).toLocaleDateString("fr-FR") : "—"}

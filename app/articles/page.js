@@ -91,7 +91,7 @@ export default function Articles() {
     try {
       const { data } = await supabase
         .from("materiels")
-        .select("id, libelle, numero_serie, numero_lot, etat, patient_id")
+        .select("id, libelle, num_serie, num_lot, etat, patient_id")
         .eq("article_id", articleId)
         .limit(10);
       setHoveredMateriels(data || []);
@@ -424,7 +424,7 @@ export default function Articles() {
                               <div key={m.id} style={{ padding: "4px 0", borderBottom: "1px solid #2a3850", display: "flex", justifyContent: "space-between", gap: 8 }}>
                                 <span>{m.libelle || "Sans libellé"}</span>
                                 <span style={{ color: "#7CC8C8", fontFamily: "Consolas, monospace", fontSize: 10.5 }}>
-                                  {m.numero_serie ? `S/N ${m.numero_serie}` : m.numero_lot ? `Lot ${m.numero_lot}` : ""}
+                                  {m.num_serie ? `S/N ${m.num_serie}` : m.num_lot ? `Lot ${m.num_lot}` : ""}
                                 </span>
                               </div>
                             ))}

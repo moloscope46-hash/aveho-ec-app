@@ -38,7 +38,7 @@ export default function InventairePage({ params }) {
         const [{ data: d }, { data: mats }] = await Promise.all([
           supabase.from("depots").select("*").eq("id", depotId).maybeSingle(),
           supabase.from("materiels")
-            .select("id, libelle, numero_serie, numero_lot, etat, emplacement, depot_id")
+            .select("id, libelle, num_serie, num_lot, etat, emplacement, depot_id")
             .eq("structure_id", auth.structureId)
             .eq("depot_id", depotId)
             .order("libelle")
@@ -57,8 +57,8 @@ export default function InventairePage({ params }) {
     const q = searchQ.toLowerCase();
     return materiels.filter(m =>
       (m.libelle || "").toLowerCase().includes(q) ||
-      (m.numero_serie || "").toLowerCase().includes(q) ||
-      (m.numero_lot || "").toLowerCase().includes(q) ||
+      (m.num_serie || "").toLowerCase().includes(q) ||
+      (m.num_lot || "").toLowerCase().includes(q) ||
       (m.emplacement || "").toLowerCase().includes(q)
     );
   }, [materiels, searchQ]);
@@ -95,19 +95,19 @@ export default function InventairePage({ params }) {
     if (!text || busy) return;
     setBusy(true);
     try {
-      // Cherche le matériel par numero_serie, numero_lot, ou id direct
+      // Cherche le matériel par num_serie, num_lot, ou id direct
       // Le QR contient typiquement l'id ou un code-barre
       let mat = materiels.find(m =>
         m.id === text ||
-        m.numero_serie === text ||
-        m.numero_lot === text
+        m.num_serie === text ||
+        m.num_lot === text
       );
       // Si pas trouvé dans la liste théorique → chercher en DB (peut-être intrus)
       if (!mat) {
         const { data: dbResult } = await supabase
           .from("materiels")
-          .select("id, libelle, numero_serie, numero_lot, depot_id, etat, emplacement")
-          .or(`id.eq.${text},numero_serie.eq.${text},numero_lot.eq.${text}`)
+          .select("id, libelle, num_serie, num_lot, depot_id, etat, emplacement")
+          .or(`id.eq.${text},num_serie.eq.${text},num_lot.eq.${text}`)
           .eq("structure_id", auth.structureId)
           .maybeSingle();
         if (dbResult) {
@@ -272,8 +272,8 @@ export default function InventairePage({ params }) {
                         {m.libelle || "Matériel sans libellé"}
                       </div>
                       <div style={{ display: "flex", gap: 8, fontSize: 10.5, color: "#5a6878", marginTop: 2, flexWrap: "wrap" }}>
-                        {m.numero_serie && <span><i className="ti ti-hash" /> S/N {m.numero_serie}</span>}
-                        {m.numero_lot && <span><i className="ti ti-package" /> Lot {m.numero_lot}</span>}
+                        {m.num_serie && <span><i className="ti ti-hash" /> S/N {m.num_serie}</span>}
+                        {m.num_lot && <span><i className="ti ti-package" /> Lot {m.num_lot}</span>}
                         {m.emplacement && <span style={{ color: "#7a6fb0", fontWeight: 600 }}><i className="ti ti-map-pin" /> {m.emplacement}</span>}
                       </div>
                     </div>
@@ -300,7 +300,7 @@ export default function InventairePage({ params }) {
             {intrus.map(m => (
               <div key={m.id} style={{ padding: "6px 10px", background: "#fff", borderRadius: 6, marginBottom: 4, fontSize: 12 }}>
                 <b>{m.libelle}</b>
-                {m.numero_serie && <span style={{ color: "#5a6878", marginLeft: 8 }}>S/N {m.numero_serie}</span>}
+                {m.num_serie && <span style={{ color: "#5a6878", marginLeft: 8 }}>S/N {m.num_serie}</span>}
               </div>
             ))}
           </Panel>

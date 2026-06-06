@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.96 — Page /diagnostic</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4256 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(124,200,200,.20));border:1px solid rgba(124,200,200,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:#7CC8C8}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.20);border-left:4px solid #7CC8C8;border-radius:14px;padding:20px 24px;margin:14px 0}
+.demo{background:#142131;border-radius:12px;padding:18px;margin:14px 0;font-family:Quicksand,sans-serif}
+.demo-version{background:linear-gradient(135deg,#7CC8C8,#5db5b5);color:#142131;padding:18px;border-radius:12px;margin-bottom:14px}
+.demo-version .label{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
+.demo-version .v{font-size:32px;font-weight:700;font-family:Consolas,monospace}
+.test-row{display:flex;gap:10px;padding:6px 10px;background:rgba(90,160,90,.08);border-left:3px solid #5aa05a;border-radius:6px;margin-bottom:4px;font-family:Consolas,monospace;font-size:12;color:#e8edf2}
+.test-row.fail{background:rgba(227,93,91,.08);border-left-color:#e35d5b}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #7CC8C8}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🩺 0.58.96 · PAGE DIAGNOSTIC</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩺 Page /diagnostic pour identifier ce qui tourne réellement<small>Tests automatiques de la version installée, état des tables Supabase, test INSERT patient</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.96-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Feature diagnostic</span>
+  </div>
+</header>
+
+<h2>🎯 Pourquoi cette page ?</h2>
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5px">Cédric voyait toujours les mêmes erreurs (router undefined, tables 400) alors que mes fix étaient déployés. C'était dû à 2 causes superposées : (1) ses push successifs étaient bloqués par un build failure (useEffect missing) et (2) son navigateur cachait l'ancien JS. La page /diagnostic permet de <b>voir en clair</b> ce qui tourne pour identifier précisément le problème.</p>
+</div>
+
+<h2>📊 Ce que la page affiche</h2>
+
+<div class="demo">
+  <div class="demo-version">
+    <div class="label">Version installée</div>
+    <div class="v">0.58.96-alpha</div>
+    <div style="font-size:11px;margin-top:4px">Si cette version diffère de ce que j'ai livré, le déploiement Vercel n'est pas à jour.</div>
+  </div>
+
+  <h3 style="color:#7a6fb0;font-size:14px;margin:14px 0 6px">🔐 Authentification</h3>
+  <pre>{
+  "ready": true,
+  "user": "moloscope46@gmail.com",
+  "structureId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "etabId": "22e9a47e-6ef7-4abb-8ec5-53437455d16e"
+}</pre>
+
+  <h3 style="color:#185FA5;font-size:14px;margin:14px 0 6px">🗄 Tables Supabase (13 testées)</h3>
+  <div class="test-row">patients ✓ 42 lignes</div>
+  <div class="test-row">materiels ✓ 312 lignes</div>
+  <div class="test-row">articles ✓ 87 lignes</div>
+  <div class="test-row">depots ✓ 8 lignes</div>
+  <div class="test-row fail">vehicules ❌ TABLE ABSENTE — Migration SQL non appliquée</div>
+  <div class="test-row fail">cuves_oxygene ❌ TABLE ABSENTE</div>
+
+  <h3 style="color:#e35d5b;font-size:14px;margin:14px 0 6px">🧪 Test création patient</h3>
+  <div class="test-row">✓ INSERT minimal OK (test puis delete)</div>
+</div>
+
+<h2>🔘 Boutons d'action</h2>
+<div class="panel">
+<ul style="margin:0;padding-left:20px;line-height:1.8;color:#bfe6e6;font-size:13px">
+<li><b>Relancer les tests</b> — recharge tous les checks DB</li>
+<li><b>Vider cache + recharger</b> — clear les caches navigateur + Service Worker + recharge (préserve le token auth)</li>
+<li><b>Hard refresh</b> — force reload sans cache</li>
+</ul>
+</div>
+
+<h2>📍 Usage</h2>
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px">Accessible directement via <code style="background:#050a14;padding:2px 6px;border-radius:4px">claude.ai/diagnostic</code> sur ton install (pas dans le menu pour rester discret). À utiliser quand quelque chose ne marche pas pour identifier rapidement la cause.</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+# Extraire le zip
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.58.96 - Page diagnostic"
+git push origin main
+
+# Puis va sur https://aveho-ec-app.vercel.app/diagnostic</pre>
+
+<footer>Aveho — Espace Collectivité · 0.58.96 · 6 juin 2026 · 🩺 DIAGNOSTIC</footer>
+</div></body></html>

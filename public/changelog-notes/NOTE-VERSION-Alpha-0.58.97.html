@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.97 — HOTFIX hydration #418 + import useEffect</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a1a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:900px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20));border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f08a88;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#fdcecd;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdcecd}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:#e35d5b}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(227,93,91,.20);border-left:4px solid #e35d5b;border-radius:14px;padding:20px 24px;margin:14px 0}
+pre{background:#050a14;color:#e8edf2;padding:16px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #e35d5b}
+.diff-add{color:#5aa05a;background:rgba(90,160,90,.10);padding:1px 4px;border-radius:3px}
+.diff-del{color:#f08a88;background:rgba(227,93,91,.10);padding:1px 4px;border-radius:3px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🚨 0.58.97 · HOTFIX HYDRATION</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🚨 2 hotfix critiques en un : React #418 + import useEffect manquant<small>Le build Vercel pouvait enfin passer · L'hydration sur /profil ne crashe plus</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.97-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Double hotfix</span>
+  </div>
+</header>
+
+<h2>🐛 Bug #1 : React error #418 (hydration mismatch sur /profil)</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff;font-size:13.5px">La section "Mode de démarrage" dans /profil lisait <code>localStorage.getItem('av-launch-mode')</code> <b>directement dans le JSX</b>. Server (sans localStorage) → rendait vide. Client → rendait du texte. <b>Différent = crash hydratation</b>.</p>
+</div>
+
+<pre><span class="diff-del">- {typeof window !== 'undefined' && (</span>
+<span class="diff-del">-   &lt;&gt; Mode actuel : &lt;b&gt;{localStorage.getItem('av-launch-mode') === 'mobile' ? '📱' : '💻'}&lt;/b&gt;&lt;/&gt;</span>
+<span class="diff-del">- )}</span>
+<span class="diff-add">+ const [launchMode, setLaunchMode] = useState(null);</span>
+<span class="diff-add">+ useEffect(() => { setLaunchMode(localStorage.getItem('av-launch-mode')); }, []);</span>
+<span class="diff-add">+ {launchMode !== null && &lt;&gt; Mode actuel : &lt;b&gt;...&lt;/b&gt;&lt;/&gt;}</span></pre>
+
+<h2>🐛 Bug #2 : useEffect manquant dans l'import</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5px">Le fichier <code>app/mobile/patient/new/page.js</code> utilisait <code>useEffect</code> mais l'import était resté à <code>import { useState }</code>. Conséquence : <b>chaque build Vercel échouait</b> à la fin du prerender avec <code>ReferenceError: useEffect is not defined</code>. Cédric était bloqué en 0.58.92 avec tous ses fix successifs (0.58.93→0.58.96) jamais déployés.</p>
+</div>
+
+<pre><span class="diff-del">- import { useState } from "react";</span>
+<span class="diff-add">+ import { useState, useEffect } from "react";</span></pre>
+
+<h2>📋 Pattern à retenir</h2>
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13px"><b>Jamais</b> lire <code>localStorage</code> / <code>window</code> / <code>Date.now()</code> directement dans le rendu JSX. <b>Toujours</b> initialiser un state vide puis le remplir dans un <code>useEffect</code>. Le useEffect ne tourne que côté client → SSR initial reste vide → pas de mismatch.</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+# Vérifier que useEffect est bien dans l'import (devrait y être dans ce zip)
+Get-Content app\mobile\patient\new\page.js | Select-String "import.*react"
+# Doit afficher : import { useState, useEffect } from "react";
+
+npm run build       # Doit passer cette fois !
+git add -A
+git commit -m "0.58.97 - Fix hydration profil + useEffect import"
+git push origin main</pre>
+
+<p style="color:#bfe6e6;font-size:13px;margin-top:20px">Une fois le build vert sur Vercel, <b>TOUS les fix accumulés depuis 0.58.91 partent ensemble</b> : router defined sur profil, vehicules INSERT défensif, transferts mobile défensif, patients INSERT défensif, choix-mode toujours visible, hydration profil. Hard refresh Ctrl+Shift+R après push.</p>
+
+<footer>Aveho — Espace Collectivité · 0.58.97 · 6 juin 2026 · 🚨 HOTFIX HYDRATION + USEEFFECT</footer>
+</div></body></html>

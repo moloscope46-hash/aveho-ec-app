@@ -34,8 +34,8 @@ function openQrPrintWindow(mat, article) {
   const w = window.open("", "_blank", "width=600,height=800");
   if (!w) return;
   const title = (mat.libelle || article?.libelle || "Matériel").replace(/[<>]/g, "");
-  const sn = (mat.numero_serie || "").replace(/[<>]/g, "");
-  const lot = (mat.numero_lot || "").replace(/[<>]/g, "");
+  const sn = (mat.num_serie || "").replace(/[<>]/g, "");
+  const lot = (mat.num_lot || "").replace(/[<>]/g, "");
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QR ${title}</title>
     <style>
       *{box-sizing:border-box;font-family:Quicksand,sans-serif}
@@ -217,7 +217,7 @@ export default function FicheMateriel({ params }) {
 
   const etatMeta = getEtatMeta(mat.etat);
   const isPerime = mat.date_peremption && new Date(mat.date_peremption) < new Date();
-  const udi = hasUdi && mat.udi_di ? buildUdi({ gtin: mat.udi_di, lot: mat.numero_lot, serie: mat.numero_serie, peremption: null }) : null;
+  const udi = hasUdi && mat.udi_di ? buildUdi({ gtin: mat.udi_di, lot: mat.num_lot, serie: mat.num_serie, peremption: null }) : null;
 
   // KPIs (anciens)
   const maintenancesEnCours = maintenances.filter(m => statutMaintEffectif(m) !== "Faite" && m.statut !== "Annulée").length;
@@ -253,8 +253,8 @@ export default function FicheMateriel({ params }) {
                 {mat.libelle || article?.libelle || "Matériel"}
               </h1>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", fontSize: 12, color: "#5a6878", marginBottom: 8 }}>
-                {mat.numero_serie && <span><i className="ti ti-hash" /> S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{mat.numero_serie}</code></span>}
-                {mat.numero_lot && <span><i className="ti ti-tag" /> Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{mat.numero_lot}</code></span>}
+                {mat.num_serie && <span><i className="ti ti-hash" /> S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{mat.num_serie}</code></span>}
+                {mat.num_lot && <span><i className="ti ti-tag" /> Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{mat.num_lot}</code></span>}
                 {mat.date_peremption && (
                   <span style={{ color: isPerime ? "#e35d5b" : "#5a6878", fontWeight: isPerime ? 700 : 400 }}>
                     <i className="ti ti-clock" /> {isPerime ? "PÉRIMÉ" : "Péremption"} : {fmtDate(mat.date_peremption)}
@@ -350,8 +350,8 @@ export default function FicheMateriel({ params }) {
             <Panel>
               <h3 style={{ margin: "0 0 12px", fontSize: 13, color: "#5a6878", textTransform: "uppercase" }}><i className="ti ti-info-circle" /> Identifiants</h3>
               <Field label="Libellé" value={mat.libelle} />
-              <Field label="N° de série" value={mat.numero_serie} mono />
-              <Field label="N° de lot" value={mat.numero_lot} mono />
+              <Field label="N° de série" value={mat.num_serie} mono />
+              <Field label="N° de lot" value={mat.num_lot} mono />
               <Field label="Référence interne" value={mat.reference_interne || mat.reference} mono />
               {hasUdi && <Field label="UDI-DI (GTIN)" value={mat.udi_di} mono />}
               <Field label="Code-barres principal" value={mat.code_barre_principal} mono />
@@ -411,7 +411,7 @@ export default function FicheMateriel({ params }) {
                     <>
                       <img src={qrImg} alt="QR matériel" width={220} height={220} style={{ display: "block", margin: "0 auto", border: "2px solid #142131", borderRadius: 6 }} />
                       <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: "#142131" }}>{mat.libelle || article?.libelle || "Matériel"}</div>
-                      {mat.numero_serie && <div style={{ fontSize: 10, color: "#5a6878", fontFamily: "Consolas, monospace" }}>S/N {mat.numero_serie}</div>}
+                      {mat.num_serie && <div style={{ fontSize: 10, color: "#5a6878", fontFamily: "Consolas, monospace" }}>S/N {mat.num_serie}</div>}
                     </>
                   );
                 })()}

@@ -102,7 +102,7 @@ function InterventionsInner() {
     };
     try {
       let q = supabase.from("interventions")
-        .select("*, materiels(libelle, numero_serie), depots(nom, couleur), equipes(nom)")
+        .select("*, materiels(libelle, num_serie), depots(nom, couleur), equipes(nom)")
         .eq("structure_id", auth.structureId)
         .order("created_at", { ascending: false })
         .limit(500);
@@ -111,7 +111,7 @@ function InterventionsInner() {
         tryFetch(q),
         tryFetch(supabase.from("equipes").select("id, nom, couleur").eq("structure_id", auth.structureId)),
         tryFetch(supabase.from("depots").select("id, nom, couleur").eq("structure_id", auth.structureId)),
-        tryFetch(supabase.from("materiels").select("id, libelle, numero_serie").eq("structure_id", auth.structureId).limit(500)),
+        tryFetch(supabase.from("materiels").select("id, libelle, num_serie").eq("structure_id", auth.structureId).limit(500)),
       ]);
       setRows(r); setEquipes(e); setDepots(d); setMateriels(m);
     } catch (err) {
@@ -390,7 +390,7 @@ function InterventionsInner() {
                 <label>Matériel concerné</label>
                 <select value={form.materiel_id || ""} onChange={(e) => setForm({ ...form, materiel_id: e.target.value || null })}>
                   <option value="">— Aucun —</option>
-                  {materiels.slice(0, 200).map(m => <option key={m.id} value={m.id}>{m.libelle}{m.numero_serie ? ` (${m.numero_serie})` : ""}</option>)}
+                  {materiels.slice(0, 200).map(m => <option key={m.id} value={m.id}>{m.libelle}{m.num_serie ? ` (${m.num_serie})` : ""}</option>)}
                 </select>
               </div>
               <div className="fld" style={{ gridColumn: "span 2" }}>
@@ -479,7 +479,7 @@ function ListeView({ filtered, onClick, onChangeStatut }) {
                 </div>
                 <div style={{ fontSize: 13.5, color: "#142131", marginBottom: 6, lineHeight: 1.4 }}>{r.description}</div>
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11.5, color: "#5a6878" }}>
-                  {r.materiels?.libelle && <span><i className="ti ti-package" style={{ color: "#185FA5" }} /> {r.materiels.libelle}{r.materiels.numero_serie ? ` (${r.materiels.numero_serie})` : ""}</span>}
+                  {r.materiels?.libelle && <span><i className="ti ti-package" style={{ color: "#185FA5" }} /> {r.materiels.libelle}{r.materiels.num_serie ? ` (${r.materiels.num_serie})` : ""}</span>}
                   {r.depots?.nom && <span style={{ color: r.depots.couleur || "#7CC8C8" }}><i className="ti ti-building-warehouse" /> {r.depots.nom}</span>}
                   {r.equipes?.nom && <span><i className="ti ti-users" style={{ color: "#5aa05a" }} /> {r.equipes.nom}</span>}
                   {r.emplacement && <span style={{ color: "#7a6fb0", fontWeight: 600 }}><i className="ti ti-map-pin" /> {r.emplacement}</span>}

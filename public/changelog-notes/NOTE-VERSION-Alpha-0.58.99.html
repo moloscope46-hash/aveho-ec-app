@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.99 — Pathologies & Protocoles</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4256 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(24,95,165,.30));border:1px solid rgba(24,95,165,.40);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#185FA5,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(24,95,165,.20);border-left:4px solid #185FA5;border-radius:14px;padding:20px 24px;margin:14px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin:14px 0}
+.path-card{background:#fff;color:#142131;border-radius:12px;padding:14px;border-left:4px solid #185FA5}
+.path-card .head{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.path-card .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.path-card .nom{font-weight:700;font-size:14px}
+.path-card .code{font-family:Consolas,monospace;font-size:10.5px;color:#8a98a8}
+.path-card .desc{font-size:12px;color:#5a6878;margin-bottom:6px}
+.alertes{background:rgba(227,93,91,.10);border-left:3px solid #e35d5b;padding:5px 8px;font-size:11px;color:#c0392b;border-radius:4px;margin-top:6px}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #7CC8C8}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(124,200,200,.18);font-size:13px}
+table th{color:#7CC8C8;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🩺 0.58.99 · PATHOLOGIES & PROTOCOLES</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩺 Page Pathologies & Protocoles (CRUD complet) + fix bugs num_serie<small>Étape 1 d'une grosse demande Cédric — la base est posée pour rattacher pathologies à services/patients</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.99-alpha</code></span>
+    <span><b>SQL :</b> <code>migration-0.58.99-pathologies-protocoles.sql</code></span>
+    <span><b>Type :</b> Feature + fix</span>
+  </div>
+</header>
+
+<h2>🩹 Fix bugs critiques d'abord</h2>
+
+<table>
+<tr><th>Bug log</th><th>Cause</th><th>Fix</th></tr>
+<tr><td><code>materiels?select=numero_serie</code> 400</td><td>Colonne s'appelle <code>num_serie</code> pas <code>numero_serie</code></td><td>Remplacement global dans app/ (inventaire, materiel, etc.)</td></tr>
+<tr><td>Mêmes pour <code>numero_lot</code>, <code>numero_parc</code></td><td>Idem</td><td>Remplacement global aussi</td></tr>
+</table>
+
+<h2>🆕 Nouvelle page /pathologies</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5px">Référentiel commun à la structure pour gérer les pathologies prises en charge (PERFADOM, NED, NPAD, PPC, oxygénothérapie, etc.). Accessible via <b>Menu → Paramètres → Pathologies & protocoles</b>.</p>
+</div>
+
+<p style="color:#bfe6e6;font-size:13px;margin:14px 0 8px"><b>8 pathologies seedées automatiquement</b> par le SQL :</p>
+
+<div class="cards">
+  <div class="path-card" style="border-left-color:#185FA5">
+    <div class="head">
+      <div class="ic" style="background:#185FA522;color:#185FA5">💧</div>
+      <div><div class="nom">Perfusion à domicile</div><div class="code">PERF</div></div>
+    </div>
+    <div class="desc">Patient sous perfusion (PERFADOM)</div>
+  </div>
+  <div class="path-card" style="border-left-color:#5aa05a">
+    <div class="head">
+      <div class="ic" style="background:#5aa05a22;color:#5aa05a">🥩</div>
+      <div><div class="nom">Nutrition entérale</div><div class="code">NUT-NED</div></div>
+    </div>
+    <div class="desc">NED — Nutrition entérale à domicile</div>
+  </div>
+  <div class="path-card" style="border-left-color:#7CC8C8">
+    <div class="head">
+      <div class="ic" style="background:#7CC8C822;color:#7CC8C8">💨</div>
+      <div><div class="nom">PPC (Apnée du sommeil)</div><div class="code">PPC</div></div>
+    </div>
+    <div class="desc">Patient sous Pression Positive Continue</div>
+    <div class="alertes">⚠ Surveillance observance &gt; 4h/nuit obligatoire</div>
+  </div>
+  <div class="path-card" style="border-left-color:#EF9F27">
+    <div class="head">
+      <div class="ic" style="background:#EF9F2722;color:#EF9F27">⭕</div>
+      <div><div class="nom">Oxygénothérapie</div><div class="code">OXY</div></div>
+    </div>
+    <div class="desc">Patient sous oxygène</div>
+  </div>
+</div>
+
+<h2>🎨 Champs disponibles par pathologie</h2>
+
+<table>
+<tr><th>Champ</th><th>Détail</th></tr>
+<tr><td>Nom *</td><td>Obligatoire (ex: "Perfusion à domicile")</td></tr>
+<tr><td>Code</td><td>Court mnémo (ex: "PERF", "PPC", "OXY"), auto-uppercase</td></tr>
+<tr><td>Description</td><td>Phrase courte</td></tr>
+<tr><td>Icône</td><td>21 icônes Tabler au choix (stéthoscope, goutte, poumons, etc.)</td></tr>
+<tr><td>Couleur</td><td>10 palettes + color picker libre</td></tr>
+<tr><td>Protocole court</td><td>Résumé 1-2 lignes</td></tr>
+<tr><td>Protocole détaillé</td><td>Texte long (étapes, posologies, fréquences)</td></tr>
+<tr><td>⚠ Alertes</td><td>Contre-indications, surveillance — affichées en <b>rouge</b> sur la card</td></tr>
+<tr><td>Actif</td><td>Désactiver sans supprimer (perd l'opacité sur la card)</td></tr>
+</table>
+
+<h2>🗄 SQL créé</h2>
+
+<pre>-- Table pathologies (référentiel commun structure)
+CREATE TABLE pathologies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  structure_id UUID NOT NULL,
+  code TEXT, nom TEXT NOT NULL,
+  description TEXT,
+  icone TEXT DEFAULT 'ti-stethoscope',
+  couleur TEXT DEFAULT '#185FA5',
+  protocole_court TEXT,
+  protocole_detail TEXT,
+  alertes TEXT,
+  actif BOOLEAN DEFAULT true,
+  ...
+);
+
+-- Jointure services <-> pathologies (M:N)
+CREATE TABLE services_pathologies (
+  service_id UUID NOT NULL,
+  pathologie_id UUID NOT NULL,
+  PRIMARY KEY (service_id, pathologie_id)
+);
+
+-- Lien patient → pathologie principale
+ALTER TABLE patients ADD COLUMN pathologie_id UUID;
+
+-- Seed 8 pathologies PSAD courantes</pre>
+
+<h2>📋 Suite — priorités proposées pour 0.59.0+</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;line-height:1.9;color:#bfe6e6;font-size:13px">
+<li>✅ <b>Page /pathologies CRUD</b> + SQL (FAIT en 0.58.99)</li>
+<li>🔜 <b>Rattacher pathologies à un service</b> dans son édition (multi-select dans /etablissement/edition)</li>
+<li>🔜 <b>Cascade création patient mobile</b> : choisir service → afficher pathologies du service + chambres dispo + matériel installé dans chambre + recherche article</li>
+<li>🔜 <b>Workflow d'entrée patient</b> en mode mobile avec étapes guidées</li>
+<li>🔜 <b>Réimpression QR</b> automatique si patient change de chambre</li>
+<li>🔜 <b>UI dossier médical premium</b> dans création/édition patient (antécédents, traitements en cours, etc.)</li>
+</ol>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.58.99 - Pathologies CRUD + fix num_serie"
+git push origin main
+
+# Puis dans Supabase SQL Editor :
+# Colle migration-0.58.99-pathologies-protocoles.sql → Run
+# Vérifie : tu dois voir 8 pathologies seedées automatiquement</pre>
+
+<footer>Aveho — Espace Collectivité · 0.58.99 · 6 juin 2026 · 🩺 PATHOLOGIES & PROTOCOLES</footer>
+</div></body></html>

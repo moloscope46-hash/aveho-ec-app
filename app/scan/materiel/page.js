@@ -68,7 +68,7 @@ function ScanMaterielInner() {
           setMateriel(data);
           setPresetMode(true);
           setStep("scan");  // attend qu'on scanne pour update
-          toast.success(`Matériel : ${data.libelle || data.numero_serie || "Sans libellé"}. Scanne le code GS1.`);
+          toast.success(`Matériel : ${data.libelle || data.num_serie || "Sans libellé"}. Scanne le code GS1.`);
         }
       })();
     }
@@ -107,8 +107,8 @@ function ScanMaterielInner() {
           if (pi) updates.udi_pi = pi;
         }
       }
-      if (parsed.lot) updates.numero_lot = parsed.lot;
-      if (parsed.serie) updates.numero_serie = parsed.serie;
+      if (parsed.lot) updates.num_lot = parsed.lot;
+      if (parsed.serie) updates.num_serie = parsed.serie;
       if (parsed.peremption) {
         const iso = formatGS1Date(parsed.peremption);
         if (iso) updates.date_peremption = iso;
@@ -133,9 +133,9 @@ function ScanMaterielInner() {
       // Stratégies de recherche par ordre :
       // 1. Match exact sur qr_code complet (si on a déjà scanné ce même code)
       // 2. Match GTIN parsé → udi_di
-      // 3. Match série parsée → numero_serie
-      // 4. Match lot parsé → numero_lot (si série pas trouvée)
-      // 5. Match code raw → numero_serie ou code_barre_principal
+      // 3. Match série parsée → num_serie
+      // 4. Match lot parsé → num_lot (si série pas trouvée)
+      // 5. Match code raw → num_serie ou code_barre_principal
       let found = null;
 
       if (hasUdi) {
@@ -146,7 +146,7 @@ function ScanMaterielInner() {
           const di = p.gtin.length === 14 ? p.gtin.slice(1) : p.gtin;
           // Sur DI + série si possible
           if (p.serie) {
-            const r1 = await supabase.from("materiels").select("*").eq("udi_di", di).eq("numero_serie", p.serie).limit(1);
+            const r1 = await supabase.from("materiels").select("*").eq("udi_di", di).eq("num_serie", p.serie).limit(1);
             if (r1.data?.[0]) found = r1.data[0];
           }
           if (!found) {
@@ -157,18 +157,18 @@ function ScanMaterielInner() {
       }
 
       if (!found && p.serie) {
-        const r3 = await supabase.from("materiels").select("*").eq("numero_serie", p.serie).limit(1);
+        const r3 = await supabase.from("materiels").select("*").eq("num_serie", p.serie).limit(1);
         if (r3.data?.[0]) found = r3.data[0];
       }
 
       if (!found && p.lot && !p.serie) {
-        const r4 = await supabase.from("materiels").select("*").eq("numero_lot", p.lot).limit(5);
+        const r4 = await supabase.from("materiels").select("*").eq("num_lot", p.lot).limit(5);
         if (r4.data?.length === 1) found = r4.data[0];
       }
 
       if (!found) {
         // Try code raw as serial
-        const r5 = await supabase.from("materiels").select("*").eq("numero_serie", rawText.trim()).limit(1);
+        const r5 = await supabase.from("materiels").select("*").eq("num_serie", rawText.trim()).limit(1);
         if (r5.data?.[0]) found = r5.data[0];
       }
 
@@ -180,7 +180,7 @@ function ScanMaterielInner() {
       if (found) {
         setMateriel(found);
         setStep("found");
-        toast.success(`Matériel trouvé : ${found.libelle || found.numero_serie}`);
+        toast.success(`Matériel trouvé : ${found.libelle || found.num_serie}`);
       } else {
         setStep("not_found");
       }
@@ -230,7 +230,7 @@ function ScanMaterielInner() {
       <div className="wrap" style={{ maxWidth: 640 }}>
         <div style={{ marginBottom: 8 }}><BackButton /></div>
         <PageHead small
-          title={presetMode ? `Scanner UDI — ${materiel?.libelle || materiel?.numero_serie || "matériel"}` : "Scanner matériel"}
+          title={presetMode ? `Scanner UDI — ${materiel?.libelle || materiel?.num_serie || "matériel"}` : "Scanner matériel"}
           sub={presetMode
             ? "Scanne le code GS1/UDI pour enrichir la fiche matériel automatiquement"
             : "Scanne un code-barres, QR ou DataMatrix pour identifier ou agir sur un matériel"}
@@ -277,8 +277,8 @@ function ScanMaterielInner() {
                 <div style={{ fontSize: 11, color: "#5aa05a", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>Matériel identifié</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#142131" }}>{materiel.libelle || "Sans libellé"}</div>
                 <div style={{ fontSize: 11, color: "#5a6878", marginTop: 2 }}>
-                  {materiel.numero_serie && <span>S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{materiel.numero_serie}</code></span>}
-                  {materiel.numero_lot && <span> · Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{materiel.numero_lot}</code></span>}
+                  {materiel.num_serie && <span>S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{materiel.num_serie}</code></span>}
+                  {materiel.num_lot && <span> · Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{materiel.num_lot}</code></span>}
                   {materiel.etat && <span> · {materiel.etat}</span>}
                 </div>
               </div>

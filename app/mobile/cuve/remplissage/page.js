@@ -23,7 +23,7 @@ export default function MobileCuveRemplissagePage() {
     niveau_apres_pct: 100,
     pression_apres_bar: "",
     volume_ajoute_l: "",
-    numero_lot: "",
+    num_lot: "",
     fournisseur: "",
     notes: "",
   });
@@ -33,10 +33,10 @@ export default function MobileCuveRemplissagePage() {
     (async () => {
       const { data } = await supabase
         .from("cuves_oxygene")
-        .select("id, numero_serie, marque, modele, type_gaz, statut, niveau_actuel_pct, pression_actuelle_bar, capacite_litres")
+        .select("id, num_serie, marque, modele, type_gaz, statut, niveau_actuel_pct, pression_actuelle_bar, capacite_litres")
         .eq("structure_id", auth.structureId)
         .eq("actif", true)
-        .order("numero_serie");
+        .order("num_serie");
       setCuves(data || []);
     })();
   }, [auth.ready, auth.structureId]);
@@ -71,7 +71,7 @@ export default function MobileCuveRemplissagePage() {
         pression_avant_bar: form.pression_avant_bar ? parseFloat(form.pression_avant_bar) : null,
         pression_apres_bar: form.pression_apres_bar ? parseFloat(form.pression_apres_bar) : null,
         volume_ajoute_l: form.volume_ajoute_l ? parseFloat(form.volume_ajoute_l) : null,
-        numero_lot: form.numero_lot || null,
+        num_lot: form.num_lot || null,
         fournisseur: form.fournisseur || null,
         technicien_id: auth.user?.id || null,
         notes: form.notes || null,
@@ -85,7 +85,7 @@ export default function MobileCuveRemplissagePage() {
         pression_actuelle_bar: form.pression_apres_bar ? parseFloat(form.pression_apres_bar) : null,
         statut: newStatut,
         date_dernier_remplissage: new Date().toISOString(),
-        numero_lot_remplissage: form.numero_lot || null,
+        num_lot_remplissage: form.num_lot || null,
         fournisseur_remplissage: form.fournisseur || null,
       }).eq("id", cuve.id);
       if (err2) throw err2;
@@ -152,7 +152,7 @@ export default function MobileCuveRemplissagePage() {
                       }}>
                         <i className="ti ti-flame" style={{ color: col, fontSize: 22 }} />
                         <div style={{ flex: 1 }}>
-                          <div style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>{c.numero_serie || "Sans n°"}</div>
+                          <div style={{ color: "#fff", fontSize: 14, fontWeight: 700 }}>{c.num_serie || "Sans n°"}</div>
                           <div style={{ color: "#bfe6e6", fontSize: 11 }}>{c.marque || ""} {c.modele || ""} · {c.type_gaz} · {c.niveau_actuel_pct || 0}%</div>
                         </div>
                         <i className="ti ti-chevron-right" style={{ color: col }} />
@@ -171,7 +171,7 @@ export default function MobileCuveRemplissagePage() {
             <Section title="📊 Mesures AVANT remplissage" color="#185FA5">
               <div style={{ background: "rgba(24,95,165,.10)", padding: 12, borderRadius: 8, marginBottom: 14 }}>
                 <div style={{ fontSize: 11, color: "#bfe6e6", textTransform: "uppercase", letterSpacing: 1 }}>Cuve sélectionnée</div>
-                <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>{cuve.numero_serie} · {cuve.type_gaz}</div>
+                <div style={{ fontSize: 16, color: "#fff", fontWeight: 700 }}>{cuve.num_serie} · {cuve.type_gaz}</div>
                 <div style={{ fontSize: 11.5, color: "#bfe6e6" }}>{cuve.marque} {cuve.modele} · Capacité {cuve.capacite_litres || "?"} L</div>
               </div>
 
@@ -220,7 +220,7 @@ export default function MobileCuveRemplissagePage() {
             </Field>
 
             <Field label="🏷 N° de lot du remplissage *">
-              <input value={form.numero_lot} onChange={e => setForm({ ...form, numero_lot: e.target.value })} placeholder="ex: LOT-2026-001234" style={{ ...inputStyle, fontFamily: "Consolas, monospace" }} />
+              <input value={form.num_lot} onChange={e => setForm({ ...form, num_lot: e.target.value })} placeholder="ex: LOT-2026-001234" style={{ ...inputStyle, fontFamily: "Consolas, monospace" }} />
             </Field>
 
             <Field label="🏭 Fournisseur">
@@ -247,12 +247,12 @@ export default function MobileCuveRemplissagePage() {
               <i className="ti ti-circle-check" style={{ fontSize: 56, color: "#5aa05a" }} />
               <h2 style={{ margin: "10px 0 6px", color: "#fff", fontSize: 20 }}>Remplissage validé</h2>
               <p style={{ margin: 0, color: "#bfe6e6", fontSize: 13 }}>
-                Cuve <b>{cuve.numero_serie}</b><br/>
+                Cuve <b>{cuve.num_serie}</b><br/>
                 {form.niveau_avant_pct}% → <b style={{ color: "#5aa05a", fontSize: 16 }}>{form.niveau_apres_pct}%</b><br/>
-                Lot {form.numero_lot} · {form.fournisseur}
+                Lot {form.num_lot} · {form.fournisseur}
               </p>
             </div>
-            <button onClick={() => { setStep(1); setCuve(null); setForm({ niveau_avant_pct: "", pression_avant_bar: "", niveau_apres_pct: 100, pression_apres_bar: "", volume_ajoute_l: "", numero_lot: "", fournisseur: "", notes: "" }); }} style={{
+            <button onClick={() => { setStep(1); setCuve(null); setForm({ niveau_avant_pct: "", pression_avant_bar: "", niveau_apres_pct: 100, pression_apres_bar: "", volume_ajoute_l: "", num_lot: "", fournisseur: "", notes: "" }); }} style={{
               width: "100%", marginTop: 14,
               background: "linear-gradient(135deg, #7CC8C8, #5db5b5)",
               color: "#142131", border: "none", padding: 14, borderRadius: 12,
@@ -298,11 +298,11 @@ export default function MobileCuveRemplissagePage() {
             </button>
           )}
           {step === 3 && (
-            <button onClick={valider} disabled={busy || !form.numero_lot} style={{
+            <button onClick={valider} disabled={busy || !form.num_lot} style={{
               flex: 1, background: "linear-gradient(135deg, #5aa05a, #4a8a4a)",
               color: "#fff", border: "none", padding: "12px 18px", borderRadius: 10, cursor: busy ? "wait" : "pointer",
               fontFamily: "inherit", fontSize: 14, fontWeight: 700,
-              opacity: (busy || !form.numero_lot) ? 0.6 : 1,
+              opacity: (busy || !form.num_lot) ? 0.6 : 1,
             }}>
               {busy ? "Enregistrement..." : "✓ Valider le remplissage"}
             </button>

@@ -49,7 +49,7 @@ function ScanArticleInner() {
     type: "entree",
     quantite: 1,
     lot: "",
-    numero_serie: "",
+    num_serie: "",
     date_peremption: "",
     notes: "",
     reference_externe: "",
@@ -96,7 +96,7 @@ function ScanArticleInner() {
         setForm(f => ({
           ...f,
           lot: gs1.lot || f.lot,
-          numero_serie: gs1.serie || f.numero_serie,
+          num_serie: gs1.serie || f.num_serie,
           date_peremption: gs1.peremption ? formatGS1Date(gs1.peremption) || f.date_peremption : f.date_peremption,
         }));
       }
@@ -152,7 +152,7 @@ function ScanArticleInner() {
       toast.error("Quantité invalide");
       return;
     }
-    if (article.gere_serie && !form.numero_serie && form.create_materiel) {
+    if (article.gere_serie && !form.num_serie && form.create_materiel) {
       toast.error("Cet article est tracé par série. Saisis le numéro de série ou décoche 'Créer matériel'.");
       return;
     }
@@ -171,7 +171,7 @@ function ScanArticleInner() {
         type: form.type,
         quantite: parseFloat(form.quantite),
         lot: form.lot || null,
-        numero_serie: form.numero_serie || null,
+        num_serie: form.num_serie || null,
         date_peremption: form.date_peremption || null,
         notes: form.notes || null,
         reference_externe: form.reference_externe || null,
@@ -195,8 +195,8 @@ function ScanArticleInner() {
             etablissement_id: auth.etabId || null,
             article_id: article.id,
             libelle: article.libelle,
-            numero_serie: nb === 1 ? (form.numero_serie || null) : null,
-            numero_lot: form.lot || null,
+            num_serie: nb === 1 ? (form.num_serie || null) : null,
+            num_lot: form.lot || null,
             date_peremption: form.date_peremption || null,
             etat: "Disponible",
           });
@@ -223,7 +223,7 @@ function ScanArticleInner() {
     setStep("scan");
     setScanResult(null);
     setArticle(null);
-    setForm({ type: "entree", quantite: 1, lot: "", numero_serie: "", date_peremption: "", notes: "", reference_externe: "", create_materiel: false });
+    setForm({ type: "entree", quantite: 1, lot: "", num_serie: "", date_peremption: "", notes: "", reference_externe: "", create_materiel: false });
     setManualCode("");
   }
 
@@ -370,7 +370,7 @@ function ScanArticleInner() {
                   {article.gere_serie && (
                     <div className="fld">
                       <label>🔢 N° série {article.gere_serie && parseInt(form.quantite || 0) === 1 && "*"}</label>
-                      <input value={form.numero_serie} onChange={(e) => setForm({ ...form, numero_serie: e.target.value })} placeholder="S/N-001" style={{ fontFamily: "Consolas, monospace" }} />
+                      <input value={form.num_serie} onChange={(e) => setForm({ ...form, num_serie: e.target.value })} placeholder="S/N-001" style={{ fontFamily: "Consolas, monospace" }} />
                     </div>
                   )}
                   {article.gere_peremption && (
@@ -417,7 +417,7 @@ function ScanArticleInner() {
               <p style={{ color: "#5a6878", margin: "0 0 18px", fontSize: 14 }}>
                 {form.type === "entree" ? "+" : "-"}{form.quantite} <b>{article.libelle}</b>
                 {form.lot && <span style={{ display: "block", fontSize: 12, marginTop: 4 }}>Lot : <code style={{ background: "transparent", padding: 0 }}>{form.lot}</code></span>}
-                {form.numero_serie && <span style={{ display: "block", fontSize: 12 }}>S/N : <code style={{ background: "transparent", padding: 0 }}>{form.numero_serie}</code></span>}
+                {form.num_serie && <span style={{ display: "block", fontSize: 12 }}>S/N : <code style={{ background: "transparent", padding: 0 }}>{form.num_serie}</code></span>}
               </p>
               <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
                 <Btn variant="primary" icon="ti-scan" onClick={resetScan}>Nouveau scan</Btn>

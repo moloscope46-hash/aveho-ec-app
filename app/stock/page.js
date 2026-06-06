@@ -294,7 +294,7 @@ function ViewCuves({ supabase, auth, router }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
                   <i className="ti ti-flame" style={{ color: couleur, fontSize: 22 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142131" }}>{c.numero_serie || "Cuve sans n°"}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142131" }}>{c.num_serie || "Cuve sans n°"}</div>
                     <div style={{ fontSize: 11, color: "#5a6878" }}>{c.marque} {c.modele} · {c.type_gaz || "O₂"}</div>
                   </div>
                   <span style={{ background: `${couleur}22`, color: couleur, padding: "2px 8px", borderRadius: 8, fontSize: 10, fontWeight: 700, textTransform: "uppercase" }}>{c.statut}</span>

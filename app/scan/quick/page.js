@@ -135,7 +135,7 @@ function ScanQuickInner() {
             etablissement_id: materiel.etablissement_id,
             materiel_id: materiel.id,
             patient_id: materiel.patient_id || null,
-            titre: actionData.titre || `DI ${materiel.libelle || materiel.numero_serie}`,
+            titre: actionData.titre || `DI ${materiel.libelle || materiel.num_serie}`,
             description: actionData.description || "",
             statut: "Nouvelle",
             priorite: actionData.priorite || "normale",
@@ -250,8 +250,8 @@ function ScanQuickInner() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 16, fontWeight: 700, color: "#142131" }}>{materiel.libelle || article?.libelle || "Matériel"}</div>
                 <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 3 }}>
-                  {materiel.numero_serie && <span>S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{materiel.numero_serie}</code></span>}
-                  {materiel.numero_lot && <span> · Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{materiel.numero_lot}</code></span>}
+                  {materiel.num_serie && <span>S/N <code style={{ background: "transparent", padding: 0, color: "#7a6fb0" }}>{materiel.num_serie}</code></span>}
+                  {materiel.num_lot && <span> · Lot <code style={{ background: "transparent", padding: 0, color: "#7CC8C8" }}>{materiel.num_lot}</code></span>}
                 </div>
                 <div style={{ fontSize: 11, color: "#5a6878", marginTop: 2 }}>
                   État : <b style={{ color: etatMeta?.color }}>{materiel.etat || "—"}</b>
@@ -307,12 +307,12 @@ function ScanQuickInner() {
               {selectedAction === "rebut" && <>🗑 Mise au rebut</>}
             </h3>
             <div style={{ padding: "8px 12px", background: "rgba(20,33,49,.04)", borderRadius: 6, fontSize: 12, color: "#5a6878", marginBottom: 14 }}>
-              Matériel : <b>{materiel.libelle || materiel.numero_serie}</b>
+              Matériel : <b>{materiel.libelle || materiel.num_serie}</b>
             </div>
 
             {selectedAction === "di" && (
               <>
-                <ActionField label="Titre de la DI" value={actionData.titre || ""} onChange={(v) => setActionData({ ...actionData, titre: v })} placeholder={`DI ${materiel.libelle || materiel.numero_serie}`} />
+                <ActionField label="Titre de la DI" value={actionData.titre || ""} onChange={(v) => setActionData({ ...actionData, titre: v })} placeholder={`DI ${materiel.libelle || materiel.num_serie}`} />
                 <ActionField label="Description" value={actionData.description || ""} onChange={(v) => setActionData({ ...actionData, description: v })} multiline placeholder="Décris le problème ou la demande..." />
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 11, color: "#5a6878", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 }}>Priorité</div>
