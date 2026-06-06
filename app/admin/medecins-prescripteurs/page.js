@@ -1,5 +1,7 @@
 "use client";
 import { toast } from "../../components/ui-premium";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../../components/ui-premium";
 import AdminGuard from "../../components/AdminGuard"; // 0.57.34 anti-régression admin
 // =============================================================
 //  app/admin/medecins-prescripteurs/page.js (Alpha 0.56.5)
@@ -169,11 +171,23 @@ function MedecinsPrescripteursPageInner() {
         </Panel>
 
         {/* Liste */}
-        {loading && <StateMsg type="loading">Chargement…</StateMsg>}
+        {loading && <Panel><SkeletonRow count={5} /></Panel>}
         {!loading && filtered.length === 0 && (
-          <StateMsg type="empty">
-            {filter || filterVerif !== "all" ? "Aucun résultat" : "Aucun médecin enregistré — ils apparaîtront automatiquement à chaque scan d'ordonnance"}
-          </StateMsg>
+          <Panel>
+            {filter || filterVerif !== "all" ? (
+              <EmptyState
+                icon="ti-search-off"
+                title="Aucun résultat"
+                description="Aucun médecin ne correspond aux filtres actuels. Essayez d'élargir vos critères."
+              />
+            ) : (
+              <EmptyState
+                icon="ti-stethoscope"
+                title="Aucun médecin enregistré"
+                description="Les médecins prescripteurs apparaîtront automatiquement à chaque scan d'ordonnance via l'OCR."
+              />
+            )}
+          </Panel>
         )}
         {!loading && filtered.length > 0 && (
           <Panel>

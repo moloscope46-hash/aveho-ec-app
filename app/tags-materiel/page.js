@@ -13,6 +13,8 @@ import { safeUpdate, safeInsert, safeDelete } from "../../lib/safeWrite";
 import { logger } from "../../lib/logger";
 // 0.58.47 : sélecteur d'icône pour personnaliser les tags
 import IconPicker, { DEFAULT_ICON } from "../components/IconPicker";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 const PALETTE = ["#7CC8C8", "#7a6fb0", "#5aa05a", "#e35d5b", "#EF9F27", "#C9867F", "#185FA5", "#2a5a5a", "#142131"];
 
 export default function TagsMaterielPage() {
@@ -89,8 +91,16 @@ export default function TagsMaterielPage() {
           <div className="di-toolbar">
             <Btn variant="new" icon="ti-plus" onClick={openNew}>Nouveau tag</Btn>
           </div>
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : rows.length === 0 ? <StateMsg>Aucun tag. <a style={{ color: "#2a5a5a", fontWeight: 600, cursor: "pointer" }} onClick={openNew}>Créer le premier</a></StateMsg>
+          {loading ? <SkeletonRow count={4} />
+            : rows.length === 0 ? (
+              <EmptyState
+                icon="ti-tags-off"
+                title="Aucun tag matériel"
+                description="Les tags vous permettent de catégoriser le matériel (en maintenance, sous garantie, urgent, etc.)."
+                actionLabel="Créer le premier tag"
+                onAction={openNew}
+              />
+            )
             : (
               <table>
                 <thead><tr><th>Tag</th><th>Description</th><th></th></tr></thead>

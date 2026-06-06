@@ -1,0 +1,274 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.49</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3a40 0%, #0d1620 50%, #050a14 100%);min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.blue{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(24,95,165,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(42,58,64,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.fix{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO Tuiles Vue d'ensemble */
+.tiles-demo{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+.tile{padding:16px;border-radius:16px;color:#fff;display:flex;align-items:center;gap:12px}
+.tile-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.tile-content{flex:1;min-width:0}
+.tile-label{font-size:11.5px;opacity:.85;font-weight:500}
+.tile-value{font-size:24px;font-weight:700;margin-top:2px}
+
+/* DEMO Cadre global */
+.bg-demo{background:radial-gradient(800px 400px at 20% -10%, #1a2438 0%, #050a14 70%);padding:24px;border-radius:16px;margin:14px 0;color:#fff;min-height:280px}
+.wrap-demo{max-width:680px;margin:0 auto;padding:24px 22px;background:rgba(13, 24, 34, 0.32);border:1px solid rgba(124, 200, 200, 0.14);border-radius:22px;box-shadow:0 8px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);backdrop-filter:blur(6px)}
+.wrap-demo-title{color:#bfe6e6;font-size:13px;margin:0 0 14px;text-transform:uppercase;letter-spacing:2px;font-weight:700}
+.wrap-demo-tile{background:rgba(124,200,200,.10);border:1px solid rgba(124,200,200,.18);border-radius:12px;padding:14px;color:#fff;font-size:13px;margin-bottom:8px}
+
+/* Empty state demo */
+.empty-demo{background:rgba(20,33,49,.7);border:1px solid rgba(124,200,200,.18);border-radius:14px;padding:36px 24px;color:#fff;text-align:center;margin:10px 0}
+.empty-demo .icon{font-size:42px;color:#7CC8C8;margin-bottom:10px;display:block}
+.empty-demo h4{margin:0 0 6px;color:#fff;font-size:16px}
+.empty-demo p{margin:0;color:#9fb6c2;font-size:13px}
+.empty-demo button{margin-top:14px;background:linear-gradient(135deg,#7CC8C8,#5da8a8);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob blue"></div></div>
+
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.49</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.49 — Fix tuiles /accueil + Cadre global pages + Migration UI premium<small>Vue d'ensemble revient · Délimitation visuelle · 4 pages migrées</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 5 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.49-alpha</code></span>
+    <span><b>Tests :</b> ~4595 verts estimés</span>
+  </div>
+</header>
+
+<h2>🩹 1. Fix : tuiles "Vue d'ensemble" disparues sur /accueil</h2>
+
+<div class="panel fix">
+<p style="margin:0"><b>Bug</b> : les tuiles 'Promotions actives', 'Commandes passées', 'En cours', 'À régler' (et la section 'À traiter en priorité') disparaissaient quand tu désactivais les widgets 'KPIs' OU 'À traiter' dans la personnalisation. Le <code>HeroDashboard</code> tout entier était englobé dans une condition qui le masquait totalement.</p>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">Ce qui revient sur /accueil :</h3>
+
+<div class="tiles-demo">
+<div class="tile" style="background:linear-gradient(135deg,#C9867F,#b56e67)">
+  <div class="tile-icon">🏷</div>
+  <div class="tile-content">
+    <div class="tile-label">Promotions actives</div>
+    <div class="tile-value">12</div>
+  </div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#7CC8C8,#5da8a8)">
+  <div class="tile-icon">🚚</div>
+  <div class="tile-content">
+    <div class="tile-label">Commandes passées</div>
+    <div class="tile-value">47</div>
+  </div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#185FA5,#134e87)">
+  <div class="tile-icon">⏱</div>
+  <div class="tile-content">
+    <div class="tile-label">En cours</div>
+    <div class="tile-value">8</div>
+  </div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#142131,#2a3850)">
+  <div class="tile-icon">€</div>
+  <div class="tile-content">
+    <div class="tile-label">À régler</div>
+    <div class="tile-value">2 458 €</div>
+  </div>
+</div>
+</div>
+
+<pre>// AVANT 0.58.49 - HeroDashboard masqué si les 2 widgets sont OFF
+{(widgets.kpis || widgets.atraiter) && (
+  &lt;HeroDashboard
+    kpis={widgets.kpis ? kpis : null}    // null → tuiles à 0
+    atraiter={widgets.atraiter ? atraiter : { di: 0, ... }}
+  /&gt;
+)}
+// → Cédric désactive le widget 'KPIs' → plus de tuiles Promotion/Commandes !
+
+// 0.58.49 - HeroDashboard toujours rendu, kpis toujours fournis
+&lt;HeroDashboard
+  auth={auth}
+  kpis={kpis}                            // toujours fourni
+  atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, ... }}
+  loading={loading}
+  onNavigate={(p) =&gt; router.push(p)}
+/&gt;
+// → 'Vue d'ensemble' (tuiles commerciales) visible inconditionnellement
+// → 'À traiter en priorité' conditionnel (totalAtraiter &gt; 0 ET widgets.atraiter)</pre>
+
+<h2>🎨 2. Cadre global sur toutes les pages</h2>
+
+<div class="panel">
+<p style="margin:0">Délimitation visuelle subtile autour du contenu de chaque page — fini l'impression que les tuiles flottent sur du noir. Effet 'glassmorphique' avec backdrop-filter blur, bordure teal très discrète, border-radius 22px. Désactivé automatiquement en mode focus zen et présentation pour rester immersif.</p>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">Démo : ce que tu vois sur /materiels ou /interventions</h3>
+
+<div class="bg-demo">
+<div class="wrap-demo">
+  <div class="wrap-demo-title">📦 Matériels</div>
+  <div class="wrap-demo-tile">🪑 Fauteuil médical · SN-2024-058 · Actif</div>
+  <div class="wrap-demo-tile">🛏 Lit médical · SN-2024-091 · Maintenance</div>
+  <div class="wrap-demo-tile">🦽 Fauteuil roulant · SN-2023-142 · Stocké</div>
+</div>
+</div>
+
+<p style="font-size:12px;color:#8aa0b0;text-align:center;margin:4px 0 14px">↑ Le contour subtil délimite la zone de contenu — autres pages, même style</p>
+
+<pre>/* 0.58.49 - app/globals.css */
+.bg-dark .wrap{
+  margin:18px auto 18px;
+  padding:24px 22px calc(120px + env(safe-area-inset-bottom, 0px));
+  background:rgba(13, 24, 34, 0.32);           /* fond sombre légèrement plus clair */
+  border:1px solid rgba(124, 200, 200, 0.14);  /* bordure teal discrète */
+  border-radius:22px;
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.25),               /* ombre douce */
+    inset 0 1px 0 rgba(255,255,255,0.04);      /* highlight haut */
+  backdrop-filter:blur(6px);                    /* effet glassmorphique */
+  -webkit-backdrop-filter:blur(6px);
+  position:relative;
+}
+
+/* Adaptation mobile (moins agressif) */
+@media (max-width: 768px){
+  .bg-dark .wrap{
+    margin:10px 10px 10px;
+    padding:18px 14px calc(160px + env(safe-area-inset-bottom, 0px));
+    border-radius:18px;
+  }
+}
+
+/* Désactivé en mode focus + présentation pour rester immersif */
+html.av-focus-mode .bg-dark .wrap,
+html[data-presentation="1"] .bg-dark .wrap{
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  backdrop-filter:none;
+}</pre>
+
+<h2>🚀 3. Migration UI premium — 4 pages</h2>
+
+<div class="panel">
+<p style="margin:0"><b>Total cumulé</b> : ~30 pages utilisent maintenant les composants UI premium (vs 26 avant). Migration de 4 pages cette release :</p>
+<ul>
+<li><code>/journal</code> (timeline activité) → SkeletonRow + EmptyState ti-history</li>
+<li><code>/panier</code> → EmptyState ti-shopping-cart-off avec bouton CTA "Voir les promotions"</li>
+<li><code>/collectivite</code> → SkeletonRow + EmptyState ti-building-skyscraper</li>
+<li><code>/audit</code> (RGPD) → SkeletonRow + EmptyState ti-search-off avec description détaillée</li>
+</ul>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">Exemple : empty state du panier</h3>
+
+<div class="empty-demo">
+<span class="icon">🛒</span>
+<h4>Votre panier est vide</h4>
+<p>Découvrez les promotions et ajoutez des articles à votre panier.</p>
+<button>Voir les promotions</button>
+</div>
+
+<pre>// AVANT 0.58.49 - Pattern legacy partout
+import { PageHead, Panel, StateMsg, Btn } from '../ui';
+
+{loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel>
+  : rows.length === 0 ? <Panel><StateMsg>Aucune activité.</StateMsg></Panel>
+  : (...)}
+
+// 0.58.49 - Pattern UI premium
+import { PageHead, Panel, StateMsg, Btn } from '../ui';
+import { EmptyState, SkeletonRow } from '../components/ui-premium';
+
+{loading ? (
+  &lt;Panel&gt;
+    &lt;SkeletonRow count={6} /&gt;
+  &lt;/Panel&gt;
+) : rows.length === 0 ? (
+  &lt;Panel&gt;
+    &lt;EmptyState
+      icon='ti-history'
+      title='Aucune activité'
+      description='Aucune action enregistrée sur la période sélectionnée. Ajustez les filtres ou la plage de dates.'
+    /&gt;
+  &lt;/Panel&gt;
+) : (...)}
+
+// /panier : EmptyState avec CTA bouton
+&lt;EmptyState
+  icon='ti-shopping-cart-off'
+  title='Votre panier est vide'
+  description='Découvrez les promotions...'
+  actionLabel='Voir les promotions'
+  onAction={() =&gt; router.push('/promotions')}
+/&gt;</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Fix /accueil</b> : tuiles Vue d'ensemble (Promotion / Commandes / En cours / À régler) toujours visibles</li>
+<li><b>Cadre global</b> sur toutes les pages : effet glassmorphique subtil avec backdrop-filter blur</li>
+<li><b>+4 pages UI premium</b> : journal, panier, collectivite, audit (~30 pages au total maintenant)</li>
+<li><b>+25 tests</b> Vitest (~4595 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4595 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.49 - Fix tuiles /accueil + Cadre global pages + Migration UI premium 4 pages"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.50+)</h2>
+<div class="panel">
+<ul>
+<li>Continuer migration UI premium : <code>/parametres</code>, <code>/promotions</code>, <code>/admin/*</code> (~10 pages restantes)</li>
+<li>Widget Trafic routier <b>si</b> clé Mappy/TomTom</li>
+<li>Sélecteur de couleur custom (au-delà des 9)</li>
+<li>Auto-cadre désactivable via préférence user dans /profil</li>
+<li>Tags multi-langues</li>
+<li>Mode présentation pour widget Météo</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.49 · 5 juin 2026 · TUILES REVIENNENT + CADRE + MIGRATION ✨</footer>
+</div>
+
+</body></html>

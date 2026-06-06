@@ -14,6 +14,8 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../../components/ui-premium";
 import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 
 function AvisGooglePageInner() {
@@ -250,9 +252,15 @@ function AvisGooglePageInner() {
         </Panel>
 
         {/* Liste des avis */}
-        {loading && <StateMsg type="loading">Chargement…</StateMsg>}
+        {loading && <Panel><SkeletonRow count={4} /></Panel>}
         {!loading && filteredAvis.length === 0 && (
-          <StateMsg type="empty">Aucun avis pour ce filtre</StateMsg>
+          <Panel>
+            <EmptyState
+              icon="ti-star-off"
+              title="Aucun avis"
+              description="Aucun avis Google ne correspond aux filtres sélectionnés. Ajustez les critères pour voir plus de résultats."
+            />
+          </Panel>
         )}
         {!loading && filteredAvis.length > 0 && (
           <Panel>

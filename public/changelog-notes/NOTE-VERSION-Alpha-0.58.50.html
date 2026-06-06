@@ -1,0 +1,263 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.50</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 70% -10%, #2a3a40 0%, #0d1620 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes shimmer{0%{background-position:-1000px 0}100%{background-position:1000px 0}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.blue{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(24,95,165,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(42,58,64,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.fix{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO Tuiles Vue d'ensemble */
+.tiles-demo{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+.tile{padding:18px;border-radius:16px;color:#fff;display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,.30);transition:transform .15s}
+.tile:hover{transform:translateY(-2px)}
+.tile-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.tile-content{flex:1;min-width:0}
+.tile-label{font-size:11.5px;opacity:.85;font-weight:500}
+.tile-value{font-size:26px;font-weight:700;margin-top:2px;letter-spacing:-.02em}
+
+/* DEMO Cadre AVANT/APRÈS */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.compare-block{background:radial-gradient(800px 400px at 20% -10%, #1a2438 0%, #050a14 70%);padding:24px;border-radius:16px;min-height:260px;position:relative}
+.compare-label{position:absolute;top:8px;right:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding:3px 9px;border-radius:6px}
+.label-before{background:#e35d5b;color:#fff}
+.label-after{background:#5aa05a;color:#fff}
+.wrap-old{max-width:280px;margin:30px auto 0;padding:16px;background:transparent;color:#fff}
+.wrap-new{max-width:280px;margin:30px auto 0;padding:18px;background:linear-gradient(180deg, rgba(13, 24, 34, 0.42) 0%, rgba(13, 24, 34, 0.32) 100%);border:1px solid rgba(124, 200, 200, 0.25);border-radius:24px;box-shadow:0 16px 50px rgba(0,0,0,0.35),0 4px 16px rgba(0,0,0,0.20),inset 0 1px 0 rgba(255,255,255,0.06),inset 0 -1px 0 rgba(124,200,200,0.10);position:relative;color:#fff}
+.wrap-new::before{content:"";position:absolute;top:0;left:18px;right:18px;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(124,200,200,0.45) 50%, transparent 100%)}
+.wrap-tile{background:rgba(124,200,200,.10);border:1px solid rgba(124,200,200,.20);border-radius:10px;padding:10px;font-size:11.5px;margin-bottom:6px}
+.wrap-h{font-size:12px;color:#bfe6e6;text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-bottom:10px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob blue"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.50</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.50 — Vue d'ensemble bulletproof + Cadre renforcé + 6 pages migrées<small>Tuiles toujours visibles · Délimitation claire · ~36 pages avec UI premium</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.50-alpha</code></span>
+    <span><b>Tests :</b> ~4620 verts estimés</span>
+  </div>
+</header>
+
+<h2>🩹 1. Vue d'ensemble bulletproof sur /accueil</h2>
+
+<div class="panel fix">
+<p style="margin:0">Tu disais ne plus voir les tuiles 'Promotion / Commandes / En cours / À régler' sur /accueil. <b>Triple sécurité</b> appliquée :</p>
+<ul style="margin:10px 0 0">
+<li><b>Section toujours rendue</b> avec <code>marginTop: 28</code> pour bien séparer du bloc 'À traiter' au-dessus</li>
+<li><b>Valeurs safe</b> avec <code>?? 0</code> au lieu de <code>|| 0</code> (gère mieux les valeurs zéro)</li>
+<li><b>Skeleton conditionnel</b> : seulement au tout premier load (<code>loading && !kpis</code>), pas pendant les reloads — fini les écrans vides intermittents</li>
+</ul>
+</div>
+
+<h3 style="color:#fff;font-size:16px;margin-top:18px">Ce que tu verras sur /accueil :</h3>
+
+<div class="tiles-demo">
+<div class="tile" style="background:linear-gradient(135deg,#C9867F,#b56e67)">
+  <div class="tile-icon">🏷</div>
+  <div class="tile-content">
+    <div class="tile-label">Promotions actives</div>
+    <div class="tile-value">12</div>
+  </div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#7CC8C8,#5da8a8)">
+  <div class="tile-icon">🚚</div>
+  <div class="tile-content">
+    <div class="tile-label">Commandes passées</div>
+    <div class="tile-value">47</div>
+  </div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#185FA5,#134e87)">
+  <div class="tile-icon">⏱</div>
+  <div class="tile-content">
+    <div class="tile-label">En cours</div>
+    <div class="tile-value">8</div>
+  </div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#142131,#2a3850)">
+  <div class="tile-icon">€</div>
+  <div class="tile-content">
+    <div class="tile-label">À régler</div>
+    <div class="tile-value">2 458 €</div>
+  </div>
+</div>
+</div>
+
+<pre>// 0.58.50 - app/accueil/HeroDashboard.js
+&lt;section style={{ marginTop: 28 }}&gt;
+  &lt;h2&gt;Vue d'ensemble&lt;/h2&gt;
+  
+  {/* Skeleton SEULEMENT au 1er load, sinon cards toujours visibles */}
+  {loading && !kpis ? (
+    &lt;SkeletonGrid count={4} cols={4} /&gt;
+  ) : (
+    &lt;div className='av-stagger'&gt;
+      &lt;KpiCard label='Promotions actives' value={kpis?.promos ?? 0}
+               icon='ti-discount-2' variant='terra' onClick={() =&gt; go('/promotions')} /&gt;
+      &lt;KpiCard label='Commandes passées' value={kpis?.commandes ?? 0}
+               icon='ti-truck-delivery' variant='teal' /&gt;
+      &lt;KpiCard label='En cours' value={kpis?.enCours ?? 0}
+               icon='ti-progress-bolt' variant='blue' /&gt;
+      &lt;KpiCard label='À régler' value={fmtEur(kpis?.aRegler ?? 0)}
+               icon='ti-currency-euro' variant='navy' /&gt;
+    &lt;/div&gt;
+  )}
+&lt;/section&gt;</pre>
+
+<h2>🎨 2. Cadre global renforcé (vraiment visible)</h2>
+
+<div class="panel">
+<p style="margin:0">Tu disais qu'il manquait un contour pour délimiter les pages — le cadre du 0.58.49 était trop subtil. <b>Renforcé</b> : opacité bordure +78%, gradient de fond, 4 couches de box-shadow, highlight teal en haut, border-radius 24px. Désactivable en mode focus et présentation.</p>
+</div>
+
+<div class="compare-grid">
+<div class="compare-block">
+  <span class="compare-label label-before">AVANT 0.58.50</span>
+  <div class="wrap-old">
+    <div class="wrap-h">📦 Matériels</div>
+    <div class="wrap-tile">🪑 Fauteuil médical</div>
+    <div class="wrap-tile">🛏 Lit médical</div>
+    <div class="wrap-tile">🦽 Fauteuil roulant</div>
+  </div>
+</div>
+<div class="compare-block">
+  <span class="compare-label label-after">APRÈS 0.58.50</span>
+  <div class="wrap-new">
+    <div class="wrap-h">📦 Matériels</div>
+    <div class="wrap-tile">🪑 Fauteuil médical</div>
+    <div class="wrap-tile">🛏 Lit médical</div>
+    <div class="wrap-tile">🦽 Fauteuil roulant</div>
+  </div>
+</div>
+</div>
+
+<p style="font-size:12px;color:#8aa0b0;text-align:center;margin:4px 0 14px">↑ Comparaison côte à côte : à droite, on voit clairement la délimitation autour des tuiles avec highlight teal en haut</p>
+
+<pre>/* 0.58.50 - app/globals.css */
+.bg-dark .wrap{
+  margin:24px auto 24px;
+  padding:28px 26px calc(120px + env(safe-area-inset-bottom, 0px));
+  background:
+    linear-gradient(180deg, rgba(13, 24, 34, 0.42) 0%, rgba(13, 24, 34, 0.32) 100%);
+  border:1px solid rgba(124, 200, 200, 0.25);  /* +78% opacité vs 0.58.49 */
+  border-radius:24px;
+  box-shadow:
+    0 16px 50px rgba(0,0,0,0.35),              /* ombre grande */
+    0 4px 16px rgba(0,0,0,0.20),               /* ombre proche */
+    inset 0 1px 0 rgba(255,255,255,0.06),      /* highlight haut */
+    inset 0 -1px 0 rgba(124,200,200,0.10);     /* bordure bas teal */
+  backdrop-filter:blur(8px);
+  position:relative;
+}
+
+/* Bonus : highlight horizontal teal en haut */
+.bg-dark .wrap::before{
+  content:'';
+  position:absolute;
+  top:0; left:24px; right:24px;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(124,200,200,0.45) 50%,
+    transparent 100%);
+}</pre>
+
+<h2>🚀 3. Migration UI premium — 6 pages de plus</h2>
+
+<div class="panel">
+<p style="margin:0"><b>Total cumulé : ~36 pages</b> avec l'UI premium (EmptyState/SkeletonRow). Ces 6 nouvelles :</p>
+<ul>
+<li><code>/promotions</code> (vue clients) → SkeletonRow + EmptyState <code>ti-discount-2-off</code> avec CTA 'Voir le catalogue'</li>
+<li><code>/admin/avis-google</code> → SkeletonRow + EmptyState <code>ti-star-off</code></li>
+<li><code>/admin/medecins-prescripteurs</code> → 2 EmptyStates contextuels (filtre vs liste vide)</li>
+<li><code>/parametres-rgpd</code> → SkeletonRow 6 lignes</li>
+<li><code>/statistiques-rgpd</code> → SkeletonRow 6 lignes</li>
+<li><code>/tags-materiel</code> → EmptyState <code>ti-tags-off</code> avec bouton 'Créer le premier tag'</li>
+</ul>
+</div>
+
+<pre>// Exemple : /tags-materiel
+import { EmptyState, SkeletonRow } from '../components/ui-premium';
+
+{loading ? <SkeletonRow count={4} />
+  : rows.length === 0 ? (
+    &lt;EmptyState
+      icon='ti-tags-off'
+      title='Aucun tag matériel'
+      description='Les tags vous permettent de catégoriser le matériel
+        (en maintenance, sous garantie, urgent, etc.).'
+      actionLabel='Créer le premier tag'
+      onAction={openNew}
+    /&gt;
+  )
+  : (...)}</pre>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Vue d'ensemble bulletproof</b> : tuiles 'Promotion / Commandes / En cours / À régler' toujours visibles</li>
+<li><b>Cadre renforcé</b> : opacité +78%, 4 couches d'ombre, highlight teal en haut, radius 24px</li>
+<li><b>+6 pages UI premium</b> : promotions, avis-google, medecins-prescripteurs, parametres-rgpd, statistiques-rgpd, tags-materiel</li>
+<li><b>+25 tests</b> Vitest (~4620 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4620 verts attendus
+npm run build           # OK attendu
+git add -A
+git commit -m "Alpha 0.58.50 - Vue d'ensemble bulletproof + Cadre renforcé + 6 pages migrées"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.51+)</h2>
+<div class="panel">
+<ul>
+<li>Continuer migration UI : <code>/parametres</code> (page principale), <code>/journal-acces-rgpd</code>, <code>/admin/bulletins-archive</code>, <code>/admin/prescriptions-archive</code></li>
+<li>Widget Trafic routier <b>si</b> clé Mappy/TomTom obtenue</li>
+<li>Sélecteur de couleur custom (au-delà des 9)</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Sync Objectifs avec Supabase (partage équipe)</li>
+<li>Drag&drop fields formulaire Crud (modal)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.50 · 6 juin 2026 · BULLETPROOF + CADRE FORT + 6 PAGES ✨</footer>
+</div>
+
+</body></html>

@@ -446,15 +446,16 @@ export default function Accueil() {
         {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
           <>
             {/* 0.58.0 : Hero Dashboard premium remplace les anciens KPIs + atraiter */}
-            {(widgets.kpis || widgets.atraiter) && (
-              <HeroDashboard
-                auth={auth}
-                kpis={widgets.kpis ? kpis : null}
-                atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 }}
-                loading={loading}
-                onNavigate={(p) => router.push(p)}
-              />
-            )}
+            {/* 0.58.49 : toujours rendre HeroDashboard (Vue d'ensemble + tuiles Promotion etc.) */}
+            {/*   Les sous-sections du HeroDashboard sont déjà conditionnelles à l'intérieur. */}
+            {/*   Le wrapper conditionnel précédent masquait à tort les tuiles commerciales. */}
+            <HeroDashboard
+              auth={auth}
+              kpis={kpis}
+              atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 }}
+              loading={loading}
+              onNavigate={(p) => router.push(p)}
+            />
 
             {widgetOrder.map((k) => {
               if (!widgets[k]) return null;

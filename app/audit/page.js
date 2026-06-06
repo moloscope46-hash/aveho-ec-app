@@ -18,6 +18,8 @@ import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { toast } from "../components/ui-premium";
+// 0.58.49 : migration UI premium pour audit
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { Heatmap } from "../Charts";
 import { logger } from "../../lib/logger";
 // 0.58.30 : vue timeline (réutilise composant partagé extrait de /historique)
@@ -472,12 +474,16 @@ export default function AuditPage() {
         )}
 
         {loading ? (
-          <Panel><StateMsg>Chargement…</StateMsg></Panel>
+          <Panel>
+            <SkeletonRow count={6} />
+          </Panel>
         ) : rows.length === 0 ? (
           <Panel>
-            <StateMsg>
-              <i className="ti ti-search-off" /> Aucune entrée correspondant aux filtres.
-            </StateMsg>
+            <EmptyState
+              icon="ti-search-off"
+              title="Aucune entrée d'audit"
+              description="Aucune entrée ne correspond aux filtres sélectionnés. Élargissez la période ou retirez certains filtres pour voir plus de résultats."
+            />
           </Panel>
         ) : (
           <Panel>

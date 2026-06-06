@@ -8,6 +8,8 @@ import { fmtEur } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, IconButton } from "../ui";
+// 0.58.49 : migration UI premium
+import { EmptyState } from "../components/ui-premium";
 import { safeInsert } from "../../lib/safeWrite";
 
 export default function Panier() {
@@ -65,7 +67,13 @@ export default function Panier() {
           {err && <div className="err">{err}</div>}
           {msg && <div className="ok">{msg}</div>}
           {cart.items.length === 0 ? (
-            <StateMsg>Votre panier est vide. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => router.push("/promotions")}>Voir les promotions</a></StateMsg>
+            <EmptyState
+              icon="ti-shopping-cart-off"
+              title="Votre panier est vide"
+              description="Découvrez les promotions et ajoutez des articles à votre panier."
+              actionLabel="Voir les promotions"
+              onAction={() => router.push("/promotions")}
+            />
           ) : (
             <>
               <table>

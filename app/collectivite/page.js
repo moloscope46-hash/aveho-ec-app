@@ -15,6 +15,8 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
+// 0.58.49 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { dialogs } from "../dialogs";
 import SireneSearch from "../SireneSearch";
 import { safeUpdate } from "../../lib/safeWrite";
@@ -216,7 +218,11 @@ export default function GroupementPage() {
           sub="Personne morale qui regroupe vos établissements"
         />
 
-        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
+        {loading ? (
+          <Panel>
+            <SkeletonRow count={5} />
+          </Panel>
+        ) : (
           <>
             {/* 0.58.36 : barre d'onglets premium */}
             <div style={{
@@ -538,7 +544,13 @@ export default function GroupementPage() {
                 </button>
               ))}
               {etabs.length === 0 && (
-                <Panel><StateMsg>Aucun établissement rattaché au groupement. Utilise le bouton ci-dessus pour en créer un.</StateMsg></Panel>
+                <Panel>
+                  <EmptyState
+                    icon="ti-building-skyscraper"
+                    title="Aucun établissement"
+                    description="Aucun établissement n'est rattaché au groupement pour le moment. Utilisez le bouton ci-dessus pour en créer un."
+                  />
+                </Panel>
               )}
             </div>
             </>)}

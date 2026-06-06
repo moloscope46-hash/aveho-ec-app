@@ -20,6 +20,8 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { toast } from "../components/ui-premium";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { dialogs } from "../dialogs";
 import { 
   TEMPLATE_CONSENTEMENT, VERSION_TEMPLATE, TEMPLATE_VARIABLES, renderConsentement, consentementToHtml, validateTemplate, nextVersion, loadCustomVariables, saveCustomVariables} from "../../lib/rgpd";
@@ -373,7 +375,9 @@ export default function ParametresRgpd() {
           sub="Personnalise le texte du formulaire de consentement de ta collectivité"
         />
 
-        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
+        {loading ? (
+          <Panel><SkeletonRow count={6} /></Panel>
+        ) : (
           <>
             {/* Bandeau template actif */}
             <Panel style={{ marginBottom: 18, borderLeft: "4px solid #5aa05a" }}>

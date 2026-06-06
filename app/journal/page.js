@@ -8,6 +8,8 @@ import { logger } from "../../lib/logger";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
+// 0.58.49 : migration UI premium (EmptyState + SkeletonRow)
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 // 0.57.10 : imports retirés (fmtDate non utilisés)
 
 const COULEUR_ACTION = {
@@ -145,8 +147,19 @@ export default function AuditLogPage() {
           </div>
         </Panel>
 
-        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel>
-          : rows.length === 0 ? <Panel><StateMsg>Aucune activité sur la période sélectionnée.</StateMsg></Panel>
+        {loading ? (
+          <Panel>
+            <SkeletonRow count={6} />
+          </Panel>
+        ) : rows.length === 0 ? (
+          <Panel>
+            <EmptyState
+              icon="ti-history"
+              title="Aucune activité"
+              description="Aucune action enregistrée sur la période sélectionnée. Ajustez les filtres ou la plage de dates pour voir plus d'activité."
+            />
+          </Panel>
+        )
           : (
             <div>
               {Object.keys(parJour).sort().reverse().map((jour) => (

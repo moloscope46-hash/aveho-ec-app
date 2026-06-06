@@ -18,6 +18,8 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal } from "../ui";
 import { toast } from "../components/ui-premium";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import { BarChart, StackedBarChart, DonutChart, Gauge, TrendBadge, Heatmap } from "../Charts";
 import { FINALITES } from "../../lib/rgpd";
@@ -399,7 +401,9 @@ export default function StatistiquesRgpd() {
           </button>
         </div>
 
-        {loading ? <Panel><StateMsg>Chargement des statistiques…</StateMsg></Panel> : (
+        {loading ? (
+          <Panel><SkeletonRow count={6} /></Panel>
+        ) : (
           <>
             {/* KPIs */}
             <KpiRow tiles={[

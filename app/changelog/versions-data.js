@@ -120,6 +120,78 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.50",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Vue d'ensemble bulletproof + Cadre renforcé + Migration UI 6 pages",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 VUE D'ENSEMBLE BULLETPROOF sur `/accueil`. La section 'Vue d'ensemble' (Promotions / Commandes / En cours / À régler) est désormais **toujours rendue**, peu importe l'état du widget kpis dans la personnalisation. Améliorations : (a) `marginTop: 28` pour bien séparer visuellement du bloc 'À traiter' au-dessus. (b) Opérateur `??` (nullish coalescing) au lieu de `||` → les valeurs `0` s'affichent correctement (`|| 0` transformait aussi `0` en `0`, c'est OK, mais `?? 0` est plus précis et future-proof). (c) Skeleton de chargement seulement au tout premier load (`loading && !kpis`), puis cards toujours visibles avec valeurs 0 si data manquante — finie l'impression de page vide pendant les reloads",
+        "code_snippet": {
+          "file": "app/accueil/HeroDashboard.js",
+          "note": "Vue d'ensemble bulletproof",
+          "lang": "jsx",
+          "before": "// 0.58.49 - rendait inconditionnellement mais skeleton trop souvent\n<section>\n  <h2>Vue d'ensemble</h2>\n  {loading ? <SkeletonGrid /> : (\n    <KpiCard value={kpis?.promos || 0} />  // || perd les vraies valeurs 0\n  )}\n</section>",
+          "after": "// 0.58.50 - bulletproof : toujours visible, valeurs safe\n<section style={{ marginTop: 28 }}>\n  <h2>Vue d'ensemble</h2>\n  {/* Skeleton seulement si 1er load (kpis null), sinon cards avec valeurs ?? 0 */}\n  {loading && !kpis ? (\n    <SkeletonGrid count={4} cols={4} />\n  ) : (\n    <div>\n      <KpiCard label='Promotions actives' value={kpis?.promos ?? 0} icon='ti-discount-2' variant='terra' onClick={() => go('/promotions')} />\n      <KpiCard label='Commandes passées' value={kpis?.commandes ?? 0} icon='ti-truck-delivery' variant='teal' />\n      <KpiCard label='En cours' value={kpis?.enCours ?? 0} icon='ti-progress-bolt' variant='blue' />\n      <KpiCard label='À régler' value={fmtEur(kpis?.aRegler ?? 0)} icon='ti-currency-euro' variant='navy' />\n    </div>\n  )}\n</section>"
+        }
+      },
+      { "code": "UI", "txt": "🎨 CADRE GLOBAL RENFORCÉ — délimitation visuelle plus marquée pour vraiment voir le contour. **Bordure** : passée de `rgba(124,200,200,0.14)` à `rgba(124,200,200,0.25)` (+78% d'opacité). **Background** : gradient subtil au lieu d'une seule couleur (`linear-gradient(180deg, rgba(13,24,34,0.42) 0%, rgba(13,24,34,0.32) 100%)`). **Box-shadow** : 4 couches au lieu de 2 (16px 50px outer + 4px 16px close + inset highlight haut + inset bordure bas teal). **Border-radius** : 24px (au lieu de 22px). **Bonus** : pseudo-élément `::before` qui dessine un highlight horizontal teal en haut du cadre (gradient transparent → teal → transparent) pour effet 'carte premium'. **Mobile** adapté",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Cadre renforcé",
+          "lang": "css",
+          "before": "/* 0.58.49 - cadre subtil */\n.bg-dark .wrap{\n  background:rgba(13, 24, 34, 0.32);\n  border:1px solid rgba(124, 200, 200, 0.14);\n  border-radius:22px;\n  box-shadow:0 8px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);\n}",
+          "after": "/* 0.58.50 - cadre renforcé + highlight top */\n.bg-dark .wrap{\n  margin:24px auto 24px;\n  padding:28px 26px calc(120px + env(safe-area-inset-bottom, 0px));\n  background:\n    linear-gradient(180deg, rgba(13, 24, 34, 0.42) 0%, rgba(13, 24, 34, 0.32) 100%);\n  border:1px solid rgba(124, 200, 200, 0.25);  /* +78% opacité */\n  border-radius:24px;\n  box-shadow:\n    0 16px 50px rgba(0,0,0,0.35),         /* ombre grande */\n    0 4px 16px rgba(0,0,0,0.20),          /* ombre proche */\n    inset 0 1px 0 rgba(255,255,255,0.06), /* highlight haut */\n    inset 0 -1px 0 rgba(124,200,200,0.10); /* bordure bas teal */\n  backdrop-filter:blur(8px);\n  position:relative;\n}\n\n/* Highlight top en gradient horizontal */\n.bg-dark .wrap::before{\n  content:'';\n  position:absolute;\n  top:0; left:24px; right:24px;\n  height:1px;\n  background:linear-gradient(90deg, transparent 0%, rgba(124,200,200,0.45) 50%, transparent 100%);\n  pointer-events:none;\n}"
+        }
+      },
+      { "code": "UI", "txt": "🚀 MIGRATION UI PREMIUM — 6 PAGES DE PLUS. (a) `/promotions` (vue clients) : SkeletonRow + EmptyState `ti-discount-2-off` avec actionLabel 'Voir le catalogue'. (b) `/admin/avis-google` : EmptyState `ti-star-off` avec description filtrage. (c) `/admin/medecins-prescripteurs` : 2 EmptyStates (filtre vs liste vide) avec `ti-stethoscope` et description OCR. (d) `/parametres-rgpd` : SkeletonRow 6 lignes. (e) `/statistiques-rgpd` : SkeletonRow 6 lignes. (f) `/tags-materiel` : EmptyState `ti-tags-off` avec bouton 'Créer le premier tag'. **Total cumulé** : ~36 pages avec UI premium (vs 30 avant)" },
+      { "code": "AI", "txt": "+25 tests Vitest (v058-50-bundle.test.js) : version+SW (2), Vue d'ensemble bulletproof (3 — marginTop, ?? au lieu de ||, skeleton conditionnel), cadre renforcé (6 — bordure 0.25, box-shadow 4 couches, ::before highlight, gradient bg, radius 24, désactivation focus), migration 6 pages (12 — import + icon pour chaque + count global ≥35). Total **~4620 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.50 : (1) Les tuiles 'Vue d'ensemble' sur /accueil sont **garanties visibles** quoi qu'il arrive — pas de skeleton infini, pas de masquage par toggle widget, pas de fallback à 0 invisible. (2) Le cadre des pages est maintenant **clairement perceptible** sans être agressif, avec highlight teal subtil en haut. (3) Au total, **36 pages** utilisent l'UI premium (EmptyState/SkeletonRow). PROCHAINES PISTES (0.58.51+) : (a) Continuer migration UI : /parametres (page principale), /journal-acces-rgpd, /admin/bulletins-archive, /admin/prescriptions-archive. (b) Widget Trafic routier si clé API. (c) Sélecteur couleur custom. (d) Mode présentation pour widget Météo. (e) Sync Objectifs avec Supabase. (f) Drag&drop fields formulaire Crud (modal). (g) Tags multi-langues" }
+    ],
+    "themes": ["fix", "ui", "wow"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.50.html",
+    "sqlFile": null
+  },
+  {
+    "v": "0.58.49",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Fix tuiles /accueil + Cadre global pages + Migration UI premium 4 pages",
+    "chantiers": [
+      { "code": "FIX", "txt": "🩹 FIX TUILES `/accueil` DISPARUES : les tuiles 'Promotions actives', 'Commandes passées', 'En cours', 'À régler' (et la section 'À traiter en priorité') ne s'affichaient plus si l'user avait désactivé les widgets 'KPIs' OU 'À traiter' dans la personnalisation du dashboard. Cause : le `HeroDashboard` était englobé dans `{(widgets.kpis || widgets.atraiter) && (...)}` qui le masquait totalement quand les 2 toggles étaient sur OFF. **Fix** : `HeroDashboard` est désormais toujours rendu (les sous-sections gèrent déjà leurs conditions internes). `kpis` passé en permanence (au lieu de `widgets.kpis ? kpis : null` qui mettait tout à 0). Seul `atraiter` reste conditionnel pour le bloc 'À traiter en priorité'",
+        "code_snippet": {
+          "file": "app/accueil/page.js",
+          "note": "Fix tuiles disparues",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.49 - HeroDashboard masqué si les 2 widgets sont OFF\n{(widgets.kpis || widgets.atraiter) && (\n  <HeroDashboard\n    kpis={widgets.kpis ? kpis : null}  // null → tuiles à 0\n    atraiter={widgets.atraiter ? atraiter : { di: 0, ... }}\n  />\n)}\n// → si Cédric désactive le widget 'KPIs', plus de tuiles Promotion/Commandes/etc.",
+          "after": "// 0.58.49 - HeroDashboard toujours rendu, kpis toujours fournis\n<HeroDashboard\n  auth={auth}\n  kpis={kpis}\n  atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 }}\n  loading={loading}\n  onNavigate={(p) => router.push(p)}\n/>\n// → 'Vue d'ensemble' (tuiles commerciales) visible inconditionnellement\n// → 'À traiter en priorité' conditionnel via totalAtraiter > 0 ET widgets.atraiter"
+        }
+      },
+      { "code": "UI", "txt": "🎨 CADRE GLOBAL SUR TOUTES LES PAGES (`.bg-dark .wrap`). Délimitation visuelle subtile autour du contenu de chaque page pour mieux séparer le fond noir et les tuiles. Background semi-transparent sombre (rgba 13,24,34,0.32), bordure 1px teal très discrète (rgba 124,200,200,0.14), border-radius 22px, box-shadow soft + inset highlight pour effet 'carte glassmorphique', backdrop-filter blur 6px. Adaptation mobile : margins réduites + radius 18px. **Désactivé automatiquement** en mode focus zen (`html.av-focus-mode`) et mode présentation (`html[data-presentation='1']`) pour rester immersif",
+        "code_snippet": {
+          "file": "app/globals.css",
+          "note": "Cadre global pages",
+          "lang": "css",
+          "before": "/* AVANT 0.58.49 - .wrap = juste max-width + padding, pas de délimitation */\n.wrap{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px))}",
+          "after": "/* 0.58.49 - cadre visuel pour les pages de l'app (sous .bg-dark) */\n.wrap{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px))}\n\n.bg-dark .wrap{\n  margin:18px auto 18px;\n  padding:24px 22px calc(120px + env(safe-area-inset-bottom, 0px));\n  background:rgba(13, 24, 34, 0.32);\n  border:1px solid rgba(124, 200, 200, 0.14);\n  border-radius:22px;\n  box-shadow:0 8px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);\n  backdrop-filter:blur(6px);\n  -webkit-backdrop-filter:blur(6px);\n  position:relative;\n}\n\n@media (max-width: 768px){\n  .bg-dark .wrap{\n    margin:10px 10px 10px;\n    padding:18px 14px calc(160px + env(safe-area-inset-bottom, 0px));\n    border-radius:18px;\n  }\n}\n\n/* Désactive en mode focus + présentation */\nhtml.av-focus-mode .bg-dark .wrap,\nhtml[data-presentation=\"1\"] .bg-dark .wrap{\n  background:transparent;\n  border:none;\n  box-shadow:none;\n  backdrop-filter:none;\n}"
+        }
+      },
+      { "code": "UI", "txt": "🚀 MIGRATION UI PREMIUM — 4 PAGES MISES À JOUR. (a) `/journal` (timeline activité) : `<StateMsg>Chargement…</StateMsg>` → `<SkeletonRow count={6}>`, empty state → `<EmptyState icon='ti-history' title='Aucune activité' />`. (b) `/panier` : empty state remplacé par `<EmptyState icon='ti-shopping-cart-off' actionLabel='Voir les promotions' onAction={...}>` (vrai bouton CTA au lieu d'un lien texte). (c) `/collectivite` : skeleton + EmptyState pour 0 établissement. (d) `/audit` (log audit RGPD) : skeleton 6 lignes + EmptyState `ti-search-off` avec description détaillée pour aider à ajuster les filtres. **Total cumulé** : ~30 pages avec UI premium désormais (vs 26 avant)",
+        "code_snippet": {
+          "file": "app/journal/page.js + app/panier/page.js + app/collectivite/page.js + app/audit/page.js",
+          "note": "Migration UI premium",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.49 - Pattern legacy partout\nimport { PageHead, Panel, StateMsg, Btn } from '../ui';\n\n{loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel>\n  : rows.length === 0 ? <Panel><StateMsg>Aucune activité.</StateMsg></Panel>\n  : (...)}",
+          "after": "// 0.58.49 - Pattern UI premium\nimport { PageHead, Panel, StateMsg, Btn } from '../ui';\nimport { EmptyState, SkeletonRow } from '../components/ui-premium';\n\n{loading ? (\n  <Panel>\n    <SkeletonRow count={6} />\n  </Panel>\n) : rows.length === 0 ? (\n  <Panel>\n    <EmptyState\n      icon='ti-history'\n      title='Aucune activité'\n      description='Aucune action enregistrée sur la période sélectionnée. Ajustez les filtres ou la plage de dates.'\n    />\n  </Panel>\n) : (...)}\n\n// Bonus /panier : EmptyState avec CTA bouton\n<EmptyState\n  icon='ti-shopping-cart-off'\n  title='Votre panier est vide'\n  description='Découvrez les promotions...'\n  actionLabel='Voir les promotions'\n  onAction={() => router.push('/promotions')}\n/>"
+        }
+      },
+      { "code": "AI", "txt": "+25 tests Vitest (v058-49-bundle.test.js) : version+SW (2), fix /accueil HeroDashboard (3 — wrapper condition retiré, kpis toujours fourni, atraiter conditionnel), cadre global CSS (4 — background+border+radius, backdrop-filter, mobile, désactivation focus/présentation), migration UI premium (5 — chaque page + check global imports). Total **~4595 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.49 : **(1)** Les tuiles 'Promotions / Commandes / En cours / À régler' réapparaissent sur `/accueil` quel que soit le réglage des widgets perso. **(2)** Toutes les pages de l'app ont maintenant un cadre visuel élégant qui délimite le contenu — fini l'impression de tuiles qui flottent sur du noir. **(3)** 4 pages de plus avec EmptyState/SkeletonRow (journal, panier, collectivite, audit). PROCHAINES PISTES (0.58.50+) : (a) Continuer la migration UI premium sur `/parametres`, `/promotions`, `/admin/*` (~10 pages restantes). (b) Widget Trafic routier si clé API. (c) Sélecteur couleur custom. (d) Auto-cadre désactivable via préférence user. (e) Tags multi-langues. (f) Mode présentation pour widget Météo. (g) Drag&drop ordonner étiquettes" }
+    ],
+    "themes": ["fix", "ui", "wow"],
+    "date": "5 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.49.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.48",
     "kind": "hotfix",
     "titre": "🩹 HOTFIX + UI : Vues stats robustes (fix 404 v_stats_di_top_demandeurs) + Auto-suggestion d'icône",

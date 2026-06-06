@@ -7,6 +7,8 @@ import { joursRestants } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, StateMsg } from "../ui";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { logger } from "../../lib/logger";
 
 export default function Promotions() {
@@ -54,8 +56,16 @@ export default function Promotions() {
           </div>
           <div className="promo-sub">Cliquez sur COMMANDER pour ajouter l'offre à votre panier</div>
 
-          {loading ? <StateMsg>Chargement des promotions…</StateMsg>
-            : promos.length === 0 ? <StateMsg>Aucune promotion active.</StateMsg>
+          {loading ? <SkeletonRow count={4} />
+            : promos.length === 0 ? (
+              <EmptyState
+                icon="ti-discount-2-off"
+                title="Aucune promotion active"
+                description="Aucune offre promotionnelle n'est disponible pour le moment. Revenez plus tard ou consultez le catalogue complet."
+                actionLabel="Voir le catalogue"
+                onAction={() => window.location.href = "/catalogue"}
+              />
+            )
             : (
               <div className="promo-grid">
                 {promos.map((p) => {
