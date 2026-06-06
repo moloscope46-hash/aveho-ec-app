@@ -1,0 +1,243 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.74 — Tests complets</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,'Segoe UI',sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1a3a4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1080px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 12px rgba(124,200,200,0)}}
+@keyframes blob{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(40px,-30px)scale(1.08)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.violet{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(94,74,140,.45) 0%,transparent 70%);animation-delay:-6s}
+
+header.cover{position:relative;border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,74,140,.30));backdrop-filter:blur(28px);border:1px solid rgba(124,200,200,.30);box-shadow:0 28px 70px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.16);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7);display:inline-block}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.25}
+h1 small{font-size:13.5px;font-weight:500;color:#a5cce0;display:block;margin-top:8px;opacity:.95}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#a5cce0}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:40px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#5e4a8c)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(18px)}
+.panel.ok{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.teal{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(20,33,49,.6))}
+.panel.violet{border-left:4px solid #7a6fb0;background:linear-gradient(135deg,rgba(122,111,176,.12),rgba(20,33,49,.6))}
+.panel.amber{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55;border-left:3px solid #7CC8C8}
+pre.cmd{background:#050a14;color:#bfe6e6;border-left:3px solid #5aa05a}
+.cmd-comment{color:#5a8a9a}
+.cmd-flag{color:#EF9F27}
+.cmd-new{color:#5aa05a;font-weight:700}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Pyramide de tests */
+.pyramid{display:flex;flex-direction:column;align-items:center;gap:4px;margin:18px 0;padding:20px;background:rgba(255,255,255,.02);border-radius:14px}
+.pyramid-row{display:flex;align-items:center;justify-content:center;gap:14px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;min-width:200px;text-align:center;position:relative}
+.pyramid-row .lbl{flex:1}
+.pyramid-row .count{background:rgba(255,255,255,.18);padding:3px 10px;border-radius:14px;font-family:Consolas,monospace;font-size:12px;font-weight:700}
+.pyramid-row.top{background:linear-gradient(135deg,#5aa05a,#4a8a4a);color:#fff;width:200px}
+.pyramid-row.mid{background:linear-gradient(135deg,#EF9F27,#d68a1f);color:#fff;width:380px}
+.pyramid-row.base{background:linear-gradient(135deg,#185FA5,#142131);color:#fff;width:560px}
+
+/* SQL status grid */
+.sql-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin:14px 0}
+.sql-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(90,160,90,.08);border:1px solid rgba(90,160,90,.30);border-radius:8px;font-size:11.5px}
+.sql-item .check{color:#5aa05a;font-size:14px;font-weight:700}
+.sql-item code{background:transparent;color:#bfe6e6;padding:0}
+
+/* Commande box */
+.commande-box{background:linear-gradient(135deg,#050a14,#0a1525);border:2px solid #7CC8C8;border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 8px 30px rgba(124,200,200,.15)}
+.commande-box .title{color:#7CC8C8;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+.commande-box pre{background:#020610;border:none;border-left:3px solid #7CC8C8;margin:6px 0}
+
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#a5cce0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob teal"></div>
+  <div class="bg-blob violet"></div>
+</div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>RELEASE 0.58.74 · TESTS COMPLETS</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🧪 Tests Vitest + Playwright pour 0.58.71→0.58.73 + script `npm run test:all`<small>Pyramide complète : unit (Vitest) + E2E (Playwright) + smoke critical paths · 21 SQL appliqués en prod ✅</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.74-alpha</code></span>
+    <span><b>Type :</b> Feature (tests)</span>
+    <span><b>SQL :</b> aucun (tous appliqués)</span>
+  </div>
+</header>
+
+<h2>✅ 21 SQL appliqués en prod (confirmation Cédric)</h2>
+
+<div class="panel ok">
+  <p style="margin:0 0 12px;font-size:13px;color:#fff">Tous les SQL des migrations 0.58.47 → 0.58.72 ont été exécutés sur la prod Supabase. Plus aucun warning de fallback dans les helpers — les sondes <code>materielsHasArticleId</code>, <code>chambresHasBatimentCol</code>, <code>articlesHasLocation</code>, etc. retournent toutes <code>true</code>. Toutes les features sont actives.</p>
+  <div class="sql-grid">
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.47</code> tags-icone</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.48</code> stats-di-views</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.52</code> membres-equipe</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.52</code> user-goals</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.53</code> partenaires-types</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.55</code> team-goals-collab</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.57</code> pharma-depots-batiment</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.60</code> batiments-services-icones</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.62</code> equipe-id</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.63</code> pharma-rattachement</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.65</code> user-goals-snapshots</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.67</code> articles-refonte</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.69</code> stock-mouvements</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.71</code> materiels-ext + trigger</div>
+    <div class="sql-item"><span class="check">✓</span> <code>0.58.72</code> tags + fournisseurs + LPP</div>
+    <div class="sql-item"><span class="check">✓</span> cron goals-snapshot 00:30</div>
+  </div>
+</div>
+
+<h2>🧪 Pyramide de tests complète</h2>
+
+<div class="pyramid">
+  <div class="pyramid-row top">
+    <span class="lbl">🎯 Smoke critical paths</span>
+    <span class="count">8 routes</span>
+  </div>
+  <div style="color:#5a6878;font-size:18px">▲</div>
+  <div class="pyramid-row mid">
+    <span class="lbl">🎭 Playwright E2E (cross-browser)</span>
+    <span class="count">~30 tests</span>
+  </div>
+  <div style="color:#5a6878;font-size:18px">▲</div>
+  <div class="pyramid-row base">
+    <span class="lbl">⚛️ Vitest unit tests</span>
+    <span class="count">5300+ tests</span>
+  </div>
+</div>
+
+<h2>⚛️ Tests Vitest ajoutés (0.58.73)</h2>
+
+<div class="panel teal">
+  <p style="margin:0 0 10px;font-size:13px;color:#fff">Nouveau fichier <code>__tests__/v058-73-bundle.test.js</code> avec <b>14 tests</b> :</p>
+  <ul style="margin:0;color:#fff;font-size:12.5px">
+    <li><b>Version + SW</b> (2) — sync `package.json` ↔ `public/sw.js`</li>
+    <li><b>Anti-régression `>` non-échappé en JSX</b> (3) — texte cassé absent, texte humain présent, scan heuristique du fichier entier pour détecter d'autres `>` suspects</li>
+    <li><b>Tests obsolètes patchés</b> (6) — v057-7, v057-11, v058-66, v058-68, v058-69, v058-70 chacun avec une assertion qui vérifie que le fix est en place</li>
+    <li><b>Cohérence changelog</b> (3) — 0.58.73 dans `versions-data.js` + `versions-index.json` + note HTML existe</li>
+    <li><b>Script test:all</b> (1) — vérifie que `npm run test:all` existe dans package.json</li>
+  </ul>
+</div>
+
+<h2>🎭 Tests Playwright E2E ajoutés (0.58.71→0.58.73 — gros oubli)</h2>
+
+<div class="panel violet">
+  <p style="margin:0 0 10px;font-size:13px;color:#fff">Nouveau fichier <code>tests/e2e/materiel-articles-scan.spec.js</code> avec <b>~20 tests E2E cross-browser</b> :</p>
+  <p style="margin:8px 0 6px;color:#7CC8C8;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px">0.58.71 — Fiche matériel premium</p>
+  <ul style="margin:0;color:#fff;font-size:12px">
+    <li>/materiel/[id] sans erreur React #310 (anti-régression boucle 400)</li>
+    <li>Listing /materiels avec bouton 'Scanner matériel' violet + badges état colorés</li>
+    <li>/scan/materiel accessible avec scanner caméra (aspect-ratio 4/3)</li>
+    <li>Mode preset <code>?materiel_id=X</code> charge sans crash</li>
+  </ul>
+  <p style="margin:12px 0 6px;color:#7a6fb0;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px">0.58.72 — Bundle articles + scan/quick</p>
+  <ul style="margin:0;color:#fff;font-size:12px">
+    <li>Modal édition article ne crash plus (safeSaveArticle)</li>
+    <li>/scan/quick accessible avec BackButton visible</li>
+    <li>BackButton intégré sur 5 pages clés (test paramétré × 5)</li>
+    <li>Bouton 'Activer la caméra' visible sur /scan/quick + /scan/materiel + /scan/article (anti-régression caméra noire × 3)</li>
+    <li>URL qrserver.com correctement construite</li>
+  </ul>
+  <p style="margin:12px 0 6px;color:#EF9F27;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px">0.58.73 — Anti-régression build cassé</p>
+  <ul style="margin:0;color:#fff;font-size:12px">
+    <li>/materiels, /articles, /scan/quick chargent sans erreur de syntaxe JSX</li>
+  </ul>
+  <p style="margin:12px 0 6px;color:#5aa05a;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1px">Smoke test global (8 routes)</p>
+  <ul style="margin:0;color:#fff;font-size:12px">
+    <li>/, /accueil, /articles, /materiels, /scan/article, /scan/materiel, /scan/quick, /changelog → status < 400</li>
+  </ul>
+</div>
+
+<h2>⚙️ Nouveaux scripts npm</h2>
+
+<div class="panel amber">
+  <pre><span style="color:#5a6878">// package.json — scripts étendus en 0.58.74</span>
+"scripts": {
+  "dev":              "next dev",
+  "build":            "next build",
+  "test":             "vitest run",
+  "test:watch":       "vitest",
+  <span class="cmd-new">"test:all":         "npm run test && npm run test:e2e",</span>  <span class="cmd-comment">// 🆕 0.58.74</span>
+  "test:e2e":         "playwright test",
+  "test:e2e:ui":      "playwright test --ui",
+  <span class="cmd-new">"test:e2e:headed":  "playwright test --headed",</span>             <span class="cmd-comment">// 🆕 0.58.74</span>
+  "test:visual":      "playwright test tests/e2e/visual-regression.spec.js"
+}</pre>
+</div>
+
+<h2>🚀 LA COMMANDE (que tu veux)</h2>
+
+<div class="commande-box">
+  <div class="title">🎯 Build + tous les tests en une seule séance</div>
+<pre class="cmd"><span class="cmd-comment"># 1. Setup</span>
+cd C:\aveho-ec-app
+npm install <span class="cmd-flag">--legacy-peer-deps</span>
+
+<span class="cmd-comment"># 2. Build (anti-régression 0.58.73 — doit passer)</span>
+npm run build
+
+<span class="cmd-comment"># 3. Tests — choisis ce que tu veux</span>
+npm run test                  <span class="cmd-comment"># Vitest seul (~5300 verts)</span>
+npm run test:e2e              <span class="cmd-comment"># Playwright seul (~30 tests cross-browser)</span>
+<span class="cmd-new">npm run test:all              # 🆕 0.58.74 — Vitest + Playwright en séquence</span>
+
+<span class="cmd-comment"># 4. Debug si un test rouge</span>
+npm run test:watch            <span class="cmd-comment"># Vitest mode watch</span>
+npm run test:e2e:ui           <span class="cmd-comment"># Playwright UI interactive</span>
+<span class="cmd-new">npm run test:e2e:headed       # 🆕 0.58.74 — voir les browsers en direct</span>
+npm run test:visual           <span class="cmd-comment"># Visual regression seul</span>
+
+<span class="cmd-comment"># 5. Si tout vert, déployer</span>
+git add -A
+git commit -m "0.58.74 - Tests complets + 21 SQL appliqués"
+git push origin main</pre>
+</div>
+
+<div class="panel" style="border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))">
+  <p style="margin:0;font-size:12.5px;color:#fff;line-height:1.6">
+    ⚠ <b>PowerShell ne supporte pas <code>&&</code></b> comme séparateur. Si <code>npm run test:all</code> ne fonctionne pas avec PowerShell directement, lance les deux commandes séparément :<br/>
+    <code style="background:rgba(0,0,0,.3);color:#7CC8C8">npm run test ; npm run test:e2e</code> (avec `;` au lieu de `&&`)<br/>
+    — ou exécute depuis Git Bash / WSL où `&&` fonctionne nativement.
+  </p>
+</div>
+
+<h2>🛣️ Routes critiques testées en smoke</h2>
+
+<div class="panel">
+<table style="width:100%;font-size:12px;border-collapse:collapse">
+<thead><tr style="background:rgba(255,255,255,.05)">
+<th style="padding:6px 8px;text-align:left;color:#7CC8C8">Route</th>
+<th style="padding:6px 8px;text-align:left;color:#7CC8C8">Test</th>
+<th style="padding:6px 8px;text-align:left;color:#7CC8C8">Critique</th>
+</tr></thead>
+<tbody>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/</code></td><td style="padding:6px 8px">Status < 400</td><td style="padding:6px 8px">✓ landing</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/accueil</code></td><td style="padding:6px 8px">Status < 400</td><td style="padding:6px 8px">✓ home authentifié</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/articles</code></td><td style="padding:6px 8px">Status < 400 + no JSX syntax error</td><td style="padding:6px 8px">✓ catalogue</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/materiels</code></td><td style="padding:6px 8px">Status < 400 + no React #310</td><td style="padding:6px 8px">✓ inventaire</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/scan/article</code></td><td style="padding:6px 8px">Status < 400 + bouton 'Activer caméra'</td><td style="padding:6px 8px">✓ scan EAN13/GS1</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/scan/materiel</code></td><td style="padding:6px 8px">Status < 400 + bouton 'Activer caméra'</td><td style="padding:6px 8px">✓ scan UDI</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/scan/quick</code></td><td style="padding:6px 8px">Status < 400 + BackButton + bouton 'Activer caméra'</td><td style="padding:6px 8px">✓ popup actions</td></tr>
+<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:6px 8px"><code>/changelog</code></td><td style="padding:6px 8px">Status < 400 + lazy fetch versions-index.json</td><td style="padding:6px 8px">✓ historique</td></tr>
+</tbody></table>
+</div>
+
+<footer>
+Aveho — Espace Collectivité · 0.58.74 · 6 juin 2026 · 🧪 TESTS COMPLETS
+</footer>
+
+</div></body></html>

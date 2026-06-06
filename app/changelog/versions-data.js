@@ -240,6 +240,28 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.74",
+    "kind": "feature",
+    "titre": "🧪 Tests Vitest + Playwright pour 0.58.71→0.58.73 + script `npm run test:all`",
+    "chantiers": [
+      { "code": "AI", "txt": "🧪 **Tests Vitest 0.58.73 (manquants)** — nouveau `__tests__/v058-73-bundle.test.js` avec 14 tests : version+SW (2), anti-régression `>` non-échappé en JSX avec heuristique de détection (3 — texte cassé absent, texte humain présent, scan global du fichier), tests obsolètes patchés (6 — v057-7, v057-11, v058-66, v058-68, v058-69, v058-70 chacun avec une assertion qui vérifie que le fix est en place), cohérence changelog (3 — 0.58.73 dans versions-data + versions-index.json + note HTML existe), script `test:all` (1)" },
+      { "code": "AI", "txt": "🎭 **Tests Playwright E2E 0.58.71→0.58.73 (gros oubli)** — nouveau `tests/e2e/materiel-articles-scan.spec.js` avec ~20 tests E2E. **0.58.71** : fiche matériel ne crash plus avec React #310 (anti-régression boucle 400) + bouton 'Scanner matériel' violet dans listing + badges état colorés + page `/scan/materiel` accessible avec scanner caméra + mode preset `?materiel_id=X`. **0.58.72** : modal édition article ne crash plus + `/scan/quick` accessible + BackButton visible sur 5 pages clés (`/scan/article`, `/scan/materiel`, `/scan/quick`, `/parametres/compta`, `/articles/etiquettes`) + bouton 'Activer la caméra' présent sur les 3 pages scan (anti-régression caméra noire) + URL qrserver.com correctement construite. **0.58.73** : anti-régression build cassé — `/materiels`, `/articles`, `/scan/quick` chargent sans erreur de syntaxe JSX. **Smoke test global** : 8 routes critiques répondent < 400" },
+      { "code": "FEAT", "txt": "⚙️ **Nouveau script `npm run test:all`** dans `package.json` qui lance vitest + playwright en séquence. Bonus : `test:e2e:headed` pour debug visuel des E2E. Désormais une seule commande pour tout valider avant un push",
+        "code_snippet": {
+          "file": "package.json",
+          "note": "Scripts test étendus",
+          "lang": "json",
+          "before": "\"scripts\": {\n  \"test\": \"vitest run\",\n  \"test:watch\": \"vitest\",\n  \"test:e2e\": \"playwright test\",\n  \"test:e2e:ui\": \"playwright test --ui\",\n  \"test:visual\": \"playwright test tests/e2e/visual-regression.spec.js\"\n}",
+          "after": "\"scripts\": {\n  \"test\": \"vitest run\",\n  \"test:watch\": \"vitest\",\n  \"test:all\": \"npm run test && npm run test:e2e\",     // 0.58.74\n  \"test:e2e\": \"playwright test\",\n  \"test:e2e:ui\": \"playwright test --ui\",\n  \"test:e2e:headed\": \"playwright test --headed\",   // 0.58.74\n  \"test:visual\": \"playwright test tests/e2e/visual-regression.spec.js\"\n}"
+        }
+      },
+      { "code": "INFO", "txt": "✅ **Tous les SQL appliqués côté Cédric** — confirmé par toi : les 21 migrations (0.58.47 à 0.58.72) sont à jour en prod Supabase. Plus de warnings de fallback dans les helpers `lib/chambres.js`, `lib/materiels.js`, `lib/articles.js` — les sondes vont toutes retourner `true`. Les features UDI / immobilisation / mouvements / tags articles / fournisseurs multi / prix location / LPP / locations matériel sont **toutes actives**" }
+    ],
+    "themes": ["tests", "ai", "ci_cd"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.74.html"
+  },
+  {
     "v": "0.58.73",
     "kind": "hotfix",
     "titre": "🚨 HOTFIX BUILD CASSÉ — `>` non-échappé en JSX + maj 8 tests obsolètes",

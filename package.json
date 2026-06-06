@@ -1,6 +1,6 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.58.73-alpha",
+  "version": "0.58.74-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,7 +13,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:visual": "playwright test tests/e2e/visual-regression.spec.js",
-    "test:visual:update": "playwright test tests/e2e/visual-regression.spec.js --update-snapshots"
+    "test:visual:update": "playwright test tests/e2e/visual-regression.spec.js --update-snapshots",
+    "test:all": "npm run test && npm run test:e2e",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
