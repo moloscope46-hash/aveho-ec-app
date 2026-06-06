@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
+import { selectChambresContexte } from "../../lib/chambres";
 import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
 // 0.58.39 : hook réutilisable pour le contexte bâtiment/service de la TopBar
@@ -57,10 +58,10 @@ export default function Interventions() {
     (async () => {
       try {
         // Charge les chambres du contexte → patient_id assignés
-        let query = supabase.from("chambres").select("id, service_id, batiment_id");
-        if (ctx.serviceId) query = query.eq("service_id", ctx.serviceId);
-        else if (ctx.batimentId) query = query.eq("batiment_id", ctx.batimentId);
-        const { data: chambres } = await query;
+        // 0.58.70 : helper avec fallback batiment_id absent
+        const { data: chambres } = await selectChambresContexte(supabase, {
+          serviceId: ctx.serviceId, batimentId: ctx.batimentId,
+        });
         if (!alive || !chambres) return;
         const chambreIds = chambres.map(c => c.id);
         if (chambreIds.length === 0) { setCtxPatientIds(new Set()); return; }

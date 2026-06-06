@@ -47,6 +47,26 @@ export default function GalaxyBackground({ density = "normal", showShootingStars
     { id: 3, startTop: 60, startLeft: -8, delay: 13, duration: 4.5 },
   ] : [], [showShootingStars]);
 
+  // 0.58.71 : Météorites enflammées qui traversent à différentes hauteurs/angles
+  const meteorites = useMemo(() => showShootingStars ? [
+    { id: 1, startTop: 5,  angle: 18, delay: 3,  duration: 6 },
+    { id: 2, startTop: 22, angle: 22, delay: 11, duration: 7 },
+    { id: 3, startTop: 45, angle: 16, delay: 19, duration: 6.5 },
+    { id: 4, startTop: 70, angle: 25, delay: 27, duration: 7.5 },
+  ] : [], [showShootingStars]);
+
+  // 0.58.71 : Anneau d'astéroïdes (positions sur un cercle, statique sauf rotation conteneur)
+  const asteroids = useMemo(() => {
+    const n = 14;
+    const palette = ["#a89070", "#c9a880", "#8a7860", "#b89878", "#7a6850"];
+    return Array.from({ length: n }, (_, i) => ({
+      id: i,
+      angle: (i / n) * Math.PI * 2,
+      size: 2 + Math.random() * 4,
+      color: palette[i % palette.length],
+    }));
+  }, []);
+
   return (
     <div
       aria-hidden="true"
@@ -157,6 +177,62 @@ export default function GalaxyBackground({ density = "normal", showShootingStars
         />
       ))}
 
+      {/* 0.58.71 : Météorites enflammées (plus grosses + traînée orange) */}
+      {showShootingStars && meteorites.map(mt => (
+        <div
+          key={`meteor-${mt.id}`}
+          style={{
+            position: "absolute",
+            top: `${mt.startTop}%`,
+            left: `-10%`,
+            width: 140,
+            height: 4,
+            background: "linear-gradient(90deg, transparent, rgba(255,165,80,0.9) 30%, rgba(255,69,0,0.95) 60%, rgba(255,220,180,0.9) 90%, transparent)",
+            borderRadius: 2,
+            filter: "blur(0.5px)",
+            transform: `rotate(${mt.angle}deg)`,
+            animation: `av-meteor-fall ${mt.duration}s linear infinite`,
+            animationDelay: `${mt.delay}s`,
+            boxShadow: "0 0 18px 2px rgba(255,140,40,0.5)",
+            opacity: 0,
+          }}
+        >
+          {/* Tête de météorite (boule de feu) */}
+          <div style={{
+            position: "absolute", right: -2, top: -3,
+            width: 10, height: 10, borderRadius: "50%",
+            background: "radial-gradient(circle, #fff, #ffb04d 40%, #ff4500 80%, transparent)",
+            boxShadow: "0 0 18px 5px rgba(255,140,40,0.7)",
+          }} />
+        </div>
+      ))}
+
+      {/* 0.58.71 : Anneau d'astéroïdes (rotation très lente, déco subtile) */}
+      <div style={{
+        position: "absolute",
+        top: "55%", left: "20%",
+        width: 360, height: 360,
+        border: "1px dashed rgba(255,200,150,0.10)",
+        borderRadius: "50%",
+        transform: "translate(-50%, -50%) rotate(-15deg)",
+        animation: "av-asteroid-ring 120s linear infinite",
+        pointerEvents: "none",
+      }}>
+        {asteroids.map(a => (
+          <div key={`ast-${a.id}`} style={{
+            position: "absolute",
+            top: `${50 + 50 * Math.sin(a.angle)}%`,
+            left: `${50 + 50 * Math.cos(a.angle)}%`,
+            width: a.size, height: a.size,
+            background: a.color,
+            borderRadius: "50%",
+            boxShadow: `0 0 ${a.size * 2}px ${a.color}50`,
+            transform: "translate(-50%, -50%)",
+            opacity: 0.55,
+          }} />
+        ))}
+      </div>
+
       <style jsx global>{`
         @keyframes av-star-twinkle {
           0%, 100% { opacity: var(--star-opacity, 0.5); transform: scale(1); }
@@ -199,6 +275,16 @@ export default function GalaxyBackground({ density = "normal", showShootingStars
           5% { opacity: 1; }
           70% { opacity: 1; }
           100% { opacity: 0; transform: rotate(15deg) translateX(110vw); }
+        }
+        @keyframes av-meteor-fall {
+          0% { opacity: 0; transform: rotate(var(--mt-angle, 20deg)) translateX(0); }
+          8% { opacity: 1; }
+          85% { opacity: 1; }
+          100% { opacity: 0; transform: rotate(var(--mt-angle, 20deg)) translateX(130vw); }
+        }
+        @keyframes av-asteroid-ring {
+          from { transform: translate(-50%, -50%) rotate(-15deg); }
+          to { transform: translate(-50%, -50%) rotate(345deg); }
         }
       `}</style>
     </div>

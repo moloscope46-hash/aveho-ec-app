@@ -14,6 +14,8 @@
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
+import BackButton from "../../components/BackButton";
+import { safeInsertMateriels } from "../../../lib/materiels";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
@@ -200,9 +202,11 @@ function ScanArticleInner() {
           });
         }
         try {
-          const { error: matErr } = await supabase.from("materiels").insert(matPayloads);
+          // 0.58.71 : helper avec strip auto des colonnes absentes (article_id, udi_*, immo_*)
+          const { error: matErr, stripped } = await safeInsertMateriels(supabase, matPayloads);
           if (matErr) console.warn("[scan] insert matériels:", matErr.message);
-        } catch { /* table évolue, silent */ }
+          if (stripped?.article_id) console.warn("[scan] article_id non lié (SQL 0.58.67 absent)");
+        } catch (e) { console.warn("[scan] matériel exception:", e?.message); }
       }
 
       toast.success(`Entrée stock validée : +${form.quantite} ${article.libelle}`);
@@ -229,6 +233,7 @@ function ScanArticleInner() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap" style={{ maxWidth: 600 }}>
+        <div style={{ marginBottom: 8 }}><BackButton /></div>
         <PageHead small title="Scan code-barres" sub="Entrée stock article par scan caméra ou GS1-128" />
 
         {/* Étape scan */}
@@ -242,6 +247,7 @@ function ScanArticleInner() {
                   active={!searching && !article}
                   autoStop={true}
                   formats="all"
+                  requireUserStart={true}
                 />
                 {searching && (
                   <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.7)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#7CC8C8" }}>

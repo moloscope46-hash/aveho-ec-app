@@ -15,6 +15,7 @@
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
+import BackButton from "../../components/BackButton";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
@@ -157,6 +158,7 @@ function EtiquettesArticlesInner() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
+        <div style={{ marginBottom: 8 }}><BackButton /></div>
         <div className="no-print">
           <PageHead small title="Étiquettes prix" sub={`Génération PDF imprimable · ${selectedArticles.length} article${selectedArticles.length > 1 ? "s" : ""} sélectionné${selectedArticles.length > 1 ? "s" : ""} (${labels.length} étiquette${labels.length > 1 ? "s" : ""} au total, ${totalPages} page${totalPages > 1 ? "s" : ""})`} />
 

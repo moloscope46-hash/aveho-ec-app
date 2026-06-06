@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.70</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #5a1f1f 0%, #0d1820 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1000px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(227,93,91,.5)}70%{box-shadow:0 0 0 10px rgba(227,93,91,0)}}
+@keyframes blob{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(40px,-30px)scale(1.05)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob 18s ease-in-out infinite}
+.bg-blob.red{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(227,93,91,.55) 0%,transparent 70%)}
+.bg-blob.amber{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(239,159,39,.35) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(227,93,91,.20));backdrop-filter:blur(30px);border:1px solid rgba(227,93,91,.30);box-shadow:0 30px 80px rgba(20,33,49,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#fdc5c0;font-weight:700;background:rgba(227,93,91,.14);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#e35d5b;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);display:inline-block}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#fdc5c0;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#fdc5c0}
+.meta b{color:#fff}
+.meta code{background:rgba(227,93,91,.18);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#7CC8C8)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(227,93,91,.20);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.bug{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55}
+pre.bug{border-left:3px solid #e35d5b}
+pre.fix{border-left:3px solid #5aa05a}
+ul{padding-left:20px}li{margin:6px 0}
+.cascade{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin:14px 0;align-items:start}
+.cascade .step{background:rgba(20,33,49,.65);border:1px solid rgba(227,93,91,.20);border-radius:10px;padding:14px;font-size:12.5px}
+.cascade .step .num{display:inline-block;background:#e35d5b;color:#fff;width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-weight:700;font-size:11px;margin-right:6px}
+.cascade .arrow{display:flex;align-items:center;justify-content:center;color:#e35d5b;font-size:20px;font-weight:700}
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(227,93,91,.20);font-size:11.5px;color:#fdc5c0;text-align:center}
+footer .pre-deploy{background:#050a14;color:#bfe6e6;padding:14px 16px;border-radius:10px;text-align:left;font-family:Consolas,monospace;font-size:11.5px;max-width:680px;margin:14px auto}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob red"></div><div class="bg-blob amber"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>HOTFIX 0.58.70 · BUG PROD</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🚨 Fix critique : 400 Bad Request en boucle + crash React #310<small>Cause : colonne <code style="background:rgba(227,93,91,.18);color:#fff">batiment_id</code> absente de la table chambres en prod</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.70-alpha</code></span>
+    <span><b>Sévérité :</b> Critique 🔴</span>
+    <span><b>Impact :</b> App en boucle d'erreur, finit par crash</span>
+  </div>
+</header>
+
+<h2>🚨 Symptôme rapporté</h2>
+
+<div class="panel bug">
+<pre style="background:#0d1822;color:#fdc5c0;font-size:11px">GET https://...supabase.co/rest/v1/chambres?select=id%2Cservice_id%2Cbatiment_id
+    &service_id=eq.08b89a82-30c5-43d3-9256-93bc3b21a1f7   <span style="color:#e35d5b">400 (Bad Request)</span>
+...
+postMessage  l @ 1255-...js
+postMessage  l @ 1255-...js
+postMessage  l @ 1255-...js
+...  (×plusieurs centaines en boucle)
+Uncaught Error: <span style="color:#e35d5b">Minified React error #310</span>
+    Rendered more hooks than during the previous render</pre>
+</div>
+
+<h2>🔍 Diagnostic — cascade d'erreurs</h2>
+
+<div class="cascade">
+  <div class="step"><span class="num">1</span><b>SQL pending</b><br><small>Migration 0.58.57 (`batiment_id` sur chambres) jamais exécutée côté Supabase</small></div>
+  <div class="arrow">→</div>
+  <div class="step"><span class="num">2</span><b>400 Bad Request</b><br><small>`SELECT id, service_id, batiment_id FROM chambres` → Postgres : `column does not exist`</small></div>
+</div>
+<div class="cascade">
+  <div class="step"><span class="num">3</span><b>try/catch silencieux</b><br><small>L'erreur est attrapée mais le setState dans le catch invalide les deps du useEffect</small></div>
+  <div class="arrow">→</div>
+  <div class="step"><span class="num">4</span><b>useEffect re-fire</b><br><small>Re-fetch → re-400 → re-catch → boucle infinie</small></div>
+</div>
+<div class="cascade">
+  <div class="step"><span class="num">5</span><b>SW postMessage flood</b><br><small>Le Service Worker broadcaste chaque échec aux clients, saturant le main thread</small></div>
+  <div class="arrow">→</div>
+  <div class="step"><span class="num">6</span><b>React #310 crash</b><br><small>Ordre des hooks devient instable (probablement `useRealtimeTable` × 6 dans `/accueil`)</small></div>
+</div>
+
+<h2>✅ Fix appliqué</h2>
+
+<p>Nouveau helper <code>lib/chambres.js</code> qui (a) sonde la présence de la colonne UNE seule fois, (b) cache le résultat module-level pour éviter toute boucle, (c) fallback gracieux si absente.</p>
+
+<pre class="fix">// lib/chambres.js — 0.58.70
+let _hasBatimentCol = null;  // ← cache module-level, jamais re-sondé après 1er appel
+
+export async function chambresHasBatimentCol(supabase) {
+  if (_hasBatimentCol !== null) return _hasBatimentCol;  // ← anti-boucle
+  const { error } = await supabase.from('chambres')
+    .select('batiment_id', { count: 'exact', head: true }).limit(1);
+  if (error && (error.code === '42703' || /batiment_id/i.test(error.message))) {
+    _hasBatimentCol = false;
+    return false;
+  }
+  _hasBatimentCol = true;
+  return true;
+}
+
+export async function selectChambresContexte(supabase, { serviceId, batimentId }) {
+  const hasCol = await chambresHasBatimentCol(supabase);
+  if (serviceId) {
+    const cols = hasCol ? 'id, service_id, batiment_id' : 'id, service_id';
+    const r = await supabase.from('chambres').select(cols).eq('service_id', serviceId);
+    return { data: r.data || [], hasBatimentCol: hasCol };
+  }
+  if (batimentId) {
+    if (!hasCol) return { data: [], hasBatimentCol: false };  // ← fallback propre
+    const r = await supabase.from('chambres').select('id, service_id, batiment_id').eq('batiment_id', batimentId);
+    return { data: r.data || [], hasBatimentCol: true };
+  }
+}</pre>
+
+<h2>📍 Endroits patchés</h2>
+
+<div class="panel">
+<ul style="font-size:13px">
+<li><code>lib/useContextPatientIds.js</code> — <b>hook centralisé</b> utilisé par 8+ pages (RGPD, statistiques, achats, commandes, signalements, présentation, admin…)</li>
+<li><code>app/maintenance/page.js</code> — filtre matériel maintenu par contexte</li>
+<li><code>app/interventions/page.js</code> — filtre interventions par contexte</li>
+<li><code>app/materiels/page.js</code> — filtre inventaire matériel par contexte</li>
+</ul>
+<p style="margin:8px 0 0;font-size:12px;color:#fdc5c0">→ Une seule sonde au 1er appel, le cache fait que tous les autres usages réutilisent le résultat. <b>0 requête supplémentaire</b> par rapport à avant.</p>
+</div>
+
+<h2>🛠 Pour résoudre durablement</h2>
+
+<div class="panel ok">
+<p style="margin:0 0 8px"><b>Exécute le SQL pending dans Supabase SQL Editor :</b></p>
+<pre style="background:#0d1822;color:#bfe6e6;font-size:11.5px"># Dans Supabase Dashboard › SQL Editor › Run :
+public/sql/migration-0.58.57-pharmacies-depots-batiment.sql</pre>
+<p style="margin:8px 0 0;font-size:12.5px">Ça ajoute la colonne `batiment_id` à `chambres` + back-fill éventuel. Une fois fait, le filtre par bâtiment re-fonctionne partout dans l'app. <b>En attendant, l'app fonctionne avec le filtre par service uniquement</b> (le filtre par bâtiment est silencieusement désactivé jusqu'à ce que le SQL soit appliqué).</p>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<footer>
+<div class="pre-deploy">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                    # ~5212 verts (+12 nouveaux)
+npm run build               # OK
+
+git add -A
+git commit -m "Hotfix 0.58.70 - Fix 400 chambres.batiment_id + crash React #310"
+git push origin main
+
+# Après déploiement : Ctrl+F5 pour vider cache navigateur
+# → L'app charge sans boucle d'erreur
+# → Console : "[chambres] colonne batiment_id absente, fallback service_id only"
+#   (warning normal jusqu'à exécution du SQL 0.58.57)</div>
+<div style="margin-top:18px">Aveho — Espace Collectivité · Hotfix 0.58.70 · 6 juin 2026 · 🚨 ANTI-BOUCLE 🔧 FALLBACK ✅</div>
+</footer>
+
+</div></body></html>

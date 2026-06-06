@@ -126,8 +126,9 @@ describe("0.57.7 - page.js : import versions-index + fetch chantiers-extra", () 
     expect(src).toMatch(/fetch\(["']\/changelog-data\/chantiers-extra\.json["']/);
   });
 
-  it("force-cache pour le fetch (asset statique versionné par déploiement)", () => {
-    expect(src).toMatch(/cache:\s*["']force-cache["']/);
+  it("cache:'default' pour le fetch (override en 0.58.68 — était force-cache)", () => {
+    // 0.58.68 : force-cache → default + cache-busting via ?v=pkg.version
+    expect(src).toMatch(/cache:\s*["']default["']/);
   });
 
   it("Merge des chantiers cachés dans le state ALL_VERSIONS", () => {

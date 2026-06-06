@@ -97,9 +97,10 @@ describe("0.57.11 - page.js : fetch lazy versions-index + chantiers-extra", () =
     expect(src).toMatch(/Promise\.all/);
   });
 
-  it("force-cache pour les 2 fetches (assets statiques)", () => {
-    // Doit avoir au moins 2 occurrences de force-cache
-    const matches = src.match(/cache:\s*["']force-cache["']/g) || [];
+  it("cache:'default' pour les 2 fetches (override en 0.58.68 — était force-cache)", () => {
+    // 0.58.68 a remplacé force-cache (cache infini) par default (respect Cache-Control)
+    // + cache-busting via ?v=pkg.version.
+    const matches = src.match(/cache:\s*["']default["']/g) || [];
     expect(matches.length).toBeGreaterThanOrEqual(2);
   });
 

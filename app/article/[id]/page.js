@@ -9,6 +9,8 @@
 import { useEffect, useState, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
+import { selectMaterielsByArticle } from "../../../lib/materiels";
+import BackButton from "../../components/BackButton";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
@@ -31,6 +33,10 @@ export default function ArticleDetailPage({ params }) {
   const [partenaire, setPartenaire] = useState(null);
   const [materiels, setMateriels] = useState([]);
   const [mouvements, setMouvements] = useState([]);
+  // 0.58.72 : nouveaux états (fournisseurs multi, tags article)
+  const [fournisseurs, setFournisseurs] = useState([]);  // article_fournisseurs
+  const [articleTags, setArticleTags] = useState([]);
+  const [allTags, setAllTags] = useState([]);            // tags_article disponibles
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [notFound, setNotFound] = useState(false);
@@ -59,15 +65,21 @@ export default function ArticleDetailPage({ params }) {
       if (a.etablissement_partenaire_id) {
         promises.push(supabase.from("etablissements_partenaires").select("id, nom").eq("id", a.etablissement_partenaire_id).maybeSingle());
       }
-      // Matériels rattachés
-      promises.push(supabase.from("materiels").select("id, libelle, numero_serie, numero_lot, etat, date_peremption, patient_id, depot_id, created_at").eq("article_id", id).order("created_at", { ascending: false }));
+      // Matériels rattachés - 0.58.71 : helper avec fallback article_id absent
+      // (évite le 400 si SQL 0.58.67 pas appliqué)
+      const matResultPromise = selectMaterielsByArticle(supabase, id,
+        "id, libelle, numero_serie, numero_lot, etat, date_peremption, patient_id, depot_id, created_at"
+      );
+      promises.push(matResultPromise);
 
       const results = await Promise.allSettled(promises);
       let idx = 0;
       if (a.tva_taux_id) { setTva(results[idx++].value?.data || null); }
       if (a.pharmacie_id) { setPharmacie(results[idx++].value?.data || null); }
       if (a.etablissement_partenaire_id) { setPartenaire(results[idx++].value?.data || null); }
-      setMateriels(results[idx++].value?.data || []);
+      // Le helper retourne {data, hasArticleId} ; on extrait .data
+      const matRes = results[idx++].value;
+      setMateriels(matRes?.data || []);
 
       // Mouvements stock (table optionnelle — fallback gracieux)
       try {
@@ -79,6 +91,33 @@ export default function ArticleDetailPage({ params }) {
           .limit(50);
         setMouvements(mvts || []);
       } catch { /* table absente, silent */ }
+
+      // 0.58.72 : Fournisseurs multi (table optionnelle)
+      try {
+        const { data: fs } = await supabase
+          .from("article_fournisseurs")
+          .select("*")
+          .eq("article_id", id)
+          .order("est_prioritaire", { ascending: false })
+          .order("created_at", { ascending: true });
+        setFournisseurs(fs || []);
+      } catch { /* table absente */ }
+
+      // 0.58.72 : Tags article (table optionnelle)
+      try {
+        const { data: links } = await supabase
+          .from("article_tags").select("tag_id").eq("article_id", id);
+        const tagIds = (links || []).map(l => l.tag_id);
+        if (tagIds.length > 0) {
+          const { data: tgs } = await supabase
+            .from("tags_article").select("*").in("id", tagIds);
+          setArticleTags(tgs || []);
+        }
+        // Liste de tous les tags pour ajout/édition
+        const { data: all } = await supabase
+          .from("tags_article").select("*").eq("actif", true).order("ordre_affichage").order("libelle");
+        setAllTags(all || []);
+      } catch { /* table absente */ }
     } catch (e) {
       console.error("[article] load:", e);
       toast.error(e.message);
@@ -146,6 +185,8 @@ export default function ArticleDetailPage({ params }) {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
+        {/* 0.58.72 : Bouton retour */}
+        <div style={{ marginBottom: 8 }}><BackButton /></div>
         {/* Header personnalisé avec photo + métadonnées */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#5a6878", marginBottom: 6 }}>
@@ -242,13 +283,16 @@ export default function ArticleDetailPage({ params }) {
           </div>
         )}
 
-        {/* Onglets */}
+        {/* Onglets — 0.58.72 : ajout Location, Fournisseurs, Tags */}
         <div style={{ display: "flex", borderBottom: "2px solid #e3e9ee", marginBottom: 16, overflowX: "auto" }}>
           {[
             { key: "overview", lbl: "Vue d'ensemble", icon: "ti-eye" },
             { key: "materiels", lbl: `Matériels (${materiels.length})`, icon: "ti-package" },
             { key: "stock", lbl: "Stock & mouvements", icon: "ti-arrows-up-down" },
             { key: "tarifs", lbl: "Tarifs détaillés", icon: "ti-coin-euro" },
+            { key: "location", lbl: "Location", icon: "ti-calendar-time" },
+            { key: "fournisseurs", lbl: `Fournisseurs (${fournisseurs.length})`, icon: "ti-building-warehouse" },
+            { key: "tags", lbl: `Tags (${articleTags.length})`, icon: "ti-tag" },
             { key: "compta", lbl: "Comptabilité", icon: "ti-calculator" },
           ].map(t => (
             <button key={t.key} onClick={() => setActiveTab(t.key)}
@@ -504,6 +548,131 @@ export default function ArticleDetailPage({ params }) {
           </div>
         )}
 
+        {/* 0.58.72 — Tab : Location */}
+        {activeTab === "location" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 14px", fontSize: 14, color: "#142131" }}>
+              <i className="ti ti-calendar-time" /> Tarifs de location
+            </h3>
+            {article.louable === false ? (
+              <div style={{ padding: "16px 18px", background: "rgba(124,200,200,.10)", borderRadius: 8, borderLeft: "3px solid #7CC8C8" }}>
+                <p style={{ margin: 0, fontSize: 13, color: "#1c5454" }}>
+                  Cet article n'est pas marqué comme <b>louable</b>. Pour activer la location, édite l'article et coche la case "Louable" puis renseigne les tarifs ci-dessous.
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+                <LocCard label="Par jour" amount={article.prix_location_jour} period="/jour" color="#5aa05a" icon="ti-sun" defaultUnit={article.facturation_location === "jour"} />
+                <LocCard label="Par semaine" amount={article.prix_location_semaine} period="/semaine" color="#185FA5" icon="ti-calendar" defaultUnit={article.facturation_location === "semaine"} />
+                <LocCard label="Par mois" amount={article.prix_location_mois} period="/mois" color="#7a6fb0" icon="ti-calendar-month" defaultUnit={article.facturation_location === "mois"} />
+                <LocCard label="Par trimestre" amount={article.prix_location_trimestre} period="/trim." color="#EF9F27" icon="ti-calendar-stats" defaultUnit={article.facturation_location === "trimestre"} />
+              </div>
+            )}
+            <p style={{ margin: "14px 0 0", fontSize: 11.5, color: "#8a98a8", lineHeight: 1.5 }}>
+              Les locations en cours sont visibles sur la fiche du matériel concerné (onglet "Mouvements"). Pour configurer ces tarifs, édite l'article via le bouton <b>Éditer</b> en haut de la page.
+            </p>
+          </Panel>
+        )}
+
+        {/* 0.58.72 — Tab : Fournisseurs */}
+        {activeTab === "fournisseurs" && (
+          <Panel style={{ padding: 0, overflow: "hidden" }}>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid #e3e9ee", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: 14, color: "#142131" }}>
+                <i className="ti ti-building-warehouse" /> Fournisseurs ({fournisseurs.length})
+              </h3>
+              <Btn variant="primary" icon="ti-plus" onClick={() => router.push(`/articles?edit=${id}&tab=fournisseurs`)}>Ajouter</Btn>
+            </div>
+            {fournisseurs.length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+                <i className="ti ti-building-warehouse" style={{ fontSize: 36, opacity: 0.5 }} /><br />
+                <div style={{ marginTop: 10, fontSize: 13 }}>Aucun fournisseur enregistré.</div>
+                <div style={{ fontSize: 11, marginTop: 4 }}>Active le SQL 0.58.72 et ajoute des fournisseurs avec prix d'achat différents.</div>
+              </div>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+                <thead>
+                  <tr style={{ background: "#fafbfc", borderBottom: "2px solid #e3e9ee" }}>
+                    <th style={{ padding: "9px 10px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Fournisseur</th>
+                    <th style={{ padding: "9px 10px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Type</th>
+                    <th style={{ padding: "9px 10px", textAlign: "right", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Prix HT</th>
+                    <th style={{ padding: "9px 10px", textAlign: "right", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Remise</th>
+                    <th style={{ padding: "9px 10px", textAlign: "center", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Délai</th>
+                    <th style={{ padding: "9px 10px", textAlign: "center", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Priorité</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fournisseurs.map(f => (
+                    <tr key={f.id} style={{ borderBottom: "1px solid #f0f3f6", background: f.est_prioritaire ? "rgba(255,215,0,.05)" : undefined }}>
+                      <td style={{ padding: "9px 10px" }}>
+                        <div style={{ fontWeight: 600, color: "#142131" }}>{f.reference_fournisseur || "—"}</div>
+                        <div style={{ fontSize: 11, color: "#5a6878" }}>{f.notes}</div>
+                      </td>
+                      <td style={{ padding: "9px 10px" }}>
+                        <span style={{ padding: "2px 7px", borderRadius: 4, fontSize: 10.5, fontWeight: 700, background: f.fournisseur_type === "pharmacie" ? "rgba(124,200,200,.18)" : "rgba(122,111,176,.18)", color: f.fournisseur_type === "pharmacie" ? "#1c5454" : "#5a4a90" }}>
+                          {f.fournisseur_type}
+                        </span>
+                      </td>
+                      <td style={{ padding: "9px 10px", textAlign: "right", fontFamily: "Consolas, monospace", fontWeight: 700, color: "#142131" }}>{f.prix_achat_ht ? fmtEur(f.prix_achat_ht) : "—"}</td>
+                      <td style={{ padding: "9px 10px", textAlign: "right", color: "#5aa05a", fontWeight: 700 }}>{f.remise_pct ? `-${f.remise_pct}%` : "—"}</td>
+                      <td style={{ padding: "9px 10px", textAlign: "center", fontSize: 11.5 }}>{f.delai_livraison_jours ? `${f.delai_livraison_jours}j` : "—"}</td>
+                      <td style={{ padding: "9px 10px", textAlign: "center" }}>
+                        {f.est_prioritaire ? <span style={{ fontSize: 16 }} title="Fournisseur prioritaire">⭐</span> : ""}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </Panel>
+        )}
+
+        {/* 0.58.72 — Tab : Tags */}
+        {activeTab === "tags" && (
+          <Panel>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h3 style={{ margin: 0, fontSize: 14, color: "#142131" }}>
+                <i className="ti ti-tag" /> Tags ({articleTags.length})
+              </h3>
+              <Btn variant="ghost" icon="ti-settings" onClick={() => router.push("/parametres/tags-article")}>Gérer les tags</Btn>
+            </div>
+            {articleTags.length === 0 ? (
+              <div style={{ padding: 20, textAlign: "center", color: "#8a98a8" }}>
+                <p style={{ fontSize: 13 }}>Aucun tag associé. Les tags permettent d'appliquer des règles de prix automatiques.</p>
+                {allTags.length > 0 && (
+                  <div style={{ marginTop: 14 }}>
+                    <p style={{ fontSize: 11.5, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>Tags disponibles :</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center" }}>
+                      {allTags.map(t => (
+                        <span key={t.id} style={{ padding: "4px 10px", borderRadius: 14, fontSize: 11.5, fontWeight: 600, background: (t.couleur || "#7a6fb0") + "22", color: t.couleur || "#7a6fb0", border: `1px solid ${(t.couleur || "#7a6fb0")}40` }}>
+                          <i className={`ti ${t.icone || "ti-tag"}`} style={{ marginRight: 4 }} />{t.libelle}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+                {articleTags.map(t => (
+                  <div key={t.id} style={{ padding: "10px 14px", borderRadius: 10, border: `2px solid ${(t.couleur || "#7a6fb0")}40`, background: (t.couleur || "#7a6fb0") + "10" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <i className={`ti ${t.icone || "ti-tag"}`} style={{ color: t.couleur || "#7a6fb0", fontSize: 18 }} />
+                      <span style={{ fontSize: 14, fontWeight: 700, color: t.couleur || "#7a6fb0" }}>{t.libelle}</span>
+                    </div>
+                    {t.description && <div style={{ fontSize: 11, color: "#5a6878", marginBottom: 6 }}>{t.description}</div>}
+                    {(t.surcharge_prix_vente_pct || t.prix_vente_fixe) && (
+                      <div style={{ fontSize: 11, color: "#142131", fontFamily: "Consolas, monospace", padding: "4px 8px", background: "rgba(255,255,255,.6)", borderRadius: 4 }}>
+                        {t.prix_vente_fixe ? `Prix fixe vente : ${fmtEur(t.prix_vente_fixe)}` : `Surcharge vente : ${t.surcharge_prix_vente_pct > 0 ? "+" : ""}${t.surcharge_prix_vente_pct}%`}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        )}
+
         {/* Tab : Compta */}
         {activeTab === "compta" && (
           <Panel>
@@ -563,6 +732,24 @@ function ComptaField({ label, inherited, override }) {
           (hérité : {inherited})
         </div>
       )}
+    </div>
+  );
+}
+
+// 0.58.72 - Carte tarif location
+function LocCard({ label, amount, period, color, icon, defaultUnit }) {
+  return (
+    <div style={{ padding: "12px 14px", border: `1px solid ${color}30`, borderRadius: 10, borderLeft: `4px solid ${color}`, background: `${color}08`, position: "relative" }}>
+      {defaultUnit && (
+        <span style={{ position: "absolute", top: 6, right: 8, padding: "1px 6px", borderRadius: 3, fontSize: 9, fontWeight: 700, background: color, color: "#fff", textTransform: "uppercase", letterSpacing: 0.5 }}>défaut</span>
+      )}
+      <div style={{ fontSize: 11, color, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}>
+        <i className={`ti ${icon}`} /> {label}
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: amount ? "#142131" : "#cfd8e0", fontFamily: "Consolas, monospace" }}>
+        {amount ? `${parseFloat(amount).toFixed(2)} €` : "—"}
+        {amount && <span style={{ fontSize: 11, color: "#5a6878", fontWeight: 500, marginLeft: 4 }}>{period}</span>}
+      </div>
     </div>
   );
 }

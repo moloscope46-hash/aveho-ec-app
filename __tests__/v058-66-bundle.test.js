@@ -81,7 +81,8 @@ describe("0.58.66 - Filtres avancés Vue Tuiles changelog (combiner tri + tag)",
   const src = fs.readFileSync(path.resolve(process.cwd(), "app/changelog/page.js"), "utf-8");
 
   it("Récap visuel avec chips pour chaque filtre actif", () => {
-    expect(src).toMatch(/Récap visuel des filtres actifs combinés/);
+    // 0.58.73 : le commentaire est en minuscule "récap visuel" (pas "Récap")
+    expect(src).toMatch(/récap visuel des filtres actifs combinés/i);
   });
 
   it("Chips removables : filter / search / themes individuels", () => {

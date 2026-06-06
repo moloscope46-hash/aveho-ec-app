@@ -9,6 +9,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { createClient } from "../../../lib/supabase";
+import BackButton from "../../components/BackButton";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
@@ -228,6 +229,7 @@ export default function ParametresCompta() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
+        <div style={{ marginBottom: 8 }}><BackButton /></div>
         <PageHead small title="Paramétrage Comptabilité" sub="TVA et comptes comptables de ton organisation" />
 
         {/* Tabs (extensible — on commence par TVA, on pourra ajouter d'autres modules après) */}

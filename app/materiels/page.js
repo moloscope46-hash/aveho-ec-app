@@ -2,6 +2,7 @@
 // Page Materiels — Matériel médical : série, parc, lot, état, dépôt, zone (CRUD)
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
+import { selectChambresContexte } from "../../lib/chambres";
 import { useAuth } from "../../lib/useAuth";
 // 0.58.40 : hook réutilisable pour le contexte bât/svc (introduit 0.58.39)
 import { useCurrentContext } from "../../lib/useCurrentContext";
@@ -9,7 +10,9 @@ import { useCurrentContext } from "../../lib/useCurrentContext";
 import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
+import { useRouter } from "next/navigation";
 import { PageHead, Statut, Modal, Btn } from "../ui";
+import { getEtatMeta } from "../materiel/[id]/page";
 import { PageHero } from "../components/ui-premium";
 // 0.58.4 : KpiRow remplacé par les stats inline dans PageHero
 import Crud from "../crud";
@@ -19,6 +22,7 @@ import { logger } from "../../lib/logger";
 export default function Materiels() {
   const supabase = createClient();
   const auth = useAuth();
+  const router = useRouter();
   const cart = useCart();
   const [rel, setRel] = useState({ article_id: [], patient_id: [] });
   const [relReady, setRelReady] = useState(false);
@@ -41,10 +45,10 @@ export default function Materiels() {
     (async () => {
       try {
         // Chambres du contexte → patient_ids assignés
-        let query = supabase.from("chambres").select("id, service_id, batiment_id");
-        if (ctx.serviceId) query = query.eq("service_id", ctx.serviceId);
-        else if (ctx.batimentId) query = query.eq("batiment_id", ctx.batimentId);
-        const { data: chambres } = await query;
+        // 0.58.70 : helper avec fallback batiment_id absent
+        const { data: chambres } = await selectChambresContexte(supabase, {
+          serviceId: ctx.serviceId, batimentId: ctx.batimentId,
+        });
         if (!alive || !chambres) return;
         const chambreIds = chambres.map(c => c.id);
         if (chambreIds.length === 0) { setCtxPatientIds(new Set()); return; }
@@ -173,8 +177,24 @@ export default function Materiels() {
             { label: "Affectés", value: items.filter((m) => m.patient_id).length },
           ]}
         />
-        {/* 0.55.11 (AI) : Export CSV matériels */}
+        {/* 0.55.11 (AI) : Export CSV matériels + 0.58.71 : bouton Scanner matériel */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 8, alignItems: "center" }}>
+          {/* 0.58.71 : raccourci scanner matériel */}
+          <button
+            onClick={() => router.push("/scan/materiel")}
+            title="Scanner un code GS1/UDI pour identifier un matériel"
+            style={{
+              background: "linear-gradient(135deg, #5e4a8c, #4a3a70)",
+              color: "#fff", border: "none",
+              padding: "6px 13px", borderRadius: 8,
+              fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+              fontFamily: "inherit",
+              display: "inline-flex", alignItems: "center", gap: 5,
+              boxShadow: "0 3px 10px rgba(94,74,140,.25)",
+            }}
+          >
+            <i className="ti ti-scan" /> Scanner matériel
+          </button>
           {/* 0.58.40 : toggle filtre par contexte bât/svc (apparait si contexte défini) */}
           {(ctx.batimentId || ctx.serviceId) && (
             <button
@@ -260,7 +280,34 @@ export default function Materiels() {
             { key: "num_parc", label: "N° parc" },
             { key: "num_lot", label: "N° lot" },
             { key: "patient_id", label: "Patient", render: (r) => patLabel[r.patient_id] || "—" },
-            { key: "etat", label: "État", render: (r) => <Statut value={r.etat} /> },
+            { key: "etat", label: "État", render: (r) => {
+              // 0.58.71 : badge état coloré + indicateur immobilisation
+              const etatMeta = getEtatMeta(r.etat);
+              return (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{
+                    padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 700,
+                    background: etatMeta.tint, color: etatMeta.color,
+                    border: `1px solid ${etatMeta.color}40`,
+                    display: "inline-flex", alignItems: "center", gap: 3,
+                  }}>
+                    <i className={`ti ${etatMeta.icon}`} style={{ fontSize: 10 }} /> {r.etat || "—"}
+                  </span>
+                  {r.immobilisation_active && (
+                    <span title="Immobilisé comptablement" style={{
+                      padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700,
+                      background: "rgba(94,74,140,.18)", color: "#5e4a8c",
+                    }}>📊 IMMO</span>
+                  )}
+                  {r.udi_di && (
+                    <span title={`UDI: ${r.udi_di}`} style={{
+                      padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700,
+                      background: "rgba(94,74,140,.12)", color: "#5e4a8c",
+                    }}>🔖</span>
+                  )}
+                </span>
+              );
+            } },
           ]}
           fields={[
             { key: "libelle", label: "Libellé matériel", required: true },

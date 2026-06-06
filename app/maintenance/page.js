@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
+import { selectChambresContexte } from "../../lib/chambres";
 import { useAuth } from "../../lib/useAuth";
 // 0.58.42 : filtre par contexte bâtiment/service (hook réutilisable depuis 0.58.39)
 import { useCurrentContext } from "../../lib/useCurrentContext";
@@ -137,10 +138,10 @@ export default function MaintenancePage() {
     (async () => {
       try {
         // Chambres du contexte → patient_ids → matériel_ids assignés à ces patients
-        let chq = supabase.from("chambres").select("id, service_id, batiment_id");
-        if (ctx.serviceId) chq = chq.eq("service_id", ctx.serviceId);
-        else if (ctx.batimentId) chq = chq.eq("batiment_id", ctx.batimentId);
-        const { data: chambres } = await chq;
+        // 0.58.70 : helper avec fallback batiment_id absent
+        const { data: chambres } = await selectChambresContexte(supabase, {
+          serviceId: ctx.serviceId, batimentId: ctx.batimentId,
+        });
         if (!alive || !chambres) return;
         const chambreIds = chambres.map(c => c.id);
         if (chambreIds.length === 0) { setCtxMaterielIds(new Set()); return; }

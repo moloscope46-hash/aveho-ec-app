@@ -1,0 +1,299 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.72 — Bundle articles + QR matériel + fix édition + caméra</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,'Segoe UI',sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #2a1f4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1080px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 12px rgba(124,200,200,0)}}
+@keyframes blob{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(40px,-30px)scale(1.08)}}
+@keyframes meteor{0%{opacity:0;transform:translateX(-150px) rotate(25deg)}5%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(120vw) rotate(25deg)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.45;animation:blob 18s ease-in-out infinite}
+.bg-blob.violet{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(94,74,140,.65) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+.bg-meteor{position:absolute;top:25%;width:100px;height:3px;background:linear-gradient(90deg,transparent,rgba(255,170,80,.9),rgba(255,69,0,.95),transparent);border-radius:2px;filter:blur(.5px);box-shadow:0 0 12px 2px rgba(255,140,40,.5);animation:meteor 7s linear infinite;animation-delay:1s}
+.bg-meteor.b{top:60%;animation-delay:5s;animation-duration:9s}
+
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,74,140,.30));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.30);box-shadow:0 30px 80px rgba(20,33,49,.50);overflow:hidden}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.25}
+h1 small{font-size:14px;font-weight:500;color:#a5cce0;display:block;margin-top:8px;opacity:.95}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#a5cce0}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5e4a8c,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.violet{border-left:4px solid #7a6fb0;background:linear-gradient(135deg,rgba(122,111,176,.12),rgba(20,33,49,.6))}
+.panel.bug{border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.12),rgba(20,33,49,.6))}
+.panel.ok{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.teal{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(20,33,49,.6))}
+.panel.amber{border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* Action card demo */
+.actions-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.action-card{padding:14px;border-radius:10px;display:flex;gap:10px;align-items:flex-start;border:2px solid}
+.action-card .ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.action-card .title{font-size:13px;font-weight:700;color:#fff;margin-bottom:2px}
+.action-card .desc{font-size:11px;color:#a5cce0;line-height:1.4}
+.ac-di{border-color:#e35d5b40;background:linear-gradient(135deg,rgba(227,93,91,.10),transparent)}
+.ac-di .ico{background:rgba(227,93,91,.20);color:#e35d5b}
+.ac-loc{border-color:#EF9F2740;background:linear-gradient(135deg,rgba(239,159,39,.10),transparent);opacity:.5}
+.ac-loc .ico{background:rgba(239,159,39,.20);color:#EF9F27}
+.ac-ech{border-color:#7CC8C840;background:linear-gradient(135deg,rgba(124,200,200,.10),transparent)}
+.ac-ech .ico{background:rgba(124,200,200,.20);color:#7CC8C8}
+.ac-reb{border-color:#7f1d1d40;background:linear-gradient(135deg,rgba(127,29,29,.10),transparent)}
+.ac-reb .ico{background:rgba(127,29,29,.20);color:#7f1d1d}
+
+/* Loc cards */
+.loc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.loc-card{padding:12px;border-radius:10px;background:rgba(255,255,255,.04);position:relative;border-left:4px solid}
+.loc-card .lbl{font-size:10px;color:inherit;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:4px}
+.loc-card .amt{font-size:18px;font-weight:700;color:#fff;font-family:Consolas,monospace}
+.loc-card .per{font-size:10px;color:#a5cce0;font-weight:500}
+.loc-card.j{border-color:#5aa05a;color:#5aa05a}
+.loc-card.s{border-color:#185FA5;color:#185FA5}
+.loc-card.m{border-color:#7a6fb0;color:#7a6fb0}
+.loc-card.t{border-color:#EF9F27;color:#EF9F27}
+.loc-card .default-badge{position:absolute;top:4px;right:6px;font-size:8px;padding:1px 5px;border-radius:3px;background:#5aa05a;color:#fff;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+
+/* Fournisseurs demo */
+.four-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:10px;background:rgba(255,255,255,.03);border-radius:8px;overflow:hidden}
+.four-tbl th{padding:8px 10px;text-align:left;background:rgba(255,255,255,.06);color:#a5cce0;text-transform:uppercase;letter-spacing:.5px;font-size:10px;font-weight:700}
+.four-tbl td{padding:8px 10px;color:#fff;border-top:1px solid rgba(124,200,200,.08)}
+.four-tbl tr.prioritaire{background:rgba(255,215,0,.08)}
+.badge-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge-pharma{background:rgba(124,200,200,.20);color:#7CC8C8}
+.badge-partenaire{background:rgba(122,111,176,.20);color:#7a6fb0}
+
+/* QR demo */
+.qr-card{display:inline-block;text-align:center;padding:18px;border:3px dashed #7CC8C8;border-radius:14px;background:#fff;color:#142131}
+.qr-card img{display:block;margin:0 auto;border:2px solid #142131;border-radius:6px}
+.qr-card .qr-title{font-size:14px;font-weight:700;color:#142131;margin-top:10px}
+.qr-card .qr-sub{font-size:11px;color:#5a6878;font-family:Consolas,monospace}
+.qr-card .qr-foot{font-size:9.5px;color:#8a98a8;margin-top:6px;text-transform:uppercase;letter-spacing:1px}
+
+/* BackButton variants demo */
+.bb-row{display:flex;gap:14px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.bb-demo{display:inline-flex;align-items:center;gap:5px;font-family:Quicksand,sans-serif;font-weight:600;cursor:pointer;padding:6px 12px;border-radius:6px}
+.bb-ghost{background:transparent;color:#185FA5;border:1px solid transparent;font-size:12.5px}
+.bb-filled{background:linear-gradient(135deg,#185FA5,#142131);color:#fff;border:none;font-size:13px;padding:8px 16px;border-radius:8px;font-weight:700;box-shadow:0 3px 10px rgba(24,95,165,.30)}
+.bb-inline{background:transparent;color:#185FA5;border:none;font-size:12px;font-weight:500;text-decoration:underline;padding:2px 0}
+
+/* Camera cascade flow */
+.cascade{background:rgba(255,255,255,.03);border-radius:10px;padding:14px;margin:12px 0}
+.cascade-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:12px;color:#a5cce0}
+.cascade-row .step{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:rgba(124,200,200,.20);color:#7CC8C8;font-weight:700;font-size:11px;flex-shrink:0}
+.cascade-row .arrow{color:#5a6878;font-size:14px}
+.cascade-row b{color:#fff}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#a5cce0;text-align:center}
+footer .pre-deploy{background:#050a14;color:#bfe6e6;padding:14px 16px;border-radius:10px;text-align:left;font-family:Consolas,monospace;font-size:11.5px;max-width:760px;margin:14px auto;line-height:1.7}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob violet"></div>
+  <div class="bg-blob teal"></div>
+  <div class="bg-meteor"></div>
+  <div class="bg-meteor b"></div>
+</div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>RELEASE 0.58.72 · BUNDLE ARTICLES + QR + FIXES</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🐛 Fix édition article + caméra + 🎯 QR matériel imprimable + Bundle articles avancé<small>Helpers sondes article · bouton activation caméra · BackButton partout · QR scan → popup 4 actions · Tags / Fournisseurs / Location / LPP</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.72-alpha</code></span>
+    <span><b>Sévérité :</b> Mixte 🚨🚀</span>
+    <span><b>SQL :</b> <code>migration-0.58.72-articles-tags-fournisseurs-lpp.sql</code></span>
+  </div>
+</header>
+
+<h2>🚨 2 hotfix critiques + UX boutons retour</h2>
+
+<div class="panel bug">
+  <p style="margin:0 0 10px;font-size:13px"><b>1. Édition fiche article cassée</b> — l'UPDATE échouait silencieusement avec 400 car le payload contenait des colonnes du SQL 0.58.67 non appliqué. Nouveau <code>lib/articles.js</code> avec <b>8 sondes</b> (tvaTauxId, codesProduits, gereLotSerie, fournisseur, classifications, comptaOverride, location, marge) + cache module-level + <code>safeSaveArticle()</code> qui strip auto les colonnes absentes.</p>
+  <p style="margin:0 0 10px;font-size:13px"><b>2. Caméra noire au scan</b> — autoplay policy du navigateur bloquait le démarrage automatique. Nouveau bouton <b>'Activer la caméra'</b> explicite (status <code>waiting_start</code>) + diagnostic d'erreur étendu (permission/notfound/https) + messages clairs par navigateur + bouton 'Réessayer'.</p>
+  <p style="margin:0;font-size:13px"><b>3. Boutons retour</b> — composant <code>&lt;BackButton /&gt;</code> avec 3 variants (ghost / filled / inline), <code>router.back()</code> par défaut, intégré dans 7 pages clés.</p>
+</div>
+
+<h3 style="color:#fff;margin-top:20px;font-size:14px;text-transform:uppercase;letter-spacing:1px">BackButton — 3 variants</h3>
+<div class="bb-row">
+  <button class="bb-demo bb-ghost">← Retour</button>
+  <button class="bb-demo bb-filled">← Retour</button>
+  <button class="bb-demo bb-inline">← Retour</button>
+</div>
+
+<h3 style="color:#fff;margin-top:20px;font-size:14px;text-transform:uppercase;letter-spacing:1px">Cascade caméra (anti-noir)</h3>
+<div class="cascade">
+  <div class="cascade-row"><span class="step">1</span> Mount composant → <b>status=waiting_start</b> <span class="arrow">→</span> overlay avec bouton "Activer la caméra"</div>
+  <div class="cascade-row"><span class="step">2</span> Clic user → <b>userStarted=true</b> <span class="arrow">→</span> useEffect déclenche init() dans contexte d'un geste user</div>
+  <div class="cascade-row"><span class="step">3a</span> ✅ Caméra OK → <b>status=scanning</b></div>
+  <div class="cascade-row"><span class="step">3b</span> ❌ Permission refusée → <b>status=denied</b> → message clair avec instructions navigateur</div>
+  <div class="cascade-row"><span class="step">3c</span> ❌ Pas de caméra → <b>status=error</b> → suggère scan image</div>
+  <div class="cascade-row"><span class="step">3d</span> ❌ HTTPS requis → <b>status=error</b> → message dédié</div>
+</div>
+
+<h2>🎯 QR code matériel imprimable + popup 4 actions</h2>
+
+<p style="font-size:13px;color:#a5cce0;margin:0 0 14px">Génère un QR collable sur chaque matériel. Le scan ouvre <code>/scan/quick?m=ID</code> avec popup d'actions rapides.</p>
+
+<div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin:14px 0">
+  <div class="qr-card">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https%3A%2F%2Faveho-ec-app.vercel.app%2Fscan%2Fquick%3Fm%3DEXEMPLE&bgcolor=ffffff&color=142131&margin=10&qzone=2" alt="QR demo" width="180" height="180"/>
+    <div class="qr-title">Pompe à perfusion BodyGuard 323</div>
+    <div class="qr-sub">S/N 4523-XJ</div>
+    <div class="qr-sub">Lot LP2024-A</div>
+    <div class="qr-foot">Aveho — Scan pour DI / retour / échange / rebut</div>
+  </div>
+  <div style="flex:1;min-width:280px">
+    <h3 style="color:#fff;margin:0 0 10px;font-size:14px">4 actions disponibles après scan</h3>
+    <div class="actions-grid">
+      <div class="action-card ac-di">
+        <div class="ico"><i class="ti ti-bug"></i>🔧</div>
+        <div><div class="title">Demande d'intervention</div><div class="desc">Signaler un problème, panne, maintenance</div></div>
+      </div>
+      <div class="action-card ac-loc">
+        <div class="ico">📦</div>
+        <div><div class="title">Retour location</div><div class="desc">Aucune location active (disabled si pas de loc en cours)</div></div>
+      </div>
+      <div class="action-card ac-ech">
+        <div class="ico">🔄</div>
+        <div><div class="title">Échange</div><div class="desc">Échanger ce matériel — mise en quarantaine</div></div>
+      </div>
+      <div class="action-card ac-reb">
+        <div class="ico">🗑</div>
+        <div><div class="title">Mise au rebut</div><div class="desc">Matériel HS — mise au rebut définitive</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel teal">
+  <p style="margin:0;font-size:12.5px;color:#fff;line-height:1.6">
+    <b>Tables impliquées (toutes existent, fallback gracieux si absentes) :</b><br/>
+    🔧 DI → <code>interventions</code> (existe) avec <code>origine='scan_qr'</code><br/>
+    📦 Retour loc → <code>materiel_locations</code> statut='terminee' + <code>materiels.etat='Disponible'</code><br/>
+    🔄 Échange → <code>materiel_mouvements</code> type='transfert' + <code>materiels.etat='En quarantaine'</code><br/>
+    🗑 Rebut → <code>materiels.etat='Rebut'</code> + <code>date_rebut</code> auto (trigger PostgreSQL crée le mouvement)
+  </p>
+</div>
+
+<h2>📅 Prix location par période sur articles</h2>
+
+<div class="loc-grid">
+  <div class="loc-card j">
+    <div class="lbl"><i class="ti ti-sun"></i> Par jour</div>
+    <div class="amt">12,00 €<span class="per">/jour</span></div>
+  </div>
+  <div class="loc-card s">
+    <span class="default-badge">défaut</span>
+    <div class="lbl"><i class="ti ti-calendar"></i> Par semaine</div>
+    <div class="amt">65,00 €<span class="per">/semaine</span></div>
+  </div>
+  <div class="loc-card m">
+    <div class="lbl"><i class="ti ti-calendar-month"></i> Par mois</div>
+    <div class="amt">220,00 €<span class="per">/mois</span></div>
+  </div>
+  <div class="loc-card t">
+    <div class="lbl"><i class="ti ti-calendar-stats"></i> Par trimestre</div>
+    <div class="amt">580,00 €<span class="per">/trim.</span></div>
+  </div>
+</div>
+
+<p style="font-size:12px;color:#a5cce0;margin:8px 0 0">Colonnes <code>prix_location_jour/semaine/mois/trimestre</code> + <code>facturation_location</code> (période par défaut) + <code>louable</code> BOOLEAN. Onglet <b>Location</b> dans la fiche article affiche les 4 tarifs avec badge "défaut" sur la facturation principale.</p>
+
+<h2>🏭 Fournisseurs multi-sources avec prioritaire</h2>
+
+<div class="panel violet">
+  <p style="margin:0 0 6px;font-size:13px;color:#fff">Un article peut avoir <b>plusieurs fournisseurs</b> (pharmacies, partenaires, fournisseurs directs) avec des prix d'achat différents. Un seul peut être marqué <b>prioritaire</b> (contrainte UNIQUE garantie par index partial PostgreSQL).</p>
+  <table class="four-tbl">
+    <thead><tr><th>Fournisseur</th><th>Type</th><th>Prix HT</th><th>Remise</th><th>Délai</th><th>Priorité</th></tr></thead>
+    <tbody>
+      <tr class="prioritaire">
+        <td><b>Pharmacie Centrale Cahors</b><br/><span style="font-size:10px;color:#a5cce0">REF-AVH-001</span></td>
+        <td><span class="badge-tag badge-pharma">pharmacie</span></td>
+        <td><b>42,50 €</b></td>
+        <td style="color:#5aa05a;font-weight:700">-5%</td>
+        <td>3j</td>
+        <td style="text-align:center;font-size:18px">⭐</td>
+      </tr>
+      <tr>
+        <td><b>MediGroup Distribution</b><br/><span style="font-size:10px;color:#a5cce0">MG-2024-PERF-12</span></td>
+        <td><span class="badge-tag badge-partenaire">partenaire</span></td>
+        <td>45,80 €</td>
+        <td style="color:#5aa05a;font-weight:700">-2%</td>
+        <td>5j</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><b>Pharmacie de Saint-Céré</b></td>
+        <td><span class="badge-tag badge-pharma">pharmacie</span></td>
+        <td>48,00 €</td>
+        <td>—</td>
+        <td>1j</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="margin:10px 0 0;font-size:11.5px;color:#a5cce0">Index partiel SQL : <code>CREATE UNIQUE INDEX uq_art_four_priori ON article_fournisseurs(article_id) WHERE est_prioritaire = true;</code></p>
+</div>
+
+<h2>🏷️ Tags articles (comme matériels) + surcharges prix</h2>
+
+<div class="panel">
+  <p style="margin:0 0 10px;font-size:13px;color:#fff">Table <code>tags_article</code> parallèle à <code>tags_materiel</code>. Chaque tag peut surcharger les prix : <code>surcharge_prix_vente_pct</code> (+/-%), <code>prix_vente_fixe</code> (override absolu), <code>surcharge_prix_location_pct</code>, <code>prix_location_jour_fixe</code>, <code>prix_location_mois_fixe</code>.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+    <span style="padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600;background:rgba(124,200,200,.22);color:#7CC8C8;border:1px solid #7CC8C840">🌡 PPC</span>
+    <span style="padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600;background:rgba(239,159,39,.22);color:#EF9F27;border:1px solid #EF9F2740">💧 Perfusion</span>
+    <span style="padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600;background:rgba(122,111,176,.22);color:#7a6fb0;border:1px solid #7a6fb040">🦽 VPH</span>
+    <span style="padding:4px 10px;border-radius:14px;font-size:11.5px;font-weight:600;background:rgba(227,93,91,.22);color:#e35d5b;border:1px solid #e35d5b40">⚠ DM Classe III</span>
+  </div>
+  <p style="margin:8px 0 0;font-size:11.5px;color:#a5cce0">Page <code>/parametres/tags-article</code> à créer en 0.58.73 (CRUD complet, similaire à <code>/parametres/tags-materiel</code>).</p>
+</div>
+
+<h2>💊 Base LPP (codes LPPR officiels)</h2>
+
+<div class="panel amber">
+  <p style="margin:0 0 6px;font-size:13px;color:#fff">Table <code>lpp_codes</code> avec extension <code>pg_trgm</code> pour recherche fulltext rapide :</p>
+  <ul style="margin:8px 0 0;font-size:12.5px;color:#fff">
+    <li><code>code</code> PK · <code>libelle</code> · <code>classe</code> (I/II/III/IV) · <code>tarif_ref</code> · <code>prix_limite_vente</code> · <code>taux_remboursement</code></li>
+    <li><code>date_inscription</code> · <code>date_radiation</code> · <code>type_distribution</code> ('achat' | 'location')</li>
+    <li><code>donnees_brutes</code> JSONB pour stocker le payload complet de l'API</li>
+    <li>Index GIN trigram sur <code>libelle</code> pour autocomplete instantané</li>
+    <li>RLS publique en lecture (référentiel partagé inter-structure), écriture admin uniquement</li>
+  </ul>
+  <p style="margin:10px 0 0;font-size:11.5px;color:#a5cce0">⚠ <b>0.58.73 :</b> page admin <code>/admin/lpp-sync</code> qui télécharge le CSV LPPR officiel (data.gouv.fr ou ameli.fr) et upsert dans la table. Composant <code>LppAutocomplete</code> dans l'éditeur d'article qui reprend auto libellé/tarif/classe/taux remboursement.</p>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<footer>
+<div class="pre-deploy">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                    # ~5288 verts (+38 nouveaux)
+npm run build               # OK
+
+# Supabase SQL Editor — exécuter dans cet ordre :
+#   1. migration-0.58.57-pharmacies-depots-batiment.sql  (si pas fait — débloque 400 chambres)
+#   2. migration-0.58.67-articles-refonte-complete.sql   (si pas fait — débloque 400 materiels.article_id + édition article)
+#   3. migration-0.58.71-materiels-extension.sql         (UDI + immobilisation + materiel_mouvements + trigger)
+#   4. migration-0.58.72-articles-tags-fournisseurs-lpp.sql (NOUVEAU — prix loc + tags + fournisseurs + LPP + locations)
+
+git add -A
+git commit -m "0.58.72 - Fix édition article + caméra noire + BackButton + QR matériel + bundle articles avancé"
+git push origin main
+
+# Après déploiement : Ctrl+F5 (vider cache SW)
+# L'app fonctionne MÊME sans les SQL appliqués (fallback gracieux), mais features UDI/tags/fournisseurs/location disabled tant que SQL pending.</div>
+<div style="margin-top:18px">Aveho — Espace Collectivité · 0.58.72 · 6 juin 2026 · 🐛 FIX 📷 SCAN 🎯 QR 🏷️ TAGS 🏭 FOURNISSEURS 📅 LOCATION 💊 LPP</div>
+</footer>
+
+</div></body></html>

@@ -13,6 +13,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
+import { safeSaveArticle } from "../../lib/articles";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -219,15 +220,14 @@ export default function Articles() {
         image_url: form.image_url || null,
       };
       const userId = auth.user?.id;
-      if (modal?.id) {
-        const { error } = await safeUpdate(supabase, "articles", payload, { id: modal.id }, { userId });
-        if (error) throw error;
-        toast.success(`Article "${form.libelle}" mis à jour`);
-      } else {
-        const { error } = await safeInsert(supabase, "articles", payload, { userId });
-        if (error) throw error;
-        toast.success(`Article "${form.libelle}" créé`);
+      // 0.58.72 : utilisation du helper safeSaveArticle qui sonde les colonnes
+      // et strip automatiquement celles qui sont absentes (évite les 400)
+      const { error, caps, stripped } = await safeSaveArticle(supabase, payload, { id: modal?.id, userId });
+      if (error) throw error;
+      if (stripped && typeof console !== "undefined") {
+        console.warn("[articles] Certaines colonnes ont été ignorées (SQL pending) :", caps);
       }
+      toast.success(modal?.id ? `Article "${form.libelle}" mis à jour` : `Article "${form.libelle}" créé`);
       setModal(null);
       await loadAll();
     } catch (e) {

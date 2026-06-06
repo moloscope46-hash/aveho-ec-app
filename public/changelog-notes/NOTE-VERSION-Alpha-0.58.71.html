@@ -1,0 +1,218 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.71 — Bundle Matériel UDI/GS1/QR</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,'Segoe UI',sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #2a1f4a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1080px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 12px rgba(124,200,200,0)}}
+@keyframes blob{0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(40px,-30px)scale(1.08)}}
+@keyframes shoot{0%{opacity:0;transform:translateX(-100px) rotate(20deg)}5%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translateX(110vw) rotate(20deg)}}
+@keyframes meteor{0%{opacity:0;transform:translateX(-150px) rotate(25deg)}5%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(120vw) rotate(25deg)}}
+@keyframes orbit{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.45;animation:blob 18s ease-in-out infinite}
+.bg-blob.violet{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(94,74,140,.65) 0%,transparent 70%)}
+.bg-blob.teal{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(124,200,200,.45) 0%,transparent 70%);animation-delay:-6s}
+.bg-meteor{position:absolute;top:20%;width:100px;height:3px;background:linear-gradient(90deg,transparent,rgba(255,170,80,.9),rgba(255,69,0,.95),transparent);border-radius:2px;filter:blur(.5px);box-shadow:0 0 12px 2px rgba(255,140,40,.5);animation:meteor 7s linear infinite;animation-delay:2s}
+.bg-meteor.b{top:50%;animation-delay:8s;animation-duration:8s}
+.bg-shoot{position:absolute;top:35%;left:-50px;width:60px;height:2px;background:linear-gradient(90deg,transparent,#fff,transparent);transform:rotate(20deg);animation:shoot 4s linear infinite;animation-delay:3s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,74,140,.30));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.30);box-shadow:0 30px 80px rgba(20,33,49,.50);overflow:hidden}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff;line-height:1.25}
+h1 small{font-size:14px;font-weight:500;color:#a5cce0;display:block;margin-top:8px;opacity:.95}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#a5cce0}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5e4a8c,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.violet{border-left:4px solid #7a6fb0;background:linear-gradient(135deg,rgba(122,111,176,.12),rgba(20,33,49,.6))}
+.panel.bug{border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.12),rgba(20,33,49,.6))}
+.panel.ok{border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.12),rgba(20,33,49,.6))}
+.panel.teal{border-left:4px solid #7CC8C8;background:linear-gradient(135deg,rgba(124,200,200,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.14);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:11.5px;line-height:1.55}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* États grid demo */
+.etats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px}
+.etat-card{padding:8px 10px;border-radius:8px;text-align:center;font-size:11px;font-weight:700}
+.etat-card i{display:block;font-size:18px;margin-bottom:3px}
+.etat-1{background:rgba(90,160,90,.15);color:#5aa05a;border:1.5px solid #5aa05a}
+.etat-2{background:rgba(122,111,176,.15);color:#7a6fb0;border:1.5px solid #7a6fb0}
+.etat-3{background:rgba(239,159,39,.15);color:#EF9F27;border:1.5px solid #EF9F27}
+.etat-4{background:rgba(24,95,165,.15);color:#185FA5;border:1.5px solid #185FA5}
+.etat-5{background:rgba(124,200,200,.15);color:#7CC8C8;border:1.5px solid #7CC8C8}
+.etat-6{background:rgba(210,136,24,.18);color:#d28818;border:1.5px solid #d28818}
+.etat-7{background:rgba(94,74,140,.18);color:#5e4a8c;border:1.5px solid #5e4a8c}
+.etat-8{background:rgba(138,152,168,.15);color:#8a98a8;border:1.5px solid #8a98a8}
+.etat-9{background:rgba(227,93,91,.15);color:#e35d5b;border:1.5px solid #e35d5b}
+.etat-10{background:rgba(192,57,43,.15);color:#c0392b;border:1.5px solid #c0392b}
+.etat-11{background:rgba(192,57,43,.15);color:#c0392b;border:1.5px solid #c0392b}
+.etat-12{background:rgba(127,29,29,.15);color:#7f1d1d;border:1.5px solid #7f1d1d}
+
+/* UDI demo table */
+.udi-decode{width:100%;border-collapse:collapse;font-family:Consolas,monospace;font-size:11.5px}
+.udi-decode td{padding:6px 10px;border-bottom:1px solid rgba(124,200,200,.10)}
+.udi-decode td:first-child{color:#7CC8C8;width:90px;font-weight:600}
+.udi-decode td:nth-child(2){color:#a5cce0;width:130px}
+.udi-decode td:last-child{color:#fff;font-weight:700}
+
+.mvt-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:5px;font-size:10.5px;font-weight:700;font-family:Quicksand,sans-serif}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#a5cce0;text-align:center}
+footer .pre-deploy{background:#050a14;color:#bfe6e6;padding:14px 16px;border-radius:10px;text-align:left;font-family:Consolas,monospace;font-size:11.5px;max-width:760px;margin:14px auto;line-height:1.7}
+</style></head><body>
+
+<div class="bg-blobs">
+  <div class="bg-blob violet"></div>
+  <div class="bg-blob teal"></div>
+  <div class="bg-meteor"></div>
+  <div class="bg-meteor b"></div>
+  <div class="bg-shoot"></div>
+</div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>RELEASE 0.58.71 · BUNDLE MATÉRIEL UDI</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🔬 Tracabilité UDI complète + scanner GS1/QR + fiche matériel premium<small>Hotfix 400 materiels.article_id · QrScanner removeChild fix · 12 états logistique · table mouvements · galaxie home enrichie</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.71-alpha</code></span>
+    <span><b>Sévérité :</b> Mixte 🚨🚀</span>
+    <span><b>SQL :</b> <code>migration-0.58.71-materiels-extension.sql</code></span>
+  </div>
+</header>
+
+<h2>🚨 Hotfix : 400 materiels.article_id + QrScanner crash</h2>
+
+<div class="panel bug">
+  <p style="margin:0 0 10px;font-size:13px"><b>Symptômes :</b> 400 en boucle sur <code>materiels?...&article_id=eq.X</code> + crash React `removeChild` sur scanner caméra + `play() interrupted` AbortError + warning `qrbox 50px`. <b>Cause :</b> SQL 0.58.67 (colonne article_id sur materiels) non appliqué + html5-qrcode injectait des DOM enfants que React essayait de démonter.</p>
+  <p style="margin:0;font-size:13px"><b>Fix :</b> nouveau helper <code>lib/materiels.js</code> avec sondes article_id / UDI / immobilisation + cache module-level anti-boucle. Pour le scanner : <code>dangerouslySetInnerHTML={{__html:''}}</code> sur le container scanner pour que React ne touche plus à ses enfants.</p>
+</div>
+
+<h2>🔬 Tracabilité UDI complète (norme HAS / FDA)</h2>
+
+<p style="font-size:13px;color:#a5cce0;margin:0 0 14px">L'<b>UDI (Unique Device Identification)</b> est la norme HAS/FDA pour identifier de façon unique chaque dispositif médical. Le scanner décode automatiquement un GS1-128 ou DataMatrix UDI et alimente les champs.</p>
+
+<div class="panel">
+  <h3 style="margin:0 0 10px;font-size:13px;color:#7CC8C8;text-transform:uppercase">📥 Input scanné</h3>
+  <pre style="font-size:13px">(01)03400938000146(10)LOT2024A(21)SN001234(17)271231(11)240115</pre>
+  <h3 style="margin:14px 0 10px;font-size:13px;color:#7CC8C8;text-transform:uppercase">🔬 Décodage automatique</h3>
+  <table class="udi-decode">
+    <tr><td>(01)</td><td>GTIN</td><td>03400938000146</td></tr>
+    <tr><td>(10)</td><td>Lot</td><td>LOT2024A</td></tr>
+    <tr><td>(21)</td><td>Série</td><td>SN001234</td></tr>
+    <tr><td>(17)</td><td>Péremption</td><td>27/12/31</td></tr>
+    <tr><td>(11)</td><td>Fabrication</td><td>24/01/15</td></tr>
+  </table>
+  <h3 style="margin:14px 0 10px;font-size:13px;color:#7CC8C8;text-transform:uppercase">💾 Champs renseignés</h3>
+  <table class="udi-decode">
+    <tr><td>UDI-DI</td><td>Direct Identifier</td><td>3400938000146</td></tr>
+    <tr><td>UDI-PI</td><td>Production Identifier</td><td>(10)LOT2024A(21)SN001234(17)271231(11)240115</td></tr>
+    <tr><td>numero_lot</td><td></td><td>LOT2024A</td></tr>
+    <tr><td>numero_serie</td><td></td><td>SN001234</td></tr>
+    <tr><td>date_peremption</td><td></td><td>2027-12-31</td></tr>
+    <tr><td>qr_code</td><td>Brut conservé</td><td>(01)034009...</td></tr>
+  </table>
+</div>
+
+<h2>🎨 Fiche matériel premium — 6 onglets</h2>
+
+<div class="panel violet">
+  <p style="margin:0 0 14px;font-size:13px;color:#fff">Header personnalisé avec icône 96×96 dégradée selon l'état, breadcrumb, badges UDI/IMMO/patient/dépôt/DM, card état avec bouton edit, boutons Scanner+Voir article.</p>
+  <p style="margin:0 0 8px;font-size:11.5px;color:#a5cce0;text-transform:uppercase;letter-spacing:1px"><b>6 onglets :</b></p>
+  <ul style="font-size:13px;color:#fff;margin:0">
+    <li><b>Vue d'ensemble</b> — identifiants (SN, lot, ref, UDI-DI, code-barres) + affectations (article, patient, chambre, dépôt, zone, péremption)</li>
+    <li><b>Tracabilité UDI</b> — DI/PI + SVG EAN13 du GTIN + QR brut scanné + explications réglementaires</li>
+    <li><b>Mouvements</b> — table materiel_mouvements ventilée (8 types : entrée/sortie/transfert/SAV envoi/retour/rebut/réaffectation/changement état)</li>
+    <li><b>État & SAV</b> — état actuel coloré + cycle de vie (acquisition→mise en service→péremption→rebut) + motif rebut</li>
+    <li><b>Historique opérationnel</b> — maintenances + DI + transferts (ex-page)</li>
+    <li><b>Immobilisation</b> — valeur, durée, méthode (linéaire/dégressif), compte comptable classe 2</li>
+  </ul>
+</div>
+
+<h2>📊 12 états logistique — Modal grille colorée</h2>
+
+<div class="panel">
+  <div class="etats-grid">
+    <div class="etat-card etat-1"><i class="ti ti-check"></i>Disponible</div>
+    <div class="etat-card etat-2"><i class="ti ti-user"></i>En patient</div>
+    <div class="etat-card etat-3"><i class="ti ti-package"></i>En dépôt</div>
+    <div class="etat-card etat-4"><i class="ti ti-tools"></i>En SAV</div>
+    <div class="etat-card etat-5"><i class="ti ti-arrows-right"></i>En transfert</div>
+    <div class="etat-card etat-6"><i class="ti ti-alert-triangle"></i>Quarantaine</div>
+    <div class="etat-card etat-7"><i class="ti ti-lock"></i>Immobilisé</div>
+    <div class="etat-card etat-8"><i class="ti ti-archive"></i>Réformé</div>
+    <div class="etat-card etat-9"><i class="ti ti-trash"></i>Rebut</div>
+    <div class="etat-card etat-10"><i class="ti ti-question-mark"></i>Perdu</div>
+    <div class="etat-card etat-11"><i class="ti ti-shield-x"></i>Volé</div>
+    <div class="etat-card etat-12"><i class="ti ti-flame"></i>Détruit</div>
+  </div>
+  <p style="margin:14px 0 0;font-size:12px;color:#a5cce0">Chaque changement d'état est automatiquement tracé dans <code>materiel_mouvements</code> via trigger PostgreSQL.</p>
+</div>
+
+<h2>🔄 Table `materiel_mouvements` + trigger PostgreSQL</h2>
+
+<div class="panel teal">
+  <p style="margin:0 0 12px;font-size:13px;color:#fff">Trigger SQL <code>track_materiel_changes()</code> AFTER UPDATE qui auto-insère un mouvement à chaque modification d'état/patient/dépôt — <b>aucun code applicatif à écrire</b>, c'est garanti côté base.</p>
+  <div style="margin:10px 0">
+    <span class="mvt-badge" style="background:rgba(90,160,90,.22);color:#5aa05a">↓ ENTRÉE</span>
+    <span class="mvt-badge" style="background:rgba(227,93,91,.22);color:#e35d5b">↑ SORTIE</span>
+    <span class="mvt-badge" style="background:rgba(124,200,200,.22);color:#7CC8C8">↔ TRANSFERT</span>
+    <span class="mvt-badge" style="background:rgba(24,95,165,.22);color:#185FA5">🔧 SAV ENVOI</span>
+    <span class="mvt-badge" style="background:rgba(90,160,90,.22);color:#5aa05a">🔧 SAV RETOUR</span>
+    <span class="mvt-badge" style="background:rgba(227,93,91,.22);color:#e35d5b">🗑 REBUT</span>
+    <span class="mvt-badge" style="background:rgba(122,111,176,.22);color:#7a6fb0">👤 RÉAFFECTATION</span>
+    <span class="mvt-badge" style="background:rgba(239,159,39,.22);color:#EF9F27">✏ CHGT ÉTAT</span>
+  </div>
+  <pre style="font-size:11.5px">CREATE OR REPLACE FUNCTION track_materiel_changes()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (NEW.etat IS DISTINCT FROM OLD.etat) THEN
+    INSERT INTO materiel_mouvements (structure_id, etablissement_id, materiel_id, type,
+      etat_avant, etat_apres, source)
+    VALUES (NEW.structure_id, NEW.etablissement_id, NEW.id, 'changement_etat',
+      OLD.etat, NEW.etat, 'systeme');
+  END IF;
+  -- + réaffectation patient + changement dépôt
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;</pre>
+</div>
+
+<h2>🌌 Galaxie home enrichie</h2>
+
+<div class="panel">
+  <ul style="font-size:13px;color:#fff;margin:0">
+    <li><b>4 météorites enflammées</b> avec boule de feu (radial-gradient blanc→orange→rouge) + traînée 140px (linear-gradient orange) + box-shadow halo. Traversent en diagonale à différentes hauteurs/angles via keyframe `av-meteor-fall`</li>
+    <li><b>Anneau d'astéroïdes</b> 360×360 dashed avec 14 astéroïdes (5 couleurs palette terre/ocre) en rotation 120s `av-asteroid-ring`</li>
+    <li><b>Aucun JS animation frame</b> — pure CSS keyframes pour rester ultra-perf (60fps même en background)</li>
+  </ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<footer>
+<div class="pre-deploy">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                    # ~5250 verts (+38 nouveaux)
+npm run build               # OK
+
+# Supabase SQL Editor — exécuter dans cet ordre :
+#   1. migration-0.58.57-pharmacies-depots-batiment.sql  (si pas fait — débloque le 400 chambres)
+#   2. migration-0.58.67-articles-refonte-complete.sql   (si pas fait — débloque le 400 materiels.article_id)
+#   3. migration-0.58.71-materiels-extension.sql         (NOUVEAU — UDI + immobilisation + materiel_mouvements + trigger)
+
+git add -A
+git commit -m "0.58.71 - Bundle matériel UDI/GS1/QR + fiche premium + scan + galaxies + hotfix 400 materiels + QrScanner removeChild"
+git push origin main
+
+# Après déploiement : Ctrl+F5 (vider cache SW)
+# L'app fonctionne MÊME sans les SQL appliqués (fallback gracieux), mais les features UDI/immo sont disabled tant que SQL 0.58.71 absent.</div>
+<div style="margin-top:18px">Aveho — Espace Collectivité · 0.58.71 · 6 juin 2026 · 🔬 UDI 📷 SCAN 📊 12 ÉTATS 🌌 GALAXIES</div>
+</footer>
+
+</div></body></html>

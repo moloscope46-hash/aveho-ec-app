@@ -124,7 +124,9 @@ describe("0.58.69 - Fiche article dédiée /article/[id]", () => {
 
   it("Chargement parallèle TVA + pharmacie + partenaire + matériels + mouvements", () => {
     expect(src).toMatch(/Promise\.allSettled/);
-    expect(src).toMatch(/from\("materiels"\)\.select[\s\S]*?\.eq\("article_id"/);
+    // 0.58.73 : depuis 0.58.71, le SELECT materiels passe par selectMaterielsByArticle()
+    // (helper qui sonde + fallback). On accepte les 2 patterns.
+    expect(src).toMatch(/from\("materiels"\)\.select[\s\S]*?\.eq\("article_id"|selectMaterielsByArticle/);
     expect(src).toMatch(/from\("stock_mouvements"\)/);
   });
 
@@ -193,7 +195,8 @@ describe("0.58.69 - Scan article (entrée stock par scan)", () => {
 
   it("Création matériels physiques si toggle activé", () => {
     expect(src).toMatch(/form\.create_materiel/);
-    expect(src).toMatch(/supabase\.from\("materiels"\)\.insert\(matPayloads\)/);
+    // 0.58.73 : depuis 0.58.71, l'insert passe par safeInsertMateriels()
+    expect(src).toMatch(/supabase\.from\("materiels"\)\.insert\(matPayloads\)|safeInsertMateriels\(supabase, matPayloads\)/);
   });
 
   it("Saisie manuelle fallback si pas de caméra", () => {
@@ -252,7 +255,8 @@ describe("0.58.69 - Étiquettes prix PDF", () => {
   it("CSS @page A4 + @media print + masquage non-print", () => {
     expect(src).toMatch(/@page \{ size: A4/);
     expect(src).toMatch(/@media print/);
-    expect(src).toMatch(/\.no-print \{ display: none/);
+    // 0.58.73 : le sélecteur est groupé avec topbar et av-shortcuts-bar
+    expect(src).toMatch(/\.no-print[^{]*\{[^}]*display:\s*none/);
   });
 
   it("EAN13 SVG embarqué dans chaque étiquette", () => {
