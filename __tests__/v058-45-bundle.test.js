@@ -59,7 +59,8 @@ describe("0.58.45 - WeatherWidget : vigilance maison", () => {
   it("Bannière vigilance affichée si maxLevel >= 1", () => {
     expect(src).toMatch(/maxLevel >= 1 && vigColors/);
     expect(src).toMatch(/ti-alert-triangle/);
-    expect(src).toMatch(/Vigilance \$\{vigColors\.label\}/);
+    // 0.58.51 : le code utilise JSX `Vigilance {vigColors.label}` (pas une template literal $)
+    expect(src).toMatch(/Vigilance\s*\{vigColors\.label\}/);
   });
 });
 

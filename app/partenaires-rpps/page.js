@@ -15,6 +15,8 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg} from "../ui";
+// 0.58.51 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { KpiRow } from "../kpis";
 import RppsAutocomplete from "../RppsAutocomplete";
 import Modal from "../components/Modal";
@@ -221,15 +223,25 @@ export default function PartenairesRpps() {
         </Panel>
 
         {loading ? (
-          <Panel><StateMsg>Chargement…</StateMsg></Panel>
+          <Panel><SkeletonRow count={5} /></Panel>
         ) : filtered.length === 0 ? (
-          <Panel><StateMsg>
+          <Panel>
             {rows.length === 0 ? (
-              <>Aucun partenaire enregistré. <a style={{ color: "#7a6fb0", fontWeight: 600, cursor: "pointer" }} onClick={() => setRppsSearchOpen(true)}>Ajouter un partenaire depuis RPPS</a></>
+              <EmptyState
+                icon="ti-stethoscope"
+                title="Aucun partenaire enregistré"
+                description="Recherchez un médecin ou un professionnel de santé dans le répertoire RPPS pour l'ajouter à vos partenaires."
+                actionLabel="Ajouter un partenaire depuis RPPS"
+                onAction={() => setRppsSearchOpen(true)}
+              />
             ) : (
-              "Aucun partenaire ne correspond aux filtres."
+              <EmptyState
+                icon="ti-search-off"
+                title="Aucun partenaire ne correspond"
+                description="Aucun partenaire ne correspond aux filtres actuels. Élargissez vos critères pour voir plus de résultats."
+              />
             )}
-          </StateMsg></Panel>
+          </Panel>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, marginTop: 12 }}>
             {filtered.map((p) => (

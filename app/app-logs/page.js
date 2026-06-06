@@ -13,6 +13,8 @@ import { useCart } from "../useCart";
 import TopBar from "../TopBar";
 import CompactToggle from "../CompactToggle";
 import { PageHead, Panel, StateMsg, Btn } from "../ui";
+// 0.58.51 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
 
 const PAGE_SIZE = 50;
 const LEVEL_META = {
@@ -129,9 +131,17 @@ export default function AppLogsPage() {
         </Panel>
 
         {loading ? (
-          <Panel><StateMsg>Chargement…</StateMsg></Panel>
+          <Panel><SkeletonRow count={6} /></Panel>
         ) : rows.length === 0 ? (
-          <Panel><StateMsg>Aucun log. {filtreLevel || filtreSource || filtreRecherche ? "Filtres trop restrictifs ?" : "L'application n'a rien à signaler — c'est bon signe."}</StateMsg></Panel>
+          <Panel>
+            <EmptyState
+              icon={filtreLevel || filtreSource || filtreRecherche ? "ti-search-off" : "ti-check"}
+              title={filtreLevel || filtreSource || filtreRecherche ? "Aucun log avec ces filtres" : "Aucun log"}
+              description={filtreLevel || filtreSource || filtreRecherche
+                ? "Vos filtres sont peut-être trop restrictifs. Essayez de les élargir pour voir plus de résultats."
+                : "L'application n'a rien à signaler — c'est bon signe ! 🎉"}
+            />
+          </Panel>
         ) : (
           <Panel>
             <div className="panel-table"><table style={{ fontSize: 12.5 }}>

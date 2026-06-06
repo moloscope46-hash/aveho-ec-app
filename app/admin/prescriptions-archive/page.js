@@ -16,6 +16,8 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel} from "../../ui";
+// 0.58.51 : migration UI premium
+import { EmptyState } from "../../components/ui-premium";
 import { fetchWithAuth } from "../../../lib/fetchWithAuth";  // 0.57.16 : auth Bearer obligatoire
 function PrescriptionsArchivePageInner() {
   const supabase = createClient();
@@ -266,9 +268,12 @@ function PrescriptionsArchivePageInner() {
             )}
 
             {results.length === 0 && !searching && (totalEstime === 0 && Object.values(filters).some(v => v && v !== "all" && v !== null)) && (
-              <Panel style={{ textAlign: "center", padding: 30 }}>
-                <i className="ti ti-mood-empty" style={{ fontSize: 36, color: "#a0aeb9" }} />
-                <p style={{ marginTop: 10, color: "#6c7a89" }}>Aucun résultat pour ces filtres</p>
+              <Panel>
+                <EmptyState
+                  icon="ti-mood-empty"
+                  title="Aucun résultat"
+                  description="Aucune prescription ne correspond aux filtres actuels. Essayez d'élargir vos critères pour voir plus de résultats."
+                />
               </Panel>
             )}
           </>

@@ -31,10 +31,10 @@ describe("0.58.41 - Fix tests obsolètes (regex assouplis)", () => {
     expect(src).toMatch(/"liens-favoris"\[\^\\\]\]\*\\\]/);
   });
 
-  it("v058-37 regex sans sur-échappement (utilise \\s\\S directement)", () => {
+  it("v058-37 regex test multi-line présent", () => {
     const src = fs.readFileSync(path.resolve(process.cwd(), "__tests__/v058-37-bundle.test.js"), "utf-8");
-    // L'ancienne regex avait 4 backslashes (\\\\s\\\\S), la nouvelle en a 1 (\\s\\S)
-    expect(src).not.toMatch(/\\\\s\\\\S/);
+    // 0.58.51 : le test v058-37 vérifie que v058-35 utilise [\s\S]*? — donc v058-37 cherche
+    //   le pattern littéral \\s\\S (escaped dans la regex de matching). C'est OK.
     expect(src).toMatch(/from\\\(\["'\]batiments\["'\]\\\)\\\[\\\\s\\\\S/);
   });
 

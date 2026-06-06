@@ -16,6 +16,8 @@ import { useCart } from "../../useCart";
 import ContactActions from "../../ContactActions";
 import AdresseAutocomplete from "../../AdresseAutocomplete";
 import { PageHead, Panel, StateMsg } from "../../ui";
+// 0.58.51 : migration UI premium
+import { EmptyState, SkeletonRow } from "../../components/ui-premium";
 
 function ReferentielsSantePageInner() {
   const supabase = createClient();
@@ -197,9 +199,23 @@ function ReferentielsSantePageInner() {
         )}
 
         {/* Liste */}
-        {loading && <StateMsg type="loading">Chargement…</StateMsg>}
+        {loading && <Panel><SkeletonRow count={5} /></Panel>}
         {!loading && filtered.length === 0 && (
-          <StateMsg type="empty">{filter ? "Aucun résultat" : "Liste vide — clique 'Nouvelle' pour ajouter"}</StateMsg>
+          <Panel>
+            {filter ? (
+              <EmptyState
+                icon="ti-search-off"
+                title="Aucun résultat"
+                description="Aucun référentiel ne correspond à votre recherche."
+              />
+            ) : (
+              <EmptyState
+                icon="ti-database-off"
+                title="Liste vide"
+                description="Aucun référentiel défini pour le moment. Cliquez sur 'Nouvelle' pour ajouter le premier."
+              />
+            )}
+          </Panel>
         )}
         {!loading && filtered.length > 0 && (
           <Panel>

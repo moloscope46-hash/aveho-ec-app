@@ -15,6 +15,8 @@ import { logger } from "../../../lib/logger";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+// 0.58.51 : migration UI premium
+import { EmptyState, SkeletonRow } from "../../components/ui-premium";
 
 function BulletinsArchivePageInner() {
   const supabase = createClient();
@@ -113,11 +115,23 @@ function BulletinsArchivePageInner() {
         </Panel>
 
         {/* Liste */}
-        {loading && <StateMsg type="loading">Chargement des archives…</StateMsg>}
+        {loading && <Panel><SkeletonRow count={5} /></Panel>}
         {!loading && filtered.length === 0 && (
-          <StateMsg type="empty" icon="ti-archive-off">
-            {filter ? "Aucun résultat pour ce filtre" : "Aucun bulletin archivé pour l'instant. Utilise Outils scan → Créer patient depuis bulletin."}
-          </StateMsg>
+          <Panel>
+            {filter ? (
+              <EmptyState
+                icon="ti-search-off"
+                title="Aucun résultat"
+                description="Aucun bulletin ne correspond au filtre actuel. Essayez d'autres critères de recherche."
+              />
+            ) : (
+              <EmptyState
+                icon="ti-archive-off"
+                title="Aucun bulletin archivé"
+                description="Aucun bulletin de situation n'a été archivé pour le moment. Utilisez Outils scan → Créer patient depuis bulletin pour archiver vos premiers bulletins."
+              />
+            )}
+          </Panel>
         )}
         {!loading && filtered.length > 0 && (
           <Panel>

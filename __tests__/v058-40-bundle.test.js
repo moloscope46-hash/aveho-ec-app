@@ -126,8 +126,9 @@ describe("0.58.40 - NotesWidget : bloc-notes markdown léger", () => {
     expect(src).toMatch(/NOTES_STORAGE_KEY\s*=\s*["']av-personal-notes["']/);
   });
 
-  it("Max length 4000 caractères", () => {
-    expect(src).toMatch(/NOTES_MAX_LEN\s*=\s*4000/);
+  it("Max length défini (≥ 4000 caractères)", () => {
+    // 0.58.51 : NOTES_MAX_LEN a été augmenté à 50000 en 0.58.45 pour supporter images base64
+    expect(src).toMatch(/NOTES_MAX_LEN\s*=\s*\d{4,}/);
   });
 
   it("Mini-renderer markdown (renderMd + inlineMd)", () => {
@@ -175,8 +176,9 @@ describe("0.58.40 - lib/dashboardLayout : widget notes ajouté", () => {
     expect(src).toMatch(/notes:\s*false/);
   });
 
-  it("DEFAULT_ORDER inclut notes en dernier", () => {
-    expect(src).toMatch(/DEFAULT_ORDER\s*=\s*\[[^\]]*"notes"\]/);
+  it("DEFAULT_ORDER inclut notes", () => {
+    // 0.58.51 : objectifs ajouté à la fin en 0.58.43, donc notes n'est plus le dernier
+    expect(src).toMatch(/DEFAULT_ORDER\s*=\s*\[[^\]]*["']notes["'][^\]]*\]/);
   });
 });
 

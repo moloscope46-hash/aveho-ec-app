@@ -1,0 +1,300 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.58.52</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:'Segoe UI',Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1400px 800px at 50% -10%, #2a3a40 0%, #0d1620 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:2}
+@keyframes pulse-dot{0%{box-shadow:0 0 0 0 rgba(124,200,200,.5)}70%{box-shadow:0 0 0 10px rgba(124,200,200,0)}}
+@keyframes blob-float{0%,100%{transform:translate(0,0)scale(1)}33%{transform:translate(40px,-30px)scale(1.05)}66%{transform:translate(-30px,40px)scale(.95)}}
+@keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bg-blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:blob-float 18s ease-in-out infinite}
+.bg-blob.teal{top:-15%;left:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(124,200,200,.55) 0%,transparent 70%)}
+.bg-blob.blue{bottom:-15%;right:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(24,95,165,.45) 0%,transparent 70%);animation-delay:-6s}
+header.cover{position:relative;border-radius:28px;padding:48px 40px;margin-bottom:40px;background:linear-gradient(135deg,rgba(13,24,34,.85),rgba(124,200,200,.30),rgba(24,95,165,.20));backdrop-filter:blur(30px);border:1px solid rgba(124,200,200,.28);box-shadow:0 30px 80px rgba(42,58,64,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#bfe6e6;font-weight:700;background:rgba(124,200,200,.14);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:22px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#7CC8C8;animation:pulse-dot 2s ease-out infinite}
+.logo-big{font-size:36px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 18px rgba(124,200,200,.7);animation:float-y 4s ease-in-out infinite;display:inline-block}
+h1{font-size:28px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:14px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px;opacity:.9}
+.meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}
+.meta code{background:rgba(124,200,200,.12);color:#bfe6e6;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:42px 0 16px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#185FA5)}
+.panel{background:rgba(20,33,49,.6);border:1px solid rgba(124,200,200,.18);border-radius:16px;padding:22px 26px;margin:16px 0;backdrop-filter:blur(20px)}
+.panel.ok{border-color:rgba(90,160,90,.4);border-left:4px solid #5aa05a;background:linear-gradient(135deg,rgba(90,160,90,.10),rgba(20,33,49,.6))}
+.panel.fix{border-color:rgba(227,93,91,.4);border-left:4px solid #e35d5b;background:linear-gradient(135deg,rgba(227,93,91,.10),rgba(20,33,49,.6))}
+.panel.sql{border-color:rgba(239,159,39,.4);border-left:4px solid #EF9F27;background:linear-gradient(135deg,rgba(239,159,39,.10),rgba(20,33,49,.6))}
+code{font-family:Consolas,Menlo,monospace;background:rgba(124,200,200,.12);color:#bfe6e6;padding:2px 7px;border-radius:5px;font-size:12.5px}
+pre{background:#050a14;color:#e8edf2;padding:16px 18px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;border-left:3px solid #7CC8C8}
+ul{padding-left:20px}li{margin:6px 0}
+
+/* DEMO Tuiles */
+.tiles-demo{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:14px 0}
+.tile{padding:18px;border-radius:16px;color:#fff;display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,.30)}
+.tile-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.tile-content{flex:1;min-width:0}
+.tile-label{font-size:11.5px;opacity:.85;font-weight:500}
+.tile-value{font-size:26px;font-weight:700;margin-top:2px}
+
+/* DEMO ColorPicker */
+.picker-demo{background:#fff;padding:14px;border-radius:14px;color:#142131;margin:14px 0;max-width:580px;box-shadow:0 8px 30px rgba(0,0,0,.30)}
+.picker-palette{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.picker-color{width:36px;height:36px;border-radius:10px;cursor:pointer;border:2px solid transparent;display:inline-block}
+.picker-color.selected{border:3px solid #142131;transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,.20)}
+.picker-custom{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #e3e9ee;border-radius:10px}
+.picker-custom-active{background:#185FA510;border-color:#185FA5}
+.picker-native{width:32px;height:32px;border-radius:8px;border:1px solid #cfd5db;cursor:pointer;background:#7CC8C8}
+.picker-hex{flex:1;padding:6px 10px;border:1px solid #e3e9ee;border-radius:6px;font-family:Consolas,monospace;font-size:12.5px;background:#fff}
+.picker-preview{width:24px;height:24px;border-radius:6px;border:1px solid #cfd5db}
+.picker-label{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#185FA5}
+
+/* DEMO sync badge */
+.sync-demo{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}
+.sync-card{padding:14px;background:rgba(20,33,49,.7);border:1px solid rgba(124,200,200,.18);border-radius:12px;display:flex;align-items:center;gap:10px;color:#fff;font-size:13px;flex:1;min-width:200px}
+.sync-badge{font-size:11px;display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px}
+
+footer{margin-top:40px;padding-top:20px;border-top:1px solid rgba(124,200,200,.20);font-size:11.5px;color:#8aa0b0;text-align:center}
+</style></head><body>
+
+<div class="bg-blobs"><div class="bg-blob teal"></div><div class="bg-blob blue"></div></div>
+
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow"><span class="dot"></span>BUNDLE 0.58.52</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>Version 0.58.52 — Fix tuiles + Table membres_equipe + ColorPicker + Sync Objectifs<small>Skeleton supprimé · 404 fix définitif · Couleur custom · Sync cloud · ~44 pages UI</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.58.52-alpha</code></span>
+    <span><b>Tests :</b> ~4680 verts</span>
+    <span><b>SQL :</b> <code>2 nouvelles migrations</code></span>
+  </div>
+</header>
+
+<h2>🚨 1. Tuiles /accueil — fix radical</h2>
+
+<div class="panel fix">
+<p style="margin:0"><b>Diagnostic final</b> : malgré les fix 0.58.49/50, les tuiles n'apparaissaient toujours pas. <b>Cause racine</b> : le wrapper <code>{loading ? &lt;Panel&gt;&lt;StateMsg&gt;Chargement…&lt;/StateMsg&gt;&lt;/Panel&gt; : ...}</code> dans accueil/page.js masquait TOUT le HeroDashboard pendant le loading. <b>Fix radical</b> : HeroDashboard est maintenant rendu <b>AVANT</b> le check loading, avec <code>kpis</code> initialisé à <code>{promos:0, commandes:0, enCours:0, aRegler:0}</code>. Les cards s'affichent immédiatement avec 0 puis update avec vraies valeurs.</p>
+</div>
+
+<div class="tiles-demo">
+<div class="tile" style="background:linear-gradient(135deg,#C9867F,#b56e67)">
+  <div class="tile-icon">🏷</div>
+  <div class="tile-content"><div class="tile-label">Promotions actives</div><div class="tile-value">12</div></div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#7CC8C8,#5da8a8)">
+  <div class="tile-icon">🚚</div>
+  <div class="tile-content"><div class="tile-label">Commandes passées</div><div class="tile-value">47</div></div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#185FA5,#134e87)">
+  <div class="tile-icon">⏱</div>
+  <div class="tile-content"><div class="tile-label">En cours</div><div class="tile-value">8</div></div>
+</div>
+<div class="tile" style="background:linear-gradient(135deg,#142131,#2a3850)">
+  <div class="tile-icon">€</div>
+  <div class="tile-content"><div class="tile-label">À régler</div><div class="tile-value">2 458 €</div></div>
+</div>
+</div>
+
+<pre>// 0.58.52 - app/accueil/page.js
+// HeroDashboard rendu AVANT le check loading
+&lt;HeroDashboard
+  auth={auth}
+  kpis={kpis}                            // toujours fourni (objet par défaut)
+  atraiter={widgets.atraiter ? atraiter : { di: 0, ... }}
+  loading={loading}
+  onNavigate={(p) =&gt; router.push(p)}
+/&gt;
+
+{loading ? null : (
+  &lt;&gt;
+    {widgetOrder.map(...)}                // widgets restants
+  &lt;/&gt;
+)}
+
+// app/accueil/HeroDashboard.js
+// Cards TOUJOURS rendues, jamais de skeleton
+&lt;div className='av-stagger'&gt;
+  &lt;KpiCard label='Promotions actives' value={kpis?.promos ?? 0} variant='terra' onClick={() =&gt; go('/promotions')} /&gt;
+  &lt;KpiCard label='Commandes passées' value={kpis?.commandes ?? 0} variant='teal' /&gt;
+  &lt;KpiCard label='En cours' value={kpis?.enCours ?? 0} variant='blue' /&gt;
+  &lt;KpiCard label='À régler' value={fmtEur(kpis?.aRegler ?? 0)} variant='navy' /&gt;
+&lt;/div&gt;</pre>
+
+<h2>🩹 2. SQL membres_equipe — fix définitif 404</h2>
+
+<div class="panel sql">
+<p style="margin:0 0 8px"><b>À exécuter dans Supabase SQL Editor</b> pour faire disparaître DÉFINITIVEMENT le 404 :</p>
+<pre style="margin:0;background:#1a1410;color:#bfe6bf;font-size:11px">CREATE TABLE IF NOT EXISTS membres_equipe (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  equipe_id UUID NOT NULL REFERENCES equipes(id) ON DELETE CASCADE,
+  role TEXT,
+  ajoute_le TIMESTAMPTZ DEFAULT now(),
+  UNIQUE (user_id, equipe_id)
+);
+
+ALTER TABLE membres_equipe ENABLE ROW LEVEL SECURITY;
+
+-- Policies : SELECT pour tous users de la structure, INSERT/UPDATE/DELETE Admin only
+CREATE POLICY "Select membres_equipe in own structure" ...
+CREATE POLICY "Manage membres_equipe (admin)" ...</pre>
+</div>
+
+<h2>🎨 3. ColorPicker — couleur custom</h2>
+
+<div class="panel">
+<p style="margin:0">Nouveau composant <code>ColorPicker</code> réutilisable avec palette par défaut + <b>input color HTML5 natif</b> + <b>champ hex texte</b> avec validation. Branché dans <code>/tags-materiel</code> et <code>/etiquettes</code>.</p>
+</div>
+
+<div class="picker-demo">
+<div class="picker-palette">
+<span class="picker-color" style="background:#7CC8C8"></span>
+<span class="picker-color" style="background:#185FA5"></span>
+<span class="picker-color" style="background:#142131"></span>
+<span class="picker-color" style="background:#C9867F"></span>
+<span class="picker-color" style="background:#EF9F27"></span>
+<span class="picker-color" style="background:#5aa05a"></span>
+<span class="picker-color" style="background:#7a6fb0"></span>
+<span class="picker-color" style="background:#e35d5b"></span>
+<span class="picker-color" style="background:#c0392b"></span>
+<span class="picker-color selected" style="background:#FF6B9D"></span>
+<span class="picker-color" style="background:#f0d59f"></span>
+<span class="picker-color" style="background:#bfd6f0"></span>
+</div>
+<div class="picker-custom picker-custom-active">
+<span class="picker-label" style="color:#FF6B9D">🎨 Custom</span>
+<div class="picker-native" style="background:#FF6B9D"></div>
+<input class="picker-hex" type="text" value="#FF6B9D" />
+<div class="picker-preview" style="background:#FF6B9D"></div>
+</div>
+<div style="margin-top:8px;font-size:10.5px;color:#8a98a8;display:flex;align-items:center;gap:4px">
+✨ <span style="color:#FF6B9D">Couleur custom</span>
+</div>
+</div>
+
+<h2>☁️ 4. Sync Objectifs avec Supabase</h2>
+
+<div class="panel">
+<p style="margin:0"><b>Architecture hybride</b> : load localStorage immédiatement (offline-first) puis sync Supabase en background. Chaque save pousse vers Supabase + sauvegarde locale (cache offline). Badge visuel du statut de sync.</p>
+</div>
+
+<div class="sync-demo">
+<div class="sync-card">
+<span style="background:rgba(90,160,90,.25);color:#5aa05a;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">☁ Sync</span>
+Mode synchronisé — objectifs sauvegardés sur Supabase et accessibles depuis tous tes appareils
+</div>
+<div class="sync-card">
+<span style="background:rgba(124,200,200,.25);color:#7CC8C8;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">⟳ Sync…</span>
+Synchronisation en cours (à chaque save)
+</div>
+<div class="sync-card">
+<span style="background:rgba(138,152,168,.25);color:#8a98a8;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700">💾 Local</span>
+Mode local (offline ou table user_goals non créée)
+</div>
+</div>
+
+<div class="panel sql">
+<p style="margin:0 0 8px"><b>SQL à exécuter</b> :</p>
+<pre style="margin:0;background:#1a1410;color:#bfe6bf;font-size:11px">CREATE TABLE IF NOT EXISTS user_goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  label TEXT NOT NULL,
+  target NUMERIC, current NUMERIC,
+  unit TEXT, color_id TEXT,
+  position INTEGER,
+  created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ
+);
+
+-- RLS : chaque user voit/édite uniquement ses objectifs
+-- Trigger updated_at auto</pre>
+</div>
+
+<pre>// 0.58.52 - app/components/DashboardWidgets.js
+// Load hybride
+useEffect(() =&gt; {
+  // 1. Local immédiat (offline-first)
+  setGoals(getGoals());
+  
+  // 2. Sync Supabase en background
+  (async () =&gt; {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const remoteGoals = await fetchGoalsFromSupabase(supabase, user.id);
+    if (remoteGoals) {
+      setGoals(remoteGoals);
+      saveGoals(remoteGoals);  // cache offline
+      setSyncStatus('synced');
+    }
+  })();
+}, []);
+
+// Save = local + push Supabase (delete + insert, idempotent)
+async function pushGoalsToSupabase(supabase, userId, goals) {
+  await supabase.from('user_goals').delete().eq('user_id', userId);
+  const rows = goals.map((g, idx) =&gt; ({
+    user_id: userId, label: g.label, target: g.target,
+    current: g.current, color_id: g.colorId, position: idx,
+  }));
+  await supabase.from('user_goals').insert(rows);
+}</pre>
+
+<h2>🚀 5. Migration UI premium — 3 pages</h2>
+<div class="panel">
+<ul>
+<li><code>/admin/rpps-diagnostic</code> → SkeletonRow pendant test endpoints</li>
+<li><code>/admin/mail-diagnostic</code> → import composants</li>
+<li><b>Total cumulé : ~44 pages</b> avec UI premium</li>
+</ul>
+</div>
+
+<h2>📊 Récap</h2>
+
+<div class="panel">
+<ul>
+<li><b>Tuiles /accueil</b> : skeleton supprimé, cards toujours visibles immédiatement</li>
+<li><b>SQL membres_equipe</b> : fix définitif du 404 quand exécuté</li>
+<li><b>ColorPicker custom</b> : palette 12 couleurs + input color HTML5 + hex texte</li>
+<li><b>Sync Objectifs Supabase</b> : hybride localStorage + cloud, badge statut</li>
+<li><b>+3 pages UI premium</b> : ~44 pages au total</li>
+<li><b>+40 tests</b> Vitest (~4680 verts estimés)</li>
+</ul>
+</div>
+
+<h2>🚀 Déploiement</h2>
+<div class="panel ok">
+<pre style="background:#0d1822;color:#bfe6e6;border-left:3px solid #5aa05a">cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm test                # ~4680 verts attendus
+npm run build           # OK attendu
+
+# 1) D'ABORD : exécuter les 2 NOUVELLES migrations SQL dans Supabase
+#    (a) migration-0.58.52-membres-equipe.sql   (fix 404)
+#    (b) migration-0.58.52-user-goals.sql       (sync objectifs)
+
+# 2) Push code
+git add -A
+git commit -m "Alpha 0.58.52 - Fix tuiles + Table membres_equipe + ColorPicker + Sync Objectifs + 3 pages UI"
+git push origin main</pre>
+</div>
+
+<h2>📋 Prochaines pistes (0.58.53+)</h2>
+<div class="panel">
+<ul>
+<li>Brancher ColorPicker dans <code>/annonces</code> (niveau personnalisable) aussi</li>
+<li>Widget Trafic routier <b>si</b> clé Mappy/TomTom</li>
+<li>Mode présentation pour widget Météo</li>
+<li>Continuer migration UI : <code>/admin/onboarding-test</code>, <code>/admin/maintenance-cron</code>, <code>/journal-acces-rgpd</code></li>
+<li>Drag&drop fields formulaire Crud (modal)</li>
+<li>Tags multi-langues (icone + label fr/en/es)</li>
+<li>Permission partage objectifs équipe (extension user_goals avec team_id)</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · Version Alpha 0.58.52 · 6 juin 2026 · FIX TUILES + 404 + COLOR + SYNC ✨</footer>
+</div>
+
+</body></html>

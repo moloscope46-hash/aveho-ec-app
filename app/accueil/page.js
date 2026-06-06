@@ -443,20 +443,18 @@ export default function Accueil() {
           />
         )}
 
-        {loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (
-          <>
-            {/* 0.58.0 : Hero Dashboard premium remplace les anciens KPIs + atraiter */}
-            {/* 0.58.49 : toujours rendre HeroDashboard (Vue d'ensemble + tuiles Promotion etc.) */}
-            {/*   Les sous-sections du HeroDashboard sont déjà conditionnelles à l'intérieur. */}
-            {/*   Le wrapper conditionnel précédent masquait à tort les tuiles commerciales. */}
-            <HeroDashboard
-              auth={auth}
-              kpis={kpis}
-              atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 }}
-              loading={loading}
-              onNavigate={(p) => router.push(p)}
-            />
+        {/* 0.58.52 : HeroDashboard rendu IMMÉDIATEMENT (pas attendu de fin de load).
+            Les KpiCards utilisent kpis avec valeurs par défaut 0 — pas de masquage. */}
+        <HeroDashboard
+          auth={auth}
+          kpis={kpis}
+          atraiter={widgets.atraiter ? atraiter : { di: 0, achats: 0, signalements: 0, renouv: 0, maint: 0 }}
+          loading={loading}
+          onNavigate={(p) => router.push(p)}
+        />
 
+        {loading ? null : (
+          <>
             {widgetOrder.map((k) => {
               if (!widgets[k]) return null;
               // 0.58.0 : ces 2 widgets sont déjà dans HeroDashboard

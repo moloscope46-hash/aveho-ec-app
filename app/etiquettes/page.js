@@ -12,6 +12,8 @@ import { dialogs } from "../dialogs";
 import { safeUpdate, safeInsert, safeDelete } from "../../lib/safeWrite";
 // 0.58.47 : sélecteur d'icône
 import IconPicker, { DEFAULT_ICON } from "../components/IconPicker";
+// 0.58.52 : sélecteur couleur custom
+import ColorPicker from "../components/ColorPicker";
 // Palette suggérée pour la sélection
 const PALETTE = ["#7CC8C8", "#7a6fb0", "#5aa05a", "#e35d5b", "#EF9F27", "#C9867F", "#185FA5", "#2a5a5a", "#142131"];
 
@@ -128,18 +130,11 @@ export default function EtiquettesPage() {
         </div>
         <div className="fld">
           <label>Couleur</label>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {PALETTE.map((c) => (
-              <button key={c} type="button" onClick={() => setForm({ ...form, couleur: c })}
-                style={{
-                  width: 36, height: 36, borderRadius: 10, background: c, cursor: "pointer",
-                  border: form.couleur === c ? "3px solid #142131" : "2px solid transparent",
-                  outline: "none", transition: "transform .15s",
-                  transform: form.couleur === c ? "scale(1.1)" : "scale(1)",
-                }}
-                title={c} />
-            ))}
-          </div>
+          {/* 0.58.52 : ColorPicker avec palette + custom input color */}
+          <ColorPicker
+            value={form.couleur}
+            onChange={(c) => setForm({ ...form, couleur: c })}
+          />
           {/* Aperçu */}
           {form.libelle && form.couleur && (
             <div style={{ marginTop: 12 }}>

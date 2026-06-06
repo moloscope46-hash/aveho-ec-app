@@ -1691,6 +1691,9 @@ export function NotesWidget() {
 
 const GOALS_STORAGE_KEY = "av-personal-goals";
 const GOALS_MAX = 6;
+// 0.58.52 : flag pour activer la sync Supabase (false = localStorage seulement)
+//   Activé automatiquement si user authentifié + table user_goals présente
+const GOALS_SYNC_TTL_KEY = "av-goals-sync-disabled-until";
 
 function getGoals() {
   if (typeof window === "undefined") return [];
@@ -1705,6 +1708,83 @@ function getGoals() {
 function saveGoals(goals) {
   if (typeof window === "undefined") return;
   try { localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals.slice(0, GOALS_MAX))); } catch {}
+}
+
+// 0.58.52 : sync Supabase
+//   - Au mount : charge depuis Supabase, fallback localStorage si offline ou erreur
+//   - À chaque save : pousse vers Supabase + sauve aussi en localStorage (cache offline)
+//   - Si erreur 404 (table absente), flag pour 24h, mode local only
+
+function isGoalsSyncDisabled() {
+  if (typeof window === "undefined") return true;
+  try {
+    const until = parseInt(localStorage.getItem(GOALS_SYNC_TTL_KEY) || "0", 10);
+    return until > Date.now();
+  } catch { return false; }
+}
+
+function disableGoalsSyncFor24h() {
+  try {
+    const next24h = Date.now() + 24 * 60 * 60 * 1000;
+    localStorage.setItem(GOALS_SYNC_TTL_KEY, String(next24h));
+  } catch {}
+}
+
+async function fetchGoalsFromSupabase(supabase, userId) {
+  if (!supabase || !userId || isGoalsSyncDisabled()) return null;
+  try {
+    const { data, error } = await supabase
+      .from("user_goals")
+      .select("*")
+      .eq("user_id", userId)
+      .order("position", { ascending: true });
+    if (error) {
+      if (error.code === "PGRST205" || error.code === "42P01" || /not found/i.test(error.message || "")) {
+        disableGoalsSyncFor24h();
+      }
+      return null;
+    }
+    // Transforme les rows Supabase au format local
+    return (data || []).map(r => ({
+      id: r.id,
+      label: r.label,
+      target: Number(r.target) || 0,
+      current: Number(r.current) || 0,
+      unit: r.unit || "",
+      colorId: r.color_id || "blue",
+    }));
+  } catch {
+    return null;
+  }
+}
+
+async function pushGoalsToSupabase(supabase, userId, goals) {
+  if (!supabase || !userId || isGoalsSyncDisabled()) return false;
+  try {
+    // Stratégie : delete all + insert all (simple, idempotent, max 6 lignes)
+    const { error: delErr } = await supabase.from("user_goals").delete().eq("user_id", userId);
+    if (delErr) {
+      if (delErr.code === "PGRST205" || delErr.code === "42P01") {
+        disableGoalsSyncFor24h();
+      }
+      return false;
+    }
+    if (goals.length === 0) return true;
+    const rows = goals.map((g, idx) => ({
+      user_id: userId,
+      label: g.label,
+      target: g.target,
+      current: g.current,
+      unit: g.unit || null,
+      color_id: g.colorId || "blue",
+      position: idx,
+    }));
+    const { error: insErr } = await supabase.from("user_goals").insert(rows);
+    if (insErr) return false;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Palette de couleurs pour les objectifs
@@ -1722,11 +1802,66 @@ export function ObjectifsWidget() {
   const [mounted, setMounted] = useState(false);
   // 0.58.46 : mode présentation (overlay plein écran pour les réunions d'équipe)
   const [presentMode, setPresentMode] = useState(false);
+  // 0.58.52 : sync Supabase (état d'affichage du statut)
+  const [syncStatus, setSyncStatus] = useState("local");  // "local" | "syncing" | "synced" | "error"
 
   useEffect(() => {
+    // 0.58.52 : load avec stratégie hybride
+    //   1. Affiche localStorage immédiatement (offline-first)
+    //   2. Si user authentifié + table dispo → sync depuis Supabase + cache local
     setGoals(getGoals());
     setMounted(true);
+
+    // Tentative de sync Supabase en background
+    (async () => {
+      try {
+        const { createClient } = await import("../../lib/supabase");
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const remoteGoals = await fetchGoalsFromSupabase(supabase, user.id);
+        if (remoteGoals && remoteGoals.length > 0) {
+          // Si Supabase a des données → écrase le local
+          setGoals(remoteGoals);
+          saveGoals(remoteGoals);
+          setSyncStatus("synced");
+        } else if (remoteGoals !== null) {
+          // Supabase OK mais vide → push le local vers Supabase (1ère sync)
+          const local = getGoals();
+          if (local.length > 0) {
+            const ok = await pushGoalsToSupabase(supabase, user.id, local);
+            setSyncStatus(ok ? "synced" : "local");
+          } else {
+            setSyncStatus("synced");
+          }
+        } else {
+          // Erreur ou table absente → reste en local
+          setSyncStatus("local");
+        }
+      } catch {
+        setSyncStatus("local");
+      }
+    })();
   }, []);
+
+  // 0.58.52 : helper save qui pousse aussi vers Supabase
+  async function saveAndSync(nextGoals) {
+    saveGoals(nextGoals);
+    setSyncStatus("syncing");
+    try {
+      const { createClient } = await import("../../lib/supabase");
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setSyncStatus("local");
+        return;
+      }
+      const ok = await pushGoalsToSupabase(supabase, user.id, nextGoals);
+      setSyncStatus(ok ? "synced" : "local");
+    } catch {
+      setSyncStatus("local");
+    }
+  }
 
   // 0.58.46 : ESC pour quitter le mode présentation
   useEffect(() => {
@@ -1771,7 +1906,7 @@ export function ObjectifsWidget() {
     };
     const next = [...goals, newGoal];
     setGoals(next);
-    saveGoals(next);
+    saveAndSync(next);
   }
 
   async function setCurrent(goalId) {
@@ -1786,7 +1921,7 @@ export function ObjectifsWidget() {
     if (isNaN(num) || num < 0) return;
     const next = goals.map(g => g.id === goalId ? { ...g, current: num } : g);
     setGoals(next);
-    saveGoals(next);
+    saveAndSync(next);
   }
 
   async function deleteGoal(goalId) {
@@ -1800,13 +1935,13 @@ export function ObjectifsWidget() {
     if (!ok) return;
     const next = goals.filter(g => g.id !== goalId);
     setGoals(next);
-    saveGoals(next);
+    saveAndSync(next);
   }
 
   function quickIncrement(goalId, delta) {
     const next = goals.map(g => g.id === goalId ? { ...g, current: Math.max(0, (g.current || 0) + delta) } : g);
     setGoals(next);
-    saveGoals(next);
+    saveAndSync(next);
   }
 
   if (!mounted) return null;
@@ -1814,8 +1949,24 @@ export function ObjectifsWidget() {
   return (
     <Panel style={{ marginTop: 0, background: "linear-gradient(135deg, #f5f8fc 0%, #fff 100%)", borderColor: "#cfd8e0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 15, color: "#142131" }}>
+        <h2 style={{ margin: 0, fontSize: 15, color: "#142131", display: "flex", alignItems: "center", gap: 8 }}>
           <i className="ti ti-target" style={{ marginRight: 6, color: "#185FA5" }} /> Mes objectifs
+          {/* 0.58.52 : badge de statut de sync */}
+          {syncStatus === "synced" && (
+            <span title="Synchronisé avec Supabase" style={{ fontSize: 10, color: "#5aa05a", display: "inline-flex", alignItems: "center", gap: 2 }}>
+              <i className="ti ti-cloud-check" /> Sync
+            </span>
+          )}
+          {syncStatus === "syncing" && (
+            <span title="Synchronisation en cours…" style={{ fontSize: 10, color: "#8a98a8", display: "inline-flex", alignItems: "center", gap: 2 }}>
+              <i className="ti ti-cloud-upload ti-spin" /> Sync…
+            </span>
+          )}
+          {syncStatus === "local" && (
+            <span title="Mode local (Supabase non disponible)" style={{ fontSize: 10, color: "#8a98a8", display: "inline-flex", alignItems: "center", gap: 2 }}>
+              <i className="ti ti-device-floppy" /> Local
+            </span>
+          )}
         </h2>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {/* 0.58.46 : bouton mode présentation (visible seulement si au moins 1 objectif) */}

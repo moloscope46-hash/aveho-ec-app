@@ -14,6 +14,8 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg } from "../../ui";
+// 0.58.52 : migration UI premium
+import { EmptyState, SkeletonRow } from "../../components/ui-premium";
 
 function RppsDiagnosticPageInner() {
   const auth = useAuth();
@@ -95,7 +97,7 @@ function RppsDiagnosticPageInner() {
           </button>
         </div>
 
-        {loading && !diag && <StateMsg type="info" icon="ti-loader-2">Test des 4 endpoints en parallèle…</StateMsg>}
+        {loading && !diag && <Panel><SkeletonRow count={4} /></Panel>}
 
         {diag && diag.ok && (
           <>

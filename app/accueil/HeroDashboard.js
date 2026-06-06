@@ -310,6 +310,9 @@ export default function HeroDashboard({ auth, kpis, atraiter, loading, onNavigat
           KPIS commerciaux (panneau dégradé)
           0.58.49 : rendu inconditionnel — tuiles toujours visibles
           0.58.50 : valeurs safe (kpis null ou non chargé → 0 partout)
+          0.58.52 : ÉLIMINATION du skeleton — cards toujours visibles immédiatement
+            avec valeurs 0 par défaut. Le useState initialise kpis à
+            { promos:0, commandes:0, enCours:0, aRegler:0 } donc kpis n'est JAMAIS null.
       ==================================================== */}
       <section style={{ marginTop: 28 }}>
         <div style={{
@@ -340,46 +343,42 @@ export default function HeroDashboard({ auth, kpis, atraiter, loading, onNavigat
           </h2>
         </div>
 
-        {/* 0.58.50 : SkeletonGrid seulement pendant le 1er chargement,
-            puis cards toujours visibles avec valeurs safe (0 si kpis null) */}
-        {loading && !kpis ? (
-          <SkeletonGrid count={4} cols={4} />
-        ) : (
-          <div className="av-stagger" style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 14,
-          }}>
-            <KpiCard
-              label="Promotions actives"
-              value={kpis?.promos ?? 0}
-              icon="ti-discount-2"
-              variant="terra"
-              onClick={() => go("/promotions")}
-            />
-            <KpiCard
-              label="Commandes passées"
-              value={kpis?.commandes ?? 0}
-              icon="ti-truck-delivery"
-              variant="teal"
-              onClick={() => go("/commandes")}
-            />
-            <KpiCard
-              label="En cours"
-              value={kpis?.enCours ?? 0}
-              icon="ti-progress-bolt"
-              variant="blue"
-              onClick={() => go("/commandes")}
-            />
-            <KpiCard
-              label="À régler"
-              value={fmtEur(kpis?.aRegler ?? 0)}
-              icon="ti-currency-euro"
-              variant="navy"
-              onClick={() => go("/commandes")}
-            />
-          </div>
-        )}
+        {/* 0.58.52 : cards TOUJOURS rendues, jamais de skeleton.
+            kpis a toujours des valeurs (initialisé en useState). */}
+        <div className="av-stagger" style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 14,
+        }}>
+          <KpiCard
+            label="Promotions actives"
+            value={kpis?.promos ?? 0}
+            icon="ti-discount-2"
+            variant="terra"
+            onClick={() => go("/promotions")}
+          />
+          <KpiCard
+            label="Commandes passées"
+            value={kpis?.commandes ?? 0}
+            icon="ti-truck-delivery"
+            variant="teal"
+            onClick={() => go("/commandes")}
+          />
+          <KpiCard
+            label="En cours"
+            value={kpis?.enCours ?? 0}
+            icon="ti-progress-bolt"
+            variant="blue"
+            onClick={() => go("/commandes")}
+          />
+          <KpiCard
+            label="À régler"
+            value={fmtEur(kpis?.aRegler ?? 0)}
+            icon="ti-currency-euro"
+            variant="navy"
+            onClick={() => go("/commandes")}
+          />
+        </div>
       </section>
     </div>
   );

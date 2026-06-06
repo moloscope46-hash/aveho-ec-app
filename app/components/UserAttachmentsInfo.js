@@ -21,8 +21,12 @@ export default function UserAttachmentsInfo({ userId, etabId }) {
     if (!userId) return;
     // 0.58.41 : si on a déjà eu une erreur sur membres_equipe (table absente en base),
     //  on ne refetche pas pendant toute la session. Évite de polluer la console à chaque nav.
+    // 0.58.51 : flag persisté en localStorage avec TTL 24h pour éviter le 404 à chaque session,
+    //  tout en permettant un re-essai automatique si la table est créée plus tard.
+    const FLAG_KEY = "av-attachments-disabled-until";
     try {
-      if (sessionStorage.getItem("av-attachments-disabled") === "true") return;
+      const until = parseInt(localStorage.getItem(FLAG_KEY) || "0", 10);
+      if (until > Date.now()) return;  // flag actif, on skip
     } catch {}
     let alive = true;
     (async () => {
@@ -36,7 +40,11 @@ export default function UserAttachmentsInfo({ userId, etabId }) {
           .eq("user_id", userId);
         if (e1) {
           // 0.58.41 : 404 / 42P01 / 42703 / autre — silence total + flag pour la session
-          try { sessionStorage.setItem("av-attachments-disabled", "true"); } catch {}
+          // 0.58.51 : flag étendu en localStorage avec expiration 24h
+          try {
+            const next24h = Date.now() + 24 * 60 * 60 * 1000;
+            localStorage.setItem(FLAG_KEY, String(next24h));
+          } catch {}
           return;
         }
         if (!memb) return;

@@ -15,6 +15,8 @@ import { logger } from "../../lib/logger";
 import IconPicker, { DEFAULT_ICON } from "../components/IconPicker";
 // 0.58.50 : migration UI premium
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
+// 0.58.52 : sélecteur de couleur custom (palette + input color HTML5)
+import ColorPicker from "../components/ColorPicker";
 const PALETTE = ["#7CC8C8", "#7a6fb0", "#5aa05a", "#e35d5b", "#EF9F27", "#C9867F", "#185FA5", "#2a5a5a", "#142131"];
 
 export default function TagsMaterielPage() {
@@ -139,16 +141,11 @@ export default function TagsMaterielPage() {
         </div>
         <div className="fld">
           <label>Couleur</label>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {PALETTE.map((c) => (
-              <button key={c} type="button" onClick={() => setForm({ ...form, couleur: c })}
-                style={{
-                  width: 36, height: 36, borderRadius: 10, background: c, cursor: "pointer",
-                  border: form.couleur === c ? "3px solid #142131" : "2px solid transparent",
-                  transform: form.couleur === c ? "scale(1.1)" : "scale(1)",
-                }} title={c} />
-            ))}
-          </div>
+          {/* 0.58.52 : ColorPicker avec palette + custom input color */}
+          <ColorPicker
+            value={form.couleur}
+            onChange={(c) => setForm({ ...form, couleur: c })}
+          />
           {form.libelle && form.couleur && (
             <div style={{ marginTop: 12 }}>
               <span style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", marginRight: 8 }}>Aperçu :</span>

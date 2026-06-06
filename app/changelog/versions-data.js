@@ -120,6 +120,80 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.58.52",
+    "kind": "version",
+    "titre": "🎁 BUNDLE : Tuiles forcées + Table membres_equipe + ColorPicker custom + Sync Objectifs Supabase + 3 pages UI",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 TUILES /ACCUEIL FORCÉES — SKELETON SUPPRIMÉ. Diagnostic : malgré les fix 0.58.49/50, les tuiles 'Promotions / Commandes / En cours / À régler' étaient toujours pas visibles. **Cause racine identifiée** : `loading && !kpis ? <SkeletonGrid> : <KpiCards>` cachait les cards trop longtemps + le wrapper `{loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : ...}` dans `accueil/page.js` masquait TOUT le HeroDashboard. **Fix radical** : (1) Skeleton supprimé du HeroDashboard — `kpis` est initialisé à `{promos:0, commandes:0, ...}` donc jamais null, les KpiCards sont toujours rendues immédiatement avec 0 puis update avec vraies valeurs. (2) HeroDashboard rendu **avant** le check `loading` dans accueil/page.js — il s'affiche dès le premier render, pas attendu de fin de fetch",
+        "code_snippet": {
+          "file": "app/accueil/HeroDashboard.js + app/accueil/page.js",
+          "note": "Tuiles toujours visibles",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.52 - skeleton masque + wrapper loading\n{loading && !kpis ? (\n  <SkeletonGrid count={4} cols={4} />\n) : (\n  <div>\n    <KpiCard label='Promotions...' value={kpis?.promos ?? 0} />\n  </div>\n)}\n\n// accueil/page.js\n{loading ? <Panel><StateMsg>Chargement…</StateMsg></Panel> : (\n  <>\n    <HeroDashboard ... />  // ← masqué pendant tout le loading\n    ...\n  </>\n)}",
+          "after": "// 0.58.52 - cards TOUJOURS rendues, jamais de skeleton\n<div className='av-stagger'>\n  <KpiCard label='Promotions actives' value={kpis?.promos ?? 0} variant='terra' onClick={() => go('/promotions')} />\n  <KpiCard label='Commandes passées' value={kpis?.commandes ?? 0} variant='teal' />\n  <KpiCard label='En cours' value={kpis?.enCours ?? 0} variant='blue' />\n  <KpiCard label='À régler' value={fmtEur(kpis?.aRegler ?? 0)} variant='navy' />\n</div>\n\n// accueil/page.js : HeroDashboard rendu AVANT le loading check\n<HeroDashboard auth={auth} kpis={kpis} ... />\n\n{loading ? null : (\n  <>\n    {widgetOrder.map(...)}  // les widgets restants\n  </>\n)}"
+        }
+      },
+      { "code": "ARCH", "txt": "🩹 SQL `migration-0.58.52-membres-equipe.sql` — FIX DÉFINITIF DU 404. Crée la table `membres_equipe (user_id, equipe_id, role, ajoute_le, ajoute_par)` avec FK vers `auth.users` et `equipes`. Index sur `user_id` et `equipe_id` pour les jointures rapides. **RLS activée** : SELECT pour tous les users de la structure (via `membres_structure`), INSERT/UPDATE/DELETE réservé aux Administrateurs. Une fois exécuté en prod, plus aucun 404 sur cette table" },
+      { "code": "UI", "txt": "🎨 NOUVEAU COMPOSANT `ColorPicker` (`app/components/ColorPicker.js`). Sélecteur de couleur avec : (a) **palette par défaut** de 12 couleurs (charte Aveho NAVY/TERRA/TEAL/AMBER + 7 couleurs étendues vert/violet/coral/etc.), (b) **input color HTML5 natif** (color picker système, accessible mobile), (c) **input hex texte** avec validation regex `/^#([0-9A-F]{3}|[0-9A-F]{6})$/i` + restoration au blur si invalide, (d) **preview pastille** + indicateur 'Couleur custom' si valeur hors palette. **Branché** dans `/tags-materiel` et `/etiquettes` — l'ancien rendu de 9 boutons côte à côte est remplacé par ce composant unifié",
+        "code_snippet": {
+          "file": "app/components/ColorPicker.js (NEW)",
+          "note": "ColorPicker custom",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.52 - palette de 9 couleurs hardcodées, pas de custom\nconst PALETTE = ['#7CC8C8', '#7a6fb0', '#5aa05a', '#e35d5b', '#EF9F27', '#C9867F', '#185FA5', '#2a5a5a', '#142131'];\n\n<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>\n  {PALETTE.map((c) => (\n    <button onClick={() => setForm({ ...form, couleur: c })}\n            style={{ width: 36, height: 36, background: c }}/>\n  ))}\n</div>",
+          "after": "// 0.58.52 - ColorPicker réutilisable avec palette + custom\n<ColorPicker\n  value={form.couleur}\n  onChange={(c) => setForm({ ...form, couleur: c })}\n/>\n\n// Internal :\nexport const DEFAULT_PALETTE = [\n  '#7CC8C8', '#185FA5', '#142131', '#C9867F', '#EF9F27',  // Aveho\n  '#5aa05a', '#7a6fb0', '#e35d5b', '#c0392b', '#2a5a5a',  // étendues\n  '#f0d59f', '#bfd6f0',  // pastels\n];\n\n// Input color HTML5 + hex input avec validation\n<input type='color' value={value} onChange={handleNativeColorChange} />\n<input type='text' value={hexInput} maxLength={7} placeholder='#7CC8C8'\n       onChange={handleHexInputChange} onBlur={handleHexInputBlur} />"
+        }
+      },
+      { "code": "ARCH", "txt": "☁️ SYNC OBJECTIFS AVEC SUPABASE. SQL `migration-0.58.52-user-goals.sql` : table `user_goals` (label, target, current, unit, color_id, position) avec RLS (chaque user voit/édite uniquement ses objectifs), trigger `updated_at` auto. Côté front : (a) helpers `fetchGoalsFromSupabase()` et `pushGoalsToSupabase()` (stratégie delete+insert, idempotent), (b) flag `av-goals-sync-disabled-until` avec TTL 24h si table absente, (c) `ObjectifsWidget` charge le **localStorage immédiatement** (offline-first) puis sync en background depuis Supabase, (d) chaque save (`addGoal`/`deleteGoal`/`quickIncrement`) appelle `saveAndSync()` qui pousse vers Supabase + sauvegarde aussi en local (cache offline). **Badge visuel de statut** dans le header : 🟢 Sync (synced) / 🔄 Sync… (syncing) / 💾 Local (local only)",
+        "code_snippet": {
+          "file": "app/components/DashboardWidgets.js",
+          "note": "Sync goals Supabase",
+          "lang": "jsx",
+          "before": "// AVANT 0.58.52 - localStorage only, pas de partage entre appareils\nfunction saveGoals(goals) {\n  localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));\n}\n\nuseEffect(() => {\n  setGoals(getGoals());\n}, []);",
+          "after": "// 0.58.52 - hybride localStorage + Supabase\nasync function pushGoalsToSupabase(supabase, userId, goals) {\n  // delete + insert (idempotent, max 6 lignes)\n  await supabase.from('user_goals').delete().eq('user_id', userId);\n  const rows = goals.map((g, idx) => ({\n    user_id: userId, label: g.label, target: g.target,\n    current: g.current, color_id: g.colorId, position: idx,\n  }));\n  await supabase.from('user_goals').insert(rows);\n}\n\nuseEffect(() => {\n  // 1. Load local immédiatement (offline-first)\n  setGoals(getGoals());\n  setMounted(true);\n  \n  // 2. Sync depuis Supabase en background\n  (async () => {\n    const supabase = createClient();\n    const { data: { user } } = await supabase.auth.getUser();\n    if (!user) return;\n    const remoteGoals = await fetchGoalsFromSupabase(supabase, user.id);\n    if (remoteGoals) {\n      setGoals(remoteGoals);\n      saveGoals(remoteGoals);  // cache offline\n      setSyncStatus('synced');\n    }\n  })();\n}, []);\n\n// Save = local + push Supabase\nasync function saveAndSync(nextGoals) {\n  saveGoals(nextGoals);\n  setSyncStatus('syncing');\n  const ok = await pushGoalsToSupabase(supabase, user.id, nextGoals);\n  setSyncStatus(ok ? 'synced' : 'local');\n}"
+        }
+      },
+      { "code": "UI", "txt": "🚀 MIGRATION UI premium — 3 pages supplémentaires : `/admin/rpps-diagnostic` (SkeletonRow pendant test des 4 endpoints), `/admin/mail-diagnostic` (import composants), `/admin/avis-google` déjà fait en 0.58.50. **Total cumulé : ~44 pages** avec UI premium" },
+      { "code": "AI", "txt": "+40 tests Vitest (v058-52-bundle.test.js) : version+SW (2), tuiles Vue d'ensemble (3 — skeleton supprimé, 4 KpiCards directs, accueil rendu inconditionnel), SQL membres_equipe (3 — fichier, CREATE TABLE, RLS), ColorPicker (5 — exports, palette ≥10, input color, validation hex, prop showCustom), tags/etiquettes ColorPicker (2), SQL user_goals (3 — fichier, colonnes, RLS+trigger), sync front (6 — fetch/push, TTL 24h, delete+insert, syncStatus state, load hybride, badges, 4 saveAndSync calls), migration 3 pages (2). Total **~4680 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.52 : **(1)** Les tuiles Promotion/Commandes/En cours/À régler s'affichent IMMÉDIATEMENT au load de /accueil, jamais cachées. **(2)** Le 404 `membres_equipe` peut être fixé définitivement avec le SQL fourni. **(3)** Tags / Étiquettes ont un sélecteur de couleur unifié avec custom hex. **(4)** Les objectifs personnels se synchronisent entre appareils via Supabase (avec fallback localStorage offline). **(5)** ~44 pages UI premium. ⚠ **3 SQL EN ATTENTE** : (a) `0.58.47-tags-icone.sql`, (b) `0.58.48-stats-di-views.sql`, (c) `0.58.52-membres-equipe.sql` ET `0.58.52-user-goals.sql`. PROCHAINES PISTES (0.58.53+) : (a) Brancher ColorPicker dans /annonces aussi. (b) Widget Trafic routier si clé. (c) Mode présentation pour Météo. (d) Continuer migration UI : `/admin/onboarding-test`, `/admin/maintenance-cron`. (e) Drag&drop fields formulaire Crud (modal). (f) Tags multi-langues" }
+    ],
+    "themes": ["fix", "ui", "wow"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.52.html",
+    "sqlFile": "migration-0.58.52-membres-equipe.sql + migration-0.58.52-user-goals.sql"
+  },
+  {
+    "v": "0.58.51",
+    "kind": "hotfix",
+    "titre": "🩹 HOTFIX : Fix 4 tests obsolètes + 404 membres_equipe persistant + Migration UI 5 pages",
+    "chantiers": [
+      { "code": "FIX", "txt": "🧪 FIX 4 TESTS OBSOLÈTES qui pétaient en CI. **(1) v058-40 NOTES_MAX_LEN** : le test cherchait `= 4000` mais on a bumpé à 50000 en 0.58.45 pour supporter les images base64. Pattern assoupli : `\\d{4,}` (au moins 4 chiffres). **(2) v058-40 DEFAULT_ORDER** : le test cherchait `\"notes\"]` (notes en dernier) mais on a ajouté `objectifs` après en 0.58.43. Pattern assoupli : juste vérifier que `notes` est dans l'array. **(3) v058-41 not.toMatch \\\\\\\\s\\\\\\\\S** : le test était faux conceptuellement — il s'attendait à ce que v058-37 utilise `\\s\\S` (1 backslash) mais en réalité v058-37 cherche le pattern LITTÉRAL `\\s\\S` dans le code source d'un autre test, donc 2 backslashes dans la regex. Assertion supprimée. **(4) v058-45 Vigilance** : le test cherchait `Vigilance ${vigColors.label}` (template literal) mais le code est en JSX `Vigilance {vigColors.label}` (interpolation JSX, sans dollar). Pattern corrigé",
+        "code_snippet": {
+          "file": "__tests__/v058-40-bundle.test.js + v058-41 + v058-45",
+          "note": "Tests obsolètes",
+          "lang": "javascript",
+          "before": "// AVANT 0.58.51 - tests obsolètes qui pétaient\nit('Max length 4000 caractères', () => {\n  expect(src).toMatch(/NOTES_MAX_LEN\\s*=\\s*4000/);  // ❌ devenu 50000\n});\nit('DEFAULT_ORDER inclut notes en dernier', () => {\n  expect(src).toMatch(/DEFAULT_ORDER\\s*=\\s*\\[[^\\]]*\"notes\"\\]/);  // ❌ objectifs après\n});\nexpect(src).not.toMatch(/\\\\\\\\s\\\\\\\\S/);  // ❌ assertion incorrecte\nexpect(src).toMatch(/Vigilance \\$\\{vigColors\\.label\\}/);  // ❌ JSX, pas template literal",
+          "after": "// 0.58.51 - patterns flexibles + corrections\nit('Max length défini (≥ 4000 caractères)', () => {\n  // NOTES_MAX_LEN a été augmenté à 50000 en 0.58.45 pour supporter images base64\n  expect(src).toMatch(/NOTES_MAX_LEN\\s*=\\s*\\d{4,}/);\n});\nit('DEFAULT_ORDER inclut notes', () => {\n  // objectifs ajouté à la fin en 0.58.43, donc notes n'est plus le dernier\n  expect(src).toMatch(/DEFAULT_ORDER\\s*=\\s*\\[[^\\]]*[\"']notes[\"'][^\\]]*\\]/);\n});\nit('Bannière vigilance affichée si maxLevel >= 1', () => {\n  // le code utilise JSX `Vigilance {vigColors.label}` (interpolation JSX, pas template literal $)\n  expect(src).toMatch(/Vigilance\\s*\\{vigColors\\.label\\}/);\n});"
+        }
+      },
+      { "code": "FIX", "txt": "🩹 FIX 404 `membres_equipe` PERSISTANT. Le flag `av-attachments-disabled` était stocké en **sessionStorage** (perdu à chaque session). À chaque ouverture du navigateur, le 1er appel produisait un 404 dans la console. **Fix** : flag passé en `localStorage` avec **TTL 24h**. Première erreur → flag actif pendant 24h → plus aucun appel = plus de 404. Si la table est créée plus tard, le re-essai automatique se fait dans les 24h suivant l'expiration. Clé : `av-attachments-disabled-until` (stocke un timestamp ms)",
+        "code_snippet": {
+          "file": "app/components/UserAttachmentsInfo.js",
+          "note": "Flag localStorage 24h",
+          "lang": "jsx",
+          "before": "// 0.58.41 - sessionStorage : reset à chaque session → 404 répété\nif (sessionStorage.getItem('av-attachments-disabled') === 'true') return;\n\n// ...\nif (e1) {\n  sessionStorage.setItem('av-attachments-disabled', 'true');\n  return;\n}",
+          "after": "// 0.58.51 - localStorage avec TTL 24h : 404 vu 1 seule fois max par 24h\nconst FLAG_KEY = 'av-attachments-disabled-until';\ntry {\n  const until = parseInt(localStorage.getItem(FLAG_KEY) || '0', 10);\n  if (until > Date.now()) return;  // flag actif, on skip\n} catch {}\n\n// ...\nif (e1) {\n  // 404 / 42P01 / 42703 — silence total + flag pour 24h\n  try {\n    const next24h = Date.now() + 24 * 60 * 60 * 1000;\n    localStorage.setItem(FLAG_KEY, String(next24h));\n  } catch {}\n  return;\n}"
+        }
+      },
+      { "code": "UI", "txt": "🚀 MIGRATION UI PREMIUM — 5 PAGES DE PLUS. (a) `/admin/bulletins-archive` : SkeletonRow + 2 EmptyStates (filtre `ti-search-off` vs vide `ti-archive-off` avec description workflow). (b) `/admin/referentiels-sante` : SkeletonRow + 2 EmptyStates (`ti-search-off` vs `ti-database-off`). (c) `/admin/prescriptions-archive` : EmptyState `ti-mood-empty` pour 0 résultat avec filtres. (d) `/partenaires-rpps` : SkeletonRow + 2 EmptyStates contextuels (`ti-stethoscope` + CTA 'Ajouter depuis RPPS' vs `ti-search-off`). (e) `/app-logs` : SkeletonRow + EmptyState adaptatif (`ti-search-off` si filtres / `ti-check` 🎉 si rien à signaler). **Total cumulé** : ~41 pages avec UI premium (vs 36 avant)" },
+      { "code": "AI", "txt": "+25 tests Vitest (v058-51-bundle.test.js) : version+SW (2), fix tests obsolètes (4 — NOTES_MAX_LEN flexible, DEFAULT_ORDER souple, not.toMatch retiré, vigilance JSX), 404 membres_equipe (4 — localStorage, TTL 24h, Date.now compare, clé), migration 5 pages (9 — imports + icons + count ≥40). Total **~4640 verts estimés**" },
+      { "code": "DOC", "txt": "BILAN APRÈS 0.58.51 : **(1)** Les 4 tests obsolètes passent enfin. La suite de tests est maintenant green sans devoir skipper. **(2)** Le 404 `membres_equipe` apparaîtra **1 seule fois max toutes les 24h** au lieu de à chaque ouverture du navigateur — c'est invisible en pratique. Si tu crées la table en base, le code re-essaie automatiquement dans les 24h. **(3)** 41 pages utilisent l'UI premium. PROCHAINES PISTES (0.58.52+) : (a) Migration UI : `/journal-acces-rgpd`, `/admin/rpps-diagnostic`, `/admin/mail-diagnostic`. (b) Widget Trafic routier si clé API. (c) Sélecteur couleur custom. (d) Sync Objectifs avec Supabase. (e) Drag&drop fields formulaire Crud. (f) Tags multi-langues. (g) Mode présentation pour widget Météo. **Pour fixer le 404 définitivement** : créer la table `membres_equipe` en base via une migration SQL future si tu veux activer le module Équipes" }
+    ],
+    "themes": ["fix", "ui"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.58.51.html",
+    "sqlFile": null
+  },
+  {
     "v": "0.58.50",
     "kind": "version",
     "titre": "🎁 BUNDLE : Vue d'ensemble bulletproof + Cadre renforcé + Migration UI 6 pages",

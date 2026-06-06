@@ -13,6 +13,8 @@ import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel} from "../../ui";
+// 0.58.52 : migration UI premium
+import { EmptyState, SkeletonRow } from "../../components/ui-premium";
 function MailDiagnosticPageInner() {
   const supabase = createClient();
   const auth = useAuth();
