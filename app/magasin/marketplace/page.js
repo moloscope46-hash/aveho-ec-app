@@ -3,7 +3,7 @@
 //  /magasin/marketplace — Marketplace inter-magasins (0.61.9)
 //  Réassorts urgents : magasins proposent ou demandent des articles
 // =============================================================
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
@@ -12,6 +12,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
+import { MarketplaceChat } from "../../components/MarketplaceChat";
 
 const URGENCES = {
   normale: { lbl: "Normale", col: "#5a8f8f", ic: "⚪" },
@@ -51,6 +52,8 @@ export default function MarketplacePage() {
   const [filterUrgence, setFilterUrgence] = useState("");
   const [filterStatut, setFilterStatut] = useState("active");
   const [tab, setTab] = useState("toutes");  // toutes | mes-offres | demandes-vers-moi
+  const [viewMode, setViewMode] = useState("liste"); // 0.62.0 : liste | carte
+  const [chatOffre, setChatOffre] = useState(null); // 0.62.0 : chat realtime
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -161,21 +164,37 @@ export default function MarketplacePage() {
           </Panel>
 
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 4, marginTop: 12 }}>
-            {[
-              { v: "toutes", lbl: "🌐 Toutes les offres" },
-              { v: "mes-offres", lbl: "📤 Mes offres" },
-              { v: "demandes-vers-moi", lbl: "📥 Demandes reçues" },
-            ].map(t => (
-              <button key={t.v} onClick={() => setTab(t.v)} style={{
-                padding: "8px 16px", border: "none",
-                borderTopLeftRadius: 8, borderTopRightRadius: 8,
-                background: tab === t.v ? "#fff" : "rgba(255,255,255,.5)",
-                color: tab === t.v ? "#7a6fb0" : "#5a6878",
-                fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                borderBottom: tab === t.v ? "3px solid #7a6fb0" : "3px solid transparent",
-              }}>{t.lbl}</button>
-            ))}
+          <div style={{ display: "flex", gap: 4, marginTop: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 4 }}>
+              {[
+                { v: "toutes", lbl: "🌐 Toutes" },
+                { v: "mes-offres", lbl: "📤 Mes offres" },
+                { v: "demandes-vers-moi", lbl: "📥 Demandes reçues" },
+              ].map(t => (
+                <button key={t.v} onClick={() => setTab(t.v)} style={{
+                  padding: "8px 16px", border: "none",
+                  borderTopLeftRadius: 8, borderTopRightRadius: 8,
+                  background: tab === t.v ? "#fff" : "rgba(255,255,255,.5)",
+                  color: tab === t.v ? "#7a6fb0" : "#5a6878",
+                  fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  borderBottom: tab === t.v ? "3px solid #7a6fb0" : "3px solid transparent",
+                }}>{t.lbl}</button>
+              ))}
+            </div>
+            {/* 0.62.0 : toggle vue liste/carte */}
+            <div style={{ display: "flex", gap: 4 }}>
+              {[
+                { v: "liste", ic: "ti-list", lbl: "Liste" },
+                { v: "carte", ic: "ti-map-2", lbl: "Carte" },
+              ].map(m => (
+                <button key={m.v} onClick={() => setViewMode(m.v)} style={{
+                  padding: "6px 12px", border: "1px solid #cfd8e0",
+                  background: viewMode === m.v ? "#7a6fb0" : "#fff",
+                  color: viewMode === m.v ? "#fff" : "#5a6878",
+                  borderRadius: 6, fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                }}><i className={`ti ${m.ic}`} /> {m.lbl}</button>
+              ))}
+            </div>
           </div>
 
           {/* Filtres */}
@@ -198,7 +217,9 @@ export default function MarketplacePage() {
 
             {/* Liste offres */}
             <h3 style={{ margin: "0 0 12px", color: "#7a6fb0" }}>📦 Offres ({filtered.length})</h3>
-            {loading ? <div style={{ padding: 30, textAlign: "center" }}>Chargement...</div>
+            {viewMode === "carte" ? (
+              <MarketplaceMap offres={filtered.filter(o => o.point_lat && o.point_lng)} onSelect={openView} />
+            ) : loading ? <div style={{ padding: 30, textAlign: "center" }}>Chargement...</div>
             : filtered.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: "#8a98a8" }}>
                 <i className="ti ti-shopping-cart-off" style={{ fontSize: 48, color: "#e3e9ee", display: "block", marginBottom: 10 }} />
@@ -237,11 +258,19 @@ export default function MarketplacePage() {
                         {o.rayon_km && <div>📍 {o.rayon_km} km</div>}
                       </div>
                       {/* Actions */}
-                      {!isMine && o.statut === "active" && (
-                        <Btn variant="primary" icon="ti-message" onClick={(e) => { e.stopPropagation(); repondre(o); }} style={{ marginTop: 8, width: "100%", fontSize: 11 }}>
-                          💬 Répondre à cette {o.type_offre}
-                        </Btn>
-                      )}
+                      <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
+                        {!isMine && o.statut === "active" && (
+                          <Btn variant="primary" icon="ti-message" onClick={(e) => { e.stopPropagation(); repondre(o); }} style={{ flex: 1, fontSize: 11 }}>
+                            💬 Répondre
+                          </Btn>
+                        )}
+                        {/* 0.62.0 : Chat temps réel */}
+                        {(o.statut === "en_negociation" || isMine) && (
+                          <Btn variant="ghost" icon="ti-messages" onClick={(e) => { e.stopPropagation(); setChatOffre(o); }} style={{ fontSize: 11 }}>
+                            💬 Chat
+                          </Btn>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -303,8 +332,94 @@ export default function MarketplacePage() {
               )}
             </Modal>
           )}
+          {/* 0.62.0 : Modal chat temps réel */}
+          {chatOffre && (
+            <div onClick={() => setChatOffre(null)} style={{
+              position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000,
+              display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+            }}>
+              <MarketplaceChat offre={chatOffre} magasinId={magasinCtx.magasinId} onClose={() => setChatOffre(null)} />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+// =============================================================
+// 0.62.0 : MarketplaceMap — carte Leaflet avec marqueurs urgence
+// =============================================================
+function MarketplaceMap({ offres, onSelect }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current || typeof window === "undefined") return;
+    let map;
+    (async () => {
+      if (!window.L) {
+        const css = document.createElement("link");
+        css.rel = "stylesheet";
+        css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(css);
+        await new Promise((res) => {
+          const s = document.createElement("script");
+          s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          s.onload = res;
+          document.head.appendChild(s);
+        });
+      }
+      const L = window.L;
+      ref.current.innerHTML = "";
+      map = L.map(ref.current).setView([46.5, 2.5], 6); // France centre
+      L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap, © CartoDB", maxZoom: 19,
+      }).addTo(map);
+
+      const bounds = [];
+      offres.forEach(o => {
+        const lat = parseFloat(o.point_lat || 0);
+        const lng = parseFloat(o.point_lng || 0);
+        if (!lat || !lng) return;
+        const col = o.urgence === "critique" ? "#e35d5b" : o.urgence === "urgent" ? "#EF9F27" : "#5a8f8f";
+        const icon = L.divIcon({
+          html: `<div style="
+            width: 32px; height: 32px; border-radius: 16px;
+            background: ${col}; color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 14px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
+          ">${o.type_offre === "demande" ? "📥" : "📤"}</div>`,
+          className: "", iconSize: [32, 32], iconAnchor: [16, 16],
+        });
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
+        marker.bindPopup(`
+          <div style="font-family: Quicksand, sans-serif; min-width: 200px">
+            <div style="font-weight: 700; font-size: 13px; color: #142131">${o.libelle}</div>
+            <div style="font-size: 11px; color: #5a6878; margin-top: 4px">
+              ${o.quantite} ${o.unite || ""} · ${o.prix_propose_ht ? parseFloat(o.prix_propose_ht).toFixed(2) + " €" : ""}
+            </div>
+            <button onclick="window.__mktSelect && window.__mktSelect('${o.id}')" style="
+              margin-top: 8px; padding: 4px 10px; background: ${col}; color: #fff;
+              border: none; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700;
+            ">Voir détails</button>
+          </div>
+        `);
+        bounds.push([lat, lng]);
+      });
+      if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+
+      // Hook global pour bouton popup
+      window.__mktSelect = (id) => { const o = offres.find(x => x.id === id); if (o) onSelect(o); };
+    })();
+
+    return () => { if (map) map.remove(); };
+  }, [offres]);
+
+  if (!offres.length) {
+    return <div style={{ padding: 40, textAlign: "center", color: "#8a98a8", background: "#fafbfc", borderRadius: 8 }}>
+      <i className="ti ti-map-off" style={{ fontSize: 36, opacity: 0.3, display: "block", marginBottom: 8 }} />
+      Aucune offre avec géolocalisation. Renseigne le point_lat/point_lng dans tes offres.
+    </div>;
+  }
+
+  return <div ref={ref} style={{ width: "100%", height: 500, borderRadius: 8, overflow: "hidden", border: "1px solid #e3e9ee" }} />;
 }

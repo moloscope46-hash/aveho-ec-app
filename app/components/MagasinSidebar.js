@@ -27,6 +27,7 @@ const MAG_NAV = [
   { section: "Flotte & livraisons", items: [
     { p: "/magasin/flotte", ic: "ti-truck-delivery", lbl: "Flotte véhicules", col: "#185FA5" },
     { p: "/magasin/tournees", ic: "ti-route", lbl: "Tournées", col: "#7a6fb0" },
+    { p: "/magasin/analytics-tournees", ic: "ti-chart-line", lbl: "Analytics tournées", col: "#5a8f8f" },
   ]},
   { section: "Catalogue & Articles", items: [
     { p: "/articles", ic: "ti-package", lbl: "Articles", col: "#185FA5" },

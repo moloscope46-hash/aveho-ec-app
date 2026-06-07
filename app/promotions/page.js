@@ -85,7 +85,15 @@ export default function Promotions() {
                       </div>
                       <div className="promo-foot">
                         <span className="days"><i className="ti ti-clock" /> {jr != null ? `${jr}j restants` : "—"}</span>
-                        <button className={`btn-cmd ${t}`} onClick={() => cart.add(p)}>Commander <i className="ti ti-arrow-right" /></button>
+                        <button className={`btn-cmd ${t}`} onClick={async () => {
+                          // 0.62.0 : application auto mercuriale si user a un établissement actif
+                          if (cart.addWithMercuriale && auth.etablissementId) {
+                            const info = await cart.addWithMercuriale({ article: { ...p, id: p.id || p.article_id, titre: p.titre }, etablissementId: auth.etablissementId });
+                            if (info?.source) console.log(`💰 Mercuriale appliquée : ${info.nom} (${info.source})`);
+                          } else {
+                            cart.add(p);
+                          }
+                        }}>Commander <i className="ti ti-arrow-right" /></button>
                       </div>
                     </div>
                   );

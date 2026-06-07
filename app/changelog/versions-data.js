@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.0",
+    "kind": "feat",
+    "titre": "💬 Chat Realtime marketplace + 🗺 Géoloc marketplace + 📊 Analytics tournées + 📱 Capacitor wrapping + ⚡ Migration EC mercuriale",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.0-marketplace-geoloc-realtime.sql`** : (1) Ajoute `point_lat`, `point_lng`, `adresse`, `ville`, `code_postal` dans marketplace_offres. (2) Active Supabase Realtime sur `marketplace_messages` via `ALTER PUBLICATION supabase_realtime ADD TABLE marketplace_messages` — permet le chat live" },
+      { "code": "AI", "txt": "💬 **Composant `<MarketplaceChat>`** : chat temps réel via Supabase Realtime channels. Subscribe sur `marketplace_messages` filtré par offre_id. INSERT déclenche update live chez tous les participants. UI WhatsApp-like : bulles distinctes mine/autre, dégradé violet→teal pour ses messages, indicateur connexion temps réel (point vert/orange), auto-scroll, Enter pour envoyer" },
+      { "code": "AI", "txt": "🗺 **Vue carte Leaflet marketplace** : toggle Liste/Carte dans la page marketplace. Marqueurs colorés selon urgence (rouge critique, orange urgent, teal normal), emoji 📥/📤 dans le marker. Popups avec libellé+quantité+prix+bouton 'Voir détails'. Auto-fit bounds sur les offres géolocalisées. Si aucune offre géoloc → message clair pour renseigner les coords" },
+      { "code": "AI", "txt": "💬 **Bouton 'Chat' sur chaque card marketplace** : visible quand offre = mine OU statut = en_negociation. Ouvre modal MarketplaceChat plein écran. Les messages arrivent en live des 2 côtés" },
+      { "code": "AI", "txt": "📊 **Nouvelle page `/magasin/analytics-tournees`** : dashboard KPI tournées. (1) 7 cards KPI : total, en cours, terminées, distance totale, distance moy., durée moy., étapes livrées. (2) Table 'Performance par chauffeur' triée par nb tournées (tournées/terminées/distance/durée/étapes/distance moy.). (3) Histogramme par jour avec barres dégradé teal sur les 30 derniers jours. Sélecteur période 7j/30j/90j/365j" },
+      { "code": "AI", "txt": "📱 **`capacitor.config.ts` + `CAPACITOR.md`** : config Capacitor pour wrapping app native iOS/Android. AppId `com.aveho.ec`, splash screen navy avec spinner teal, status bar dark mode, plugins push/geoloc/camera configurés. Doc README complet avec étapes setup (npm install, npx cap init, add ios/android, sync, open Xcode/Android Studio), procédure App Store/Play Store, config next.config pour static export" },
+      { "code": "AI", "txt": "⚡ **Migration `/promotions` vers addWithMercuriale** : le bouton 'Commander' utilise maintenant `cart.addWithMercuriale({article, etablissementId: auth.etablissementId})` au lieu de `cart.add()`. Si une mercuriale active existe pour cet étab + article, le prix négocié est appliqué automatiquement avec log console. Fallback vers `cart.add()` si pas d'établissement actif" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin enrichie** : 'Analytics tournées' (teal 📊) dans Flotte & livraisons" },
+      { "code": "INFO", "txt": "🎯 **Aveho EC est désormais une plateforme PSAD/FBM ultra-complète** : ERP magasin + portail EC + marketplace inter-magasins + analytics + signature digitale + GPS + PDF + chat temps réel + scanner natif + app native packageable + edge functions Resend/web-push. **Ça dépasse largement la majorité des solutions du marché.**" },
+      { "code": "INFO", "txt": "🚧 **Pour 0.62.1+** : (1) Auto-géoloc des offres marketplace via API adresse (nominatim ou data.gouv.fr/api-adresse). (2) Indicator 'X messages non lus' sur cards marketplace. (3) Push notif quand nouveau message marketplace reçu. (4) Filtres analytics par chauffeur/véhicule. (5) Export CSV stats analytics. (6) Carto Africa (cartes en darkmode pour les écrans nuit)" }
+    ],
+    "themes": ["feat", "realtime", "chat", "carte", "analytics", "capacitor", "mercuriale"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.10",
     "kind": "fix",
     "titre": "🆘 HOTFIX URGENT : SQL MEGA TOTAL (TOUT en 1 fichier) + fix requêtes membres_structure qui plantaient en 400/503",
