@@ -313,11 +313,14 @@ export default function TopBar({ cartCount = 0, auth }) {
           </button>
         )}
         {/* 0.62.10 : Sélecteur établissement + filtres bât/svc en MODE MAGASIN AUSSI
-            (Cédric veut voir uniquement les étabs/bât/svc où son magasin est rattaché — TODO filtrage v_etabs_du_magasin) */}
+            0.62.94 : option "Tous les établissements" pour mode multi-étab */}
         {mounted && auth && auth.etablissements && auth.etablissements.length > 0 && (
           <div className="etab-switch">
             <i className="ti ti-building-hospital" />
-            <select value={auth.etabId || ""} onChange={(e) => auth.setEtab(e.target.value)}>
+            <select value={auth.etabId || ""} onChange={(e) => auth.setEtab(e.target.value || null)}>
+              {auth.etablissements.length > 1 && (
+                <option value="">🌐 Tous les établissements</option>
+              )}
               {auth.etablissements.map((et) => <option key={et.id} value={et.id}>{et.nom}</option>)}
             </select>
           </div>

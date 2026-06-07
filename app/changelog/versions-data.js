@@ -240,6 +240,40 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.95",
+    "kind": "fix",
+    "titre": "🔧 FIX tuiles disparaissent vue-globale (pseudo z-index 0 + overflow visible si img/badges) + effet menu gauche PLUS CLAIR (hover lift+scale+color, active barre teal gauche) + 🌐 helper applyEtabFilter pour mode Tous étabs + 🗄️ SQL mouvements stock 100 + garages re-créés",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔧 **Fix tuiles vue-globale qui disparaissaient** : la règle CSS 0.62.92 `[data-3d=true]::before { z-index: 2 }` recouvrait le contenu de la tuile. **Correction** : (1) z-index 0 sur les pseudo-elements (passent DERRIÈRE le contenu). (2) `[data-3d=true] > * { position: relative; z-index: 1 }` pour que le contenu reste devant. (3) **Exception overflow** : les tuiles contenant `img`/`position:absolute`/`av-photo-wrap` ont overflow visible + isolation auto (préserve les badges qui dépassent). pointer-events none sur ::before/::after (clic passe au travers)" },
+      { "code": "AI", "txt": "✨ **Menu gauche : effets sélection PLUS CLAIRS** : règle CSS sur `.menu-tile`. **Hover** : background gradient teal/12 + bleu/8 + border teal/50 + transform translateY(-2px) scale(1.02) + box-shadow 6px teal/25 + 2px navy/8 (effet lift cinétique). **Hover sur icône** : scale 1.15 + color teal + drop-shadow teal/40 (effet pop premium). **Hover sur label** : color bleu navy + font-weight 800 (italique gras qui ressort). **Active/courant** (data-active=true ou .active) : background plus saturé teal/25 + bleu/15 + border 2px teal + pseudo-::before barre verticale 3px à gauche gradient teal→navy (indicateur sélectionné iOS-style)" },
+      { "code": "AI", "txt": "🌐 **Helper applyEtabFilter dans useAuth** : function applyEtabFilter(query, column=etablissement_id). (1) Si etabId est défini → query.eq(column, etabId) classique. (2) Si etabId=null (mode Tous étabs) ET allEtabIds.length > 0 → query.in(column, allEtabIds) — filtre sur TOUS les étabs accessibles. (3) Sinon → retourne query inchangée. **Exposé** : auth.applyEtabFilter, auth.allEtabIds, auth.isAllEtabs. Pages clés à adapter : /patients, /materiels, /interventions, /signalements, /commandes — remplacer .eq(etablissement_id, auth.etabId) par auth.applyEtabFilter(query). À noter : le pattern `if (!auth.etabId) { setRows([]); return; }` doit être supprimé sur ces pages — c est ce qui empêche le mode Tous étabs de fonctionner" },
+      { "code": "SQL", "txt": "🗄️ **diag-stock-garages-0.62.95.sql** : (1) **Fix SELECT id sur membres_structure** : remplacé par SELECT * + COLONNES via information_schema (la colonne id existe peut-être pas sur ce schéma). (2) **Audit garages** : COUNT + sample + colonnes. (3) **RE-CRÉATION 5 garages** (Saint-Céré, Cahors, Brive, Aurillac, Souillac) avec ON CONFLICT DO NOTHING + updates défensifs adresse/cp/ville/telephone. (4) **Table mouvements_stock** créée si absente avec RLS. (5) **100 mouvements** : 30 articles × ~4 mouvements chacun avec 10 types (entree_achat, sortie_livraison, transfert_in/out, sortie_sav, retour_sav, inventaire_ajust, casse_perte, sortie_patient, retour_patient) + 10 motifs réels + quantités positives/négatives selon type + dates étalées sur 60 jours passés. (6) **RÉCAP final** : counts garages/mouvements/véhicules-avec-garage + mouvements par type avec sum(quantite)" },
+      { "code": "INFO", "txt": "📅 **À faire 0.62.96+** : (a) **Migrer les pages clés** vers auth.applyEtabFilter : /patients, /materiels, /interventions, /signalements, /commandes (chercher `auth.etabId` + supprimer le `if (!auth.etabId) return;`). (b) **ImageUploader matériel/patient** (bouton Modifier photo dans header). (c) **Buckets Supabase Storage** manuels. (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage(logo) statistiques-rgpd**. (g) **Refacto /materiels** custom. (h) **Workflow commande fournisseur** + PDF + Resend. (i) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "ui", "menu", "etab-filter", "sql"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.95.html",
+    "sqlFile": "diag-stock-garages-0.62.95.sql"
+  },
+  {
+    "v": "0.62.94",
+    "kind": "fix",
+    "titre": "🛡️ /utilisateurs Error Boundary + lazy load (catche enfin l erreur TDZ pour voir le détail) + 🌐 Filtre Tous les établissements dans TopBar + 🗄️ SQL diag collaborateurs",
+    "chantiers": [
+      { "code": "FIX", "txt": "🛡️ **Refonte /utilisateurs** : le composant principal est renommé en `_UsersInner.js` (1710 lignes intactes) et un nouveau `page.js` wrapper est créé avec : (1) **export const dynamic = force-dynamic** pour ssr OFF. (2) **React.lazy(import _UsersInner)** pour chargement dynamique côté client uniquement. (3) **ErrorBoundary class** qui catche l erreur TDZ via componentDidCatch et affiche une **page d erreur claire** : icône rouge gradient 56x56 + titre Erreur de chargement + stack trace dans bloc Consolas monospace fond #fff3f3 + 2 boutons Recharger/Retour + bloc Solutions (vider cache, réinstaller PWA, envoyer erreur à Claude). (4) **Suspense fallback** avec loader spinner teal pendant chargement lazy. **Résultat** : même si le composant interne plante, Cédric verra le message d erreur PRÉCIS et pourra le screenshoter pour fix" },
+      { "code": "AI", "txt": "🌐 **Filtre Tous les établissements dans TopBar** : ajout d une option `<option value=>🌐 Tous les établissements</option>` en première position du select etab-switch quand l user a plus de 1 étab. Au choix, `auth.setEtab(null)` est appelé → modifie lib/useAuth.js function setEtab pour gérer le cas id=null : remove localStorage ETAB_KEY + setState etabId=null + etabNom=Tous les établissements. Les pages qui filtrent par etabId verront null et pourront décider de pas filtrer (à adapter page par page selon le besoin)" },
+      { "code": "SQL", "txt": "🗄️ **diag-COLLABORATEURS-0.62.94.sql** : (1) **Audit** : compte total + champs remplis (nom/prenom/role/email/user_id) sur membres_structure + échantillon 10 lignes. (2) **Check view v_collaborateurs** : existe-t-elle ? (3) **DUMP colonnes** membres_structure complet. (4) **RÉ-IMPORT IDEMPOTENT** des 25 collaborateurs (vérification doublon par nom+prenom+structure_id avant insert + updates email/tel défensifs colonne par colonne avec BEGIN/EXCEPTION). (5) **Vérif finale** : COUNT par rôle + string_agg des noms" },
+      { "code": "INFO", "txt": "💡 **Si /utilisateurs plante encore** : (a) Hard refresh Ctrl+Shift+R + désinstalle PWA mobile. (b) Tu verras maintenant la **page d erreur DÉTAILLÉE** avec stack trace. Screenshot-la et envoie à Claude. (c) L erreur sera dans `_UsersInner.js` ligne X (visible dans le stack), beaucoup plus précis qu un bundle minifié. (d) En attendant tu peux retourner en arrière ou utiliser d autres pages" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.95+** : (a) **ImageUploader matériel/patient** : ajouter bouton Modifier photo dans header. (b) **Buckets Supabase Storage** manuels (articles-photos public RLS allow, materiels-photos public, patients-photos privé RLS structure_id, fournisseurs-logos public). (c) **MobileActionsBar** sur pages clés. (d) **Widget ChartCard /accueil** drag&drop. (e) **doc.addImage(logo) sur statistiques-rgpd**. (f) **Refacto /materiels** custom + ViewModeToggle. (g) **Workflow commande fournisseur** + PDF + Resend. (h) **Footers PDF BL/devis**. (i) **Pages filtrage etabId=null** : adapter les pages clés (/patients, /materiels, /interventions, /signalements) pour gérer le mode `Tous établissements` quand etabId est null"
+      }
+    ],
+    "themes": ["fix", "error-boundary", "utilisateurs", "topbar"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.94.html",
+    "sqlFile": "diag-COLLABORATEURS-0.62.94.sql"
+  },
+  {
     "v": "0.62.93",
     "kind": "feat",
     "titre": "🎯 INTÉGRATION DiTabsNav dans /demandes-internes/[id] (7 onglets Infos/Planning/Livraison/Matériels/Articles/Nomenclature/Magasin) + 📺 Vue TV ENRICHIE bandeau 6 KPI gros chiffres (DI/SAV/Tournées/Maintenances/Patients/CMD) + 📸 ImageUploader logo fournisseur",

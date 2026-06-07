@@ -6245,3 +6245,81 @@ body.av-anim-off .av-page-hero {
   overflow: hidden;
 }
 
+
+/* =============================================================
+   0.62.95 — Fix tuiles disparaissent vue-globale + menu gauche clair
+   ============================================================= */
+
+/* FIX : tuiles avec content important (images, badges) — ne pas clip */
+[data-3d="true"]:has(img),
+[data-3d="true"]:has([style*="position: absolute"]),
+[data-3d="true"]:has(.av-photo-wrap) {
+  overflow: visible !important;
+  isolation: auto !important;
+}
+
+/* FIX : les pseudo-elements ne doivent JAMAIS cacher le contenu */
+[data-3d="true"]::before,
+[data-3d="true"]::after {
+  z-index: 0 !important;  /* derrière le contenu */
+  pointer-events: none;
+}
+
+/* Assurer que le contenu est au-dessus */
+[data-3d="true"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* === EFFET MENU GAUCHE PLUS CLAIR (sidebar) === */
+.menu-tile {
+  transition: all 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+/* Au hover : background bleu clair + scale léger */
+.menu-tile:hover {
+  background: linear-gradient(135deg, rgba(124, 200, 200, .12), rgba(24, 95, 165, .08)) !important;
+  border-color: rgba(124, 200, 200, .5) !important;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 6px 18px rgba(124, 200, 200, .25),
+    0 2px 6px rgba(20, 33, 49, .08) !important;
+}
+
+/* Au hover : icône change de couleur et grandit */
+.menu-tile:hover .mt-ic {
+  transform: scale(1.15);
+  color: #7CC8C8 !important;
+  filter: drop-shadow(0 2px 6px rgba(124, 200, 200, .4));
+  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Au hover : label en gras + couleur changée */
+.menu-tile:hover .mt-lbl {
+  color: #185FA5 !important;
+  font-weight: 800 !important;
+  transition: all 250ms;
+}
+
+/* Tuile active/courante (si data-active=true sur le menu) */
+.menu-tile[data-active="true"],
+.menu-tile.active {
+  background: linear-gradient(135deg, rgba(124, 200, 200, .25), rgba(24, 95, 165, .15)) !important;
+  border-color: #7CC8C8 !important;
+  border-width: 2px !important;
+  box-shadow: 0 4px 12px rgba(124, 200, 200, .35);
+}
+
+/* Indicateur "sélectionné" : barre verticale teal à gauche */
+.menu-tile[data-active="true"]::before,
+.menu-tile.active::before {
+  content: "" !important;
+  position: absolute;
+  top: 8px; left: 0;
+  bottom: 8px; width: 3px;
+  background: linear-gradient(180deg, #7CC8C8, #185FA5);
+  border-radius: 0 3px 3px 0;
+  z-index: 1;
+}
+
