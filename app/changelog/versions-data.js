@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.6",
+    "kind": "fix",
+    "titre": "🔥 SQL ULTRA-DEFENSIF + 🔗 Page Rattachements étab↔magasin + 🖨 PDF mercuriale + UX continue",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔥 **`HOTFIX-aveho-0.61.6-ULTRA-DEFENSIF.sql`** : ré-écriture défensive du hotfix. Cause de l'erreur `42703: column \"magasin_id\" does not exist` : si une table existe déjà sans certaines colonnes, `CREATE INDEX` plante. **Fix** : pour CHAQUE table je fais `CREATE TABLE IF NOT EXISTS (id, ...minimum)` puis `ALTER TABLE ADD COLUMN IF NOT EXISTS` pour chaque colonne **AVANT** les CREATE INDEX et les VIEWS. Maintenant ça passe même si les tables existent déjà depuis longtemps avec des colonnes différentes" },
+      { "code": "AI", "txt": "🔗 **Nouvelle page `/magasin/rattachements`** : interface 2 colonnes pour rattacher les articles d'un étab à ton catalogue magasin. (1) Sélecteur établissement avec compteur 'rattachés/à rattacher'. (2) Colonne gauche : articles de l'étab (vert si rattaché, bouton 'Délier'). (3) Colonne droite : ton catalogue magasin avec, sous chaque article, 3 boutons → rattacher rapidement les articles étab en un clic. Recherche libellé+code des deux côtés. Quand l'EC commande un article rattaché, le prix de la mercuriale active s'applique automatiquement" },
+      { "code": "AI", "txt": "🖨 **PDF Mercuriale imprimable** : fonction `imprimerMercuriale()` dans `/magasin/mercuriales`. Bouton 🖨 PDF dans le modal édition. Génère HTML stylé Aveho violet avec : header logo + numéro + type (MERCURIALE/MARCHÉ/DEVIS/CONTRAT), méta-grid (étab client + période validité), **tableau articles avec prix HT, remise%, prix négocié, quantités min/max**, **total brut HT** somme des prix négociés, conditions paiement+livraison, 2 cadres signature (fournisseur + client). Window.print() automatique" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin enrichie** : 'Rattachements étab' (bleu, ti-link) entre Catalogue et Mercuriales dans la section Catalogue & Commerce" },
+      { "code": "INFO", "txt": "🎯 **Workflow complet maintenant pour ton WORLDVIEW Cédric** : (1) Magasin crée son catalogue → (2) Magasin rattache les articles de chaque étab → (3) Magasin crée une mercuriale active rattachée à un étab avec prix négociés → (4) EC commande → prix de la mercuriale appliqué automatiquement → (5) Magasin imprime le PDF mercuriale comme accord commercial signé" },
+      { "code": "INFO", "txt": "🚧 **À venir 0.61.7+** : (1) Application auto mercuriale au panier EC (côté add to cart). (2) Notes HTML manquantes pour 0.60.x à 0.61.6. (3) Routing GPS auto OSRM pour tournées. (4) Signature client par étape tournée (canvas). (5) BarcodeDetector API native scan in-app" }
+    ],
+    "themes": ["fix", "sql", "rattachements", "mercuriales", "pdf"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.5",
     "kind": "fix",
     "titre": "🔥 MEGA HOTFIX : SQL unifié qui crée TOUTES les tables manquantes + fix bug silencieux création bilans SAV",
