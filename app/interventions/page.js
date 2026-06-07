@@ -200,7 +200,7 @@ function InterventionsInner() {
             }
             // 3. Récupère le nom du magasin pour le toast
             if (magasinIdDetecte) {
-              const m = await supabase.from("magasins_fournisseurs").select("nom").eq("id", magasinIdDetecte).maybeSingle();
+              const m = await supabase.from("magasins").select("nom").eq("id", magasinIdDetecte).maybeSingle();
               magasinNomDetecte = m.data?.nom || null;
             }
           }

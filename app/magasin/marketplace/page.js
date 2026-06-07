@@ -13,6 +13,7 @@ import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
 import { MarketplaceChat } from "../../components/MarketplaceChat";
+import { geocoderAdresse } from "../../../lib/geoloc";
 
 const URGENCES = {
   normale: { lbl: "Normale", col: "#5a8f8f", ic: "⚪" },
@@ -54,6 +55,8 @@ export default function MarketplacePage() {
   const [tab, setTab] = useState("toutes");  // toutes | mes-offres | demandes-vers-moi
   const [viewMode, setViewMode] = useState("liste"); // 0.62.0 : liste | carte
   const [chatOffre, setChatOffre] = useState(null); // 0.62.0 : chat realtime
+  // 0.62.4 : Compteur messages par offre (badge "X messages")
+  const [messagesCount, setMessagesCount] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -70,10 +73,18 @@ export default function MarketplacePage() {
     if (tab === "demandes-vers-moi" && magasinCtx.magasinId) q = q.eq("magasin_repondeur_id", magasinCtx.magasinId);
     const [o, m] = await Promise.all([
       tryFetch(q),
-      tryFetch(supabase.from("magasins_fournisseurs").select("id, nom, ville")),
+      tryFetch(supabase.from("magasins").select("id, nom, ville")),
     ]);
     setOffres(o);
     setMagasins(m);
+    // 0.62.4 : Charge compteur messages par offre
+    if (o.length > 0) {
+      const offreIds = o.map(x => x.id);
+      const msgRes = await tryFetch(supabase.from("marketplace_messages").select("offre_id").in("offre_id", offreIds));
+      const counts = {};
+      msgRes.forEach(m => { counts[m.offre_id] = (counts[m.offre_id] || 0) + 1; });
+      setMessagesCount(counts);
+    }
     setLoading(false);
   }
 
@@ -84,6 +95,26 @@ export default function MarketplacePage() {
     if (!form.libelle.trim()) { alert("Description obligatoire"); return; }
     setSaving(true);
     try {
+      // 0.62.4 : Auto-géoloc — récupère adresse du magasin émetteur si pas déjà coords
+      let point_lat = form.point_lat || null;
+      let point_lng = form.point_lng || null;
+      let adresse_offre = form.adresse || null;
+      if (!point_lat && magasinCtx.magasinId) {
+        try {
+          const mag = await supabase.from("magasins").select("adresse, code_postal, ville").eq("id", magasinCtx.magasinId).maybeSingle();
+          if (mag.data) {
+            const adrFull = [mag.data.adresse, mag.data.code_postal, mag.data.ville].filter(Boolean).join(", ");
+            if (adrFull.length > 5) {
+              const geo = await geocoderAdresse(adrFull);
+              if (geo) {
+                point_lat = geo.lat;
+                point_lng = geo.lng;
+                adresse_offre = adresse_offre || geo.label;
+              }
+            }
+          }
+        } catch (e) { console.warn("[geocode marketplace]", e); }
+      }
       const payload = {
         magasin_emetteur_id: magasinCtx.magasinId || null,
         structure_id: auth.structureId,
@@ -99,6 +130,9 @@ export default function MarketplacePage() {
         zone_geographique: form.zone_geographique,
         rayon_km: form.rayon_km || null,
         statut: form.statut,
+        // 0.62.4 : Géoloc automatique
+        point_lat, point_lng,
+        adresse: adresse_offre,
         updated_at: new Date().toISOString(),
       };
       if (editing.mode === "create") {
@@ -266,8 +300,18 @@ export default function MarketplacePage() {
                         )}
                         {/* 0.62.0 : Chat temps réel */}
                         {(o.statut === "en_negociation" || isMine) && (
-                          <Btn variant="ghost" icon="ti-messages" onClick={(e) => { e.stopPropagation(); setChatOffre(o); }} style={{ fontSize: 11 }}>
+                          <Btn variant="ghost" icon="ti-messages" onClick={(e) => { e.stopPropagation(); setChatOffre(o); }} style={{ fontSize: 11, position: "relative" }}>
                             💬 Chat
+                            {messagesCount[o.id] > 0 && (
+                              <span style={{
+                                position: "absolute", top: -6, right: -6,
+                                background: "#e35d5b", color: "#fff",
+                                fontSize: 9, fontWeight: 700,
+                                padding: "1px 5px", borderRadius: 8,
+                                minWidth: 16, textAlign: "center",
+                                border: "2px solid #fff",
+                              }}>{messagesCount[o.id]}</span>
+                            )}
                           </Btn>
                         )}
                       </div>

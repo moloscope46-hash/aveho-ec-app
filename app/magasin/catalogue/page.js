@@ -13,6 +13,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
+import { MagasinRattachementCheck } from "../../components/MagasinRattachementCheck";
 
 const empty = {
   libelle: "", code: "", reference: "", unite: "unité",
@@ -114,6 +115,7 @@ export default function CatalogueMagasinPage() {
       <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
         <MagasinSidebar />
         <div className="page-content" style={{ flex: 1, padding: "20px 24px" }}>
+          <MagasinRattachementCheck />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <PageHead icon="ti-package" title="Catalogue magasin" subtitle={`${articles.length} article(s) · ${stats.rattaches} rattachés à des étabs`} />
             <Btn variant="primary" icon="ti-plus" onClick={openCreate}>Nouvel article</Btn>

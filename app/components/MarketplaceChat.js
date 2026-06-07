@@ -58,6 +58,26 @@ export function MarketplaceChat({ offre, magasinId, onClose }) {
         magasin_id: magasinId,
         message: newMsg.trim(),
       });
+      // 0.62.4 : Notif push à l'AUTRE partie (émetteur si je suis répondeur, ou inverse)
+      try {
+        const autreMagasinId = offre.magasin_emetteur_id === magasinId
+          ? offre.magasin_repondeur_id
+          : offre.magasin_emetteur_id;
+        if (autreMagasinId) {
+          const membres = await supabase.from("membres_structure")
+            .select("user_id")
+            .eq("magasin_fournisseur_id", autreMagasinId);
+          const notifs = (membres.data || []).map(m => ({
+            user_id: m.user_id,
+            type: "marketplace_message",
+            titre: `💬 Nouveau message marketplace`,
+            message: `Sur l'offre "${offre.libelle?.slice(0, 50)}" : ${newMsg.trim().slice(0, 100)}`,
+            url: `/magasin/marketplace?offre=${offre.id}`,
+            lue: false,
+          }));
+          if (notifs.length > 0) await supabase.from("notifications").insert(notifs);
+        }
+      } catch (e) { console.warn("[notif marketplace msg]", e); }
       setNewMsg("");
     } catch (e) { alert("Erreur envoi : " + e.message); }
     finally { setSending(false); }

@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.4",
+    "kind": "fix",
+    "titre": "🔥 Fix création magasin (bug racine table) + 🩺 Bandeau diagnostic + Auto-géoloc marketplace + Badge messages + Push notif chat",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **Bug racine trouvé** : pourquoi tu ne pouvais rien créer côté magasin. Le hook `useMagasinContext` lit la table **`magasins`** (le 90% du code aussi). Mais mon code marketplace + interventions utilisait **`magasins_fournisseurs`** (table différente créée par mes SQL récents). Résultat : `magasinCtx.magasinId` toujours `null` chez toi → toutes les requêtes filtrées sur magasin renvoyaient rien → on ne pouvait rien créer car payload `magasin_id: null`. **Fix** : `sed -i 's/magasins_fournisseurs/magasins/g'` dans marketplace + interventions. Tout le code utilise maintenant `magasins`" },
+      { "code": "AI", "txt": "🩺 **Composant `<MagasinRattachementCheck>`** : bandeau diagnostic visible en haut de `/magasin/catalogue` et `/magasin/mercuriales`. Si tu es rattaché → bandeau vert ✓ avec nom magasin. Si **PAS** rattaché → bandeau rouge explicite avec : (1) la cause exacte (`magasin_id` null → INSERT échoue). (2) Lien vers `/magasins` pour en créer un. (3) **Code SQL prêt à copier-coller** dans Supabase pour te rattacher manuellement : `UPDATE membres_structure SET magasin_fournisseur_id = (SELECT id FROM magasins LIMIT 1), role_professionnel = 'utilisateur_magasin' WHERE user_id = auth.uid();`" },
+      { "code": "SQL", "txt": "🩺 **`DIAGNOSTIC-rattachement-magasin.sql`** : SQL de diagnostic à exécuter dans Supabase. Te dit (1) si ton compte est reconnu utilisateur_magasin, (2) quels magasins existent, (3) propose la création + rattachement en commentaires prêts à dé-commenter" },
+      { "code": "AI", "txt": "📍 **Auto-géoloc marketplace via API data.gouv.fr/api-adresse** : helper `lib/geoloc.js` avec `geocoderAdresse(adresse)` et `geocoderInverse(lat, lng)`. À la création d'une offre marketplace, le code récupère automatiquement l'adresse du magasin émetteur + appelle l'API publique (gratuite, sans clé) pour géocoder et stocker `point_lat`/`point_lng`/`adresse`. Les marketmarkers apparaissent automatiquement sur la carte" },
+      { "code": "AI", "txt": "🔢 **Badge messages non lus marketplace** : compteur de messages par offre chargé dans `reload()` (single query in marketplace_messages). Badge rouge avec nombre `position: absolute, top: -6, right: -6` sur le bouton 💬 Chat. Lisible d'un coup d'œil sur la liste des offres" },
+      { "code": "AI", "txt": "📲 **Push notif marketplace** : quand tu envoies un message dans MarketplaceChat, le composant identifie automatiquement l'autre partie (émetteur si tu es répondeur, ou inverse) et INSERT notifications pour tous ses membres `magasin_fournisseur_id`. Type='marketplace_message', titre '💬 Nouveau message marketplace', lien direct vers `/magasin/marketplace?offre=X`" }
+    ],
+    "themes": ["fix-critique", "magasin", "geoloc", "badge", "notifications"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.3",
     "kind": "feat",
     "titre": "🎯 Filtres toolbar EC cachés en mode magasin + Analytics tournées : filtres chauffeur/véhicule + Export CSV",

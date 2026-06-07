@@ -12,6 +12,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
+import { MagasinRattachementCheck } from "../../components/MagasinRattachementCheck";
 import { SwipeableCard } from "../../components/SwipeableCard";
 
 const TYPES = {
@@ -208,6 +209,7 @@ export default function MercurialesPage() {
       <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
         <MagasinSidebar />
         <div className="page-content" style={{ flex: 1, padding: "20px 24px" }}>
+          <MagasinRattachementCheck />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <PageHead icon="ti-file-text" title="Mercuriales & Marchés" subtitle={`${mercus.length} document(s) · ${mercus.filter(m => m.statut === "active").length} actif(s)`} />
             <Btn variant="primary" icon="ti-plus" onClick={openCreate}>Nouvelle mercuriale</Btn>
