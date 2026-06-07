@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.10 — FIX</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #EF9F27; border-bottom: 3px solid #EF9F27; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #EF9F2711, #EF9F2705); padding: 20px 24px; border-left: 6px solid #EF9F27; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #EF9F27; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">🐛 FIX</span>
+<h1>Aveho 0.62.10</h1>
+<div class="titre">🔥 Fix /materiels React #310 (hooks order) + click libellé article = fiche globale + Filtres TopBar restaurés en mode magasin (filtrés par rattachements)</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#fix-critique</span> <span class="theme">#react-hooks</span> <span class="theme">#magasin</span> <span class="theme">#rattachements</span></div>
+</div>
+<h2>📋 Chantiers (5)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🔥 **Fix React error #310 /materiels** : les 3 `usePageAction()` étaient appelés APRÈS le `if (!auth.ready || !relReady) return null;` ligne 130. React strict : **le nombre de hooks appelés doit être identique entre tous les renders**. Quand auth pas prêt → return null → hooks pas appelés. Quand auth prêt → hooks appelés → React panique. **Fix** : déplacé les 3 usePageAction AVANT le early return. Pattern correct : tous les hooks en haut, early return après</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📄 **Click libellé article = fiche globale (immobilisation, stock, mouvements)** : restaure le comportement antérieur. Le libellé navigue maintenant vers `/article/[id]` (vue détaillée complète). Le bouton crayon 🖉 ouvre toujours le modal d'édition rapide pour les modifs ponctuelles</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.10-magasins-rattachements.sql`** : nouvelle table `magasins_rattachements` (magasin_id, etablissement_id, batiment_id, service_id, depot_id, actif, notes) — permet de rattacher un magasin granulairement à des bâtiments/services/dépôts précis d'établissements partenaires. + colonne `depots.magasin_id` (rattachement direct simple). + 2 vues helper : `v_etabs_du_magasin` et `v_perimetre_magasin`. RLS activé. 6 indexes</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🎯 **Filtres TopBar restaurés en mode magasin** : avant je les avais cachés avec `!isMagasin` (Cédric voulait pas rien quand pas rattaché). Maintenant je les **REMETS** mais le `BatimentServiceSwitcher` les **FILTRE** : import `useMagasinContext` + nouveau state `rattachementsMagasin` chargé via `magasins_rattachements.eq(magasin_id).eq(actif,true)`. Si rattachements ont des `batiment_id` précis, la liste bâtiments est filtrée. Sinon (rattachement niveau étab) on garde la liste complète</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **Workflow rattachement magasin — en cours** : il faut maintenant exécuter le SQL puis créer manuellement des `magasins_rattachements` (depuis Supabase ou bientôt une page admin). Exemple : `INSERT INTO magasins_rattachements (magasin_id, etablissement_id, batiment_id) VALUES ('<ton-magasin>', '<étab-client>', '<bât-précis>');`. Une fois rattaché, la TopBar du user magasin n'affichera que ce bâtiment dans le switcher</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.10<br>Généré automatiquement</div>
+</body></html>

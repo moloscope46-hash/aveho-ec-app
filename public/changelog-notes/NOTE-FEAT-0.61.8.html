@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.61.8 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.61.8</h1>
+<div class="titre">🚛 MEGA pack final magasin : Mercuriale auto cart + GPS tracking chauffeur + OSRM routing + Signature étape + Swipe + 12 notes HTML</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#mercuriales</span> <span class="theme">#gps</span> <span class="theme">#osrm</span> <span class="theme">#signature</span> <span class="theme">#swipe</span> <span class="theme">#notes</span></div>
+</div>
+<h2>📋 Chantiers (10)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 💰 **useCart enrichi** : nouvelle fonction `addWithMercuriale({article, etablissementId, qte})` qui appelle `getPrixMercurialeActif()` AVANT d'ajouter au panier. Stocke prix_mercuriale_ht + mercuriale_id + mercuriale_nom + mercuriale_source sur la ligne du panier. Compteur `nbMercu` (nombre de lignes avec mercuriale appliquée)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🏷 **CartDropdown badge mercuriale** : badge violet '💰 Mercu (nom)' sur les lignes du panier qui ont un prix négocié mercuriale. Affiche aussi le prix public barré quand le prix mercuriale est plus bas</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🛰 **Hook `useGpsTracking({tourneeId, enabled, intervalMs})`** dans `lib/gpsHelpers.js` : utilise navigator.geolocation.watchPosition avec enableHighAccuracy. Envoie automatiquement la position en DB sur `tournees` table toutes les 30s. Retourne `{position, error, watching}`. Activé automatiquement quand tournée passe en 'en_cours'</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🧭 **OSRM routing** dans `lib/gpsHelpers.js` : (1) `calculerItineraire(points)` appelle API publique router.project-osrm.org pour route GeoJSON entre N points + distance/durée. (2) `optimiserTournee(points)` utilise OSRM Trip API (TSP solver) avec source=first, destination=last pour optimiser l'ordre des étapes. Retourne nouvelle séquence + distance + durée</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> ✍ **Signature client par étape tournée** : quand chauffeur clique 'Terminer' sur une étape, modal SignatureCanvas s'ouvre. Capture signature manuscrite, upload vers bucket `sav-photos`, stocke URL dans `tournees_etapes.signature_url`. Bouton 'Sans signature' aussi (cas où client absent)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🚛 **Intégration tournée détail** : bandeau GPS en haut de la carte (🛰 Tracking actif + coordonnées temps réel), bouton '🧭 Optimiser ordre (OSRM)' qui propose la séquence optimale et update les ordre des étapes, bandeau distance/durée OSRM affichée après calcul</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 👈 **Composant `<SwipeableCard>`** : swipe gauche = action 1 (rouge / delete), swipe droite = action 2 (vert / archive). Backgrounds révélés progressivement avec opacité dynamique selon distance de drag. Haptic feedback au seuil. Threshold configurable (default 80px). Réutilisable partout (cards mercuriales, DI, articles, etc.)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📝 **12 notes HTML rattrapées** (versions 0.60.3 à 0.61.6) : génération batch via script Node lisant versions-data.js. Design cohérent (gradient navy + couleur thème par version), card chantier par chantier avec badge code (SQL/AI/INFO), markdown bold + code rendus en HTML. Plus de note manquante dans le changelog UI</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🎯 **Workflow logistique 100% complet** : EC commande → mercuriale active applique le prix négocié auto → magasin valide → tournée créée (avec OSRM qui optimise l'ordre) → chauffeur démarre (GPS tracking commence) → arrive à chaque étape → fait signer le client (canvas) → tournée terminée. Tout digital, tout tracé</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **0.61.9+** : (1) Migration des pages EC qui passent commande pour utiliser `addWithMercuriale` au lieu de `add`. (2) Affichage historique GPS chauffeur sur la carte. (3) Export feuille de route PDF par chauffeur. (4) Notifications push à chaque étape terminée vers les EC. (5) Marketplace inter-magasins pour réassorts urgents</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.61.8<br>Généré automatiquement</div>
+</body></html>

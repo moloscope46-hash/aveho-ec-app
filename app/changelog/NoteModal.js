@@ -236,13 +236,15 @@ export default function NoteModal({ noteModal, setNoteModal, onClose }) {
           </div>
         )}
 
-        {/* Contenu HTML scrollable */}
+        {/* Contenu HTML scrollable — 0.62.11 : fix mobile overflow */}
         <div
           ref={contentRef}
+          className="cl-note-content-wrap"
           style={{
             flex: 1,
             overflow: "auto",
             background: "#f4f7fa",
+            WebkitOverflowScrolling: "touch",
           }}
         >
           {noteModal.loading || !noteModal.html ? (
@@ -257,7 +259,7 @@ export default function NoteModal({ noteModal, setNoteModal, onClose }) {
               <span style={{ marginLeft: 10, fontSize: 13 }}>Chargement de la note…</span>
             </div>
           ) : (
-            <div dangerouslySetInnerHTML={{ __html: noteModal.html }} />
+            <div className="cl-note-scope" dangerouslySetInnerHTML={{ __html: noteModal.html }} />
           )}
         </div>
       </div>
@@ -281,6 +283,22 @@ export default function NoteModal({ noteModal, setNoteModal, onClose }) {
         }
         .cl-note-scope { font-family: 'Segoe UI', sans-serif; }
         .cl-note-scope .wrap { padding: 24px 28px 40px; }
+        /* 0.62.11 : Force responsive sur le HTML injecté */
+        .cl-note-content-wrap { padding: 0; }
+        .cl-note-scope { max-width: 100%; box-sizing: border-box; }
+        .cl-note-scope * { max-width: 100% !important; box-sizing: border-box !important; }
+        .cl-note-scope body { max-width: 100% !important; padding: 16px !important; margin: 0 !important; }
+        .cl-note-scope pre, .cl-note-scope code { white-space: pre-wrap !important; word-break: break-word !important; overflow-x: auto; max-width: 100%; }
+        .cl-note-scope table { display: block; overflow-x: auto; max-width: 100%; }
+        .cl-note-scope img { height: auto; }
+        /* Mobile : padding réduit */
+        @media (max-width: 640px) {
+          .cl-note-scope body { padding: 12px !important; font-size: 14px !important; }
+          .cl-note-scope h1 { font-size: 20px !important; }
+          .cl-note-scope h2 { font-size: 15px !important; }
+          .cl-note-scope .chantier { padding: 10px 12px !important; font-size: 13px !important; }
+          .cl-note-scope .header { padding: 12px !important; }
+        }
       `}</style>
     </div>
   );

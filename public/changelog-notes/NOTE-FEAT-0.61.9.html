@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.61.9 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.61.9</h1>
+<div class="titre">🏪 Marketplace inter-magasins + 🛰 Historique GPS polyline rouge + 📄 PDF feuille route + 📲 Notif push EC + 👈 SwipeableCard intégré</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#marketplace</span> <span class="theme">#gps</span> <span class="theme">#pdf</span> <span class="theme">#notifications</span> <span class="theme">#swipe</span></div>
+</div>
+<h2>📋 Chantiers (10)</h2>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.61.9-marketplace-gps-track.sql`** : (1) Table `marketplace_offres` (type demande/offre, urgence normale/urgent/critique, article+quantité+prix, conditions+délai+zone+rayon, statut workflow active→en_negociation→acceptee→expiree). (2) Table `marketplace_messages` (chat de négociation). (3) Table `tournees_gps_track` (historique positions chauffeur avec lat/lng/accuracy/speed/heading)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🏪 **Nouvelle page `/magasin/marketplace`** : marketplace inter-magasins pour réassorts urgents. Cards par offre (badge type 📥 Demande / 📤 Offre, urgence colorée, statut workflow). 3 tabs : Toutes / Mes offres / Demandes reçues. Filtres type+urgence+statut. Bouton 'Répondre' qui passe l'offre en 'en_negociation' + crée un message. Modal édition complet (type, urgence, article, quantité, prix, délai, zone géo, rayon km, conditions)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🛰 **Historique GPS chauffeur enregistré** : useGpsTracking modifié pour INSERT dans `tournees_gps_track` (au lieu d'écraser tournees). Chaque position toutes les 30s est conservée → permet de retracer l'itinéraire réel parcouru</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🗺 **Polyline rouge GPS sur carte tournée** : la page détail tournée charge `gpsTrack` et trace une polyline rouge épaisse (4px, opacity 0.85) de toutes les positions chauffeur. Marker 🚛 animé (pulse 1.5s) à la dernière position. Bandeau '🚛 Tracé GPS chauffeur : N points enregistrés' visible quand des données existent</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📄 **PDF Feuille de route imprimable** : bouton '📄 Feuille de route PDF' dans le header tournée. Génère HTML stylé Aveho avec header logo+numéro+date, méta-grid (date/horaires/véhicule/chauffeur/téléphone/étapes/distance), **tableau étapes complet** (ordre, adresse, type, heure prévue, durée, statut emoji ✅/🚛/☐, notes + zone signature), 2 zones signature chauffeur (départ + retour avec km). Window.print() auto</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📲 **Notifications push EC à chaque livraison** : dans `terminerAvecSignature()`, après upload signature, **récupère le created_by de la DI** et INSERT une notification 'type=livraison' dans la table notifications avec titre '📦 Livraison effectuée : <label étape>' + lien vers la DI. L'EC voit ainsi en temps réel quand le chauffeur livre</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 👈 **SwipeableCard intégré dans `/magasin/mercuriales`** : exemple complet d'usage. Swipe ← pour supprimer (rouge ti-trash), swipe → pour archiver (violet ti-archive avec UPDATE statut='archivee'). Hint '← Swipe pour supprimer · Swipe → pour archiver' affiché en bas de card. À étendre à catalogue/marketplace/tournées</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📍 **Sidebar magasin enrichie** : 'Marketplace inter-magasins' (orange 🛒) dans la section Catalogue & Commerce</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🎯 **Workflow marketplace** : (1) Magasin A a besoin de pansements urgent → crée demande 🔴 critique sur marketplace. (2) Magasin B voit la demande, clique 'Répondre' avec message+prix. (3) Statut passe en 'en_negociation'. (4) Négociation via messages. (5) Acceptation → transfert effectif via tournée standard</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **0.62.0+** : (1) Chat temps réel marketplace via Supabase Realtime. (2) Géolocalisation auto des offres marketplace (montrer sur carte). (3) Edge function send-notifications-queue pour push réel aux EC. (4) Dashboard analytics tournées (KPI distance/durée moyennes). (5) Application mobile native Capacitor wrapping</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.61.9<br>Généré automatiquement</div>
+</body></html>

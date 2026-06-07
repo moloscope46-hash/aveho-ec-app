@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.61.10 — FIX</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #EF9F27; border-bottom: 3px solid #EF9F27; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #EF9F2711, #EF9F2705); padding: 20px 24px; border-left: 6px solid #EF9F27; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #EF9F27; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">🐛 FIX</span>
+<h1>Aveho 0.61.10</h1>
+<div class="titre">🆘 HOTFIX URGENT : SQL MEGA TOTAL (TOUT en 1 fichier) + fix requêtes membres_structure qui plantaient en 400/503</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#fix</span> <span class="theme">#sql</span> <span class="theme">#hotfix-urgent</span> <span class="theme">#membres</span></div>
+</div>
+<h2>📋 Chantiers (8)</h2>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🔥 **`HOTFIX-aveho-0.61.10-MEGA-TOTAL.sql`** : LE SQL ULTIME. 477 lignes. Inclut TOUTES les tables et colonnes nécessaires depuis 0.60.0 jusqu'à 0.61.10 dans **UN SEUL FICHIER**. Plus besoin d'appliquer les SQL précédents. Tu peux ré-exécuter 50 fois sans risque (idempotent total)</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`membres_structure` : 16 ALTER ADD COLUMN IF NOT EXISTS** : ajoute toutes les colonnes utilisées par le code mais peut-être absentes chez toi : `role_professionnel`, `email`, `telephone`, `prenom`, `nom`, `nom_affiche`, `fonction_detail`, `magasin_fournisseur_id`, `photo_url`, `rpps`, `adeli`, `rpps_profession`, `pharmacie_id`, `service_id`, `structure_id`, `user_id` + indexes. **C'est l'erreur 400 que tu voyais** : la requête select `email` plantait car la colonne n'existait pas → cascade de 503 sur la page</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`magasins_fournisseurs` complète** : toutes colonnes utilisées par marketplace + flotte + tournées (code, adresse, ville, telephone, email, siret, finess, lat/lng, etc.)</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`tournees_gps_track`, `marketplace_offres`, `marketplace_messages`** créées (au cas où SQL 0.61.9 pas appliqué)</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **Vue `v_collaborateurs` créée** : utilisée par 4 pages, dépend de membres_structure</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🐛 **Fix code requêtes `membres_structure`** : page flotte demandait `select("user_id, prenom, nom, email").eq("role_professionnel", "utilisateur_magasin")` → **400** si une colonne manque. Simplifié en `select("user_id, prenom, nom")` simple. Idem pour tournée détail : `select("prenom, nom, telephone")` → `select("prenom, nom")` (le telephone reste affiché si présent grâce au `?.telephone`)</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🎯 **PROCÉDURE URGENTE** : (1) **APPLIQUE EN PREMIER** `HOTFIX-aveho-0.61.10-MEGA-TOTAL.sql` dans Supabase. Vérifie sortie : `✓ TABLES nb=19, ✓ VUES nb=4`. (2) Push le code. (3) Hard refresh (Ctrl+F5). Toutes les pages magasin doivent fonctionner</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **Pistes 0.62.0+** : (1) Chat temps réel marketplace via Supabase Realtime. (2) Géoloc auto offres marketplace sur carte Leaflet. (3) Edge function send-notifications-queue pour push réel via Resend+web-push. (4) Dashboard analytics tournées (KPI distance/durée moyennes). (5) Application mobile native via Capacitor wrapping. (6) Migration pages EC qui passent commande vers `addWithMercuriale`</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.61.10<br>Généré automatiquement</div>
+</body></html>

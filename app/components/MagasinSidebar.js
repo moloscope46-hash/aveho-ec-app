@@ -23,6 +23,7 @@ const MAG_NAV = [
   { section: "Catalogue & Commerce", items: [
     { p: "/magasin/catalogue", ic: "ti-package", lbl: "Catalogue articles", col: "#5a8f8f" },
     { p: "/magasin/rattachements", ic: "ti-link", lbl: "Rattachements étab", col: "#185FA5" },
+    { p: "/magasin/rattachements-perimetre", ic: "ti-link", lbl: "Périmètre intervention", col: "#7a6fb0" },
     { p: "/magasin/mercuriales", ic: "ti-file-text", lbl: "Mercuriales & marchés", col: "#7a6fb0" },
     { p: "/magasin/marketplace", ic: "ti-shopping-cart-plus", lbl: "Marketplace inter-magasins", col: "#EF9F27" },
   ]},

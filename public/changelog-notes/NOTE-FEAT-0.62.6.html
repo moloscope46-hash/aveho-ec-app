@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.6 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.62.6</h1>
+<div class="titre">🔢 Compteurs sidebar magasin + Recherche/filtre DI + Actions rapides ✓ Valider / ✕ Refuser</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#magasin</span> <span class="theme">#sidebar</span> <span class="theme">#di</span> <span class="theme">#ux</span></div>
+</div>
+<h2>📋 Chantiers (3)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🔢 **Compteurs badges sidebar magasin** : sur les items DI reçues, SAV reçues, Transferts et Marketplace inter-magasins. Badge coloré (couleur de l'item) avec le nombre d'éléments en attente. Calculé via 2 requêtes Supabase légères (`v_magasin_di` + `marketplace_offres` actives non émises par moi). Rafraîchi à chaque changement de page. D'un coup d'œil tu sais ce qui t'attend</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🔍 **Recherche + filtre statut dans tab DI magasin** : barre de recherche (numéro, description, commentaire) + select statut (Nouvelles, En attente, Validées, Refusées). Bouton ✕ pour reset. Filtre côté client sur les 50 dernières DI</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> ⚡ **Actions rapides ✓ Valider / ✕ Refuser** dans la liste DI magasin : visibles uniquement pour les DI en statut nouvelle/en_attente. Update direct le statut en DB sans ouvrir la fiche détaillée (UPDATE `interventions` ou `demandes_internes` selon source_table). `confirm()` sur Refuser pour éviter les clics accidentels. `e.stopPropagation()` pour éviter la navigation au click</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.6<br>Généré automatiquement</div>
+</body></html>

@@ -64,7 +64,7 @@ export default function Etablissement() {
           supabase.from("lits").select("*").order("nom"),
           supabase.from("patients").select("*").eq("etablissement_id", auth.etabId),
           supabase.from("materiels").select("*").eq("etablissement_id", auth.etabId),
-          supabase.from("interventions").select("id,patient_id,chambre_id,materiel_id,type,urgence,statut,numero,description,created_at").eq("etablissement_id", auth.etabId),
+          supabase.from("interventions").select("id,patient_id,materiel_id,type,urgence,statut,numero,description,created_at").eq("etablissement_id", auth.etabId),
         ]);
         // 0.62.9 : reconstruire l'arbre SANS les étages (table supprimée en 0.58.85)
         // Services rattachés DIRECTEMENT aux bâtiments via services.batiment_id
@@ -239,14 +239,16 @@ export default function Etablissement() {
               if (!chambreSel) return null;
               const patientsChambre = chambreSel.lits.filter(l => l.patient_id).map(l => ({ lit: l, patient: patients.find(p => p.id === l.patient_id) }));
               const materielsChambre = materiels.filter(m =>
-                m.chambre_id === chambreSel.id ||
+                // 0.62.11 : materiels.chambre_id peut ne pas exister, on prend les materiels rattachés aux patients de la chambre
+                (m.chambre_id && m.chambre_id === chambreSel.id) ||
                 patientsChambre.some(p => p.patient && m.patient_id === p.patient.id)
               );
-              const disChambre = dis.filter(d =>
-                d.chambre_id === chambreSel.id ||
-                patientsChambre.some(p => p.patient && d.patient_id === p.patient.id) ||
-                materielsChambre.some(m => d.materiel_id === m.id)
-              );
+              const disChambre = dis.filter(d => {
+                // 0.62.11 : pas de chambre_id direct sur interventions, on passe via patient/materiel
+                if (patientsChambre.some(p => p.patient && d.patient_id === p.patient.id)) return true;
+                if (materielsChambre.some(m => d.materiel_id === m.id)) return true;
+                return false;
+              });
               const occ = chambreSel.lits.filter(l => l.patient_id).length;
               return (
                 <Panel style={{ marginTop: 14, borderLeft: "4px solid #185FA5" }}>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.7 — FIX</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #EF9F27; border-bottom: 3px solid #EF9F27; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #EF9F2711, #EF9F2705); padding: 20px 24px; border-left: 6px solid #EF9F27; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #EF9F27; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">🐛 FIX</span>
+<h1>Aveho 0.62.7</h1>
+<div class="titre">👥 Fix collaborateurs (user courant toujours inclus) + 📋 Activité récente dans dashboard magasin</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#fix</span> <span class="theme">#collaborateurs</span> <span class="theme">#dashboard</span> <span class="theme">#activite</span></div>
+</div>
+<h2>📋 Chantiers (2)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🐛 **Fix liste collaborateurs sans user courant** : si Cédric (ou n'importe quel user) n'apparaît pas dans `v_collaborateurs.eq(structure_id, auth.structureId)`, c'est probablement que sa ligne `membres_structure` a un `structure_id` différent (cas multi-structure ou orphelin). **Fix** : après le fetch principal, si `auth.user.id` n'est pas dans `collabData`, on fait une requête séparée `from('membres_structure').eq('user_id', auth.user.id).maybeSingle()` et on l'ajoute en tête de liste avec un flag `_self_added`. console.info affiche la différence de structure_id pour debug</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📋 **Activité récente dans dashboard magasin** : nouveau Panel sous les KPI cards de `/magasin?tab=dashboard`. Liste les 5 dernières DI/SAV/transferts/interventions avec : icône colorée selon type, numéro, label type humanisé, **temps relatif** ('il y a 15min', 'il y a 3h', 'il y a 2j'), badge statut. Click sur item → navigation vers la fiche. Bouton 'Voir tout →' pour aller au tab DI complet. Aucune nouvelle requête (réutilise `demandes` déjà chargé)</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.7<br>Généré automatiquement</div>
+</body></html>

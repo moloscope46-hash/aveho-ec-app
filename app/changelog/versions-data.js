@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.11",
+    "kind": "fix",
+    "titre": "🔧 SQL défensif chambre_id + Changelog mobile responsive + 14 HTML manquants générés + Page UI rattachements périmètre magasin",
+    "chantiers": [
+      { "code": "AI", "txt": "🛡 **TES TABLES SONT INTACTES** : pas de recréation de bâtiments/chambres/services/étages. J'ai juste arrêté de référencer `etages` (déjà dropé en 0.58.85). Tes données existantes sont 100% préservées" },
+      { "code": "SQL", "txt": "🛡 **`migration-0.62.9-perf-indexes-DEFENSIF.sql`** (remplace l'ancien) : fonction temp `pg_temp.create_index_if_col_exists()` qui CHECK l'existence de la colonne via `information_schema.columns` AVANT de créer l'index. Plus d'erreur 42703 si une colonne n'existe pas dans ton schéma. Compatible toutes versions DB" },
+      { "code": "AI", "txt": "🐛 **Fix code `/etablissement`** : retiré `chambre_id` du select interventions (la colonne n'existe pas). Le filtrage des DI par chambre passe désormais via la relation `patient_id` (patients de la chambre) et `materiel_id` (matériels rattachés à patients de la chambre). Idem pour materiels : fallback via patient_id si pas de chambre_id direct" },
+      { "code": "AI", "txt": "📱 **Changelog mobile responsive** : ajout d'un wrapper `.cl-note-scope` avec règles CSS forçant `max-width:100%` + `box-sizing:border-box` + `word-break:break-word` sur tous les éléments HTML injectés. Tables, pre, code, images deviennent scrollables horizontalement au lieu de déborder. Media query @max-width 640px réduit les paddings et tailles de police" },
+      { "code": "AI", "txt": "📄 **14 HTML manquants générés** : script `scripts/gen-html-notes-missing.py` parse les versions sans `noteFile`, génère un HTML formaté (header gradient kind-color, badges thèmes, chantiers avec code-tag coloré, footer dark) et MAJ `versions-data.js` automatiquement. Toutes les versions 0.62.x ont maintenant leur HTML téléchargeable. Avant : 14 versions sans note. Après : 0" },
+      { "code": "AI", "txt": "🔗 **Page `/magasin/rattachements-perimetre`** : UI complète pour gérer les `magasins_rattachements` au lieu d'INSERT SQL. Liste cards par rattachement (étab + bât/svc/dépôt + notes), toggle Actif/Inactif, edit, delete. Modal de création avec selects en cascade : étab → bâtiments de cet étab → services de ce bâtiment + sélecteur dépôt indépendant. Lien dans MagasinSidebar section 'Catalogue & Commerce' : 'Périmètre intervention'" }
+    ],
+    "themes": ["fix-critique", "sql", "mobile", "changelog", "rattachements"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.10",
     "kind": "fix",
     "titre": "🔥 Fix /materiels React #310 (hooks order) + click libellé article = fiche globale + Filtres TopBar restaurés en mode magasin (filtrés par rattachements)",
@@ -252,7 +268,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "react-hooks", "magasin", "rattachements"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.10.html"
   },
   {
     "v": "0.62.9",
@@ -266,7 +282,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "etablissement", "fab", "indexes-perf"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.9.html"
   },
   {
     "v": "0.62.8",
@@ -281,7 +297,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "carte", "tournees", "gps", "fix-build"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.8.html"
   },
   {
     "v": "0.62.7",
@@ -293,7 +309,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "collaborateurs", "dashboard", "activite"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.7.html"
   },
   {
     "v": "0.62.6",
@@ -306,7 +322,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "magasin", "sidebar", "di", "ux"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.6.html"
   },
   {
     "v": "0.62.5",
@@ -319,7 +335,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-build", "vercel", "suspense"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.5.html"
   },
   {
     "v": "0.62.4",
@@ -335,7 +351,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "magasin", "geoloc", "badge", "notifications"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.4.html"
   },
   {
     "v": "0.62.3",
@@ -348,7 +364,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "toolbar", "analytics", "filtres", "export"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.3.html"
   },
   {
     "v": "0.62.2",
@@ -362,7 +378,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "articles", "materiels", "magasin"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.2.html"
   },
   {
     "v": "0.62.1",
@@ -378,7 +394,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "workflow", "interventions", "magasin"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.1.html"
   },
   {
     "v": "0.62.0",
@@ -398,7 +414,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "realtime", "chat", "carte", "analytics", "capacitor", "mercuriale"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.0.html"
   },
   {
     "v": "0.61.10",
@@ -416,7 +432,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "sql", "hotfix-urgent", "membres"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.61.10.html"
   },
   {
     "v": "0.61.9",
@@ -436,7 +452,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "marketplace", "gps", "pdf", "notifications", "swipe"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.61.9.html"
   },
   {
     "v": "0.61.8",
@@ -456,7 +472,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "mercuriales", "gps", "osrm", "signature", "swipe", "notes"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.61.8.html"
   },
   {
     "v": "0.61.7",

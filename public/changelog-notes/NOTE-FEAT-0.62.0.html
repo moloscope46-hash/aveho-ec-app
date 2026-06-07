@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.0 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.62.0</h1>
+<div class="titre">💬 Chat Realtime marketplace + 🗺 Géoloc marketplace + 📊 Analytics tournées + 📱 Capacitor wrapping + ⚡ Migration EC mercuriale</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#realtime</span> <span class="theme">#chat</span> <span class="theme">#carte</span> <span class="theme">#analytics</span> <span class="theme">#capacitor</span> <span class="theme">#mercuriale</span></div>
+</div>
+<h2>📋 Chantiers (10)</h2>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.0-marketplace-geoloc-realtime.sql`** : (1) Ajoute `point_lat`, `point_lng`, `adresse`, `ville`, `code_postal` dans marketplace_offres. (2) Active Supabase Realtime sur `marketplace_messages` via `ALTER PUBLICATION supabase_realtime ADD TABLE marketplace_messages` — permet le chat live</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 💬 **Composant `<MarketplaceChat>`** : chat temps réel via Supabase Realtime channels. Subscribe sur `marketplace_messages` filtré par offre_id. INSERT déclenche update live chez tous les participants. UI WhatsApp-like : bulles distinctes mine/autre, dégradé violet→teal pour ses messages, indicateur connexion temps réel (point vert/orange), auto-scroll, Enter pour envoyer</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🗺 **Vue carte Leaflet marketplace** : toggle Liste/Carte dans la page marketplace. Marqueurs colorés selon urgence (rouge critique, orange urgent, teal normal), emoji 📥/📤 dans le marker. Popups avec libellé+quantité+prix+bouton 'Voir détails'. Auto-fit bounds sur les offres géolocalisées. Si aucune offre géoloc → message clair pour renseigner les coords</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 💬 **Bouton 'Chat' sur chaque card marketplace** : visible quand offre = mine OU statut = en_negociation. Ouvre modal MarketplaceChat plein écran. Les messages arrivent en live des 2 côtés</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📊 **Nouvelle page `/magasin/analytics-tournees`** : dashboard KPI tournées. (1) 7 cards KPI : total, en cours, terminées, distance totale, distance moy., durée moy., étapes livrées. (2) Table 'Performance par chauffeur' triée par nb tournées (tournées/terminées/distance/durée/étapes/distance moy.). (3) Histogramme par jour avec barres dégradé teal sur les 30 derniers jours. Sélecteur période 7j/30j/90j/365j</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📱 **`capacitor.config.ts` + `CAPACITOR.md`** : config Capacitor pour wrapping app native iOS/Android. AppId `com.aveho.ec`, splash screen navy avec spinner teal, status bar dark mode, plugins push/geoloc/camera configurés. Doc README complet avec étapes setup (npm install, npx cap init, add ios/android, sync, open Xcode/Android Studio), procédure App Store/Play Store, config next.config pour static export</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> ⚡ **Migration `/promotions` vers addWithMercuriale** : le bouton 'Commander' utilise maintenant `cart.addWithMercuriale({article, etablissementId: auth.etablissementId})` au lieu de `cart.add()`. Si une mercuriale active existe pour cet étab + article, le prix négocié est appliqué automatiquement avec log console. Fallback vers `cart.add()` si pas d'établissement actif</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📍 **Sidebar magasin enrichie** : 'Analytics tournées' (teal 📊) dans Flotte & livraisons</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🎯 **Aveho EC est désormais une plateforme PSAD/FBM ultra-complète** : ERP magasin + portail EC + marketplace inter-magasins + analytics + signature digitale + GPS + PDF + chat temps réel + scanner natif + app native packageable + edge functions Resend/web-push. **Ça dépasse largement la majorité des solutions du marché.**</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **Pour 0.62.1+** : (1) Auto-géoloc des offres marketplace via API adresse (nominatim ou data.gouv.fr/api-adresse). (2) Indicator 'X messages non lus' sur cards marketplace. (3) Push notif quand nouveau message marketplace reçu. (4) Filtres analytics par chauffeur/véhicule. (5) Export CSV stats analytics. (6) Carto Africa (cartes en darkmode pour les écrans nuit)</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.0<br>Généré automatiquement</div>
+</body></html>
