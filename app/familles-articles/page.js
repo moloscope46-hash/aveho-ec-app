@@ -13,7 +13,18 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, Modal } from "../ui";
 import BackButton from "../components/BackButton";
 
-const ICONES = ["ti-folder", "ti-package", "ti-pill", "ti-stethoscope", "ti-bandage", "ti-droplet", "ti-air-conditioning", "ti-tool", "ti-armchair", "ti-bed", "ti-test-pipe", "ti-shield", "ti-shopping-bag", "ti-truck", "ti-receipt"];
+const ICONES = [
+  "ti-folder", "ti-folders", "ti-package", "ti-packages", "ti-box", "ti-boxes",
+  "ti-pill", "ti-stethoscope", "ti-bandage", "ti-droplet", "ti-droplets",
+  "ti-air-conditioning", "ti-lungs", "ti-heartbeat", "ti-medical-cross",
+  "ti-tool", "ti-tools", "ti-armchair", "ti-armchair-2", "ti-bed", "ti-wheelchair",
+  "ti-test-pipe", "ti-test-pipe-2", "ti-microscope", "ti-shield", "ti-shield-check",
+  "ti-shopping-bag", "ti-shopping-cart", "ti-truck", "ti-truck-delivery",
+  "ti-receipt", "ti-clipboard-list", "ti-clipboard-check",
+  "ti-parking", "ti-stack-2", "ti-building-warehouse",
+  "ti-bone", "ti-prescription", "ti-vaccine", "ti-thermometer", "ti-eye",
+  "ti-ear", "ti-tooth", "ti-hand-stop", "ti-walk", "ti-run", "ti-baby-carriage"
+];
 const COULEURS = ["#185FA5", "#7CC8C8", "#EF9F27", "#7a6fb0", "#5aa05a", "#e35d5b", "#5a4a90", "#5a8f8f", "#C9867F"];
 
 export default function FamillesArticlesPage() {
@@ -233,10 +244,21 @@ export default function FamillesArticlesPage() {
                   ))}
                 </div>
               </label>
-              <label style={{ fontSize: 12, color: "#5a6878" }}>Icône
-                <select value={form.icone || "ti-folder"} onChange={(e) => setForm({ ...form, icone: e.target.value })} style={inp}>
-                  {ICONES.map(ic => <option key={ic} value={ic}>{ic}</option>)}
-                </select>
+              <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}>Icône <span style={{ fontSize: 10, fontWeight: 600, color: form.couleur || "#185FA5" }}>{form.icone || "ti-folder"}</span>
+                <div style={{ marginTop: 4, padding: 8, border: "1px solid #cfd8e0", borderRadius: 6, background: "#fafbfc", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(36px, 1fr))", gap: 4, maxHeight: 150, overflowY: "auto" }}>
+                  {ICONES.map(ic => (
+                    <button key={ic} type="button" onClick={() => setForm({ ...form, icone: ic })} title={ic} style={{
+                      width: 36, height: 36, border: "none",
+                      background: form.icone === ic ? (form.couleur || "#185FA5") : "#fff",
+                      color: form.icone === ic ? "#fff" : "#5a6878",
+                      borderRadius: 6, fontSize: 18, cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      border: form.icone === ic ? `2px solid ${form.couleur || "#185FA5"}` : "1px solid #e3e9ee",
+                    }}>
+                      <i className={`ti ${ic}`} />
+                    </button>
+                  ))}
+                </div>
               </label>
               <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878", display: "flex", alignItems: "center", gap: 8 }}>
                 <input type="checkbox" checked={form.actif !== false} onChange={(e) => setForm({ ...form, actif: e.target.checked })} />

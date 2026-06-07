@@ -1,6 +1,7 @@
 "use client";
 // Page Utilisateurs — Gestion des membres, rôles personnalisables et invitations
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { fmtDate, relativeTime, activityDotColor } from "../../lib/format";
@@ -30,6 +31,7 @@ const MODULES = [
 export default function Utilisateurs() {
   const supabase = createClient();
   const auth = useAuth();
+  const router = useRouter();
   const cart = useCart();
   const [tab, setTab] = useState("membres");
   const [membres, setMembres] = useState([]);
@@ -838,7 +840,13 @@ export default function Utilisateurs() {
                   {auth.can("inviter") && (
                     /* 0.58.23 : NeonButton variant=teal pour "Créer un utilisateur" */
                     <NeonButton variant="teal" icon="ti-user-plus" onClick={() => { setErr(""); setInviteModal(true); }}>
-                      Créer un utilisateur
+                      Inviter par mail
+                    </NeonButton>
+                  )}
+                  {auth.can("inviter") && (
+                    /* 0.62.34 : Bouton création directe (sans mail) */
+                    <NeonButton variant="amber" icon="ti-user-shield" onClick={() => router.push("/utilisateurs/creer-direct")}>
+                      Créer directement
                     </NeonButton>
                   )}
                   {/* 0.58.15 : raccourci vers la page d'onboarding guidé */}

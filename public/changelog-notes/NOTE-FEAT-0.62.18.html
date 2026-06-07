@@ -3,81 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.18 — Note d'évolution</title>
+<title>Aveho 0.62.18 — FEATURE</title>
 <style>
   :root {
     --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
     --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
-    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
   }
   * { box-sizing: border-box; }
-  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
-  .wrap { }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
   header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
-  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
-  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
   .logo .v { color: var(--teal); }
   h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
   h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
   .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
-  .meta b { color: #fff; }
   .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
-  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
-  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
-  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
   .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
   .panel.warn { background: #fff8ec; border-color: #f0d59f; }
   .panel.violet { background: #f3effa; border-color: #d6c9ec; }
   .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
   code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
-  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
-  ul { padding-left: 20px; margin: 6px 0; }
-  li { margin: 8px 0; }
-  b { color: var(--navy); }
-  .themes-row { margin-top: 14px; }
-  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
   @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
 </style>
 </head>
 <body>
-<div class="wrap">
 
   <header class="cover">
     <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
-    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
     <h1>Version 0.62.18
       <small>🛣 Tournée multi-sources (DI+Transferts+SAV+Maint+Retour+Bilan) + Popup survol + Chauffeur enrichi + Page collab magasin</small>
     </h1>
     <div class="meta">
-      <span><b>📅 Date :</b> 6 juin 2026</span>
-      <span><b>📦 Version :</b> <span class="badge">v0.62.18-alpha</span></span>
-      <span><b>📋 Type :</b> Nouvelle fonctionnalité majeure</span>
-      <span><b>🔧 Chantiers :</b> 7 AI</span>
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.18-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>7</b> AI</span>
     </div>
-    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">tournees</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">collaborateurs</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">magasin</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">ux</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">popup</span></div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#tournees</span> <span class="theme-pill">#collaborateurs</span> <span class="theme-pill">#magasin</span> <span class="theme-pill">#ux</span> <span class="theme-pill">#popup</span></div>
   </header>
 
-
-  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(7 chantiers)</small></h2>
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(7)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Page `/magasin/tournees/nouvelle` ENRICHIE</h3>
   <div class="panel ">
-    <ul>
-    <li>📦 <b>Page <code>/magasin/tournees/nouvelle</code> ENRICHIE</b> : avant juste DI à livrer. Maintenant <b>6 sources</b> dans des onglets : 📦 DI à livrer (orange) / 🔄 Transferts (violet) / 🛠 SAV (rouge) / 🔧 Maintenance (bleu) / ↩ Retours (vert) / 📋 Bilans (teal). Chaque onglet a son compteur. Boutons 'Tout cocher' / 'Tout décocher' par onglet</li>
-    <li>🖱 <b>Popup au survol</b> : passe la souris sur une ligne → tooltip fixe en bas à droite (360px, fond #142131, border orange) affiche MAX infos : type, numéro, établissement, dépôt, ville, description/motif, quantité, lignes, badge URGENT si urgence, date de création. <code>onMouseEnter</code> / <code>onMouseLeave</code> stockent l'item courant</li>
-    <li>📋 <b>Liste enrichie MAX colonnes</b> : avant flex simple. Maintenant grid 6-7 colonnes : checkbox, badge type, étab + numéro, métadonnée (nb lignes / qté / sous-type), ville, badge urgence. Texte tronqué proprement avec ellipsis sur l'étab</li>
-    <li>🚛 <b>Chauffeur enrichi</b> : select affiche maintenant <code>Prénom Nom [role_pro] · fonction_detail ☎ tel</code>. À la sélection, encart violet affiche le rôle pro, l'email, et les <b>types de DI gérés</b> (depuis la table membres_structure). Champ <code>types_di_geres</code> libre, à remplir manuellement ou via la page collab magasin</li>
-    <li>🔗 <b>Submit multi-sources</b> : construit dynamiquement les étapes depuis selectedDis + selectedTransferts + selectedAutres. type_etape adapté (livraison/transfert/sav/maintenance/retour/bilan). Adresse + lat/lng résolues automatiquement depuis les jointures. Durée estimée : 10min transferts, 15min DI, 20min SAV/retour/bilan, 30min maintenance</li>
-    <li>👥 <b>Nouvelle page <code>/magasin/collaborateurs</code></b> : voir tous les collab (filtres 🏬 Magasin / 🏥 Étab / Tous + recherche). Cards distinguent collab étab (bleu, ti-user) vs collab magasin (teal, ti-building-warehouse). Affiche fonction, email, tél, types DI gérés, boutons mailto/tel. Bouton 'Nouveau collab magasin' → modal d'invitation avec : email, prénom/nom, tél, fonction, <b>rôle magasin</b> (8 options : chauffeur-livreur, technicien SAV/maint, préparateur, responsable magasin, commercial, logisticien, administratif) + <b>types DI gérés multi-select</b> (livraison/transfert/sav/maintenance/retour/bilan/dépannage) qui sera utilisé pour auto-attribuer les demandes. Stocké dans <code>invitations</code> avec fallback si colonnes pas créées</li>
-    <li>🔗 <b>Lien sidebar magasin</b> : 'Collaborateurs' ajouté dans section 'Flotte &amp; livraisons' (couleur teal #5a8f8f, icône ti-users)</li>
-    </ul>
+    <p>📦 avant juste DI à livrer. Maintenant <strong>6 sources</strong> dans des onglets : 📦 DI à livrer (orange) / 🔄 Transferts (violet) / 🛠 SAV (rouge) / 🔧 Maintenance (bleu) / ↩ Retours (vert) / 📋 Bilans (teal). Chaque onglet a son compteur. Boutons 'Tout cocher' / 'Tout décocher' par onglet</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Popup au survol</h3>
+  <div class="panel ">
+    <p>🖱 passe la souris sur une ligne → tooltip fixe en bas à droite (360px, fond #142131, border orange) affiche MAX infos : type, numéro, établissement, dépôt, ville, description/motif, quantité, lignes, badge URGENT si urgence, date de création. <code>onMouseEnter</code> / <code>onMouseLeave</code> stockent l'item courant</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Liste enrichie MAX colonnes</h3>
+  <div class="panel ">
+    <p>📋 avant flex simple. Maintenant grid 6-7 colonnes : checkbox, badge type, étab + numéro, métadonnée (nb lignes / qté / sous-type), ville, badge urgence. Texte tronqué proprement avec ellipsis sur l'étab</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Chauffeur enrichi</h3>
+  <div class="panel ">
+    <p>🚛 select affiche maintenant <code>Prénom Nom [role_pro] · fonction_detail ☎ tel</code>. À la sélection, encart violet affiche le rôle pro, l'email, et les <strong>types de DI gérés</strong> (depuis la table membres_structure). Champ <code>types_di_geres</code> libre, à remplir manuellement ou via la page collab magasin</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Submit multi-sources</h3>
+  <div class="panel ">
+    <p>🔗 construit dynamiquement les étapes depuis selectedDis + selectedTransferts + selectedAutres. type_etape adapté (livraison/transfert/sav/maintenance/retour/bilan). Adresse + lat/lng résolues automatiquement depuis les jointures. Durée estimée : 10min transferts, 15min DI, 20min SAV/retour/bilan, 30min maintenance</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouvelle page `/magasin/collaborateurs`</h3>
+  <div class="panel ">
+    <p>👥 voir tous les collab (filtres 🏬 Magasin / 🏥 Étab / Tous + recherche). Cards distinguent collab étab (bleu, ti-user) vs collab magasin (teal, ti-building-warehouse). Affiche fonction, email, tél, types DI gérés, boutons mailto/tel. Bouton 'Nouveau collab magasin' → modal d'invitation avec : email, prénom/nom, tél, fonction, <strong>rôle magasin</strong> (8 options : chauffeur-livreur, technicien SAV/maint, préparateur, responsable magasin, commercial, logisticien, administratif) + <strong>types DI gérés multi-select</strong> (livraison/transfert/sav/maintenance/retour/bilan/dépannage) qui sera utilisé pour auto-attribuer les demandes. Stocké dans <code>invitations</code> avec fallback si colonnes pas créées</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Lien sidebar magasin</h3>
+  <div class="panel ">
+    <p>🔗 'Collaborateurs' ajouté dans section 'Flotte &amp; livraisons' (couleur teal #5a8f8f, icône ti-users)</p>
   </div>
 
 
 
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.18 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
   <footer>
-    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
-    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
   </footer>
 
-</div>
 </body>
 </html>

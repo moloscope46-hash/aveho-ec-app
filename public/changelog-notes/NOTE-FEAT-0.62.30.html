@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.23 — FEATURE</title>
+<title>Aveho 0.62.30 — FEATURE</title>
 <style>
   :root {
     --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
@@ -45,48 +45,46 @@
   <header class="cover">
     <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
     <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
-    <h1>Version 0.62.23
-      <small>✨ Code établissement + Stock auto à la réception + Min stock par étape + Mode mobile titres</small>
+    <h1>Version 0.62.30
+      <small>👥 Lot Filtres équipes + Stats : equipe_id sur 8 tables + EquipeFilter réutilisable + audit RangePicker stats</small>
     </h1>
     <div class="meta">
       <span>📅 <b>Date :</b> 6 juin 2026</span>
-      <span>📦 <b>Version :</b> <span class="badge">v0.62.23-alpha</span></span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.30-alpha</span></span>
       <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
-      <span>🔧 <b>Chantiers :</b> <b>1</b> SQL · <b>3</b> AI · <b>1</b> INFO</span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> SQL · <b>3</b> AI · <b>2</b> INFO</span>
     </div>
-    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#sql</span> <span class="theme-pill">#stock</span> <span class="theme-pill">#etab</span> <span class="theme-pill">#mobile</span> <span class="theme-pill">#trigger</span></div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#equipes</span> <span class="theme-pill">#filtres</span> <span class="theme-pill">#stats</span> <span class="theme-pill">#sql</span></div>
   </header>
 
   <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
-  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">`migration-0.62.23-code-etab-stock-reception.sql`</h3>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">`migration-0.62.30-equipe-id-entities.sql`</h3>
   <div class="panel violet">
-    
-    <p>🆕</p>
-    <ol class="steps">
-      <li>ajoute <code>etablissements.code</code> (TEXT) — code court interne type 'CHU-LYON-01'</li>
-      <li>Fonction <code>fn_bon_reception_creer_mouvements()</code> + trigger AFTER INSERT sur <code>bons_reception</code> : si réception conforme + statut valide + type_source=transfert → crée automatiquement un mouvement <code>entree</code> dans <code>stock_mouvements</code> sur le dépôt destination. RAISE WARNING en cas d'erreur (ne bloque jamais le bon)</li>
-      <li>Table <code>articles_min_stock_etape</code> : permet de définir des stocks min/max par bâtiment/service/dépôt (pas juste global) avec contrainte UNIQUE (article_id, batiment_id, service_id, depot_id). 4 RLS policies</li>
-    </ol><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">migration-0.62.23-code-etab-stock-reception.sql</code></div>
+    <p>🆕 ajoute la colonne <code>equipe_id UUID</code> sur <strong>8 tables métier</strong> : patients, interventions, materiels, commandes, achats, signalements, transferts, demandes_internes. 8 indexes partiels (WHERE equipe_id IS NOT NULL pour économiser l'espace). Vue <code>v_equipe_stats</code> aggrégée avec compteurs 7j / 30j / 90j / total par équipe pour patients, interventions, commandes, signalements, matériels. Idempotent</p><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">migration-0.62.30-equipe-id-entities.sql</code></div>
   </div>
 
   <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
-  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Champ Code établissement</h3>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouveau composant `EquipeFilter`</h3>
   <div class="panel ">
-    <p>🏥 ajouté sur <code>/etablissement/fiche</code> : nouvelle colonne dans le bloc identification, à côté de FINESS et SIRET. Layout grid 3 colonnes (au lieu de 2). Affiché en police monospace Consolas pour un look code. Save inclus dans le payload UPDATE</p>
+    <p>🧩 pill bar réutilisable filtrant les équipes de la structure. Charge automatiquement les équipes via <code>useAuth().structureId</code>, affiche un bouton 'Toutes équipes' + un bouton par équipe avec couleur + icône Tabler. Mode <code>compact</code> (padding réduit) pour intégration dans des toolbars existantes. <code>onChange(equipe_id || null)</code> API simple. Pas affiché si 0 équipes</p>
   </div>
-  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Mode mobile : titres bien visibles</h3>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">EquipeFilter intégré sur `/transferts`</h3>
   <div class="panel ">
-    <p>📱 ajout <code>.page-content</code> mobile avec padding 18/12, h1 font-size 23px (au lieu de 25px qui débordait), line-height 1.2, eyebrow plus compact (11px). Plus de titres cachés derrière la topbar sur les écrans étroits</p>
+    <p>🔍 ajout state <code>filterEquipe</code>, intégration dans la toolbar (entre priorité et bouton Scanner), filter <code>if (filterEquipe &amp;&amp; t.equipe_id !== filterEquipe) return false</code>, deps useMemo enrichi</p>
   </div>
-  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Stock auto à la réception conforme</h3>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">EquipeFilter intégré sur `/signalements`</h3>
   <div class="panel ">
-    <p>📦 le trigger SQL fait que dès qu'un bon de réception est validé sur un transfert avec statut valide, un mouvement d'entrée stock est créé automatiquement sur le dépôt destination avec commentaire 'Réception conforme du bon BR-XXXXXX'. Plus besoin de saisir manuellement. Les SAV/maintenances/DI nécessiteront un workflow dédié (TODO)</p>
+    <p>🔍 state <code>fEquipe</code>, dans la toolbar entre tri et 'Effacer filtres' (qui efface aussi fEquipe), filter <code>if (fEquipe &amp;&amp; r.equipe_id !== fEquipe) return false</code>. Reste à brancher commandes + achats (4 pages au lieu de 2 — partial)</p>
   </div>
 
-  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
-  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Toujours en attente</h3>
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">AUDIT RangePicker stats déjà branché</h3>
   <div class="panel ">
-    <p>🚧 Cantonnement étab livraisons (JOIN tournees_etapes.etablissement_id), Bon réception PDF (jsPDF CDN), Vue onglets édition article, Module étiquettes enrichi GS1/QR, Scan QR mode magasin, Garages côté magasin UI, Mail dédié magasin (edge function), Création membres_structure à l'inscription, Dashboard temps réel poussé, /carte bouton créer tournée depuis DI, Commande EC → magasin, page UI articles min stock par étape (table créée, page à venir)</p>
+    <p>📋 (constat 0.62.30) : (a) <code>/statistiques</code> utilise déjà <code>&lt;RangePicker value={range} onChange={setRange} /&gt;</code> ligne 399. (b) Le useEffect ligne 117 a <code>range.from</code> et <code>range.to</code> dans ses deps (ligne 278), donc reload automatique sur changement de plage. (c) RangePicker premium fournit <strong>5 presets</strong> : 7j / 30j / 3 mois / 6 mois / année. (d) Si pas de plage définie, fallback historique sur 6 derniers mois. Pas de modification nécessaire</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Reste pour ce lot mais déjà fait</h3>
+  <div class="panel ">
+    <p>🚧 sélecteur équipe dans formulaires création (à intégrer page par page, gros chantier sur les 8 formulaires concernés — reporté). 2 pages restantes : <code>/commandes</code> et <code>/achats</code> (à brancher dans 0.62.31 si tu insistes ou via PR simple)</p>
   </div>
 
 
@@ -94,19 +92,19 @@
   <div class="panel violet">
     <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
     <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
-migration-0.62.23-code-etab-stock-reception.sql</code></pre>
-    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/migration-0.62.23-code-etab-stock-reception.sql</code> · Téléchargeable depuis la modale changelog</p>
+migration-0.62.30-equipe-id-entities.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/migration-0.62.30-equipe-id-entities.sql</code> · Téléchargeable depuis la modale changelog</p>
   </div>
 
 
   <h2>🚀 Procédure de déploiement</h2>
   <div class="panel hi">
     <ol class="steps">
-      <li>Lance le SQL <code>migration-0.62.23-code-etab-stock-reception.sql</code> dans Supabase SQL Editor</li>
+      <li>Lance le SQL <code>migration-0.62.30-equipe-id-entities.sql</code> dans Supabase SQL Editor</li>
       <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
       <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
       <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
-      <li>Terminal : <code>git add -A ; git commit -m "0.62.23 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.30 - Nouvelle fonctionnalité" ; git push origin main</code></li>
       <li>Vercel déploie automatiquement depuis le push</li>
     </ol>
   </div>

@@ -20,6 +20,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, IconButton, Modal } from "../ui";
 import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-premium";
+import EquipeFilter from "../components/EquipeFilter";
 import BackButton from "../components/BackButton";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 
@@ -81,6 +82,7 @@ function TransfertsInner() {
   const [search, setSearch] = useState("");
   const [filterStatut, setFilterStatut] = useState("");
   const [filterPriorite, setFilterPriorite] = useState("");
+  const [filterEquipe, setFilterEquipe] = useState(null);  // 0.62.30
 
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState({});
@@ -143,6 +145,7 @@ function TransfertsInner() {
     return transferts.filter(t => {
       if (filterStatut && t.statut !== filterStatut) return false;
       if (filterPriorite && t.priorite !== filterPriorite) return false;
+      if (filterEquipe && t.equipe_id !== filterEquipe) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const hay = `${t.motif || ""} ${t.notes || ""}`.toLowerCase();
@@ -150,7 +153,7 @@ function TransfertsInner() {
       }
       return true;
     });
-  }, [transferts, search, filterStatut, filterPriorite]);
+  }, [transferts, search, filterStatut, filterPriorite, filterEquipe]);
 
   // Stats par statut
   const statsByStatut = useMemo(() => {
@@ -313,6 +316,7 @@ function TransfertsInner() {
               <option value="">Toutes priorités</option>
               {PRIORITES.map(p => <option key={p.value} value={p.value}>{p.lbl}</option>)}
             </select>
+            <EquipeFilter value={filterEquipe} onChange={setFilterEquipe} compact />
             <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/quick")}>Scanner</Btn>
             <NeonButton variant="teal" icon="ti-plus" onClick={openNew}>Nouveau transfert</NeonButton>
           </div>

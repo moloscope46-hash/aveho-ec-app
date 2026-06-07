@@ -97,6 +97,7 @@ const MENU = [
   { section: "Maintenance", sectionIcon: "ti-tool", items: [
     { p: "/mes-demandes", ic: "ti-truck-loading", lbl: "Mes demandes (DI)", col: "#EF9F27" },
     { p: "/sav/nouvelle", ic: "ti-tool", lbl: "Demande SAV", col: "#e35d5b" },
+    { p: "/bilans-sav", ic: "ti-clipboard-check", lbl: "Bilans SAV", col: "#c0392b" },
     { p: "/transferts/nouvelle", ic: "ti-transfer", lbl: "Demande transfert", col: "#7a6fb0" },
     { p: "/interventions", ic: "ti-tools", lbl: "Interventions / DI", col: "#c0392b" },
     { p: "/transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
@@ -110,11 +111,11 @@ const MENU = [
     { p: "/bons-reception", ic: "ti-receipt", lbl: "Bons de réception", col: "#5aa05a" },
   ] },
   // 0.62.22 : FACTURATION (placeholder, à implémenter)
-  { section: "Facturation", sectionIcon: "ti-receipt-2", items: [
+  { section: "Facturation", sectionIcon: "ti-currency-euro", items: [
     { p: "/facturation", ic: "ti-receipt-2", lbl: "Facturation (bientôt)", col: "#8a98a8" },
   ] },
   // 5. ADMINISTRATIF (RGPD, statistiques métier, signalements, paramètres usuels)
-  { section: "Administratif", sectionIcon: "ti-clipboard-list", items: [
+  { section: "Administratif", sectionIcon: "ti-folder-cog", items: [
     { p: "/statistiques", ic: "ti-chart-bar", lbl: "Statistiques", col: "#7a6fb0" },
     { p: "/statistiques-activite", ic: "ti-users-group", lbl: "Statistiques activité", col: "#185FA5" },
     { p: "/statistiques-interventions", ic: "ti-tools", lbl: "Statistiques DI", col: "#e35d5b" },

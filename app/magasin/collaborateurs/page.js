@@ -136,6 +136,7 @@ export default function MagasinCollaborateursPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <PageHead icon="ti-users" title="Collaborateurs" subtitle="Côté magasin — voir tous les collab + créer des users dédiés" />
             <Btn variant="primary" icon="ti-plus" onClick={openCreate}>Nouveau collab magasin</Btn>
+            <Btn variant="ghost" icon="ti-user-shield" onClick={() => router.push("/utilisateurs/creer-direct")}>Créer direct (sans mail)</Btn>
           </div>
 
           {/* Filtres */}

@@ -58,32 +58,53 @@ export default function LivraisonsPlanifieesPage() {
 
   async function reload() {
     setLoading(true);
-    const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch (e) { console.warn(e); return []; } };
+    const tryFetch = async (q) => { try { const r = await q; if (r.error) console.warn("[livraisons]", r.error.message); return r.data || []; } catch (e) { console.warn(e); return []; } };
 
-    // 1. Tournées
-    let tq = supabase.from("tournees")
-      .select("*, vehicules_magasin(immatriculation, marque, modele), magasins(nom, ville)")
-      .order("date_tournee", { ascending: false })
-      .limit(100);
+    // 0.62.31 : Retiré les jointures PostgREST qui plantent en 400 (FK non déclarées)
+    // → SELECT simple puis jointure client via Map lookup
+    let tq = supabase.from("tournees").select("*").order("date_tournee", { ascending: false }).limit(100);
     if (isMagasin && magasinCtx.magasinId) tq = tq.eq("magasin_id", magasinCtx.magasinId);
     let trns = await tryFetch(tq);
 
-    // 0.62.26 : Cantonnement côté étab → ne voit que les tournées dont au moins une étape pointe sur son étab
+    // Cantonnement étab
     if (!isMagasin && auth.etabId) {
-      // Récup les IDs des tournées qui ont au moins une étape sur cet étab
       const etapesQ = await tryFetch(supabase.from("tournees_etapes").select("tournee_id").eq("etablissement_id", auth.etabId));
       const tourneesAutorisees = new Set((etapesQ || []).map(e => e.tournee_id));
       trns = trns.filter(t => tourneesAutorisees.has(t.id));
     }
+
+    // Hydrater vehicules + magasins via maps (sans jointure)
+    const vehIds = [...new Set(trns.map(t => t.vehicule_id).filter(Boolean))];
+    const magIds = [...new Set(trns.map(t => t.magasin_id).filter(Boolean))];
+    const [vehData, magData] = await Promise.all([
+      vehIds.length ? tryFetch(supabase.from("vehicules_magasin").select("id, immatriculation, marque, modele").in("id", vehIds)) : Promise.resolve([]),
+      magIds.length ? tryFetch(supabase.from("magasins").select("id, nom, ville").in("id", magIds)) : Promise.resolve([]),
+    ]);
+    const vehMap = new Map((vehData || []).map(v => [v.id, v]));
+    const magMap = new Map((magData || []).map(m => [m.id, m]));
+    trns = trns.map(t => ({
+      ...t,
+      vehicules_magasin: vehMap.get(t.vehicule_id) || null,
+      magasins: magMap.get(t.magasin_id) || null,
+    }));
     setTournees(trns);
 
-    // 2. Transferts
-    let xq = supabase.from("transferts")
-      .select("*, depots:depot_destination_id(nom, etablissement_id, etablissements(nom, ville))")
-      .order("created_at", { ascending: false })
-      .limit(100);
+    // 2. Transferts (idem : pas de jointure PostgREST)
+    let xq = supabase.from("transferts").select("*").order("created_at", { ascending: false }).limit(100);
     if (isMagasin && magasinCtx.magasinId) xq = xq.eq("magasin_emetteur_id", magasinCtx.magasinId);
     let trs = await tryFetch(xq);
+
+    // Hydrater depots + étabs séparément
+    const depotIds = [...new Set(trs.map(t => t.depot_destination_id).filter(Boolean))];
+    let depotData = [];
+    if (depotIds.length) depotData = await tryFetch(supabase.from("depots").select("id, nom, etablissement_id").in("id", depotIds));
+    const etabIds = [...new Set(depotData.map(d => d.etablissement_id).filter(Boolean))];
+    let etabData = [];
+    if (etabIds.length) etabData = await tryFetch(supabase.from("etablissements").select("id, nom, ville").in("id", etabIds));
+    const etabMap = new Map(etabData.map(e => [e.id, e]));
+    const depotMap = new Map(depotData.map(d => [d.id, { ...d, etablissements: etabMap.get(d.etablissement_id) || null }]));
+    trs = trs.map(t => ({ ...t, depots: depotMap.get(t.depot_destination_id) || null }));
+
     // Cantonnement étab via depot.etablissement_id
     if (!isMagasin && auth.etabId) {
       trs = trs.filter(t => t.depots?.etablissement_id === auth.etabId);

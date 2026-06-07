@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.33 — FIX</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #EF9F27 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.33
+      <small>🐛 Lot fix UI : icônes menu Facturation/Administratif + bouton Nouvelle pathologie + popup overflow + grille icônes familles + tuiles fiche groupement</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.33-alpha</span></span>
+      <span>📋 <b>Type :</b> Correction de bug critique</span>
+      <span>🔧 <b>Chantiers :</b> <b>3</b> FIX · <b>2</b> UX · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#fix</span> <span class="theme-pill">#ui</span> <span class="theme-pill">#modal</span> <span class="theme-pill">#icones</span> <span class="theme-pill">#groupement</span> <span class="theme-pill">#tuiles</span></div>
+  </header>
+
+  <h2>🐛 Fix bug <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Icônes menu Facturation + Administratif</h3>
+  <div class="panel warn">
+    <p>🎨 changées pour des icônes plus visibles. Facturation passe de <code>ti-receipt-2</code> à <strong><code>ti-currency-euro</code></strong> (plus parlant côté finances). Administratif passe de <code>ti-clipboard-list</code> à <strong><code>ti-folder-cog</code></strong> (folder paramètres). Note : si elles ne s'affichent toujours pas chez toi, c'est un cache PWA → Ctrl+Shift+R pour forcer le refresh</p>
+  </div>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix CRITIQUE bouton 'Nouvelle pathologie'</h3>
+  <div class="panel warn">
+    <p>🚨 la modale ne s'ouvrait pas car <code>&lt;Modal&gt;</code> était instanciée SANS le prop <code>open={true}</code>. Le composant Modal du design system exige explicitement <code>open</code> pour s'afficher (early return si <code>!open</code>). Ajout <code>open={!!modal}</code> → la modal s'ouvre maintenant correctement au click sur le bouton</p>
+  </div>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix popup 'Nouveau matériel' qui déborde</h3>
+  <div class="panel warn">
+    <p>📐 ajout dans <code>globals.css</code> de règles globales <code>.modal { max-height: 90vh; overflow-y: auto }</code> + <code>.modal-body { max-height: calc(85vh - 120px); overflow-y: auto; -webkit-overflow-scrolling: touch }</code>. Sur mobile (≤ 700px) : modale en 96vw + max-height 80vh pour respecter les barres système iOS/Android. S'applique à TOUTES les modales du site (Modal et Modal v2)</p><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">globals.css</code></div>
+  </div>
+
+  <h2>🎨 Interface utilisateur <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Familles articles : grille d'icônes visuelle</h3>
+  <div class="panel hi">
+    
+    <p>🎨 au lieu du select texte</p>
+    <ol class="steps">
+      <li><strong>Élargissement du catalogue d'icônes</strong> : passe de 15 à <strong>47 icônes Tabler</strong> thématiques santé/PSAD (folder, package, pill, stethoscope, bandage, droplet, lungs, heartbeat, medical-cross, wheelchair, microscope, prescription, vaccine, thermometer, eye, ear, tooth, walk, baby-carriage, etc.)</li>
+      <li><strong>Sélection visuelle</strong> : grid 36×36 px avec icônes affichées en grand, click pour sélectionner, l'icône active prend la couleur de la famille en background + border 2px</li>
+      <li>Label affiche le nom de l'icône sélectionnée en petit à côté. Max-height 150px + scroll si besoin</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Fiche groupement `/collectivite` : tuiles avec compteurs sur 4 onglets</h3>
+  <div class="panel hi">
+    
+    <p></p>
+    <ol class="steps">
+      <li>Header avec h3 + count + sous-titre + bouton 'Liste complète'</li>
+      <li><strong>Grid de tuiles 180px</strong> affichant les éléments rattachés au groupement avec icône colorée + label + valeur</li>
+      <li><strong>Compteurs réels via Supabase</strong> : 7 counts en parallèle (vehicules, garages, magasins, tournees, depots, equipes, collaborateurs) via select count exact head</li>
+      <li>Nouveau composant <code>Tuile</code> avec hover translateY(-2px) et background pastel. Click sur tuile → router.push</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">0.62.34 (NEXT) : Tournées GPS</h3>
+  <div class="panel ">
+    <p>🚧 — OSRM routing + tracking chauffeur temps réel + polyline historique sur la carte + export feuille de route PDF par chauffeur + signature canvas par étape. Gros lot prévu</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.33 - Correction de bug critique" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

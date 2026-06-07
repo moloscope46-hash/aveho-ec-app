@@ -3476,3 +3476,12 @@ html.av-presentation-mode.av-presentation-hide-notifs [data-focus-hide-on-notifs
 
 /* 0.62.27 : Animation pulse pour indicateur refresh auto */
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* 0.62.33 : Fix modales qui débordent en hauteur (mobile + desktop) */
+.modal { max-height: 90vh; overflow-y: auto; }
+.modal-body, .modal-v2 .modal-body { max-height: calc(85vh - 120px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* Si modale en plein écran sur mobile : padding-bottom safe area */
+@media (max-width: 700px) {
+  .modal { max-width: 96vw; width: 96vw; }
+  .modal-body, .modal-v2 .modal-body { max-height: calc(80vh - 100px); }
+}

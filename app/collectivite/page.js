@@ -22,6 +22,28 @@ import SireneSearch from "../SireneSearch";
 import { safeUpdate } from "../../lib/safeWrite";
 import { logEvent } from "../../lib/events";
 
+function Tuile({ icon, label, value, color, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      background: "#fff", border: `2px solid ${color}30`,
+      borderLeft: `4px solid ${color}`, borderRadius: 10,
+      padding: "12px 14px", cursor: "pointer", textAlign: "left",
+      fontFamily: "inherit", display: "flex", alignItems: "center", gap: 10,
+      transition: "transform 150ms",
+    }}
+    onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+    onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
+      <div style={{ width: 38, height: 38, background: `${color}1A`, color: color, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+        <i className={`ti ${icon}`} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "#142131", lineHeight: 1.2 }}>{label}</div>
+        {typeof value !== "undefined" && <div style={{ fontSize: 16, fontWeight: 800, color, lineHeight: 1 }}>{value}</div>}
+      </div>
+    </button>
+  );
+}
+
 export default function GroupementPage() {
   const supabase = createClient();
   const router = useRouter();
@@ -41,6 +63,27 @@ export default function GroupementPage() {
   const [popupTab, setPopupTab] = useState("bats");
   // 0.58.36 : onglets de la page /collectivite (identite | activite | localisation | etablissements)
   const [activeTab, setActiveTab] = useState("identite");
+  // 0.62.33 : compteurs pour les onglets véhicules/garages/magasins/tournées
+  const [counts, setCounts] = useState({ vehicules: 0, garages: 0, magasins: 0, tournees: 0, depots: 0, equipes: 0, collaborateurs: 0 });
+  useEffect(() => {
+    if (!auth.ready || !auth.structureId) return;
+    (async () => {
+      try {
+        const sb = createClient();
+        const tryCount = async (q) => { try { const r = await q; return r.count ?? 0; } catch { return 0; } };
+        const [v, g, m, t, d, e, c] = await Promise.all([
+          tryCount(sb.from("vehicules").select("id", { count: "exact", head: true }).eq("structure_id", auth.structureId)),
+          tryCount(sb.from("garages").select("id", { count: "exact", head: true }).eq("structure_id", auth.structureId)),
+          tryCount(sb.from("magasins").select("id", { count: "exact", head: true }).eq("structure_id", auth.structureId)),
+          tryCount(sb.from("tournees").select("id", { count: "exact", head: true })),
+          tryCount(sb.from("depots").select("id", { count: "exact", head: true }).eq("structure_id", auth.structureId)),
+          tryCount(sb.from("equipes").select("id", { count: "exact", head: true }).eq("structure_id", auth.structureId)),
+          tryCount(sb.from("membres_structure").select("user_id", { count: "exact", head: true }).eq("structure_id", auth.structureId).eq("actif", true)),
+        ]);
+        setCounts({ vehicules: v, garages: g, magasins: m, tournees: t, depots: d, equipes: e, collaborateurs: c });
+      } catch (e) { console.warn(e); }
+    })();
+  }, [auth.ready, auth.structureId]);
   useEffect(() => {
     try {
       const saved = localStorage.getItem("av-collectivite-tab");
@@ -644,71 +687,80 @@ export default function GroupementPage() {
               </Panel>
             )}
 
-            {/* 0.62.17 : 4 nouveaux onglets — véhicules, garages, magasins, tournées */}
+            {/* 0.62.33 : 4 onglets enrichis avec tuiles + compteurs + multiple liens */}
             {activeTab === "vehicules" && (
               <Panel>
-                <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                  <i className="ti ti-ambulance" style={{ fontSize: 56, color: "#e35d5b", display: "block", marginBottom: 12 }} />
-                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Flotte véhicules</h3>
-                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
-                    Tous les véhicules sanitaires, taxis, VSL, utilitaires du groupement
-                  </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <h3 style={{ margin: 0, color: "#142131" }}>🚑 Flotte véhicules ({counts.vehicules})</h3>
+                    <div style={{ fontSize: 12, color: "#5a6878", marginTop: 2 }}>Ambulances · taxis · VSL · utilitaires</div>
+                  </div>
                   <button onClick={() => router.push("/vehicules")} style={btnGradient("#e35d5b", "#c0392b")}>
-                    <i className="ti ti-arrow-right" /> Ouvrir la page Véhicules
+                    <i className="ti ti-list" /> Liste complète
                   </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+                  <Tuile icon="ti-ambulance" label="Tous les véhicules" value={counts.vehicules} color="#e35d5b" onClick={() => router.push("/vehicules")} />
+                  <Tuile icon="ti-plus" label="Ajouter un véhicule" color="#5aa05a" onClick={() => router.push("/vehicules/nouveau")} />
+                  <Tuile icon="ti-parking" label="Garages associés" value={counts.garages} color="#185FA5" onClick={() => router.push("/garages")} />
+                  <Tuile icon="ti-route" label="Tournées en cours" value={counts.tournees} color="#7a6fb0" onClick={() => router.push("/magasin/tournees")} />
                 </div>
               </Panel>
             )}
 
             {activeTab === "garages" && (
               <Panel>
-                <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                  <i className="ti ti-parking" style={{ fontSize: 56, color: "#185FA5", display: "block", marginBottom: 12 }} />
-                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Garages & parkings</h3>
-                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
-                    Lieux de stationnement et d'entretien des véhicules
-                  </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <h3 style={{ margin: 0, color: "#142131" }}>🅿️ Garages & parkings ({counts.garages})</h3>
+                    <div style={{ fontSize: 12, color: "#5a6878", marginTop: 2 }}>Stationnement · entretien · ateliers</div>
+                  </div>
                   <button onClick={() => router.push("/garages")} style={btnGradient("#185FA5", "#0d4a8c")}>
-                    <i className="ti ti-arrow-right" /> Ouvrir la page Garages
+                    <i className="ti ti-list" /> Liste complète
                   </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+                  <Tuile icon="ti-parking" label="Tous les garages" value={counts.garages} color="#185FA5" onClick={() => router.push("/garages")} />
+                  <Tuile icon="ti-plus" label="Nouveau garage" color="#5aa05a" onClick={() => router.push("/garages?new=1")} />
+                  <Tuile icon="ti-ambulance" label="Véhicules rattachés" value={counts.vehicules} color="#e35d5b" onClick={() => router.push("/vehicules")} />
                 </div>
               </Panel>
             )}
 
             {activeTab === "magasins" && (
               <Panel>
-                <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                  <i className="ti ti-building-warehouse" style={{ fontSize: 56, color: "#5a8f8f", display: "block", marginBottom: 12 }} />
-                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Magasins PSAD/FBM</h3>
-                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
-                    Magasins fournisseurs rattachés au groupement
-                  </p>
-                  <button onClick={() => router.push("/magasins/nouveau")} style={btnGradient("#5a8f8f", "#3a6f6f")}>
-                    <i className="ti ti-arrow-right" /> Ouvrir la page Magasins
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <h3 style={{ margin: 0, color: "#142131" }}>🏬 Magasins PSAD/FBM ({counts.magasins})</h3>
+                    <div style={{ fontSize: 12, color: "#5a6878", marginTop: 2 }}>Fournisseurs rattachés au groupement</div>
+                  </div>
+                  <button onClick={() => router.push("/magasins")} style={btnGradient("#5a8f8f", "#3a6f6f")}>
+                    <i className="ti ti-list" /> Liste complète
                   </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+                  <Tuile icon="ti-building-warehouse" label="Tous les magasins" value={counts.magasins} color="#5a8f8f" onClick={() => router.push("/magasins")} />
+                  <Tuile icon="ti-plus" label="Nouveau magasin" color="#5aa05a" onClick={() => router.push("/magasins/nouveau")} />
+                  <Tuile icon="ti-building-warehouse" label="Dépôts" value={counts.depots} color="#EF9F27" onClick={() => router.push("/depots")} />
+                  <Tuile icon="ti-users" label="Collaborateurs" value={counts.collaborateurs} color="#7CC8C8" onClick={() => router.push("/collaborateurs")} />
                 </div>
               </Panel>
             )}
 
             {activeTab === "tournees" && (
               <Panel>
-                <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                  <i className="ti ti-route" style={{ fontSize: 56, color: "#7a6fb0", display: "block", marginBottom: 12 }} />
-                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Tournées & livraisons</h3>
-                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
-                    Tournées des magasins, calendrier, analytics
-                  </p>
-                  <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                    <button onClick={() => router.push("/magasin/tournees")} style={btnGradient("#7a6fb0", "#5e4a8c")}>
-                      <i className="ti ti-route" /> Liste tournées
-                    </button>
-                    <button onClick={() => router.push("/magasin/tournees/calendrier")} style={btnGradient("#EF9F27", "#d48820")}>
-                      <i className="ti ti-calendar" /> Calendrier
-                    </button>
-                    <button onClick={() => router.push("/magasin/analytics-tournees")} style={btnGradient("#5a8f8f", "#3a6f6f")}>
-                      <i className="ti ti-chart-line" /> Analytics
-                    </button>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <h3 style={{ margin: 0, color: "#142131" }}>🚚 Tournées & livraisons ({counts.tournees})</h3>
+                    <div style={{ fontSize: 12, color: "#5a6878", marginTop: 2 }}>Tournées des magasins · calendrier · analytics</div>
                   </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+                  <Tuile icon="ti-route" label="Liste des tournées" value={counts.tournees} color="#7a6fb0" onClick={() => router.push("/magasin/tournees")} />
+                  <Tuile icon="ti-calendar" label="Calendrier" color="#EF9F27" onClick={() => router.push("/magasin/tournees/calendrier")} />
+                  <Tuile icon="ti-chart-line" label="Analytics" color="#5a8f8f" onClick={() => router.push("/magasin/analytics-tournees")} />
+                  <Tuile icon="ti-truck" label="Livraisons planifiées" color="#185FA5" onClick={() => router.push("/livraisons-planifiees")} />
+                  <Tuile icon="ti-receipt" label="Bons de réception" color="#5aa05a" onClick={() => router.push("/bons-reception")} />
                 </div>
               </Panel>
             )}

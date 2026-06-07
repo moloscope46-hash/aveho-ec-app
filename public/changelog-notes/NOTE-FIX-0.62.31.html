@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.25 — FIX</title>
+<title>Aveho 0.62.31 — FIX</title>
 <style>
   :root {
     --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
@@ -45,46 +45,60 @@
   <header class="cover">
     <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
     <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
-    <h1>Version 0.62.25
-      <small>🚨 Fix syntax error versions-data (virgule manquante) + REFONTE HTML notes au format RICHE (toutes 0.62.x)</small>
+    <h1>Version 0.62.31
+      <small>🚨 Fix 400 livraisons-planifiees (jointures cassées) + REFONTE HTML notes format ULTRA RICHE (style ancien Alpha 0.55)</small>
     </h1>
     <div class="meta">
       <span>📅 <b>Date :</b> 6 juin 2026</span>
-      <span>📦 <b>Version :</b> <span class="badge">v0.62.25-alpha</span></span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.31-alpha</span></span>
       <span>📋 <b>Type :</b> Correction de bug critique</span>
-      <span>🔧 <b>Chantiers :</b> <b>1</b> FIX · <b>3</b> AI</span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> FIX · <b>2</b> AI · <b>1</b> INFO</span>
     </div>
-    <div class="themes-row"><span class="theme-pill">#fix-critique</span> <span class="theme-pill">#html</span> <span class="theme-pill">#changelog</span> <span class="theme-pill">#vercel</span> <span class="theme-pill">#script</span></div>
+    <div class="themes-row"><span class="theme-pill">#fix-critique</span> <span class="theme-pill">#html</span> <span class="theme-pill">#notes</span> <span class="theme-pill">#livraisons</span> <span class="theme-pill">#postgrest</span></div>
   </header>
 
-  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
-  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">REFONTE COMPLÈTE DES HTML NOTES</h3>
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouveau script `scripts/gen-html-notes-ultra.py`</h3>
   <div class="panel ">
     
-    <p></p>
+    <p>📄 génère des HTML notes ULTRA détaillées au format des anciennes notes Alpha 0.55+. Features</p>
     <ol class="steps">
-      <li><strong>Header gradient navy → couleur kind → navy</strong> avec eyebrow uppercase + logo aveho + titre + sous-titre + badges meta (date, version, type, compteur chantiers, themes en pills)</li>
-      <li><strong>Sections groupées par type de code</strong> (SQL, AI, FIX, UX, INFO) avec h2 souligné ambre + icône colorée 32×32 + compteur</li>
-      <li><strong>Panels colorés</strong> : <code>.violet</code> pour SQL, <code>.warn</code> pour FIX, <code>.hi</code> pour UX</li>
-      <li><strong>Code inline</strong> <code>&lt;code&gt;</code> avec fond #f4f7fa + border</li>
-      <li><strong>Block SQL séparé</strong> avec <code>pre</code> navy listant le fichier + chemin</li>
-      <li><strong>Footer professionnel</strong></li>
+      <li>Header gradient navy → couleur kind → navy avec eyebrow uppercase + logo + badges meta + themes en pills</li>
+      <li>Sections h2 groupées par type avec emoji + souligné ambre + compteur</li>
+      <li>Pour chaque chantier : <strong>h3 avec titre extrait du </strong>gras**** + panel coloré dédié (.violet pour SQL, .warn pour FIX, .hi pour UX)</li>
+      <li>**Détection auto des étapes</li>
+      <li></li>
+      <li></li>
+      <li>** dans le texte → conversion en <code>&lt;ol class='steps'&gt;</code></li>
+      <li><strong>Extraction fichiers mentionnés</strong> (.js/.sql/.css) → footer 'Fichiers concernés'</li>
+      <li><strong>Section SQL séparée</strong> avec bloc pre navy listant le chemin</li>
+      <li><strong>Procédure de déploiement</strong> auto-générée avec 5-6 étapes shell</li>
+      <li>Footer professionnel. Responsive mobile</li>
     </ol>
-  </div>
-  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouveau script `scripts/gen-html-notes-rich.py`</h3>
-  <div class="panel ">
-    <p>🔧 remplace les scripts précédents qui généraient des HTML pauvres. Parse versions-data.js avec regex robuste, extrait kind/titre/chantiers/themes/date/noteFile/sqlFile. Transforme <code><strong>bold</strong></code> en <code>&lt;b&gt;</code>, <code>\\</code>code\\`<code> en </code>&lt;code&gt;`, échappe HTML. Groupe les chantiers par code, ordre prioritaire (SQL &gt; AI &gt; FIX &gt; UX &gt; INFO). Génère 15 HTML pour 0.62.10 → 0.62.24. Responsive mobile</p>
   </div>
   <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">15 HTML régénérés</h3>
   <div class="panel ">
-    <p>♻ au format riche : 0.62.10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24. Tous téléchargeables depuis la modale changelog avec format identique aux anciennes notes ultra-détaillées</p>
+    <p>♻ au format ULTRA RICHE : 0.62.16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31. Beaucoup plus détaillés que la version précédente : chaque chantier a son h3 + panel coloré dédié + étapes en ol numérotées si détectées + fichiers mentionnés en footer. Format identique aux anciennes notes Alpha 0.55.43 (262 lignes) ou Alpha 0.55.0 (288 lignes) avec sections 🛡 🔐 🗄 🎨 🎯</p>
   </div>
 
   <h2>🐛 Fix bug <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
-  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix CRITIQUE syntax error Vercel</h3>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix erreur 400 sur `/livraisons-planifiees`</h3>
   <div class="panel warn">
-    <p>🚨 <code>versions-data.js:354</code> avait <code>"noteFile": "..." "sqlFile": ...</code> SANS VIRGULE entre les 2 propriétés → build webpack cassé. Script Python qui ajoutait <code>sqlFile</code> après coup ne gérait pas le cas où noteFile était la dernière propriété du bloc. <strong>Fix global</strong> : regex <code>re.sub</code> qui détecte le pattern <code>"noteFile":...\
-  "sqlFile"</code> et ajoute la virgule. 7 versions impactées corrigées (0.62.10, 11, 13, 16, 17, etc.)</p>
+    
+    <p></p>
+    <ol class="steps">
+      <li>Pattern fix appliqué : SELECT simple sur tournees, puis fetch séparé via <code>IN</code> sur <code>vehicules_magasin</code> + <code>magasins</code> avec les ID collectés</li>
+      <li>Construction de <code>Map</code> pour lookup O</li>
+      <li></li>
+      <li>Hydratation manuelle <code>t.vehicules_magasin = vehMap.get(t.vehicule_id)</code></li>
+      <li>Idem pour transferts : fetch depots séparé, puis étabs depuis depots.etablissement_id, double map lookup. Plus aucune jointure PostgREST, robust aux FK manquantes</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Roadmap 0.62.x à jour</h3>
+  <div class="panel ">
+    <p>🎯 0.62.32 SAV complet (bilan exec + PDF + photos + signature), 0.62.33 Tournées GPS (OSRM + tracking + polyline), 0.62.34 Marketplace + Notifs push, 0.62.35 Patients workflows mobile, 0.62.36 Magasin admin, 0.62.37 Temps réel + Météo, 0.62.38 App native Capacitor</p>
   </div>
 
 
@@ -96,7 +110,7 @@
       <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
       <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
       <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
-      <li>Terminal : <code>git add -A ; git commit -m "0.62.25 - Correction de bug critique" ; git push origin main</code></li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.31 - Correction de bug critique" ; git push origin main</code></li>
       <li>Vercel déploie automatiquement depuis le push</li>
     </ol>
   </div>

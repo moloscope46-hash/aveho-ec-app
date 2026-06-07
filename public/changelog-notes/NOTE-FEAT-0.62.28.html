@@ -3,97 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.28 — Note d'évolution</title>
+<title>Aveho 0.62.28 — FEATURE</title>
 <style>
   :root {
     --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
     --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
-    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
   }
   * { box-sizing: border-box; }
-  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
-  .wrap { }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
   header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
-  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
-  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
   .logo .v { color: var(--teal); }
   h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
   h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
   .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
-  .meta b { color: #fff; }
   .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
-  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
-  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
-  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
   .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
   .panel.warn { background: #fff8ec; border-color: #f0d59f; }
   .panel.violet { background: #f3effa; border-color: #d6c9ec; }
   .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
   code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
-  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
-  ul { padding-left: 20px; margin: 6px 0; }
-  li { margin: 8px 0; }
-  b { color: var(--navy); }
-  .themes-row { margin-top: 14px; }
-  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
   @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
 </style>
 </head>
 <body>
-<div class="wrap">
 
   <header class="cover">
     <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
-    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
     <h1>Version 0.62.28
       <small>📧 Edge function mail magasin (Resend + Auth fallback) + Workflow Commande EC → DI magasin (2 étapes validation)</small>
     </h1>
     <div class="meta">
-      <span><b>📅 Date :</b> 6 juin 2026</span>
-      <span><b>📦 Version :</b> <span class="badge">v0.62.28-alpha</span></span>
-      <span><b>📋 Type :</b> Nouvelle fonctionnalité majeure</span>
-      <span><b>🔧 Chantiers :</b> 1 SQL · 2 AI · 1 INFO</span>
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.28-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> SQL · <b>2</b> AI · <b>1</b> INFO</span>
     </div>
-    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">commande</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">workflow</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">magasin</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">edge-function</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">mail</span></div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#commande</span> <span class="theme-pill">#workflow</span> <span class="theme-pill">#magasin</span> <span class="theme-pill">#edge-function</span> <span class="theme-pill">#mail</span></div>
   </header>
 
-
-  <h2><span style="display:inline-block;width:32px;height:32px;background:#7CC8C822;color:#7CC8C8;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🗄</span>SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">`migration-0.62.28-commande-ec-vers-magasin.sql`</h3>
   <div class="panel violet">
-    <ul>
-    <li>🆕 <b><code>migration-0.62.28-commande-ec-vers-magasin.sql</code></b> : (1) Table <code>commandes_ec</code> avec workflow 9 statuts : brouillon → a_valider_ec → validee_ec → envoyee_magasin → preparation → expediee → livree → receptionnee, + rejetee. Champs : numero, structure_id, etab+bât+svc+depot, magasin_id (destinataire), cree_par+le, validee_ec_par+le+commentaire, envoyee_magasin_le, di_id (lien retour), total_lignes/HT/TTC, urgence, livraison_souhaitee_le, motif_rejet. (2) Table <code>commandes_ec_lignes</code> (article_id, quantite, prix, tva). (3) Fonction <code>fn_commande_ec_vers_di()</code> SECURITY DEFINER : transforme la commande validee_ec en DI dans <code>demandes_internes</code> (numero DI-CMD-YYYYMMDD-HHMMSS, type=livraison, sous_type=commande_ec) et lie via <code>commande_id_origine</code>. (4) Vue <code>v_commandes_ec_compteurs</code> pour dashboards. 6 indexes + RLS strict structure_id</li>
-    </ul>
+    
+    <p>🆕</p>
+    <ol class="steps">
+      <li>Table <code>commandes_ec</code> avec workflow 9 statuts : brouillon → a_valider_ec → validee_ec → envoyee_magasin → preparation → expediee → livree → receptionnee, + rejetee. Champs : numero, structure_id, etab+bât+svc+depot, magasin_id (destinataire), cree_par+le, validee_ec_par+le+commentaire, envoyee_magasin_le, di_id (lien retour), total_lignes/HT/TTC, urgence, livraison_souhaitee_le, motif_rejet</li>
+      <li>Table <code>commandes_ec_lignes</code> (article_id, quantite, prix, tva)</li>
+      <li>Fonction <code>fn_commande_ec_vers_di()</code> SECURITY DEFINER : transforme la commande validee_ec en DI dans <code>demandes_internes</code> (numero DI-CMD-YYYYMMDD-HHMMSS, type=livraison, sous_type=commande_ec) et lie via <code>commande_id_origine</code></li>
+      <li>Vue <code>v_commandes_ec_compteurs</code> pour dashboards. 6 indexes + RLS strict structure_id</li>
+    </ol><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">migration-0.62.28-commande-ec-vers-magasin.sql</code></div>
   </div>
 
-  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(2 chantiers)</small></h2>
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouvelle page `/commandes-validation`</h3>
   <div class="panel ">
-    <ul>
-    <li>📋 <b>Nouvelle page <code>/commandes-validation</code></b> : workflow validation chef de service. Filtres par statut avec compteurs (9 statuts colorés). Cards par commande : numero, étab → magasin, nb lignes + montant HT, urgence 🔥, notes, motif rejet. <b>Sur statut 'a_valider_ec'</b> → 2 boutons : ✓ Valider (vert gradient) ou ⊘ Rejeter (rouge). Modal validation avec textarea commentaire + checkbox visuelle. À la validation : UPDATE statut → 'validee_ec' + appel RPC <code>fn_commande_ec_vers_di</code> qui crée la DI automatiquement dans le magasin destinataire (statut 'nouvelle'). Au rejet : UPDATE statut + motif_rejet stocké. Lien dans menu Commande</li>
-    <li>📧 <b>Edge function <code>invite-user-magasin</code></b> dans <code>supabase/functions/</code> : envoi mail d'invitation avec branding MAGASIN (au lieu du mail Auth générique). Payload : email + magasin_id + role_magasin + types_di_geres + prenom/nom/tel. Process : (1) Charge infos magasin (nom, ville, couleur_primaire). (2) Récupère qui invite. (3) Crée invitation en base. (4) Génère HTML avec gradient navy → couleur_magasin, card magasin avec rôle + types DI, bouton CTA. (5) <b>Envoi via Resend si <code>RESEND_API_KEY</code> configuré</b> (mail custom avec from='${magasin.nom} &lt;noreply@aveho.fr&gt;'). <b>Fallback Supabase Auth.admin.inviteUserByEmail</b> sinon (mail générique). Retourne <code>email_sent_via</code> pour traçabilité. Déploiement : <code>supabase functions deploy invite-user-magasin</code></li>
-    </ul>
+    <p>📋 workflow validation chef de service. Filtres par statut avec compteurs (9 statuts colorés). Cards par commande : numero, étab → magasin, nb lignes + montant HT, urgence 🔥, notes, motif rejet. <strong>Sur statut 'a_valider_ec'</strong> → 2 boutons : ✓ Valider (vert gradient) ou ⊘ Rejeter (rouge). Modal validation avec textarea commentaire + checkbox visuelle. À la validation : UPDATE statut → 'validee_ec' + appel RPC <code>fn_commande_ec_vers_di</code> qui crée la DI automatiquement dans le magasin destinataire (statut 'nouvelle'). Au rejet : UPDATE statut + motif_rejet stocké. Lien dans menu Commande</p>
   </div>
-
-  <h2><span style="display:inline-block;width:32px;height:32px;background:#5a687822;color:#5a6878;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">ℹ</span>Info / Tâche <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Edge function `invite-user-magasin`</h3>
   <div class="panel ">
-    <ul>
-    <li>📦 <b>Cette version termine la TODO list de 0.62.x</b> ! Voici ce qui reste comme features ouvertes pour 0.63.x+ : intégration scan complet sur les flows magasin, signature électronique upload Storage sur bons de réception, dashboard temps réel WebSocket Supabase Realtime, marketplace inter-magasins, intégration GED documentaire, exports comptables LPP/LPPR. À voir selon priorités</li>
-    </ul>
+    
+    <p></p>
+    <ol class="steps">
+      <li>Charge infos magasin (nom, ville, couleur_primaire)</li>
+      <li>Récupère qui invite</li>
+      <li>Crée invitation en base</li>
+      <li>Génère HTML avec gradient navy → couleur_magasin, card magasin avec rôle + types DI, bouton CTA</li>
+      <li><strong>Envoi via Resend si <code>RESEND_API_KEY</code> configuré</strong> (mail custom avec from='${magasin.nom} &lt;noreply@aveho.fr&gt;'). <strong>Fallback Supabase Auth.admin.inviteUserByEmail</strong> sinon (mail générique). Retourne <code>email_sent_via</code> pour traçabilité. Déploiement : <code>supabase functions deploy invite-user-magasin</code></li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Cette version termine la TODO list de 0.62.x</h3>
+  <div class="panel ">
+    <p>📦 ! Voici ce qui reste comme features ouvertes pour 0.63.x+ : intégration scan complet sur les flows magasin, signature électronique upload Storage sur bons de réception, dashboard temps réel WebSocket Supabase Realtime, marketplace inter-magasins, intégration GED documentaire, exports comptables LPP/LPPR. À voir selon priorités</p>
   </div>
 
 
-  <h2>📦 Migration SQL</h2>
+  <h2>📦 SQL à appliquer dans Supabase</h2>
   <div class="panel violet">
-    <p>Cette version inclut une migration SQL à appliquer dans Supabase SQL Editor :</p>
-    <pre style="margin-top:10px">migration-0.62.28-commande-ec-vers-magasin.sql</pre>
-    <p style="margin-top:8px;font-size:12px;color:#5a6878">📍 Disponible dans <code>public/sql/migration-0.62.28-commande-ec-vers-magasin.sql</code>. Lance-la AVANT de déployer cette version.</p>
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+migration-0.62.28-commande-ec-vers-magasin.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/migration-0.62.28-commande-ec-vers-magasin.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>migration-0.62.28-commande-ec-vers-magasin.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.28 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
   </div>
 
 
   <footer>
-    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
-    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
   </footer>
 
-</div>
 </body>
 </html>

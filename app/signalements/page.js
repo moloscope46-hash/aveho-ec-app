@@ -22,6 +22,7 @@ import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 // 0.58.22 : NeonButton premium pour boutons principaux
 import { NeonButton } from "../components/ui-premium";
+import EquipeFilter from "../components/EquipeFilter";
 const TYPES = [
   { value: "Problème", color: "#e35d5b", icon: "ti-alert-triangle" },
   { value: "Idée", color: "#7CC8C8", icon: "ti-bulb" },
@@ -47,6 +48,7 @@ export default function SignalementsPage() {
   const [err, setErr] = useState("");
   const [fStatut, setFStatut] = useStickyState("", "signalements:fStatut");
   const [fType, setFType] = useStickyState("", "signalements:fType");
+  const [fEquipe, setFEquipe] = useState(null);  // 0.62.30
   // Alpha 0.41.0 : filtre catégorie + tri
   const [fCategorie, setFCategorie] = useStickyState("", "signalements:fCategorie");
   const [triPar, setTriPar] = useStickyState("recent", "signalements:tri"); // "recent" | "votes"
@@ -225,6 +227,7 @@ export default function SignalementsPage() {
       if (fStatut && r.statut !== fStatut) return false;
       if (fType && r.type !== fType) return false;
       if (fCategorie && r.categorie !== fCategorie) return false;
+      if (fEquipe && r.equipe_id !== fEquipe) return false;
       return true;
     })
     .sort((a, b) => {
@@ -292,7 +295,8 @@ export default function SignalementsPage() {
               <option value="recent">Plus récents</option>
               <option value="votes">Plus de votes</option>
             </select>
-            {(fStatut || fType || fCategorie) && <Btn variant="ghost" icon="ti-x" onClick={() => { setFStatut(""); setFType(""); setFCategorie(""); }}>Effacer filtres</Btn>}
+            <EquipeFilter value={fEquipe} onChange={setFEquipe} compact />
+            {(fStatut || fType || fCategorie || fEquipe) && <Btn variant="ghost" icon="ti-x" onClick={() => { setFStatut(""); setFType(""); setFCategorie(""); setFEquipe(null); }}>Effacer filtres</Btn>}
           </div>
 
           {loading ? (

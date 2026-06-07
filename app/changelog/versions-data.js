@@ -240,6 +240,87 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.34",
+    "kind": "feat",
+    "titre": "🔧 Fix SQL bilans_sav (ALTER défensif) + 👤 Création utilisateur DIRECTE (sans invitation mail, identifiants à transmettre)",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.34-bilans-sav-FIX.sql`** : fix l'erreur `column 'sav_id' does not exist` du SQL 0.62.32. Cause : si la table `bilans_sav` existait déjà partiellement (ancienne version), `CREATE TABLE IF NOT EXISTS` n'a pas créé les colonnes manquantes. Solution : 21 instructions `ALTER TABLE bilans_sav ADD COLUMN IF NOT EXISTS` qui rattrapent toutes les colonnes une par une, puis CREATE TABLE en backup pour le cas pas existant du tout, puis indexes/RLS/vue. 100% idempotent, relançable plusieurs fois sans erreur. Le 0.62.32 reste valide pour les nouvelles installations" },
+      { "code": "AI", "txt": "👤 **Nouvelle page `/utilisateurs/creer-direct`** : création d'un utilisateur SANS passer par invitation mail. Workflow : (1) Choix type compte 🏥 **Établissement** vs 🏬 **Magasin** avec boutons gradients. (2) Email + mot de passe pré-généré (12 chars alphanumeric, bouton 🔄 regen). (3) Identité : prénom, nom, fonction, téléphone. (4) Rattachement : select étab OU select magasin selon type. (5) Click 'Créer' → appel edge function `create-user-direct` → user créé avec `email_confirm=true` (skip mail). (6) **Écran résultat** : affiche URL + email + password en cards copiables (bouton Copier chacun), warning de transmettre manuellement, conseil changement password à première connexion" },
+      { "code": "AI", "txt": "📧 **Edge function `create-user-direct`** dans `supabase/functions/` : (1) Reçoit payload email/password/prenom/nom/structure_id/etab_id ou magasin_id. (2) Génère password si non fourni (12 chars `generatePassword`). (3) `auth.admin.createUser` avec **`email_confirm=true`** pour skip le mail Auth. (4) Crée la ligne dans `membres_structure` avec tous les champs. (5) Retourne `{ok, user_id, email, password, app_url}`. (6) **Fallback côté client** : si l'edge function échoue (pas déployée encore), essai `auth.signUp` direct + insert membre, avec message explicite pour déployer l'edge function" },
+      { "code": "AI", "txt": "🔗 **Liens dans 2 pages** : (a) `/utilisateurs` (admin) : à côté du bouton 'Inviter par mail' (renommé), ajout d'un bouton ambre **'Créer directement'** qui route vers la nouvelle page. (b) `/magasin/collaborateurs` : à côté de 'Nouveau collab magasin', ajout 'Créer direct (sans mail)' ghost button" },
+      { "code": "INFO", "txt": "📅 **Planning 0.62.35 (NEXT) : Tournées GPS** — OSRM routing pour tracer les itinéraires automatiquement entre étapes, tracking GPS du chauffeur en temps réel via geolocation API, polyline rouge sur la carte avec historique GPS du jour, export feuille de route PDF par chauffeur (étapes + horaires + adresses), signature canvas par étape pour confirmation de livraison. Gros lot avec carte Leaflet + Storage + jsPDF" }
+    ],
+    "themes": ["feat", "fix-sql", "users", "edge-function", "direct"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.34.html",
+    "sqlFile": "migration-0.62.34-bilans-sav-FIX.sql"
+  },
+  {
+    "v": "0.62.33",
+    "kind": "fix",
+    "titre": "🐛 Lot fix UI : icônes menu Facturation/Administratif + bouton Nouvelle pathologie + popup overflow + grille icônes familles + tuiles fiche groupement",
+    "chantiers": [
+      { "code": "FIX", "txt": "🎨 **Icônes menu Facturation + Administratif** : changées pour des icônes plus visibles. Facturation passe de `ti-receipt-2` à **`ti-currency-euro`** (plus parlant côté finances). Administratif passe de `ti-clipboard-list` à **`ti-folder-cog`** (folder paramètres). Note : si elles ne s'affichent toujours pas chez toi, c'est un cache PWA → Ctrl+Shift+R pour forcer le refresh" },
+      { "code": "FIX", "txt": "🚨 **Fix CRITIQUE bouton 'Nouvelle pathologie'** : la modale ne s'ouvrait pas car `<Modal>` était instanciée SANS le prop `open={true}`. Le composant Modal du design system exige explicitement `open` pour s'afficher (early return si `!open`). Ajout `open={!!modal}` → la modal s'ouvre maintenant correctement au click sur le bouton" },
+      { "code": "FIX", "txt": "📐 **Fix popup 'Nouveau matériel' qui déborde** : ajout dans `globals.css` de règles globales `.modal { max-height: 90vh; overflow-y: auto }` + `.modal-body { max-height: calc(85vh - 120px); overflow-y: auto; -webkit-overflow-scrolling: touch }`. Sur mobile (≤ 700px) : modale en 96vw + max-height 80vh pour respecter les barres système iOS/Android. S'applique à TOUTES les modales du site (Modal et Modal v2)" },
+      { "code": "UX", "txt": "🎨 **Familles articles : grille d'icônes visuelle** au lieu du select texte. (1) **Élargissement du catalogue d'icônes** : passe de 15 à **47 icônes Tabler** thématiques santé/PSAD (folder, package, pill, stethoscope, bandage, droplet, lungs, heartbeat, medical-cross, wheelchair, microscope, prescription, vaccine, thermometer, eye, ear, tooth, walk, baby-carriage, etc.). (2) **Sélection visuelle** : grid 36×36 px avec icônes affichées en grand, click pour sélectionner, l'icône active prend la couleur de la famille en background + border 2px. (3) Label affiche le nom de l'icône sélectionnée en petit à côté. Max-height 150px + scroll si besoin" },
+      { "code": "UX", "txt": "🏠 **Fiche groupement `/collectivite` : tuiles avec compteurs sur 4 onglets** (Véhicules, Garages, Magasins, Tournées). Avant : juste un bouton 'Ouvrir la page X' au centre. Maintenant : (1) Header avec h3 + count + sous-titre + bouton 'Liste complète'. (2) **Grid de tuiles 180px** affichant les éléments rattachés au groupement avec icône colorée + label + valeur. (3) **Compteurs réels via Supabase** : 7 counts en parallèle (vehicules, garages, magasins, tournees, depots, equipes, collaborateurs) via select count exact head. (4) Nouveau composant `Tuile` avec hover translateY(-2px) et background pastel. Click sur tuile → router.push" },
+      { "code": "INFO", "txt": "🚧 **0.62.34 (NEXT) : Tournées GPS** — OSRM routing + tracking chauffeur temps réel + polyline historique sur la carte + export feuille de route PDF par chauffeur + signature canvas par étape. Gros lot prévu" }
+    ],
+    "themes": ["fix", "ui", "modal", "icones", "groupement", "tuiles"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.33.html"
+  },
+  {
+    "v": "0.62.32",
+    "kind": "feat",
+    "titre": "🛠 Lot SAV COMPLET : table bilans_sav + page exécution 5 points + photos Storage + signature canvas + rapport PDF",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.32-bilans-sav.sql`** : (1) Table `bilans_sav` workflow 4 statuts (en_cours → termine → valide_ec | refuse_ec). Colonnes : numero, structure_id, sav_id (lien DI SAV), materiel_id, article_id, technicien_user_id+nom, date_debut/fin, **points JSONB** (les 5 points stockés [{n, libelle, conforme, commentaire}]), resultat ('conforme'|'reparable'|'non_conforme'|'a_remplacer'), diagnostic, preconisations, signature_technicien_url, signature_ec_url+par+le+nom, motif_refus. (2) Table `bilans_sav_photos` (FK CASCADE) : bilan_id, point_n (1-5 ou null global), url, filename, taille, taken_by, taken_at, commentaire. (3) Vue `v_sav_analytics` : compteurs par statut + par résultat + durée moyenne. (4) **5 indexes** + RLS strict structure_id. (5) Bucket Storage `sav-photos` à créer manuellement dans Supabase Studio" },
+      { "code": "AI", "txt": "📋 **Nouvelle page `/bilans-sav`** : liste des bilans + bouton **'Démarrer un bilan'** avec modal de création (technicien + SAV optionnel). Filtres par statut avec compteurs colorés (en_cours/termine/valide_ec/refuse_ec). Cards : numero + technicien + diagnostic (extrait 80 char) + date + badge statut + badge résultat coloré. Click sur card → redirige vers `/bilan-sav/[id]` pour l'exécution. À la création : 5 points standards pré-remplis + statut 'en_cours' + redirect auto" },
+      { "code": "AI", "txt": "🔧 **Nouvelle page `/bilan-sav/[id]`** : exécution complète du bilan en mobile-first. (1) **Header** avec numero + statut + technicien + dates. (2) **5 points de contrôle** dans des cards bordées colorées (vert si OK, rouge si KO). Pour chaque : numéro circulaire + libellé + description + boutons ✓ OK / ✗ KO + textarea commentaire + **bouton 📷 Photo avec capture caméra mobile** (input file capture=environment). (3) **Synthèse globale** : 4 boutons résultat colorés + textarea diagnostic + textarea préconisations. (4) **Validation EC** (statut termine) : 2 boutons ✓ Valider / ⊘ Refuser → modal avec **signature canvas** (touch + mouse, taille 460×140, bouton ↺ Effacer). (5) **Bouton PDF** jsPDF CDN génère rapport A4 avec header navy + tous les points colorés (vert/rouge/gris) + diagnostic + préco + signature EC en image. Auto-save sur chaque modification (onBlur sur textarea, onClick sur boutons)" },
+      { "code": "AI", "txt": "📤 **Upload photos Supabase Storage** : path `bilan-{id}/{timestamp}-pt{n}.{ext}` dans bucket `sav-photos`. Signed URL générée pour affichage (1 an). **Fallback** : si le bucket n'existe pas, conversion automatique de la photo en data URL base64 et stockage direct dans `bilans_sav_photos.url`. Photos affichées en thumb 70×70 dans la card du point concerné, click → ouvre en grand dans nouvel onglet" },
+      { "code": "AI", "txt": "✍ **Signature canvas EC** : composant `ValidationModal` dédié avec canvas HTML5 (mouse events + touch events pour mobile), trait noir épaisseur 2, lineCap round. Bouton ↺ pour effacer. Capture via `canvas.toDataURL('image/png')` → stocké directement dans `signature_ec_url` (data URL base64). Au refus : textarea motif obligatoire stocké dans `motif_refus`" },
+      { "code": "AI", "txt": "📄 **Rapport PDF jsPDF CDN** : génération A4 avec header navy + titre + métadonnées (technicien, dates, statut, résultat) + **section '5 Points de contrôle'** avec chaque point en couleur (vert ✓, rouge ✗, gris si non évalué) + commentaires en retrait + diagnostic + préconisations + **section 'Validation établissement'** avec nom signataire + date + signature image (addImage avec dataURL PNG). Footer 'Généré le {date} · {n} photos'. Save direct avec numero comme filename" },
+      { "code": "AI", "txt": "🔗 **Lien menu Maintenance** : ajout 'Bilans SAV' (icône ti-clipboard-check, couleur #c0392b) entre 'Demande SAV' et 'Demande transfert' dans la sidebar TopBar section Maintenance" }
+    ],
+    "themes": ["feat", "sav", "bilan", "pdf", "signature", "storage", "mobile"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.32.html",
+    "sqlFile": "migration-0.62.32-bilans-sav.sql"
+  },
+  {
+    "v": "0.62.31",
+    "kind": "fix",
+    "titre": "🚨 Fix 400 livraisons-planifiees (jointures cassées) + REFONTE HTML notes format ULTRA RICHE (style ancien Alpha 0.55)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🐛 **Fix erreur 400 sur `/livraisons-planifiees`** : les requêtes `tournees?select=*,vehicules_magasin(...),magasins(...)` et `transferts?select=*,depots:depot_destination_id(...,etablissements(...))` plantaient en HTTP 400 car les **foreign keys ne sont pas déclarées** dans Supabase. (1) Pattern fix appliqué : SELECT simple sur tournees, puis fetch séparé via `IN` sur `vehicules_magasin` + `magasins` avec les ID collectés. (2) Construction de `Map` pour lookup O(1). (3) Hydratation manuelle `t.vehicules_magasin = vehMap.get(t.vehicule_id)`. (4) Idem pour transferts : fetch depots séparé, puis étabs depuis depots.etablissement_id, double map lookup. Plus aucune jointure PostgREST, robust aux FK manquantes" },
+      { "code": "AI", "txt": "📄 **Nouveau script `scripts/gen-html-notes-ultra.py`** : génère des HTML notes ULTRA détaillées au format des anciennes notes Alpha 0.55+. Features : (1) Header gradient navy → couleur kind → navy avec eyebrow uppercase + logo + badges meta + themes en pills. (2) Sections h2 groupées par type avec emoji + souligné ambre + compteur. (3) Pour chaque chantier : **h3 avec titre extrait du **gras**** + panel coloré dédié (.violet pour SQL, .warn pour FIX, .hi pour UX). (4) **Détection auto des étapes (1) (2) (3)** dans le texte → conversion en `<ol class='steps'>`. (5) **Extraction fichiers mentionnés** (.js/.sql/.css) → footer 'Fichiers concernés'. (6) **Section SQL séparée** avec bloc pre navy listant le chemin. (7) **Procédure de déploiement** auto-générée avec 5-6 étapes shell. (8) Footer professionnel. Responsive mobile" },
+      { "code": "AI", "txt": "♻ **15 HTML régénérés** au format ULTRA RICHE : 0.62.16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31. Beaucoup plus détaillés que la version précédente : chaque chantier a son h3 + panel coloré dédié + étapes en ol numérotées si détectées + fichiers mentionnés en footer. Format identique aux anciennes notes Alpha 0.55.43 (262 lignes) ou Alpha 0.55.0 (288 lignes) avec sections 🛡 🔐 🗄 🎨 🎯" },
+      { "code": "INFO", "txt": "🎯 **Roadmap 0.62.x à jour** : 0.62.32 SAV complet (bilan exec + PDF + photos + signature), 0.62.33 Tournées GPS (OSRM + tracking + polyline), 0.62.34 Marketplace + Notifs push, 0.62.35 Patients workflows mobile, 0.62.36 Magasin admin, 0.62.37 Temps réel + Météo, 0.62.38 App native Capacitor" }
+    ],
+    "themes": ["fix-critique", "html", "notes", "livraisons", "postgrest"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.31.html"
+  },
+  {
+    "v": "0.62.30",
+    "kind": "feat",
+    "titre": "👥 Lot Filtres équipes + Stats : equipe_id sur 8 tables + EquipeFilter réutilisable + audit RangePicker stats",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.30-equipe-id-entities.sql`** : ajoute la colonne `equipe_id UUID` sur **8 tables métier** : patients, interventions, materiels, commandes, achats, signalements, transferts, demandes_internes. 8 indexes partiels (WHERE equipe_id IS NOT NULL pour économiser l'espace). Vue `v_equipe_stats` aggrégée avec compteurs 7j / 30j / 90j / total par équipe pour patients, interventions, commandes, signalements, matériels. Idempotent" },
+      { "code": "AI", "txt": "🧩 **Nouveau composant `EquipeFilter`** : pill bar réutilisable filtrant les équipes de la structure. Charge automatiquement les équipes via `useAuth().structureId`, affiche un bouton 'Toutes équipes' + un bouton par équipe avec couleur + icône Tabler. Mode `compact` (padding réduit) pour intégration dans des toolbars existantes. `onChange(equipe_id || null)` API simple. Pas affiché si 0 équipes" },
+      { "code": "AI", "txt": "🔍 **EquipeFilter intégré sur `/transferts`** : ajout state `filterEquipe`, intégration dans la toolbar (entre priorité et bouton Scanner), filter `if (filterEquipe && t.equipe_id !== filterEquipe) return false`, deps useMemo enrichi" },
+      { "code": "AI", "txt": "🔍 **EquipeFilter intégré sur `/signalements`** : state `fEquipe`, dans la toolbar entre tri et 'Effacer filtres' (qui efface aussi fEquipe), filter `if (fEquipe && r.equipe_id !== fEquipe) return false`. Reste à brancher commandes + achats (4 pages au lieu de 2 — partial)" },
+      { "code": "INFO", "txt": "📋 **AUDIT RangePicker stats déjà branché** (constat 0.62.30) : (a) `/statistiques` utilise déjà `<RangePicker value={range} onChange={setRange} />` ligne 399. (b) Le useEffect ligne 117 a `range.from` et `range.to` dans ses deps (ligne 278), donc reload automatique sur changement de plage. (c) RangePicker premium fournit **5 presets** : 7j / 30j / 3 mois / 6 mois / année. (d) Si pas de plage définie, fallback historique sur 6 derniers mois. Pas de modification nécessaire" },
+      { "code": "INFO", "txt": "🚧 **Reste pour ce lot mais déjà fait** : sélecteur équipe dans formulaires création (à intégrer page par page, gros chantier sur les 8 formulaires concernés — reporté). 2 pages restantes : `/commandes` et `/achats` (à brancher dans 0.62.31 si tu insistes ou via PR simple)" }
+    ],
+    "themes": ["feat", "equipes", "filtres", "stats", "sql"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.30.html",
+    "sqlFile": "migration-0.62.30-equipe-id-entities.sql"
+  },
+  {
     "v": "0.62.29",
     "kind": "ux",
     "titre": "🎨 Lot Premium UI : ParticlesBackground patients + NeonButton transferts + audit complet composants premium déjà actifs",

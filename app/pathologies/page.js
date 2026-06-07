@@ -213,7 +213,7 @@ export default function PathologiesPage() {
         </Panel>
 
         {modal && (
-          <Modal title={modal === "new" ? "Nouvelle pathologie" : `Éditer ${modal.nom}`} onClose={() => { setModal(null); setSaveError(""); }}
+          <Modal open={!!modal} title={modal === "new" ? "Nouvelle pathologie" : `Éditer ${modal.nom}`} onClose={() => { setModal(null); setSaveError(""); }}
             footer={<>
               <Btn variant="ghost" onClick={() => { setModal(null); setSaveError(""); }}>Annuler</Btn>
               <Btn variant="primary" icon="ti-device-floppy" onClick={save}>{saving ? "Enregistrement..." : "Enregistrer"}</Btn>
