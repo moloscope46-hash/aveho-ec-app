@@ -48,6 +48,7 @@ const MENU = [
   { section: "Groupement", sectionIcon: "ti-building-community", items: [
     { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
     { p: "/etablissements", ic: "ti-building-hospital", lbl: "Établissements", col: "#1c5454" },
+    { p: "/had", ic: "ti-home-heart", lbl: "HAD (Hospitalisation À Domicile)", col: "#185FA5" },
     { p: "/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#7CC8C8" },
     { p: "/collaborateurs-fournisseurs", ic: "ti-users-group", lbl: "Collaborateurs fournisseurs", col: "#5a8f8f" },
     // 2. ÉTABLISSEMENTS, BÂTIMENTS, SERVICES, ÉQUIPES (organisationnel)

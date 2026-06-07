@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.68 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.68
+      <small>🏥 Module HAD complet (table + rattachements + vue stats + démo 3 HAD) + Mode Liste/Tuiles partout (ViewModeToggle) + LogoUploader dans /collectivite</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.68-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> SQL · <b>3</b> AI · <b>1</b> UX · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#had</span> <span class="theme-pill">#view-mode</span> <span class="theme-pill">#logo</span> <span class="theme-pill">#sql</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">`migration-0.62.68-had-module-complet.sql`</h3>
+  <div class="panel violet">
+    
+    <p>🗄️ module HAD complet</p>
+    <ol class="steps">
+      <li><strong>Table <code>had</code></strong> : nom, code, finess, type (généraliste/pédiatrique/périnatale/oncologie), adresse complète, responsable (nom + tel + email), <strong>capacite_lits</strong>, zone_intervention, latitude/longitude pour carte, rayon_intervention_km (défaut 30), logo_url, notes, actif</li>
+      <li><strong>5 tables rattachements</strong> : <code>had_etablissements</code> (partenaire/prescripteur/support), <code>had_vehicules</code>, <code>had_garages</code> (est_principal), <code>had_depots</code> (est_principal), <code>membres_had</code> (role : medecin_coordo/cadre_ide/ide/aide_soignant/kine/secretaire/chauffeur)</li>
+      <li><strong>Colonnes ajoutées</strong> : <code>had_id</code> sur <code>demandes_internes</code> + <code>patients</code> + <code>etablissements</code>, <code>adresse_domicile</code>/<code>cp_domicile</code>/<code>ville_domicile</code>/<code>latitude</code>/<code>longitude</code> sur patients (pour cartes intervention domicile), <code>est_had</code> flag sur etablissements</li>
+      <li><strong>Vue <code>v_had_stats</code></strong> : HAD avec stats agrégées (nb_collaborateurs, nb_vehicules, nb_garages, nb_etablissements, nb_depots) pour cards UI</li>
+      <li><strong>RLS</strong> : SELECT public authenticated + ALL pour la structure</li>
+      <li><strong>Démo 3 HAD</strong> : HAD du Lot (HAD-46, 35 lits, généraliste, Saint-Céré), HAD Cantal Causses (HAD-15, 22 lits, Saint-Flour), HAD Pédiatrique Sud (HAD-PED, 15 lits, Cahors). Rattachements démo : HAD du Lot partenaire de EHPAD Tilleuls + FAM Causse + prescripteur Clinique Bel Air</li>
+      <li><strong>5 patients SSIAD basculés en HAD</strong> avec adresses domicile + coordonnées GPS pour démontrer cartes patient</li>
+    </ol><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">migration-0.62.68-had-module-complet.sql</code></div>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Page `/had`</h3>
+  <div class="panel ">
+    <p>🏥 liste des HAD avec <strong>mode Tuiles OU Liste</strong> (ViewModeToggle). <strong>Tuiles 3D</strong> : icône typée dans bulle gradient (généraliste bleu / pédiatrique teal / périnatale amber / oncologie violet), nom + code + FINESS, ville, zone d'intervention + rayon km, responsable, <strong>4 mini-stats</strong> en row (Lits / Collab. / Véhic. / Étabs). Click sur tuile → fiche détaillée (à venir). <strong>Mode liste compact</strong> : table 9 colonnes (Nom / Code-FINESS / Type / Ville / Lits / Collab. / Véhic. / Étabs / Actions). <strong>PageHead</strong> subtitle dynamique : 'X structures · Y lits · Z collaborateurs'. <strong>PageToolbar</strong> : filtres buttongroup Type (4 couleurs) + toggle Actifs. <strong>Modal CRUD</strong> : nom + code + FINESS + type, adresse complète, contact général, <strong>fieldset Responsable HAD</strong> (nom + tel + email), <strong>fieldset Capacité &amp; Zone</strong> (capacite_lits + rayon km + zone description + latitude/longitude pour carte)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Composant `ViewModeToggle`</h3>
+  <div class="panel ">
+    <p>🔁 réutilisable (97 lignes) : switcher Tuiles/Liste avec persistance localStorage automatique. <strong>Hook <code>useViewMode(storageKey, defaultMode)</code></strong> : retourne [mode, setMode] qui persiste dans <code>av-view-{storageKey}</code>. Composant <strong>2 boutons gradient</strong> (Tuiles ti-layout-grid / Liste ti-list) avec shadow + transition 200ms quand actif. data-tooltip natif premium. accentColor configurable. À utiliser partout : <code>/patients</code>, <code>/materiels</code>, <code>/etablissements</code>, <code>/equipements</code>, <code>/articles</code>, etc.</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">LogoUploader intégré dans `/collectivite`</h3>
+  <div class="panel ">
+    <p>🖼️ (page fiche groupement) : nouvelle section gradient teal/bleu au top du form contenant le LogoUploader (size 100, bucket sav-photos, pathPrefix <code>structures/{structureId}</code>). Sauvegarde dans <code>structures.logo_url</code>. Payload update enrichi. Import du composant ajouté</p>
+  </div>
+
+  <h2>🎨 Interface utilisateur <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Menu Groupement enrichi</h3>
+  <div class="panel hi">
+    <p>🔗 nouvelle entrée 'HAD (Hospitalisation À Domicile)' avec icône <code>ti-home-heart</code> bleu #185FA5, juste après 'Établissements'. Logique : Groupement → Établissements classiques → HAD → Collaborateurs...</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Comment utiliser</h3>
+  <div class="panel ">
+    
+    <p>📋</p>
+    <ol class="steps">
+      <li>Run SQL → tables HAD créées + 3 HAD démo</li>
+      <li>Va dans menu Groupement → HAD → vois la liste tuiles avec stats</li>
+      <li>Click 'Nouvelle HAD' → formulaire complet avec responsable + capacité + zone GPS</li>
+      <li>Toggle Tuiles/Liste pour changer la vue</li>
+      <li>Préférence vue persistée par utilisateur dans localStorage</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO restantes 0.62.69+</h3>
+  <div class="panel ">
+    <p>📅 (a) Page détail HAD <code>/had/[id]</code> avec onglets (Infos / Collaborateurs / Véhicules / Garages / Étabs partenaires / Patients / Carte), (b) LogoUploader dans <code>/etablissements/[id]</code> + édition services, (c) Affichage logo dans TopBar (badge structure) + PageHead + footers PDF BL/devis + bracelet patient, (d) Onglet 'HAD' dans /etablissement (étabs rattachés à des HAD), (e) Filtre HAD dans création utilisateur, (f) Carte interactive HAD + patients domicile (Leaflet/Mapbox), (g) Workflow création commande fournisseur + PDF BC + Resend mail, (h) Brancher offlineSync dans page tournée chauffeur (smartWrite + cacheTournee). Marathon en cours, on enchaîne lot par lot pour ne pas tout casser</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+migration-0.62.68-had-module-complet.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/migration-0.62.68-had-module-complet.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>migration-0.62.68-had-module-complet.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.68 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

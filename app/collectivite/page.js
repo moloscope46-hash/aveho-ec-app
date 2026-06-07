@@ -19,6 +19,7 @@ import { PageHead, Panel, StateMsg, Modal, Btn } from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
 import { dialogs } from "../dialogs";
 import SireneSearch from "../SireneSearch";
+import LogoUploader from "../components/LogoUploader";  /* 0.62.68 */
 import { safeUpdate } from "../../lib/safeWrite";
 import { logEvent } from "../../lib/events";
 
@@ -198,6 +199,7 @@ export default function GroupementPage() {
         site_web: form.site_web || null,
         latitude: form.latitude || null,
         longitude: form.longitude || null,
+        logo_url: form.logo_url || null,  /* 0.62.68 : logo groupement */
         notes: form.notes || null,
       };
       await safeUpdate(supabase, "structures", payload, { id: auth.structureId }, { userId: auth.user?.id });
@@ -370,6 +372,17 @@ export default function GroupementPage() {
                   <i className="ti ti-check" /> {savedMsg}
                 </div>
               )}
+              {/* 0.62.68 : Logo du groupement */}
+              <div style={{ marginBottom: 16, padding: 14, background: "linear-gradient(135deg, rgba(24,95,165,.04), rgba(124,200,200,.04))", border: "1px solid #eef1f4", borderRadius: 12 }}>
+                <LogoUploader
+                  value={form.logo_url}
+                  onChange={(url) => setForm({ ...form, logo_url: url })}
+                  bucket="sav-photos"
+                  pathPrefix={`structures/${auth.structureId}`}
+                  label="Logo du groupement"
+                  size={100}
+                />
+              </div>
               <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
                 <Fld label="Nom usuel *">
                   <input value={form.nom || ""} onChange={(e) => setForm({ ...form, nom: e.target.value })} style={inputStyle} disabled={!isAdmin} />
