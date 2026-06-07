@@ -60,45 +60,59 @@ export default function NotifBell({ structureId, userId }) {
   }, [structureId]);
 
   // Alpha 0.43.0 : Realtime Supabase — subscribe aux INSERT pour pop instantané
+  // 0.62.99 : cleanup robuste contre erreur "cannot add postgres_changes after subscribe"
   const [hasNew, setHasNew] = useState(false); // anime la cloche
   useEffect(() => {
     if (!structureId) return;
-    const channel = supabase
-      .channel(`notif:${structureId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `structure_id=eq.${structureId}`,
-        },
-        (payload) => {
-          // Ajoute la notification en tête de liste (déduplication par id)
-          setItems((prev) => {
-            if (prev.some((n) => n.id === payload.new.id)) return prev;
-            return [payload.new, ...prev].slice(0, 30);
-          });
-          // Trigger animation cloche
-          setHasNew(true);
-          setTimeout(() => setHasNew(false), 3000);
-          // Toast natif si dispo + autorisé
-          try {
-            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted" && document.hidden) {
-              new Notification("Aveho EC", {
-                body: payload.new.titre || payload.new.message || "Nouvelle notification",
-                icon: "/icon-192.png",
-                tag: payload.new.id, // évite doublons
-              });
+    let channel = null;
+    let cancelled = false;
+    try {
+      // Nom unique par mount pour éviter collisions de subscription
+      channel = supabase
+        .channel(`notif:${structureId}:${Date.now()}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "notifications",
+            filter: `structure_id=eq.${structureId}`,
+          },
+          (payload) => {
+            if (cancelled) return;
+            // Ajoute la notification en tête de liste (déduplication par id)
+            setItems((prev) => {
+              if (prev.some((n) => n.id === payload.new.id)) return prev;
+              return [payload.new, ...prev].slice(0, 30);
+            });
+            // Trigger animation cloche
+            setHasNew(true);
+            setTimeout(() => setHasNew(false), 3000);
+            // Toast natif si dispo + autorisé
+            try {
+              if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted" && document.hidden) {
+                new Notification("Aveho EC", {
+                  body: payload.new.titre || payload.new.message || "Nouvelle notification",
+                  icon: "/icon-192.png",
+                  tag: payload.new.id, // évite doublons
+                });
+              }
+            } catch (e) {
+              // silencieux
             }
-          } catch (e) {
-            // silencieux
           }
-        }
-      )
-      .subscribe();
+        );
+      // subscribe seulement si .on() s'est bien passé
+      channel.subscribe();
+    } catch (e) {
+      // Erreur silencieuse : realtime indisponible (ex : connexion ws bloquée)
+      console.warn("[NotifBell] realtime indisponible:", e?.message);
+    }
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (channel) {
+        try { supabase.removeChannel(channel); } catch {}
+      }
     };
   }, [structureId]);
 

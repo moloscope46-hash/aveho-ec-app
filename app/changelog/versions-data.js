@@ -240,6 +240,37 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.99",
+    "kind": "fix",
+    "titre": "🔧 Fix 404 membres_magasin (table absente → skip silencieux session) + 🔔 Fix realtime postgres_changes after subscribe (cleanup robuste + nom canal unique) + 🖼 favicon.ico placeholder",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔧 **Fix 404 membres_magasin** : la table n existe pas sur le schéma de Cédric → 404 répété en boucle. **Fix** : (1) Test sessionStorage flag `av:skip:membres_magasin:v1` au début → si déjà skippé cette session, on ne refait pas la requête. (2) Detection erreur PGRST116 (relation not found) ou 42P01 (table missing) ou message containing not found/does not exist → setItem flag. (3) Catch global silencieux qui set aussi le flag. **Résultat** : 1 seul 404 en début de session puis plus jamais (le flag dure jusqu à fermeture onglet). Plus de spam dans la console" },
+      { "code": "FIX", "txt": "🔔 **Fix realtime NotifBell** : erreur `cannot add postgres_changes callbacks for realtime:notif:... after subscribe()`. **Cause** : race condition en re-render rapide ou React Strict Mode dev. Le canal s abonne puis un autre useEffect re-crée le canal avant cleanup et ajoute un .on() après subscribe. **Fix** : (1) `let channel = null; let cancelled = false;` au début. (2) Nom de canal **UNIQUE par mount** : `notif:${structureId}:${Date.now()}` (avant : `notif:${structureId}` partagé causait collisions). (3) Try/catch global autour de channel().on().subscribe() pour silence erreur si realtime indisponible. (4) Cleanup robuste : cancelled flag dans le callback pour ignorer payloads tardifs + try/catch sur removeChannel" },
+      { "code": "AI", "txt": "🖼 **favicon.ico placeholder** : créé un favicon minimal pour éviter le 404 `GET /favicon.ico 404` qui pollue la console. (TODO : remplacer par le vrai logo Aveho au format .ico ou .png 32x32)" },
+      { "code": "INFO", "txt": "💡 **À propos /parametres qui pète** : la page parametres ressemble OK structurellement (useState avant useEffect, pas de TDZ apparent). Si plante encore : (1) Hard refresh Ctrl+Shift+R. (2) Vérifier console F12 pour message d erreur précis. (3) M envoyer le screenshot. **Possibles causes** : useTheme/useKiosque imports cassés, table structures.parametres column manquante, ou autre cas similaire à 0.62.97" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.100+** : (a) **ImageUploader patient** /patient/[id] (bouton photo dans header). (b) **Vrai favicon Aveho** (.ico ou png 32x32 au logo). (c) **Buckets Supabase Storage** manuels. (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Refacto /materiels** custom. (h) **Workflow commande fournisseur** PDF+Resend. (i) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "404", "realtime", "favicon"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.99.html"
+  },
+  {
+    "v": "0.62.98",
+    "kind": "fix",
+    "titre": "🔧 FIX 400 PostgREST useAuth (jointure magasins splittée) + 🎨 FIX tuiles disparaissent vue-globale (retrait overflow:hidden + isolation:isolate) + 📸 ImageUploader matériel header (bouton appareil photo sur icône)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔧 **Fix 400 Supabase URL .../lse&order=nom.asc** : la requête membres_magasin avec jointure PostgREST `select(magasin_id, magasins(id, etablissement_id, nom))` plantait en 400 car la FK n est pas déclarée dans Postgres. **Split en 2 requêtes** : (1) `from(membres_magasin).select(magasin_id).eq(user_id, X)` puis si trouvé (2) `from(magasins).select(id, etablissement_id, nom).eq(id, magasin_id)`. Pattern récurrent connu : JAMAIS de jointure PostgREST si FK non déclarée → toujours fetch séparé + Map lookup" },
+      { "code": "FIX", "txt": "🎨 **Fix tuiles disparaissent DÉFINITIVEMENT** : la règle 0.62.92 ajoutait `overflow: hidden` + `isolation: isolate` sur `[data-3d=true]`. Sur vue-globale (qui a des badges en position absolute + photos bannières), le contenu était clippé/caché par l isolation context. **RETIRÉ overflow et isolation** de la règle de base. Les coins angulaires cyberpunk (::before/::after) restent mais avec z-index 0 + pointer-events none — ils ne masquent plus le contenu. **Les badges, logos et images dépassants sont à nouveau visibles partout**" },
+      { "code": "AI", "txt": "📸 **ImageUploader matériel** (/materiel/[id]) : (1) Import ImageUploader. (2) State `photoEditing` boolean. (3) **Icône matériel devient clickable** : background-image = photo_url si dispose + badge appareil photo 28x28 gradient navy-teal en bottom-right + cursor pointer + title=Modifier la photo. Click → ouvre modal. (4) **Modal édition photo** : overlay fixed inset 0 + backdrop blur + card 480px centrée. Contient ImageUploader bucket=materiels-photos folder=mat.id maxSizeMB=3 + bouton Fermer gradient. **À l upload** : setMat optimiste + supabase.update photo_url + toast success/error. **Le matériel a maintenant une photo visible dans le header de sa fiche**" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.99+** : (a) **ImageUploader patient** /patient/[id] (même pattern que matériel : icône avec photo_url + badge appareil photo + modal). (b) **Buckets Supabase Storage** manuels Dashboard : articles-photos, materiels-photos, patients-photos (privé), fournisseurs-logos. (c) **MobileActionsBar** déploiement pages clés. (d) **Widget ChartCard /accueil** drag&drop. (e) **doc.addImage logo statistiques-rgpd**. (f) **Refacto /materiels** custom + ViewModeToggle. (g) **Workflow commande fournisseur** PDF+Resend. (h) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "tuiles", "photo", "supabase"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.98.html"
+  },
+  {
     "v": "0.62.97",
     "kind": "fix",
     "titre": "🎯 FIX TDZ DÉFINITIF /utilisateurs : le useEffect ligne 93 utilisait searchMembres déclaré ligne 96 (TDZ) → minifié `er` ! Déplacé après. Wrapper page.js simplifié avec next/dynamic ssr:false",

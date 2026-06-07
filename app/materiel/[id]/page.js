@@ -25,6 +25,7 @@ import { generateEan13Svg, isValidEan13, buildUdi, generateQrCodeUrl } from "../
 import { materielsHasArticleId, materielsHasUdi, materielsHasImmobilisation } from "../../../lib/materiels";
 import { safeUpdate } from "../../../lib/safeWrite";
 import BackButton from "../../components/BackButton";
+import ImageUploader from "../../components/ImageUploader";  /* 0.62.98 */
 
 // 0.58.72 — Ouvre une nouvelle fenêtre avec un QR pleine page prêt à imprimer
 function openQrPrintWindow(mat, article) {
@@ -103,6 +104,8 @@ export default function FicheMateriel({ params }) {
   const [mouvements, setMouvements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  // 0.62.98 : mode édition photo
+  const [photoEditing, setPhotoEditing] = useState(false);
   const [editingEtat, setEditingEtat] = useState(false);
   const [hasArticleId, setHasArticleId] = useState(false);
   const [hasUdi, setHasUdi] = useState(false);
@@ -245,8 +248,21 @@ export default function FicheMateriel({ params }) {
               background: `linear-gradient(135deg, ${etatMeta.color}, ${etatMeta.color}cc)`,
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0, boxShadow: `0 8px 25px ${etatMeta.color}40`,
-            }}>
-              <i className={`ti ${etatMeta.icon}`} style={{ color: "#fff", fontSize: 42 }} />
+              position: "relative", cursor: "pointer",
+              backgroundImage: mat.photo_url ? `url(${mat.photo_url})` : undefined,
+              backgroundSize: "cover", backgroundPosition: "center",
+            }} onClick={() => setPhotoEditing(true)} title="Modifier la photo">
+              {!mat.photo_url && <i className={`ti ${etatMeta.icon}`} style={{ color: "#fff", fontSize: 42 }} />}
+              <div style={{
+                position: "absolute", bottom: -2, right: -2,
+                width: 28, height: 28, borderRadius: 14,
+                background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 13, boxShadow: "0 2px 6px rgba(20,33,49,.25)",
+                border: "2px solid #fff",
+              }}>
+                <i className="ti ti-camera" />
+              </div>
             </div>
             <div style={{ flex: 1, minWidth: 240 }}>
               <h1 style={{ margin: "0 0 6px", fontSize: 24, color: "#142131", fontWeight: 700 }}>
@@ -581,6 +597,44 @@ export default function FicheMateriel({ params }) {
               </div>
             )}
           </Panel>
+        )}
+
+        {/* 0.62.98 : Modal édition photo matériel */}
+        {photoEditing && (
+          <div className="modal-bg" onClick={(e) => { if (e.target === e.currentTarget) setPhotoEditing(false); }}
+            style={{ position: "fixed", inset: 0, background: "rgba(20,33,49,.55)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: 22, maxWidth: 480, width: "100%" }}>
+              <h3 style={{ margin: "0 0 14px", color: "#142131", display: "flex", alignItems: "center", gap: 8 }}>
+                <i className="ti ti-camera" style={{ color: "#185FA5" }} /> Photo du matériel
+              </h3>
+              <ImageUploader
+                value={mat.photo_url}
+                onChange={async (url) => {
+                  setMat({ ...mat, photo_url: url });
+                  try {
+                    await supabase.from("materiels").update({ photo_url: url }).eq("id", mat.id);
+                    toast.success("Photo enregistrée");
+                  } catch (e) {
+                    toast.error("Erreur sauvegarde photo");
+                  }
+                }}
+                bucket="materiels-photos"
+                folder={mat.id}
+                label="Photo matériel"
+                maxSizeMB={3}
+              />
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                <button onClick={() => setPhotoEditing(false)} style={{
+                  padding: "10px 18px", borderRadius: 10,
+                  background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                  color: "#fff", border: "none", fontSize: 13, fontWeight: 700,
+                  fontFamily: "inherit", cursor: "pointer",
+                }}>
+                  <i className="ti ti-check" /> Fermer
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

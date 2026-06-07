@@ -6045,8 +6045,8 @@ body.av-anim-off .av-page-hero {
     transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 350ms ease-out,
     border-color 250ms ease-out;
-  overflow: hidden;
-  isolation: isolate;
+  /* 0.62.98 : RETIRÉ overflow:hidden et isolation:isolate qui faisaient disparaître
+     les badges absolus (vue-globale, magasin/fournisseurs, etc.). Visibilité d'abord ! */
   will-change: transform;
 }
 
