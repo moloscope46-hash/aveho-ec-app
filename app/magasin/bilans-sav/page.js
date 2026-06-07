@@ -86,16 +86,16 @@ export default function BilansSavPage() {
     try {
       let bilanId = editing.id;
       if (bilanId) {
-        await supabase.from("bilans_sav").update({
+        const ru = await supabase.from("bilans_sav").update({
           nom: editing.nom, code: editing.code, description: editing.description,
           duree_estimee_min: editing.duree_estimee_min, icone: editing.icone, couleur: editing.couleur,
           actif: editing.actif !== false,
           updated_at: new Date().toISOString(),
         }).eq("id", bilanId);
+        if (ru.error) throw ru.error;  // 0.61.5 : check error update
       } else {
         const r = await supabase.from("bilans_sav").insert({
           structure_id: auth.structureId,
-          // 0.60.4 : rattache au magasin du user
           magasin_id: magasinCtx.magasinId || null,
           nom: editing.nom, code: editing.code, description: editing.description,
           duree_estimee_min: editing.duree_estimee_min, icone: editing.icone, couleur: editing.couleur,
@@ -103,14 +103,16 @@ export default function BilansSavPage() {
           created_by: auth.user?.id,
         }).select("id").single();
         if (r.error) throw r.error;
+        if (!r.data?.id) throw new Error("Pas d'ID retourné lors de l'insertion");
         bilanId = r.data.id;
       }
 
       // Sauvegarde points (delete + reinsert pour simplicité)
-      await supabase.from("bilans_sav_points").delete().eq("bilan_id", bilanId);
+      const rd = await supabase.from("bilans_sav_points").delete().eq("bilan_id", bilanId);
+      if (rd.error) console.warn("[del points]", rd.error);
       const validPoints = points.filter(p => p.libelle?.trim());
       if (validPoints.length > 0) {
-        await supabase.from("bilans_sav_points").insert(
+        const ri = await supabase.from("bilans_sav_points").insert(
           validPoints.map((p, i) => ({
             bilan_id: bilanId,
             ordre: i + 1,
@@ -123,21 +125,27 @@ export default function BilansSavPage() {
             est_obligatoire: p.est_obligatoire !== false,
           }))
         );
+        if (ri.error) throw ri.error;
       }
 
       // Rattachements articles
-      await supabase.from("bilans_sav_articles").delete().eq("bilan_id", bilanId);
+      const rda = await supabase.from("bilans_sav_articles").delete().eq("bilan_id", bilanId);
+      if (rda.error) console.warn("[del articles]", rda.error);
       const linkedArr = Array.from(linkedArticles);
       if (linkedArr.length > 0) {
-        await supabase.from("bilans_sav_articles").insert(
+        const ria = await supabase.from("bilans_sav_articles").insert(
           linkedArr.map(articleId => ({ bilan_id: bilanId, article_id: articleId }))
         );
+        if (ria.error) throw ria.error;
       }
 
       setEditing(null);
       await reload();
       alert("✓ Bilan SAV enregistré");
-    } catch (e) { alert("Erreur : " + e.message); }
+    } catch (e) {
+      console.error("[save bilan SAV]", e);
+      alert("❌ Erreur : " + (e.message || JSON.stringify(e)));
+    }
     finally { setSaving(false); }
   }
 

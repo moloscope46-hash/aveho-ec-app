@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.5",
+    "kind": "fix",
+    "titre": "🔥 MEGA HOTFIX : SQL unifié qui crée TOUTES les tables manquantes + fix bug silencieux création bilans SAV",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔥 **`HOTFIX-aveho-0.61.5-MEGA-TOUTES-TABLES.sql`** : SQL unifié 100% idempotent qui crée TOUTES les tables manquantes depuis 0.60.0. Plus besoin d'appliquer les SQL un par un. **Inclut** : bilans_sav + bilans_sav_points + bilans_sav_articles + sav_executions, etablissements_magasins_droits, membres_structure_magasins, bucket sav-photos, inventaires + inventaires_lignes, vehicules_magasin + tournees + tournees_etapes, articles_rattachements + mercuriales + mercuriales_lignes, ALTER demandes_internes (type_demande, bilan_sav_id, transfert_*_at, rapport_sav_*), ALTER articles (magasin_id, est_catalogue_magasin, prix_public_ht/achat_ht, famille), ALTER stock_mouvements (inventaire_id, source_motif), ALTER etablissements/depots (latitude/longitude)" },
+      { "code": "SQL", "txt": "🔥 **Vue `v_analytics_sav` CORRIGÉE** : utilisait `bilans_sav_executions` (table inexistante, erreur `42P01: relation does not exist`). Corrigée pour utiliser `sav_executions` (la vraie table). Le SQL 0.61.4 plantait à cause de ça" },
+      { "code": "SQL", "txt": "🔥 **Vue `v_di_a_livrer` robustifiée** : utilise COALESCE(type_demande, 'di') et NULLS LAST pour ne pas planter si colonnes vides" },
+      { "code": "AI", "txt": "🐛 **Fix bug silencieux création bilans SAV** : la fonction `save()` avait des `await supabase.from().update()` sans check d'erreur → si l'API échoue (table absente, RLS, etc.) **rien ne se passe et pas d'alerte**. Fix : check `.error` partout (update bilan, delete points, insert points, delete articles, insert articles). Ajout `console.error()` pour faciliter le debug. Meilleur message d'alerte avec JSON.stringify en fallback. Maintenant si ça plante, tu sauras pourquoi" },
+      { "code": "INFO", "txt": "🎯 **Procédure** : (1) Applique le HOTFIX SQL en PREMIER dans Supabase SQL Editor — il est totalement idempotent et peut être ré-exécuté autant que tu veux. (2) Une fois passé, vérifie la sortie : 'TABLES CRÉÉES nb=14' + 3 vues. (3) Build + push. (4) Re-teste la création de bilan SAV → soit ça marche, soit tu auras l'erreur exacte" },
+      { "code": "INFO", "txt": "🚨 **Pourquoi tu avais ces 404/400** : tu n'as pas dû appliquer plusieurs des SQL précédents (0.60.0, 0.61.1, 0.61.3, 0.61.4). Le SQL 0.61.4 plantait sur la vue v_analytics_sav (bug de ma part) ce qui empêchait le reste de se créer" }
+    ],
+    "themes": ["hotfix", "sql", "bilans-sav", "tables"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.4",
     "kind": "feat",
     "titre": "🛍 MEGA pack catalogue magasin : TopBar adapté magasin + Catalogue magasin propre + Mercuriales + Fix v_analytics_sav 404",
