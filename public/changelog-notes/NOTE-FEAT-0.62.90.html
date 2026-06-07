@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.90 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.90
+      <small>🔧 FIX toolbar mobile qui se chevauchait (flex-wrap+min-h 40+primary full-width seul) + 🎯 DiTabsNav composant onglets DI avec GROSSES FLÈCHES navigation (Infos/Planning/Livraison/Matériels/Articles/Nomenclature/Magasin) + 🗄️ SQL garages-véhicules + livraisons enrichies</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.90-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> FIX · <b>2</b> AI · <b>1</b> SQL · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#fix</span> <span class="theme-pill">#ui</span> <span class="theme-pill">#mobile</span> <span class="theme-pill">#di</span> <span class="theme-pill">#navigation</span> <span class="theme-pill">#sql</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">demo-GARAGES-LIVRAISONS-0.62.90.sql</h3>
+  <div class="panel violet">
+    
+    <p>🗄️</p>
+    <ol class="steps">
+      <li><strong>Tous les véhicules rattachés à des garages</strong> : loop sur vehicules + SELECT random garage + UPDATE garage_id direct + insert dans vehicules_garages si la table existe</li>
+      <li><strong>40 étapes de tournée enrichies</strong> avec contenu réaliste : Fauteuil roulant + pansements TPN, Lit médicalisé + matelas anti-escarres, Pompe perfusion + tubulures, Concentrateur O2 + bouteilles, PPC ResMed + masque, Poches NPAD + sondes, Déambulateur + canne, Bilan SAV pompe défectueuse, Récupération matériel sortie patient, Échange concentrateur défectueux. Durée estimée random 10-35 min par étape</li>
+      <li><strong>20 DI avec matériels rattachés</strong> : table demandes_internes_materiels (liaison) si existe, sinon update materiel_id direct sur la DI</li>
+    </ol>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">DiTabsNav composant onglets</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li>Bouton préc à gauche : chevron-left + label de l onglet précédent (av-big-arrow)</li>
+      <li><strong>Centre</strong> : pill ENORME 56px de haut gradient couleur de l onglet courant + icône 22px + label + badge count si counts[active] (ex : 5 matériels)</li>
+      <li>Bouton suiv à droite : label de l onglet suivant + chevron-right. <strong>Pills onglets</strong> (desktop only, cachées mobile) : accès direct aux 7 onglets avec compteurs. <strong>7 onglets</strong> : Infos (bleu), Planning (violet), Livraison (terra), Matériels (navy), Articles (teal), Nomenclature (amber), Magasin (teal foncé). Chacun avec icône + couleur thématique</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">CSS av-big-arrow</h3>
+  <div class="panel ">
+    <p>🎨 classe utilitaire pour boutons navigation gros. Padding 12 18 + border 2px + border-radius 14 + min-height 56 + transition cubic-bezier élastique. <strong>Hover</strong> : border #185FA5 + color #185FA5 + transform translateY(-2px) + shadow 6px navy/18. <strong>Active</strong> : background gradient navy-teal + color blanc + border navy + shadow 4px navy/40. Icônes 22px. Désactivé : opacity 0.3 + cursor not-allowed. Utilisable partout pour navigation pas-à-pas (DI/Devis/Commande)</p>
+  </div>
+
+  <h2>🐛 Fix bug <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix toolbar mobile DÉFINITIF</h3>
+  <div class="panel warn">
+    <p>🔧 règles CSS @media max-width 768px. Toolbar (di-toolbar, av-pagetoolbar, [class*=toolbar]) en flex-wrap + gap 6 + padding 8 + overflow visible. Boutons : flex 0 1 auto + min-height 40 + padding 8 12 + font-size 12 + white-space nowrap. <strong>Bouton primary seul</strong> : flex 1 1 100% (toute la largeur). <strong>Compteurs/stats</strong> : flex 1 1 100% + order 99 (passent en bas). <strong>Icon-only buttons</strong> : 40x40 carré fixe. Plus aucun chevauchement, regroupement intelligent</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Pour intégrer DiTabsNav</h3>
+  <div class="panel ">
+    <p>📋 dans /demande-interne/[id] : <code>import DiTabsNav from app/components/DiTabsNav</code>. Dans le composant : <code>const [tab, setTab] = useState(infos);</code> puis <code>&lt;DiTabsNav active={tab} onChange={setTab} counts={{materiels: materiels.length, articles: articles.length}} /&gt;</code> puis rendu conditionnel : <code>{tab === infos &amp;&amp; &lt;InfosContent/&gt;}{tab === planning &amp;&amp; &lt;PlanningContent/&gt;}{tab === livraison &amp;&amp; &lt;LivraisonContent/&gt;}</code> etc. Les 7 onglets sont prêts à recevoir leur contenu</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO restantes 0.62.91+</h3>
+  <div class="panel ">
+    <p>📅 (a) <strong>Intégrer DiTabsNav</strong> dans /demande-interne/[id] avec rendu des 7 onglets (Infos déjà existant, créer Planning/Livraison/Matériels/Articles/Nomenclature/Magasin). (b) <strong>Vue TV améliorée</strong> : ajouter sur la page TV (probablement /tv ou /accueil-tv) tous les compteurs récents (étages, lits, livraisons, SAV). (c) <strong>Déployer ImageUploader</strong> dans modals matériel/patient/fournisseur. (d) <strong>Buckets Supabase Storage</strong> à créer manuellement. (e) <strong>MobileActionsBar</strong> sur pages clés. (f) <strong>Widget ChartCard /accueil</strong> drag&amp;drop. (g) <strong>doc.addImage(logo) statistiques-rgpd</strong>. (h) <strong>Refacto /materiels</strong> page custom. (i) <strong>Workflow commande fournisseur</strong> + PDF + Resend. (j) <strong>Footers PDF BL/devis</strong></p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+demo-GARAGES-LIVRAISONS-0.62.90.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/demo-GARAGES-LIVRAISONS-0.62.90.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>demo-GARAGES-LIVRAISONS-0.62.90.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.90 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>
