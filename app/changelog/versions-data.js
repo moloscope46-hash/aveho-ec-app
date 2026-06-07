@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.8",
+    "kind": "feat",
+    "titre": "🚛 MEGA pack final magasin : Mercuriale auto cart + GPS tracking chauffeur + OSRM routing + Signature étape + Swipe + 12 notes HTML",
+    "chantiers": [
+      { "code": "AI", "txt": "💰 **useCart enrichi** : nouvelle fonction `addWithMercuriale({article, etablissementId, qte})` qui appelle `getPrixMercurialeActif()` AVANT d'ajouter au panier. Stocke prix_mercuriale_ht + mercuriale_id + mercuriale_nom + mercuriale_source sur la ligne du panier. Compteur `nbMercu` (nombre de lignes avec mercuriale appliquée)" },
+      { "code": "AI", "txt": "🏷 **CartDropdown badge mercuriale** : badge violet '💰 Mercu (nom)' sur les lignes du panier qui ont un prix négocié mercuriale. Affiche aussi le prix public barré quand le prix mercuriale est plus bas" },
+      { "code": "AI", "txt": "🛰 **Hook `useGpsTracking({tourneeId, enabled, intervalMs})`** dans `lib/gpsHelpers.js` : utilise navigator.geolocation.watchPosition avec enableHighAccuracy. Envoie automatiquement la position en DB sur `tournees` table toutes les 30s. Retourne `{position, error, watching}`. Activé automatiquement quand tournée passe en 'en_cours'" },
+      { "code": "AI", "txt": "🧭 **OSRM routing** dans `lib/gpsHelpers.js` : (1) `calculerItineraire(points)` appelle API publique router.project-osrm.org pour route GeoJSON entre N points + distance/durée. (2) `optimiserTournee(points)` utilise OSRM Trip API (TSP solver) avec source=first, destination=last pour optimiser l'ordre des étapes. Retourne nouvelle séquence + distance + durée" },
+      { "code": "AI", "txt": "✍ **Signature client par étape tournée** : quand chauffeur clique 'Terminer' sur une étape, modal SignatureCanvas s'ouvre. Capture signature manuscrite, upload vers bucket `sav-photos`, stocke URL dans `tournees_etapes.signature_url`. Bouton 'Sans signature' aussi (cas où client absent)" },
+      { "code": "AI", "txt": "🚛 **Intégration tournée détail** : bandeau GPS en haut de la carte (🛰 Tracking actif + coordonnées temps réel), bouton '🧭 Optimiser ordre (OSRM)' qui propose la séquence optimale et update les ordre des étapes, bandeau distance/durée OSRM affichée après calcul" },
+      { "code": "AI", "txt": "👈 **Composant `<SwipeableCard>`** : swipe gauche = action 1 (rouge / delete), swipe droite = action 2 (vert / archive). Backgrounds révélés progressivement avec opacité dynamique selon distance de drag. Haptic feedback au seuil. Threshold configurable (default 80px). Réutilisable partout (cards mercuriales, DI, articles, etc.)" },
+      { "code": "AI", "txt": "📝 **12 notes HTML rattrapées** (versions 0.60.3 à 0.61.6) : génération batch via script Node lisant versions-data.js. Design cohérent (gradient navy + couleur thème par version), card chantier par chantier avec badge code (SQL/AI/INFO), markdown bold + code rendus en HTML. Plus de note manquante dans le changelog UI" },
+      { "code": "INFO", "txt": "🎯 **Workflow logistique 100% complet** : EC commande → mercuriale active applique le prix négocié auto → magasin valide → tournée créée (avec OSRM qui optimise l'ordre) → chauffeur démarre (GPS tracking commence) → arrive à chaque étape → fait signer le client (canvas) → tournée terminée. Tout digital, tout tracé" },
+      { "code": "INFO", "txt": "🚧 **0.61.9+** : (1) Migration des pages EC qui passent commande pour utiliser `addWithMercuriale` au lieu de `add`. (2) Affichage historique GPS chauffeur sur la carte. (3) Export feuille de route PDF par chauffeur. (4) Notifications push à chaque étape terminée vers les EC. (5) Marketplace inter-magasins pour réassorts urgents" }
+    ],
+    "themes": ["feat", "mercuriales", "gps", "osrm", "signature", "swipe", "notes"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.7",
     "kind": "fix",
     "titre": "🔥 SQL ABSOLU (vrai cette fois) + 📋 Helper application auto mercuriale + 📷 Scanner natif BarcodeDetector in-app",
@@ -270,7 +290,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "sql", "rattachements", "mercuriales", "pdf"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.61.6.html"
   },
   {
     "v": "0.61.5",
@@ -286,7 +306,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["hotfix", "sql", "bilans-sav", "tables"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.61.5.html"
   },
   {
     "v": "0.61.4",
@@ -306,7 +326,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "catalogue", "mercuriales", "topbar", "magasin", "hotfix"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.61.4.html"
   },
   {
     "v": "0.61.3",
@@ -347,7 +367,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "ux", "mobile", "pwa", "responsive"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.61.2.html"
   },
   {
     "v": "0.61.1",
@@ -365,7 +385,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "feat", "inventaire", "signature", "edge-functions", "cron", "rbeu"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.61.1.html"
   },
   {
     "v": "0.61.0",
@@ -384,7 +404,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "rbeu", "notifications", "pwa", "tracfin", "conformite"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.61.0.html"
   },
   {
     "v": "0.60.8",
@@ -398,7 +418,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "css", "layout"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.60.8.html"
   },
   {
     "v": "0.60.7",
@@ -415,7 +435,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "feat", "magasin", "cantonnement", "inventaire", "depots"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.60.7.html"
   },
   {
     "v": "0.60.6",
@@ -433,7 +453,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "sav", "storage", "transfert", "analytics", "signature"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.60.6.html"
   },
   {
     "v": "0.60.5",
@@ -449,7 +469,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "hydration", "react", "sql"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.60.5.html"
   },
   {
     "v": "0.60.4",
@@ -467,7 +487,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "sav", "transfert", "droits", "rapport"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.60.4.html"
   },
   {
     "v": "0.60.3",
@@ -480,7 +500,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix", "imports", "sql", "view"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-VERSION-Alpha-0.60.3.html"
   },
   {
     "v": "0.60.2",

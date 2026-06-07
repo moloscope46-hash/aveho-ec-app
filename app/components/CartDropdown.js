@@ -148,6 +148,15 @@ export default function CartDropdown({ open, onClose, anchorRef }) {
                 </div>
                 {it.code && <div style={{ fontSize: 10.5, color: "#8a98a8", fontFamily: "Consolas, monospace" }}>{it.code}</div>}
                 {it.depot_nom && <div style={{ fontSize: 10.5, color: "#5a6878" }}><i className="ti ti-building-warehouse" /> {it.depot_nom}</div>}
+                {/* 0.61.8 : badge mercuriale appliquée */}
+                {it.mercuriale_id && (
+                  <div style={{ marginTop: 4, padding: "2px 6px", background: "rgba(122,111,176,.12)", color: "#7a6fb0", borderRadius: 4, fontSize: 10, fontWeight: 700, display: "inline-flex", gap: 4, alignItems: "center" }}>
+                    💰 Mercu {it.mercuriale_nom ? `(${it.mercuriale_nom.slice(0, 20)})` : ""}
+                    {it.prix_public && it.prix < it.prix_public && (
+                      <span style={{ textDecoration: "line-through", opacity: 0.7, marginLeft: 4 }}>{parseFloat(it.prix_public).toFixed(2)} €</span>
+                    )}
+                  </div>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
                   <button onClick={() => updateQty(it.id, -1)} aria-label="Diminuer" style={qtyBtn}>−</button>
                   <span style={{ fontSize: 12, fontWeight: 700, minWidth: 22, textAlign: "center", fontFamily: "Consolas, monospace" }}>{it.qte || 1}</span>
