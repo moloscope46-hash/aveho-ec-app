@@ -240,6 +240,42 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.22",
+    "kind": "feat",
+    "titre": "🚛 Refonte menu (Stock+Maintenance+Facturation+Catalogue dans Mon espace) + Page Livraisons planifiées + Bons réception",
+    "chantiers": [
+      { "code": "SQL", "txt": "🚨 **`migration-0.62.22-v-collaborateurs-FIX-VIRGULE.sql`** : la migration 0.62.21 plantait avec `42601: syntax error at or near \".\"` car virgule manquante entre la liste dynamique de colonnes (`m.user_id, ..., m.pharmacie_id`) et les colonnes jointes (`e.nom AS ...`). **Fix** : on GARDE la virgule de fin (`m.pharmacie_id, `) avant `e.nom AS ...`. Bonus diagnostic en fin de script qui liste toutes les vraies colonnes de membres_structure" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.22-livraisons-bons-reception.sql`** : table `bons_reception` (numero, structure_id, etablissement_id, type_source [tournee/transfert/di/commande], source_id, conforme, anomalies, commentaire, signataire_email, signature_url, receptionne_par/le, statut [valide/litige/refuse]). 4 indexes + RLS strict par structure_id" },
+      { "code": "AI", "txt": "📋 **REFONTE COMPLÈTE DU MENU** côté Groupement : (1) **Stock** : nouveau menu regroupé avec Stock global + Matériel + Dépôts + Magasins fournisseurs + Garages + Familles articles (avant éparpillé dans Groupement). (2) **Maintenance** : nouveau menu pour mes-demandes, sav/nouvelle, transferts/nouvelle, interventions, transferts, maintenance, calendrier DI, Mode TV (avant dans 'Livraison' fourre-tout). (3) **Livraisons** : simplifié à 2 entrées : Livraisons planifiées + Bons de réception. (4) **Facturation** : placeholder (à implémenter). (5) **Mon espace** enrichi : Articles catalogue + Catalogue magasin déplacés ici. (6) Groupement épuré : juste les entités organisationnelles (collab, étabs, équipes, patients, carte)" },
+      { "code": "AI", "txt": "🏠 **Icône Mon espace fixée** : `ti-home-2` n'existait pas dans Tabler. Remplacé par `ti-home`. La section a maintenant son icône maison visible" },
+      { "code": "AI", "txt": "🚛 **Nouvelle page `/livraisons-planifiees`** : vue commune EC + Magasin qui liste TOUTES les livraisons (tournées + transferts) avec leur statut. Filtres : Toutes / À recevoir / En cours / Livrées. Grid 6 colonnes : icône type, badge type (tournée/transfert), libellé + ref + destination + véhicule, date, statut coloré, **bouton 'Valider réception'** (côté EC uniquement, sur statut livree/a_faire/en_cours)" },
+      { "code": "AI", "txt": "✅ **Workflow validation réception** : click 'Valider' → modal avec checkbox 'Livraison conforme', textarea anomalies (si pas conforme), commentaire, signataire email. À la validation : (1) UPDATE statut tournée/transfert → 'receptionne'. (2) INSERT bon_reception avec numero auto BR-XXXXXX. (3) Statut final : 'valide' si conforme, 'litige' sinon. Une fois validé, la livraison disparaît du filtre 'À recevoir'" },
+      { "code": "AI", "txt": "📑 **Nouvelle page `/bons-reception`** : historique des validations. Cards par bon avec numéro (Consolas), source (type+id), signataire, anomalies en rouge italique, commentaire, date réception, badge 'Conforme' vert ou 'Litige' orange. 100 derniers" },
+      { "code": "INFO", "txt": "🚧 **À compléter dans une prochaine version** : (1) Le stock ne se met pas encore automatiquement à jour à la validation — alerte visible à la création du bon de réception. (2) Le cantonnement étab côté livraisons-planifiees n'est pas encore appliqué (TODO via JOIN sur tournees_etapes.etablissement_id). (3) Bon de réception PDF imprimable. (4) Signature électronique upload Storage. (5) Mode mobile titres + code étab" }
+    ],
+    "themes": ["feat", "menu", "livraisons", "reception", "sql", "ui"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.22.html",
+    "sqlFile": "migration-0.62.22-livraisons-bons-reception.sql"
+  },
+  {
+    "v": "0.62.21",
+    "kind": "fix",
+    "titre": "🐛 SQL v_collaborateurs ULTRA défensif (m.id n'existe pas) + Burger caché magasin + Carte renommée + Familles magasin",
+    "chantiers": [
+      { "code": "SQL", "txt": "🚨 **`migration-0.62.21-v-collaborateurs-ULTRA-DEFENSIF.sql`** : la migration 0.62.20 plantait `ERROR 42703: column m.id does not exist`. Fix radical : on **TEST chaque colonne individuellement** via `information_schema.columns` avant de l'inclure dans le SELECT. Boucle `FOREACH c IN ARRAY candidate_cols` qui construit dynamiquement la liste de colonnes existantes. Plus jamais aucune erreur 42703 possible. Bonus : SELECT diagnostic à la fin qui liste TOUTES les vraies colonnes de `membres_structure`" },
+      { "code": "AI", "txt": "🍔 **Burger menu CACHÉ en mode magasin** : avant le burger ti-menu-2 en haut à gauche apparaissait aussi côté magasin (alors que la sidebar magasin propre est déjà là). Maintenant `{!isMagasin && <button className='burger'>}`. Plus de menu dupliqué en haut à gauche du magasin" },
+      { "code": "AI", "txt": "🗺 **'Carte logistique' renommée 'Carte'** dans le menu Groupement. Plus court, plus clair, cohérent avec l'URL `/carte`" },
+      { "code": "AI", "txt": "🗑 **'Dashboard direction' retiré** du menu Groupement. Page `/direction` reste accessible directement par URL mais n'apparait plus dans le menu déplié" },
+      { "code": "AI", "txt": "🎨 **Icône Infirmières fixée** : `ti-heart-rate-monitor` n'existe pas dans Tabler Icons actuel. Remplacé par `ti-medical-cross` (croix médicale) qui est dans toutes les versions. L'item 'Infirmières' affiche enfin son icône" },
+      { "code": "AI", "txt": "🏬 **Familles articles côté MAGASIN** : page `/familles-articles` ajoutée dans la sidebar magasin (section 'Catalogue & Commerce'). Filtre intelligent : `magasin_id.eq.${magasinId} OR magasin_id.is.null` → le user magasin voit ses propres familles + les familles globales du groupement. À la création depuis l'espace magasin, `magasin_id` est rempli automatiquement (la famille appartient au magasin)" }
+    ],
+    "themes": ["fix-critique", "sql", "ui", "magasin", "familles", "navigation"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.21.html",
+    "sqlFile": "migration-0.62.21-v-collaborateurs-ULTRA-DEFENSIF.sql"
+  },
+  {
     "v": "0.62.20",
     "kind": "feat",
     "titre": "🐛 Fix SQL v_collaborateurs (etablissement_ids) + Familles articles 3 niveaux + Fix édition article + EAN13/GS1 sur articles",

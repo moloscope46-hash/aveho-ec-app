@@ -34,10 +34,12 @@ import { useViewMode } from "../lib/useViewMode";
 // 5. ADMINISTRATIF (RGPD, statistiques, journal, signalements, paramètres)
 // 6. ADMIN (admin tech : utilisateurs, audit, logs, référentiels santé)
 const MENU = [
-  { section: "Mon espace", sectionIcon: "ti-home-2", items: [
+  { section: "Mon espace", sectionIcon: "ti-home", items: [
     { p: "/accueil", ic: "ti-home", lbl: "Accueil", col: "#7CC8C8" },
     { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
+    { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
+    { p: "/magasin/catalogue", ic: "ti-shopping-bag", lbl: "Catalogue magasin", col: "#5a8f8f" },
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
     { p: "/promotions", ic: "ti-discount-2", lbl: "Promotions", col: "#e35d5b" },
   ] },
@@ -47,29 +49,30 @@ const MENU = [
     { p: "/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#7CC8C8" },
     { p: "/collaborateurs-fournisseurs", ic: "ti-users-group", lbl: "Collaborateurs fournisseurs", col: "#5a8f8f" },
     { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
-    { p: "/direction", ic: "ti-building-skyscraper", lbl: "Dashboard direction", col: "#7a6fb0" },
     // 2. ÉTABLISSEMENTS, BÂTIMENTS, SERVICES, ÉQUIPES (organisationnel)
     { p: "/etablissement", ic: "ti-building-hospital", lbl: "Établissements", col: "#185FA5" },
     { p: "/etablissement/fiche", ic: "ti-id-badge-2", lbl: "Fiche étab.", col: "#1c5454" },
     { p: "/etablissement/edition", ic: "ti-edit", lbl: "Bâtiments / Services", col: "#7a6fb0" },
     { p: "/equipes", ic: "ti-users-group", lbl: "Équipes", col: "#5a4a90" },
-    { p: "/carte", ic: "ti-map", lbl: "Carte logistique", col: "#5aa05a" },
-    // 3. CONTENU MÉTIER
+    { p: "/carte", ic: "ti-map", lbl: "Carte", col: "#5aa05a" },
+    // 3. CONTENU MÉTIER (juste patients ici)
     { p: "/patients", ic: "ti-users", lbl: "Patients", col: "#7a6fb0" },
+  ] },
+  // 0.62.22 : NOUVEAU - Menu STOCK regroupé
+  { section: "Stock", sectionIcon: "ti-stack-2", items: [
+    { p: "/stock", ic: "ti-stack-2", lbl: "Stock global", col: "#c97a2a" },
     { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
-    { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
     { p: "/magasins/nouveau", ic: "ti-building-warehouse", lbl: "Magasins fournisseurs", col: "#5a8f8f" },
-    { p: "/stock", ic: "ti-stack-2", lbl: "Stock", col: "#c97a2a" },
+    { p: "/garages", ic: "ti-parking", lbl: "Garages", col: "#185FA5" },
+    { p: "/familles-articles", ic: "ti-categories", lbl: "Familles articles", col: "#7a6fb0" },
   ] },
   // 0.58.53 : nouvelle section "Mes partenaires" avec sous-types + raccourcis vers les annuaires officiels
   { section: "Mes partenaires", sectionIcon: "ti-users-group", items: [
     { p: "/partenaires-rpps?type=prescripteur", ic: "ti-stethoscope", lbl: "Prescripteurs (médecins)", col: "#5a4a90" },
-    { p: "/partenaires-rpps?type=infirmiere", ic: "ti-heart-rate-monitor", lbl: "Infirmières", col: "#C9867F" },
-    // 0.58.57 : page dédiée pharmacies (table séparée avec horaires + garde)
+    { p: "/partenaires-rpps?type=infirmiere", ic: "ti-medical-cross", lbl: "Infirmières", col: "#C9867F" },
     { p: "/pharmacies", ic: "ti-prescription", lbl: "Pharmacies", col: "#5aa05a" },
     { p: "/etablissements-partenaires", ic: "ti-building-community", lbl: "Établissements partenaires", col: "#7a6fb0" },
-    // Raccourcis vers les annuaires officiels (déplacés de "Collectivité")
     { p: "/annuaire-rpps?metier=medecin", ic: "ti-list-search", lbl: "🔍 Annuaire RPPS (médecins)", col: "#8a98a8" },
     { p: "/annuaire-rpps?metier=infirmiere", ic: "ti-list-search", lbl: "🔍 Annuaire RPPS (infirmières)", col: "#8a98a8" },
     { p: "/etablissements", ic: "ti-list-search", lbl: "🔍 Annuaire étabs (FINESS)", col: "#8a98a8" },
@@ -88,8 +91,8 @@ const MENU = [
     { p: "/commandes", ic: "ti-truck-delivery", lbl: "Mes commandes", col: "#5a8f8f" },
     { p: "/achats", ic: "ti-cash", lbl: "Achats", col: "#EF9F27" },
   ] },
-  // 4. LIVRAISON (= interventions / DI / transferts / planning)
-  { section: "Livraison", sectionIcon: "ti-truck-delivery", items: [
+  // 0.62.22 : MAINTENANCE regroupée (avant Livraison qui était fourre-tout)
+  { section: "Maintenance", sectionIcon: "ti-tool", items: [
     { p: "/mes-demandes", ic: "ti-truck-loading", lbl: "Mes demandes (DI)", col: "#EF9F27" },
     { p: "/sav/nouvelle", ic: "ti-tool", lbl: "Demande SAV", col: "#e35d5b" },
     { p: "/transferts/nouvelle", ic: "ti-transfer", lbl: "Demande transfert", col: "#7a6fb0" },
@@ -98,6 +101,15 @@ const MENU = [
     { p: "/maintenance", ic: "ti-tool", lbl: "Maintenance", col: "#5a8f8f" },
     { p: "/calendrier", ic: "ti-calendar", lbl: "Calendrier DI", col: "#EF9F27" },
     { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV de service", col: "#7CC8C8" },
+  ] },
+  // 0.62.22 : LIVRAISON simplifiée (juste réceptions/validation)
+  { section: "Livraisons", sectionIcon: "ti-truck-delivery", items: [
+    { p: "/livraisons-planifiees", ic: "ti-truck", lbl: "Livraisons planifiées", col: "#EF9F27" },
+    { p: "/bons-reception", ic: "ti-receipt", lbl: "Bons de réception", col: "#5aa05a" },
+  ] },
+  // 0.62.22 : FACTURATION (placeholder, à implémenter)
+  { section: "Facturation", sectionIcon: "ti-receipt-2", items: [
+    { p: "/facturation", ic: "ti-receipt-2", lbl: "Facturation (bientôt)", col: "#8a98a8" },
   ] },
   // 5. ADMINISTRATIF (RGPD, statistiques métier, signalements, paramètres usuels)
   { section: "Administratif", sectionIcon: "ti-clipboard-list", items: [
@@ -244,7 +256,8 @@ export default function TopBar({ cartCount = 0, auth }) {
   return (
     <>
       <div className="topbar">
-        <button className="burger" onClick={() => setOpen(true)} aria-label="Menu"><i className="ti ti-menu-2" /></button>
+        {/* 0.62.21 : Pas de burger en mode magasin (sidebar magasin propre) */}
+        {!isMagasin && <button className="burger" onClick={() => setOpen(true)} aria-label="Menu"><i className="ti ti-menu-2" /></button>}
         <span className="logo" onClick={() => router.push("/accueil")}>a<span className="v">v</span>eho</span>
         {/* Alpha 0.55.34 : bouton info compact (i) qui ouvre un popup version */}
         <button

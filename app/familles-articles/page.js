@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { useMagasinContext } from "../../lib/useMagasinContext";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, Modal } from "../ui";
@@ -20,6 +21,8 @@ export default function FamillesArticlesPage() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
+  // 0.62.21 : Si user magasin → familles filtrées par magasin_id
+  const magasinCtx = useMagasinContext();
   const [familles, setFamilles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState({});
@@ -37,7 +40,13 @@ export default function FamillesArticlesPage() {
     setLoading(true);
     setTableMissing(false);
     try {
-      const r = await supabase.from("familles_articles").select("*").eq("structure_id", auth.structureId).order("ordre").order("nom");
+      // 0.62.21 : Filtre par magasin si user magasin
+      let q = supabase.from("familles_articles").select("*").eq("structure_id", auth.structureId);
+      if (magasinCtx.isUserMagasin && magasinCtx.magasinId) {
+        q = q.or(`magasin_id.eq.${magasinCtx.magasinId},magasin_id.is.null`);
+      }
+      q = q.order("ordre").order("nom");
+      const r = await q;
       if (r.error) {
         if (r.error.code === "42P01") setTableMissing(true);
         setFamilles([]);
@@ -75,6 +84,8 @@ export default function FamillesArticlesPage() {
     try {
       const payload = {
         structure_id: auth.structureId,
+        // 0.62.21 : Si user magasin → famille rattachée au magasin
+        magasin_id: magasinCtx.isUserMagasin ? (magasinCtx.magasinId || null) : null,
         parent_id: form.parent_id || null,
         niveau: form.niveau || 1,
         nom: form.nom.trim(),
