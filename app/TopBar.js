@@ -23,6 +23,7 @@ import Modal from "./components/Modal";
 import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
 // 0.58.87 : mini-panier dropdown style Amazon
 import CartDropdown from "./components/CartDropdown";
+import StructureLogo from "./components/StructureLogo";  /* 0.62.69 */
 // 0.61.4 : adapter TopBar selon mode magasin (catalogue, panier, etc.)
 import { useViewMode } from "../lib/useViewMode";
 
@@ -259,6 +260,8 @@ export default function TopBar({ cartCount = 0, auth }) {
         {/* 0.62.21 : Pas de burger en mode magasin (sidebar magasin propre) */}
         {!isMagasin && <button className="burger" onClick={() => setOpen(true)} aria-label="Menu"><i className="ti ti-menu-2" /></button>}
         <span className="logo" onClick={() => router.push("/accueil")}>a<span className="v">v</span>eho</span>
+        {/* 0.62.69 : Logo du groupement à côté du logo Aveho */}
+        {auth?.structureId && <StructureLogo structureId={auth.structureId} size={28} />}
         {/* Alpha 0.55.34 : bouton info compact (i) qui ouvre un popup version */}
         <button
           onClick={() => setVersionOpen(true)}

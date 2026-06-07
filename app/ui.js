@@ -228,24 +228,36 @@ export function Panel({ children, style, color, hoverable, className }) {
 }
 
 // En-tête de page premium (0.62.45 : icône colorée + gradient + animation)
-export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, color }) {
+// 0.62.69 : support `logoUrl` qui remplace l'icône par un logo
+export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, color, logoUrl }) {
   // 0.62.45 : Si icon + title fournis, on rend le header premium ; sinon le legacy
-  if (icon && title && !eyebrow) {
+  if ((icon || logoUrl) && title && !eyebrow) {
     const mainColor = color || "#185FA5";
     return (
       <div className="page-hero av-page-hero av-fade-in" style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 12,
-            background: `linear-gradient(135deg, ${mainColor} 0%, ${mainColor}dd 100%)`,
-            color: "#fff",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 26,
-            boxShadow: `0 6px 16px ${mainColor}40`,
-            flexShrink: 0,
-          }}>
-            <i className={`ti ${icon}`} />
-          </div>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" style={{
+              width: 52, height: 52, borderRadius: 12,
+              background: "rgba(255,255,255,.95)",
+              padding: 4,
+              boxShadow: `0 6px 16px ${mainColor}40`,
+              flexShrink: 0,
+              objectFit: "contain",
+            }} />
+          ) : (
+            <div style={{
+              width: 52, height: 52, borderRadius: 12,
+              background: `linear-gradient(135deg, ${mainColor} 0%, ${mainColor}dd 100%)`,
+              color: "#fff",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 26,
+              boxShadow: `0 6px 16px ${mainColor}40`,
+              flexShrink: 0,
+            }}>
+              <i className={`ti ${icon}`} />
+            </div>
+          )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 className="av-page-hero-title" style={{
               margin: 0,

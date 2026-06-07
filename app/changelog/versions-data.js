@@ -240,6 +240,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.69",
+    "kind": "feat",
+    "titre": "🏥 Fiche détail HAD /had/[id] avec 7 onglets (Infos/Collab/Véhic/Garages/Étabs/Patients/Carte) + LogoUploader /etablissement/fiche + Logo TopBar + PageHead + bracelet patient",
+    "chantiers": [
+      { "code": "AI", "txt": "🏥 **Page `/had/[id]` détail complète** (700+ lignes) avec composant Tabs réutilisable. **Header** : PageHead avec icône typée + nom + sub (type + code + FINESS) + couleur dynamique selon type HAD. **6 KPIs row** : Lits / Collaborateurs / Véhicules / Garages / Étabs partenaires / Patients HAD avec valeurs en temps réel depuis v_had_stats. **Bouton 'Modifier' toggle** edit mode. **7 onglets** : (1) **Infos** : LogoUploader + sections Identité/Coordonnées/Responsable/Zone d'intervention/GPS + mode edit avec fieldsets, (2) **Collaborateurs** : cards 3D avec rôle coloré (7 rôles : médecin coordo, cadre IDE, IDE, aide-soignant, kiné, secrétaire, chauffeur) + bouton retrait + modal picker, (3) **Véhicules** : cards avec immatriculation + marque/modèle + retrait + picker select des vehicules non rattachés, (4) **Garages** : cards avec nom + adresse + flag est_principal, (5) **Étabs partenaires** : cards avec type_relation (partenaire/prescripteur/support), (6) **Patients HAD** : cards cliquables avec adresse domicile + téléphone + indicateur GPS, (7) **Carte** : iframe OpenStreetMap centré sur GPS HAD + bbox calculé + liste cliquable des patients géolocalisés (liens vers OSM zoom 15)" },
+      { "code": "AI", "txt": "🖼️ **LogoUploader dans `/etablissement/fiche`** : nouvelle section gradient teal/bleu au top du form étab (size 90, bucket sav-photos, pathPrefix `etablissements/{etabId}`). Sauvegarde dans `etablissements.logo_url` (payload update enrichi). Import ajouté en haut de fichier" },
+      { "code": "AI", "txt": "🏷️ **Logo dans TopBar (badge structure)** : nouveau composant `StructureLogo.js` (45 lignes) qui charge `structures.logo_url` avec **cache localStorage 5 min** (`av-struct-logo-{structureId}`). Affiche un mini-logo 28px à côté du logo Aveho dans le TopBar (background blanc 95%, padding 2, border-radius 6, shadow). Si pas de logo : ne render rien (null return). Intégré dans TopBar après le span.logo. Performance : un seul fetch par session navigateur" },
+      { "code": "AI", "txt": "🎨 **PageHead accepte prop `logoUrl`** : nouvelle prop optionnelle dans le composant `<PageHead>`. Si fournie, remplace l'icône Tabler par le logo de l'établissement/HAD/structure (image 52x52 contain background blanc 95%, padding 4, mêmes border-radius/shadow que l'icône classique). Fallback vers icône Tabler si logoUrl absent. Détection : `(icon || logoUrl) && title` au lieu de juste `icon && title`. Compatible existing usage" },
+      { "code": "AI", "txt": "🆔 **Logo dans bracelet patient** : header A4 reçoit le logo de la structure à gauche du label 'AVEHO · BRACELET PATIENT'. Fetch `structures.logo_url` au chargement de la page si auth.structureId. Affichage 54x54 contain border-radius 8 à côté de l'eyebrow + titre patient. Bracelet A6 : à venir 0.62.70 (peu de place sur format 14.8cm)" },
+      { "code": "INFO", "txt": "📋 **Comment utiliser la fiche HAD** : (1) Aller dans /had → liste tuiles. (2) Click sur une tuile → fiche détail. (3) 7 onglets accessibles via barre Tabs en haut. (4) Bouton 'Modifier' en haut-droite → bascule edit mode pour modifier les infos. (5) Pour chaque onglet (collab/vehic/garage/etab) : bouton 'Ajouter/Rattacher' ouvre une modal picker. (6) Onglet Carte : nécessite latitude/longitude de la HAD remplies (sinon message orange). (7) Click sur patient → fiche patient classique" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.70+** : (a) LogoUploader dans édition service (page service par service), (b) Bracelet A6 patient avec logo (réduire mention 'AVEHO BRACELET' pour faire place), (c) Footers PDF BL/devis avec logo structure (via React-PDF ou WeasyPrint), (d) Sélecteur visuel auto-complete pour pickers HAD (au lieu de saisie UUID brut), (e) Filtre HAD dans création utilisateur + champ rôle HAD, (f) Onglet 'HAD' dans /etablissement (étabs rattachés à des HAD), (g) Carte interactive Leaflet/Mapbox avec markers patients + HAD + véhicules en mouvement temps réel, (h) Workflow création commande fournisseur + PDF BC + Resend mail" }
+    ],
+    "themes": ["feat", "had", "logo", "ui"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.69.html"
+  },
+  {
     "v": "0.62.68",
     "kind": "feat",
     "titre": "🏥 Module HAD complet (table + rattachements + vue stats + démo 3 HAD) + Mode Liste/Tuiles partout (ViewModeToggle) + LogoUploader dans /collectivite",

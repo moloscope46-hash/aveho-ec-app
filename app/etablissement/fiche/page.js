@@ -13,6 +13,7 @@ import { PageHead, Panel, Btn, StateMsg } from "../../ui";
 import { dialogs } from "../../dialogs";
 import AddressAutocomplete from "../../AddressAutocomplete";
 import FinessSearch from "../../FinessSearch";
+import LogoUploader from "../../components/LogoUploader";  /* 0.62.69 */
 import SireneSearch from "../../SireneSearch";
 import { logEvent } from "../../../lib/events";
 import { safeUpdate } from "../../../lib/safeWrite";
@@ -129,6 +130,7 @@ function FicheEtablissementInner() {
         capacite: form.capacite ? parseInt(form.capacite) : null,
         latitude: form.latitude || null,
         longitude: form.longitude || null,
+        logo_url: form.logo_url || null,  /* 0.62.69 : logo établissement */
         // 0.55.47 : est_partenaire RETIRÉ du payload — verrouillé après création
         // pour éviter qu'un étab passe accidentellement de mine à partner ou vice versa
       };
@@ -361,6 +363,16 @@ function FicheEtablissementInner() {
               </div>
 
               <div style={{ display: "grid", gap: 12 }}>
+                {/* 0.62.69 : Logo établissement */}
+                <div style={{ padding: 14, background: "linear-gradient(135deg, rgba(24,95,165,.04), rgba(124,200,200,.04))", border: "1px solid #eef1f4", borderRadius: 12 }}>
+                  <LogoUploader
+                    value={form.logo_url}
+                    onChange={(url) => setForm({ ...form, logo_url: url })}
+                    pathPrefix={`etablissements/${auth.etabId}`}
+                    label="Logo de l'établissement"
+                    size={90}
+                  />
+                </div>
                 <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
                   <div>
                     <label style={fldLabel}>Nom *</label>

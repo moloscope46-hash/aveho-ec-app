@@ -18,6 +18,7 @@ export default function PatientQrPage({ params }) {
   const [patient, setPatient] = useState(null);
   const [chambre, setChambre] = useState(null);
   const [consent, setConsent] = useState(null);
+  const [structureLogo, setStructureLogo] = useState(null);  /* 0.62.69 */
   const [loading, setLoading] = useState(true);
   const [format, setFormat] = useState("a4"); // "a4" | "bracelet"
   // 0.62.67 : choix type de code (QR ou code-barres horizontal)
@@ -56,6 +57,13 @@ export default function PatientQrPage({ params }) {
             .maybeSingle();
           setConsent(cons);
         } catch {}
+        // 0.62.69 : Logo structure pour bracelet/A4
+        if (auth.structureId) {
+          try {
+            const { data: st } = await supabase.from("structures").select("logo_url").eq("id", auth.structureId).maybeSingle();
+            setStructureLogo(st?.logo_url || null);
+          } catch {}
+        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
@@ -122,12 +130,17 @@ export default function PatientQrPage({ params }) {
           // ===== FICHE A4 =====
           <div style={{ border: "4px solid #185FA5", borderRadius: 14, padding: 28 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18, paddingBottom: 12, borderBottom: "2px solid #e3e9ee" }}>
-              <div>
-                <div style={{ fontSize: 11, letterSpacing: 3, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO · BRACELET PATIENT</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                {structureLogo && (
+                  <img src={structureLogo} alt="Logo" style={{ width: 54, height: 54, objectFit: "contain", borderRadius: 8 }} />
+                )}
+                <div>
+                  <div style={{ fontSize: 11, letterSpacing: 3, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO · BRACELET PATIENT</div>
                 <h1 style={{ fontSize: 28, margin: "4px 0 2px", color: "#142131", fontWeight: 700, letterSpacing: -0.5 }}>
                   {patient.nom} <span style={{ fontWeight: 500 }}>{patient.prenom || ""}</span>
                 </h1>
                 {patient.civilite && <div style={{ fontSize: 12, color: "#5a6878" }}>{patient.civilite}{patient.nom_jeune_fille ? ` (née ${patient.nom_jeune_fille})` : ""}</div>}
+                </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 16, fontFamily: "Consolas, monospace", color: "#185FA5", fontWeight: 700 }}>{patient.numero_dossier || "—"}</div>
