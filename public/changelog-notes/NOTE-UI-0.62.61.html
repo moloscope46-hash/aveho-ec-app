@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.61 — UI</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · UI</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.61
+      <small>💎 UI PREMIUM PRO : tous les inputs/selects/tables/modals auto-stylés sans toucher au code des 28 pages restantes</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.61-alpha</span></span>
+      <span>📋 <b>Type :</b> </span>
+      <span>🔧 <b>Chantiers :</b> <b>3</b> UX · <b>5</b> AI · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#ui</span> <span class="theme-pill">#ux</span> <span class="theme-pill">#premium</span> <span class="theme-pill">#pro</span> <span class="theme-pill">#global-style</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(5)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Tables premium globales</h3>
+  <div class="panel ">
+    <p>📊 sélecteurs <code>.panel table thead</code>, <code>.panel-table table thead</code> → header avec gradient <code>linear-gradient(180deg, #f8fafc, #f0f4f8)</code> + border-bottom 2px + th uppercase 11.5px letterSpacing .4 padding 10×12. Rows : padding 10×12, border-bottom #f4f7fa, <strong>hover row background teal 6%</strong>. Dernière row sans border. Toutes les tables existantes deviennent cohérentes</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Effet brillance subtil sur les Panels</h3>
+  <div class="panel ">
+    <p>🎁 <code>.panel::before</code> avec gradient diagonal <code>linear-gradient(120deg, transparent, rgba(124,200,200,.06), transparent)</code> qui passe au survol (left -100% → 150% en 800ms). Effet 'shine' premium discret. Désactivable via <code>data-no-shine</code> attribute</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Backdrop modals premium</h3>
+  <div class="panel ">
+    <p>🔮 <code>backdrop-filter: blur(6px) saturate(120%)</code> + background navy/55% → vrai effet glassmorphism sur tous les modals existants. <strong>Checkboxes + radios</strong> : <code>accent-color: #7CC8C8</code> natif pour cohérence couleur. <strong>KpiRow tiles hover</strong> : translateY(-2px) + shadow 0 8px 20px (effet lévitation cohérent avec les autres cards)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Boutons `.btn-ghost` premium</h3>
+  <div class="panel ">
+    <p>🎨 padding 7×12, border 1px #e3e9ee radius 8px, Quicksand 12.5px font-weight 600, transition all 150ms. Hover : background #f4f7fa + border #c0d0d8 + color navy. Effet de profondeur cohérent avec les autres boutons</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Effet skeleton premium global</h3>
+  <div class="panel ">
+    <p>💫 classe <code>.av-loading</code> ou <code>.panel.is-loading</code> ajoute un shimmer overlay (gradient horizontal teal 10% + animation <code>av-shimmer 1.5s infinite linear</code>). Utilisable partout où on a besoin d'indiquer un chargement sans pré-câbler des Skeleton dans chaque composant</p>
+  </div>
+
+  <h2>🎨 Interface utilisateur <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Auto-style premium TOUS les `input[type=search]`</h3>
+  <div class="panel hi">
+    <p>✨ sans toucher aux 28 pages. Sélecteurs CSS ciblés : <code>.bg-dark input[type=search]</code>, <code>.wrap input[type=search]</code>, <code>.page-content input[type=search]</code>. Style appliqué : padding 9px 12px 9px 36px (espace pour icône), border 1px #e3e9ee radius 10px, fond blanc avec <strong>icône loupe SVG inline en base64</strong> (couleur #8a98a8) en background no-repeat 12px center, boxShadow subtil 0 1px 2px navy/4%. Au focus : border teal #7CC8C8 + ring 3px teal/18%. <strong>Toutes les recherches de l'app deviennent visuellement cohérentes</strong> instantanément. Pas de migration code nécessaire</p>
+  </div>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Auto-style premium TOUS les `select`</h3>
+  <div class="panel hi">
+    <p>🎯 padding 8px 28px 8px 12px, border 1px #e3e9ee radius 10px, <strong>flèche chevron-down SVG inline custom</strong> en background no-repeat (remplace l'arrow native du browser), appearance: none pour masquer le style natif. Au focus : ring teal. Au hover : border #c0d0d8. Tous les sélecteurs de filtre des 28 pages sont uniformisés sans toucher leur code</p>
+  </div>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Auto-style inputs text/email/tel/number/date + textareas</h3>
+  <div class="panel hi">
+    <p>📝 padding 8px 12px, border radius 10px, Quicksand, fontSize 13, boxShadow subtil. Pour textareas : resize vertical seulement. Les forms partout dans l'app ont maintenant le même look premium. Possibilité d'override via classe <code>.no-style</code> si une page veut un input custom</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Résultat</h3>
+  <div class="panel ">
+    <p>💡 sans toucher au code des 28 pages, leur UI devient instantanément premium. Cohérence visuelle quasi parfaite dans toute l'app (le Cmd+K même, les modales, les selects, les inputs, les tables). Les pages déjà migrées (PageToolbar + PageHead premium) gardent leur look custom mais bénéficient aussi de ces améliorations (focus ring teal, scrollbar, modals blur)</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Prochains lots</h3>
+  <div class="panel ">
+    <p>📅 0.62.62 Module congés/absences équipe (calendrier prévisionnel avec validation manager), 0.62.63 Stats commerciales magasin (CA mensuel + top articles + marge brute par étab + panier moyen), 0.62.64 Workflow chiffrage devis SAV (PDF + mail Resend), 0.62.65 Détection fin de vie matériel (SAV cumulés &gt; 60% prix neuf → alerte), 0.62.66 Tour guidé interactif PWA (popovers contextuels 1er login), 0.62.67 Migration manuelle PageToolbar sur 5 pages clés restantes (magasin/depots, magasin/catalogue, partenaires-rpps, /admin/medecins-prescripteurs, /utilisateurs)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.61 - " ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

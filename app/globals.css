@@ -3840,3 +3840,550 @@ header, .topbar, .top-bar, [class*="topbar"] {
 .av-weather-carousel::-webkit-scrollbar {
   display: none;
 }
+
+/* =============================================================
+   0.62.60 — Améliorations UI/UX globales harmonisation
+   ============================================================= */
+
+/* Boutons "primary" globaux : gradient + hover lift cohérent */
+button.btn-primary,
+.btn-primary,
+button[class*="primary"]:not([class*="ghost"]) {
+  transition: transform 150ms, box-shadow 150ms, filter 150ms;
+}
+
+/* Cards & panels : effet hover subtil quand cliquables */
+.av-card-clickable,
+.av-card-float[onClick],
+[data-clickable="true"] {
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms;
+}
+.av-card-clickable:hover,
+[data-clickable="true"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20,33,49,.12);
+}
+
+/* Inputs/selects globaux premium : focus ring cohérent */
+input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #7CC8C8 !important;
+  box-shadow: 0 0 0 3px rgba(124,200,200,.18) !important;
+  background: #fff;
+}
+
+/* Spinners de chargement uniformes */
+.av-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(124,200,200,.3);
+  border-top-color: #7CC8C8;
+  border-radius: 50%;
+  animation: av-spin .8s linear infinite;
+}
+@keyframes av-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Badges status : highlight subtil */
+.av-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+
+/* Smooth scroll partout */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible amélioré (accessibilité) */
+*:focus-visible:not(input):not(textarea):not(select) {
+  outline: 2px solid #7CC8C8;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Disabled state cohérent */
+button:disabled, [disabled] {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+/* Loading state des boutons */
+button.is-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+button.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 16px; height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: av-spin .8s linear infinite;
+  color: #fff;
+}
+
+/* Tooltips natifs améliorés (browser-default mais design propre) */
+[title]:hover {
+  cursor: help;
+}
+
+/* Hover sur les liens dans le corps de l'app */
+a:not(.no-style):not(.btn):not([class*="btn-"]) {
+  color: #185FA5;
+  text-decoration: none;
+  transition: color 150ms;
+}
+a:not(.no-style):not(.btn):not([class*="btn-"]):hover {
+  color: #134e87;
+  text-decoration: underline;
+}
+
+/* =============================================================
+   0.62.61 — UI PREMIUM PRO : auto-style des inputs search / selects existants
+   Pour donner un look PageToolbar à TOUTES les pages sans toucher le code
+   ============================================================= */
+
+/* Tous les input[type="search"] : style premium auto */
+.bg-dark input[type="search"],
+.wrap input[type="search"],
+.page-content input[type="search"] {
+  padding: 9px 12px 9px 36px !important;
+  border: 1px solid #e3e9ee !important;
+  border-radius: 10px !important;
+  font-size: 13px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a98a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/></svg>") no-repeat 12px center;
+  font-family: "Quicksand", sans-serif;
+  transition: all 150ms;
+  box-shadow: 0 1px 2px rgba(20,33,49,.04);
+}
+.bg-dark input[type="search"]:focus,
+.wrap input[type="search"]:focus,
+.page-content input[type="search"]:focus {
+  border-color: #7CC8C8 !important;
+  box-shadow: 0 0 0 3px rgba(124,200,200,.18), 0 1px 2px rgba(20,33,49,.04) !important;
+  outline: none;
+}
+
+/* Tous les select : style premium auto */
+.bg-dark select,
+.wrap select,
+.page-content select {
+  padding: 8px 28px 8px 12px !important;
+  border: 1px solid #e3e9ee !important;
+  border-radius: 10px !important;
+  font-family: "Quicksand", sans-serif;
+  font-size: 12.5px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a98a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 10px center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 150ms;
+  box-shadow: 0 1px 2px rgba(20,33,49,.04);
+}
+.bg-dark select:focus,
+.wrap select:focus,
+.page-content select:focus {
+  border-color: #7CC8C8 !important;
+  box-shadow: 0 0 0 3px rgba(124,200,200,.18), 0 1px 2px rgba(20,33,49,.04) !important;
+  outline: none;
+}
+.bg-dark select:hover,
+.wrap select:hover,
+.page-content select:hover {
+  border-color: #c0d0d8 !important;
+}
+
+/* Tous les input[type="text"] et inputs sans type : style premium auto */
+.bg-dark input[type="text"]:not(.no-style),
+.bg-dark input[type="email"]:not(.no-style),
+.bg-dark input[type="tel"]:not(.no-style),
+.bg-dark input[type="number"]:not(.no-style),
+.bg-dark input[type="date"]:not(.no-style),
+.wrap input[type="text"]:not(.no-style),
+.wrap input[type="email"]:not(.no-style),
+.wrap input[type="tel"]:not(.no-style),
+.wrap input[type="number"]:not(.no-style),
+.wrap input[type="date"]:not(.no-style) {
+  padding: 8px 12px;
+  border: 1px solid #e3e9ee;
+  border-radius: 10px;
+  font-family: "Quicksand", sans-serif;
+  font-size: 13px;
+  background: #fff;
+  transition: all 150ms;
+  box-shadow: 0 1px 2px rgba(20,33,49,.04);
+}
+
+/* Textarea premium */
+.bg-dark textarea:not(.no-style),
+.wrap textarea:not(.no-style) {
+  padding: 10px 12px;
+  border: 1px solid #e3e9ee;
+  border-radius: 10px;
+  font-family: "Quicksand", sans-serif;
+  font-size: 13px;
+  background: #fff;
+  transition: all 150ms;
+  box-shadow: 0 1px 2px rgba(20,33,49,.04);
+  resize: vertical;
+}
+
+/* =============================================================
+   Cards & Panels : effet brillance discret au hover
+   ============================================================= */
+.panel {
+  position: relative;
+  overflow: hidden;
+}
+.panel:not([data-no-shine])::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(124,200,200,.06), transparent);
+  transition: left 800ms ease;
+  pointer-events: none;
+}
+.panel:not([data-no-shine]):hover::before {
+  left: 150%;
+}
+
+/* =============================================================
+   Tables premium : header avec gradient subtil + row hover
+   ============================================================= */
+.panel table thead tr,
+.panel-table table thead tr {
+  background: linear-gradient(180deg, #f8fafc 0%, #f0f4f8 100%) !important;
+  border-bottom: 2px solid #e3e9ee !important;
+}
+.panel table thead th,
+.panel-table table thead th {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: #5a6878 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.4px !important;
+  padding: 10px 12px !important;
+  text-align: left !important;
+}
+.panel table tbody td,
+.panel-table table tbody td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid #f4f7fa !important;
+  font-size: 12.5px !important;
+  color: #142131 !important;
+}
+.panel table tbody tr:last-child td,
+.panel-table table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+.panel table tbody tr:hover,
+.panel-table table tbody tr:hover {
+  background: rgba(124,200,200,.06) !important;
+}
+
+/* =============================================================
+   Buttons : améliorations premium globales
+   ============================================================= */
+.btn-ghost,
+button.btn-ghost {
+  padding: 7px 12px !important;
+  border: 1px solid #e3e9ee !important;
+  background: #fff !important;
+  color: #5a6878 !important;
+  border-radius: 8px !important;
+  font-family: "Quicksand", sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: all 150ms !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.btn-ghost:hover,
+button.btn-ghost:hover {
+  background: #f4f7fa !important;
+  border-color: #c0d0d8 !important;
+  color: #142131 !important;
+}
+
+/* =============================================================
+   Effet de chargement page (skeleton premium global)
+   ============================================================= */
+.panel.is-loading,
+.av-loading {
+  position: relative;
+  overflow: hidden;
+}
+.panel.is-loading::after,
+.av-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(124,200,200,.1) 50%, transparent 100%);
+  animation: av-shimmer 1.5s infinite linear;
+  pointer-events: none;
+}
+
+/* =============================================================
+   Backdrop premium pour les modals
+   ============================================================= */
+.modal-bg {
+  backdrop-filter: blur(6px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(120%) !important;
+  background: rgba(20,33,49,.55) !important;
+}
+
+/* =============================================================
+   Checkbox & radio premium
+   ============================================================= */
+input[type="checkbox"]:not(.no-style),
+input[type="radio"]:not(.no-style) {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #7CC8C8;
+}
+
+/* =============================================================
+   KpiRow tile premium hover
+   ============================================================= */
+.kpi-row > div,
+[class*="kpi-tile"],
+[class*="StatCard"] {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms !important;
+}
+.kpi-row > div:hover,
+[class*="kpi-tile"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20,33,49,.10);
+}
+
+/* =============================================================
+   0.62.62 — UI PREMIUM ENCORE PLUS BEAU : animations & micro-interactions
+   ============================================================= */
+
+/* Stagger fade-in : les enfants directs des grilles arrivent en cascade */
+.av-stagger > *,
+[class*="grid"] > .panel,
+.av-fade-in-cascade > * {
+  animation: av-fade-up 400ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+.av-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.av-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.av-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.av-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.av-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.av-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.av-stagger > *:nth-child(7) { animation-delay: 240ms; }
+.av-stagger > *:nth-child(8) { animation-delay: 280ms; }
+
+@keyframes av-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Boutons primary : effet glow + shine au hover */
+button[class*="primary"]:not([class*="ghost"]):not(:disabled),
+.btn-primary:not(:disabled),
+.NeonButton {
+  position: relative;
+  overflow: hidden;
+}
+button[class*="primary"]:not([class*="ghost"]):not(:disabled)::before,
+.btn-primary:not(:disabled)::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,.25), transparent);
+  transition: left 600ms ease;
+  pointer-events: none;
+}
+button[class*="primary"]:not([class*="ghost"]):not(:disabled):hover::before,
+.btn-primary:not(:disabled):hover::before {
+  left: 100%;
+}
+
+/* Active state : feedback tactile */
+button:not(:disabled):active {
+  transform: translateY(1px) scale(.98);
+  transition: transform 60ms;
+}
+
+/* Cards premium : effet 3D au hover */
+.av-card-3d,
+[data-3d="true"] {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 300ms;
+  transform-style: preserve-3d;
+}
+.av-card-3d:hover,
+[data-3d="true"]:hover {
+  transform: translateY(-4px) scale(1.005);
+  box-shadow: 0 12px 32px rgba(20,33,49,.15), 0 4px 8px rgba(124,200,200,.1);
+}
+
+/* Effet ripple sur les boutons (sans JS) */
+button[data-ripple="true"] {
+  position: relative;
+  overflow: hidden;
+}
+button[data-ripple="true"]::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,.4);
+  transform: translate(-50%, -50%);
+  transition: width 600ms ease, height 600ms ease;
+}
+button[data-ripple="true"]:active::after {
+  width: 300px; height: 300px;
+  transition: 0s;
+}
+
+/* Glow autour des éléments importants */
+.av-glow-teal {
+  box-shadow: 0 0 20px rgba(124,200,200,.4), 0 0 40px rgba(124,200,200,.2);
+}
+.av-glow-amber {
+  box-shadow: 0 0 20px rgba(239,159,39,.4), 0 0 40px rgba(239,159,39,.2);
+}
+.av-glow-coral {
+  box-shadow: 0 0 20px rgba(227,93,91,.4), 0 0 40px rgba(227,93,91,.2);
+  animation: av-pulse-glow 2s infinite;
+}
+@keyframes av-pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(227,93,91,.4), 0 0 40px rgba(227,93,91,.2); }
+  50% { box-shadow: 0 0 25px rgba(227,93,91,.5), 0 0 50px rgba(227,93,91,.3); }
+}
+
+/* Sticky header au scroll : ombre qui apparaît */
+.topbar,
+[class*="TopBar"] {
+  transition: box-shadow 200ms, backdrop-filter 200ms;
+}
+body.scrolled .topbar {
+  box-shadow: 0 4px 20px rgba(20,33,49,.15);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+
+/* Tooltips premium : tooltip natif amélioré pour les buttons avec title */
+[title]:not(:disabled):hover {
+  position: relative;
+}
+
+/* Badge "pulse" pour les notifs nouvelles */
+.av-pulse,
+[data-pulse="true"] {
+  animation: av-ping 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes av-ping {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(1.2); opacity: 0; }
+}
+
+/* Effet "scan line" sur les bordures de section importante */
+.av-scan-border {
+  position: relative;
+  overflow: hidden;
+}
+.av-scan-border::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: -100%;
+  width: 50%; height: 2px;
+  background: linear-gradient(90deg, transparent, #7CC8C8, transparent);
+  animation: av-scan 3s ease-in-out infinite;
+}
+@keyframes av-scan {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+/* Number counter : animation des chiffres importants au load */
+.av-count-up {
+  display: inline-block;
+  animation: av-count-pop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes av-count-pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Mode sombre auto pour les sections avec data-dark */
+[data-dark="true"] {
+  background: linear-gradient(135deg, #1a2840, #0f1b28);
+  color: #fff;
+}
+[data-dark="true"] input,
+[data-dark="true"] select,
+[data-dark="true"] textarea {
+  background: rgba(255,255,255,.05) !important;
+  border-color: rgba(255,255,255,.1) !important;
+  color: #fff !important;
+}
+
+/* Border gradient pour les cards premium */
+.av-border-gradient {
+  border: 2px solid transparent !important;
+  background-image: linear-gradient(#fff, #fff), linear-gradient(135deg, #7CC8C8, #185FA5, #7a6fb0);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+/* Wow factor : entrée du dashboard */
+.av-hero-entrance {
+  animation: av-hero-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes av-hero-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); filter: blur(8px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+/* Section dividers premium */
+.av-section-divider {
+  position: relative;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124,200,200,.4), transparent);
+  margin: 24px 0;
+}
+
+/* Empty states premium */
+.av-empty-state {
+  text-align: center;
+  padding: 48px 20px;
+}
+.av-empty-state-icon {
+  font-size: 64px;
+  color: #c0d0d8;
+  margin-bottom: 14px;
+  display: inline-block;
+  animation: av-float 3s ease-in-out infinite;
+}
+@keyframes av-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}

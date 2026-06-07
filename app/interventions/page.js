@@ -319,11 +319,10 @@ function InterventionsInner() {
       <div className="wrap">
         <BackButton />
         <PageHead
-          eyebrow="MAINTENANCE · DEMANDES D'INTERVENTION"
           icon="ti-tools"
           title="Demandes d'intervention"
-          accent={`${stats.total} DI · ${stats.urgentes} urgentes`}
-          sub="Workflow scan-driven · Pré-remplissage depuis QR dépôt/matériel · Vue Liste ou Kanban"
+          subtitle={`${stats.total} DI · ${stats.urgentes} urgentes · Workflow scan-driven · Vue Liste ou Kanban`}
+          color="#e35d5b"
         />
 
         {/* Hero stats — 5 tuiles cliquables par statut */}

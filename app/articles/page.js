@@ -18,6 +18,8 @@ import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
+// 0.62.60 : PageToolbar universel
+import PageToolbar from "../components/PageToolbar";
 import { EmptyState, SkeletonRow, toast } from "../components/ui-premium";
 import { fmtEur } from "../../lib/format";
 import { generateEan13, isValidEan13, detectBarcodeType, generateEan13Svg } from "../../lib/barcode";
@@ -283,54 +285,50 @@ export default function Articles() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead small title="Articles" sub={`Référentiel catalogue · ${items.length} article${items.length > 1 ? "s" : ""}`} />
+        <PageHead icon="ti-package" title="Articles" subtitle="Référentiel catalogue" color="#185FA5" small />
 
-        {/* Filtres */}
-        <Panel style={{ marginBottom: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input
-              type="search"
-              placeholder="Rechercher (libellé, réf, code-barres, LPP)…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ flex: "1 1 220px", padding: "7px 10px", border: "1px solid #e3e9ee", borderRadius: 8, fontSize: 13 }}
-            />
-            <select value={filterFamille} onChange={(e) => setFilterFamille(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #e3e9ee", fontSize: 12.5 }}>
-              <option value="">Toutes familles</option>
-              {FAMILLES.map(f => <option key={f}>{f}</option>)}
-            </select>
-            <select value={filterTracabilite} onChange={(e) => setFilterTracabilite(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #e3e9ee", fontSize: 12.5 }}>
-              <option value="">Toute tracabilité</option>
-              <option value="lot">Géré par lot</option>
-              <option value="serie">Géré par série</option>
-            </select>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer" }}>
-              <input type="checkbox" checked={filterDm} onChange={(e) => setFilterDm(e.target.checked)} />
-              DM uniquement
-            </label>
-            <button onClick={newArticle} style={{
-              background: "linear-gradient(135deg, #185FA5, #134e87)",
-              color: "#fff", border: "none", padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 5,
-            }}>
-              <i className="ti ti-plus" /> Nouvel article
-            </button>
-            <button onClick={() => router.push("/scan/article")} title="Scanner un code-barres pour une entrée stock" style={{
-              background: "linear-gradient(135deg, #7CC8C8, #5da8a8)",
-              color: "#fff", border: "none", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+        {/* 0.62.60 : PageToolbar universel */}
+        <PageToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Libellé, réf, code-barres, LPP..."
+          totalCount={items.length}
+          filteredCount={filtered.length}
+          accentColor="#185FA5"
+          filters={[
+            { key: "famille", label: "Famille", value: filterFamille, onChange: setFilterFamille,
+              options: FAMILLES.map(f => ({ v: f, l: f })) },
+            { key: "tracabilite", label: "Tracabilité", value: filterTracabilite, onChange: setFilterTracabilite,
+              options: [{ v: "lot", l: "Géré par lot" }, { v: "serie", l: "Géré par série" }] },
+            { key: "dm", label: "DM uniquement", value: filterDm, onChange: setFilterDm, type: "toggle", color: "#7a6fb0", icon: "ti-medical-cross" },
+          ]}
+          onReset={() => { setSearch(""); setFilterFamille(""); setFilterTracabilite(""); setFilterDm(false); }}
+          actions={
+            <>
+              <button onClick={newArticle} style={{
+                background: "linear-gradient(135deg, #185FA5, #134e87)",
+                color: "#fff", border: "none", padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 5,
+              }}>
+                <i className="ti ti-plus" /> Nouvel article
+              </button>
+              <button onClick={() => router.push("/scan/article")} title="Scanner un code-barres" style={{
+                background: "linear-gradient(135deg, #7CC8C8, #5da8a8)",
+                color: "#fff", border: "none", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
               display: "inline-flex", alignItems: "center", gap: 5,
             }}>
               <i className="ti ti-scan" /> Scan
-            </button>
-            <button onClick={() => router.push("/articles/etiquettes")} title="Imprimer des étiquettes prix" style={{
-              background: "linear-gradient(135deg, #EF9F27, #d28818)",
-              color: "#fff", border: "none", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              display: "inline-flex", alignItems: "center", gap: 5,
-            }}>
-              <i className="ti ti-printer" /> Étiquettes
-            </button>
-          </div>
-        </Panel>
+              </button>
+              <button onClick={() => router.push("/articles/etiquettes")} title="Imprimer des étiquettes prix" style={{
+                background: "linear-gradient(135deg, #EF9F27, #d28818)",
+                color: "#fff", border: "none", padding: "7px 12px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 5,
+              }}>
+                <i className="ti ti-printer" /> Étiquettes
+              </button>
+            </>
+          }
+        />
 
         {/* Liste */}
         <Panel style={{ padding: 0, overflow: "hidden" }}>

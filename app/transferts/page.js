@@ -21,6 +21,8 @@ import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, IconButton, Modal } from "../ui";
+// 0.62.60 : PageToolbar universel
+import PageToolbar from "../components/PageToolbar";
 import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-premium";
 import EquipeFilter from "../components/EquipeFilter";
 import BackButton from "../components/BackButton";
@@ -291,11 +293,10 @@ function TransfertsInner() {
       <div className="wrap">
         <div style={{ marginBottom: 8 }}><BackButton /></div>
         <PageHead
-          eyebrow="LOGISTIQUE"
           icon="ti-arrows-exchange"
           title="Transferts"
-          accent={`${transferts.length}`}
-          sub="Multi-source / destination · Scan QR · Workflow Demandé → Validé → Reçu · Priorités"
+          subtitle="Multi-source / destination · Scan QR · Workflow Demandé → Validé → Reçu · Priorités"
+          color="#7a6fb0"
         />
 
         {/* Stats par statut */}
@@ -321,25 +322,27 @@ function TransfertsInner() {
           })}
         </div>
 
-        {/* Toolbar */}
-        <Panel style={{ marginBottom: 14, padding: "12px 14px" }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input
-              type="search"
-              placeholder="🔍 Rechercher (motif, notes...)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ flex: 1, minWidth: 220, padding: "8px 14px", border: "1px solid #e3e9ee", borderRadius: 18, fontSize: 13, fontFamily: "inherit" }}
-            />
-            <select value={filterPriorite} onChange={(e) => setFilterPriorite(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #e3e9ee", fontSize: 12.5 }}>
-              <option value="">Toutes priorités</option>
-              {PRIORITES.map(p => <option key={p.value} value={p.value}>{p.lbl}</option>)}
-            </select>
-            <EquipeFilter value={filterEquipe} onChange={setFilterEquipe} compact />
-            <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/quick")}>Scanner</Btn>
-            <NeonButton variant="teal" icon="ti-plus" onClick={openNew}>Nouveau transfert</NeonButton>
-          </div>
-        </Panel>
+        {/* 0.62.60 : PageToolbar universel */}
+        <PageToolbar
+          search={search}
+          onSearch={setSearch}
+          placeholder="Motif, notes..."
+          totalCount={transferts.length}
+          filteredCount={filtered.length}
+          accentColor="#7a6fb0"
+          filters={[
+            { key: "priorite", label: "Priorité", value: filterPriorite, onChange: setFilterPriorite,
+              options: PRIORITES.map(p => ({ v: p.value, l: p.lbl })) },
+          ]}
+          onReset={() => { setSearch(""); setFilterPriorite(""); setFilterEquipe(null); }}
+          actions={
+            <>
+              <EquipeFilter value={filterEquipe} onChange={setFilterEquipe} compact />
+              <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/quick")}>Scanner</Btn>
+              <NeonButton variant="teal" icon="ti-plus" onClick={openNew}>Nouveau transfert</NeonButton>
+            </>
+          }
+        />
 
         {/* Liste */}
         {loading ? (

@@ -28,6 +28,7 @@ const MAG_NAV = [
     { p: "/magasin/rattachements-perimetre", ic: "ti-link", lbl: "Périmètre intervention", col: "#7a6fb0" },
     { p: "/magasin/mercuriales", ic: "ti-file-text", lbl: "Mercuriales & marchés", col: "#7a6fb0" },
     { p: "/magasin/marketplace", ic: "ti-shopping-cart-plus", lbl: "Marketplace inter-magasins", col: "#EF9F27" },
+    { p: "/magasin/pieces-marketplace", ic: "ti-tool", lbl: "Marketplace pièces détachées", col: "#e35d5b" },
   ]},
   // 0.61.3 : Flotte & livraisons
   { section: "Flotte & livraisons", items: [

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.62 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.62
+      <small>🔔 Notifications push thématiques opt-in granulaire par étab + 💎 UI ENCORE PLUS BEAU (animations, glow, ripple, stagger fade-in)</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.62-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>3</b> AI · <b>1</b> SQL · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#notifs</span> <span class="theme-pill">#opt-in</span> <span class="theme-pill">#ui-premium</span> <span class="theme-pill">#animations</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">`migration-0.62.62-notifications-preferences.sql`</h3>
+  <div class="panel violet">
+    
+    <p>📐</p>
+    <ol class="steps">
+      <li><strong>Table <code>notifications_preferences</code></strong> : user_id, structure_id, etablissement_id NULL pour général, type_notif, canal CHECK (push/email/sms/in_app), enabled, niveau_min CHECK (info/warning/critique), heures_silencieuses_debut/fin TIME, UNIQUE(user_id, etablissement_id, type_notif, canal)</li>
+      <li><strong>3 index</strong> : user, étab, lookup composite (user+étab+type+enabled)</li>
+      <li><strong>Trigger <code>trg_notif_prefs_modifie</code></strong> : update auto modifie_le</li>
+      <li><strong>Fonction <code>user_should_receive_notif(user_id, etablissement_id, type, canal, niveau)</code></strong> RETURNS BOOLEAN : vérifie pref spécifique → fallback pref générale (etab NULL) → défaut TRUE. Filtre par niveau_min (warning+ ne reçoit pas info). Gère heures silencieuses avec cas spécial chevauchement minuit (ex 22:00→07:00). SECURITY DEFINER pour appel depuis serverless</li>
+      <li><strong>RLS</strong> : SELECT + ALL réservé à <code>auth.uid() = user_id</code> (privacy)</li>
+    </ol><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">migration-0.62.62-notifications-preferences.sql</code></div>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Refonte complète `/parametres/notifications`</h3>
+  <div class="panel ">
+    <p>🔔 (363 lignes) : opt-in granulaire <strong>par établissement × par type × par canal</strong>. <strong>10 types de notifs</strong> prédéfinis avec icônes + couleurs : DI urgentes (ti-alert-triangle coral), DI assignées (ti-tools bleu), Livraisons (ti-truck-delivery amber), SAV (ti-bug rouge), Commandes EC (ti-shopping-cart vert), Signalements (ti-flag violet), Annonces (ti-megaphone), Tournée chauffeur (ti-route), RGPD (ti-shield-lock teal), Marketplace pièces (ti-tool amber). <strong>Sélecteur étab en pills premium</strong> : 'Tous les établissements (général)' violet + 1 pill par étab de la structure (bleu). <strong>3 KPIs</strong> : Notifs actives / muettes / Types dispo. <strong>Boutons globaux</strong> : 'Tout activer' / 'Tout désactiver'. <strong>Grid cards</strong> par type avec : icône carrée 38×38 gradient + shadow couleur, label + description, <strong>Toggle Switch premium</strong> (48×26 avec animation cubic-bezier 200ms et shadow couleur), section niveau minimum (Info+/Warning+/Crit) en 3 boutons buttongroup. <strong>Heures silencieuses</strong> : 2 inputs time De→Jusqu'à avec exemple '22:00 → 07:00'. Permission browser détectée via <code>Notification.permission</code> avec bouton 'Autoriser les notifications' si pas encore granted</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">CSS UI ENCORE PLUS BEAU</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li>Stagger fade-in** : enfants directs des grilles <code>[class*=grid] &gt; .panel</code> arrivent en cascade animation av-fade-up 400ms cubic-bezier avec délai 40ms par index (jusqu'à 8). Effet 'wow' à chaque page load. **</li>
+      <li>Boutons primary glow + shine<strong> : pseudo-élément <code>::before</code> avec gradient blanc 25% qui traverse au hover (left -100% → 100% en 600ms). Effet 'reflet lumineux'. </strong></li>
+      <li>Active state tactile<strong> : <code>:active</code> → translateY(1px) scale(.98) en 60ms, feedback haptique visuel. </strong></li>
+      <li>Effet ripple sans JS<strong> : <code>button[data-ripple=true]:active::after</code> étend un cercle blanc 40% jusqu'à 300px en 600ms. </strong></li>
+      <li>Cards 3D<strong> : <code>data-3d=true</code> hover → translateY(-4px) scale(1.005) + double shadow (navy + teal glow). </strong></li>
+      <li>Glow utility classes** : av-glow-teal/amber/coral (le coral pulse avec <code>av-pulse-glow 2s infinite</code>)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Plus d'animations premium</h3>
+  <div class="panel ">
+    <p>🎨 <strong>(7) Topbar dynamique au scroll</strong> : <code>body.scrolled .topbar</code> → shadow + backdrop blur 12px saturate 180% activé via scroll listener requestAnimationFrame dans LazyLayoutChrome. <strong>(8) Badge pulse</strong> : <code>.av-pulse</code> ou <code>[data-pulse=true]</code> → animation ping infinite (scale 1→1.2 opacity 1→0). <strong>(9) Scan line border</strong> : <code>.av-scan-border::after</code> → barre teal 2px qui balaie de gauche à droite en 3s ease-in-out. <strong>(10) Count-up pop</strong> : <code>.av-count-up</code> animation scale .5→1 opacity 0→1 cubic-bezier 600ms (chiffres importants). <strong>(11) Border gradient</strong> : <code>.av-border-gradient</code> → 2px transparent avec linear-gradient(135deg, teal, blue, violet) via background-clip border-box. <strong>(12) Hero entrance</strong> : <code>.av-hero-entrance</code> → opacity 0→1 + translateY 20→0 + scale .96→1 + filter blur 8→0 en 700ms cubic-bezier(0.16, 1, 0.3, 1). <strong>(13) Float icon</strong> : empty-state-icon flotte légèrement (translateY ±6px en 3s)</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Utilisation</h3>
+  <div class="panel ">
+    <p>🎯 sur le widget Notifications ou avant d'envoyer une push, appeler <code>await supabase.rpc('user_should_receive_notif', { p_user_id, p_etablissement_id, p_type_notif: 'di_urgente', p_canal: 'push', p_niveau: 'critique' })</code>. Retourne TRUE/FALSE. À intégrer dans la edge function <code>send-push-notification</code> Supabase (existante) pour respecter les préférences utilisateur. Côté UI, les classes CSS .av-stagger, [data-3d], [data-ripple], .av-glow-* sont prêtes à utiliser dans les composants</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Prochains lots</h3>
+  <div class="panel ">
+    <p>📅 0.62.63 Stats commerciales magasin (CA mensuel + top articles + marge brute par étab + panier moyen), 0.62.64 Workflow chiffrage devis SAV (bilan → PDF + mail Resend), 0.62.65 Détection fin de vie matériel (SAV cumulés &gt; 60% prix neuf), 0.62.66 Tour guidé interactif PWA (popovers 1er login), 0.62.67 Module congés/absences équipe (calendrier + validation), 0.62.68 Export universel CSV/Excel avec colonnes choisies, 0.62.69 Workflow renouvellement consentements RGPD (alertes 30j avant expiration)</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+migration-0.62.62-notifications-preferences.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/migration-0.62.62-notifications-preferences.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>migration-0.62.62-notifications-preferences.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.62 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

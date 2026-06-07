@@ -357,7 +357,7 @@ export default function Patients() {
         {/* 0.62.29 : ParticlesBackground premium en arrière-plan */}
         <ParticlesBackground count={25} speed={0.18} linkDistance={120} mode="teal" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 160, pointerEvents: "none", opacity: 0.6, zIndex: 0 }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, position: "relative", zIndex: 1 }}>
-          <PageHead small title={lbl("patients", "Patients") + " finaux"} sub={auth.etabNom || "—"} />
+          <PageHead icon="ti-users" title={lbl("patients", "Patients") + " finaux"} subtitle={auth.etabNom || "—"} color="#7a6fb0" small />
           <button className="btn-etab" onClick={() => router.push("/etablissement")}><i className="ti ti-building-hospital" /> Mon établissement</button>
         </div>
         <KpiRow tiles={kpis} />

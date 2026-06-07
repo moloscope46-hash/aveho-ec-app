@@ -25,6 +25,8 @@
 // =============================================================
 
 import dynamic from "next/dynamic";
+// 0.62.62 : scroll listener body.scrolled
+import { useEffect } from "react";
 
 const InstallBanner = dynamic(() => import("./InstallBanner"), { ssr: false });
 const KeyboardHelp = dynamic(() => import("./KeyboardHelp"), { ssr: false });
@@ -43,6 +45,21 @@ const PwaInstallPrompt = dynamic(() => import("./components/PwaInstallPrompt").t
 const MagasinFab = dynamic(() => import("./components/MagasinFab").then(m => m.MagasinFab), { ssr: false });
 
 export default function LazyLayoutChrome() {
+  // 0.62.62 : scroll listener pour body.scrolled (active backdrop blur + shadow topbar)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let raf = null;
+    function onScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        document.body.classList.toggle("scrolled", window.scrollY > 8);
+        raf = null;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <>
       {/* Alpha 0.36.0 : banner contextuel d'installation PWA */}
