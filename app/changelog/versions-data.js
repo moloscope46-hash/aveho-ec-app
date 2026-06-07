@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.16",
+    "kind": "feat",
+    "titre": "🚗 Garages + 🚛 Fiche matériel enrichie logistique + Icônes équipes auto + Fix 400 vehicules",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.16-garages.sql`** : nouvelle table `garages` (id, structure_id, etablissement_id, magasin_id, nom, adresse, ville, capacité, type [garage/parking/atelier/depot_logistique], téléphone, responsable, horaires, lat/lng, notes, actif). 4 RLS policies SELECT/INSERT/UPDATE/DELETE filtrées par structure_id du user. Ajout `vehicules.garage_id` (UUID) + index" },
+      { "code": "AI", "txt": "🅿️ **Nouvelle page `/garages`** : CRUD complet avec 4 types (garage 🏠 / parking 🅿️ / atelier mécanique 🔧 / dépôt logistique 📦). Cards avec border-left coloré par type, comptage véhicules rattachés + capacité, modal édition (nom, type, capacité, adresse, CP, ville, tél, responsable, horaires, notes, actif). À la suppression : `vehicules.garage_id` mis à NULL avant DELETE. Banner d'alerte si table absente avec lien vers le SQL" },
+      { "code": "AI", "txt": "🐛 **Fix 400 sur `/vehicules`** : la jointure PostgREST `vehicules?select=*,etablissements(nom)` plantait (FK non déclarée). Retiré complètement la jointure (les noms étab sont joints client-side via `setEtabs`). Plus d'erreur console" },
+      { "code": "AI", "txt": "🚛 **Fiche matériel TRACABILITÉ ENRICHIE** : ajout des champs : marque, modèle, fournisseur, UDI (GS1/HIBC réglementaire), chambre actuelle (select), **dépôt de rattachement avec distinction EC 🏢 / magasin 🏬**, date achat, prix achat HT, date mise en service, durée amortissement (mois), valeur nette comptable, prochaine maintenance, état enrichi (Disponible/Location/Maintenance/Hors service/Réformé), notes textarea. **Table 'étage' totalement abandonnée** (dropée en 0.58.85, on ne référence plus du tout)" },
+      { "code": "AI", "txt": "📋 **Liste matériels MAX colonnes** : libellé (lien fiche) + tags, n° série, n° parc, n° lot, UDI (Consolas), patient affecté, **chambre actuelle**, **dépôt** (icône 🏬 magasin / 🏢 étab), date achat, prix HT, état avec badge + drapeau IMMO. Toutes triables. Charge `chambres` (id, nom, service_id) + `depots` (id, nom, magasin_id, etablissement_id) au mount" },
+      { "code": "AI", "txt": "🎨 **Icônes équipes auto-détectées** : avant les équipes apparaissaient juste avec leur nom. Maintenant chaque tuile a une icône 38x38px à gauche, fond `couleur 10%`, déduite intelligemment du nom : infirmières → ti-medical-cross, médecins → ti-stethoscope, aide-soignants → ti-heart-handshake, kiné → ti-massage, pharma → ti-pill, admin → ti-id-badge-2, logistique → ti-truck-loading, livraison → ti-truck-delivery, maintenance → ti-tool, équipe nuit → ti-moon, équipe jour → ti-sun, restauration → ti-tools-kitchen-2, ménage → ti-spray, animation → ti-music, direction → ti-crown, fallback → ti-users-group. Si `e.icone` rempli en DB, il est prioritaire" }
+    ],
+    "themes": ["feat", "garages", "materiels", "tracabilite", "equipes", "vehicules"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.15",
     "kind": "fix",
     "titre": "🏗 Vue plan ROBUSTE + boutons création Bâtiment/Service/Chambre/Lit en modal universel (plus de redirect 404)",

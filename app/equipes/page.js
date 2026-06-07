@@ -225,12 +225,41 @@ export default function EquipesPage() {
 }
 
 function EquipeRow({ e, onOpen, onArchive }) {
+  // 0.62.16 : icône déduite du nom de l'équipe (mots-clés) avec fallback générique
+  const guessIcon = (nom) => {
+    const n = (nom || "").toLowerCase();
+    if (/infirm|soin|nurse/.test(n)) return "ti-medical-cross";
+    if (/medecin|docteur|doctor/.test(n)) return "ti-stethoscope";
+    if (/aide.soign|asd/.test(n)) return "ti-heart-handshake";
+    if (/kine|reeduc/.test(n)) return "ti-massage";
+    if (/pharma|prep/.test(n)) return "ti-pill";
+    if (/admin|secret|bureau/.test(n)) return "ti-id-badge-2";
+    if (/logist|stock|magasin|appro/.test(n)) return "ti-truck-loading";
+    if (/livr|chauff|tournee/.test(n)) return "ti-truck-delivery";
+    if (/mainten|tech|sav|atelier/.test(n)) return "ti-tool";
+    if (/nuit|garde/.test(n)) return "ti-moon";
+    if (/jour|matin/.test(n)) return "ti-sun";
+    if (/restau|cuisin|repas/.test(n)) return "ti-tools-kitchen-2";
+    if (/menag|nettoy|propret/.test(n)) return "ti-spray";
+    if (/anim|loisir/.test(n)) return "ti-music";
+    if (/direction|cadre|chef/.test(n)) return "ti-crown";
+    return "ti-users-group";
+  };
+  const icone = e.icone || guessIcon(e.nom);
+  const couleur = e.couleur || "#185FA5";
   return (
     <div style={{
       padding: 10, background: "#f4f7fa", borderRadius: 6,
-      borderLeft: `3px solid ${e.couleur || "#185FA5"}`,
-      display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
+      borderLeft: `3px solid ${couleur}`,
+      display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
     }}>
+      {/* 0.62.16 : icône d'équipe */}
+      <div style={{
+        width: 38, height: 38, background: `${couleur}1A`, color: couleur,
+        borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      }}>
+        <i className={`ti ${icone}`} style={{ fontSize: 20 }} />
+      </div>
       <div style={{ flex: 1, minWidth: 180, cursor: "pointer" }} onClick={onOpen}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <b style={{ fontSize: 13, color: "#142131" }}>{e.nom}</b>

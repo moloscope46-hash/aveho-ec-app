@@ -46,25 +46,19 @@ function VehiculesPageInner() {
     let mounted = true;
     (async () => {
       try {
-        // 0.58.93 : SELECT défensif — tente d'abord avec jointure, fallback si erreur (FK absente ou table absente)
+        // 0.62.16 : Plus de jointure PostgREST (FK pas déclarée → 400 dans la console)
+        // → SELECT simple + jointure client
         let vehData = [];
         let etabData = [];
         try {
-          const r = await supabase.from("vehicules").select("*, etablissements(nom)").eq("structure_id", auth.structureId).order("nom");
+          const r = await supabase.from("vehicules").select("*").eq("structure_id", auth.structureId).order("nom");
           if (r.error) throw r.error;
           vehData = r.data || [];
         } catch (errVeh) {
-          console.warn("[Vehicules] Jointure etablissements échouée, fallback sans :", errVeh?.message);
-          try {
-            const r2 = await supabase.from("vehicules").select("*").eq("structure_id", auth.structureId).order("nom");
-            if (r2.error) throw r2.error;
-            vehData = r2.data || [];
-          } catch (errVeh2) {
-            console.error("[Vehicules] Table vehicules inaccessible :", errVeh2?.message);
-            vehData = [];
-            if (errVeh2?.code === "42P01") {
-              setLoadError("La table 'vehicules' n'existe pas. Applique migration-0.58.85-vehicules-cuves-stock.sql dans Supabase SQL Editor.");
-            }
+          console.error("[Vehicules] Table vehicules inaccessible :", errVeh?.message);
+          vehData = [];
+          if (errVeh?.code === "42P01") {
+            setLoadError("La table 'vehicules' n'existe pas. Applique migration-0.58.85-vehicules-cuves-stock.sql dans Supabase SQL Editor.");
           }
         }
         try {
@@ -148,7 +142,7 @@ function VehiculesPageInner() {
       }
       setModal(null);
       // reload
-      const { data } = await supabase.from("vehicules").select("*, etablissements(nom)").eq("structure_id", auth.structureId).order("nom");
+      const { data } = await supabase.from("vehicules").select("*").eq("structure_id", auth.structureId).order("nom");
       setVehs(data || []);
     } catch (e) {
       console.error("[Vehicules] Catch:", e);

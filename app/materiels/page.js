@@ -46,6 +46,8 @@ function MaterielsInner() {
   const [tagModal, setTagModal] = useState(null);  // matériel ouvert pour gestion tags
   // Alpha 0.13 : filtres combinés dépôt
   const [depots, setDepots] = useState([]);
+  // 0.62.16 : chambres pour sélecteur localisation + colonne
+  const [chambres, setChambres] = useState([]);
   // 0.58.40 : filtre par contexte bât/svc courant (via hook useCurrentContext)
   const ctx = useCurrentContext();
   const [ctxPatientIds, setCtxPatientIds] = useState(null);
@@ -95,12 +97,13 @@ function MaterielsInner() {
         if (pats.length === 0) {
           pats = await tryFetch(supabase.from("patients").select("id,nom,prenom"));
         }
-        const [arts, tg, links, dep, eqs] = await Promise.all([
+        const [arts, tg, links, dep, eqs, ch] = await Promise.all([
           tryFetch(supabase.from("articles").select("id,libelle")),
           tryFetch(supabase.from("tags_materiel").select("*").order("libelle")),
           tryFetch(supabase.from("materiel_tags").select("materiel_id, tag_id")),
-          tryFetch(supabase.from("depots").select("id, nom").order("nom")),
+          tryFetch(supabase.from("depots").select("id, nom, magasin_id, etablissement_id").order("nom")),
           tryFetch(supabase.from("equipes").select("id, nom").order("nom")),
+          tryFetch(supabase.from("chambres").select("id, nom, service_id").order("nom")),
         ]);
         if (!mounted) return;  // 0.58.84
         setRel({
@@ -116,6 +119,7 @@ function MaterielsInner() {
         });
         setMatTags(linksByMat);
         setDepots(dep);
+        setChambres(ch);
         setRelReady(true);
       } catch (e) {
         logger.error("[Materiels] load failed:", e);
@@ -314,7 +318,26 @@ function MaterielsInner() {
             { key: "num_serie", label: "N° série" },
             { key: "num_parc", label: "N° parc" },
             { key: "num_lot", label: "N° lot" },
+            { key: "udi_di", label: "UDI", render: (r) => r.udi_di ? <span style={{ fontFamily: "Consolas,monospace", fontSize: 11 }}>{r.udi_di}</span> : "—" },
             { key: "patient_id", label: "Patient", render: (r) => patLabel[r.patient_id] || "—" },
+            { key: "chambre_id", label: "Chambre", render: (r) => {
+              if (!r.chambre_id) return "—";
+              const ch = chambres.find(c => c.id === r.chambre_id);
+              return ch ? ch.nom : "—";
+            } },
+            { key: "depot_id", label: "Dépôt", render: (r) => {
+              if (!r.depot_id) return "—";
+              const d = depots.find(d => d.id === r.depot_id);
+              if (!d) return "—";
+              return (
+                <span title={d.magasin_id ? "Dépôt magasin" : "Dépôt étab"}>
+                  <i className={d.magasin_id ? "ti ti-building-warehouse" : "ti ti-building"} style={{ color: d.magasin_id ? "#5a8f8f" : "#185FA5", marginRight: 3 }} />
+                  {d.nom}
+                </span>
+              );
+            } },
+            { key: "date_achat", label: "Achat", render: (r) => r.date_achat ? new Date(r.date_achat).toLocaleDateString("fr-FR") : "—" },
+            { key: "prix_achat_ht", label: "Prix HT", render: (r) => r.prix_achat_ht ? `${parseFloat(r.prix_achat_ht).toFixed(2)} €` : "—" },
             { key: "etat", label: "État", render: (r) => {
               // 0.58.71 : badge état coloré + indicateur immobilisation
               const etatMeta = getEtatMeta(r.etat);
@@ -334,12 +357,6 @@ function MaterielsInner() {
                       background: "rgba(94,74,140,.18)", color: "#5e4a8c",
                     }}>📊 IMMO</span>
                   )}
-                  {r.udi_di && (
-                    <span title={`UDI: ${r.udi_di}`} style={{
-                      padding: "2px 6px", borderRadius: 4, fontSize: 9.5, fontWeight: 700,
-                      background: "rgba(94,74,140,.12)", color: "#5e4a8c",
-                    }}>🔖</span>
-                  )}
                 </span>
               );
             } },
@@ -350,12 +367,35 @@ function MaterielsInner() {
             { key: "num_serie", label: "N° de série" },
             { key: "num_parc", label: "N° de parc" },
             { key: "num_lot", label: "N° de lot" },
+            { key: "udi_di", label: "UDI (Unique Device Identifier)", help: "Code GS1/HIBC réglementaire" },
+            { key: "marque", label: "Marque" },
+            { key: "modele", label: "Modèle" },
+            { key: "fournisseur", label: "Fournisseur" },
             { key: "patient_id", label: "Patient affecté", type: "select" },
+            { key: "chambre_id", label: "Chambre actuelle", type: "select",
+              options: chambres.map(c => ({ value: c.id, label: `Ch. ${c.nom}` })),
+            },
+            { key: "depot_id", label: "🏢 Dépôt de rattachement (EC ou magasin)", type: "select",
+              options: depots.map(d => ({
+                value: d.id,
+                label: `${d.magasin_id ? "🏬 " : "🏢 "}${d.nom}${d.magasin_id ? " (magasin)" : ""}`,
+              })),
+              help: "Dépôt étab ou dépôt magasin — détermine où est physiquement le matériel",
+            },
+            { key: "date_achat", label: "Date d'achat", type: "date" },
+            { key: "prix_achat_ht", label: "Prix d'achat HT (€)", type: "number" },
+            { key: "date_mise_service", label: "Mise en service", type: "date" },
+            { key: "duree_amortissement_mois", label: "Durée amortissement (mois)", type: "number" },
+            { key: "valeur_nette_comptable", label: "Valeur nette comptable (€)", type: "number" },
             { key: "etat", label: "État", type: "select", options: [
               { value: "Disponible", label: "Disponible" },
               { value: "En location", label: "En location" },
               { value: "Maintenance", label: "Maintenance" },
+              { value: "Hors service", label: "Hors service" },
+              { value: "Réformé", label: "Réformé" },
             ] },
+            { key: "date_prochaine_maintenance", label: "Prochaine maintenance", type: "date" },
+            { key: "notes", label: "Notes", type: "textarea" },
           ]}
           filterFields={[
             { key: "q", label: "Recherche", type: "text", searchKeys: ["libelle", "num_serie", "num_parc", "num_lot"], placeholder: "Libellé, série, parc…" },
