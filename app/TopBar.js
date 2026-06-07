@@ -64,10 +64,11 @@ const MENU = [
   // 0.62.22 : NOUVEAU - Menu STOCK regroupé
   { section: "Stock", sectionIcon: "ti-stack-2", items: [
     { p: "/stock", ic: "ti-stack-2", lbl: "Stock global", col: "#c97a2a" },
+    { p: "/articles", ic: "ti-package", lbl: "Articles", col: "#185FA5" },
     { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
     { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
     { p: "/magasins/nouveau", ic: "ti-building-warehouse", lbl: "Magasins fournisseurs", col: "#5a8f8f" },
-    { p: "/garages", ic: "ti-parking", lbl: "Garages", col: "#185FA5" },
+    { p: "/garages", ic: "ti-parking", lbl: "Garages", col: "#EF9F27" },
     { p: "/familles-articles", ic: "ti-categories", lbl: "Familles articles", col: "#7a6fb0" },
     { p: "/articles-min-stock-etape", ic: "ti-stack-pop", lbl: "Min stock par étape", col: "#e35d5b" },
   ] },
