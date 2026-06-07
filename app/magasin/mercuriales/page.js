@@ -181,7 +181,10 @@ export default function MercurialesPage() {
 
       setEditing(null);
       await reload();
-    } catch (e) { alert("Erreur : " + e.message); }
+    } catch (e) {
+      console.error("[mercuriale save]", e);
+      alert("❌ Erreur mercuriale :\n\n" + (e.message || JSON.stringify(e)) + "\n\nDétails console F12.");
+    }
     finally { setSaving(false); }
   }
 

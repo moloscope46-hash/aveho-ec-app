@@ -373,7 +373,7 @@ export default function Articles() {
                         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
                       <td style={{ padding: "8px", fontFamily: "Consolas, monospace", fontSize: 11.5, color: "#185FA5" }}>{a.reference || "—"}</td>
                       <td style={{ padding: "8px" }}>
-                        <a onClick={() => router.push(`/article/${a.id}`)} style={{ cursor: "pointer", color: "#142131", fontWeight: 600, textDecoration: "none" }} title="Ouvrir la fiche détaillée">{a.libelle}</a>
+                        <a onClick={() => editArticle(a)} style={{ cursor: "pointer", color: "#142131", fontWeight: 600, textDecoration: "none" }} title="Éditer l'article">{a.libelle}</a>
                         {a.dispositif_medical && <span style={{ marginLeft: 5, fontSize: 9, background: "#fde4e1", color: "#c0392b", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>DM{a.classe_dm ? ` ${a.classe_dm}` : ""}</span>}
                         {a.sterile && <span style={{ marginLeft: 4, fontSize: 9, background: "#dbe7f5", color: "#185FA5", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }} title="Stérile">✦</span>}
                         {a.usage_unique && <span style={{ marginLeft: 4, fontSize: 9, background: "#fff8ec", color: "#7a4f15", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }} title="Usage unique">UU</span>}

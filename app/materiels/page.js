@@ -10,7 +10,7 @@ import { useCurrentContext } from "../../lib/useCurrentContext";
 import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHead, Statut, Modal, Btn } from "../ui";
 import { getEtatMeta } from "../materiel/[id]/page";
 import { PageHero } from "../components/ui-premium";
@@ -23,6 +23,9 @@ export default function Materiels() {
   const supabase = createClient();
   const auth = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // 0.62.2 : Pré-filtre via query string (ex: /materiels?article_id=XXX)
+  const filterArticleId = searchParams.get("article_id");
   const cart = useCart();
   const [rel, setRel] = useState({ article_id: [], patient_id: [] });
   const [relReady, setRelReady] = useState(false);
@@ -261,10 +264,12 @@ export default function Materiels() {
           table="materiels"
           title="Nouveau matériel"
           relations={rel}
-          extraFilter={ctx.active ? (r) => {
+          extraFilter={(ctx.active || filterArticleId) ? (r) => {
             // 0.58.62 : combine filtre patient (bât/svc) ET filtre équipe
-            if (ctxPatientIds && (!r.patient_id || !ctxPatientIds.has(r.patient_id))) return false;
-            if (ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
+            if (ctx.active && ctxPatientIds && (!r.patient_id || !ctxPatientIds.has(r.patient_id))) return false;
+            if (ctx.active && ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
+            // 0.62.2 : filtre par article_id depuis URL
+            if (filterArticleId && r.article_id !== filterArticleId) return false;
             return true;
           } : null}
           columns={[

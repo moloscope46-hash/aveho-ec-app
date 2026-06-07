@@ -89,7 +89,10 @@ export default function CatalogueMagasinPage() {
       }
       setEditing(null);
       await reload();
-    } catch (e) { alert("Erreur : " + e.message); }
+    } catch (e) {
+      console.error("[catalogue save]", e);
+      alert("❌ Erreur création article :\n\n" + (e.message || JSON.stringify(e)) + "\n\nDétails console F12.");
+    }
     finally { setSaving(false); }
   }
 

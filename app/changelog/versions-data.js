@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.2",
+    "kind": "fix",
+    "titre": "🔧 Fix ciblés (analyse existant, pas de doublons) : éditer article ouvre le modal, /materiels lit ?article_id=X, erreurs CRUD magasin visibles",
+    "chantiers": [
+      { "code": "AI", "txt": "🐛 **Click libellé article → ouvre le modal d'édition** : avant, `<a onClick={() => router.push(`/article/${a.id}`)}` redirigeait vers la fiche détaillée. Maintenant `onClick={() => editArticle(a)}` ouvre directement le modal en place. Le crayon (IconButton) faisait déjà ça correctement" },
+      { "code": "AI", "txt": "🐛 **`/materiels` lit maintenant `?article_id=X`** : import de `useSearchParams`, lecture du param `article_id`, ajout dans `extraFilter` pour pré-filtrer la liste matériels par article. Maintenant le lien 'Voir la liste →' depuis le modal article fonctionne correctement" },
+      { "code": "AI", "txt": "🐛 **Erreurs CRUD magasin maintenant visibles** : pages `/magasin/catalogue` et `/magasin/mercuriales` ajoutent `console.error()` détaillé + alert enrichi `❌ Erreur création article : <message>\\n\\nDétails console F12.`. Si une création échoue silencieusement, l'erreur exacte sera visible (probable cause : RLS strict, colonne manquante, ou magasin_id non défini)" },
+      { "code": "INFO", "txt": "🎯 **Pour débuguer 'rien ne se crée côté magasin'** : (1) Ouvre console F12. (2) Tente de créer un article catalogue magasin. (3) Si erreur → copie-colle moi le message exact ou la sortie console. Sans erreur on tourne en rond" }
+    ],
+    "themes": ["fix", "articles", "materiels", "magasin"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.1",
     "kind": "feat",
     "titre": "🔧 Workflow EC→Magasin pour les DI : intervention sur matériel rattaché magasin remonte auto dans /magasin?tab=di",
