@@ -7,6 +7,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+// 0.62.66 : confinement magasin
+import { useMagasinContext } from "../../../lib/useMagasinContext";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
@@ -32,6 +34,8 @@ export default function ReceptionsPage() {
   const router = useRouter();
   const auth = useAuth();
   const cart = useCart();
+  // 0.62.66 : confinement magasin (chauffeur/magasinier ne voit que SON magasin + ses étabs autorisés)
+  const magasinCtx = useMagasinContext();
   const [receptions, setReceptions] = useState({ fournisseur: [], transfert: [], demande: [] });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -46,17 +50,36 @@ export default function ReceptionsPage() {
   async function reload() {
     setLoading(true);
     try {
+      // 0.62.66 : Confinement magasin — si user lié à un magasin, ne récupère que les commandes/transferts de CE magasin
+      const magId = magasinCtx.magasinId;
+
       // 1. BL fournisseurs en attente (commande envoyée non encore reçue)
-      const fournR = await supabase.from("commandes_fournisseurs")
-        .select("id, numero, date_commande, date_livraison_prevue, statut, fournisseur_id")
+      let fournQ = supabase.from("commandes_fournisseurs")
+        .select("id, numero, date_commande, date_livraison_prevue, statut, fournisseur_id, magasin_id")
         .in("statut", ["envoyee", "confirmee", "partiellement_recue"])
         .order("date_livraison_prevue", { ascending: true });
+      if (magId) fournQ = fournQ.eq("magasin_id", magId);
+      const fournR = await fournQ;
 
-      // 2. Transferts entrants en attente (vers ce magasin)
-      const transR = await supabase.from("transferts")
-        .select("id, numero, motif, priorite, statut, depot_destination_id, created_at")
-        .in("statut", ["valide", "en_transit"])
-        .order("created_at", { ascending: false });
+      // 2. Transferts entrants en attente (vers ce magasin) — filtre depot_destination_id IN dépôts du magasin
+      let transR = { data: [] };
+      if (magId) {
+        const depotsR = await supabase.from("depots").select("id").eq("magasin_id", magId);
+        const myDepotIds = (depotsR.data || []).map(d => d.id);
+        if (myDepotIds.length > 0) {
+          transR = await supabase.from("transferts")
+            .select("id, numero, motif, priorite, statut, depot_destination_id, created_at")
+            .in("statut", ["valide", "en_transit"])
+            .in("depot_destination_id", myDepotIds)
+            .order("created_at", { ascending: false });
+        }
+      } else {
+        // Pas de contexte magasin = user structure → voit tout
+        transR = await supabase.from("transferts")
+          .select("id, numero, motif, priorite, statut, depot_destination_id, created_at")
+          .in("statut", ["valide", "en_transit"])
+          .order("created_at", { ascending: false });
+      }
 
       // 3. Demandes internes avec retour matériel
       const diR = await supabase.from("demandes_internes")
@@ -111,6 +134,11 @@ export default function ReceptionsPage() {
   }), [receptions, allRows]);
 
   function openReception(row) {
+    // 0.62.65 : pour les fournisseurs, on va sur la page détail avec saisie ligne par ligne
+    if (row._source === "fournisseur") {
+      router.push(`/magasin/receptions/${row.id}`);
+      return;
+    }
     setScanForm({
       source: row._source,
       source_id: row.id,

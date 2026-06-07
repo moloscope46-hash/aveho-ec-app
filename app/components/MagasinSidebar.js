@@ -30,6 +30,7 @@ const MAG_NAV = [
     { p: "/magasin/marketplace", ic: "ti-shopping-cart-plus", lbl: "Marketplace inter-magasins", col: "#EF9F27" },
     { p: "/magasin/pieces-marketplace", ic: "ti-tool", lbl: "Marketplace pièces détachées", col: "#e35d5b" },
     { p: "/magasin/fournisseurs", ic: "ti-truck", lbl: "Fournisseurs", col: "#185FA5" },
+    { p: "/magasin/receptions", ic: "ti-package-import", lbl: "Réceptions (BL + transferts + DI)", col: "#5aa05a" },
     { p: "/magasin/recyclage", ic: "ti-recycle", lbl: "Recyclage & valorisation", col: "#5aa05a" },
   ]},
   // 0.61.3 : Flotte & livraisons

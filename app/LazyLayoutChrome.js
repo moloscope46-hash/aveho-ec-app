@@ -43,6 +43,8 @@ const MagasinBottomNav = dynamic(() => import("./components/MagasinBottomNav").t
 const PwaInstallPrompt = dynamic(() => import("./components/PwaInstallPrompt").then(m => m.PwaInstallPrompt), { ssr: false });
 // 0.62.9 : FAB création rapide magasin
 const MagasinFab = dynamic(() => import("./components/MagasinFab").then(m => m.MagasinFab), { ssr: false });
+// 0.62.66 : Indicateur sync hors-ligne
+const OfflineSyncIndicator = dynamic(() => import("./components/OfflineSyncIndicator"), { ssr: false });
 
 export default function LazyLayoutChrome() {
   // 0.62.62 : scroll listener pour body.scrolled (active backdrop blur + shadow topbar)
@@ -84,6 +86,8 @@ export default function LazyLayoutChrome() {
       {/* 0.62.9 : FAB création rapide magasin (mode magasin only) */}
       <MagasinFab />
       <PwaInstallPrompt />
+      {/* 0.62.66 : Indicateur sync hors-ligne (chauffeurs en tournée) */}
+      <OfflineSyncIndicator />
     </>
   );
 }

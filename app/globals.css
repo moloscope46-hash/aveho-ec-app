@@ -4414,3 +4414,172 @@ body.scrolled .topbar {
 .av-tab-content .av-page-hero {
   display: none !important;
 }
+
+/* =============================================================
+   0.62.65 — Plus de polish UI/UX
+   ============================================================= */
+
+/* Tooltips premium avec data-tooltip */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  padding: 5px 10px;
+  background: linear-gradient(135deg, #142131, #1a2840);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms, transform 150ms;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Skeleton premium pour les listes */
+.av-skeleton {
+  background: linear-gradient(90deg, #f0f4f8 25%, #e3e9ee 50%, #f0f4f8 75%);
+  background-size: 200% 100%;
+  animation: av-skeleton-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes av-skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Effets sur les images : hover zoom subtil */
+img[data-zoom="true"]:hover {
+  transform: scale(1.05);
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrollbar custom plus discret */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(20,33,49,.04);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(20,33,49,.18);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(20,33,49,.32);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* Sélection de texte couleur AVEHO */
+::selection {
+  background: rgba(124,200,200,.4);
+  color: #142131;
+}
+
+/* Détail réception : highlight ligne au scan */
+@keyframes av-flash-success {
+  0%, 100% { background: transparent; }
+  30% { background: rgba(94,160,90,.25); }
+}
+.av-flash-success {
+  animation: av-flash-success 600ms ease-out;
+}
+
+/* Disabled state pour les boutons primary */
+button:disabled:not([class*="ghost"]) {
+  background: linear-gradient(135deg, #c0d0d8, #aab8c0) !important;
+  cursor: not-allowed !important;
+  opacity: 1 !important;
+  filter: grayscale(.5);
+}
+
+/* Modals : animation premium d'entrée */
+.modal-overlay {
+  animation: av-modal-fade-in 200ms ease-out;
+}
+.modal-content {
+  animation: av-modal-pop-in 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes av-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes av-modal-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* PageHead : effet brillance sur l'icône au load */
+.av-page-hero > div > div:first-child {
+  position: relative;
+  overflow: hidden;
+}
+.av-page-hero > div > div:first-child::after {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,.2) 50%, transparent 70%);
+  animation: av-icon-shine 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes av-icon-shine {
+  0%, 100% { transform: translateX(-100%) translateY(-100%); opacity: 0; }
+  50% { transform: translateX(0) translateY(0); opacity: 1; }
+  60% { transform: translateX(100%) translateY(100%); opacity: 0; }
+}
+
+/* Forms : labels uppercase letterSpacing premium */
+.av-tab-content label > span:first-child,
+.panel label > span:first-child {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #5a6878;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 3px;
+}
+
+/* Progress bars premium animation */
+.av-progress-bar {
+  background: linear-gradient(90deg, #7CC8C8, #185FA5);
+  height: 8px;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(124,200,200,.4);
+}
+
+/* Pills/Badges premium */
+.av-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}

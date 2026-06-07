@@ -6,6 +6,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+// 0.62.66 : confinement magasin
+import { useMagasinContext } from "../../../lib/useMagasinContext";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
@@ -43,6 +45,8 @@ export default function RecyclagePage() {
   const router = useRouter();
   const auth = useAuth();
   const cart = useCart();
+  // 0.62.66 : confinement magasin
+  const magasinCtx = useMagasinContext();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tableMissing, setTableMissing] = useState(false);
@@ -60,10 +64,13 @@ export default function RecyclagePage() {
   async function reload() {
     setLoading(true);
     try {
-      const r = await supabase.from("materiels_retour")
+      let q = supabase.from("materiels_retour")
         .select("*")
         .order("date_retour", { ascending: false })
         .limit(200);
+      // 0.62.66 : confinement magasin
+      if (magasinCtx.magasinId) q = q.eq("magasin_id", magasinCtx.magasinId);
+      const r = await q;
       if (r.error?.code === "42P01") setTableMissing(true);
       setRows(r.data || []);
     } catch (e) { console.error(e); }
@@ -107,6 +114,7 @@ export default function RecyclagePage() {
       await supabase.from("materiels_retour").insert({
         numero,
         structure_id: auth.structureId,
+        magasin_id: magasinCtx.magasinId || null,  // 0.62.66 : confinement
         date_retour: form.date_retour,
         motif: form.motif,
         etat_visuel: form.etat_visuel,
