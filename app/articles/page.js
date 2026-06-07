@@ -20,6 +20,7 @@ import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 // 0.62.60 : PageToolbar universel
 import PageToolbar from "../components/PageToolbar";
+import ImageUploader from "../components/ImageUploader";  /* 0.62.88 */
 import { EmptyState, SkeletonRow, toast } from "../components/ui-premium";
 import { fmtEur } from "../../lib/format";
 import { generateEan13, isValidEan13, detectBarcodeType, generateEan13Svg } from "../../lib/barcode";
@@ -500,6 +501,17 @@ export default function Articles() {
             {/* Tab : Général */}
             {activeTab === "general" && (
               <>
+                {/* 0.62.88 : Photo article */}
+                <div style={{ marginBottom: 14 }}>
+                  <ImageUploader
+                    value={form.photo_url}
+                    onChange={(url) => setForm({ ...form, photo_url: url })}
+                    bucket="articles-photos"
+                    folder={modal?.id || "nouveau"}
+                    label="Photo article"
+                    maxSizeMB={3}
+                  />
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
                   <div className="fld"><label>Référence</label>
                     <input value={form.reference || ""} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder="REF-001" style={{ fontFamily: "Consolas, monospace" }} />

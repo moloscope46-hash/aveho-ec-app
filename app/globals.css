@@ -5927,3 +5927,94 @@ body.av-anim-off .av-page-hero {
   100% { top: 100%; opacity: 0; }
 }
 
+
+/* =============================================================
+   0.62.90 — Fix DÉFINITIF toolbar mobile (regroupement boutons)
+   ============================================================= */
+@media (max-width: 768px) {
+  /* Toolbar : 1ère ligne = action principale + Plus, 2ème ligne = stats/filtres */
+  .di-toolbar, .av-pagetoolbar, [class*="toolbar"] {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    overflow: visible !important;
+  }
+
+  /* Boutons toolbar : reduce font + padding */
+  .di-toolbar > button,
+  .av-pagetoolbar > button,
+  [class*="toolbar"] > button {
+    flex: 0 1 auto !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+
+  /* Bouton primary (Nouveau X) prend toute la largeur si seul */
+  .di-toolbar > button:first-child:last-of-type,
+  .di-toolbar > .neon-btn:first-child:last-of-type {
+    flex: 1 1 100% !important;
+  }
+
+  /* Compteurs/stats inline en pleine largeur sous les boutons */
+  .di-toolbar [class*="stat"],
+  .di-toolbar [class*="count"],
+  .di-toolbar [class*="badge"] {
+    flex: 1 1 100% !important;
+    order: 99;
+  }
+
+  /* Icon-only buttons en groupe à droite */
+  .di-toolbar button[aria-label]:not(:has(span)),
+  button.tb-icon {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    flex: 0 0 40px !important;
+  }
+}
+
+/* === Grosses flèches navigation DI === */
+.av-big-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #fff, #fafbfc);
+  border: 2px solid #e3e9ee;
+  border-radius: 14px;
+  color: #5a6878;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 56px;
+  box-shadow: 0 2px 6px rgba(20,33,49,.04);
+}
+.av-big-arrow:hover {
+  border-color: #185FA5;
+  color: #185FA5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(24,95,165,.18);
+}
+.av-big-arrow.active {
+  background: linear-gradient(135deg, #185FA5, #7CC8C8);
+  color: #fff;
+  border-color: #185FA5;
+  box-shadow: 0 4px 12px rgba(24,95,165,.4);
+}
+.av-big-arrow i.ti {
+  font-size: 22px;
+}
+
+
+/* Mobile : cacher pills onglets (les grosses flèches suffisent) */
+@media (max-width: 768px) {
+  .di-tabs-pills {
+    display: none !important;
+  }
+}
+

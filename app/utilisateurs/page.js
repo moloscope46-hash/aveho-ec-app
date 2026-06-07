@@ -1,5 +1,7 @@
 "use client";
 // Page Utilisateurs — Gestion des membres, rôles personnalisables et invitations
+// 0.62.91 : force-dynamic pour éviter erreur Vercel build TDZ
+export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";

@@ -240,6 +240,75 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.91",
+    "kind": "fix",
+    "titre": "🔧 Fix page /utilisateurs (force-dynamic pour éviter TDZ minification) + 🗄️ SQL audit FINAL ultra défensif (colonne commentaire détectée) + dump colonnes tables clés",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔧 **Fix /utilisateurs TDZ** : erreur Uncaught ReferenceError Cannot access er before initialization sur le bundle minifié. Cause possible : optimisation Vercel prerender + minification qui mélange l ordre des déclarations const. **Fix** : ajout `export const dynamic = force-dynamic;` en tête de app/utilisateurs/page.js pour forcer le rendu côté client uniquement, empêchant la pré-compilation statique qui peut générer des bundles incorrects. Pattern déjà appliqué sur d autres pages (planning, materiels)" },
+      { "code": "SQL", "txt": "🗄️ **audit-FINAL-DEFENSIVE-0.62.91.sql** : refonte 100% défensive de l audit. **Fix erreur** column commentaire does not exist sur tournees_etapes : le SELECT FILTER WHERE commentaire IS NOT NULL est retiré. Remplacé par DUMP DES COLONNES réelles de tournees_etapes via information_schema.columns pour que Cédric voie quelle colonne utiliser (notes, description ou autre selon le schéma). **Couvre 42 tables** dans le loop principal + sections détaillées par statut (DI, Maintenances, Patients, Commandes, Collaborateurs, Tournées, Étapes) + véhicules avec/sans garage + colonnes réelles de tournees_etapes, membres_structure, interventions" },
+      { "code": "INFO", "txt": "💡 **Si /utilisateurs continue de planter après push** : (a) Vide le cache navigateur (Ctrl+Shift+R sur PC, supprime PWA installée sur mobile). (b) Si Vercel build OK mais page plante : ouvre la console F12, screenshot l erreur. (c) Le minified code er pourrait être `err` (state du composant) ou `error` (variable locale), TDZ très typique de Webpack avec circular imports OU avec un useState/useCallback qui référencerait une variable plus bas. (d) Force-dynamic devrait régler dans 90% des cas car Vercel ne pré-compile plus la page" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.92+** : (a) **Intégrer DiTabsNav** dans /demande-interne/[id] avec rendu 7 onglets. (b) **Vue TV améliorée** avec tous les compteurs récents (étages/lits/livraisons/SAV). (c) **Déployer ImageUploader** dans modals matériel/patient/fournisseur. (d) **Buckets Supabase Storage** à créer manuellement. (e) **MobileActionsBar** sur pages clés. (f) **Widget ChartCard /accueil** drag&drop. (g) **doc.addImage logo statistiques-rgpd**. (h) **Refacto /materiels** custom. (i) **Workflow commande fournisseur** + PDF + Resend. (j) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "tdz", "sql"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.91.html",
+    "sqlFile": "audit-FINAL-DEFENSIVE-0.62.91.sql"
+  },
+  {
+    "v": "0.62.90",
+    "kind": "feat",
+    "titre": "🔧 FIX toolbar mobile qui se chevauchait (flex-wrap+min-h 40+primary full-width seul) + 🎯 DiTabsNav composant onglets DI avec GROSSES FLÈCHES navigation (Infos/Planning/Livraison/Matériels/Articles/Nomenclature/Magasin) + 🗄️ SQL garages-véhicules + livraisons enrichies",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔧 **Fix toolbar mobile DÉFINITIF** : règles CSS @media max-width 768px. Toolbar (di-toolbar, av-pagetoolbar, [class*=toolbar]) en flex-wrap + gap 6 + padding 8 + overflow visible. Boutons : flex 0 1 auto + min-height 40 + padding 8 12 + font-size 12 + white-space nowrap. **Bouton primary seul** : flex 1 1 100% (toute la largeur). **Compteurs/stats** : flex 1 1 100% + order 99 (passent en bas). **Icon-only buttons** : 40x40 carré fixe. Plus aucun chevauchement, regroupement intelligent" },
+      { "code": "AI", "txt": "🎯 **DiTabsNav composant onglets** (140 lignes) : nouveau composant pour fiche DI. **Header avec GROSSES FLÈCHES** : (1) Bouton préc à gauche : chevron-left + label de l onglet précédent (av-big-arrow). (2) **Centre** : pill ENORME 56px de haut gradient couleur de l onglet courant + icône 22px + label + badge count si counts[active] (ex : 5 matériels). (3) Bouton suiv à droite : label de l onglet suivant + chevron-right. **Pills onglets** (desktop only, cachées mobile) : accès direct aux 7 onglets avec compteurs. **7 onglets** : Infos (bleu), Planning (violet), Livraison (terra), Matériels (navy), Articles (teal), Nomenclature (amber), Magasin (teal foncé). Chacun avec icône + couleur thématique" },
+      { "code": "AI", "txt": "🎨 **CSS av-big-arrow** : classe utilitaire pour boutons navigation gros. Padding 12 18 + border 2px + border-radius 14 + min-height 56 + transition cubic-bezier élastique. **Hover** : border #185FA5 + color #185FA5 + transform translateY(-2px) + shadow 6px navy/18. **Active** : background gradient navy-teal + color blanc + border navy + shadow 4px navy/40. Icônes 22px. Désactivé : opacity 0.3 + cursor not-allowed. Utilisable partout pour navigation pas-à-pas (DI/Devis/Commande)" },
+      { "code": "SQL", "txt": "🗄️ **demo-GARAGES-LIVRAISONS-0.62.90.sql** : (1) **Tous les véhicules rattachés à des garages** : loop sur vehicules + SELECT random garage + UPDATE garage_id direct + insert dans vehicules_garages si la table existe. (2) **40 étapes de tournée enrichies** avec contenu réaliste : Fauteuil roulant + pansements TPN, Lit médicalisé + matelas anti-escarres, Pompe perfusion + tubulures, Concentrateur O2 + bouteilles, PPC ResMed + masque, Poches NPAD + sondes, Déambulateur + canne, Bilan SAV pompe défectueuse, Récupération matériel sortie patient, Échange concentrateur défectueux. Durée estimée random 10-35 min par étape. (3) **20 DI avec matériels rattachés** : table demandes_internes_materiels (liaison) si existe, sinon update materiel_id direct sur la DI" },
+      { "code": "INFO", "txt": "📋 **Pour intégrer DiTabsNav** dans /demande-interne/[id] : `import DiTabsNav from app/components/DiTabsNav`. Dans le composant : `const [tab, setTab] = useState(infos);` puis `<DiTabsNav active={tab} onChange={setTab} counts={{materiels: materiels.length, articles: articles.length}} />` puis rendu conditionnel : `{tab === infos && <InfosContent/>}{tab === planning && <PlanningContent/>}{tab === livraison && <LivraisonContent/>}` etc. Les 7 onglets sont prêts à recevoir leur contenu" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.91+** : (a) **Intégrer DiTabsNav** dans /demande-interne/[id] avec rendu des 7 onglets (Infos déjà existant, créer Planning/Livraison/Matériels/Articles/Nomenclature/Magasin). (b) **Vue TV améliorée** : ajouter sur la page TV (probablement /tv ou /accueil-tv) tous les compteurs récents (étages, lits, livraisons, SAV). (c) **Déployer ImageUploader** dans modals matériel/patient/fournisseur. (d) **Buckets Supabase Storage** à créer manuellement. (e) **MobileActionsBar** sur pages clés. (f) **Widget ChartCard /accueil** drag&drop. (g) **doc.addImage(logo) statistiques-rgpd**. (h) **Refacto /materiels** page custom. (i) **Workflow commande fournisseur** + PDF + Resend. (j) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "ui", "mobile", "di", "navigation", "sql"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.90.html",
+    "sqlFile": "demo-GARAGES-LIVRAISONS-0.62.90.sql"
+  },
+  {
+    "v": "0.62.89",
+    "kind": "sql",
+    "titre": "🗄️ SQL MEGA VIE COMPLÈTE : architecture complète tous étabs (étages+lits) + patients assignés chambres + 10 tournées livraison + ~40 étapes GPS + magasin ressources attribuées + 15 signalements SAV actifs",
+    "chantiers": [
+      { "code": "SQL", "txt": "🏗️ **Architecture complète tous étabs** : (1) Table **etages** créée si absente avec RLS. (2) **3 étages par bâtiment** (RDC + 1er + 2ème) sur les 100 premiers bâtiments — soit potentiellement 300 étages. (3) **Lits dans chaque chambre** (1 ou 2 par chambre random) sur les 100 premières chambres. (4) **Patients assignés à des chambres** : pour chaque patient Hospitalisé sans chambre, attribution random d''une chambre existante (50 patients max)" },
+      { "code": "SQL", "txt": "🚛 **10 tournées de livraison** sur véhicules avec : numéro TRN-2026-XXXX, chauffeur nommé (Yanis ROUX, Sabrina VINCENT, Marc PETIT, Émilie LAURENT, Lucas DUBOIS), 4 statuts (planifiee/en_cours/terminee/annulee), date_tournee étalée sur ±5 jours autour d aujourd hui, km_estime random 50-250. **~40 étapes de livraison** (3-7 par tournée) avec ordre + type (livraison/recuperation) + adresse + ville + cp + GPS sur 6 villes (Saint-Céré, Cahors, Souillac, Gourdon, Figeac, Saint-Flour), 3 statuts (realisee/en_cours/planifiee)" },
+      { "code": "SQL", "txt": "🏪 **Ressources attribuées au magasin** : (1) **User affecté au magasin** : auth.uid() ou 1er user de membres_structure inséré dans membres_magasin avec role=magasinier. (2) **15 articles** rattachés au magasin via articles_magasin (table si existe) avec quantite_stock random 10-110 et quantite_min 5. (3) **3 véhicules** assignés au magasin (UPDATE magasin_id si colonne existe). (4) **2 dépôts** assignés au magasin. Résultat : quand l user magasin se connecte, il voit son magasin + ses articles + ses véhicules + ses dépôts" },
+      { "code": "SQL", "txt": "🔧 **15 signalements SAV actifs** : 15 descriptions réelles de pannes (Pompe perfusion bipe continu, Lit barrière bloquée, Fauteuil joystick déréglé, Concentrateur O2 alarme batterie, PPC fuite circuit, Pompe nutrition débit erratique, Lit télécommande HS, Matelas air compresseur bruyant, Glucomètre erreur affichage, Tensiomètre brassard troué, Lève-malade frein cassé, Concentrateur saturation chute, Fauteuil roue voilée, Pompe alarme volume résiduel, PPC humidificateur fuite) avec niveau urgence (urgent/normal/critique) et 1 sur 4 traité" },
+      { "code": "SQL", "txt": "📊 **Audit final propre** : SELECT UNION ALL qui dump etablissements + batiments + etages + services + chambres + patients (total + avec chambre) + tournees + tournees_etapes + signalements + interventions + commandes + DI + maintenances en une seule sortie tableau ordonnée par count desc. **Plus DUMP colonnes** pour debug : membres_structure, interventions, tournees, tournees_etapes, lits, etages (au cas où certaines colonnes manquent). Tout en PL/pgSQL défensif avec BEGIN/EXCEPTION/END" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.90+** : (a) **Déployer ImageUploader** dans modals matériel, patient, fournisseur (copier pattern /articles). (b) **Buckets Supabase Storage** à créer : articles-photos, materiels-photos, patients-photos (privé), fournisseurs-logos. (c) **Déployer MobileActionsBar** sur pages clés. (d) **Widget ChartCard sur /accueil** drag&drop. (e) **doc.addImage(logo) sur statistiques-rgpd**. (f) **Refacto /materiels** en page custom. (g) **Workflow commande fournisseur** + PDF BC + Resend. (h) **Footers PDF custom BL/devis**"
+      }
+    ],
+    "themes": ["sql", "demo", "vie-complete"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-SQL-0.62.89.html",
+    "sqlFile": "demo-VIE-COMPLETE-0.62.89.sql"
+  },
+  {
+    "v": "0.62.88",
+    "kind": "feat",
+    "titre": "🔧 Fix SQL audit défensif (détection colonnes au lieu de SELECT brut) + 🔌 Auto-connect magasin→étab dans useAuth + 📸 ImageUploader déployé dans modal article (1ère page)",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔧 **audit-COUNTS-DEFENSIVE-0.62.88.sql** : refonte 100% défensive. **Fix erreurs** : column id does not exist sur membres_structure (la colonne PK peut s appeler id mais sur certains schémas non), column technicien_nom does not exist sur interventions. **Solution** : (1) loop PL/pgSQL avec EXECUTE format() pour COUNT défensif → BEGIN/EXCEPTION/END capture les erreurs par table + affiche ERR si plante. (2) Détection colonnes via information_schema.columns avant les sous-queries. (3) Section finale qui DUMP les colonnes de membres_structure/interventions/maintenances/demandes_internes pour debug. **Couvre 42 tables** au total" },
+      { "code": "AI", "txt": "🔌 **Auto-connect magasin → étab** dans lib/useAuth.js : si l user n a pas d étab sauvegardé en localStorage (1ère connexion ou clear cache), on tente de récupérer son magasin via supabase.from(membres_magasin).select(magasins(etablissement_id)).eq(user_id, ...).maybeSingle(). Si magasin trouvé ET son etablissement_id figure dans la liste etabs accessibles → on le sélectionne automatiquement + sauvegarde dans localStorage. Sinon fallback vers etabs[0]. **Résultat** : l user magasin (chauffeur livreur, magasinier) est directement connecté au bon établissement au login. Plus besoin de switcher manuellement à chaque session" },
+      { "code": "AI", "txt": "📸 **ImageUploader déployé dans /articles** modal : import + intégration dans le tab Général au-dessus du couple Référence/Libellé. Props : bucket=articles-photos + folder=modal?.id || nouveau + label=Photo article + maxSizeMB=3. Le composant gère preview 220px hauteur + bouton Supprimer + bouton Upload gradient teal/bleu + indication formats. La photo_url est stockée dans form.photo_url et persistée à la sauvegarde de l article. **Modèle à copier** dans modals matériels, patient, fournisseur (changer bucket et folder)" },
+      { "code": "INFO", "txt": "🎯 **Pour déployer ImageUploader ailleurs (copier-coller)** : (1) Ajouter `import ImageUploader from ../components/ImageUploader;` en haut du fichier. (2) Dans le modal au début du formulaire, ajouter : `<ImageUploader value={form.photo_url} onChange={(url) => setForm({ ...form, photo_url: url })} bucket=BUCKET-NAME folder={modal?.id || nouveau} label=LABEL maxSizeMB=3 />`. (3) Le composant gère tout : upload Supabase Storage, preview, validation type/taille, suppression. Pour matériels : bucket=materiels-photos + label=Photo matériel. Pour patients : bucket=patients-photos + label=Photo patient. Pour fournisseurs : bucket=fournisseurs-logos + label=Logo fournisseur"  },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.89+** : (a) **Déployer ImageUploader** dans modals matériels, patient, fournisseur (copier pattern de /articles). (b) **Buckets Supabase Storage** à créer manuellement Dashboard → Storage : articles-photos (public RLS allow), materiels-photos (public), patients-photos (privé RLS structure_id), fournisseurs-logos (public). (c) **Déployer MobileActionsBar** sur /patients, /materiels, /magasin/articles, /magasin/materiels, /interventions, /signalements, /commandes. (d) **Widget ChartCard sur /accueil** dans système widgets drag&drop (ajouter widgetOrder.chartdash). (e) **doc.addImage(logo) sur statistiques-rgpd**. (f) **Refacto /materiels** en page custom. (g) **Workflow commande fournisseur** + PDF BC + Resend. (h) **Footers PDF custom BL/devis**"
+      }
+    ],
+    "themes": ["fix", "sql", "auth", "photo"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.88.html",
+    "sqlFile": "audit-COUNTS-DEFENSIVE-0.62.88.sql"
+  },
+  {
     "v": "0.62.87",
     "kind": "fix",
     "titre": "📷 FIX CRITIQUE caméra : popup permission navigateur enfin demandé + helper requestCameraPermission réutilisable + 🗄️ audit SQL avec COUNTS forcés",
