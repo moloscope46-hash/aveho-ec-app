@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.102",
+    "kind": "fix",
+    "titre": "🎯 OVERRIDE FINAL tuiles : 6 règles CSS conflictuelles trouvées (isolation:isolate persistante ligne 5837) → force overflow:visible + isolation:auto + animation off + opacity 1 partout. + RAPPEL PUSH ULTRA IMPORTANT",
+    "chantiers": [
+      { "code": "FIX", "txt": "🎯 **TUILES TROUVÉE LA CAUSE RÉELLE** : audit a montré 6 règles CSS qui appliquaient soit isolation:isolate soit overflow:hidden sur `[data-3d=true]`. Mon fix 0.62.98 ne touchait QUE la règle ligne 6035, mais ligne 5837 (règle 0.62.86) gardait `isolation: isolate` actif. **Fix 0.62.102** : ajout d un BLOC OVERRIDE FINAL en bas du CSS qui force : overflow:visible !important + isolation:auto !important sur les tuiles, z-index -1 sur tous les ::before/::after, position relative + z-index 1 sur les enfants, animation none + opacity 1 sur les tuiles dans .av-stagger (au cas où l animation av-tile-entrance laisse opacity 0), opacity 1 + visibility visible !important pour garantir affichage" },
+      { "code": "INFO", "txt": "⚠️ **POURQUOI TU VOIS ENCORE LES 404 et 400** : l URL `select=magasin_id` (sans la jointure magasins) prouve que tu as la version 0.62.98 ou 0.62.99 sur Vercel. Mais le bloc est COMPLÈTEMENT DÉSACTIVÉ en 0.62.100. Et le 400 etablissements_partenaires?archive=eq.false est aussi FIXÉ en 0.62.100. **TU N AS PAS PUSH 0.62.100/101/102 !** Sans push, mes fixes ne sont pas déployés sur Vercel. Procédure obligatoire : (1) Décompresse le ZIP. (2) `npm install --legacy-peer-deps`. (3) `npm run build`. (4) **`git add -A && git commit -m 0.62.102 && git push origin main`**. (5) Attendre 1-2 min déploiement Vercel. (6) Hard refresh Ctrl+Shift+R" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.103+** : (a) **ImageUploader patient**. (b) **Vrai favicon Aveho** logo. (c) **Buckets Supabase Storage** manuels. (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Refacto /materiels** custom. (h) **Workflow commande fournisseur** PDF+Resend. (i) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "tuiles", "critique"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.102.html"
+  },
+  {
     "v": "0.62.101",
     "kind": "fix",
     "titre": "📱 BOTTOM-SHEET pour TOUS les dropdowns TopBar mobile (CartDropdown panier, NotifBell preview, etc) — classe tb-dropdown ajoutée + CSS force fixed bottom 0",

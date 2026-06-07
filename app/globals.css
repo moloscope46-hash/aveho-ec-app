@@ -6507,3 +6507,55 @@ body.av-anim-off .av-page-hero {
   }
 }
 
+
+/* =============================================================
+   0.62.102 — OVERRIDE FINAL : tuiles JAMAIS cachées
+   Gagne par ordre (dernière règle wins en CSS)
+   ============================================================= */
+
+/* Force visibility totale sur les tuiles : aucun overflow, aucune isolation */
+[data-3d="true"],
+.av-stat-card,
+.tile-card,
+.av-tile {
+  overflow: visible !important;
+  isolation: auto !important;
+}
+
+/* Tous les pseudo-elements derrière le contenu */
+[data-3d="true"]::before,
+[data-3d="true"]::after,
+.av-stat-card::before,
+.av-stat-card::after,
+.tile-card::before,
+.tile-card::after {
+  z-index: -1 !important;
+  pointer-events: none !important;
+}
+
+/* Le contenu de la tuile TOUJOURS au-dessus */
+[data-3d="true"] > *,
+.av-stat-card > *,
+.tile-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Désactiver l'animation av-tile-entrance qui peut laisser opacity 0 */
+.av-stagger > [data-3d="true"],
+.av-stagger > .av-stat-card,
+.av-stagger > .av-kpi-premium {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Cards toujours visibles même sans hover */
+[data-3d="true"],
+.av-stat-card,
+.tile-card {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
