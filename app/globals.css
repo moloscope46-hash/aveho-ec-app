@@ -5120,3 +5120,43 @@ body.av-anim-off .av-stagger > * {
 body.av-anim-off .av-page-hero {
   animation: none !important;
 }
+
+/* =============================================================
+   0.62.74 — MobileContextPicker + PWA polish
+   ============================================================= */
+
+/* Bouton context mobile : visible seulement < 768px */
+@media (max-width: 768px) {
+  .mobile-context-btn {
+    display: inline-flex !important;
+  }
+  /* Cacher le etab-switch classique en mobile (remplacé par le picker) */
+  .topbar .etab-switch {
+    display: none !important;
+  }
+}
+@media (min-width: 769px) {
+  .mobile-context-btn {
+    display: none !important;
+  }
+}
+
+/* PWA install banner : visible et bien placé */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 9000;
+  background: linear-gradient(135deg, #142131, #1c5454);
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(20,33,49,.4);
+  animation: av-slide-up-fade 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes av-slide-up-fade {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

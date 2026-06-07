@@ -24,6 +24,7 @@ import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
 // 0.58.87 : mini-panier dropdown style Amazon
 import CartDropdown from "./components/CartDropdown";
 import StructureLogo from "./components/StructureLogo";  /* 0.62.69 */
+import MobileContextPicker from "./components/MobileContextPicker";  /* 0.62.74 */
 // 0.61.4 : adapter TopBar selon mode magasin (catalogue, panier, etc.)
 import { useViewMode } from "../lib/useViewMode";
 
@@ -320,6 +321,8 @@ export default function TopBar({ cartCount = 0, auth }) {
             </select>
           </div>
         )}
+        {/* 0.62.74 : Bouton context mobile (popup avec étab/bât/svc) */}
+        {mounted && auth && <MobileContextPicker auth={auth} />}
         {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) */}
         {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
         {mounted && auth && <NotifBell structureId={auth.structureId} userId={auth.user?.id} />}

@@ -56,7 +56,7 @@ const MAG_NAV = [
   ]},
 ];
 
-export default function MagasinSidebar() {
+function MagasinSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const auth = useAuth();
@@ -279,3 +279,7 @@ export default function MagasinSidebar() {
     </>
   );
 }
+
+
+export default MagasinSidebar;
+export { MagasinSidebar };
