@@ -90,10 +90,11 @@ export default function Utilisateurs() {
   const [filtreStatut, setFiltreStatut] = useState("actifs"); // 'actifs' | 'archives' | 'tous'
   // 0.62.52 : pagination grande liste membres (TODO depuis 0.58.31)
   const [membresPage, setMembresPage] = useState(0);
-  useEffect(() => { setMembresPage(0); }, [searchMembres, filtreStatut]); // reset page au filtre
   const [filtreInvit, setFiltreInvit] = useState("non-archivees"); // 'non-archivees' | 'archivees' | 'toutes'
   // Alpha 0.20.0 : recherche dans la liste des membres
   const [searchMembres, setSearchMembres] = useState("");
+  // 0.62.97 : FIX TDZ — useEffect déplacé APRÈS searchMembres pour éviter "Cannot access 'er' before initialization"
+  useEffect(() => { setMembresPage(0); }, [searchMembres, filtreStatut]); // reset page au filtre
   const [userInfoModal, setUserInfoModal] = useState(null);
   const [userInfoForm, setUserInfoForm] = useState({
     nom_affiche: "", telephone: "", poste: "", notes: "", date_arrivee: "",

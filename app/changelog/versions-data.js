@@ -240,6 +240,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.97",
+    "kind": "fix",
+    "titre": "🎯 FIX TDZ DÉFINITIF /utilisateurs : le useEffect ligne 93 utilisait searchMembres déclaré ligne 96 (TDZ) → minifié `er` ! Déplacé après. Wrapper page.js simplifié avec next/dynamic ssr:false",
+    "chantiers": [
+      { "code": "FIX", "txt": "🎯 **TDZ DÉFINITIVEMENT RÉSOLU** : audit profond du fichier _UsersInner.js a révélé le pattern fatal ligne 93 : `useEffect(() => { setMembresPage(0); }, [searchMembres, filtreStatut]);` — **MAIS** `searchMembres` est déclaré ligne 96 (3 lignes plus bas). Le useEffect référence donc une variable dans sa Temporal Dead Zone. **Au minifié** : `searchMembres` devient une variable courte (probablement `er`) et le code essaie de l accéder avant son init = ReferenceError. **FIX** : déplacé le useEffect ligne 97 (après le useState searchMembres ligne 95). Maintenant l ordre est : declare searchMembres → useEffect dépend de searchMembres. **La page /utilisateurs doit enfin s ouvrir !**" },
+      { "code": "AI", "txt": "🧹 **Wrapper page.js simplifié** : remplacé l Error Boundary class par next/dynamic avec ssr:false. (1) `import dynamicImport from next/dynamic` (le default export, renommé pour éviter conflit avec `export const dynamic`). (2) `const UsersInner = dynamicImport(() => import(./_UsersInner), { ssr: false, loading: () => <Spinner /> })`. (3) Composant page : `<UsersInner />`. Plus simple, pas de class qui aurait pu interférer avec la minification. Le loader spinner teal reste affiché pendant le chargement dynamique" },
+      { "code": "INFO", "txt": "💡 **Méthodologie diag TDZ** pour les futurs cas : (1) Si erreur `Cannot access X before initialization` au load d une page, le composant a une variable courte (1-2 lettres après minification) utilisée avant sa déclaration. (2) Chercher dans le composant les patterns `useEffect/useMemo/useCallback` dont l array de dépendances réfère à une `const [x, ...] = useState(...)` déclarée plus bas. (3) Aussi : initializers useState complexes qui réfèrent à des states déclarés plus bas. (4) Toujours **déclarer les states EN PREMIER**, puis useEffect/useMemo APRÈS" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.98+** : (a) **ImageUploader matériel/patient** (bouton Modifier photo header). (b) **Buckets Supabase Storage** manuels Dashboard → Storage. (c) **MobileActionsBar** déploiement sur pages clés. (d) **Widget ChartCard /accueil** drag&drop. (e) **doc.addImage logo statistiques-rgpd**. (f) **Refacto /materiels** custom + ViewModeToggle. (g) **Workflow commande fournisseur** + PDF + Resend. (h) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "tdz", "critique"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.97.html"
+  },
+  {
     "v": "0.62.96",
     "kind": "fix",
     "titre": "📱 REVOIR TOUS LES POP-UPS DU SOFT en mode mobile : bottom-sheet partout (slide-up depuis le bas, handle drag, 90vh max, padding, sticky footer, popup MobileActionsBar position fixed bottom 0). /patients migré mode Tous étabs",
