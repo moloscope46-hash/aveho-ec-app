@@ -30,6 +30,7 @@ import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 import { safeFetch } from "../../lib/offlineCache";
 import { useStickyState } from "../../lib/useStickyState";
 import AdresseAutocomplete from "../AdresseAutocomplete";
+import EtabContextHeader from "../components/EtabContextHeader";  /* 0.62.73 */
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
@@ -821,6 +822,7 @@ export default function Patients() {
             <div className="modal-head">{modal.id ? `Modifier le ${lbl("patient", "patient").toLowerCase()}` : `Nouveau ${lbl("patient", "patient").toLowerCase()}`} <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setModal(null)} /></div>
             <div className="modal-body">
               {err && <div className="err">{err}</div>}
+              {!modal.id && <EtabContextHeader auth={auth} color="#7a6fb0" icon="ti-user-heart" />}
               <div className="fld-row">
                 <div className="fld"><label>Nom *</label><input value={form.nom || ""} onChange={(e) => setForm({ ...form, nom: e.target.value })} /></div>
                 <div className="fld"><label>Prénom</label><input value={form.prenom || ""} onChange={(e) => setForm({ ...form, prenom: e.target.value })} /></div>

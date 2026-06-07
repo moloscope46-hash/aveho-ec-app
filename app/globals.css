@@ -5092,3 +5092,31 @@ input[type="file"][capture="environment"] {
   }
 }
 
+
+/* =============================================================
+   0.62.73 — Désactivation globale des animations (av-anim-off)
+   ============================================================= */
+body.av-anim-off,
+body.av-anim-off * {
+  animation-duration: 0ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0ms !important;
+  transition-delay: 0ms !important;
+}
+body.av-anim-off [data-3d="true"]:hover {
+  transform: none !important;
+  box-shadow: 0 2px 6px rgba(20,33,49,.08) !important;
+}
+body.av-anim-off [data-3d="true"]::before,
+body.av-anim-off [data-3d="true"]::after,
+body.av-anim-off .av-kpi-glow::after,
+body.av-anim-off .av-page-deploy::before {
+  display: none !important;
+}
+body.av-anim-off .av-stagger > * {
+  opacity: 1 !important;
+  transform: none !important;
+}
+body.av-anim-off .av-page-hero {
+  animation: none !important;
+}

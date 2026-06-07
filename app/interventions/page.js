@@ -22,6 +22,7 @@ import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-pre
 import { fmtDate } from "../../lib/format";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 import BackButton from "../components/BackButton";
+import EtabContextHeader from "../components/EtabContextHeader";  /* 0.62.73 */
 
 const STATUTS = [
   { value: "Nouvelle",  color: "#e35d5b", icon: "ti-alert-circle",   bg: "rgba(227,93,91,.10)",   order: 0 },
@@ -422,6 +423,7 @@ function InterventionsInner() {
                 <i className="ti ti-scan" /> <b>DI créée depuis le scan d'un QR</b> · Les rattachements sont pré-remplis automatiquement
               </div>
             )}
+            {modal.mode === "new" && <EtabContextHeader auth={auth} color="#e35d5b" icon="ti-tools" />}
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld">

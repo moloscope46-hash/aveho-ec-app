@@ -239,7 +239,23 @@ export const THEME_LABELS = {
 };
 
 export const ALL_VERSIONS = [
-    {
+  {
+    "v": "0.62.73",
+    "kind": "feat",
+    "titre": "⏸ Bouton désactivation animations (sur /accueil) + 🗄️ SQL MEGA DÉMO (8 fournisseurs + 6 véhic + 3 garages + 12 articles + 10 matériels + 8 DI + 4 SAV + 3 transferts + 5 commandes + 5 interventions + 3 dépôts) + 🔒 EtabContextHeader sur modals create (patients + interventions)",
+    "chantiers": [
+      { "code": "AI", "txt": "⏸️ **Bouton désactivation animations** : nouveau composant AnimationsToggle (118 lignes) avec hook useAnimationsToggle. **Toggle switch** UI premium (44x24 avec rond qui glisse en cubic-bezier élastique) + version compact pour barre actions. Persistence localStorage av-anim-disabled. **CSS body.av-anim-off** : applique animation-duration 0ms + transition-duration 0ms à TOUS les éléments, désactive les pseudo-elements shimmer/glow/deploy, force opacity 1 + transform none sur stagger, animation none sur page-hero, transform/shadow simple sur hover data-3d. Le toggle est intégré dans /accueil à côté du bouton Personnaliser (mode compact)" },
+      { "code": "SQL", "txt": "🗄️ **demo-mega-pack-0.62.73.sql** : pack démo TOUT-EN-UN auto-détecte structure_id. **8 fournisseurs** (Pharmacie Centrale du Lot, MediPro SO, Lomaco, Hartmann, Coloplast, ConvaTec, Smith & Nephew, Mölnlycke) avec contact tél/email/adresse. **6 véhicules** (Kangoo Z.E., Partner, Berlingo, Master, Ducato, Daily 35S) avec immat/type/km/date_circulation, 2 rattachés HAD du Lot. **3 garages** (Saint-Céré central, Renault Pro Cahors, Norauto Souillac), 1 principal HAD. **12 articles** (PERF/CICA/NPAD/PPC/O2/VPH) avec prix HT 1.10€ → 1850€. **10 matériels** (pompes perf, concentrateur O2, PPC ResMed, lits Hill-Rom, fauteuils Invacare/Vermeiren, pompe Kangaroo) avec numéros série + états variés. **8 demandes_internes** (statuts en_attente/validee/en_cours/cloturee, priorités urgente/haute/normale/basse, 1 rattachée HAD du Lot). **4 signalements SAV** (urgents/normaux, sur 4 matériels différents). **3 transferts**. **5 commandes** (de 675€ à 4560€). **5 interventions** (Livraison/Maintenance/Installation/Reprise/Formation). **3 dépôts** (1 HAD). TOUS les inserts en `ON CONFLICT DO NOTHING` + UPDATES défensifs en `BEGIN EXCEPTION END` pour ne pas planter si colonnes optionnelles manquantes. Section vérifications finale avec compteurs par table" },
+      { "code": "AI", "txt": "🔒 **EtabContextHeader composant réutilisable** : nouveau composant standardisé en haut des modals de création. Affiche **l'établissement courant** (auth.etabNom) avec icône colorée gradient + label uppercase Création dans l établissement + nom etab en bold + cadenas ti-lock pour rappeler que c est verrouillé par le contexte. **Border-left 4px** coloré selon entité, background gradient subtil. Si auth.etabId absent : null return (no render). **Intégré dans /patients modal new** (couleur violet ti-user-heart) et **/interventions modal new** (couleur coral ti-tools). À déployer en 0.62.74 sur : DI, achats, articles, transferts, signalements" },
+      { "code": "INFO", "txt": "📋 **Comment tester** : (1) Run SQL demo-mega-pack-0.62.73.sql dans Supabase → toutes les tables se peuplent en démo. (2) Va dans /magasin → tu vois des DI à traiter, des SAV en attente, des commandes en livraison. (3) /magasin/flotte → 6 véhicules visibles. (4) /had/[id] → onglets Véhicules + Garages + Dépôts avec données. (5) /accueil → toggle ⏸️ Animations OFF en haut, test persistence F5" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.74+** : (a) **Mode Liste/Tuiles déployé sur patients, materiels, etablissements** : utiliser composant ViewModeToggle 0.62.68 + hook useViewMode. (b) **Footers PDF BL/devis avec logo structure** : chercher générateur PDF côté edge function/Resend, charger structures.logo_url + injecter dans template footer. (c) **EtabContextHeader sur autres modals create** : DI (page directe pas trouvée), achats/articles/transferts/signalements (passer en revue chaque page principale). (d) **Workflow création commande fournisseur** + génération PDF BC + envoi mail Resend. (e) **Brancher offlineSync dans page tournée chauffeur** (smartWrite + cacheTournee au démarrage tournée)" }
+    ],
+    "themes": ["feat", "demo", "ui", "context"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.73.html",
+    "sqlFile": "demo-mega-pack-0.62.73.sql"
+  },
+  {
     "v": "0.62.72",
     "kind": "fix",
     "titre": "📱 PASS MOBILE COMPLET (modals slide-up, tuiles 1 col, KPIs 2 col, inputs no-zoom iOS) + 🎨 Fix filtre étab TopBar lisible + 🖼 LogoUploader services & bâtiments + Fix SQL audit s.code",

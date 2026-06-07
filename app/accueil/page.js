@@ -10,6 +10,7 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Statut, StateMsg } from "../ui";
 import OnboardingTour from "../OnboardingTour";
+import AnimationsToggle from "../components/AnimationsToggle";  /* 0.62.73 */
 // 0.58.27 : tour produit premium "Découvrir les nouveautés" (en plus du legacy)
 import PremiumOnboardingTour from "../components/OnboardingTour";
 import MultiEtabSummary from "../MultiEtabSummary";
@@ -338,6 +339,9 @@ export default function Accueil() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
           <PageHead eyebrow="ESPACE COLLECTIVITÉ" title="Bonjour, bienvenue sur votre" accent="espace"
             sub={auth.structureNom ? `Vous êtes connecté pour ${auth.structureNom}` : "Rattachez votre compte à une structure pour commander."} />
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {/* 0.62.73 : toggle animations */}
+            <AnimationsToggle compact />
           {/* 0.58.44 : badge sur le bouton si des widgets bonus sont dispos */}
           {(() => {
             const hiddenOptIn = ALL_WIDGETS.filter(w => !widgets[w.id]).length;
@@ -360,6 +364,7 @@ export default function Accueil() {
               </button>
             );
           })()}
+          </div>{/* fin wrap toggle+button 0.62.73 */}
         </div>
 
         {/* 0.58.44 : bannière d'invitation à découvrir les widgets opt-in (dismissable) */}

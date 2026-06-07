@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.73 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.73
+      <small>⏸ Bouton désactivation animations (sur /accueil) + 🗄️ SQL MEGA DÉMO (8 fournisseurs + 6 véhic + 3 garages + 12 articles + 10 matériels + 8 DI + 4 SAV + 3 transferts + 5 commandes + 5 interventions + 3 dépôts) + 🔒 EtabContextHeader sur modals create (patients + interventions)</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.73-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>2</b> AI · <b>1</b> SQL · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#demo</span> <span class="theme-pill">#ui</span> <span class="theme-pill">#context</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">demo-mega-pack-0.62.73.sql</h3>
+  <div class="panel violet">
+    <p>🗄️ pack démo TOUT-EN-UN auto-détecte structure_id. <strong>8 fournisseurs</strong> (Pharmacie Centrale du Lot, MediPro SO, Lomaco, Hartmann, Coloplast, ConvaTec, Smith &amp; Nephew, Mölnlycke) avec contact tél/email/adresse. <strong>6 véhicules</strong> (Kangoo Z.E., Partner, Berlingo, Master, Ducato, Daily 35S) avec immat/type/km/date_circulation, 2 rattachés HAD du Lot. <strong>3 garages</strong> (Saint-Céré central, Renault Pro Cahors, Norauto Souillac), 1 principal HAD. <strong>12 articles</strong> (PERF/CICA/NPAD/PPC/O2/VPH) avec prix HT 1.10€ → 1850€. <strong>10 matériels</strong> (pompes perf, concentrateur O2, PPC ResMed, lits Hill-Rom, fauteuils Invacare/Vermeiren, pompe Kangaroo) avec numéros série + états variés. <strong>8 demandes_internes</strong> (statuts en_attente/validee/en_cours/cloturee, priorités urgente/haute/normale/basse, 1 rattachée HAD du Lot). <strong>4 signalements SAV</strong> (urgents/normaux, sur 4 matériels différents). <strong>3 transferts</strong>. <strong>5 commandes</strong> (de 675€ à 4560€). <strong>5 interventions</strong> (Livraison/Maintenance/Installation/Reprise/Formation). <strong>3 dépôts</strong> (1 HAD). TOUS les inserts en <code>ON CONFLICT DO NOTHING</code> + UPDATES défensifs en <code>BEGIN EXCEPTION END</code> pour ne pas planter si colonnes optionnelles manquantes. Section vérifications finale avec compteurs par table</p>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Bouton désactivation animations</h3>
+  <div class="panel ">
+    <p>⏸️ nouveau composant AnimationsToggle (118 lignes) avec hook useAnimationsToggle. <strong>Toggle switch</strong> UI premium (44x24 avec rond qui glisse en cubic-bezier élastique) + version compact pour barre actions. Persistence localStorage av-anim-disabled. <strong>CSS body.av-anim-off</strong> : applique animation-duration 0ms + transition-duration 0ms à TOUS les éléments, désactive les pseudo-elements shimmer/glow/deploy, force opacity 1 + transform none sur stagger, animation none sur page-hero, transform/shadow simple sur hover data-3d. Le toggle est intégré dans /accueil à côté du bouton Personnaliser (mode compact)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">EtabContextHeader composant réutilisable</h3>
+  <div class="panel ">
+    <p>🔒 nouveau composant standardisé en haut des modals de création. Affiche <strong>l'établissement courant</strong> (auth.etabNom) avec icône colorée gradient + label uppercase Création dans l établissement + nom etab en bold + cadenas ti-lock pour rappeler que c est verrouillé par le contexte. <strong>Border-left 4px</strong> coloré selon entité, background gradient subtil. Si auth.etabId absent : null return (no render). <strong>Intégré dans /patients modal new</strong> (couleur violet ti-user-heart) et <strong>/interventions modal new</strong> (couleur coral ti-tools). À déployer en 0.62.74 sur : DI, achats, articles, transferts, signalements</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Comment tester</h3>
+  <div class="panel ">
+    
+    <p>📋</p>
+    <ol class="steps">
+      <li>Run SQL demo-mega-pack-0.62.73.sql dans Supabase → toutes les tables se peuplent en démo</li>
+      <li>Va dans /magasin → tu vois des DI à traiter, des SAV en attente, des commandes en livraison</li>
+      <li>/magasin/flotte → 6 véhicules visibles</li>
+      <li>/had/[id] → onglets Véhicules + Garages + Dépôts avec données</li>
+      <li>/accueil → toggle ⏸️ Animations OFF en haut, test persistence F5</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO restantes 0.62.74+</h3>
+  <div class="panel ">
+    <p>📅 (a) <strong>Mode Liste/Tuiles déployé sur patients, materiels, etablissements</strong> : utiliser composant ViewModeToggle 0.62.68 + hook useViewMode. (b) <strong>Footers PDF BL/devis avec logo structure</strong> : chercher générateur PDF côté edge function/Resend, charger structures.logo_url + injecter dans template footer. (c) <strong>EtabContextHeader sur autres modals create</strong> : DI (page directe pas trouvée), achats/articles/transferts/signalements (passer en revue chaque page principale). (d) <strong>Workflow création commande fournisseur</strong> + génération PDF BC + envoi mail Resend. (e) <strong>Brancher offlineSync dans page tournée chauffeur</strong> (smartWrite + cacheTournee au démarrage tournée)</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+demo-mega-pack-0.62.73.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/demo-mega-pack-0.62.73.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>demo-mega-pack-0.62.73.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.73 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>
