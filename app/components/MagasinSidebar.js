@@ -12,6 +12,7 @@ import { createClient } from "../../lib/supabase";
 const MAG_NAV = [
   { section: "Tableau de bord", items: [
     { p: "/magasin", ic: "ti-dashboard", lbl: "Vue d'ensemble", col: "#5a8f8f" },
+    { p: "/magasin/scan", ic: "ti-scan", lbl: "🔍 Scan magasin", col: "#185FA5" },
     { p: "/magasin/analytics-sav", ic: "ti-chart-bar", lbl: "Analytics SAV", col: "#7CC8C8" },
     { p: "/mobile/magasin", ic: "ti-device-mobile", lbl: "Vue mobile", col: "#7CC8C8" },
   ]},

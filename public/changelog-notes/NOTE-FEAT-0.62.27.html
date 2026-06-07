@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.27 — Note d'évolution</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
+  .wrap { }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta b { color: #fff; }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { margin: 8px 0; }
+  b { color: var(--navy); }
+  .themes-row { margin-top: 14px; }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <h1>Version 0.62.27
+      <small>🏷 Étiquettes enrichies QR/GS1/UDI/LPP + Scan QR magasin dédié + Dashboard auto-refresh 30s</small>
+    </h1>
+    <div class="meta">
+      <span><b>📅 Date :</b> 6 juin 2026</span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.27-alpha</span></span>
+      <span><b>📋 Type :</b> Nouvelle fonctionnalité majeure</span>
+      <span><b>🔧 Chantiers :</b> 3 AI · 1 INFO</span>
+    </div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">etiquettes</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">qr</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">gs1</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">scan</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">magasin</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">auto-refresh</span></div>
+  </header>
+
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3 chantiers)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🏷 <b>Étiquettes ENRICHIES</b> sur <code>/articles/etiquettes</code> : ajout 4 nouvelles options dans le panneau de config — <b>📱 QR Code</b> (génération auto via api.qrserver.com pointant vers <code>/article/{id}</code> ou <code>/materiel/{id}</code>), <b>🏷 GS1</b> (affiche le <code>code_gs1</code> de l'article), <b>🆔 UDI matériels</b> (affiche <code>udi_di</code> du matériel rattaché), <b>⚕ LPP</b> (affiche <code>ref_lpp</code>). Plus un <b>mode Matériels</b> (radio button) qui génère 1 étiquette par matériel rattaché à l'article (avec son n° série/parc/lot/UDI propre) au lieu de X copies du même. Layout enrichi avec <code>.label-body-row</code> flex pour QR à gauche + données à droite. CSS dédié pour <code>.label-gs1</code> (teal), <code>.label-udi</code> (ambre), <code>.label-lpp</code> (bleu), <code>.label-mat-tag</code> (badge ambre)</li>
+    <li>🔍 <b>Nouvelle page <code>/magasin/scan</code></b> : flow scan dédié au magasin (au lieu de rediriger vers <code>/scan/article</code> qui est mode étab). <b>Sélection dépôt</b> persistante (sessionStorage <code>magasin_scan_depot</code>) qui agit comme contexte pour les actions. <b>Input scan</b> code-barre/QR avec autofocus pour scanner physique. <b>Résolution intelligente</b> : cherche par <code>code_ean13</code>, <code>code_barre</code>, <code>code</code> dans articles + par <code>num_serie</code>, <code>num_parc</code>, <code>num_lot</code>, <code>udi_di</code> dans matériels + parse URL QR <code>/article/UUID</code> ou <code>/materiel/UUID</code>. <b>6 actions</b> disponibles selon contexte : 📥 Entrée stock (désactivé si pas de dépôt sélectionné), 📤 Sortie stock, 🔄 Transfert, 🛠 SAV, 🔧 Maintenance, ℹ Voir fiche. Chaque action route vers la page dédiée avec <code>article_id</code>/<code>materiel_id</code>/<code>depot_id</code> en query string. Lien dans sidebar magasin section 'Tableau de bord'</li>
+    <li>♻ <b>Dashboard magasin auto-refresh 30s</b> : toggle 'Auto-refresh ON/OFF' en haut du dashboard avec indicateur pulse animé vert quand actif. <code>setInterval</code> de 30 secondes qui appelle <code>reload(silent=true)</code> (pas de spinner) → KPIs/listes se mettent à jour en arrière-plan. Affiche 'MAJ HH:MM:SS' à côté du toggle. <code>useEffect cleanup</code> correct pour arrêter l'interval au démontage. Animation <code>@keyframes pulse</code> ajoutée dans <code>globals.css</code></li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#5a687822;color:#5a6878;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">ℹ</span>Info / Tâche <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🚧 <b>Toujours en attente</b> : Mail dédié magasin (edge function Supabase Auth pour mails personnalisés avec branding magasin), Commande EC → magasin workflow complet (panier EC → DI auto chez magasin avec validation 2 étapes). Ces 2 features demandent edge functions Supabase + tests email donc reportées</li>
+    </ul>
+  </div>
+
+
+
+  <footer>
+    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
+    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+  </footer>
+
+</div>
+</body>
+</html>

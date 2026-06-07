@@ -3473,3 +3473,6 @@ html.av-presentation-mode.av-presentation-hide-notifs [data-focus-hide-on-notifs
   0%, 100% { opacity: 0.6; transform: scaleX(1); }
   50% { opacity: 1; transform: scaleX(1.05); }
 }
+
+/* 0.62.27 : Animation pulse pour indicateur refresh auto */
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }

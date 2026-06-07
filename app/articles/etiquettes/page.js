@@ -57,9 +57,17 @@ function EtiquettesArticlesInner() {
   const [showBarcode, setShowBarcode] = useState(true);
   const [showRef, setShowRef] = useState(true);
   const [showPrice, setShowPrice] = useState(true);
+  // 0.62.27 : nouvelles options GS1/QR/UDI
+  const [showQR, setShowQR] = useState(false);
+  const [showGS1, setShowGS1] = useState(false);
+  const [showUDI, setShowUDI] = useState(false);
+  const [showLPP, setShowLPP] = useState(false);
+  const [labelMode, setLabelMode] = useState("article");  // "article" | "materiels"
   const [priceMode, setPriceMode] = useState("ttc");  // "ttc" | "ht" | "both"
   const [copies, setCopies] = useState(1);
   const [structureNom, setStructureNom] = useState("");
+  // 0.62.27 : matériels rattachés pour mode logistique
+  const [materielsArticles, setMaterielsArticles] = useState({});  // {article_id: [materiels]}
 
   async function loadAll() {
     if (!auth.ready || !auth.structureId) return;
@@ -67,7 +75,7 @@ function EtiquettesArticlesInner() {
     try {
       const { data: arts } = await supabase
         .from("articles")
-        .select("id, reference, libelle, famille, code_barre, code_barre_type, prix_vente_ht, prix_vente_ttc, tva_pct, unite, conditionnement_libelle, actif, archive")
+        .select("id, reference, libelle, famille, code_barre, code_barre_type, code_ean13, code_gs1, ref_lpp, prix_vente_ht, prix_vente_ttc, tva_pct, unite, conditionnement_libelle, actif, archive")
         .eq("structure_id", auth.structureId)
         .eq("archive", false)
         .eq("actif", true)
@@ -83,6 +91,20 @@ function EtiquettesArticlesInner() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // 0.62.27 : Charge les matériels rattachés en mode logistique
+  async function loadMateriels(articleIds) {
+    if (!articleIds.length) return;
+    try {
+      const { data } = await supabase.from("materiels").select("id, article_id, num_serie, num_parc, num_lot, udi_di, etat").in("article_id", articleIds);
+      const m = {};
+      (data || []).forEach(x => {
+        if (!m[x.article_id]) m[x.article_id] = [];
+        m[x.article_id].push(x);
+      });
+      setMaterielsArticles(m);
+    } catch (e) { console.warn(e); }
   }
 
   useEffect(() => { loadAll(); }, [auth.ready, auth.structureId]);
@@ -127,12 +149,24 @@ function EtiquettesArticlesInner() {
   const labels = useMemo(() => {
     const result = [];
     selectedArticles.forEach(a => {
-      for (let i = 0; i < copies; i++) {
-        result.push(a);
+      // 0.62.27 : Mode "materiels" → 1 étiquette par matériel rattaché
+      if (labelMode === "materiels") {
+        const mats = materielsArticles[a.id] || [];
+        if (mats.length === 0) {
+          // Fallback : 1 étiquette générique si aucun matériel
+          result.push({ ...a, _materiel: null });
+        } else {
+          mats.forEach(m => result.push({ ...a, _materiel: m }));
+        }
+      } else {
+        // Mode "article" → X copies par article
+        for (let i = 0; i < copies; i++) {
+          result.push({ ...a, _materiel: null });
+        }
       }
     });
     return result;
-  }, [selectedArticles, copies]);
+  }, [selectedArticles, copies, labelMode, materielsArticles]);
 
   const fmt = FORMATS[format];
   const labelsPerPage = fmt.cols * fmt.rows;
@@ -191,15 +225,40 @@ function EtiquettesArticlesInner() {
             </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
               <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer" }}>
-                <input type="checkbox" checked={showRef} onChange={(e) => setShowRef(e.target.checked)} /> Afficher la référence
+                <input type="checkbox" checked={showRef} onChange={(e) => setShowRef(e.target.checked)} /> Référence
               </label>
               <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer" }}>
-                <input type="checkbox" checked={showBarcode} onChange={(e) => setShowBarcode(e.target.checked)} /> Afficher le code-barres EAN13
+                <input type="checkbox" checked={showBarcode} onChange={(e) => setShowBarcode(e.target.checked)} /> Code-barres EAN13
               </label>
               <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer" }}>
-                <input type="checkbox" checked={showPrice} onChange={(e) => setShowPrice(e.target.checked)} /> Afficher le prix
+                <input type="checkbox" checked={showPrice} onChange={(e) => setShowPrice(e.target.checked)} /> Prix
+              </label>
+              {/* 0.62.27 : nouvelles options GS1/QR/UDI/LPP */}
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer", color: "#7a6fb0", fontWeight: 600 }}>
+                <input type="checkbox" checked={showQR} onChange={(e) => setShowQR(e.target.checked)} /> 📱 QR Code
+              </label>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer", color: "#7CC8C8", fontWeight: 600 }}>
+                <input type="checkbox" checked={showGS1} onChange={(e) => setShowGS1(e.target.checked)} /> 🏷 GS1
+              </label>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer", color: "#EF9F27", fontWeight: 600 }}>
+                <input type="checkbox" checked={showUDI} onChange={(e) => setShowUDI(e.target.checked)} /> 🆔 UDI matériels
+              </label>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, cursor: "pointer", color: "#185FA5", fontWeight: 600 }}>
+                <input type="checkbox" checked={showLPP} onChange={(e) => setShowLPP(e.target.checked)} /> ⚕ LPP
               </label>
             </div>
+
+            {/* 0.62.27 : Mode étiquettes (article ou matériels rattachés) */}
+            <div style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5 }}>Mode :</span>
+              <label style={{ fontSize: 12.5, cursor: "pointer" }}>
+                <input type="radio" checked={labelMode === "article"} onChange={() => setLabelMode("article")} /> 📦 Article (X étiquettes/article)
+              </label>
+              <label style={{ fontSize: 12.5, cursor: "pointer" }}>
+                <input type="radio" checked={labelMode === "materiels"} onChange={() => { setLabelMode("materiels"); loadMateriels(selectedIds); }} /> 🔧 Matériels (1 par mat. rattaché)
+              </label>
+            </div>
+
             <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 8 }}>
               <Btn variant="ghost" icon="ti-x" onClick={() => router.back()}>Annuler</Btn>
               <Btn variant="primary" icon="ti-printer" onClick={handlePrint} disabled={labels.length === 0}>
@@ -280,28 +339,61 @@ function EtiquettesArticlesInner() {
                     }}>
                       {pageLabels.map((a, idx) => {
                         const ttc = ttcOf(a);
+                        const mat = a._materiel;
+                        // 0.62.27 : QR Code via api.qrserver.com (pas de lib externe)
+                        const qrData = mat
+                          ? `https://aveho-ec-app.vercel.app/materiel/${mat.id}`
+                          : `https://aveho-ec-app.vercel.app/article/${a.id}`;
+                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(qrData)}`;
+                        // Code EAN à afficher : priorité code_ean13 > code_barre
+                        const eanCode = a.code_ean13 || a.code_barre;
                         return (
                           <div key={`${a.id}-${pageIdx}-${idx}`} className="label-cell" style={{ width: `${fmt.w}mm`, height: `${fmt.h}mm` }}>
                             <div className="label-header">
                               {structureNom && <div className="label-struct">{structureNom}</div>}
                               {showRef && a.reference && <div className="label-ref">{a.reference}</div>}
+                              {mat && <div className="label-mat-tag">🔧 N°{mat.num_serie || mat.num_parc || mat.id.substring(0, 6)}</div>}
                             </div>
                             <div className="label-libelle">{a.libelle}</div>
-                            {showPrice && ttc && (
-                              <div className="label-prix">
-                                {(priceMode === "ttc" || priceMode === "both") && (
-                                  <span className="prix-ttc">{fmtEur(ttc)}{priceMode === "both" && <small> TTC</small>}</span>
+
+                            {/* 0.62.27 : Conteneur droite = codes + prix, gauche = QR si activé */}
+                            <div className="label-body-row">
+                              {showQR && (
+                                <div className="label-qr">
+                                  <img src={qrUrl} alt="QR" width="60" height="60" />
+                                </div>
+                              )}
+                              <div className="label-body-data">
+                                {showPrice && ttc && (
+                                  <div className="label-prix">
+                                    {(priceMode === "ttc" || priceMode === "both") && (
+                                      <span className="prix-ttc">{fmtEur(ttc)}{priceMode === "both" && <small> TTC</small>}</span>
+                                    )}
+                                    {(priceMode === "ht" || priceMode === "both") && a.prix_vente_ht && (
+                                      <span className="prix-ht">{fmtEur(a.prix_vente_ht)}{priceMode === "both" && <small> HT</small>}</span>
+                                    )}
+                                  </div>
                                 )}
-                                {(priceMode === "ht" || priceMode === "both") && a.prix_vente_ht && (
-                                  <span className="prix-ht">{fmtEur(a.prix_vente_ht)}{priceMode === "both" && <small> HT</small>}</span>
+                                {showLPP && a.ref_lpp && (
+                                  <div className="label-lpp">⚕ LPP {a.ref_lpp}</div>
+                                )}
+                                {showGS1 && a.code_gs1 && (
+                                  <div className="label-gs1">🏷 {a.code_gs1}</div>
+                                )}
+                                {showUDI && mat?.udi_di && (
+                                  <div className="label-udi">🆔 UDI {mat.udi_di}</div>
+                                )}
+                                {mat?.num_lot && (
+                                  <div className="label-lot">Lot : {mat.num_lot}</div>
                                 )}
                               </div>
+                            </div>
+
+                            {showBarcode && eanCode && isValidEan13(eanCode) && (
+                              <div className="label-barcode" dangerouslySetInnerHTML={{ __html: generateEan13Svg(eanCode) }} />
                             )}
-                            {showBarcode && a.code_barre && isValidEan13(a.code_barre) && (
-                              <div className="label-barcode" dangerouslySetInnerHTML={{ __html: generateEan13Svg(a.code_barre) }} />
-                            )}
-                            {showBarcode && a.code_barre && !isValidEan13(a.code_barre) && (
-                              <div className="label-barcode-text">{a.code_barre}</div>
+                            {showBarcode && eanCode && !isValidEan13(eanCode) && (
+                              <div className="label-barcode-text">{eanCode}</div>
                             )}
                           </div>
                         );
@@ -346,6 +438,16 @@ function EtiquettesArticlesInner() {
         .prix-ht { font-size: 9pt; color: #5a6878; font-weight: 600; }
         .label-barcode svg { height: 12mm; width: auto; max-width: 100%; }
         .label-barcode-text { font-family: Consolas, monospace; font-size: 8pt; color: #142131; padding: 1mm 0; text-align: center; letter-spacing: 0.5px; }
+        /* 0.62.27 : nouvelles classes pour GS1/QR/UDI/LPP */
+        .label-mat-tag { font-size: 6pt; background: #EF9F27; color: #fff; padding: 0.5mm 1.5mm; border-radius: 1mm; font-weight: 700; }
+        .label-body-row { display: flex; gap: 2mm; align-items: flex-start; }
+        .label-qr { flex-shrink: 0; }
+        .label-qr img { display: block; }
+        .label-body-data { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5mm; }
+        .label-gs1 { font-size: 7pt; font-family: Consolas, monospace; color: #7CC8C8; font-weight: 700; }
+        .label-udi { font-size: 6.5pt; font-family: Consolas, monospace; color: #EF9F27; font-weight: 700; }
+        .label-lpp { font-size: 7pt; color: #185FA5; font-weight: 700; }
+        .label-lot { font-size: 6.5pt; color: #5a6878; font-family: Consolas, monospace; }
       `}</style>
     </div>
   );

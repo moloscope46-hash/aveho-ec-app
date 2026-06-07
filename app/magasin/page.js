@@ -53,6 +53,9 @@ export default function MagasinPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ articles: 0, di_pendantes: 0, partenaires: 0, etabs_clients: 0 });
   // 0.60.7 : EC ayant droits avec ce magasin (cantonnement filtres)
+  // 0.62.27 : Refresh auto activable
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
   const [etabsAutorises, setEtabsAutorises] = useState([]);
 
   useEffect(() => {
@@ -60,8 +63,17 @@ export default function MagasinPage() {
     reload();
   }, [auth.ready, auth.structureId, magasinCtx.loading, magasinCtx.magasinId]);
 
-  async function reload() {
-    setLoading(true);
+  // 0.62.27 : setInterval refresh auto toutes les 30s si activé
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      reload(true);  // silent refresh
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, auth.structureId, magasinCtx.magasinId]);
+
+  async function reload(silent = false) {
+    if (!silent) setLoading(true);
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
 
     // 0.60.2 : Si user magasin, filtrer les DI par son magasin_id
@@ -103,7 +115,8 @@ export default function MagasinPage() {
       partenaires: parts.length,
       etabs_clients: etabsFiltered.length,
     });
-    setLoading(false);
+    if (!silent) setLoading(false);
+    setLastRefresh(new Date());
   }
 
   return (
@@ -128,6 +141,21 @@ export default function MagasinPage() {
           <div style={{ flex: 1, minWidth: 200 }}>
             <h1 style={{ margin: 0, color: "#142131", fontSize: 22 }}>🏬 Magasin Aveho</h1>
             <div style={{ fontSize: 12.5, color: "#5a6878" }}>Catalogue + DI reçues + partenaires fournisseurs</div>
+          </div>
+          {/* 0.62.27 : Toggle refresh auto */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginRight: 8 }}>
+            <button onClick={() => setAutoRefresh(!autoRefresh)} title="Refresh auto toutes les 30s" style={{
+              background: autoRefresh ? "linear-gradient(135deg,#5aa05a,#4a8a4a)" : "transparent",
+              color: autoRefresh ? "#fff" : "#5a6878",
+              border: autoRefresh ? "none" : "1px solid #cfd8e0",
+              padding: "6px 12px", borderRadius: 6,
+              fontFamily: "inherit", fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 6,
+            }}>
+              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: autoRefresh ? "#fff" : "#cfd8e0", animation: autoRefresh ? "pulse 1.5s infinite" : "none" }} />
+              {autoRefresh ? "Auto-refresh ON (30s)" : "Auto-refresh OFF"}
+            </button>
+            {lastRefresh && <span style={{ fontSize: 10.5, color: "#8a98a8" }}>MAJ {lastRefresh.toLocaleTimeString("fr-FR")}</span>}
           </div>
           <Btn variant="ghost" icon="ti-arrow-back-up" onClick={() => { viewMode.setMode("ec"); router.push("/collaborateurs"); }}>Retour mode EC</Btn>
         </div>

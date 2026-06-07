@@ -240,6 +240,35 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.28",
+    "kind": "feat",
+    "titre": "📧 Edge function mail magasin (Resend + Auth fallback) + Workflow Commande EC → DI magasin (2 étapes validation)",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.28-commande-ec-vers-magasin.sql`** : (1) Table `commandes_ec` avec workflow 9 statuts : brouillon → a_valider_ec → validee_ec → envoyee_magasin → preparation → expediee → livree → receptionnee, + rejetee. Champs : numero, structure_id, etab+bât+svc+depot, magasin_id (destinataire), cree_par+le, validee_ec_par+le+commentaire, envoyee_magasin_le, di_id (lien retour), total_lignes/HT/TTC, urgence, livraison_souhaitee_le, motif_rejet. (2) Table `commandes_ec_lignes` (article_id, quantite, prix, tva). (3) Fonction `fn_commande_ec_vers_di()` SECURITY DEFINER : transforme la commande validee_ec en DI dans `demandes_internes` (numero DI-CMD-YYYYMMDD-HHMMSS, type=livraison, sous_type=commande_ec) et lie via `commande_id_origine`. (4) Vue `v_commandes_ec_compteurs` pour dashboards. 6 indexes + RLS strict structure_id" },
+      { "code": "AI", "txt": "📋 **Nouvelle page `/commandes-validation`** : workflow validation chef de service. Filtres par statut avec compteurs (9 statuts colorés). Cards par commande : numero, étab → magasin, nb lignes + montant HT, urgence 🔥, notes, motif rejet. **Sur statut 'a_valider_ec'** → 2 boutons : ✓ Valider (vert gradient) ou ⊘ Rejeter (rouge). Modal validation avec textarea commentaire + checkbox visuelle. À la validation : UPDATE statut → 'validee_ec' + appel RPC `fn_commande_ec_vers_di` qui crée la DI automatiquement dans le magasin destinataire (statut 'nouvelle'). Au rejet : UPDATE statut + motif_rejet stocké. Lien dans menu Commande" },
+      { "code": "AI", "txt": "📧 **Edge function `invite-user-magasin`** dans `supabase/functions/` : envoi mail d'invitation avec branding MAGASIN (au lieu du mail Auth générique). Payload : email + magasin_id + role_magasin + types_di_geres + prenom/nom/tel. Process : (1) Charge infos magasin (nom, ville, couleur_primaire). (2) Récupère qui invite. (3) Crée invitation en base. (4) Génère HTML avec gradient navy → couleur_magasin, card magasin avec rôle + types DI, bouton CTA. (5) **Envoi via Resend si `RESEND_API_KEY` configuré** (mail custom avec from='${magasin.nom} <noreply@aveho.fr>'). **Fallback Supabase Auth.admin.inviteUserByEmail** sinon (mail générique). Retourne `email_sent_via` pour traçabilité. Déploiement : `supabase functions deploy invite-user-magasin`" },
+      { "code": "INFO", "txt": "📦 **Cette version termine la TODO list de 0.62.x** ! Voici ce qui reste comme features ouvertes pour 0.63.x+ : intégration scan complet sur les flows magasin, signature électronique upload Storage sur bons de réception, dashboard temps réel WebSocket Supabase Realtime, marketplace inter-magasins, intégration GED documentaire, exports comptables LPP/LPPR. À voir selon priorités" }
+    ],
+    "themes": ["feat", "commande", "workflow", "magasin", "edge-function", "mail"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.28.html",
+    "sqlFile": "migration-0.62.28-commande-ec-vers-magasin.sql"
+  },
+  {
+    "v": "0.62.27",
+    "kind": "feat",
+    "titre": "🏷 Étiquettes enrichies QR/GS1/UDI/LPP + Scan QR magasin dédié + Dashboard auto-refresh 30s",
+    "chantiers": [
+      { "code": "AI", "txt": "🏷 **Étiquettes ENRICHIES** sur `/articles/etiquettes` : ajout 4 nouvelles options dans le panneau de config — **📱 QR Code** (génération auto via api.qrserver.com pointant vers `/article/{id}` ou `/materiel/{id}`), **🏷 GS1** (affiche le `code_gs1` de l'article), **🆔 UDI matériels** (affiche `udi_di` du matériel rattaché), **⚕ LPP** (affiche `ref_lpp`). Plus un **mode Matériels** (radio button) qui génère 1 étiquette par matériel rattaché à l'article (avec son n° série/parc/lot/UDI propre) au lieu de X copies du même. Layout enrichi avec `.label-body-row` flex pour QR à gauche + données à droite. CSS dédié pour `.label-gs1` (teal), `.label-udi` (ambre), `.label-lpp` (bleu), `.label-mat-tag` (badge ambre)" },
+      { "code": "AI", "txt": "🔍 **Nouvelle page `/magasin/scan`** : flow scan dédié au magasin (au lieu de rediriger vers `/scan/article` qui est mode étab). **Sélection dépôt** persistante (sessionStorage `magasin_scan_depot`) qui agit comme contexte pour les actions. **Input scan** code-barre/QR avec autofocus pour scanner physique. **Résolution intelligente** : cherche par `code_ean13`, `code_barre`, `code` dans articles + par `num_serie`, `num_parc`, `num_lot`, `udi_di` dans matériels + parse URL QR `/article/UUID` ou `/materiel/UUID`. **6 actions** disponibles selon contexte : 📥 Entrée stock (désactivé si pas de dépôt sélectionné), 📤 Sortie stock, 🔄 Transfert, 🛠 SAV, 🔧 Maintenance, ℹ Voir fiche. Chaque action route vers la page dédiée avec `article_id`/`materiel_id`/`depot_id` en query string. Lien dans sidebar magasin section 'Tableau de bord'" },
+      { "code": "AI", "txt": "♻ **Dashboard magasin auto-refresh 30s** : toggle 'Auto-refresh ON/OFF' en haut du dashboard avec indicateur pulse animé vert quand actif. `setInterval` de 30 secondes qui appelle `reload(silent=true)` (pas de spinner) → KPIs/listes se mettent à jour en arrière-plan. Affiche 'MAJ HH:MM:SS' à côté du toggle. `useEffect cleanup` correct pour arrêter l'interval au démontage. Animation `@keyframes pulse` ajoutée dans `globals.css`" },
+      { "code": "INFO", "txt": "🚧 **Toujours en attente** : Mail dédié magasin (edge function Supabase Auth pour mails personnalisés avec branding magasin), Commande EC → magasin workflow complet (panier EC → DI auto chez magasin avec validation 2 étapes). Ces 2 features demandent edge functions Supabase + tests email donc reportées" }
+    ],
+    "themes": ["feat", "etiquettes", "qr", "gs1", "scan", "magasin", "auto-refresh"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.27.html"
+  },
+  {
     "v": "0.62.26",
     "kind": "feat",
     "titre": "🏬 Cantonnement livraisons étab + Garages magasin UI + Trigger membres_structure inscription + Statuts calendrier x11",

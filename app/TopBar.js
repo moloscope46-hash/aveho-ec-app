@@ -90,6 +90,7 @@ const MENU = [
   { section: "Commande", sectionIcon: "ti-shopping-bag", items: [
     { p: "/panier", ic: "ti-shopping-cart", lbl: "Panier", col: "#e35d5b", count: "cart" },
     { p: "/commandes", ic: "ti-truck-delivery", lbl: "Mes commandes", col: "#5a8f8f" },
+    { p: "/commandes-validation", ic: "ti-clipboard-check", lbl: "Validation chef service", col: "#EF9F27" },
     { p: "/achats", ic: "ti-cash", lbl: "Achats", col: "#EF9F27" },
   ] },
   // 0.62.22 : MAINTENANCE regroupée (avant Livraison qui était fourre-tout)
