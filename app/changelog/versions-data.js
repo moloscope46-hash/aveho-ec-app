@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.26",
+    "kind": "feat",
+    "titre": "🏬 Cantonnement livraisons étab + Garages magasin UI + Trigger membres_structure inscription + Statuts calendrier x11",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.26-membre-auto-cantonnement-livraisons.sql`** : (1) Trigger `trg_user_signup_membre` sur `auth.users` AFTER INSERT → `fn_user_signup_creer_membre()` cherche une invitation pour l'email du user, crée le membre dans `membres_structure` avec toutes les infos (prenom, nom, role_pro, etab_id, magasin_fournisseur_id, etc.), marque l'invitation acceptée. (2) Vue `v_livraisons_etab` joignant `tournees` × `tournees_etapes` pour filtrer côté étab. (3) Vue `v_livraisons_compteurs_etab` pour les badges par statut. (4) Garages : assure colonnes `magasin_id` + `etablissement_id`" },
+      { "code": "AI", "txt": "🏬 **Cantonnement étab côté `/livraisons-planifiees`** : avant côté étab on voyait toutes les tournées globales. Maintenant : récupère les `tournee_id` depuis `tournees_etapes` filtré par `etablissement_id = auth.etabId`, puis filtre côté client. Idem pour transferts : filtre via `depots.etablissement_id`. Le user étab ne voit QUE les tournées qui passent chez lui, et les transferts vers ses dépôts. Magasin = toutes ses tournées émises (inchangé)" },
+      { "code": "AI", "txt": "🅿️ **Nouvelle page `/magasin/garages`** : UI dédiée magasin pour gérer ses garages/parkings/ateliers/dépôts logistiques. 4 types avec filtre. Filtre intelligent `magasin_id.eq.X OR magasin_id.is.null` (voit les garages globaux + ses propres). Création auto-remplit `magasin_id` avec le magasin courant. Cards avec compteur véhicules rattachés (count depuis `vehicules_magasin.garage_id`). Modal édition complet : type, capacité, adresse, ville, CP, responsable, téléphone, horaires. Lien ajouté dans sidebar magasin section 'Flotte & livraisons'" },
+      { "code": "AI", "txt": "📊 **Statuts tournée x11 enrichis dans le calendrier** : avant 5 statuts simples. Maintenant 11 statuts complets : 📅 Planifiée, 📦 En préparation, ⏳ À démarrer, 🚛 En cours, 📍 Sur place, ✓ Livrée, ✅ Réceptionnée, 🏁 Terminée, ⚠ En retard, ⊘ Annulée, ❌ Litige. Chaque statut a sa couleur dédiée + description tooltip (`title=` attribute). **Légende complète** affichée en haut du calendrier dans un Panel dédié avec badges colorés. Format `STATUT_META[k]` enrichi avec `icon`, `lbl`, `desc`" },
+      { "code": "INFO", "txt": "🚧 **Toujours en attente** : Module étiquettes enrichi GS1/QR (page existe, à enrichir), Scan QR mode magasin dédié (flow distinct à coder), Mail dédié magasin (edge function Supabase Auth), Dashboard temps réel poussé (setInterval refresh auto), Commande EC → magasin workflow complet" }
+    ],
+    "themes": ["feat", "cantonnement", "garages", "trigger", "statuts", "calendrier"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.26.html",
+    "sqlFile": "migration-0.62.26-membre-auto-cantonnement-livraisons.sql"
+  },
+  {
     "v": "0.62.25",
     "kind": "fix",
     "titre": "🚨 Fix syntax error versions-data (virgule manquante) + REFONTE HTML notes au format RICHE (toutes 0.62.x)",

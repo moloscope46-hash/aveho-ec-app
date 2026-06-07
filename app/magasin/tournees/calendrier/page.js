@@ -13,12 +13,19 @@ import { useCart } from "../../../useCart";
 import { PageHead, Panel, Btn } from "../../../ui";
 import { MagasinSidebar } from "../../../components/MagasinSidebar";
 
+// 0.62.26 : Statuts enrichis avec plus de granularité
 const STATUT_META = {
-  en_cours: { col: "#185FA5", lbl: "🚛", bgLight: "rgba(24,95,165,.12)" },
-  planifiee: { col: "#EF9F27", lbl: "📅", bgLight: "rgba(239,159,39,.12)" },
-  a_faire: { col: "#7a6fb0", lbl: "⏳", bgLight: "rgba(122,111,176,.12)" },
-  terminee: { col: "#5aa05a", lbl: "✓", bgLight: "rgba(94,160,90,.12)" },
-  annulee: { col: "#e35d5b", lbl: "⊘", bgLight: "rgba(227,93,91,.12)" },
+  planifiee:    { col: "#EF9F27", lbl: "📅 Planifiée", icon: "📅", bgLight: "rgba(239,159,39,.12)", desc: "Tournée prévue, pas encore démarrée" },
+  preparation:  { col: "#c97a2a", lbl: "📦 En préparation", icon: "📦", bgLight: "rgba(201,122,42,.12)", desc: "Chargement véhicule en cours" },
+  a_faire:      { col: "#7a6fb0", lbl: "⏳ À démarrer", icon: "⏳", bgLight: "rgba(122,111,176,.12)", desc: "Prête au départ" },
+  en_cours:     { col: "#185FA5", lbl: "🚛 En cours", icon: "🚛", bgLight: "rgba(24,95,165,.12)", desc: "Chauffeur en route" },
+  en_livraison: { col: "#5e4a8c", lbl: "📍 Sur place", icon: "📍", bgLight: "rgba(94,74,140,.12)", desc: "Étape en cours" },
+  livree:       { col: "#5a8f8f", lbl: "✓ Livrée", icon: "✓", bgLight: "rgba(94,143,143,.12)", desc: "Étapes terminées, à valider côté étab" },
+  receptionnee: { col: "#5aa05a", lbl: "✅ Réceptionnée", icon: "✅", bgLight: "rgba(94,160,90,.12)", desc: "Validation étab OK" },
+  terminee:     { col: "#5aa05a", lbl: "🏁 Terminée", icon: "🏁", bgLight: "rgba(94,160,90,.12)", desc: "Cycle complet OK" },
+  retard:       { col: "#e35d5b", lbl: "⚠ En retard", icon: "⚠", bgLight: "rgba(227,93,91,.12)", desc: "Retard de plus d'1h" },
+  annulee:      { col: "#8a98a8", lbl: "⊘ Annulée", icon: "⊘", bgLight: "rgba(138,152,168,.12)", desc: "Tournée annulée" },
+  litige:       { col: "#c0392b", lbl: "❌ Litige", icon: "❌", bgLight: "rgba(192,57,43,.12)", desc: "Anomalie réception, en attente" },
 };
 
 const JOURS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -145,6 +152,26 @@ export default function CalendrierTourneesPage() {
             </div>
           </div>
 
+          {/* 0.62.26 : Légende des statuts */}
+          <Panel style={{ marginBottom: 12, padding: "10px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#5a6878", letterSpacing: 1, marginBottom: 8 }}>📊 Légende des statuts</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {Object.entries(STATUT_META).map(([k, m]) => (
+                <span key={k} title={m.desc} style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "3px 8px", borderRadius: 4,
+                  background: m.bgLight, color: m.col,
+                  border: `1px solid ${m.col}40`,
+                  fontSize: 10.5, fontWeight: 700,
+                  cursor: "help",
+                }}>
+                  <span>{m.icon}</span>
+                  <span>{m.lbl.replace(m.icon + " ", "")}</span>
+                </span>
+              ))}
+            </div>
+          </Panel>
+
           {loading ? <Panel><div style={{ padding: 40, textAlign: "center" }}>Chargement…</div></Panel> : (
             <Panel style={{ padding: 0, overflow: "hidden" }}>
               {/* Header jours */}
@@ -186,7 +213,7 @@ export default function CalendrierTourneesPage() {
                             fontSize: 10.5, color: "#142131",
                           }}>
                             <div style={{ fontWeight: 700, fontSize: 11 }}>
-                              {meta.lbl} {t.heure_depart || ""} {t.numero || t.nom || "T-" + t.id.substring(0, 6)}
+                              {meta.icon} {t.heure_depart || ""} {t.numero || t.nom || "T-" + t.id.substring(0, 6)}
                             </div>
                             <div style={{ fontSize: 9.5, color: "#5a6878" }}>
                               {t.vehicules_magasin?.immatriculation || "—"} · {chauffeurs[t.chauffeur_user_id] || "—"}

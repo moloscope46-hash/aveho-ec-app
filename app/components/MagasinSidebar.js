@@ -31,6 +31,7 @@ const MAG_NAV = [
   // 0.61.3 : Flotte & livraisons
   { section: "Flotte & livraisons", items: [
     { p: "/magasin/flotte", ic: "ti-truck-delivery", lbl: "Flotte véhicules", col: "#185FA5" },
+    { p: "/magasin/garages", ic: "ti-parking", lbl: "Garages magasin", col: "#7a6fb0" },
     { p: "/magasin/tournees", ic: "ti-route", lbl: "Tournées", col: "#7a6fb0" },
     { p: "/magasin/tournees/calendrier", ic: "ti-calendar", lbl: "Calendrier tournées", col: "#EF9F27" },
     { p: "/magasin/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#5a8f8f" },

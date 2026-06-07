@@ -66,8 +66,15 @@ export default function LivraisonsPlanifieesPage() {
       .order("date_tournee", { ascending: false })
       .limit(100);
     if (isMagasin && magasinCtx.magasinId) tq = tq.eq("magasin_id", magasinCtx.magasinId);
-    // Côté étab : cantonnement par etablissement_ids des étapes (TODO via JOIN)
-    const trns = await tryFetch(tq);
+    let trns = await tryFetch(tq);
+
+    // 0.62.26 : Cantonnement côté étab → ne voit que les tournées dont au moins une étape pointe sur son étab
+    if (!isMagasin && auth.etabId) {
+      // Récup les IDs des tournées qui ont au moins une étape sur cet étab
+      const etapesQ = await tryFetch(supabase.from("tournees_etapes").select("tournee_id").eq("etablissement_id", auth.etabId));
+      const tourneesAutorisees = new Set((etapesQ || []).map(e => e.tournee_id));
+      trns = trns.filter(t => tourneesAutorisees.has(t.id));
+    }
     setTournees(trns);
 
     // 2. Transferts
@@ -76,8 +83,11 @@ export default function LivraisonsPlanifieesPage() {
       .order("created_at", { ascending: false })
       .limit(100);
     if (isMagasin && magasinCtx.magasinId) xq = xq.eq("magasin_emetteur_id", magasinCtx.magasinId);
-    // Côté étab : filtre par étab via depot.etablissement_id  (TODO précision avec rattachements)
-    const trs = await tryFetch(xq);
+    let trs = await tryFetch(xq);
+    // Cantonnement étab via depot.etablissement_id
+    if (!isMagasin && auth.etabId) {
+      trs = trs.filter(t => t.depots?.etablissement_id === auth.etabId);
+    }
     setTransferts(trs);
 
     setLoading(false);
