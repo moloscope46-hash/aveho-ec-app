@@ -264,6 +264,12 @@ export default function Etablissement() {
                 { k: "vehicules", lbl: `Véhicules (${vehs.length})`, ic: "ti-ambulance", c: "#e35d5b" },
                 { k: "depots",    lbl: `Dépôts (${depots.length})`,    ic: "ti-building-warehouse", c: "#EF9F27" },
                 { k: "magasins",  lbl: `Magasins rattachés`, ic: "ti-link", c: "#5a8f8f" },
+                // 0.62.17 : onglets manquants
+                { k: "garages",       lbl: "Garages",        ic: "ti-parking",      c: "#185FA5" },
+                { k: "equipes",       lbl: "Équipes",        ic: "ti-users-group",  c: "#5a4a90" },
+                { k: "collaborateurs", lbl: "Collaborateurs", ic: "ti-users",       c: "#7CC8C8" },
+                { k: "patients",      lbl: "Patients",       ic: "ti-heart",        c: "#e35d5b" },
+                { k: "materiels",     lbl: "Matériels",      ic: "ti-package",      c: "#7a6fb0" },
               ].map(t => {
                 const active = tab === t.k;
                 return (
@@ -552,6 +558,13 @@ export default function Etablissement() {
             {tab === "magasins" && (
               <MagasinsRattachesPanel etabId={auth.etabId} auth={auth} supabase={supabase} />
             )}
+
+            {/* 0.62.17 : Onglets raccourcis (redirect vers les pages dédiées) */}
+            {tab === "garages" && <RedirectTab icon="ti-parking" color="#185FA5" title="Garages & parkings" desc="Lieux de stationnement et d'entretien des véhicules de cet étab" href="/garages" router={router} />}
+            {tab === "equipes" && <RedirectTab icon="ti-users-group" color="#5a4a90" title="Équipes & services" desc="Équipes terrain rattachées à cet établissement" href="/equipes" router={router} />}
+            {tab === "collaborateurs" && <RedirectTab icon="ti-users" color="#7CC8C8" title="Collaborateurs" desc="Personnel et intervenants de l'établissement" href="/collaborateurs" router={router} />}
+            {tab === "patients" && <RedirectTab icon="ti-heart" color="#e35d5b" title="Patients" desc="Patients pris en charge dans cet étab" href="/patients" router={router} />}
+            {tab === "materiels" && <RedirectTab icon="ti-package" color="#7a6fb0" title="Matériels" desc="Équipements rattachés à cet étab — fiches de traçabilité" href="/materiels" router={router} />}
           </>
         )}
         {/* 0.58.87 : Modal articles du dépôt sélectionné */}
@@ -1019,4 +1032,27 @@ function btnQuick(color) {
     alignItems: "center",
     gap: 4,
   };
+}
+
+// 0.62.17 : composant RedirectTab — onglet simple qui redirige vers une page dédiée
+function RedirectTab({ icon, color, title, desc, href, router }) {
+  return (
+    <Panel style={{ marginTop: 12 }}>
+      <div style={{ textAlign: "center", padding: "40px 20px" }}>
+        <i className={`ti ${icon}`} style={{ fontSize: 56, color, display: "block", marginBottom: 12 }} />
+        <h3 style={{ margin: "0 0 8px", color: "#142131" }}>{title}</h3>
+        <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18, maxWidth: 480, margin: "0 auto 18px" }}>{desc}</p>
+        <button onClick={() => router.push(href)} style={{
+          background: `linear-gradient(135deg,${color},${color}cc)`,
+          color: "#fff", border: "none",
+          padding: "10px 22px", borderRadius: 10,
+          fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer",
+          boxShadow: `0 4px 12px ${color}4D`,
+          display: "inline-flex", alignItems: "center", gap: 6,
+        }}>
+          <i className="ti ti-arrow-right" /> Ouvrir la page
+        </button>
+      </div>
+    </Panel>
+  );
 }

@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.17",
+    "kind": "feat",
+    "titre": "📑 Onglets manquants Groupement + Établissement + Cantonnement /magasin/rattachements + Garage sur form véhicule",
+    "chantiers": [
+      { "code": "AI", "txt": "📑 **Page Collectivité/Groupement : 4 nouveaux onglets** : 🚑 Véhicules (rouge #e35d5b) + 🅿️ Garages (bleu #185FA5) + 🏬 Magasins (teal #5a8f8f) + 🛣 Tournées (violet #7a6fb0). L'onglet Tournées propose 3 boutons : 'Liste tournées' / 'Calendrier' / 'Analytics'. Helper `btnGradient(c1, c2)` factorisé pour les boutons (fond gradient, shadow couleur, icône inline)" },
+      { "code": "AI", "txt": "📑 **Page Établissement : 5 nouveaux onglets** : 🅿️ Garages (#185FA5) + 👥 Équipes (#5a4a90) + 👤 Collaborateurs (#7CC8C8) + ❤ Patients (#e35d5b) + 📦 Matériels (#7a6fb0). Composant `RedirectTab` réutilisable : icône 56px + titre + description + bouton gradient 'Ouvrir la page'. Pratique pour naviguer dans les ressources liées à l'étab" },
+      { "code": "AI", "txt": "🎯 **Cantonnement `/magasin/rattachements`** : la liste des étabs accessibles est maintenant filtrée selon **2 critères combinés** : (1) **Cantonnement de l'agence/magasin** via les `magasins_rattachements.actif=true` → seuls les étabs rattachés au magasin courant apparaissent. (2) **Cantonnement du collaborateur** : si `membres_structure.lock_assignment = true` et `etablissement_ids` rempli → intersection avec le périmètre du magasin. Si intersection = vide → message 'Aucun étab autorisé'. console.info trace les filtres pour debug" },
+      { "code": "AI", "txt": "🅿️ **Bouton 'Garage / Parking' sur form véhicule** : nouveau sélecteur entre Établissement et Immatriculation. Charge `garages` au mount (filtré par structure_id), affiche nom + ville. Si liste vide → lien rapide 'Créer un garage →' vers `/garages`. À l'enregistrement, `vehicules.garage_id` est sauvegardé (colonne ajoutée par migration-0.62.16-garages.sql)" }
+    ],
+    "themes": ["feat", "navigation", "onglets", "cantonnement", "vehicules"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.16",
     "kind": "feat",
     "titre": "🚗 Garages + 🚛 Fiche matériel enrichie logistique + Icônes équipes auto + Fix 400 vehicules",

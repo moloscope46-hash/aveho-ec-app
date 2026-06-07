@@ -262,6 +262,11 @@ export default function GroupementPage() {
                 { id: "collaborateurs", label: "Collaborateurs", icon: "ti-users", color: "#7CC8C8" },
                 { id: "depots",         label: "Dépôts",         icon: "ti-building-warehouse", color: "#5a8f8f" },
                 { id: "equipes",        label: "Équipes",        icon: "ti-users-group", color: "#5a4a90" },
+                // 0.62.17 : 4 nouveaux onglets pour les ajouts récents
+                { id: "vehicules",      label: "Véhicules",      icon: "ti-ambulance", color: "#e35d5b" },
+                { id: "garages",        label: "Garages",        icon: "ti-parking", color: "#185FA5" },
+                { id: "magasins",       label: "Magasins",       icon: "ti-building-warehouse", color: "#5a8f8f" },
+                { id: "tournees",       label: "Tournées",       icon: "ti-route", color: "#7a6fb0" },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -635,6 +640,75 @@ export default function GroupementPage() {
                   }}>
                     <i className="ti ti-arrow-right" /> Ouvrir la page Équipes
                   </button>
+                </div>
+              </Panel>
+            )}
+
+            {/* 0.62.17 : 4 nouveaux onglets — véhicules, garages, magasins, tournées */}
+            {activeTab === "vehicules" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-ambulance" style={{ fontSize: 56, color: "#e35d5b", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Flotte véhicules</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Tous les véhicules sanitaires, taxis, VSL, utilitaires du groupement
+                  </p>
+                  <button onClick={() => router.push("/vehicules")} style={btnGradient("#e35d5b", "#c0392b")}>
+                    <i className="ti ti-arrow-right" /> Ouvrir la page Véhicules
+                  </button>
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === "garages" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-parking" style={{ fontSize: 56, color: "#185FA5", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Garages & parkings</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Lieux de stationnement et d'entretien des véhicules
+                  </p>
+                  <button onClick={() => router.push("/garages")} style={btnGradient("#185FA5", "#0d4a8c")}>
+                    <i className="ti ti-arrow-right" /> Ouvrir la page Garages
+                  </button>
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === "magasins" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-building-warehouse" style={{ fontSize: 56, color: "#5a8f8f", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Magasins PSAD/FBM</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Magasins fournisseurs rattachés au groupement
+                  </p>
+                  <button onClick={() => router.push("/magasins/nouveau")} style={btnGradient("#5a8f8f", "#3a6f6f")}>
+                    <i className="ti ti-arrow-right" /> Ouvrir la page Magasins
+                  </button>
+                </div>
+              </Panel>
+            )}
+
+            {activeTab === "tournees" && (
+              <Panel>
+                <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                  <i className="ti ti-route" style={{ fontSize: 56, color: "#7a6fb0", display: "block", marginBottom: 12 }} />
+                  <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Tournées & livraisons</h3>
+                  <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18 }}>
+                    Tournées des magasins, calendrier, analytics
+                  </p>
+                  <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                    <button onClick={() => router.push("/magasin/tournees")} style={btnGradient("#7a6fb0", "#5e4a8c")}>
+                      <i className="ti ti-route" /> Liste tournées
+                    </button>
+                    <button onClick={() => router.push("/magasin/tournees/calendrier")} style={btnGradient("#EF9F27", "#d48820")}>
+                      <i className="ti ti-calendar" /> Calendrier
+                    </button>
+                    <button onClick={() => router.push("/magasin/analytics-tournees")} style={btnGradient("#5a8f8f", "#3a6f6f")}>
+                      <i className="ti ti-chart-line" /> Analytics
+                    </button>
+                  </div>
                 </div>
               </Panel>
             )}
@@ -1033,4 +1107,23 @@ function EquipeCard({ equipe, onClick }) {
       <i className="ti ti-chevron-right" style={{ color: couleur, opacity: 0.6 }} />
     </button>
   );
+}
+
+// 0.62.17 : helper bouton gradient pour les onglets
+function btnGradient(c1, c2) {
+  return {
+    background: `linear-gradient(135deg,${c1},${c2})`,
+    color: "#fff",
+    border: "none",
+    padding: "10px 22px",
+    borderRadius: 10,
+    fontFamily: "inherit",
+    fontWeight: 700,
+    fontSize: 13,
+    cursor: "pointer",
+    boxShadow: `0 4px 12px ${c1}4D`,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+  };
 }

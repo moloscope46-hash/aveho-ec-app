@@ -34,6 +34,8 @@ function VehiculesPageInner() {
   const cart = useCart();
   const [vehs, setVehs] = useState([]);
   const [etabs, setEtabs] = useState([]);
+  // 0.62.17 : garages pour le sélecteur de rattachement
+  const [garages, setGarages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [modal, setModal] = useState(null); // null | "new" | row
@@ -68,6 +70,11 @@ function VehiculesPageInner() {
         if (!mounted) return;
         setVehs(vehData);
         setEtabs(etabData);
+        // 0.62.17 : charger les garages disponibles
+        try {
+          const rg = await supabase.from("garages").select("id, nom, ville").eq("structure_id", auth.structureId).order("nom");
+          setGarages(rg.data || []);
+        } catch { setGarages([]); }
       } catch (e) { console.error(e); }
       finally { if (mounted) setLoading(false); }
     })();
@@ -102,6 +109,8 @@ function VehiculesPageInner() {
       const payload = {
         structure_id: auth.structureId,
         etablissement_id: form.etablissement_id || null,
+        // 0.62.17 : garage de stationnement
+        garage_id: form.garage_id || null,
         nom: form.nom,
         type: form.type || "sanitaire",
         immatriculation: form.immatriculation || null,
@@ -274,6 +283,19 @@ function VehiculesPageInner() {
                 <option value="">— Aucun rattachement —</option>
                 {etabs.map(e => <option key={e.id} value={e.id}>{e.nom}</option>)}
               </select>
+            </div>
+            {/* 0.62.17 : Garage de stationnement */}
+            <div className="fld">
+              <label>🅿️ Garage / Parking</label>
+              <select value={form.garage_id || ""} onChange={e => setForm({ ...form, garage_id: e.target.value })}>
+                <option value="">— Aucun —</option>
+                {garages.map(g => <option key={g.id} value={g.id}>{g.nom}{g.ville ? ` · ${g.ville}` : ""}</option>)}
+              </select>
+              {garages.length === 0 && (
+                <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 4 }}>
+                  Aucun garage encore. <a href="/garages" style={{ color: "#185FA5", fontWeight: 700 }}>Créer un garage →</a>
+                </div>
+              )}
             </div>
             <div className="fld-row">
               <div className="fld" style={{ flex: 1 }}>

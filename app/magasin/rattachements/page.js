@@ -45,8 +45,44 @@ export default function RattachementsPage() {
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
     let qm = supabase.from("articles").select("id, libelle, code, prix_public_ht").eq("est_catalogue_magasin", true).order("libelle");
     if (magasinCtx.isUserMagasin && magasinCtx.magasinId) qm = qm.eq("magasin_id", magasinCtx.magasinId);
+
+    // 0.62.17 : Cantonnement par magasin (agence) + collaborateur
+    // 1. Récupérer les rattachements actifs du magasin courant
+    let etabsAutorisesIds = null;
+    if (magasinCtx.isUserMagasin && magasinCtx.magasinId) {
+      const ratt = await tryFetch(supabase.from("magasins_rattachements")
+        .select("etablissement_id")
+        .eq("magasin_id", magasinCtx.magasinId)
+        .eq("actif", true));
+      etabsAutorisesIds = [...new Set(ratt.map(r => r.etablissement_id).filter(Boolean))];
+      console.info("[Rattachements] Cantonnement magasin actif :", etabsAutorisesIds.length, "étabs autorisés");
+    }
+    // 2. Cantonnement collaborateur : si user a `etablissement_ids` dans membres_structure, on intersect
+    if (auth.user?.id) {
+      try {
+        const me = await supabase.from("membres_structure")
+          .select("etablissement_ids, lock_assignment")
+          .eq("user_id", auth.user.id)
+          .maybeSingle();
+        if (me.data?.lock_assignment && Array.isArray(me.data?.etablissement_ids) && me.data.etablissement_ids.length > 0) {
+          const collabEtabs = me.data.etablissement_ids;
+          if (etabsAutorisesIds === null) etabsAutorisesIds = collabEtabs;
+          else etabsAutorisesIds = etabsAutorisesIds.filter(id => collabEtabs.includes(id));
+          console.info("[Rattachements] Cantonnement collaborateur appliqué :", collabEtabs.length, "→ intersect:", etabsAutorisesIds.length);
+        }
+      } catch (e) { console.warn("[Rattachements] check user etabs:", e); }
+    }
+
+    let qe = supabase.from("etablissements").select("id, nom, ville").order("nom");
+    if (etabsAutorisesIds !== null && etabsAutorisesIds.length > 0) qe = qe.in("id", etabsAutorisesIds);
+    else if (etabsAutorisesIds !== null && etabsAutorisesIds.length === 0) {
+      // Aucun étab autorisé → liste vide
+      setEtabs([]); setArticlesMagasin([]); setLoading(false);
+      return;
+    }
+
     const [e, am] = await Promise.all([
-      tryFetch(supabase.from("etablissements").select("id, nom, ville").order("nom")),
+      tryFetch(qe),
       tryFetch(qm),
     ]);
     setEtabs(e);
