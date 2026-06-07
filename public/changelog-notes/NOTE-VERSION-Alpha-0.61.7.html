@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.61.7 — SQL absolu + Mercuriale auto + Scan natif</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;background:radial-gradient(1500px 900px at 50% -10%,#3a2424 0%,#142131 50%,#050a14 100%);min-height:100vh;line-height:1.55}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.30));border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;gap:8px;font-size:11px;letter-spacing:3px;color:#ffcccb;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}h1 small{font-size:13.5px;font-weight:500;color:#ffe0e0;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#ffe0e0}.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(227,93,91,.20);border-left:4px solid #e35d5b;border-radius:14px;padding:20px 24px;margin:14px 0}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #e35d5b}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(227,93,91,.18);font-size:11.5px;color:#ffe0e0;text-align:center}
+</style></head><body><div class="page">
+<header class="cover">
+<div class="eyebrow">🔥 0.61.7 · SQL ABSOLU + MERCURIALE AUTO + SCAN NATIF</div>
+<div class="logo-big">a<span class="v">v</span>eho</div>
+<h1>🔥 SQL ABSOLU (vrai cette fois) + Application auto mercuriale + Scanner natif BarcodeDetector<small>Pack 0.61.7 — Fix définitif erreur created_at + features complétion magasin</small></h1>
+<div class="meta"><span><b>Date :</b> 6 juin 2026</span><span><b>Version :</b> <code>v0.61.7-alpha</code></span><span><b>Type :</b> Hotfix + Features</span></div>
+</header>
+
+<h2>🚨 Erreur SQL fixée</h2>
+<div class="panel">
+<p style="margin:0;color:#fff">Erreur : <code style="background:#050a14;color:#ffcccb;padding:2px 6px">42703: column "se.created_at" does not exist</code></p>
+<p style="color:#ffe0e0;margin-top:8px">Cause : la table sav_executions existait déjà sans created_at chez toi.</p>
+<p style="color:#ffe0e0;margin-top:8px"><b>Fix</b> : pour CHAQUE table je fais <code style="background:#050a14;color:#ffcccb;padding:2px 6px">ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()</code> explicitement. La vue v_analytics_sav utilise <code style="background:#050a14;color:#ffcccb;padding:2px 6px">COALESCE(se.executee_at, NOW())</code> pour ne pas dépendre de cette colonne.</p>
+</div>
+
+<h2>📋 Application auto mercuriale au panier</h2>
+<div class="panel">
+<p style="margin:0;color:#fff"><code style="background:#050a14;color:#bfe6e6;padding:2px 6px">lib/mercurialeHelper.js</code> — fonctions <code>getPrixMercurialeActif()</code> et <code>appliquerMercurialeLigne()</code>.</p>
+<p style="color:#ffe0e0;margin-top:8px">Logique : recherche dans cet ordre (premier match gagne) :</p>
+<ol style="color:#ffe0e0;margin:0;padding-left:20">
+<li>Rattachement direct article étab → article magasin avec prix négocié override</li>
+<li>Mercuriale ACTIVE rattachée à cet étab + ligne sur cet article</li>
+<li>Mercuriale ACTIVE générique (pas d'étab) + ligne sur cet article</li>
+<li>null → utilise prix public (fallback)</li>
+</ol>
+<p style="color:#ffe0e0;margin-top:8px">À intégrer dans le panier EC : appel au moment du add to cart pour stocker prix_mercuriale_ht + mercuriale_id sur la ligne.</p>
+</div>
+
+<h2>📷 Scanner code-barres natif in-app</h2>
+<div class="panel">
+<p style="margin:0;color:#fff">Composant <code style="background:#050a14;color:#bfe6e6;padding:2px 6px">&lt;ScanBarcode onScan onClose /&gt;</code></p>
+<p style="color:#ffe0e0;margin-top:8px">Utilise <b>BarcodeDetector API native</b> (Chrome/Edge/Opera Android). Plus de redirect vers /scan/article. Affiche vidéo live caméra arrière + viseur teal avec coins + ligne de scan animée. Décode EAN-13/EAN-8/Code128/QR. Haptic feedback à la détection. Code affiché en bas.</p>
+<p style="color:#ffe0e0;margin-top:8px">Intégré dans <code style="background:#050a14;color:#bfe6e6;padding:2px 6px">/magasin/inventaires</code> : bouton "📷 Scanner" ouvre la caméra in-app au lieu de quitter la page.</p>
+</div>
+
+<h2>🚀 Procédure</h2>
+<pre># 1. SQL (FINAL on espère)
+# Supabase → HOTFIX-aveho-0.61.7-ABSOLU.sql → Run
+# Vérifie sortie : TABLES OK nb=14, VUES OK nb=3
+
+# 2. Code
+cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.61.7 - SQL absolu + mercuriale auto + scan natif BarcodeDetector"
+git push origin main</pre>
+
+<h2>🔜 0.61.8+</h2>
+<div class="panel">
+<ol style="margin:0;padding-left:20;color:#ffe0e0">
+<li>Intégration helper mercuriale dans le hook useCart côté EC</li>
+<li>Affichage badge "💰 Mercu" sur les lignes de panier avec prix négocié</li>
+<li>Notes HTML manquantes pour versions précédentes</li>
+<li>Routing GPS OSRM pour tournées</li>
+<li>Signature canvas par étape tournée</li>
+<li>Swipe actions sur cards</li>
+<li>Tracking GPS temps réel chauffeur</li>
+</ol>
+</div>
+
+<footer>Aveho EC · 0.61.7 · 6 juin 2026 · 🔥 SQL ABSOLU · 📋 MERCURIALE AUTO · 📷 SCAN NATIF</footer>
+</div></body></html>

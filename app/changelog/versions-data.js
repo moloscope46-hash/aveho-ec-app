@@ -240,6 +240,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.7",
+    "kind": "fix",
+    "titre": "🔥 SQL ABSOLU (vrai cette fois) + 📋 Helper application auto mercuriale + 📷 Scanner natif BarcodeDetector in-app",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔥 **`HOTFIX-aveho-0.61.7-ABSOLU.sql`** : 3ème tentative. Erreur précédente : `42703: column 'se.created_at' does not exist` car la table existait déjà sans created_at chez toi. **Fix** : pour CHAQUE table je fais `ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW()` explicitement. La vue v_analytics_sav utilise `COALESCE(se.executee_at, NOW())` pour ne pas dépendre de cette colonne. Tu peux le relancer 50 fois, ça passe" },
+      { "code": "AI", "txt": "📋 **`lib/mercurialeHelper.js`** : helpers pour application auto des prix mercuriale au panier EC. Fonction `getPrixMercurialeActif({articleId, etablissementId})` qui cherche dans cet ordre : (1) prix négocié direct dans `articles_rattachements`, (2) mercuriale ACTIVE rattachée à l'étab avec ligne sur cet article (filtrée par date_debut/date_fin), (3) mercuriale ACTIVE générique. Retourne `{prix, source, mercurialeId, mercurialeNom}` ou null. Fonction `appliquerMercurialeLigne(ligne, etabId)` enrichit la ligne en place" },
+      { "code": "AI", "txt": "📷 **Composant `<ScanBarcode>`** : scanner code-barres natif via BarcodeDetector API (Chrome/Edge/Opera Android). UI plein écran : vidéo caméra arrière + viseur teal avec coins animés + ligne de scan + haptic feedback à la détection. Décode EAN-13/EAN-8/Code128/QR. Plus besoin de redirect vers /scan/article. Détecte si BarcodeDetector non supporté → message clair (Chrome/Edge mobile)" },
+      { "code": "AI", "txt": "🔌 **Intégration ScanBarcode dans `/magasin/inventaires`** : bouton '📷 Scanner' ouvre maintenant la caméra in-app (composant modal plein écran) au lieu de quitter pour /scan/article. Plus rapide, plus ergonomique. Le code détecté arrive directement dans handleScan() qui auto-incrémente la quantité" },
+      { "code": "AI", "txt": "📝 **Note HTML 0.61.7** créée avec thème rouge (urgence hotfix)" },
+      { "code": "INFO", "txt": "🎯 **Pour activer le scanner natif** : sur mobile, utilise Chrome/Edge/Opera (pas Safari iOS qui ne supporte pas BarcodeDetector). En dev local sur PC : tu peux tester avec Chrome devtools en simulant un device mobile" },
+      { "code": "INFO", "txt": "🚧 **0.61.8+** : (1) Intégration helper mercuriale dans `useCart` côté EC avec badge '💰 Mercu' sur les lignes. (2) Routing GPS OSRM pour tournées (optimisation ordre étapes). (3) Signature canvas par étape tournée (réutilise SignatureCanvas). (4) Swipe actions sur cards (← supprimer / → archiver). (5) Tracking GPS temps réel chauffeur via geolocation API. (6) Rattrapage notes HTML versions précédentes" }
+    ],
+    "themes": ["fix", "sql", "mercuriales", "scan", "barcodedetector"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.61.7.html"
+  },
+  {
     "v": "0.61.6",
     "kind": "fix",
     "titre": "🔥 SQL ULTRA-DEFENSIF + 🔗 Page Rattachements étab↔magasin + 🖨 PDF mercuriale + UX continue",

@@ -12,6 +12,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
+import { ScanBarcode } from "../../components/ScanBarcode";
 
 // 0.61.1 : Wrap pour Suspense (useSearchParams le requiert en build)
 export default function InventairesPageWrapper() {
@@ -46,6 +47,7 @@ function InventairesPage() {
   const [tab, setTab] = useState("saisie");                           // saisie | historique
   const [scanInput, setScanInput] = useState("");
   const [scanMessage, setScanMessage] = useState("");
+  const [scanCameraOpen, setScanCameraOpen] = useState(false);  // 0.61.7 : scan in-app
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId || magasinCtx.loading) return;
@@ -424,7 +426,7 @@ function InventairesPage() {
                     autoFocus
                     style={{ flex: 1, padding: "10px 14px", border: "2px solid #5a8f8f", borderRadius: 8, fontFamily: "Consolas,monospace", fontSize: 13, fontWeight: 600 }}
                   />
-                  <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/article")}>Scanner caméra</Btn>
+                  <Btn variant="ghost" icon="ti-scan" onClick={() => setScanCameraOpen(true)}>📷 Scanner</Btn>
                 </div>
                 {scanMessage && (
                   <div style={{ marginBottom: 10, padding: 8, background: scanMessage.startsWith("✓") ? "rgba(94,160,90,.10)" : "rgba(227,93,91,.10)", color: scanMessage.startsWith("✓") ? "#5aa05a" : "#c0392b", borderRadius: 6, fontSize: 12.5, fontWeight: 700 }}>
@@ -536,6 +538,13 @@ function InventairesPage() {
           )}
         </div>
       </div>
+      {/* 0.61.7 : Scanner caméra in-app (BarcodeDetector API) */}
+      {scanCameraOpen && (
+        <ScanBarcode
+          onScan={(code) => { handleScan(code); }}
+          onClose={() => setScanCameraOpen(false)}
+        />
+      )}
     </div>
   );
 }
