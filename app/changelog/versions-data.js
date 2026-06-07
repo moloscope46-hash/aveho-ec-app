@@ -240,6 +240,25 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.92",
+    "kind": "feat",
+    "titre": "✨ TUILES HI-TECH MERVEILLE (cyberpunk corners + light sweep + scan hint + entrance stagger + click pulse + halo coloré thématique data-accent) — refonte CSS complète différente du menu déroulant",
+    "chantiers": [
+      { "code": "AI", "txt": "✨ **Refonte TOTALE tuiles** : effet cyberpunk hi-tech différent du contour gradient utilisé sur le menu burger. **Base** : background gradient blanc subtil + border teal/12 + box-shadow 3-niveaux (1px contour + 4px diffuse + inset shine 1px). Transition cubic-bezier élastique 350ms sur transform/shadow/border. Overflow hidden + isolation pour stacking propre" },
+      { "code": "AI", "txt": "🎯 **Coins angulaires cyberpunk** : pseudo-élément ::before en haut-gauche (14x14 border-top-left teal gradient + radius 4 0 0 0) + ::after en bas-droite (14x14 border-bottom-right teal solid + radius 0 0 4 0). Invisible par défaut (opacity 0), apparaît au hover avec scale 1.2 + transition 300ms. Effet bracket cinematic style HUD futuriste" },
+      { "code": "AI", "txt": "⚡ **HOVER MERVEILLE** : transform translateY(-4px) + scale 1.005 (lift subtil), border teal/45 (highlight), box-shadow 12px teal/18 + 4px navy/10 + 1px teal/15 contour + inset shine 1px. **Animation av-scan-hint** 1.5s qui simule une vague d énergie traversant la card avec ring shadow expanding teal de 0 à 8px de spread. Light gradient diagonal 40-60% teal/8 superposé au background pour effet sweep" },
+      { "code": "AI", "txt": "👆 **CLICK pulse** : transform translateY(-1px) scale(0.995) en 100ms (feedback tactile). Box-shadow inset 2px navy/8 + shadow 4px teal/25. **Animation av-click-pulse** sur ::before : ring 0→16px expanding teal/50→0 en 600ms ease-out (validation visuelle façon Material Design)" },
+      { "code": "AI", "txt": "🎨 **Stripe lumineuse cards premium** : pseudo-::before sur av-stat-card et av-kpi-premium = ligne 1px en haut allant de 10% à 90% gradient transparent→teal/80→transparent + opacity 0.6. **Au hover** : opacity 1 + left 0% + right 0% (s étend bord à bord avec transition 600ms). Effet wave de lumière qui balaie le haut" },
+      { "code": "AI", "txt": "🎬 **Entrance stagger au mount** : classe .av-stagger sur le container parent + animation av-tile-entrance 600ms cubic-bezier élastique sur chaque enfant data-3d/av-stat-card/av-kpi-premium. **Animation-delay décalé** : 0/40/80/120/160/200/240/280/320 ms pour les 9 premières tuiles. From : opacity 0 + translateY 20px + scale 0.96 + blur 4px → To : opacity 1 + translateY 0 + scale 1 + blur 0. Effet cinematic d arrivée par vague" },
+      { "code": "AI", "txt": "🌈 **Halo coloré thématique via data-accent** : 7 variantes (teal/bleu/violet/amber/rouge/vert/terra). À utiliser `<div data-3d=true data-accent=violet>...</div>` → au hover la shadow et la border prennent la couleur thématique. Glow shadow 12px x couleur/22 + 1px shadow contour + border color/50. Permet aux pages de catégoriser leurs tuiles par sens métier (rouge SAV, vert dispo, amber attention, bleu info, violet patients, etc.)" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.93+** : (a) **Intégrer DiTabsNav** dans /demande-interne/[id]. (b) **Vue TV améliorée** avec compteurs. (c) **Déployer ImageUploader** modals matériel/patient/fournisseur. (d) **Buckets Supabase Storage** manuels. (e) **MobileActionsBar** sur pages clés. (f) **Widget ChartCard /accueil** drag&drop. (g) **doc.addImage logo statistiques-rgpd**. (h) **Refacto /materiels** custom. (i) **Workflow commande fournisseur** + PDF + Resend. (j) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["feat", "ui", "hi-tech", "tuiles"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.92.html"
+  },
+  {
     "v": "0.62.91",
     "kind": "fix",
     "titre": "🔧 Fix page /utilisateurs (force-dynamic pour éviter TDZ minification) + 🗄️ SQL audit FINAL ultra défensif (colonne commentaire détectée) + dump colonnes tables clés",
