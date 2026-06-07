@@ -336,28 +336,42 @@ button{font-family:inherit;cursor:pointer}
   letter-spacing:-.01em;
   position:relative;z-index:1;
 }
-/* 0.59.0 : Mode mobile — menu compact, libellés cachés, icônes uniquement */
+/* 0.62.84 : Mode mobile — menu LISIBLE avec icônes + labels (revoké 0.59.0 cachait labels) */
 @media (max-width: 768px) {
-  .menu-section-label,
-  .menu-section-bar,
+  .menu-section-label {
+    display: inline-block !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+  }
+  .menu-section-bar {
+    display: inline-block !important;
+  }
   .menu-tile .mt-lbl {
-    display: none !important;
+    display: block !important;
+    font-size: 10.5px !important;
+    line-height: 1.2 !important;
+    margin-top: 4px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .menu-tile {
-    padding: 8px !important;
-    min-height: 48px !important;
+    padding: 10px 6px !important;
+    min-height: 70px !important;
+    flex-direction: column !important;
     justify-content: center !important;
+    text-align: center;
   }
   .menu-tile .mt-ic {
-    margin: 0 !important;
+    margin: 0 auto 2px !important;
   }
   .menu-tiles {
-    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)) !important;
     gap: 6px !important;
   }
   .menu-section-h {
-    padding: 4px !important;
-    justify-content: center !important;
+    padding: 6px 8px !important;
+    justify-content: flex-start !important;
   }
 }
 .menu-tile .mt-count{
@@ -5740,5 +5754,71 @@ body.av-anim-off .av-page-hero {
 [style*="overflow-x: auto"]::-webkit-scrollbar {
   height: 0;
   display: none;
+}
+
+
+/* =============================================================
+   0.62.84 — Fix tuiles coupées en mode mobile + photo articles
+   ============================================================= */
+@media (max-width: 768px) {
+  /* Container de tuiles : permet le scroll horizontal SI besoin */
+  .av-stagger, [class*="grid"][style*="auto-fill"] {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+  /* Cards : full width + no clip horizontal */
+  [data-3d="true"] {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden;
+  }
+  /* Garantir que les grilles tuiles passent en 1 colonne sur petit écran */
+  [style*="repeat(auto-fill, minmax(360px"],
+  [style*="repeat(auto-fill, minmax(320px"],
+  [style*="repeat(auto-fill, minmax(300px"],
+  [style*="repeat(auto-fill, minmax(280px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Photo article wrapper */
+.av-photo-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f4f7fa, #e9eef2);
+}
+.av-photo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms ease-out;
+}
+[data-3d="true"]:hover .av-photo-wrap img {
+  transform: scale(1.05);
+}
+.av-photo-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c0d0d8;
+  font-size: 48px;
+}
+.av-photo-badge {
+  position: absolute;
+  top: 10px; left: 10px;
+  padding: 3px 8px;
+  background: rgba(255,255,255,.95);
+  color: #142131;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(6px);
 }
 
