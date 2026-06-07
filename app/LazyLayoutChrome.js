@@ -37,6 +37,8 @@ const FloatingActionBar = dynamic(() => import("./FloatingActionBar"), { ssr: fa
 // 0.61.2 : Mobile UX magasin
 const MagasinBottomNav = dynamic(() => import("./components/MagasinBottomNav").then(m => m.MagasinBottomNav), { ssr: false });
 const PwaInstallPrompt = dynamic(() => import("./components/PwaInstallPrompt").then(m => m.PwaInstallPrompt), { ssr: false });
+// 0.62.9 : FAB création rapide magasin
+const MagasinFab = dynamic(() => import("./components/MagasinFab").then(m => m.MagasinFab), { ssr: false });
 
 export default function LazyLayoutChrome() {
   return (
@@ -58,6 +60,8 @@ export default function LazyLayoutChrome() {
       <FloatingActionBar />
       {/* 0.61.2 : bottom nav magasin (mobile only) + prompt PWA install */}
       <MagasinBottomNav />
+      {/* 0.62.9 : FAB création rapide magasin (mode magasin only) */}
+      <MagasinFab />
       <PwaInstallPrompt />
     </>
   );

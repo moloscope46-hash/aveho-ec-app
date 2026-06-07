@@ -57,22 +57,42 @@ export default function Etablissement() {
     if (!auth.ready) return;
     (async () => {
       try {
-        const [b, e, s, c, l, pa, ma, di] = await Promise.all([
+        const [b, s, c, l, pa, ma, di] = await Promise.all([
           supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId).order("nom"),
-          Promise.resolve({ data: [] }), // 0.58.85 etages dropped
           supabase.from("services").select("*").order("nom"),
           supabase.from("chambres").select("*").order("nom"),
           supabase.from("lits").select("*").order("nom"),
           supabase.from("patients").select("*").eq("etablissement_id", auth.etabId),
           supabase.from("materiels").select("*").eq("etablissement_id", auth.etabId),
-          supabase.from("interventions").select("id,patient_id,type,urgence,statut,numero").eq("etablissement_id", auth.etabId),
+          supabase.from("interventions").select("id,patient_id,chambre_id,materiel_id,type,urgence,statut,numero,description,created_at").eq("etablissement_id", auth.etabId),
         ]);
-        // reconstruire l'arbre
+        // 0.62.9 : reconstruire l'arbre SANS les étages (table supprimée en 0.58.85)
+        // Services rattachés DIRECTEMENT aux bâtiments via services.batiment_id
         const lits = l.data || [];
         const chambres = (c.data || []).map((ch) => ({ ...ch, lits: lits.filter((x) => x.chambre_id === ch.id) }));
         const services = (s.data || []).map((sv) => ({ ...sv, chambres: chambres.filter((x) => x.service_id === sv.id) }));
-        const etages = (e.data || []).map((et) => ({ ...et, services: services.filter((x) => x.etage_id === et.id) }));
-        const bats = (b.data || []).map((ba) => ({ ...ba, etages: etages.filter((x) => x.batiment_id === ba.id) }));
+        // Bâtiments → services directs (avec etages factice pour compat)
+        const bats = (b.data || []).map((ba) => {
+          const svcsBat = services.filter((x) => x.batiment_id === ba.id);
+          // Fallback : si aucun service n'a batiment_id rempli, on prend TOUS les services
+          // (cas DB plus ancienne sans batiment_id sur services)
+          const svcsFinal = svcsBat.length > 0
+            ? svcsBat
+            : (services.filter(sv => !sv.batiment_id && b.data.length === 1) || []);
+          return {
+            ...ba,
+            // pseudo-étage "Rez-de-chaussée" pour garder la structure attendue par PlanView/TreeView
+            etages: [{ id: `${ba.id}-default`, nom: "—", services: svcsFinal }],
+          };
+        });
+        // Si aucun bâtiment mais on a des services, créer un bâtiment virtuel
+        if (bats.length === 0 && services.length > 0) {
+          bats.push({
+            id: "virtual-bat",
+            nom: "Établissement",
+            etages: [{ id: "virtual-etage", nom: "—", services }],
+          });
+        }
         setTree(bats); setPatients(pa.data || []); setMateriels(ma.data || []); setDis(di.data || []);
       } catch (e) {
         // 0.57.5 : try/catch englobant pour pas crasher la page
@@ -201,6 +221,152 @@ export default function Etablissement() {
                 <TreeView tree={tree} st={st} setFilter={setFilter} visibleChambreIds={visibleChambreIds} pName={pName} diOfChambre={diOfChambre} />
               )}
             </Panel>
+
+            {/* 0.62.9 : Panneau détail chambre sélectionnée — MAX d'infos */}
+            {st.chambre && (() => {
+              // Retrouver la chambre dans le tree
+              let chambreSel = null, serviceSel = null, batSel = null;
+              for (const b of tree) {
+                for (const e of b.etages) {
+                  for (const sv of e.services) {
+                    const ch = sv.chambres.find(c => c.id === st.chambre);
+                    if (ch) { chambreSel = ch; serviceSel = sv; batSel = b; break; }
+                  }
+                  if (chambreSel) break;
+                }
+                if (chambreSel) break;
+              }
+              if (!chambreSel) return null;
+              const patientsChambre = chambreSel.lits.filter(l => l.patient_id).map(l => ({ lit: l, patient: patients.find(p => p.id === l.patient_id) }));
+              const materielsChambre = materiels.filter(m =>
+                m.chambre_id === chambreSel.id ||
+                patientsChambre.some(p => p.patient && m.patient_id === p.patient.id)
+              );
+              const disChambre = dis.filter(d =>
+                d.chambre_id === chambreSel.id ||
+                patientsChambre.some(p => p.patient && d.patient_id === p.patient.id) ||
+                materielsChambre.some(m => d.materiel_id === m.id)
+              );
+              const occ = chambreSel.lits.filter(l => l.patient_id).length;
+              return (
+                <Panel style={{ marginTop: 14, borderLeft: "4px solid #185FA5" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div>
+                      <h3 style={{ margin: 0, color: "#142131" }}>
+                        <i className="ti ti-door" style={{ color: "#185FA5", marginRight: 6 }} />
+                        Chambre {chambreSel.nom}
+                      </h3>
+                      <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 2 }}>
+                        {batSel.nom} · {serviceSel.nom} · {occ}/{chambreSel.lits.length} lits occupés
+                      </div>
+                    </div>
+                    <button onClick={() => setFilter("chambre", "")} style={{ background: "transparent", border: "1px solid #cfd8e0", padding: "5px 12px", borderRadius: 6, cursor: "pointer", color: "#5a6878", fontFamily: "inherit", fontSize: 12 }}>
+                      <i className="ti ti-x" /> Désélectionner
+                    </button>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
+                    {/* Lits + Patients */}
+                    <div>
+                      <h4 style={{ margin: "0 0 8px", fontSize: 12, color: "#185FA5", textTransform: "uppercase", letterSpacing: 1 }}>🛏 Lits & Patients</h4>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {chambreSel.lits.map(l => {
+                          const p = l.patient_id ? patients.find(x => x.id === l.patient_id) : null;
+                          return (
+                            <div key={l.id} style={{
+                              padding: "8px 10px", background: l.patient_id ? "#eaf6ee" : "#f4f7fa",
+                              borderRadius: 6, border: `1px solid ${l.patient_id ? "#b5dcc1" : "#e3e9ee"}`,
+                              fontSize: 12, display: "flex", alignItems: "center", gap: 8,
+                            }}>
+                              <i className="ti ti-bed" style={{ color: l.patient_id ? "#1D9E75" : "#8a98a8" }} />
+                              <span style={{ flex: 1 }}>
+                                <b>{l.nom}</b> · {p ? `${p.nom} ${p.prenom || ""}` : <span style={{ color: "#8a98a8" }}>Libre</span>}
+                              </span>
+                              {p && <button onClick={() => router.push(`/patient/${p.id}`)} style={{ background: "transparent", border: "none", color: "#185FA5", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>Fiche →</button>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Matériels */}
+                    <div>
+                      <h4 style={{ margin: "0 0 8px", fontSize: 12, color: "#7CC8C8", textTransform: "uppercase", letterSpacing: 1 }}>🛠 Matériels ({materielsChambre.length})</h4>
+                      {materielsChambre.length === 0 ? (
+                        <div style={{ padding: 14, color: "#8a98a8", fontSize: 12, textAlign: "center", background: "#fafbfc", borderRadius: 6 }}>Aucun matériel</div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 200, overflowY: "auto" }}>
+                          {materielsChambre.slice(0, 20).map(m => {
+                            const meta = getEtatMeta ? getEtatMeta(m.etat) : { col: "#5a6878" };
+                            return (
+                              <div key={m.id} onClick={() => router.push(`/materiel/${m.id}`)} style={{
+                                padding: "6px 10px", background: "#fff",
+                                borderLeft: `3px solid ${meta.col || "#7CC8C8"}`,
+                                borderRadius: 4, fontSize: 11.5, cursor: "pointer",
+                                border: "1px solid #e3e9ee",
+                              }}>
+                                <div style={{ fontWeight: 600, color: "#142131" }}>{m.libelle || "Matériel"}</div>
+                                <div style={{ fontSize: 10, color: "#8a98a8" }}>
+                                  {m.num_serie && <>S/N: {m.num_serie} · </>}
+                                  {m.num_parc && <>Parc: {m.num_parc} · </>}
+                                  <span style={{ color: meta.col || "#5a6878", fontWeight: 700 }}>{m.etat || "—"}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Demandes d'intervention */}
+                    <div>
+                      <h4 style={{ margin: "0 0 8px", fontSize: 12, color: "#EF9F27", textTransform: "uppercase", letterSpacing: 1 }}>🔧 Interventions ({disChambre.length})</h4>
+                      {disChambre.length === 0 ? (
+                        <div style={{ padding: 14, color: "#8a98a8", fontSize: 12, textAlign: "center", background: "#fafbfc", borderRadius: 6 }}>Aucune DI</div>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 200, overflowY: "auto" }}>
+                          {disChambre.map(d => {
+                            const statutCol = d.statut === "Clôturée" ? "#5aa05a" : d.statut === "En cours" ? "#EF9F27" : d.urgence === "Urgent" ? "#e35d5b" : "#185FA5";
+                            return (
+                              <div key={d.id} onClick={() => router.push(`/interventions?id=${d.id}`)} style={{
+                                padding: "6px 10px", background: "#fff",
+                                borderLeft: `3px solid ${statutCol}`,
+                                borderRadius: 4, fontSize: 11.5, cursor: "pointer",
+                                border: "1px solid #e3e9ee",
+                              }}>
+                                <div style={{ fontWeight: 600, color: "#142131", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                                  <span>{d.numero || `DI-${d.id?.substring(0, 8)}`}</span>
+                                  <span style={{ fontSize: 9, background: statutCol, color: "#fff", padding: "1px 6px", borderRadius: 3, fontWeight: 700 }}>{d.statut || "Nouvelle"}</span>
+                                </div>
+                                <div style={{ fontSize: 10, color: "#8a98a8" }}>
+                                  {d.type} · {d.urgence}
+                                </div>
+                                {d.description && <div style={{ fontSize: 10.5, color: "#5a6878", marginTop: 2 }}>{d.description.slice(0, 80)}{d.description.length > 80 ? "…" : ""}</div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions rapides */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 14, paddingTop: 12, borderTop: "1px solid #e3e9ee", flexWrap: "wrap" }}>
+                    <button onClick={() => router.push(`/interventions?new=1&chambre=${chambreSel.id}`)} style={{ background: "#EF9F27", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700 }}>
+                      <i className="ti ti-plus" /> Nouvelle DI
+                    </button>
+                    <button onClick={() => router.push(`/materiels?chambre=${chambreSel.id}`)} style={{ background: "#7CC8C8", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700 }}>
+                      <i className="ti ti-tools" /> Voir tout matériel
+                    </button>
+                    {patientsChambre.length > 0 && (
+                      <button onClick={() => router.push(`/patient/${patientsChambre[0].patient.id}`)} style={{ background: "transparent", color: "#185FA5", border: "1px solid #185FA5", padding: "8px 14px", borderRadius: 6, cursor: "pointer", fontFamily: "inherit", fontSize: 12, fontWeight: 700 }}>
+                        <i className="ti ti-user" /> Fiche patient
+                      </button>
+                    )}
+                  </div>
+                </Panel>
+              );
+            })()}
 
             <Panel style={{ marginTop: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>

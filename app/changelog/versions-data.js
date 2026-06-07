@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.9",
+    "kind": "feat",
+    "titre": "🏥 Fix vue plan étab (étages drop = arbre vide) + Détail chambre MAX d'infos + FAB mobile magasin + SQL perf indexes",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **Fix vue plan établissement complètement cassée** : ligne 62 utilisait `Promise.resolve({data:[]})` pour `etages` (table dropée en 0.58.85). Le code construisait ensuite `services.filter(x.etage_id === et.id)` → `etages=[]` → tous les services filtrés → tout l'arbre VIDE. **Fix** : reconstruction de l'arbre SANS étages, services rattachés directement aux bâtiments via `services.batiment_id`. Fallback pour DB anciennes : si aucun service n'a `batiment_id`, on prend tous les services du seul bâtiment. Étage 'factice' (nom='—') créé pour garder la signature attendue par PlanView/TreeView" },
+      { "code": "AI", "txt": "🎯 **Panneau détail chambre MAX d'infos** : quand tu sélectionnes une chambre dans la vue plan, nouveau Panel borderLeft #185FA5 s'affiche en dessous avec 3 colonnes responsives. **(1) Lits & Patients** : tous les lits, lien fiche patient. **(2) Matériels** (jusqu'à 20) : libellé, S/N, parc, état coloré. **(3) Interventions** : numéro, statut badge coloré, type, urgence, description tronquée 80 car. Click chaque item navigue vers fiche. **Actions rapides** en bas : 'Nouvelle DI' pré-remplie chambre, 'Voir tout matériel' filtré, 'Fiche patient'" },
+      { "code": "AI", "txt": "➕ **FAB création rapide magasin** : `app/components/MagasinFab.js` — bouton flottant rond 60px en bas-droite (gradient teal #5a8f8f). Click → déploie 4 actions empilées avec animation : Article (#185FA5), Mercuriale (#7a6fb0), Tournée (#EF9F27), Offre marketplace (#5a8f8f). Bouton tourne 45° en backdrop sombre quand ouvert. Visible UNIQUEMENT en mode magasin (viewMode.isMagasin). Intégré dans `LazyLayoutChrome.js` via dynamic import ssr:false" },
+      { "code": "SQL", "txt": "⚡ **`migration-0.62.9-perf-indexes.sql`** : 30+ indexes IF NOT EXISTS sur les tables chaudes. **interventions** : etab, patient, materiel, chambre, statut, created_at. **materiels** : etab, patient (partial), article, chambre, depot. **tournees** : magasin, statut, date, chauffeur. **tournees_etapes/gps_track** : tournee_id. **marketplace_offres/messages** : emetteur, repondeur, statut, offre. **membres_structure** : user_id, magasin_fournisseur_id. **notifications** : (user_id, lue, created_at DESC). **articles/rattachements** : etab, magasin, art. **patients/chambres/lits** : etab, chambre, service. Index partiels (`WHERE col IS NOT NULL`) pour économiser l'espace sur les colonnes nullable. Devrait accélérer toutes les pages 2-5×" }
+    ],
+    "themes": ["fix-critique", "etablissement", "fab", "indexes-perf"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.8",
     "kind": "feat",
     "titre": "🗺 CAMIONS_DEMO retirés → vraies tournées GPS sur /carte EC + nouvelle carte /magasin/tournees avec popups complets",
