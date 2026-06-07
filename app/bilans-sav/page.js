@@ -78,6 +78,11 @@ export default function BilansSAVPage() {
           { n: 4, libelle: "Conformité normes", description: "Étiquettes, marquages, mises à jour", conforme: null, commentaire: "" },
           { n: 5, libelle: "Accessoires & consommables", description: "Pièces fournies, niveau, état", conforme: null, commentaire: "" },
         ],
+        // 0.62.58 : pièces détachées utilisées pour la réparation (TODO récurrente)
+        pieces_detachees: [],          // [{ designation, ref, quantite, prix_unitaire, fournisseur, num_commande }]
+        cout_pieces_total: 0,           // total HT calculé
+        duree_intervention_min: null,   // durée en minutes
+        cout_main_doeuvre: null,        // coût main d'œuvre HT
       }).select().maybeSingle();
       if (r.error) throw r.error;
       // Redirige vers le bilan

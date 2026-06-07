@@ -88,6 +88,29 @@ module.exports = {
   reactStrictMode: true,
   outputFileTracingRoot: path.join(__dirname),
   poweredByHeader: false,
+  // 0.62.56 — Performance optimizations
+  compress: true,                          // gzip côté Next (en plus de Vercel)
+  productionBrowserSourceMaps: false,      // pas de sourcemaps en prod (gain taille)
+  // Modular imports pour les grosses libs : importer { x } from "lodash" ne load que x
+  modularizeImports: {
+    "lodash": {
+      transform: "lodash/{{member}}",
+    },
+  },
+  // SWC minify (déjà par défaut en Next 15 mais explicite)
+  experimental: {
+    optimizePackageImports: [
+      "recharts",
+      "d3",
+      "lucide-react",
+      "@supabase/supabase-js",
+    ],
+  },
+  // 0.62.56 — Images
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60,
+  },
   async headers() {
     return [
       { source: "/(.*)", headers: SECURITY_HEADERS },

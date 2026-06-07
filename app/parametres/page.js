@@ -60,7 +60,7 @@ function ParametresInner() {
       <div className="bg-dark">
         <TopBar cartCount={cart.count} auth={auth} />
         <div className="wrap">
-          <PageHead small title="Paramètres" sub="Accès restreint aux administrateurs" />
+          <PageHead icon="ti-settings" title="Paramètres" subtitle="Accès restreint aux administrateurs" color="#5e4a8c" small />
           <Panel><StateMsg>Ton rôle n'autorise pas la modification des paramètres collectivité.</StateMsg></Panel>
         </div>
       </div>

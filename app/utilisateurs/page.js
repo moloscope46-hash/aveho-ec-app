@@ -635,7 +635,7 @@ export default function Utilisateurs() {
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="wrap">
-        <PageHead small title="Gestion des utilisateurs" sub="Rôles, droits, rattachement aux services et invitations" />
+        <PageHead icon="ti-users-group" title="Gestion des utilisateurs" subtitle="Rôles, droits, rattachement aux services et invitations" color="#185FA5" small />
         <KpiRow tiles={kpis} />
 
         <div className="seg" style={{ marginBottom: 14 }}>

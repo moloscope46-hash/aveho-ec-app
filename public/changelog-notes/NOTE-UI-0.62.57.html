@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.57 — UI</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · UI</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.57
+      <small>🎨 Refonte UI 70 pages legacy : PageHead premium auto-upgrade + /parametres + /utilisateurs + fix React #310 signalements</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.57-alpha</span></span>
+      <span>📋 <b>Type :</b> </span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> AI · <b>2</b> UX · <b>1</b> FIX · <b>3</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#ui</span> <span class="theme-pill">#ux</span> <span class="theme-pill">#refonte</span> <span class="theme-pill">#premium</span> <span class="theme-pill">#fix</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Auto-upgrade des 70 pages avec PageHead legacy</h3>
+  <div class="panel ">
+    <p>🪄 modification du fallback dans <code>app/ui.js</code>. Avant : les pages avec <code>&lt;PageHead eyebrow='X' title='Y' icon='ti-Z'&gt;</code> (format legacy) rendaient le rendu plat sans icône colorée. Après : nouvelle branche dans le composant <code>if (icon &amp;&amp; title) { return &lt;PremiumLayout/&gt; }</code> qui détecte la présence d'une icône + d'un titre et rend le format premium avec icône carrée gradient 52×52 + shadow couleur + titre Quicksand 24px blanc + textShadow + animation fade-in. L'eyebrow (s'il existe) est rendu en petit chapeau au-dessus du titre (10.5px white/55% uppercase letterSpacing 1). <strong>70 pages d'un coup en visuel premium</strong> sans toucher leur code ! Le legacy pur (sans icon) garde son rendu CSS classes pour rétrocompat</p><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">app/ui.js</code></div>
+  </div>
+
+  <h2>🐛 Fix bug <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix React #310 sur /signalements</h3>
+  <div class="panel warn">
+    <p>⚠️ même pattern que /achats en 0.62.48. <code>useContextPatientIds()</code> était appelé APRÈS <code>if (!auth.ready) return null;</code> → hook après early return = rendu inconsistant entre les renders = React #310. Solution : déplacer le hook AVANT le early return. Pattern préventif important : tous les hooks toujours en haut, returns conditionnels juste après. Aussi appliqué dans cette session</p>
+  </div>
+
+  <h2>🎨 Interface utilisateur <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Migration UI /parametres</h3>
+  <div class="panel hi">
+    <p>⚙️ (TODO mentionnée 6x) : passage du PageHead legacy au format premium avec icône <code>ti-settings</code> + color violet AVEHO #5e4a8c. Plus de coherence visuelle avec les autres pages refondues (etablissements, patients, etc.)</p>
+  </div>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">/utilisateurs PageHead premium</h3>
+  <div class="panel hi">
+    <p>👥 icône <code>ti-users-group</code> + color #185FA5 (bleu AVEHO). Cohérent avec le menu Administration et les autres pages de gestion</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Vérifications TODO récurrentes</h3>
+  <div class="panel ">
+    
+    <p>✅</p>
+    <ol class="steps">
+      <li>Cantonnement étab livraisons côté magasin → <strong>déjà fait</strong> depuis 0.62.17 dans <code>/magasin/rattachements</code> (Cantonnement par magasin agence + intersection collaborateur via <code>membres_structure.etablissement_ids</code>)</li>
+      <li>Filtrer /signalements par contexte bât/svc → <strong>déjà fait</strong> depuis 0.58.54 (useContextPatientIds + filterEquipe 0.58.63)</li>
+      <li>Permission partage objectifs équipe → <strong>déjà fait</strong> depuis 0.58.56 (champs <code>shared</code>/<code>team_id</code> + modal teamPicker)</li>
+      <li>Notes raccourci checkbox edit mode → <strong>déjà fait</strong> depuis 0.58.43 (Ctrl/Cmd+Shift+X pour toggle checkbox sur ligne du curseur)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Bilan TODO restantes après vérifications</h3>
+  <div class="panel ">
+    <p>📋 Le projet est dans une phase de maturité — la plupart des chantiers itératifs sont déjà livrés au fil des versions. Vraies pistes ouvertes : (a) Tests E2E Playwright sur workflows critiques (login → validation chef service → tournée → livraison), (b) Dashboard temps réel WebSocket Supabase Realtime (actuellement polling), (c) GED documentaire simple (Storage bucket sav-photos étendu + tags + recherche full-text), (d) Notes : sélection blocs collés (paste multi-blocs avec format), (e) Carrousel météo swipe entre jours, (f) Widget Trafic routier (bloqué : clé API), (g) Tags multi-langues (i18n complet — gros chantier), (h) Bilan matériel pièces détachées (à faire évoluer)</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Prochain lot conseillé</h3>
+  <div class="panel ">
+    <p>📅 0.62.58 Tests E2E Playwright (workflow login + DI + intervention + commande). C'est le plus impactant maintenant pour la stabilité avant prod élargie. Ensuite : 0.62.59 Dashboard temps réel WebSocket (vraie value ajoutée pour les magasiniers qui voient les DI arriver en temps réel)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.57 - " ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

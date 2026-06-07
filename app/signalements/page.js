@@ -208,10 +208,12 @@ export default function SignalementsPage() {
     await load();
   }
 
-  if (!auth.ready) return null;
-
+  // 0.62.57 FIX : hooks AVANT early return (React #310)
   // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
   const { patientIds, ctx } = useContextPatientIds();
+
+  if (!auth.ready) return null;
+
   const rowsCtx = ctx.active
     ? rows.filter(r => {
         if (patientIds && r.patient_id && !patientIds.has(r.patient_id)) return false;

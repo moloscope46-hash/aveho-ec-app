@@ -11,10 +11,12 @@
 import { useEffect, useState, useRef } from "react";
 import { Panel } from "../ui";
 import { dialogs } from "../dialogs";
-import TeamStatsPdfExport from "./TeamStatsPdfExport";  // 0.58.62
+// 0.62.56 — perf : lazy load des composants d'export PDF/CSV (rarement utilisés)
+import dynamic from "next/dynamic";
+const TeamStatsPdfExport = dynamic(() => import("./TeamStatsPdfExport"), { ssr: false, loading: () => null });
+const TeamGoalsSnapshotsExport = dynamic(() => import("./TeamGoalsSnapshotsExport"), { ssr: false, loading: () => null });
 import TeamGoalsSparkline from "./TeamGoalsSparkline";  // 0.58.63
 import TeamVsTeamChart from "./TeamVsTeamChart";  // 0.58.67
-import TeamGoalsSnapshotsExport from "./TeamGoalsSnapshotsExport";  // 0.58.67
 
 // 30 citations soigneusement choisies (pas trop perso, pas trop corporate)
 const CITATIONS = [
@@ -571,7 +573,7 @@ export function WeatherWidget() {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lng}` +
           `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,precipitation,pressure_msl,cloud_cover,visibility` +
           `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset,uv_index_max,wind_speed_10m_max` +
-          `&timezone=auto&forecast_days=4`;
+          `&timezone=auto&forecast_days=7`;
         const r = await fetch(url);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const json = await r.json();
@@ -905,10 +907,11 @@ export function WeatherWidget() {
 
             {/* 0.58.44 : prévisions 3 prochains jours (toggle) */}
             {/* 0.58.46 : ajout focus jour (clic ou swipe) → mini-panneau détails */}
+            {/* 0.62.58 : extension à 7 jours + vrai carrousel scrollable horizontal */}
             {showForecast && state.forecast && state.forecast.time && state.forecast.time.length > 1 && (
               <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #bce0f7" }}>
                 <div style={{ fontSize: 10.5, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span><i className="ti ti-calendar" /> Prévisions 3 jours</span>
+                  <span><i className="ti ti-calendar" /> Prévisions 7 jours</span>
                   {focusForecastIdx !== null && (
                     <button
                       onClick={() => setFocusForecastIdx(null)}
@@ -919,24 +922,33 @@ export function WeatherWidget() {
                   )}
                 </div>
                 <div
-                  style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, touchAction: "pan-y" }}
-                  // 0.58.46 : swipe horizontal pour changer le jour focus (mobile-friendly)
+                  className="av-weather-carousel"
+                  style={{
+                    display: "flex", gap: 6, overflowX: "auto",
+                    scrollSnapType: "x mandatory",
+                    scrollBehavior: "smooth",
+                    paddingBottom: 4,
+                    // Cacher la scrollbar pour un look propre
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                    touchAction: "pan-x",
+                  }}
                   onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
                   onTouchEnd={(e) => {
                     if (touchStartX.current == null) return;
                     const dx = e.changedTouches[0].clientX - touchStartX.current;
                     touchStartX.current = null;
-                    if (Math.abs(dx) < 40) return;  // pas un swipe significatif
-                    const dir = dx < 0 ? 1 : -1;  // swipe gauche = jour suivant
+                    if (Math.abs(dx) < 40) return;
+                    const dir = dx < 0 ? 1 : -1;
                     setFocusForecastIdx((curr) => {
-                      const nb = 3;
+                      const nb = Math.min(6, (state.forecast.time?.length || 1) - 1);
                       const next = (curr == null ? 0 : curr) + dir;
                       if (next < 0 || next >= nb) return curr;
                       return next;
                     });
                   }}
                 >
-                  {state.forecast.time.slice(1, 4).map((iso, i) => {
+                  {state.forecast.time.slice(1).map((iso, i) => {
                     const fcCode = state.forecast.weather_code[i + 1];
                     const fcWmo = WMO[fcCode] || { e: "🌡", l: "—" };
                     const fcMax = state.forecast.temperature_2m_max[i + 1];
@@ -948,7 +960,9 @@ export function WeatherWidget() {
                         onClick={() => setFocusForecastIdx(isFocus ? null : i)}
                         style={{
                           textAlign: "center",
-                          padding: "8px 6px",
+                          padding: "8px 8px",
+                          minWidth: 70, flex: "0 0 auto",
+                          scrollSnapAlign: "start",
                           background: isFocus ? "linear-gradient(135deg, rgba(24,95,165,.18), rgba(124,200,200,.15))" : "rgba(255,255,255,.6)",
                           borderRadius: 8,
                           border: `1px solid ${isFocus ? "#185FA5" : "rgba(188,224,247,.5)"}`,

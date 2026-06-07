@@ -3790,3 +3790,53 @@ body.av-presentation-mode .toast:not(.toast-error):not(.toast-critical) {
 header, .topbar, .top-bar, [class*="topbar"] {
   overflow: visible !important;
 }
+
+/* =============================================================
+   0.62.56 — Fix PageHead : titre blanc sur .bg-dark, navy sur clair
+   ============================================================= */
+/* Par défaut (fond dark) : déjà blanc via inline style */
+
+/* Si la page n'a pas .bg-dark mais un fond clair (panel parent etc.), repasser en navy */
+.panel .av-page-hero-title,
+[style*="background: #fff"] .av-page-hero-title,
+[style*="background: white"] .av-page-hero-title {
+  color: #142131 !important;
+  text-shadow: none !important;
+}
+.panel .av-page-hero-sub,
+[style*="background: #fff"] .av-page-hero-sub,
+[style*="background: white"] .av-page-hero-sub {
+  color: #5a6878 !important;
+}
+.panel .av-page-hero,
+[style*="background: #fff"] .av-page-hero {
+  border-bottom-color: #eef1f4 !important;
+}
+
+/* Eyebrow legacy (texte d'étiquette small au-dessus du titre) sur bg-dark : forcer clair */
+.bg-dark .eyebrow {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* h1.h1 legacy (PageHead sans icon) sur bg-dark : forcer clair */
+.bg-dark .h1,
+.bg-dark h1.h1 {
+  color: #fff !important;
+}
+.bg-dark .sub {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Tous les h1, h2, h3 directement sur .bg-dark (en dehors d'un panel blanc) doivent être clairs */
+.bg-dark > h1, .bg-dark > h2, .bg-dark > h3,
+.bg-dark .wrap > h1, .bg-dark .wrap > h2, .bg-dark .wrap > h3,
+.bg-dark .page-content > h1, .bg-dark .page-content > h2, .bg-dark .page-content > h3 {
+  color: #fff;
+}
+
+/* =============================================================
+   0.62.58 — Carrousel météo : scrollbar cachée mais scroll actif
+   ============================================================= */
+.av-weather-carousel::-webkit-scrollbar {
+  display: none;
+}

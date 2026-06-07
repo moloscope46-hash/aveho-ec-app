@@ -233,7 +233,7 @@ export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, c
   if (icon && title && !eyebrow) {
     const mainColor = color || "#185FA5";
     return (
-      <div className="page-hero av-fade-in" style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #eef1f4" }}>
+      <div className="page-hero av-page-hero av-fade-in" style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,.08)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div style={{
             width: 52, height: 52, borderRadius: 12,
@@ -247,19 +247,20 @@ export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, c
             <i className={`ti ${icon}`} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h1 style={{
+            <h1 className="av-page-hero-title" style={{
               margin: 0,
               fontSize: small ? 20 : 24,
               fontWeight: 800,
               fontFamily: "Quicksand, sans-serif",
-              color: "#142131",
+              color: "#fff",  /* 0.62.56 : blanc par défaut (fond .bg-dark) — overrideable via CSS si fond clair */
               letterSpacing: "-0.02em",
               lineHeight: 1.1,
+              textShadow: "0 1px 2px rgba(0,0,0,.2)",
             }}>
               {title} {accent && <span style={{ color: mainColor }}>{accent}</span>}
             </h1>
             {(subtitle || sub) && (
-              <div style={{ fontSize: 13, color: "#5a6878", marginTop: 4, lineHeight: 1.4 }}>
+              <div className="av-page-hero-sub" style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginTop: 4, lineHeight: 1.4 }}>
                 {subtitle || sub}
               </div>
             )}
@@ -268,7 +269,55 @@ export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, c
       </div>
     );
   }
-  // Legacy fallback pour les pages qui utilisaient l'ancien format
+  // Legacy fallback amélioré 0.62.57 :
+  // Si on a une icône mais format legacy (eyebrow + title), on rend le format premium quand même
+  // (avec l'eyebrow en subtitle)
+  if (icon && title) {
+    const mainColor = color || "#185FA5";
+    return (
+      <div className="page-hero av-page-hero av-fade-in" style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid rgba(255,255,255,.08)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 12,
+            background: `linear-gradient(135deg, ${mainColor} 0%, ${mainColor}dd 100%)`,
+            color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26,
+            boxShadow: `0 6px 16px ${mainColor}40`,
+            flexShrink: 0,
+          }}>
+            <i className={`ti ${icon}`} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {eyebrow && (
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,.55)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
+                {eyebrow}
+              </div>
+            )}
+            <h1 className="av-page-hero-title" style={{
+              margin: 0,
+              fontSize: small ? 20 : 24,
+              fontWeight: 800,
+              fontFamily: "Quicksand, sans-serif",
+              color: "#fff",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+              textShadow: "0 1px 2px rgba(0,0,0,.2)",
+            }}>
+              {title} {accent && <span style={{ color: mainColor }}>{accent}</span>}
+            </h1>
+            {(subtitle || sub) && (
+              <div className="av-page-hero-sub" style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginTop: 4, lineHeight: 1.4 }}>
+                {subtitle || sub}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Vraiment legacy fallback (sans icône) — passe en classes CSS qui sont déjà claires sur bg-dark
   return (
     <>
       {eyebrow && <span className="eyebrow"><i className={`ti ${icon || "ti-building-hospital"}`} /> {eyebrow}</span>}
