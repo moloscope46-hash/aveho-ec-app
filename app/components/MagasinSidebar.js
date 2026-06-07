@@ -113,7 +113,9 @@ function MagasinSidebar() {
 
   if (!viewMode.ready) return null;
   if (!viewMode.isMagasin) return null;
-  const collapsed = sidebarCollapsed;
+  // 0.62.78 : forcer non-collapsed en mobile (burger-open) : titres visibles
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 900;
+  const collapsed = isMobile ? false : sidebarCollapsed;
 
   return (
     <>
