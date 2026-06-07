@@ -376,6 +376,16 @@ export default function Patients() {
                 {lbl("patient", "Patient") === "Patient" ? "Nouveau patient" : `Nouveau ${lbl("patient", "Patient").toLowerCase()}`}
               </NeonButton>
             )}
+            {/* 0.62.41 : Wizard mobile 5 étapes - alternative pour mobile/tablette */}
+            {auth.can("ecrire") && (
+              <NeonButton
+                variant="amber"
+                icon="ti-device-mobile"
+                onClick={() => router.push("/mobile/patient/new")}
+              >
+                Wizard mobile 5 étapes
+              </NeonButton>
+            )}
             <button className="btn-ghost" onClick={() => setShowFilters(!showFilters)}>
               <i className={`ti ${showFilters ? "ti-filter-off" : "ti-filter"}`} /> Filtres avancés
               {(filters.q || filters.service || filters.chambre || filters.etat || filters.etiquette) && <span style={{ background: "#7CC8C8", color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 8, marginLeft: 4 }}>●</span>}
@@ -788,6 +798,9 @@ export default function Patients() {
                           {auth.can("ecrire") && <i className="ti ti-edit" style={{ color: "#2a5a5a", cursor: "pointer", marginRight: 12 }} onClick={() => openEdit(r)} />}
                           {/* 0.58.82 : Bouton imprimer bracelet QR */}
                           <i className="ti ti-id" style={{ color: "#185FA5", cursor: "pointer", marginRight: 12 }} onClick={(e) => { e.stopPropagation(); router.push(`/patients/${r.id}/qr`); }} title="Imprimer bracelet QR" />
+                          {/* 0.62.41 : Dossier médical premium */}
+                          <i className="ti ti-file-medical" style={{ color: "#5aa05a", cursor: "pointer", marginRight: 12 }} onClick={(e) => { e.stopPropagation(); router.push(`/patient/${r.id}/dossier`); }} title="Dossier médical" />
+                          <i className="ti ti-eye" style={{ color: "#7a6fb0", cursor: "pointer", marginRight: 12 }} onClick={(e) => { e.stopPropagation(); router.push(`/patient/${r.id}`); }} title="Vue complète" />
                           {auth.can("supprimer") && <IconButton icon="ti-trash" color="#C9867F" ariaLabel={`Supprimer ${r.nom || "patient"}`} onClick={() => del(r)} />}
                         </td>
                       </tr>

@@ -46,6 +46,7 @@ const MAG_NAV = [
     { p: "/magasin?tab=di", ic: "ti-truck-loading", lbl: "DI reçues", col: "#EF9F27" },
     { p: "/magasin?tab=sav", ic: "ti-tool", lbl: "SAV reçues", col: "#e35d5b" },
     { p: "/magasin?tab=transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
+    { p: "/magasin/etablissements", ic: "ti-building-hospital", lbl: "Mes EC clients", col: "#185FA5" },
     { p: "/magasin/etablissements/nouveau", ic: "ti-building-plus", lbl: "+ Nouvel EC client", col: "#5aa05a" },
   ]},
   { section: "Configuration", items: [

@@ -140,6 +140,7 @@ const MENU = [
   // 6. ADMIN (tech)
   { section: "Administration", sectionIcon: "ti-shield-lock", items: [
     { p: "/utilisateurs", ic: "ti-users-group", lbl: "Utilisateurs", col: "#185FA5" },
+    { p: "/parametres/app-native", ic: "ti-device-mobile", lbl: "App native (iOS/Android)", col: "#185FA5" },
     { p: "/historique", ic: "ti-history", lbl: "Historique", col: "#7a6fb0" },
     { p: "/audit", ic: "ti-list-search", lbl: "Audit log", col: "#5e4a8c" },
     { p: "/statut", ic: "ti-activity-heartbeat", lbl: "Statut système", col: "#5aa05a" },

@@ -57,6 +57,8 @@ function EtablissementsListPageInner() {
   // 0.58.31 : auto-open create modal si ?create=1 (depuis /collectivite)
   const searchParams = useSearchParams();
   const [rows, setRows] = useState([]);
+  // 0.62.40 : stats riches par établissement (patients, lits, bâtiments, services, DI, livraisons, collaborateurs)
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -97,6 +99,50 @@ function EtablissementsListPageInner() {
       .eq("structure_id", auth.structureId);
     setRows(data || []);
     setLoading(false);
+    // 0.62.40 : charger stats riches en parallèle
+    if (data?.length) {
+      const ids = data.map(e => e.id);
+      const initStats = {};
+      data.forEach(e => { initStats[e.id] = { patients: 0, lits: 0, batiments: 0, services: 0, chambres: 0, di_en_cours: 0, livraisons: 0, collaborateurs: 0 }; });
+      try {
+        const tryListByEtab = async (table, etabIds, etabField = "etablissement_id") => {
+          try {
+            const r = await supabase.from(table).select(etabField).in(etabField, etabIds);
+            return r.data || [];
+          } catch { return []; }
+        };
+        const [p, l, b, s, ch, di, liv, co] = await Promise.all([
+          tryListByEtab("patients", ids),
+          tryListByEtab("lits", ids),
+          tryListByEtab("batiments", ids),
+          tryListByEtab("services", ids),
+          tryListByEtab("chambres", ids),
+          (async () => {
+            try {
+              const r = await supabase.from("interventions").select("etablissement_id, statut").in("etablissement_id", ids).in("statut", ["en_cours", "planifiee", "a_faire", "ouverte"]);
+              return r.data || [];
+            } catch { return []; }
+          })(),
+          (async () => {
+            try {
+              const r = await supabase.from("tournees_etapes").select("etablissement_id").in("etablissement_id", ids).is("completed_at", null);
+              return r.data || [];
+            } catch { return []; }
+          })(),
+          tryListByEtab("membres_structure", ids),
+        ]);
+        const s2 = { ...initStats };
+        p.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].patients++; });
+        l.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].lits++; });
+        b.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].batiments++; });
+        s.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].services++; });
+        ch.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].chambres++; });
+        di.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].di_en_cours++; });
+        liv.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].livraisons++; });
+        co.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].collaborateurs++; });
+        setStats(s2);
+      } catch (e) { console.warn("[stats etabs]:", e); }
+    }
   }
   useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.structureId]);
 
@@ -451,45 +497,114 @@ function EtablissementsListPageInner() {
             </StateMsg>
           </Panel>
         ) : view === "tuiles" ? (
-          // 0.62.37 : Vue TUILES
-          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+          // 0.62.40 : Vue TUILES GROSSES MAX INFO (Cédric : "hésite pas à les refaire")
+          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 18 }}>
             {filtered.map(e => {
               const couleur = TYPE_COULEURS[e.type] || "#185FA5";
+              const st = stats[e.id] || {};
               return (
                 <div key={e.id} onClick={() => router.push(`/etablissement/fiche?id=${e.id}`)} style={{
-                  background: "#fff", border: `1px solid ${couleur}30`,
-                  borderTop: `4px solid ${couleur}`,
-                  borderRadius: 12, overflow: "hidden", cursor: "pointer",
-                  transition: "transform 150ms, box-shadow 150ms",
+                  background: "#fff",
+                  border: `2px solid ${couleur}25`,
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  transition: "transform 200ms, box-shadow 200ms, border-color 200ms",
+                  boxShadow: "0 2px 8px rgba(0,0,0,.04)",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
-                onMouseEnter={(ev) => { ev.currentTarget.style.transform = "translateY(-3px)"; ev.currentTarget.style.boxShadow = `0 8px 16px ${couleur}25`; }}
-                onMouseLeave={(ev) => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "none"; }}>
-                  {e.photo_url ? (
-                    <div style={{ width: "100%", height: 110, background: `url(${e.photo_url}) center/cover`, backgroundColor: `${couleur}10` }} />
-                  ) : (
-                    <div style={{ width: "100%", height: 110, background: `linear-gradient(135deg, ${couleur}15, ${couleur}30)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, color: couleur }}>
-                      <i className="ti ti-building-hospital" />
+                onMouseEnter={(ev) => { ev.currentTarget.style.transform = "translateY(-4px)"; ev.currentTarget.style.boxShadow = `0 12px 24px ${couleur}30`; ev.currentTarget.style.borderColor = couleur; }}
+                onMouseLeave={(ev) => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,.04)"; ev.currentTarget.style.borderColor = `${couleur}25`; }}>
+
+                  {/* HEADER : photo/gradient + titre + type */}
+                  <div style={{
+                    position: "relative",
+                    height: 140,
+                    background: e.photo_url
+                      ? `linear-gradient(180deg, transparent 30%, rgba(0,0,0,.7)), url(${e.photo_url}) center/cover`
+                      : `linear-gradient(135deg, ${couleur}, ${couleur}dd)`,
+                  }}>
+                    {/* Type pill en haut à droite */}
+                    <div style={{ position: "absolute", top: 10, right: 10, background: "rgba(255,255,255,.95)", color: couleur, padding: "4px 10px", borderRadius: 16, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, boxShadow: "0 2px 4px rgba(0,0,0,.1)" }}>
+                      {e.type || "—"}
                     </div>
-                  )}
-                  <div style={{ padding: 14 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: "#142131", lineHeight: 1.2 }}>{e.nom}</div>
-                        {e.est_partenaire && <span style={{ display: "inline-block", marginTop: 4, padding: "1px 8px", background: "#e6f7f7", color: "#1c5454", borderRadius: 10, fontSize: 10, fontWeight: 700 }}><i className="ti ti-route" /> Partenaire</span>}
+                    {/* Partenaire badge en haut à gauche */}
+                    {e.est_partenaire && (
+                      <div style={{ position: "absolute", top: 10, left: 10, background: "rgba(28,84,84,.95)", color: "#fff", padding: "3px 9px", borderRadius: 14, fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <i className="ti ti-route" /> Partenaire
                       </div>
-                      <span style={{ background: `${couleur}1A`, color: couleur, padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap" }}>{e.type || "—"}</span>
+                    )}
+                    {/* Si pas photo : grosse icône */}
+                    {!e.photo_url && (
+                      <div style={{ position: "absolute", top: 30, left: 0, right: 0, textAlign: "center", fontSize: 56, color: "rgba(255,255,255,.4)" }}>
+                        <i className="ti ti-building-hospital" />
+                      </div>
+                    )}
+                    {/* Nom + ville en bas */}
+                    <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, color: "#fff", textShadow: "0 2px 4px rgba(0,0,0,.4)" }}>
+                      <div style={{ fontWeight: 800, fontSize: 17, lineHeight: 1.2 }}>{e.nom}</div>
+                      {e.ville && <div style={{ fontSize: 12, marginTop: 3, opacity: 0.95 }}><i className="ti ti-map-pin" /> {e.code_postal ? `${e.code_postal} ` : ""}{e.ville}</div>}
                     </div>
-                    {e.ville && <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 6 }}>📍 {e.code_postal ? `${e.code_postal} ` : ""}{e.ville}</div>}
-                    {e.finess && <div style={{ fontSize: 10.5, color: "#8a98a8", fontFamily: "Consolas,monospace", marginTop: 2 }}>FINESS : {e.finess}</div>}
-                    {e.capacite && <div style={{ fontSize: 11, color: "#5a6878", marginTop: 4 }}>🛏 <b>{e.capacite}</b> lits</div>}
-                    <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                  </div>
+
+                  {/* BODY : grid stats riches */}
+                  <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                    {/* Bloc stats principal : 4 stats clés en grid 2x2 */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <StatBox icon="ti-users" label="Patients" value={st.patients} color="#7a6fb0" />
+                      <StatBox icon="ti-bed" label="Lits" value={st.lits} color="#185FA5" extra={e.capacite ? `${e.capacite} cap.` : null} />
+                      <StatBox icon="ti-building" label="Bâtiments" value={st.batiments} color="#5a8f8f" />
+                      <StatBox icon="ti-stethoscope" label="Services" value={st.services} color="#5aa05a" />
+                    </div>
+
+                    {/* Bloc actions/activité : 3 stats horizontales */}
+                    <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: "1px dashed #e3e9ee" }}>
+                      <ActiveBadge icon="ti-tools" label="DI en cours" value={st.di_en_cours} color="#e35d5b" />
+                      <ActiveBadge icon="ti-truck-delivery" label="Livraisons" value={st.livraisons} color="#EF9F27" />
+                      <ActiveBadge icon="ti-users-group" label="Collab." value={st.collaborateurs} color="#7CC8C8" />
+                    </div>
+
+                    {/* Infos secondaires : FINESS + tél + capacité */}
+                    {(e.finess || e.telephone || e.chambres) && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                        {e.finess && (
+                          <span style={{ fontSize: 10, fontFamily: "Consolas,monospace", color: "#8a98a8", background: "#f4f7fa", padding: "2px 8px", borderRadius: 4 }}>
+                            <b>FINESS</b> {e.finess}
+                          </span>
+                        )}
+                        {st.chambres > 0 && (
+                          <span style={{ fontSize: 10, color: "#5a6878", background: "#f4f7fa", padding: "2px 8px", borderRadius: 4 }}>
+                            <i className="ti ti-door" /> {st.chambres} chambres
+                          </span>
+                        )}
+                        {e.telephone && (
+                          <a href={`tel:${e.telephone}`} onClick={(ev) => ev.stopPropagation()} style={{ fontSize: 10, color: "#185FA5", background: "rgba(24,95,165,.08)", padding: "2px 8px", borderRadius: 4, textDecoration: "none", fontWeight: 700 }}>
+                            <i className="ti ti-phone" /> {e.telephone}
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* CTA bouton */}
+                    <div style={{ display: "flex", gap: 6, marginTop: "auto", paddingTop: 4 }}>
                       <button onClick={(ev) => { ev.stopPropagation(); router.push(`/etablissement/fiche?id=${e.id}`); }} style={{
-                        flex: 1, background: couleur, color: "#fff", border: "none",
-                        borderRadius: 6, padding: "6px 10px",
-                        fontFamily: "inherit", fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                        flex: 2, background: couleur, color: "#fff", border: "none",
+                        borderRadius: 8, padding: "9px 14px",
+                        fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                        display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                       }}>
                         <i className="ti ti-arrow-right" /> Ouvrir la fiche
                       </button>
+                      {e.latitude && e.longitude && (
+                        <button onClick={(ev) => { ev.stopPropagation(); setGpsModal({ lat: e.latitude, lng: e.longitude, label: e.nom }); }} title="Itinéraire" style={{
+                          background: "#fff", color: couleur, border: `1px solid ${couleur}`,
+                          borderRadius: 8, padding: "9px 12px",
+                          fontFamily: "inherit", fontSize: 12, cursor: "pointer",
+                        }}>
+                          <i className="ti ti-map-2" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -911,6 +1026,44 @@ function StatCard({ icon, color, value, label }) {
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 20, fontWeight: 700, color: "#142131", lineHeight: 1.1 }}>{value}</div>
         <div style={{ fontSize: 11, color: "#6c7a89", textTransform: "uppercase", letterSpacing: ".4px", fontWeight: 600 }}>{label}</div>
+      </div>
+    </div>
+  );
+}
+
+// 0.62.40 : composant StatBox grosse case stats principales
+function StatBox({ icon, label, value, color, extra }) {
+  return (
+    <div style={{
+      background: `${color}0A`, border: `1px solid ${color}25`,
+      borderRadius: 8, padding: "10px 12px",
+      display: "flex", alignItems: "center", gap: 10,
+    }}>
+      <div style={{ width: 36, height: 36, background: color, color: "#fff", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
+        <i className={`ti ${icon}`} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1, fontFamily: "Quicksand, sans-serif" }}>{value ?? 0}</div>
+        <div style={{ fontSize: 10.5, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.3, fontWeight: 600, marginTop: 2 }}>{label}{extra ? ` · ${extra}` : ""}</div>
+      </div>
+    </div>
+  );
+}
+
+// 0.62.40 : ActiveBadge stat horizontale compacte
+function ActiveBadge({ icon, label, value, color }) {
+  const has = value > 0;
+  return (
+    <div style={{
+      flex: 1, display: "flex", alignItems: "center", gap: 6,
+      padding: "6px 8px", borderRadius: 6,
+      background: has ? `${color}12` : "#fafbfc",
+      border: `1px solid ${has ? `${color}30` : "#eef1f4"}`,
+    }}>
+      <i className={`ti ${icon}`} style={{ fontSize: 14, color: has ? color : "#cfd8e0" }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 800, color: has ? color : "#cfd8e0", lineHeight: 1 }}>{value ?? 0}</div>
+        <div style={{ fontSize: 9, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.3, marginTop: 1, fontWeight: 600 }}>{label}</div>
       </div>
     </div>
   );

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.44 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.44
+      <small>📱 App native Capacitor : config Vercel live + helper cross-platform + page tests features + doc déploiement complète</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.44-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>4</b> AI · <b>1</b> UX · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#capacitor</span> <span class="theme-pill">#native</span> <span class="theme-pill">#ios</span> <span class="theme-pill">#android</span> <span class="theme-pill">#push</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(4)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">`capacitor.config.ts` refactorisé</h3>
+  <div class="panel ">
+    <p>📱 en mode 'server live' : pointe directement vers <code>https://aveho-ec-app.vercel.app</code> au lieu d'embarquer un build statique. <strong>Avantage majeur</strong> : pas besoin de re-builder l'app native iOS/Android à chaque update web → les utilisateurs voient les mises à jour immédiatement. Le binaire native devient un simple wrapper qui charge le site Vercel via WebView native. Config : appId <code>fr.aveho.ec</code>, appName 'Aveho EC', allowNavigation whitelist (Vercel + Supabase + data.gouv + OSRM + OSM), plugins configurés (SplashScreen navy + spinner teal, StatusBar dark, Keyboard adaptive, PushNotifications APNS/FCM, Camera, Geolocation pour tracking chauffeur). Android backgroundColor navy + minWebViewVersion 70</p><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">capacitor.config.ts</code></div>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Helper `lib/capacitor.js`</h3>
+  <div class="panel ">
+    
+    <p>🧰 wrappers cross-platform qui fallback en web automatiquement si pas natif</p>
+    <ol class="steps">
+      <li><strong>Détection</strong> : <code>isNative()</code>, <code>getPlatform()</code>, <code>isIOS()</code>, <code>isAndroid()</code></li>
+      <li><strong>Photo</strong> : <code>takePhoto({source, quality})</code> → utilise @capacitor/camera natif si dispo, sinon input file web</li>
+      <li><strong>Push</strong> : <code>registerPush({onToken, onNotification, onError})</code> → enregistre l'appareil pour APNS/FCM avec callback token</li>
+      <li><strong>Géoloc</strong> : <code>getCurrentLocation()</code> haute précision native ou fallback <code>navigator.geolocation</code></li>
+      <li><strong>Vibration</strong> : <code>vibrate('light'|'medium'|'heavy')</code> → Haptics natif ou <code>navigator.vibrate</code></li>
+      <li><strong>Storage</strong> : <code>setPref/getPref</code> → @capacitor/preferences ou localStorage</li>
+      <li><strong>Share</strong> : <code>share({title, text, url})</code> → natif ou Web Share API ou fallback clipboard</li>
+      <li><strong>Network</strong> : <code>getNetworkStatus()</code> → connecté + type de connexion</li>
+    </ol><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">lib/capacitor.js</code></div>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouvelle page `/parametres/app-native`</h3>
+  <div class="panel ">
+    
+    <p>🧪 centre de test interactif des features natives. Affiche</p>
+    <ol class="steps">
+      <li>Plateforme détectée (App native vs Navigateur web) avec badge coloré</li>
+      <li>Statut réseau (connecté + type 4G/wifi/etc.)</li>
+      <li>6 cartes test individuelles : Push notifications (enregistre token Supabase), Géolocalisation, Caméra (preview image), Vibration/Haptic, Partage natif, État réseau</li>
+      <li>Section setup avec snippet code complet des commandes Capacitor à exécuter. Composant <code>FeatBox</code> réutilisable avec icon + bouton Test + status + zone enfant. Accessible via menu Administration → 'App native (iOS/Android)'</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">`CAPACITOR.md` refondu</h3>
+  <div class="panel ">
+    <p>📚 (218 lignes vs 80 lignes avant) : doc complète de déploiement iOS/Android avec : prérequis détaillés (Mac+Xcode, Android Studio, comptes Apple/Google), setup initial commandes complètes (12 plugins essentiels), mode 'server live' vs mode statique embarqué, build iOS détaillé (Xcode capabilities + Info.plist permissions), build Android détaillé (Gradle + AndroidManifest permissions), push APNS/FCM, génération icons/splash automatique, helper code samples, debug iOS/Android, publication App Store/Play Store step by step, tableau troubleshooting des erreurs courantes (Pod install, R.java, trust certificate)</p>
+  </div>
+
+  <h2>🎨 Interface utilisateur <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5aa05a;padding-left:10px;color:#5aa05a;margin-top:24px">Lien menu Administration → 'App native (iOS/Android)'</h3>
+  <div class="panel hi">
+    <p>🔗 ajouté avec icône <code>ti-device-mobile</code>. Point d'entrée pour tester les features avant publication sur les stores</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Prochains lots</h3>
+  <div class="panel ">
+    <p>📅 0.62.45 Module facturation squelette (factures, lots LPP, télétransmission B2 SESAM-Vitale), 0.62.46 Reporting avancé (tableaux de bord direction, export Excel multi-feuilles, rapports d'activité), 0.62.47 Imports/exports CSV/Excel (mercuriales, articles, patients en masse via wizard mapping colonnes)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.44 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

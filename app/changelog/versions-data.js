@@ -240,6 +240,66 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.44",
+    "kind": "feat",
+    "titre": "📱 App native Capacitor : config Vercel live + helper cross-platform + page tests features + doc déploiement complète",
+    "chantiers": [
+      { "code": "AI", "txt": "📱 **`capacitor.config.ts` refactorisé** en mode 'server live' : pointe directement vers `https://aveho-ec-app.vercel.app` au lieu d'embarquer un build statique. **Avantage majeur** : pas besoin de re-builder l'app native iOS/Android à chaque update web → les utilisateurs voient les mises à jour immédiatement. Le binaire native devient un simple wrapper qui charge le site Vercel via WebView native. Config : appId `fr.aveho.ec`, appName 'Aveho EC', allowNavigation whitelist (Vercel + Supabase + data.gouv + OSRM + OSM), plugins configurés (SplashScreen navy + spinner teal, StatusBar dark, Keyboard adaptive, PushNotifications APNS/FCM, Camera, Geolocation pour tracking chauffeur). Android backgroundColor navy + minWebViewVersion 70" },
+      { "code": "AI", "txt": "🧰 **Helper `lib/capacitor.js`** : wrappers cross-platform qui fallback en web automatiquement si pas natif. (1) **Détection** : `isNative()`, `getPlatform()`, `isIOS()`, `isAndroid()`. (2) **Photo** : `takePhoto({source, quality})` → utilise @capacitor/camera natif si dispo, sinon input file web. (3) **Push** : `registerPush({onToken, onNotification, onError})` → enregistre l'appareil pour APNS/FCM avec callback token. (4) **Géoloc** : `getCurrentLocation()` haute précision native ou fallback `navigator.geolocation`. (5) **Vibration** : `vibrate('light'|'medium'|'heavy')` → Haptics natif ou `navigator.vibrate`. (6) **Storage** : `setPref/getPref` → @capacitor/preferences ou localStorage. (7) **Share** : `share({title, text, url})` → natif ou Web Share API ou fallback clipboard. (8) **Network** : `getNetworkStatus()` → connecté + type de connexion" },
+      { "code": "AI", "txt": "🧪 **Nouvelle page `/parametres/app-native`** : centre de test interactif des features natives. Affiche : (1) Plateforme détectée (App native vs Navigateur web) avec badge coloré, (2) Statut réseau (connecté + type 4G/wifi/etc.), (3) 6 cartes test individuelles : Push notifications (enregistre token Supabase), Géolocalisation, Caméra (preview image), Vibration/Haptic, Partage natif, État réseau. (4) Section setup avec snippet code complet des commandes Capacitor à exécuter. Composant `FeatBox` réutilisable avec icon + bouton Test + status + zone enfant. Accessible via menu Administration → 'App native (iOS/Android)'" },
+      { "code": "AI", "txt": "📚 **`CAPACITOR.md` refondu** (218 lignes vs 80 lignes avant) : doc complète de déploiement iOS/Android avec : prérequis détaillés (Mac+Xcode, Android Studio, comptes Apple/Google), setup initial commandes complètes (12 plugins essentiels), mode 'server live' vs mode statique embarqué, build iOS détaillé (Xcode capabilities + Info.plist permissions), build Android détaillé (Gradle + AndroidManifest permissions), push APNS/FCM, génération icons/splash automatique, helper code samples, debug iOS/Android, publication App Store/Play Store step by step, tableau troubleshooting des erreurs courantes (Pod install, R.java, trust certificate)" },
+      { "code": "UX", "txt": "🔗 **Lien menu Administration → 'App native (iOS/Android)'** ajouté avec icône `ti-device-mobile`. Point d'entrée pour tester les features avant publication sur les stores" },
+      { "code": "INFO", "txt": "📅 **Prochains lots** : 0.62.45 Module facturation squelette (factures, lots LPP, télétransmission B2 SESAM-Vitale), 0.62.46 Reporting avancé (tableaux de bord direction, export Excel multi-feuilles, rapports d'activité), 0.62.47 Imports/exports CSV/Excel (mercuriales, articles, patients en masse via wizard mapping colonnes)" }
+    ],
+    "themes": ["feat", "capacitor", "native", "ios", "android", "push"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.44.html"
+  },
+  {
+    "v": "0.62.42",
+    "kind": "feat",
+    "titre": "🏬 Magasin admin : page Mes EC clients (liste tuiles+liste) + audit droits/rattachements existants",
+    "chantiers": [
+      { "code": "AI", "txt": "🏬 **Nouvelle page `/magasin/etablissements`** : liste des EC clients d'un magasin avec **double vue** tuiles/liste (toggle persisté `localStorage.mag_etabs_view`). **Vue Tuiles** : grid 320px avec photo OU gradient teal foncé, type pill en haut, badge Partenaire, nom blanc en bas avec ombre, et **3 mini-stats** (Patients violet, DI ouvertes rouge, Livraisons ambre) en grid 1fr 1fr 1fr. Hover translateY + box-shadow couleur type. Click → ouvre la fiche de l'étab. **Vue Liste** : table compacte avec stats à droite, row entière cliquable. Toolbar : recherche + boutons 'Nouvel EC client' + 'Droits'" },
+      { "code": "AI", "txt": "📊 **Stats riches en parallèle** par étab : 3 requêtes Supabase via `Promise.all` → patients count, DI ouvertes (interventions.statut IN ('en_cours', 'planifiee', 'a_faire', 'ouverte')), livraisons en attente (tournees_etapes.completed_at IS NULL). Helpers `tryList` et `tryListBy` qui catch silencieusement les tables manquantes. Map lookup O(1) ensuite. Composant `Mini` réutilisable avec comportement intelligent (gris si 0 + alert, coloré sinon)" },
+      { "code": "UX", "txt": "🔗 **Sidebar magasin enrichie** : ajout du lien **'Mes EC clients'** dans la section Flotte & livraisons, juste avant '+ Nouvel EC client'. Icône `ti-building-hospital` bleue. Permet d'accéder rapidement à la liste avant de créer un nouveau client" },
+      { "code": "INFO", "txt": "📋 **Audit composants existants** (déjà actifs) : (1) **`/magasin/droits`** existe avec 248 lignes (config qui peut commander/SAV/transférer via quel magasin, depuis 0.60.4). (2) **`/magasin/rattachements`** existe 295 lignes (rattachements magasin↔étabs). (3) **`/magasin/etablissements/nouveau`** existe (création EC client depuis 0.62.13). (4) **`/magasin/rattachements-perimetre`** existe (périmètre par magasin). Le lot 0.62.42 vient compléter avec la **liste qui manquait** entre 'Mes droits' et 'Nouvel EC client'" },
+      { "code": "INFO", "txt": "📅 **Prochains lots** : 0.62.43 Temps réel + Météo (Supabase Realtime patient/DI/livraisons via channels + widget Open-Meteo sur dashboard magasin), 0.62.44 App native Capacitor wrapping (build iOS/Android avec accès caméra natif + push notifications natives via OneSignal), 0.62.45 Module facturation (premier squelette : factures, lots LPP, télétransmission B2)" }
+    ],
+    "themes": ["feat", "magasin", "etabs", "admin", "tuiles"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.42.html"
+  },
+  {
+    "v": "0.62.41",
+    "kind": "feat",
+    "titre": "📱 Patients/Workflows : audit wizard mobile 5 étapes existant + boutons dossier médical & wizard sur liste patients",
+    "chantiers": [
+      { "code": "INFO", "txt": "📋 **Audit composants existants** : (1) **`/mobile/patient/new`** existe déjà avec wizard 5 étapes complet (Identité → Affectation + Médecin → Coordonnées + Urgence → Médical complet → Récapitulatif & validation), 794 lignes, gestion step state, validation par étape, navigation prev/next. (2) **QR auto** : après création, redirection automatique vers `/patients/{id}/qr` pour imprimer bracelet (formats A4 fiche ou A6 bracelet). (3) **Dossier médical premium** `/patient/[id]/dossier` existe avec 5 sections (synthese, antécédents, allergies, traitements, pathologie) en onglets premium. (4) **Dashboard patient** `/patient/[id]/dashboard` existe. (5) **Edit patient** `/patient/[id]/edit` existe. Le lot était **déjà fait**, on enrichit la visibilité" },
+      { "code": "UX", "txt": "🩺 **Boutons d'accès rapide ajoutés sur chaque row `/patients`** : (1) **Icône `ti-file-medical` verte** → ouvre le dossier médical premium `/patient/{id}/dossier`. (2) **Icône `ti-eye` violette** → ouvre la vue complète `/patient/{id}` (page principale avec onglets). Maintenant chaque row a 5 actions rapides : RGPD shield + Étiquettes + Édition + QR bracelet + **Dossier médical** + **Vue complète** + Suppression. Toutes accessible en un click avec stopPropagation pour éviter les conflits" },
+      { "code": "UX", "txt": "📱 **Bouton 'Wizard mobile 5 étapes' dans la toolbar `/patients`** : à côté du bouton classique 'Nouveau patient' (modal desktop), nouveau NeonButton ambre **'Wizard mobile 5 étapes'** avec icône `ti-device-mobile` qui route vers `/mobile/patient/new`. Permet l'accès rapide au wizard pour les utilisateurs sur tablette/mobile, avec workflow guidé étape par étape" },
+      { "code": "INFO", "txt": "📅 **Prochains lots** : 0.62.42 Magasin admin (page /magasin/droits + création étab côté magasin), 0.62.43 Temps réel + Météo (Supabase Realtime patient/DI/livraisons + widget Open-Meteo), 0.62.44 App native Capacitor wrapping (build iOS/Android avec accès caméra natif)" }
+    ],
+    "themes": ["feat", "patients", "wizard", "mobile", "dossier"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.41.html"
+  },
+  {
+    "v": "0.62.40",
+    "kind": "ux",
+    "titre": "🎨 Refonte GROSSES tuiles établissements : MAX d'infos (DI en cours, livraisons, patients, lits, étages, bât, services, collab) — magnifiques",
+    "chantiers": [
+      { "code": "UX", "txt": "🎨 **Refonte ULTRA tuiles `/etablissements`** (Cédric : 'hésite pas à les refaire un truc avec max d'info'). Avant : petites tuiles 280px minimalistes. Maintenant : **GROSSES tuiles 360px** avec 3 zones structurées. **(1) HEADER 140px** : photo de l'étab en cover OU gradient couleur du type, overlay gradient sombre en bas pour lisibilité, type pill blanche en haut à droite, badge Partenaire teal en haut à gauche, **nom en blanc gras 17px + ville/CP** en bas avec ombre portée. **(2) BLOC STATS PRINCIPALES** : grid 2x2 de `StatBox` avec icône carrée colorée (Patients violet, Lits bleu, Bâtiments teal foncé, Services vert) + nombre énorme 20px gras + label uppercase. **(3) BLOC ACTIVITÉ** : 3 `ActiveBadge` horizontaux séparés par border-top dashed → DI en cours (rouge), Livraisons (ambre), Collaborateurs (teal clair). Badge gris discret si 0, coloré si > 0. **(4) INFOS SECONDAIRES** : badges horizontaux pour FINESS (mono), chambres (door icon), téléphone (clickable tel:). **(5) CTA** : bouton plein de la couleur du type 'Ouvrir la fiche' + bouton secondaire 'Itinéraire' (map-2 icon) qui ouvre GPSProviderModal" },
+      { "code": "AI", "txt": "📊 **Chargement des stats riches en parallèle** : nouveau state `stats[etab_id] = {patients, lits, batiments, services, chambres, di_en_cours, livraisons, collaborateurs}`. 8 requêtes Supabase en parallèle via `Promise.all` avec helper `tryListByEtab(table, etabIds)` qui catch silencieusement les tables qui n'existeraient pas. **DI en cours** : filtre `interventions.statut in ('en_cours', 'planifiee', 'a_faire', 'ouverte')`. **Livraisons** : `tournees_etapes.completed_at IS NULL` (étapes pas encore livrées). Compteurs construits via map + forEach après les fetches" },
+      { "code": "AI", "txt": "🧩 **Composants `StatBox` + `ActiveBadge`** réutilisables ajoutés dans `/etablissements/page.js`. StatBox : carte avec icône carrée colorée 36×36 + valeur 20px + label uppercase. ActiveBadge : ligne horizontale compacte avec icône 14px + valeur 13px + label 9px uppercase. Comportement intelligent : si value=0, le badge prend une couleur grise discrète (pas distractif), si value>0 il prend la couleur vive de l'événement (alerte visuelle)" },
+      { "code": "FIX", "txt": "🐛 **Détails visuels** : grid passe de minmax(280px, 1fr) à **minmax(360px, 1fr)** pour permettre l'affichage des stats riches. Gap 18px au lieu de 14. Border-radius 16 au lieu de 12. Box-shadow base 2px 8px + hover 12px 24px de la couleur du type. Transition 200ms au lieu de 150ms pour un effet plus premium. Hover : translateY(-4px) + border-color devient solide" },
+      { "code": "INFO", "txt": "📅 **Roadmap restante** : 0.62.41 Patients workflows mobile (wizard 5 étapes + QR auto + dossier médical), 0.62.42 Magasin admin (page /magasin/droits + création étab côté mag), 0.62.43 Temps réel + Météo (Realtime, widget Open-Meteo), 0.62.44 App native Capacitor wrapping" }
+    ],
+    "themes": ["ux", "tuiles", "stats", "etabs", "premium"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-UX-0.62.40.html"
+  },
+  {
     "v": "0.62.39",
     "kind": "fix",
     "titre": "🚨 Fix SQL marketplace défensif (column magasin_id does not exist) + 🏠 Menu Groupement remis dans Groupement (pas Mon espace)",
