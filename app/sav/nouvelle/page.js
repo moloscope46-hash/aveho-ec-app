@@ -140,7 +140,7 @@ export default function NouvelleSavPage() {
                 ? `${bilansForArticle.length} bilan${bilansForArticle.length > 1 ? "s" : ""} rattaché${bilansForArticle.length > 1 ? "s" : ""} à cet article :`
                 : "Aucun bilan spécifiquement rattaché à cet article. Choisis un bilan parmi tous les disponibles."}
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,280px))", justifyContent: "start", gap: 8 }}>
               {(bilansForArticle.length > 0 ? bilansForArticle : bilans).map(b => {
                 const selected = form.bilan_sav_id === b.id;
                 return (

@@ -97,7 +97,7 @@ export default function ProfilMagasinPage() {
                 <Btn variant="primary" icon="ti-device-floppy" onClick={saveProfil}>{saving ? "..." : "Enregistrer"}</Btn>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", justifyContent: "start", gap: 10 }}>
                 <Info lbl="Nom complet" val={`${me?.prenom || ""} ${me?.nom || ""}`.trim() || "—"} />
                 <Info lbl="Email" val={auth.user?.email || "—"} />
                 <Info lbl="Téléphone" val={me?.telephone || "—"} />
@@ -114,7 +114,7 @@ export default function ProfilMagasinPage() {
               <div style={{ color: "#5a6878" }}>Chargement...</div>
             ) : magasinCtx.magasin ? (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", justifyContent: "start", gap: 10 }}>
                   <Info lbl="Nom du magasin" val={magasinCtx.magasin.nom} />
                   <Info lbl="Code interne" val={magasinCtx.magasin.code || "—"} />
                   <Info lbl="Ville" val={magasinCtx.magasin.ville || "—"} />
@@ -141,7 +141,7 @@ export default function ProfilMagasinPage() {
           {magasinCtx.etablissement && (
             <Panel style={{ marginTop: 12, borderLeft: "4px solid #7a6fb0" }}>
               <h3 style={{ margin: "0 0 12px", color: "#7a6fb0" }}>🏥 Agence rattachée au magasin</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", justifyContent: "start", gap: 10 }}>
                 <Info lbl="Agence" val={magasinCtx.etablissement.nom} />
                 <Info lbl="Ville" val={magasinCtx.etablissement.ville || "—"} />
                 {magasinCtx.etablissement.finess && <Info lbl="FINESS" val={magasinCtx.etablissement.finess} />}

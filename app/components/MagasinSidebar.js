@@ -9,7 +9,12 @@ import { useAuth } from "../../lib/useAuth";
 const MAG_NAV = [
   { section: "Tableau de bord", items: [
     { p: "/magasin", ic: "ti-dashboard", lbl: "Vue d'ensemble", col: "#5a8f8f" },
+    { p: "/magasin/analytics-sav", ic: "ti-chart-bar", lbl: "Analytics SAV", col: "#7CC8C8" },
     { p: "/mobile/magasin", ic: "ti-device-mobile", lbl: "Vue mobile", col: "#7CC8C8" },
+  ]},
+  { section: "Stock & dépôts", items: [
+    { p: "/magasin/depots", ic: "ti-building-warehouse", lbl: "Dépôts clients", col: "#5a8f8f" },
+    { p: "/magasin/inventaires", ic: "ti-clipboard-list", lbl: "Inventaires", col: "#EF9F27" },
   ]},
   { section: "Catalogue & Articles", items: [
     { p: "/articles", ic: "ti-package", lbl: "Articles", col: "#185FA5" },

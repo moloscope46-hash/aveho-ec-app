@@ -70,7 +70,7 @@ export default function MesDemandesPage() {
 
         {/* Stats cliquables par statut */}
         <Panel>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 180px))", justifyContent: "start", gap: 8 }}>
             <StatTile lbl="Total" val={demandes.length} col="#5a6878" ic="ti-list"
               active={!filterStatut} onClick={() => setFilterStatut("")} />
             {Object.entries(STATUTS).map(([key, st]) => {

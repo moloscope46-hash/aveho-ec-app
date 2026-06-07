@@ -293,13 +293,11 @@ function PointControleCard({ point, index, result, onChange }) {
           />
         )}
         {isPhoto && (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input value={result.photo_url || ""} onChange={(e) => onChange("photo_url", e.target.value)}
-              placeholder="URL de la photo (intégration upload à venir)"
-              style={{ flex: 1, padding: "8px 12px", border: "1px solid #cfd8e0", borderRadius: 8, fontFamily: "inherit", fontSize: 12.5 }}
-            />
-            {result.photo_url && <img src={result.photo_url} alt="" style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }} onError={(e) => e.target.style.display = "none"} />}
-          </div>
+          <PhotoUploader
+            currentUrl={result.photo_url}
+            onUploaded={(url) => onChange("photo_url", url)}
+            onClear={() => onChange("photo_url", null)}
+          />
         )}
 
         {/* Commentaire complémentaire (sauf pour type texte) */}
@@ -310,6 +308,62 @@ function PointControleCard({ point, index, result, onChange }) {
           />
         )}
       </div>
+    </div>
+  );
+}
+
+// =============================================================
+// 0.60.6 : Composant upload photo via Supabase Storage
+// =============================================================
+function PhotoUploader({ currentUrl, onUploaded, onClear }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const supabase = createClient();
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { setError("Fichier trop volumineux (5 Mo max)"); return; }
+    setError(""); setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const fileName = `sav-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("sav-photos").upload(fileName, file, {
+        cacheControl: "3600", upsert: false,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("sav-photos").getPublicUrl(fileName);
+      onUploaded(pub.publicUrl);
+    } catch (e) { setError(`${e.message} (vérifie que le bucket 'sav-photos' existe)`); }
+    finally { setUploading(false); }
+  }
+
+  return (
+    <div>
+      {currentUrl ? (
+        <div style={{ display: "flex", gap: 10, alignItems: "center", padding: 8, background: "#fafbfc", borderRadius: 8 }}>
+          <img src={currentUrl} alt="" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 6, border: "1px solid #e3e9ee" }} />
+          <div style={{ flex: 1, fontSize: 11, color: "#5a6878" }}>
+            <i className="ti ti-check" style={{ color: "#5aa05a" }} /> Photo uploadée
+          </div>
+          <button onClick={onClear} style={{ background: "transparent", border: "1px solid #e35d5b", color: "#e35d5b", padding: "4px 10px", borderRadius: 6, cursor: "pointer", fontSize: 11, fontFamily: "inherit" }}>
+            🗑 Retirer
+          </button>
+        </div>
+      ) : (
+        <label style={{
+          display: "flex", alignItems: "center", gap: 8, padding: 10,
+          background: uploading ? "#fafbfc" : "#fff", border: "2px dashed #cfd8e0", borderRadius: 8, cursor: uploading ? "wait" : "pointer",
+        }}>
+          <i className="ti ti-camera-plus" style={{ color: "#5a8f8f", fontSize: 24 }} />
+          <div style={{ flex: 1, fontSize: 12.5, color: "#5a6878" }}>
+            {uploading ? "Upload en cours..." : "📷 Cliquer pour prendre/choisir une photo"}
+            <div style={{ fontSize: 10.5, color: "#8a98a8" }}>Max 5 Mo · JPG/PNG/WebP</div>
+          </div>
+          <input type="file" accept="image/*" capture="environment" onChange={handleFile} disabled={uploading} style={{ display: "none" }} />
+        </label>
+      )}
+      {error && <div style={{ marginTop: 6, padding: 6, background: "rgba(227,93,91,.10)", color: "#c0392b", fontSize: 11, borderRadius: 4 }}>⚠ {error}</div>}
     </div>
   );
 }

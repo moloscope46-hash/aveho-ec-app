@@ -201,7 +201,7 @@ export default function NouveauTransfertPage() {
             {lignes.map((l, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 100px 110px 36px", gap: 8, alignItems: "center" }}>
                 <input value={l.libelle} onChange={(e) => updateLigne(i, "libelle", e.target.value)} placeholder="Libellé article..." style={{ padding: "8px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13 }} />
-                <input type="number" min="1" value={l.quantite_demandee} onChange={(e) => updateLigne(i, "quantite_demandee", e.target.value)} placeholder="Qté" style={{ padding: "8px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13, fontFamily: "Consolas,monospace" }} />
+                <input type="number" min="1" value={l.quantite_demandee} onChange={(e) => updateLigne(i, "quantite_demandee", e.target.value)} placeholder="Qté" style={{ padding: "8px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontSize: 13, fontFamily: "Consolas,monospace" }} />
                 <select value={l.unite} onChange={(e) => updateLigne(i, "unite", e.target.value)} style={{ padding: "8px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13 }}>
                   <option value="unité">Unité</option>
                   <option value="boîte">Boîte</option>

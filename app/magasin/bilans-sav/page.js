@@ -195,7 +195,7 @@ export default function BilansSavPage() {
               <span style={{ fontSize: 12 }}>Crée un bilan pour définir tes points de contrôle (généralement 5 points) à rattacher à tes articles.</span>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,300px))", justifyContent: "start", gap: 12 }}>
               {bilans.map(b => (
                 <div key={b.id} onClick={() => openEdit(b)} style={{
                   background: "#fff", border: `1px solid ${b.couleur || "#5a8f8f"}33`, borderLeft: `4px solid ${b.couleur || "#5a8f8f"}`,

@@ -383,6 +383,10 @@ button{font-family:inherit;cursor:pointer}
 
 /* layout contenu */
 .wrap{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px))}
+/* 0.60.8 : .page-content utilisé par les nouvelles pages — même comportement que .wrap pour cohérence.
+   Quand utilisé dans un layout flex (mode magasin avec sidebar), le inline style flex:1 prend la priorité
+   et le max-width: 1180px contraint la zone centrale.  */
+.page-content{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px));width:100%}
 /* 0.58.49 : cadre global pour les pages de l'app (sous .bg-dark) — délimitation visuelle subtile */
 /* 0.58.50 : cadre renforcé avec gradient border + ombre plus marquée pour démarcation claire */
 .bg-dark .wrap{

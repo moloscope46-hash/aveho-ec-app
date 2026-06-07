@@ -220,7 +220,7 @@ export default function CollaborateursPage() {
         {/* Stats par rôle */}
         {!loading && collabs.length > 0 && (
           <Panel style={{ marginTop: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,180px))", justifyContent: "start", gap: 8 }}>
               {ROLES_PRO.map(r => {
                 const n = collabs.filter(c => c.role_professionnel === r.v).length;
                 if (n === 0) return null;
@@ -319,7 +319,7 @@ export default function CollaborateursPage() {
             </div>
             <div className="fld">
               <label>Rôle professionnel</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(110px,1fr))", gap: 6 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(110px,140px))", justifyContent: "start", gap: 6 }}>
                 {ROLES_PRO.map(r => (
                   <button key={r.v} type="button" onClick={() => setForm({ ...form, role_professionnel: r.v })} style={{
                     padding: "8px 10px",

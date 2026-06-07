@@ -20,6 +20,10 @@ const STATUTS = {
   refusee:   { lbl: "Refusée",       col: "#e35d5b", ic: "ti-x" },
   livree:    { lbl: "Livrée",        col: "#185FA5", ic: "ti-truck-delivery" },
   cloturee:  { lbl: "Clôturée",      col: "#7a6fb0", ic: "ti-circle-check" },
+  // 0.60.6 : statuts spécifiques transferts
+  en_preparation: { lbl: "En préparation", col: "#EF9F27", ic: "ti-package" },
+  en_transit:     { lbl: "En transit",     col: "#185FA5", ic: "ti-truck" },
+  livre:          { lbl: "Livré",          col: "#5aa05a", ic: "ti-check-bold" },
 };
 
 export default function DemandeInterneDetailPage() {
@@ -201,6 +205,71 @@ export default function DemandeInterneDetailPage() {
     finally { setActionInProgress(false); }
   }
 
+  // 0.60.6 : Workflow transferts (preparation → en_transit → livre)
+  async function changerStatutTransfert(newStatut, label) {
+    if (!confirm(`Marquer ce transfert comme ${label} ?`)) return;
+    setActionInProgress(true);
+    try {
+      const updates = { statut: newStatut };
+      const now = new Date().toISOString();
+      if (newStatut === "en_preparation") { updates.transfert_preparation_at = now; updates.transfert_preparation_par = auth.user?.id; }
+      else if (newStatut === "en_transit") { updates.transfert_transit_at = now; updates.transfert_transit_par = auth.user?.id; }
+      else if (newStatut === "livre") { updates.transfert_livre_at = now; updates.transfert_livre_par = auth.user?.id; updates.livree_at = now; }
+      const r = await supabase.from("demandes_internes").update(updates).eq("id", id);
+      if (r.error) throw r.error;
+      // Notif EC
+      try {
+        if (di?.created_by && di.created_by !== auth.user?.id) {
+          await supabase.from("notifications").insert({
+            user_id: di.created_by,
+            structure_id: di.structure_id,
+            type: "di",
+            titre: `Transfert ${di.numero || ""} ${label.toLowerCase()}`,
+            message: `Statut mis à jour : ${label}`,
+            url: `/demandes-internes/${id}`,
+            lu: false,
+          });
+        }
+      } catch {}
+      await reload();
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setActionInProgress(false); }
+  }
+
+  // 0.60.6 : Validation rapport SAV côté EC (avec signature)
+  async function validerRapportSav(signature, commentaire) {
+    if (!signature?.trim()) { alert("Signature requise (nom de la personne qui valide)"); return; }
+    setActionInProgress(true);
+    try {
+      const r = await supabase.from("demandes_internes").update({
+        rapport_sav_valide_par_ec: auth.user?.id,
+        rapport_sav_validee_at: new Date().toISOString(),
+        rapport_sav_signature: signature.trim(),
+        rapport_sav_commentaire_ec: commentaire?.trim() || null,
+        statut: "cloturee",
+        cloturee_at: new Date().toISOString(),
+      }).eq("id", id);
+      if (r.error) throw r.error;
+      // Notif magasin
+      try {
+        if (di?.validee_par && di.validee_par !== auth.user?.id) {
+          await supabase.from("notifications").insert({
+            user_id: di.validee_par,
+            structure_id: di.structure_id,
+            type: "di",
+            titre: `Rapport SAV ${di.numero || ""} validé`,
+            message: `Validé par ${signature}. ${commentaire ? "Commentaire : " + commentaire : ""}`,
+            url: `/demandes-internes/${id}`,
+            lu: false,
+          });
+        }
+      } catch {}
+      await reload();
+      alert("✓ Rapport SAV validé et signé. DI clôturée.");
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setActionInProgress(false); }
+  }
+
   if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Chargement...</div>;
   if (!di) return (
     <div className="page-shell">
@@ -244,8 +313,30 @@ export default function DemandeInterneDetailPage() {
         </div>
 
         {/* 0.59.8 : Actions EC — Confirmer réception si DI livrée */}
-        {/* 0.60.5 : guard viewMode.ready pour éviter hydration mismatch */}
-        {viewMode.ready && viewMode.isEC && di.statut === "livree" && (
+        {/* 0.60.6 : Validation rapport SAV côté EC (sur DI SAV validée non encore signée) */}
+        {viewMode.ready && viewMode.isEC && di.type_demande === "sav" && di.statut === "validee" && !di.rapport_sav_validee_at && (
+          <ValidationRapportSavPanel di={di} onValider={validerRapportSav} actionInProgress={actionInProgress} />
+        )}
+
+        {/* 0.60.6 : Rapport SAV déjà validé côté EC — affichage info */}
+        {viewMode.ready && di.rapport_sav_validee_at && (
+          <Panel style={{ background: "rgba(90,160,90,.08)", borderLeft: "4px solid #5aa05a" }}>
+            <h3 style={{ margin: "0 0 6px", color: "#5aa05a", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-shield-check" /> Rapport SAV validé
+            </h3>
+            <div style={{ fontSize: 12.5, color: "#5a6878" }}>
+              ✍ Signé par <b>{di.rapport_sav_signature}</b> le {new Date(di.rapport_sav_validee_at).toLocaleString("fr-FR")}
+            </div>
+            {di.rapport_sav_commentaire_ec && (
+              <div style={{ marginTop: 8, padding: 8, background: "#fff", borderRadius: 6, fontSize: 12, color: "#142131" }}>
+                💬 {di.rapport_sav_commentaire_ec}
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {/* 0.60.5 : Actions EC — Confirmer réception si DI livrée (mais pas SAV ni Transfert) */}
+        {viewMode.ready && viewMode.isEC && di.statut === "livree" && di.type_demande !== "sav" && (
           <Panel style={{ background: "rgba(24,95,165,.06)", borderLeft: "4px solid #185FA5" }}>
             <h3 style={{ margin: "0 0 10px", color: "#185FA5", display: "flex", alignItems: "center", gap: 8 }}>
               <i className="ti ti-package" /> Actions Espace Collectivité
@@ -293,6 +384,15 @@ export default function DemandeInterneDetailPage() {
                       ✓ DI validée — bilan à exécuter
                     </span>
                   </>
+                ) : di.type_demande === "transfert" ? (
+                  <>
+                    <Btn variant="primary" icon="ti-package" onClick={() => changerStatutTransfert("en_preparation", "En préparation")} disabled={actionInProgress}>
+                      Démarrer préparation
+                    </Btn>
+                    <span style={{ padding: "8px 12px", color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
+                      ✓ Transfert validé — à préparer
+                    </span>
+                  </>
                 ) : (
                   <>
                     <Btn variant="primary" icon="ti-truck-delivery" onClick={genererBL} disabled={actionInProgress}>
@@ -303,6 +403,24 @@ export default function DemandeInterneDetailPage() {
                     </span>
                   </>
                 )}
+              </div>
+            ) : di.statut === "en_preparation" ? (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <Btn variant="primary" icon="ti-truck" onClick={() => changerStatutTransfert("en_transit", "En transit")} disabled={actionInProgress}>
+                  Marquer en transit
+                </Btn>
+                <span style={{ padding: "8px 12px", color: "#EF9F27", fontSize: 12, fontWeight: 600 }}>
+                  📦 Préparation en cours
+                </span>
+              </div>
+            ) : di.statut === "en_transit" ? (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <Btn variant="primary" icon="ti-check-bold" onClick={() => changerStatutTransfert("livre", "Livré")} disabled={actionInProgress}>
+                  Confirmer livraison
+                </Btn>
+                <span style={{ padding: "8px 12px", color: "#185FA5", fontSize: 12, fontWeight: 600 }}>
+                  🚛 Marchandises en transit
+                </span>
               </div>
             ) : di.statut === "livree" ? (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -418,6 +536,59 @@ export default function DemandeInterneDetailPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// 0.60.6 : Panel validation rapport SAV côté EC avec signature
+function ValidationRapportSavPanel({ di, onValider, actionInProgress }) {
+  const [show, setShow] = useState(false);
+  const [signature, setSignature] = useState("");
+  const [commentaire, setCommentaire] = useState("");
+
+  return (
+    <Panel style={{ background: "rgba(94,143,143,.06)", borderLeft: "4px solid #5a8f8f" }}>
+      <h3 style={{ margin: "0 0 8px", color: "#5a8f8f", display: "flex", alignItems: "center", gap: 8 }}>
+        <i className="ti ti-clipboard-check" /> Validation du rapport SAV
+      </h3>
+      <div style={{ fontSize: 12.5, color: "#5a6878", marginBottom: 10 }}>
+        Le magasin a exécuté le bilan SAV. Vérifie le rapport et valide-le pour clôturer la DI.
+      </div>
+      {!show ? (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Btn variant="primary" icon="ti-shield-check" onClick={() => setShow(true)}>
+            Valider et signer le rapport
+          </Btn>
+        </div>
+      ) : (
+        <div style={{ background: "#fff", border: "1px solid #5a8f8f", borderRadius: 8, padding: 12 }}>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, color: "#5a6878", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>
+              ✍ Signature (nom de la personne qui valide) *
+            </label>
+            <input value={signature} onChange={(e) => setSignature(e.target.value)} autoFocus
+              placeholder="Prénom Nom"
+              style={{ width: "100%", padding: "10px 12px", border: "1px solid #cfd8e0", borderRadius: 8, fontFamily: "inherit", fontSize: 14, fontWeight: 600, fontStyle: "italic" }} />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, color: "#5a6878", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>
+              💬 Commentaire (optionnel)
+            </label>
+            <textarea value={commentaire} onChange={(e) => setCommentaire(e.target.value)} rows={2}
+              placeholder="Observations éventuelles..."
+              style={{ width: "100%", padding: "8px 12px", border: "1px solid #cfd8e0", borderRadius: 8, fontFamily: "inherit", fontSize: 12.5, resize: "vertical" }} />
+          </div>
+          <div style={{ fontSize: 11, color: "#8a98a8", marginBottom: 10, fontStyle: "italic" }}>
+            En validant, tu certifies avoir consulté le rapport et accepté les conclusions. La DI sera clôturée.
+          </div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <Btn variant="ghost" onClick={() => { setShow(false); setSignature(""); setCommentaire(""); }}>Annuler</Btn>
+            <Btn variant="primary" icon="ti-check" onClick={() => onValider(signature, commentaire)} disabled={actionInProgress || !signature.trim()}>
+              ✓ Valider et signer
+            </Btn>
+          </div>
+        </div>
+      )}
+    </Panel>
   );
 }
 

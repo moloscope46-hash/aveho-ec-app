@@ -47,7 +47,9 @@ export default function MagasinPage() {
   const [demandes, setDemandes] = useState([]);
   const [partenaires, setPartenaires] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ articles: 0, di_pendantes: 0, partenaires: 0 });
+  const [stats, setStats] = useState({ articles: 0, di_pendantes: 0, partenaires: 0, etabs_clients: 0 });
+  // 0.60.7 : EC ayant droits avec ce magasin (cantonnement filtres)
+  const [etabsAutorises, setEtabsAutorises] = useState([]);
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
@@ -64,19 +66,38 @@ export default function MagasinPage() {
       disQuery = disQuery.eq("magasin_id", magasinCtx.magasinId);
     }
 
-    const [artsCat, dis, parts] = await Promise.all([
+    // 0.60.7 : Récupère les EC ayant droit avec ce magasin (cantonnement filtres)
+    let etabsAutorisesIds = null;
+    if (magasinCtx.isUserMagasin && magasinCtx.magasinId) {
+      const droits = await tryFetch(supabase.from("etablissements_magasins_droits")
+        .select("etablissement_id, droit_commande, droit_sav, droit_transfert")
+        .eq("magasin_id", magasinCtx.magasinId));
+      etabsAutorisesIds = droits
+        .filter(d => d.droit_commande || d.droit_sav || d.droit_transfert)
+        .map(d => d.etablissement_id);
+    }
+
+    const [artsCat, dis, parts, etabsAll] = await Promise.all([
       tryFetch(supabase.from("articles").select("id, libelle, code, prix_vente_ht, type_article, photo_url, est_catalogue_magasin").limit(500)),
       tryFetch(disQuery),
       tryFetch(supabase.from("etablissements_partenaires").select("*").eq("est_fournisseur", true).order("nom")),
+      tryFetch(supabase.from("etablissements").select("id, nom, ville").order("nom")),
     ]);
+
+    // Filtrer les établissements autorisés pour le user magasin
+    const etabsFiltered = etabsAutorisesIds !== null
+      ? etabsAll.filter(e => etabsAutorisesIds.includes(e.id))
+      : etabsAll;
 
     setArticles(artsCat);
     setDemandes(dis);
     setPartenaires(parts);
+    setEtabsAutorises(etabsFiltered);
     setStats({
       articles: artsCat.length,
       di_pendantes: dis.filter(d => ["en_attente", "nouvelle", "draft", null].includes(d.statut)).length,
       partenaires: parts.length,
+      etabs_clients: etabsFiltered.length,
     });
     setLoading(false);
   }
@@ -126,7 +147,7 @@ export default function MagasinPage() {
         {/* TABLEAU DE BORD */}
         {activeTab === "dashboard" && (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", justifyContent: "start", gap: 12 }}>
               <StatCard color="#185FA5" icon="ti-package" lbl="Articles catalogue" value={stats.articles} onClick={() => setActiveTab("catalogue")} />
               <StatCard color="#EF9F27" icon="ti-truck-loading" lbl="DI à traiter" value={demandes.filter(d => (d.type_demande || "di") === "di" && ["nouvelle", "en_attente", null].includes(d.statut)).length} onClick={() => setActiveTab("di")} />
               <StatCard color="#e35d5b" icon="ti-tool" lbl="SAV à traiter" value={demandes.filter(d => d.type_demande === "sav" && ["nouvelle", "en_attente", null].includes(d.statut)).length} onClick={() => setActiveTab("sav")} />
@@ -355,7 +376,7 @@ function AlertesStockBas({ supabase, structureId }) {
       <div style={{ fontWeight: 700, color: "#d48820", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
         <i className="ti ti-alert-triangle" /> {alertes.length} article{alertes.length > 1 ? "s" : ""} en stock bas
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 260px))", justifyContent: "start", gap: 8 }}>
         {alertes.map(a => {
           const pct = a.stock_min > 0 ? ((a.stock_actuel || 0) / a.stock_min) * 100 : 0;
           const couleur = pct === 0 ? "#e35d5b" : pct < 50 ? "#EF9F27" : "#d48820";

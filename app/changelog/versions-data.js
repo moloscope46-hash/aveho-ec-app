@@ -240,6 +240,55 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.60.8",
+    "kind": "fix",
+    "titre": "🔥 Fix tuiles définitif — règle CSS .page-content manquante + Fix 503 /transferts/nouvelle (duplicate fontFamily)",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **CAUSE RACINE trouvée** : la classe CSS `.page-content` utilisée par TOUTES mes nouvelles pages n'était **PAS définie dans globals.css** → aucune contrainte de largeur → la div s'étalait sur 100% de la page (d'où l'impression que les tuiles font toute la largeur). Les vraies pages utilisent `.wrap` qui a `max-width: 1180px; margin: 0 auto`. Fix : ajout de la règle `.page-content { max-width: 1180px; margin: 0 auto; padding: 30px 24px ... }` dans globals.css. **Maintenant /transferts/nouvelle, /collaborateurs-fournisseurs, /magasins/nouveau, /magasin/depots, /magasin/inventaires, /magasin/profil, /magasin/parametres, /magasin/analytics-sav, /magasin/droits sont contraintes à 1180px max et centrées comme les autres pages**" },
+      { "code": "AI", "txt": "🔥 **Fix 503 /transferts/nouvelle** : duplicate key `fontFamily` dans un style React inline (ligne 204 : `fontFamily: 'inherit', fontSize: 13, fontFamily: 'Consolas,monospace'`). React minimal en prod plante sur les duplicate keys. Fix : suppression du premier `fontFamily: 'inherit'`. La page devrait se charger correctement maintenant" },
+      { "code": "AI", "txt": "🩹 **Fix `1fr` restants** dans `/sav/nouvelle`, `/mes-demandes`, `/transferts` : remplacés par des contraintes max-width (180px, 280px) avec `justifyContent: start`. Plus aucun `1fr` dans aucune page magasin/EC/transfert" },
+      { "code": "INFO", "txt": "🎯 **Reset visuel net** : grâce au .page-content avec max-width 1180px, toutes les pages magasin/EC sont maintenant centrées proprement, avec une largeur cohérente sur tous les écrans, et les tuiles ont leur taille définie sans s'étaler" }
+    ],
+    "themes": ["fix", "css", "layout"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.60.7",
+    "kind": "feat",
+    "titre": "🩹 Fix tuiles définitif + 🔒 Cantonnement filtres EC magasin + 📦 Dépôts clients magasin + 📋 Génération inventaires",
+    "chantiers": [
+      { "code": "AI", "txt": "🩹 **Fix définitif tuiles centrées** : pages `/magasin`, `/magasin/bilans-sav`, `/magasin/profil`, `/collaborateurs` avaient encore des `1fr` qui étiraient les cards à 100% de la largeur. Fix global : remplacé par `minmax(220px, 260px)`, `minmax(140px, 180px)`, `minmax(110px, 140px)`, `minmax(260px, 300px)` selon le contexte + `justifyContent: 'start'`. **Plus aucun `1fr` dans les grids cards** des pages concernées" },
+      { "code": "AI", "txt": "🔒 **Cantonnement filtres côté magasin** : sur `/magasin`, nouveau chargement des `etablissements_magasins_droits` filtrés par le magasin du user, puis filtrage des établissements visibles. Si user magasin → ne voit QUE les EC qui ont au moins un droit (commande/SAV/transfert) avec lui. Nouveau state `etabsAutorises` + stat tile 'Établissements clients' ajoutée" },
+      { "code": "AI", "txt": "📦 **Nouvelle page `/magasin/depots`** : liste des dépôts des établissements ayant des droits avec le magasin. Filtrage en cascade : (1) récupère les `etablissements_magasins_droits` du magasin, (2) garde les EC qui ont au moins un droit, (3) garde les bâtiments dans ces EC, (4) garde les services dans ces bâtiments, (5) garde les dépôts rattachés à ces EC. Cards par dépôt avec icône, nom, code, étab parent, bouton 'Générer inventaire' qui redirige vers /magasin/inventaires?depot=X. 4 stat tiles (dépôts/étabs/bâtiments/services)" },
+      { "code": "AI", "txt": "📋 **Nouvelle page `/magasin/inventaires`** : génération d'inventaires par dépôt. Workflow en 2 étapes : (1) sélection du dépôt parmi ceux autorisés (filtrés par droits), (2) saisie comptage article par article (input number sur chaque ligne, calcul écart automatique vs stock théorique calculé via stock_mouvements). Recherche article + écart coloré (vert si exact, bleu si sur-stock, rouge si manquant). Bouton 🖨 **'Rapport PDF'** : ouvre fenêtre HTML stylée avec stats (exact/sur-stock/manquants/total) + tableau détaillé + 2 zones signature + impression auto" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin étendue** : nouvelle section 'Stock & dépôts' avec 'Dépôts clients' (ti-building-warehouse) et 'Inventaires' (ti-clipboard-list amber). Accessible depuis n'importe quelle page magasin" },
+      { "code": "INFO", "txt": "🎯 **Cantonnement strict** : un user magasin voit maintenant uniquement (a) ses propres données magasin · (b) les EC ayant configuré des droits avec lui · (c) les dépôts/bâtiments/services de ces EC. Aucune fuite de données vers les autres établissements" },
+      { "code": "INFO", "txt": "🔜 **Reste 0.60.8+** : extension cantonnement à /articles, workflow inventaire complet (validation, écart, ajustement stock), export Excel, scan codes-barres pour comptage rapide, email rapport SAV" }
+    ],
+    "themes": ["fix", "feat", "magasin", "cantonnement", "inventaire", "depots"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.60.6",
+    "kind": "feat",
+    "titre": "📷 Upload photos SAV + 🚛 Workflow transferts complet + ✍ Validation rapport SAV signé + 📊 Dashboard analytics SAV",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.60.6-transferts-signature-storage.sql`** : (1) ALTER demandes_internes : transfert_preparation_at/transit_at/livre_at + leurs par, rapport_sav_valide_par_ec, rapport_sav_signature, rapport_sav_commentaire_ec. (2) **Bucket Supabase Storage `sav-photos`** créé via SQL (`storage.buckets`) avec policies (lecture publique + upload authentifié). (3) Vue `v_analytics_sav` : metrics par demande (verdict CONFORME/NON_CONFORME/EN_ATTENTE, duree_heures, compteurs ok/ko/na/mesures)" },
+      { "code": "AI", "txt": "📷 **Upload photos réel** dans la page exécution bilan SAV : nouveau composant `<PhotoUploader>` qui upload directement dans le bucket `sav-photos` via `supabase.storage`. Bouton 'Cliquer pour prendre/choisir une photo' (input type=file accept=image/* capture=environment pour caméra mobile). Max 5 Mo. Génère nom unique `sav-<timestamp>-<random>.<ext>`. Affiche preview 60x60 + bouton 'Retirer'. URL publique stockée dans `sav_executions.photo_url`" },
+      { "code": "AI", "txt": "🚛 **Workflow transferts complet** : nouveaux statuts intermédiaires `en_preparation` → `en_transit` → `livre`. Sur DI type=transfert validée, le magasin voit successivement les boutons : 'Démarrer préparation' (set transfert_preparation_at + statut), 'Marquer en transit' (statut en_transit), 'Confirmer livraison' (statut livre + livree_at). Notification EC à chaque étape avec libellé du nouveau statut" },
+      { "code": "AI", "txt": "✍ **Validation rapport SAV côté EC avec signature** : sur DI type=sav statut=validee non encore signée, nouveau panneau teal 'Validation du rapport SAV' apparaît côté EC. Bouton 'Valider et signer le rapport' → formulaire avec champ Signature (nom obligatoire) + Commentaire optionnel. Submit → set `rapport_sav_valide_par_ec` + `rapport_sav_validee_at` + `rapport_sav_signature` + statut DI=cloturee + notif magasin. Si déjà signé → bandeau vert 'Rapport SAV validé' avec signataire + date + commentaire" },
+      { "code": "AI", "txt": "📊 **Nouvelle page `/magasin/analytics-sav`** : dashboard analytics SAV avec sidebar ERP. Sélecteur période (7/30/90/365 jours). 4 BigStats : Total SAV / Taux conformité / Durée moyenne (création→clôture) / Urgents. **Répartition par verdict** (3 barres horizontales colorées). **Tendance sur 7 jours** (histogramme empilé total + non conformes). **Top bilans exécutés** (5 plus utilisés avec % conformité). **Top articles avec SAV** (tableau avec total + non conformes + taux échec coloré). Filtrage automatique par magasin si user magasin" },
+      { "code": "AI", "txt": "📍 **Lien 'Analytics SAV'** ajouté dans la sidebar magasin (section Tableau de bord, icône ti-chart-bar teal). Accessible en un click depuis n'importe quelle page magasin" },
+      { "code": "INFO", "txt": "🎯 **Cycle SAV COMPLET** maintenant possible : (1) EC crée SAV avec article+panne+bilan · (2) Magasin valide + exécute bilan (photos uploadées via caméra) · (3) Génère rapport PDF · (4) EC reçoit notif + va sur la DI · (5) Valide et signe le rapport · (6) DI clôturée · (7) Analytics actualisé en temps réel" },
+      { "code": "INFO", "txt": "🏆 **Pack 0.60 = ERP magasin complet** : 7 versions livrées (0.60.0 → 0.60.6) qui transforment Aveho EC en plateforme PSAD+Magasin complète avec SAV ultra-pro, transferts traçables, droits configurables, et analytics" }
+    ],
+    "themes": ["feat", "sav", "storage", "transfert", "analytics", "signature"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.60.5",
     "kind": "fix",
     "titre": "🩹 Fix React #418 (hydration) + 🩹 Fix article URL loop + 🩹 SQL hotfix colonnes materiels/stock",
