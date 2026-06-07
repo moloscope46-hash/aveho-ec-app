@@ -16,17 +16,35 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 // 0.58.84 : helper sondage batiment_id (évite 400 cascadants)
 import { selectServicesContexte } from "../../lib/services";
+// 0.62.10 : Filtrer par rattachements magasin
+import { useMagasinContext } from "../../lib/useMagasinContext";
 
 const STORAGE_BAT = "av-current-batiment-id";
 const STORAGE_SVC = "av-current-service-id";
 
 export default function BatimentServiceSwitcher({ auth }) {
   const supabase = createClient();
+  const magasinCtx = useMagasinContext();
   const [batiments, setBatiments] = useState([]);
   const [services, setServices] = useState([]);
   const [batId, setBatId] = useState("");
   const [svcId, setSvcId] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 0.62.10 : En mode magasin, charger d'abord les rattachements
+  const [rattachementsMagasin, setRattachementsMagasin] = useState(null);
+  useEffect(() => {
+    if (!magasinCtx.isUserMagasin || !magasinCtx.magasinId) { setRattachementsMagasin(null); return; }
+    (async () => {
+      try {
+        const r = await supabase.from("magasins_rattachements")
+          .select("etablissement_id, batiment_id, service_id, depot_id")
+          .eq("magasin_id", magasinCtx.magasinId)
+          .eq("actif", true);
+        setRattachementsMagasin(r.data || []);
+      } catch { setRattachementsMagasin([]); }
+    })();
+  }, [magasinCtx.isUserMagasin, magasinCtx.magasinId]);
 
   // Charge bâtiments quand l'établissement change
   useEffect(() => {
@@ -52,6 +70,15 @@ export default function BatimentServiceSwitcher({ auth }) {
           list = fb.data || [];
         }
         setBatiments(list);
+        // 0.62.10 : En mode magasin, filtrer la liste sur les rattachements
+        if (magasinCtx.isUserMagasin && Array.isArray(rattachementsMagasin)) {
+          const bIdsAutorises = new Set(rattachementsMagasin.filter(r => r.batiment_id).map(r => r.batiment_id));
+          // Si rattachements précisent des batiment_id, on filtre ; sinon (rattachement niveau étab) on garde tout
+          if (bIdsAutorises.size > 0) {
+            list = list.filter(b => bIdsAutorises.has(b.id));
+            setBatiments(list);
+          }
+        }
         // Restore sélection précédente si toujours valide
         // 0.58.98 : si saved === "" → "Tous les bâtiments" (préserver le choix)
         try {
@@ -78,7 +105,7 @@ export default function BatimentServiceSwitcher({ auth }) {
       }
     })();
     return () => { alive = false; };
-  }, [auth?.etabId]);
+  }, [auth?.etabId, rattachementsMagasin]);
 
   // 0.58.60 : équipes rattachées au service (ou bâtiment si pas de service)
   const [equipes, setEquipes] = useState([]);

@@ -127,6 +127,19 @@ function MaterielsInner() {
     return () => { mounted = false; };
   }, [auth.ready]);
 
+  // 0.62.10 : Les hooks DOIVENT être appelés AVANT tout early return (React rules)
+  // sinon erreur #310 "Rendered more hooks than during the previous render"
+  // 0.58.43 : page-actions du Cmd+K
+  usePageAction("open-new", () => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("new", "1");
+      window.location.href = url.toString();
+    }
+  });
+  usePageAction("export-csv", () => exportMaterielsCsv());
+  usePageAction("toggle-ctx-filter", () => ctx.toggle());
+
   if (!auth.ready || !relReady) return null;
 
   // Alpha 0.11 : bascule un tag sur un matériel
@@ -173,17 +186,7 @@ function MaterielsInner() {
       console.error("Export CSV matériels :", e);
     }
   }
-  // 0.58.43 : page-actions du Cmd+K
-  usePageAction("open-new", () => {
-    // Trigger natif Crud (le bouton "Nouveau matériel" du composant) via query param
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.searchParams.set("new", "1");
-      window.location.href = url.toString();
-    }
-  });
-  usePageAction("export-csv", () => exportMaterielsCsv());
-  usePageAction("toggle-ctx-filter", () => ctx.toggle());
+  // 0.62.10 : usePageAction déplacés en haut du composant (voir avant le early return)
 
   return (
     <div className="bg-dark">

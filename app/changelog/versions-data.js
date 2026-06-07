@@ -240,6 +240,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.10",
+    "kind": "fix",
+    "titre": "🔥 Fix /materiels React #310 (hooks order) + click libellé article = fiche globale + Filtres TopBar restaurés en mode magasin (filtrés par rattachements)",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **Fix React error #310 /materiels** : les 3 `usePageAction()` étaient appelés APRÈS le `if (!auth.ready || !relReady) return null;` ligne 130. React strict : **le nombre de hooks appelés doit être identique entre tous les renders**. Quand auth pas prêt → return null → hooks pas appelés. Quand auth prêt → hooks appelés → React panique. **Fix** : déplacé les 3 usePageAction AVANT le early return. Pattern correct : tous les hooks en haut, early return après" },
+      { "code": "AI", "txt": "📄 **Click libellé article = fiche globale (immobilisation, stock, mouvements)** : restaure le comportement antérieur. Le libellé navigue maintenant vers `/article/[id]` (vue détaillée complète). Le bouton crayon 🖉 ouvre toujours le modal d'édition rapide pour les modifs ponctuelles" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.10-magasins-rattachements.sql`** : nouvelle table `magasins_rattachements` (magasin_id, etablissement_id, batiment_id, service_id, depot_id, actif, notes) — permet de rattacher un magasin granulairement à des bâtiments/services/dépôts précis d'établissements partenaires. + colonne `depots.magasin_id` (rattachement direct simple). + 2 vues helper : `v_etabs_du_magasin` et `v_perimetre_magasin`. RLS activé. 6 indexes" },
+      { "code": "AI", "txt": "🎯 **Filtres TopBar restaurés en mode magasin** : avant je les avais cachés avec `!isMagasin` (Cédric voulait pas rien quand pas rattaché). Maintenant je les **REMETS** mais le `BatimentServiceSwitcher` les **FILTRE** : import `useMagasinContext` + nouveau state `rattachementsMagasin` chargé via `magasins_rattachements.eq(magasin_id).eq(actif,true)`. Si rattachements ont des `batiment_id` précis, la liste bâtiments est filtrée. Sinon (rattachement niveau étab) on garde la liste complète" },
+      { "code": "INFO", "txt": "🚧 **Workflow rattachement magasin — en cours** : il faut maintenant exécuter le SQL puis créer manuellement des `magasins_rattachements` (depuis Supabase ou bientôt une page admin). Exemple : `INSERT INTO magasins_rattachements (magasin_id, etablissement_id, batiment_id) VALUES ('<ton-magasin>', '<étab-client>', '<bât-précis>');`. Une fois rattaché, la TopBar du user magasin n'affichera que ce bâtiment dans le switcher" }
+    ],
+    "themes": ["fix-critique", "react-hooks", "magasin", "rattachements"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.9",
     "kind": "feat",
     "titre": "🏥 Fix vue plan étab (étages drop = arbre vide) + Détail chambre MAX d'infos + FAB mobile magasin + SQL perf indexes",

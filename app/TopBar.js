@@ -294,9 +294,9 @@ export default function TopBar({ cartCount = 0, auth }) {
             }}>⌘K</kbd>
           </button>
         )}
-        {/* 0.62.3 : Sélecteur établissement + filtres bât/svc UNIQUEMENT en mode EC.
-            En mode magasin, ces filtres EC n'ont aucun sens (le magasin a son propre contexte). */}
-        {mounted && auth && !isMagasin && auth.etablissements && auth.etablissements.length > 0 && (
+        {/* 0.62.10 : Sélecteur établissement + filtres bât/svc en MODE MAGASIN AUSSI
+            (Cédric veut voir uniquement les étabs/bât/svc où son magasin est rattaché — TODO filtrage v_etabs_du_magasin) */}
+        {mounted && auth && auth.etablissements && auth.etablissements.length > 0 && (
           <div className="etab-switch">
             <i className="ti ti-building-hospital" />
             <select value={auth.etabId || ""} onChange={(e) => auth.setEtab(e.target.value)}>
@@ -304,8 +304,8 @@ export default function TopBar({ cartCount = 0, auth }) {
             </select>
           </div>
         )}
-        {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) — uniquement mode EC (0.62.3) */}
-        {mounted && auth && !isMagasin && <BatimentServiceSwitcher auth={auth} />}
+        {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) */}
+        {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
         {mounted && auth && <NotifBell structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <div style={{ position: "relative" }}>
