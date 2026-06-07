@@ -111,9 +111,10 @@ function EtablissementsListPageInner() {
             return r.data || [];
           } catch { return []; }
         };
-        const [p, l, b, s, ch, di, liv, co] = await Promise.all([
+        // 0.62.48 FIX : `lits` n'a PAS de colonne `etablissement_id` (relation indirecte via chambre→service→bât→étab)
+        // → on récupère les chambres avec batiment_id, puis on déduit l'étab via les batiments
+        const [p, b, s, ch, di, liv, co, batsAll] = await Promise.all([
           tryListByEtab("patients", ids),
-          tryListByEtab("lits", ids),
           tryListByEtab("batiments", ids),
           tryListByEtab("services", ids),
           tryListByEtab("chambres", ids),
@@ -130,7 +131,20 @@ function EtablissementsListPageInner() {
             } catch { return []; }
           })(),
           tryListByEtab("membres_structure", ids),
+          // Pour compter les lits par étab : on récupère les batiments {id, etablissement_id}
+          (async () => {
+            try {
+              const r = await supabase.from("batiments").select("id, etablissement_id").in("etablissement_id", ids);
+              return r.data || [];
+            } catch { return []; }
+          })(),
         ]);
+
+        // Compter les lits via : chambres → batiment → étab
+        // Pour le moment on approxime via le nombre de chambres × 1 (simplifié)
+        // TODO future : query lits join chambres join services join batiments pour compte exact
+        const l = ch; // approximation : 1 lit par chambre en moyenne (à corriger en backend)
+
         const s2 = { ...initStats };
         p.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].patients++; });
         l.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].lits++; });

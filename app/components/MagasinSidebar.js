@@ -70,6 +70,20 @@ export function MagasinSidebar() {
   const magasinCtx = useMagasinContext();
   const supabase = createClient();
   const [counts, setCounts] = useState({ di: 0, sav: 0, transferts: 0, marketplace: 0 });
+  // 0.62.47 : sidebar collapsible persisté
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { setSidebarCollapsed(localStorage.getItem("av-mag-sidebar-collapsed") === "1"); } catch {}
+    function onKey(e) {
+      if (e.key === "b" && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setSidebarCollapsed(c => { const next = !c; try { localStorage.setItem("av-mag-sidebar-collapsed", next ? "1" : "0"); } catch {}; return next; });
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     if (!auth?.user || !viewMode.ready || !viewMode.isMagasin) return;
@@ -104,46 +118,73 @@ export function MagasinSidebar() {
   // Visible uniquement en mode magasin
   if (!viewMode.isMagasin) return null;
 
+  // 0.62.47 : sidebar collapsible (TODO depuis 0.58.31 !)
+  const collapsed = sidebarCollapsed;
+
   return (
-    <aside className="magasin-sidebar-erp" style={{
-      width: 240, minHeight: "calc(100vh - 60px)",
+    <aside className={`magasin-sidebar-erp ${collapsed ? "collapsed" : ""}`} style={{
+      width: collapsed ? 64 : 240, minHeight: "calc(100vh - 60px)",
       background: "linear-gradient(180deg, #142131, #0a141f)",
       borderRight: "1px solid rgba(94,143,143,.20)",
-      padding: "16px 12px",
+      padding: collapsed ? "16px 8px" : "16px 12px",
       position: "sticky", top: 60,
       overflowY: "auto",
       fontFamily: "Quicksand, sans-serif",
       flexShrink: 0,
+      transition: "width 220ms cubic-bezier(0.4, 0, 0.2, 1), padding 220ms",
     }}>
+      {/* Toggle button */}
+      <button onClick={() => setSidebarCollapsed(c => { const next = !c; try { localStorage.setItem("av-mag-sidebar-collapsed", next ? "1" : "0"); } catch {}; return next; })}
+        title={collapsed ? "Déplier (Cmd+B)" : "Replier (Cmd+B)"}
+        style={{
+          position: "absolute", top: 12, right: collapsed ? 12 : 8,
+          width: 26, height: 26, borderRadius: 6,
+          background: "rgba(255,255,255,.08)", color: "#a8d8d8",
+          border: "1px solid rgba(255,255,255,.15)",
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14, transition: "all 150ms",
+          zIndex: 5,
+        }}>
+        <i className={`ti ti-${collapsed ? "chevron-right" : "chevron-left"}`} />
+      </button>
       {/* Header magasin */}
       <div style={{
-        padding: "10px 12px", borderRadius: 10,
+        padding: collapsed ? "8px 4px" : "10px 12px", borderRadius: 10,
         background: "rgba(94,143,143,.10)", border: "1px solid rgba(94,143,143,.30)",
-        marginBottom: 14,
+        marginBottom: 14, marginTop: collapsed ? 36 : 0,
+        textAlign: collapsed ? "center" : "left",
       }}>
-        <div style={{ fontSize: 11, color: "#a8d8d8", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
-          🏬 ESPACE MAGASIN
-        </div>
-        <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>
-          {auth.user?.email?.split("@")[0]}
-        </div>
-        <button onClick={() => { viewMode.setMode("ec"); router.push("/collaborateurs"); }} style={{
-          marginTop: 8, padding: "5px 8px",
-          background: "rgba(255,255,255,.05)", color: "#fff",
-          border: "1px solid rgba(255,255,255,.20)", borderRadius: 6,
-          fontFamily: "inherit", fontSize: 10.5, fontWeight: 600, cursor: "pointer",
-          width: "100%",
-        }} title="Repasser en vue EC">
-          <i className="ti ti-switch" /> Repasser en EC
-        </button>
+        {collapsed ? (
+          <div style={{ fontSize: 18 }}>🏬</div>
+        ) : (
+          <>
+            <div style={{ fontSize: 11, color: "#a8d8d8", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
+              🏬 ESPACE MAGASIN
+            </div>
+            <div style={{ fontSize: 12, color: "#fff", fontWeight: 600 }}>
+              {auth.user?.email?.split("@")[0]}
+            </div>
+            <button onClick={() => { viewMode.setMode("ec"); router.push("/collaborateurs"); }} style={{
+              marginTop: 8, padding: "5px 8px",
+              background: "rgba(255,255,255,.05)", color: "#fff",
+              border: "1px solid rgba(255,255,255,.20)", borderRadius: 6,
+              fontFamily: "inherit", fontSize: 10.5, fontWeight: 600, cursor: "pointer",
+              width: "100%",
+            }} title="Repasser en vue EC">
+              <i className="ti ti-switch" /> Repasser en EC
+            </button>
+          </>
+        )}
       </div>
 
       {/* Sections */}
       {MAG_NAV.map((sect, i) => (
         <div key={i} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 9.5, color: "#a8d8d8", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, padding: "0 8px 4px" }}>
-            {sect.section}
-          </div>
+          {!collapsed && (
+            <div style={{ fontSize: 9.5, color: "#a8d8d8", letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, padding: "0 8px 4px" }}>
+              {sect.section}
+            </div>
+          )}
           {sect.items.map(it => {
             const isActive = pathname === it.p.split("?")[0];
             // 0.62.6 : compteur badge sur certains items
@@ -153,25 +194,30 @@ export function MagasinSidebar() {
             else if (it.p === "/magasin?tab=transferts" && counts.transferts > 0) badge = counts.transferts;
             else if (it.p === "/magasin/marketplace" && counts.marketplace > 0) badge = counts.marketplace;
             return (
-              <button key={it.p} onClick={() => router.push(it.p)} style={{
-                display: "flex", alignItems: "center", gap: 10,
-                width: "100%", padding: "8px 12px",
+              <button key={it.p} onClick={() => router.push(it.p)} title={collapsed ? it.lbl : undefined} style={{
+                display: "flex", alignItems: "center", gap: collapsed ? 0 : 10,
+                width: "100%", padding: collapsed ? "10px 0" : "8px 12px",
                 background: isActive ? "rgba(94,143,143,.18)" : "transparent",
                 color: isActive ? "#fff" : "#bfe6e6",
                 border: "none", borderRadius: 6,
                 fontFamily: "inherit", fontSize: 12.5, fontWeight: isActive ? 700 : 500,
-                cursor: "pointer", textAlign: "left",
+                cursor: "pointer", textAlign: collapsed ? "center" : "left",
                 borderLeft: isActive ? `3px solid ${it.col}` : "3px solid transparent",
                 marginBottom: 2,
+                justifyContent: collapsed ? "center" : "flex-start",
+                position: "relative",
               }}>
-                <i className={`ti ${it.ic}`} style={{ color: it.col, fontSize: 16 }} />
-                <span style={{ flex: 1 }}>{it.lbl}</span>
+                <i className={`ti ${it.ic}`} style={{ color: it.col, fontSize: collapsed ? 18 : 16 }} />
+                {!collapsed && <span style={{ flex: 1 }}>{it.lbl}</span>}
                 {badge !== null && (
                   <span style={{
                     background: it.col, color: "#fff",
                     fontSize: 10, fontWeight: 700,
                     padding: "1px 6px", borderRadius: 8,
                     minWidth: 18, textAlign: "center",
+                    position: collapsed ? "absolute" : "static",
+                    top: collapsed ? 2 : undefined,
+                    right: collapsed ? 4 : undefined,
                   }}>{badge}</span>
                 )}
               </button>

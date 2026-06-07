@@ -13,6 +13,8 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+// 0.62.47 : filtre contexte bât/svc courant (TODO depuis 0.58.36)
+import { useCurrentContext } from "../../lib/useCurrentContext";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, Modal } from "../ui";
@@ -68,6 +70,26 @@ function InterventionsInner() {
   const [depots, setDepots] = useState([]);
   const [materiels, setMateriels] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // 0.62.47 : filtre par contexte bât/svc (depuis BatimentServiceSwitcher)
+  const ctx = useCurrentContext();
+  const [ctxMaterielIds, setCtxMaterielIds] = useState(null);
+  useEffect(() => {
+    if (!ctx.batimentId && !ctx.serviceId) {
+      setCtxMaterielIds(null);
+      return;
+    }
+    (async () => {
+      try {
+        // Récupère les patients/matériels liés à ce contexte (via lits → chambres → services → bâtiment)
+        let q = supabase.from("materiels").select("id, batiment_id, service_id");
+        if (ctx.batimentId) q = q.eq("batiment_id", ctx.batimentId);
+        if (ctx.serviceId) q = q.eq("service_id", ctx.serviceId);
+        const r = await q;
+        setCtxMaterielIds(new Set((r.data || []).map(x => x.id)));
+      } catch (e) { setCtxMaterielIds(null); }
+    })();
+  }, [ctx.batimentId, ctx.serviceId, ctx.active]);
 
   const [view, setView] = useState("liste");
   const [fStatut, setFStatut] = useState("");
@@ -135,6 +157,8 @@ function InterventionsInner() {
       if (fUrgence && r.urgence !== fUrgence) return false;
       if (fEquipe && r.equipe_id !== fEquipe) return false;
       if (fDepot && r.depot_id !== fDepot) return false;
+      // 0.62.47 : filtre par contexte bât/svc → ne garde que les DI liées aux matériels du contexte
+      if (ctx.active && ctxMaterielIds && r.materiel_id && !ctxMaterielIds.has(r.materiel_id)) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const hay = `${r.numero || ""} ${r.type || ""} ${r.description || ""} ${r.materiels?.libelle || ""} ${r.depots?.nom || ""}`.toLowerCase();
@@ -142,7 +166,7 @@ function InterventionsInner() {
       }
       return true;
     });
-  }, [rows, fStatut, fUrgence, fEquipe, fDepot, search]);
+  }, [rows, fStatut, fUrgence, fEquipe, fDepot, search, ctx.active, ctxMaterielIds]);
 
   function nextNumero() {
     const year = new Date().getFullYear();

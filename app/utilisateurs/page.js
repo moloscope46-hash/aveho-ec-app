@@ -86,6 +86,9 @@ export default function Utilisateurs() {
   const [createdInviteLink, setCreatedInviteLink] = useState(null);
   // Alpha 0.16.0 : filtre archive + modale info user
   const [filtreStatut, setFiltreStatut] = useState("actifs"); // 'actifs' | 'archives' | 'tous'
+  // 0.62.52 : pagination grande liste membres (TODO depuis 0.58.31)
+  const [membresPage, setMembresPage] = useState(0);
+  useEffect(() => { setMembresPage(0); }, [searchMembres, filtreStatut]); // reset page au filtre
   const [filtreInvit, setFiltreInvit] = useState("non-archivees"); // 'non-archivees' | 'archivees' | 'toutes'
   // Alpha 0.20.0 : recherche dans la liste des membres
   const [searchMembres, setSearchMembres] = useState("");
@@ -677,7 +680,7 @@ export default function Utilisateurs() {
                 {(() => {
                   // Alpha 0.20.0 : filtrage par recherche (nom, poste, email)
                   const q = searchMembres.trim().toLowerCase();
-                  const visibles = membres.filter(m => {
+                  const visiblesAll = membres.filter(m => {
                     // Filtre statut
                     if (filtreStatut === "actifs" && m.archive) return false;
                     if (filtreStatut === "archives" && !m.archive) return false;
@@ -692,13 +695,19 @@ export default function Utilisateurs() {
                     ].filter(Boolean).join(" ").toLowerCase();
                     return hay.includes(q);
                   });
-                  if (visibles.length === 0) {
+                  if (visiblesAll.length === 0) {
                     return <StateMsg>
                       {q ? `Aucun membre trouvé pour "${searchMembres}".` :
                        `Aucun membre ${filtreStatut === "archives" ? "archivé" : filtreStatut === "actifs" ? "actif" : ""}.`}
                     </StateMsg>;
                   }
+                  // 0.62.52 : pagination intelligente (50 lignes / page) pour grandes listes
+                  const PAGE_SIZE = 50;
+                  const totalPages = Math.ceil(visiblesAll.length / PAGE_SIZE);
+                  const startIdx = membresPage * PAGE_SIZE;
+                  const visibles = visiblesAll.slice(startIdx, startIdx + PAGE_SIZE);
                   return (
+                  <>
                   <div className="panel-table"><table>
                     <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Services</th><th>Visibilité</th><th>Statut</th><th></th></tr></thead>
                     <tbody>
@@ -802,6 +811,36 @@ export default function Utilisateurs() {
                       })}
                     </tbody>
                   </table></div>
+                  {/* 0.62.52 : barre pagination si grande liste */}
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 4px", borderTop: "1px solid #eef1f4", marginTop: 8 }}>
+                      <div style={{ fontSize: 12, color: "#5a6878" }}>
+                        Affichage <b>{startIdx + 1}</b>–<b>{Math.min(startIdx + PAGE_SIZE, visiblesAll.length)}</b> sur <b>{visiblesAll.length}</b> membres
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <button onClick={() => setMembresPage(0)} disabled={membresPage === 0} title="Première page"
+                          style={{ padding: "6px 10px", background: "#fff", border: "1px solid #e3e9ee", borderRadius: 6, cursor: membresPage === 0 ? "not-allowed" : "pointer", opacity: membresPage === 0 ? .4 : 1, fontFamily: "inherit", fontSize: 12 }}>
+                          <i className="ti ti-chevrons-left" />
+                        </button>
+                        <button onClick={() => setMembresPage(p => Math.max(0, p - 1))} disabled={membresPage === 0}
+                          style={{ padding: "6px 10px", background: "#fff", border: "1px solid #e3e9ee", borderRadius: 6, cursor: membresPage === 0 ? "not-allowed" : "pointer", opacity: membresPage === 0 ? .4 : 1, fontFamily: "inherit", fontSize: 12 }}>
+                          <i className="ti ti-chevron-left" /> Précédent
+                        </button>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#142131", padding: "0 8px" }}>
+                          Page {membresPage + 1} / {totalPages}
+                        </span>
+                        <button onClick={() => setMembresPage(p => Math.min(totalPages - 1, p + 1))} disabled={membresPage >= totalPages - 1}
+                          style={{ padding: "6px 10px", background: "#fff", border: "1px solid #e3e9ee", borderRadius: 6, cursor: membresPage >= totalPages - 1 ? "not-allowed" : "pointer", opacity: membresPage >= totalPages - 1 ? .4 : 1, fontFamily: "inherit", fontSize: 12 }}>
+                          Suivant <i className="ti ti-chevron-right" />
+                        </button>
+                        <button onClick={() => setMembresPage(totalPages - 1)} disabled={membresPage >= totalPages - 1} title="Dernière page"
+                          style={{ padding: "6px 10px", background: "#fff", border: "1px solid #e3e9ee", borderRadius: 6, cursor: membresPage >= totalPages - 1 ? "not-allowed" : "pointer", opacity: membresPage >= totalPages - 1 ? .4 : 1, fontFamily: "inherit", fontSize: 12 }}>
+                          <i className="ti ti-chevrons-right" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  </>
                   );
                 })()}
               </Panel>

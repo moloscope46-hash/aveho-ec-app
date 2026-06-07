@@ -276,12 +276,25 @@ export default function PharmaciesPage() {
       <div className="wrap">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
           <PageHead
-            eyebrow="PARTENAIRES SANTÉ"
+            icon="ti-prescription"
             title="Pharmacies"
-            accent="(officines & PUI)"
-            sub="Annuaire des pharmacies partenaires avec horaires d'ouverture, garde et spécialités"
+            subtitle="Annuaire des pharmacies partenaires avec horaires d'ouverture, garde et spécialités"
+            color="#5aa05a"
           />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignSelf: "center" }}>
+            <button
+              onClick={() => setFilterType(filterType === "garde" ? "all" : "garde")}
+              title="Filtrer pharmacies de garde"
+              style={{
+                background: filterType === "garde" ? "linear-gradient(135deg, #7a6fb0, #5a4a90)" : "rgba(122,111,176,.15)",
+                color: filterType === "garde" ? "#fff" : "#7a6fb0", border: filterType === "garde" ? "none" : "1px solid #7a6fb0",
+                padding: "10px 16px", borderRadius: 10,
+                fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <i className="ti ti-moon" /> {filterType === "garde" ? "Toutes" : "Pharmacies de garde"}
+            </button>
             <button
               onClick={newPharmacie}
               style={{

@@ -16,6 +16,8 @@ import { PageHead, Panel, StateMsg, Btn } from "../ui";
 import { dialogs } from "../dialogs";
 // 0.58.47 : sélecteur d'icône (l'annonce peut surcharger l'icône par défaut du niveau)
 import IconPicker from "../components/IconPicker";
+// 0.62.50 : ColorPicker pour couleur personnalisée annonce
+import ColorPicker from "../components/ColorPicker";
 
 const NIVEAU_OPTS = [
   { v: "info", lbl: "Info (bleu)", color: "#185FA5" },
@@ -297,9 +299,27 @@ export default function AnnoncesAdminPage() {
                   <IconPicker
                     value={form.icone}
                     onChange={(icon) => setForm({ ...form, icone: icon })}
-                    color={NIVEAU_OPTS.find(n => n.v === (form.niveau || "info"))?.color || "#185FA5"}
+                    color={form.color_perso || NIVEAU_OPTS.find(n => n.v === (form.niveau || "info"))?.color || "#185FA5"}
                     suggestFor={`${form.titre || ""} ${form.message || ""}`}
                   />
+                </div>
+                {/* 0.62.50 : ColorPicker custom pour personnaliser la couleur de l'annonce */}
+                <div>
+                  <label style={{ display: "block", fontSize: 11, color: "#6c7a89", fontWeight: 600, marginBottom: 4 }}>
+                    Couleur personnalisée <span style={{ fontSize: 10.5, color: "#8a98a8", fontWeight: 400 }}>(optionnel — override la couleur du niveau)</span>
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <ColorPicker
+                      value={form.color_perso || NIVEAU_OPTS.find(n => n.v === (form.niveau || "info"))?.color || "#185FA5"}
+                      onChange={(c) => setForm({ ...form, color_perso: c })}
+                    />
+                    {form.color_perso && (
+                      <button type="button" onClick={() => setForm({ ...form, color_perso: null })}
+                        style={{ padding: "4px 8px", fontSize: 11, background: "rgba(227,93,91,.1)", color: "#e35d5b", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "inherit" }}>
+                        <i className="ti ti-x" /> Reset
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {/* Alpha 0.52.5 : ciblage par établissement */}
                 <div>

@@ -45,13 +45,37 @@ export default function CommandesValidationPage() {
   async function reload() {
     setLoading(true);
     try {
+      // 0.62.48 FIX : pas de jointure PostgREST (FK pas déclarées sur magasins/etablissements)
+      // → fetch les commandes seules, puis enrichir avec Map lookup
       const r = await supabase.from("commandes_ec")
-        .select("*, magasins(nom), etablissements(nom)")
+        .select("*")
         .eq("structure_id", auth.structureId)
         .order("cree_le", { ascending: false })
         .limit(100);
       if (r.error?.code === "42P01") setTableMissing(true);
-      setCommandes(r.data || []);
+      const cmds = r.data || [];
+      // Enrichir avec magasins + etablissements en 2 queries séparées
+      const magIds = Array.from(new Set(cmds.map(c => c.magasin_id).filter(Boolean)));
+      const etabIds = Array.from(new Set(cmds.map(c => c.etablissement_id).filter(Boolean)));
+      let magMap = new Map(), etabMap = new Map();
+      if (magIds.length > 0) {
+        try {
+          const rm = await supabase.from("magasins").select("id, nom").in("id", magIds);
+          (rm.data || []).forEach(m => magMap.set(m.id, m));
+        } catch {}
+      }
+      if (etabIds.length > 0) {
+        try {
+          const re = await supabase.from("etablissements").select("id, nom").in("id", etabIds);
+          (re.data || []).forEach(e => etabMap.set(e.id, e));
+        } catch {}
+      }
+      const enriched = cmds.map(c => ({
+        ...c,
+        magasins: c.magasin_id ? magMap.get(c.magasin_id) : null,
+        etablissements: c.etablissement_id ? etabMap.get(c.etablissement_id) : null,
+      }));
+      setCommandes(enriched);
     } catch (e) { console.error(e); }
     setLoading(false);
   }

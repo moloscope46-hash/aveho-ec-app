@@ -67,16 +67,33 @@ export default function NouvelleTourneePage() {
     if (magasinCtx.isUserMagasin && magasinCtx.magasinId) trQ = trQ.eq("magasin_emetteur_id", magasinCtx.magasinId);
     promises.push(tryFetch(trQ));
     // 5. Retours / SAV / Maintenance / Bilans : depuis demandes_internes par sous-type
-    let savQ = supabase.from("demandes_internes").select("id, numero, type, sous_type, etablissement_id, etablissements(nom, ville, adresse, latitude, longitude), description, urgence, statut, created_at").in("statut", ["nouvelle", "ouverte", "en_attente", "planifiee"]).in("type", ["sav", "maintenance", "retour", "bilan", "depannage"]);
+    // 0.62.48 FIX : pas de jointure PostgREST `etablissements(...)` (FK pas déclarée → 400)
+    // → on récupère les DI seules, puis on fetch les étabs séparément + Map lookup
+    let savQ = supabase.from("demandes_internes").select("id, numero, type, sous_type, etablissement_id, description, urgence, statut, created_at").in("statut", ["nouvelle", "ouverte", "en_attente", "planifiee"]).in("type", ["sav", "maintenance", "retour", "bilan", "depannage"]);
     if (magasinCtx.isUserMagasin && magasinCtx.magasinId) savQ = savQ.eq("magasin_id", magasinCtx.magasinId);
     promises.push(tryFetch(savQ));
 
     const [dis, veh, ch, trs, autres] = await Promise.all(promises);
+
+    // 0.62.48 : enrichir les DI avec leur etablissement via une 2e query séparée
+    const etabIds = Array.from(new Set([...(autres || []).map(d => d.etablissement_id)].filter(Boolean)));
+    let etabsMap = new Map();
+    if (etabIds.length > 0) {
+      try {
+        const r = await supabase.from("etablissements").select("id, nom, ville, adresse, latitude, longitude").in("id", etabIds);
+        (r.data || []).forEach(e => etabsMap.set(e.id, e));
+      } catch {}
+    }
+    const autresEnrichis = (autres || []).map(d => ({
+      ...d,
+      etablissements: d.etablissement_id ? etabsMap.get(d.etablissement_id) : null,
+    }));
+
     setDisALivrer(dis);
     setVehicules(veh);
     setChauffeurs(ch);
     setTransferts(trs);
-    setAutresDemandes(autres);
+    setAutresDemandes(autresEnrichis);
     setLoading(false);
   }
 

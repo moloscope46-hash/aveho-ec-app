@@ -31,6 +31,8 @@ const KeyboardHelp = dynamic(() => import("./KeyboardHelp"), { ssr: false });
 const VersionCheck = dynamic(() => import("./VersionCheck"), { ssr: false });
 const AnnoncesBanner = dynamic(() => import("./AnnoncesBanner"), { ssr: false });
 const FocusMode = dynamic(() => import("./FocusMode"), { ssr: false });
+// 0.62.47 : Mode présentation (TODO depuis 0.58.30 !)
+const PresentationMode = dynamic(() => import("./PresentationMode"), { ssr: false });
 const GeolocPrompt = dynamic(() => import("./GeolocPrompt"), { ssr: false });
 const BiometricOptInModal = dynamic(() => import("./BiometricOptInModal"), { ssr: false });
 const FloatingActionBar = dynamic(() => import("./FloatingActionBar"), { ssr: false });
@@ -52,6 +54,8 @@ export default function LazyLayoutChrome() {
       <AnnoncesBanner />
       {/* Alpha 0.52.0 : mode focus Esc Esc */}
       <FocusMode />
+      {/* 0.62.47 : Mode présentation Cmd+Shift+P (masque notifs + flou montants/IDs) */}
+      <PresentationMode />
       {/* Alpha 0.55.0 : demande géolocalisation au premier login */}
       <GeolocPrompt />
       {/* Alpha 0.55.13 : proposition activation empreinte après login (mobile) */}

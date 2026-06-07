@@ -3745,3 +3745,48 @@ input:focus, select:focus, textarea:focus {
   background: radial-gradient(circle, rgba(124,200,200,.15), transparent 70%);
   pointer-events: none;
 }
+
+/* =============================================================
+   0.62.47 — Mode présentation : masquer infos sensibles
+   ============================================================= */
+body.av-presentation-mode .notification-badge,
+body.av-presentation-mode .badge-count,
+body.av-presentation-mode [data-notif-badge],
+body.av-presentation-mode .av-badge-notif {
+  display: none !important;
+}
+
+/* Floute les montants pour ne pas exposer les chiffres financiers en démo */
+body.av-presentation-mode .av-sensitive-amount,
+body.av-presentation-mode [data-sensitive="amount"] {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Floute les RPPS / FINESS / numéros de dossier */
+body.av-presentation-mode .av-sensitive-id,
+body.av-presentation-mode [data-sensitive="id"] {
+  filter: blur(4px);
+  user-select: none;
+}
+
+/* Masque les toasts non critiques */
+body.av-presentation-mode .toast:not(.toast-error):not(.toast-critical) {
+  display: none !important;
+}
+
+/* =============================================================
+   0.62.48 — Fix cloche notif z-index (badge sortait de l'icône
+   mais était coupé par les parents en overflow hidden)
+   ============================================================= */
+.notif-wrap { overflow: visible !important; }
+.notif-btn { overflow: visible !important; }
+.notif-badge {
+  z-index: 10 !important;
+  box-shadow: 0 2px 6px rgba(20,33,49,.3), 0 0 0 2px #142131; /* ring navy pour démarquer du fond */
+}
+/* Si la topbar a overflow hidden, forcer visible */
+header, .topbar, .top-bar, [class*="topbar"] {
+  overflow: visible !important;
+}

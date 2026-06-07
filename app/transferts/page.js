@@ -12,6 +12,8 @@
 // =============================================================
 
 import { useEffect, useState, useMemo, Suspense } from "react";
+// 0.62.55 : filtre contexte bât/svc via depot_id (TODO 6x)
+import { useCurrentContext } from "../../lib/useCurrentContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
@@ -77,6 +79,17 @@ function TransfertsInner() {
   const [chambres, setChambres] = useState([]);
   const [magasins, setMagasins] = useState([]);
   const [articles, setArticles] = useState([]);
+
+  // 0.62.55 : filtre par contexte bât/svc → on récupère les dépôts du contexte
+  const ctx = useCurrentContext();
+  const ctxDepotIds = useMemo(() => {
+    if (!ctx.active || !depots.length) return null;
+    return new Set(depots.filter(d => {
+      if (ctx.batimentId && d.batiment_id !== ctx.batimentId) return false;
+      if (ctx.serviceId && d.service_id !== ctx.serviceId) return false;
+      return true;
+    }).map(d => d.id));
+  }, [ctx.active, ctx.batimentId, ctx.serviceId, depots]);
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -146,6 +159,12 @@ function TransfertsInner() {
       if (filterStatut && t.statut !== filterStatut) return false;
       if (filterPriorite && t.priorite !== filterPriorite) return false;
       if (filterEquipe && t.equipe_id !== filterEquipe) return false;
+      // 0.62.55 : filtre contexte bât/svc via depot_id source/destination
+      if (ctx.active && ctxDepotIds && ctxDepotIds.size > 0) {
+        const sourceMatch = t.depot_source_id && ctxDepotIds.has(t.depot_source_id);
+        const destMatch = t.depot_destination_id && ctxDepotIds.has(t.depot_destination_id);
+        if (!sourceMatch && !destMatch) return false;
+      }
       if (search.trim()) {
         const q = search.toLowerCase();
         const hay = `${t.motif || ""} ${t.notes || ""}`.toLowerCase();
@@ -153,7 +172,7 @@ function TransfertsInner() {
       }
       return true;
     });
-  }, [transferts, search, filterStatut, filterPriorite, filterEquipe]);
+  }, [transferts, search, filterStatut, filterPriorite, filterEquipe, ctx.active, ctxDepotIds]);
 
   // Stats par statut
   const statsByStatut = useMemo(() => {
