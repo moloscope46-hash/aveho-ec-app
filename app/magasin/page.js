@@ -17,6 +17,8 @@ const TABS = [
   { id: "dashboard", icon: "ti-dashboard",        lbl: "Tableau de bord", col: "#5a8f8f" },
   { id: "catalogue", icon: "ti-package",          lbl: "Catalogue",        col: "#185FA5" },
   { id: "di",        icon: "ti-truck-loading",    lbl: "DI reçues",        col: "#EF9F27" },
+  { id: "sav",       icon: "ti-tool",             lbl: "SAV reçues",       col: "#e35d5b" },
+  { id: "bilans",    icon: "ti-clipboard-check",  lbl: "Bilans SAV",       col: "#7CC8C8" },
   { id: "fournisseurs", icon: "ti-truck-delivery", lbl: "Partenaires",     col: "#7a6fb0" },
 ];
 
@@ -105,7 +107,8 @@ export default function MagasinPage() {
           <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
               <StatCard color="#185FA5" icon="ti-package" lbl="Articles catalogue" value={stats.articles} onClick={() => setActiveTab("catalogue")} />
-              <StatCard color="#EF9F27" icon="ti-truck-loading" lbl="DI à traiter" value={stats.di_pendantes} onClick={() => setActiveTab("di")} />
+              <StatCard color="#EF9F27" icon="ti-truck-loading" lbl="DI à traiter" value={demandes.filter(d => (d.type_demande || "di") === "di" && ["nouvelle", "en_attente", null].includes(d.statut)).length} onClick={() => setActiveTab("di")} />
+              <StatCard color="#e35d5b" icon="ti-tool" lbl="SAV à traiter" value={demandes.filter(d => d.type_demande === "sav" && ["nouvelle", "en_attente", null].includes(d.statut)).length} onClick={() => setActiveTab("sav")} />
               <StatCard color="#7a6fb0" icon="ti-truck-delivery" lbl="Partenaires" value={stats.partenaires} onClick={() => setActiveTab("fournisseurs")} />
               <StatCard color="#5aa05a" icon="ti-trending-up" lbl="DI traitées (30j)" value={demandes.filter(d => ["validee", "livree", "cloturee"].includes(d.statut)).length} />
             </div>
@@ -178,6 +181,52 @@ export default function MagasinPage() {
                 ))}
               </div>
             )}
+          </Panel>
+        )}
+
+        {/* 0.60.0 : SAV reçues */}
+        {activeTab === "sav" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#e35d5b" }}>SAV reçues ({demandes.filter(d => d.type_demande === "sav").length})</h3>
+            {demandes.filter(d => d.type_demande === "sav").length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+                <i className="ti ti-tool" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+                Aucune demande SAV reçue.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {demandes.filter(d => d.type_demande === "sav").slice(0, 50).map(d => (
+                  <div key={d.id} onClick={() => router.push(`/demandes-internes/${d.id}`)} style={{
+                    background: "#fff", border: "1px solid #e3e9ee",
+                    borderLeft: `3px solid ${d.statut === "validee" ? "#5aa05a" : d.statut === "refusee" ? "#e35d5b" : "#EF9F27"}`,
+                    borderRadius: 8, padding: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 12,
+                  }}>
+                    <i className="ti ti-tool" style={{ color: "#e35d5b", fontSize: 20 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>{d.numero || `SAV-${d.id?.substring(0,8)}`}</div>
+                      <div style={{ fontSize: 11, color: "#8a98a8" }}>{new Date(d.created_at).toLocaleString("fr-FR")}</div>
+                    </div>
+                    <span style={{ padding: "2px 8px", borderRadius: 6, background: "#fafbfc", border: "1px solid #cfd8e0", fontSize: 11, fontWeight: 600, color: "#5a6878" }}>{d.statut || "nouvelle"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {/* 0.60.0 : Bilans SAV (lien direct vers la page CRUD) */}
+        {activeTab === "bilans" && (
+          <Panel>
+            <div style={{ textAlign: "center", padding: "30px 20px" }}>
+              <i className="ti ti-clipboard-check" style={{ fontSize: 56, color: "#7CC8C8", display: "block", marginBottom: 12 }} />
+              <h3 style={{ margin: "0 0 8px", color: "#142131" }}>Gestion des bilans SAV</h3>
+              <p style={{ color: "#5a6878", fontSize: 13, marginBottom: 18, maxWidth: 480, margin: "0 auto 18px" }}>
+                Crée des templates de bilans avec leurs points de contrôle (généralement 5 points), rattache-les aux articles. Les EC pourront sélectionner ces bilans quand ils demandent un SAV.
+              </p>
+              <Btn variant="primary" icon="ti-arrow-right" onClick={() => router.push("/magasin/bilans-sav")}>
+                Ouvrir la gestion des bilans
+              </Btn>
+            </div>
           </Panel>
         )}
 

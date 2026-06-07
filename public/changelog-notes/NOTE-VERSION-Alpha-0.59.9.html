@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.9 — Wizard 5 étapes + Création article rapide</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a2a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(201,134,127,.20));border:1px solid rgba(201,134,127,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#e8b4ad;font-weight:700;background:rgba(201,134,127,.18);border:1px solid rgba(201,134,127,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#f0d4d0;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#f0d4d0}
+.meta b{color:#fff}.meta code{background:rgba(201,134,127,.16);color:#fff;border:1px solid rgba(201,134,127,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#C9867F,#5a8f8f)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(201,134,127,.20);border-left:4px solid #C9867F;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* Stepper 5 étapes */
+.stepper{display:flex;justify-content:space-between;align-items:center;gap:4px;background:#142131;padding:18px 12px;border-radius:10px;margin:14px 0}
+.step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative}
+.step .dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;z-index:1}
+.step.done .dot{background:#C9867F;color:#fff}
+.step.cur .dot{background:#C9867F;color:#fff;border:2px solid #fff;box-shadow:0 0 0 3px rgba(255,255,255,.20)}
+.step.todo .dot{background:rgba(255,255,255,.10);color:#8a98a8}
+.step .lbl{font-size:10px;margin-top:5px;font-weight:500;text-align:center}
+.step.done .lbl, .step.cur .lbl{color:#fff;font-weight:700}
+.step.todo .lbl{color:#8a98a8}
+.step .line{position:absolute;left:-50%;top:16px;width:100%;height:2px}
+.step.done .line, .step.cur .line{background:#C9867F}
+.step.todo .line{background:rgba(255,255,255,.10)}
+
+/* Ligne DI orpheline */
+.ligne{background:#fff;color:#142131;border-radius:8px;padding:12px;margin:8px 0;display:flex;align-items:center;gap:10px;border:1px solid #e3e9ee;border-left:3px solid #185FA5}
+.ligne.orphan{border-color:#EF9F27;border-left-color:#EF9F27}
+.ligne .icon{font-size:22px}
+.ligne .nom{font-weight:700}
+.ligne .warning{font-size:11px;color:#d48820;font-style:italic;margin-top:3px}
+.ligne .qty{padding:4px 10px;background:#fafbfc;border:1px solid #cfd8e0;border-radius:6px;font-weight:700;font-size:12.5px}
+.ligne .btn-create{background:linear-gradient(135deg,#5a8f8f,#477676);color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer}
+
+/* Modal preview */
+.modal-preview{background:#fff;color:#142131;border-radius:12px;padding:24px;max-width:500px;margin:14px auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-preview h2{color:#5a8f8f;margin:0 0 6px;font-size:18px;display:flex;align-items:center;gap:6px;border:none;padding:0}
+.modal-preview h2::before{content:none}
+.modal-preview .desc{font-size:12.5px;color:#5a6878;margin-bottom:14px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;color:#5a6878;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.field input{width:100%;padding:8px 12px;background:#fafbfc;border:1px solid #cfd8e0;border-radius:8px;font-family:inherit;font-size:13px;color:#142131}
+.checkbox-box{padding:12px;border-radius:8px;background:rgba(94,143,143,.10);border:2px solid #5a8f8f;display:flex;align-items:center;gap:10px;margin-top:10px}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #C9867F}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(201,134,127,.18);font-size:11.5px;color:#f0d4d0;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">📋🆕 0.59.9 · WIZARD + ARTICLE RAPIDE</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>📋 Wizard patient 5 vraies étapes guidées + 🆕 Création article rapide depuis détail DI<small>Refacto wizard mobile + cycle vertueux article orphelin → catalogue</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.9-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Feature</span>
+  </div>
+</header>
+
+<h2>📋 1. Wizard patient mobile en 5 vraies étapes</h2>
+
+<p style="color:#f0d4d0;font-size:13;margin:0 0 8px">Avant : 4 étapes avec sous-étape pseudo (Identité+Affectation+Médecin tout dans step 1). Maintenant : <b>5 étapes vraiment séparées</b>, chacune avec son contexte et sa validation.</p>
+
+<div class="stepper">
+  <div class="step done"><div class="dot"><i>📋</i></div><div class="lbl">Identité</div></div>
+  <div class="step cur"><div class="line"></div><div class="dot"><i>🏢</i></div><div class="lbl">Affectation</div></div>
+  <div class="step todo"><div class="line"></div><div class="dot"><i>📞</i></div><div class="lbl">Contact</div></div>
+  <div class="step todo"><div class="line"></div><div class="dot"><i>🩺</i></div><div class="lbl">Médical</div></div>
+  <div class="step todo"><div class="line"></div><div class="dot"><i>✓</i></div><div class="lbl">Validation</div></div>
+</div>
+
+<h3 style="color:#fff;margin-top:14px">Contenu de chaque étape</h3>
+
+<table style="width:100%;border-collapse:collapse">
+<tr><th style="text-align:left;padding:8px;color:#C9867F;font-size:11px;text-transform:uppercase;letter-spacing:1px">Étape</th><th style="text-align:left;padding:8px;color:#C9867F;font-size:11px;text-transform:uppercase;letter-spacing:1px">Contenu</th><th style="text-align:left;padding:8px;color:#C9867F;font-size:11px;text-transform:uppercase;letter-spacing:1px">Validation</th></tr>
+<tr style="border-top:1px solid rgba(201,134,127,.18)"><td style="padding:8px;color:#fff">1. Identité</td><td style="padding:8px;color:#f0d4d0;font-size:12.5">Civilité, Nom, Prénom, Date naissance, N° sécu</td><td style="padding:8px;color:#e35d5b;font-size:12">Nom obligatoire</td></tr>
+<tr style="border-top:1px solid rgba(201,134,127,.18)"><td style="padding:8px;color:#fff">2. Affectation</td><td style="padding:8px;color:#f0d4d0;font-size:12.5">Établissement, Bâtiment, Service, Chambre (grid dispo/occupée), Matériel installé, Recherche article, Médecin référent, Pathologie principale (avec ★ du service)</td><td style="padding:8px;color:#e35d5b;font-size:12">Établissement obligatoire</td></tr>
+<tr style="border-top:1px solid rgba(201,134,127,.18)"><td style="padding:8px;color:#fff">3. Contact</td><td style="padding:8px;color:#f0d4d0;font-size:12.5">Adresse, téléphone, email, contact d'urgence (nom + tél + lien)</td><td style="padding:8px;color:#8a98a8;font-size:12">Aucune</td></tr>
+<tr style="border-top:1px solid rgba(201,134,127,.18)"><td style="padding:8px;color:#fff">4. Médical</td><td style="padding:8px;color:#f0d4d0;font-size:12.5">Allergies, GIR, mobilité, médecin traitant, traitements en cours</td><td style="padding:8px;color:#8a98a8;font-size:12">Aucune</td></tr>
+<tr style="border-top:1px solid rgba(201,134,127,.18)"><td style="padding:8px;color:#fff">5. Validation</td><td style="padding:8px;color:#f0d4d0;font-size:12.5">Récap toutes infos + bouton Créer</td><td style="padding:8px;color:#8a98a8;font-size:12">—</td></tr>
+</table>
+
+<p style="color:#f0d4d0;font-size:13;margin:10px 0 0"><b>👆 Bullets stepper cliquables</b> : si l'étape est atteinte (`step >= s.n`), click pour revenir directement. Le user peut naviguer librement entre étapes déjà validées (utile pour corriger une info en cours de saisie).</p>
+
+<h2>🆕 2. Création article rapide depuis détail DI</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5">Quand l'EC envoie une DI avec un article qui n'existe pas dans le catalogue magasin (juste libellé/code en texte libre), la ligne apparaît côté magasin en <b>amber avec ⚠</b> :</p>
+</div>
+
+<div class="ligne orphan">
+  <span class="icon">📦❌</span>
+  <div style="flex:1">
+    <div class="nom">Tubulure perfusion innovante</div>
+    <div style="font-family:Consolas,monospace;font-size:11;color:#8a98a8">TUBE-NEW-2026</div>
+    <div class="warning">⚠ Article non rattaché au catalogue</div>
+  </div>
+  <span class="qty">10 u</span>
+  <button class="btn-create">+ Créer article</button>
+</div>
+
+<p style="color:#f0d4d0;font-size:13;margin:0">Click sur "Créer article" → modal teal s'ouvre avec champs pré-remplis :</p>
+
+<div class="modal-preview">
+  <h2><i>📦+</i> Créer un article catalogue</h2>
+  <div class="desc">Cet article sera ajouté au catalogue magasin Aveho et rattaché à la ligne de la DI.</div>
+  <div class="field">
+    <label>Libellé *</label>
+    <input value="Tubulure perfusion innovante" readonly>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="field">
+      <label>Référence interne</label>
+      <input placeholder="REF-001" style="font-family:Consolas,monospace">
+    </div>
+    <div class="field">
+      <label>Code produit</label>
+      <input value="TUBE-NEW-2026" readonly style="font-family:Consolas,monospace">
+    </div>
+  </div>
+  <div class="checkbox-box">
+    <input type="checkbox" checked style="accent-color:#5a8f8f;width:16px;height:16px">
+    <div style="flex:1">
+      <div style="font-weight:700;color:#5a8f8f;font-size:12.5"><i>🏬</i> Article du catalogue magasin</div>
+      <div style="font-size:11;color:#5a6878">Recommandé : permet aux EC de référencer cet article dans leurs DI futures</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button style="padding:8px 16px;background:#fff;color:#5a6878;border:1px solid #cfd8e0;border-radius:8px;font-size:12.5;font-weight:700">Annuler</button>
+    <button style="padding:8px 16px;background:linear-gradient(135deg,#5a8f8f,#477676);color:#fff;border:none;border-radius:8px;font-size:12.5;font-weight:700">💾 Créer et rattacher</button>
+  </div>
+</div>
+
+<p style="color:#f0d4d0;font-size:13;margin:10px 0 0">Click "Créer et rattacher" → INSERT dans articles → UPDATE de la ligne DI avec le nouveau article_id → reload. <b>L'article rejoint le catalogue magasin et devient référençable par les EC pour leurs prochaines DI.</b></p>
+
+<h2>🔄 Cycle vertueux maintenant possible</h2>
+
+<pre>EC envoie DI avec article texte libre (article inexistant)
+  ↓
+Magasin reçoit DI → voit ligne en amber ⚠
+  ↓
+Magasin click "Créer article"
+  ↓
+Modal pré-rempli (libellé/code de la ligne)
+  ↓
+Magasin confirme création (catalogue magasin par défaut)
+  ↓
+Article créé + ligne DI mise à jour avec article_id
+  ↓
+EC peut maintenant référencer cet article dans ses prochaines DI
+   (via autocomplete catalogue magasin sur /articles édition)</pre>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.9 - Wizard 5 etapes + creation article rapide DI"
+git push origin main</pre>
+
+<p style="color:#f0d4d0;font-size:13;margin-top:14px">Pas de SQL, tout utilise les tables existantes (articles avec colonne <code>est_catalogue_magasin</code> de 0.59.5, demandes_internes_lignes de 0.59.8).</p>
+
+<h2>🎉 Récap pack 0.59 complet</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff;font-size:13.5">10 versions livrées en 24h, qui ferment complètement le cycle Magasin Aveho :</p>
+<ul style="margin:0;color:#f0d4d0;font-size:12.5;line-height:1.8">
+<li><b>0.59.0</b> Collaborateurs + icônes menu + mobile compact</li>
+<li><b>0.59.1</b> Patient enrichi (étab obligatoire + chambres dispo + médecin/pathologie)</li>
+<li><b>0.59.2</b> Fix dark mode + matériel chambre + recherche article</li>
+<li><b>0.59.3</b> Stepper 5 + FAB QR + dossier médical premium + multi-select pathologies service</li>
+<li><b>0.59.4</b> Hotfix payload ultra-minimal patient</li>
+<li><b>0.59.5</b> Mode Magasin Aveho (switch UserMenu + page /magasin 4 onglets)</li>
+<li><b>0.59.6</b> Magasin complet : checkbox fournisseur + autocomplete catalogue + DI actions + rôle utilisateur magasin</li>
+<li><b>0.59.7</b> Cascade pathologies service + /mes-demandes EC + notifs auto DI</li>
+<li><b>0.59.8</b> BL imprimable + Confirmer réception EC + Alertes stock bas</li>
+<li><b>0.59.9</b> Wizard 5 vraies étapes + Création article rapide depuis DI</li>
+</ul>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.9 · 6 juin 2026 · 📋 WIZARD 5 ÉTAPES · 🆕 ARTICLE RAPIDE</footer>
+</div></body></html>

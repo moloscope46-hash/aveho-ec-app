@@ -1,0 +1,209 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.60.0 — SAV ultra-pro</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a1a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.20),rgba(94,143,143,.20));border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f08a88;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:38px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:26px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#fdcecd;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdcecd}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#5a8f8f)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(227,93,91,.20);border-left:4px solid #e35d5b;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* Bilan card */
+.bilan-card{background:#fff;color:#142131;border-radius:10px;padding:14px;border-left:4px solid #5a8f8f;margin:10px 0}
+.bilan-card .head{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.bilan-card .head .icon{width:40px;height:40px;background:rgba(94,143,143,.22);color:#5a8f8f;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.bilan-card .nom{font-weight:700;font-size:14px}
+.point{display:flex;align-items:center;gap:8px;padding:6px;background:#fafbfc;border-radius:6px;margin:4px 0;font-size:12px}
+.point .num{width:22px;height:22px;background:#5a8f8f;color:#fff;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10}
+
+/* Mobile preview */
+.mobile-preview{background:linear-gradient(180deg,#1c4040,#142131);border-radius:24px;padding:18px;max-width:340px;margin:14px auto;color:#fff}
+.mobile-preview .top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(94,143,143,.3);padding-bottom:14px;margin-bottom:14px}
+.mobile-preview .logo{font-size:24px;font-weight:600;letter-spacing:2px}
+.mobile-preview .logo span{color:#7CC8C8}
+.tiles-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.action-tile{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px;border-left:4px solid;display:flex;gap:8px;align-items:center}
+.action-tile.urgent-red{background:rgba(227,93,91,.20);border-color:#e35d5b}
+.action-tile .ic{font-size:22px}
+.action-tile .val{font-size:22px;font-weight:700;font-family:Consolas,monospace;line-height:1}
+.action-tile .lbl{font-size:9px;color:#a8d8d8;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #e35d5b}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(227,93,91,.18);font-size:13px}
+table th{color:#f08a88;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(227,93,91,.18);font-size:11.5px;color:#fdcecd;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🛠 0.60.0 · SAV ULTRA-PRO</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🛠 SAV ultra-pro : bilans 5 points + page /sav/nouvelle EC + vue Action Mobile magasin<small>Cycle SAV complet · 6 nouvelles tables DB · Workflow techniciens magasin sur mobile</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.60.0-alpha</code> 🎉 nouveau cycle 0.60</span>
+    <span><b>SQL :</b> <code>migration-0.60.0-sav-bilans-transferts.sql</code></span>
+    <span><b>Type :</b> Feature majeure</span>
+  </div>
+</header>
+
+<h2>🗄 1. SQL — 6 nouveaux objets DB</h2>
+
+<pre>-- Table bilans_sav (templates)
+CREATE TABLE bilans_sav (id, magasin_id, structure_id, code, nom,
+  description, duree_estimee_min, icone, couleur, actif);
+
+-- Table bilans_sav_points (5 points par bilan typiquement)
+CREATE TABLE bilans_sav_points (id, bilan_id, ordre, libelle,
+  type_controle ENUM('oui_non','mesure','texte','photo'),
+  unite, valeur_min, valeur_max, est_obligatoire);
+
+-- Table bilans_sav_articles (M:N rattachement)
+CREATE TABLE bilans_sav_articles (bilan_id, article_id);
+
+-- ALTER demandes_internes
+ALTER TABLE demandes_internes
+  ADD type_demande TEXT DEFAULT 'di',  -- 'di' | 'sav' | 'transfert'
+  ADD bilan_sav_id UUID,
+  ADD article_concerne_id UUID,
+  ADD panne_description TEXT,
+  ADD depot_source_id UUID;
+
+-- Table sav_executions (résultats des contrôles)
+CREATE TABLE sav_executions (id, demande_id, bilan_id, point_id,
+  resultat, valeur_mesure, commentaire, photo_url);
+
+-- Table droits étab → magasin
+CREATE TABLE etablissements_magasins_droits (etablissement_id, magasin_id,
+  droit_commande, droit_sav, droit_transfert);</pre>
+
+<h2>📋 2. /magasin/bilans-sav — Création de bilans</h2>
+
+<div class="bilan-card">
+  <div class="head">
+    <div class="icon"><i>🩺</i></div>
+    <div>
+      <div class="nom">Bilan annuel concentrateur O2</div>
+      <div style="font-family:Consolas,monospace;font-size:10.5;color:#8a98a8">BSV-O2-001 · ⏱ 30 min</div>
+    </div>
+  </div>
+  <div style="font-size:12;color:#5a6878;margin-bottom:8">Bilan de contrôle obligatoire annuel sur tous les concentrateurs d'oxygène.</div>
+  <div class="point"><span class="num">1</span> Pression sortie O2 (mesure, 2-5 bar)</div>
+  <div class="point"><span class="num">2</span> Concentration O2 mesurée (mesure, 85-100%)</div>
+  <div class="point"><span class="num">3</span> Niveau sonore acceptable (oui/non)</div>
+  <div class="point"><span class="num">4</span> État du filtre (oui/non + photo)</div>
+  <div class="point"><span class="num">5</span> Test alarme manque O2 (oui/non)</div>
+  <div style="font-size:11;color:#8a98a8;margin-top:6">3 articles rattachés</div>
+</div>
+
+<p style="color:#fdcecd;font-size:13;margin:8px 0 0">Le magasin crée des bilans avec leurs points de contrôle (généralement 5), chaque point avec son type (✓/✗, 📏 mesure avec unité+min/max, 📝 texte, 📷 photo) et flag obligatoire. Rattachement multi-articles via grid checkboxes.</p>
+
+<h2>📋 3. /sav/nouvelle — EC crée une demande</h2>
+
+<div class="panel" style="border-left-color:#e35d5b">
+<p style="margin:0 0 10px;color:#fff;font-size:14;font-weight:700">3 panels guidés :</p>
+<ol style="margin:0;color:#fdcecd;font-size:13;line-height:1.8">
+<li><b>Article concerné</b> : sélecteur dans le catalogue de la structure, indique si rattaché au catalogue magasin</li>
+<li><b>Bilan SAV</b> : automatiquement filtré par les bilans rattachés à l'article. Si aucun spécifique → tous les bilans actifs. Click pour sélectionner card avec icône+couleur</li>
+<li><b>Panne</b> : description obligatoire, priorité normale/urgente, magasin destinataire, commentaire libre</li>
+</ol>
+<p style="margin:10px 0 0;color:#fdcecd;font-size:12">Submit → INSERT demandes_internes avec <code>type_demande='sav'</code>, statut='nouvelle'. Visible côté magasin dans /mobile/magasin et /magasin onglet 'SAV reçues'.</p>
+</div>
+
+<h2>📱 4. /mobile/magasin — Action Mobile dédiée</h2>
+
+<p style="color:#fdcecd;font-size:13;margin:0 0 8px">Le user magasin atterrit ICI au login (au lieu de /magasin desktop) :</p>
+
+<div class="mobile-preview">
+  <div class="top">
+    <div class="logo">a<span>v</span>eho</div>
+    <div>
+      <div style="font-size:9;color:#a8d8d8;letter-spacing:1.5;text-transform:uppercase">Action mobile · Magasin</div>
+      <div style="font-size:12;font-weight:700">Bonjour user_magasin</div>
+    </div>
+    <button style="padding:4px 8px;background:rgba(255,255,255,.10);color:#fff;border:1px solid rgba(255,255,255,.20);border-radius:6px;font-size:9;font-weight:700">↔ EC</button>
+  </div>
+  <div class="tiles-grid">
+    <div class="action-tile urgent-red" style="border-color:#EF9F27">
+      <div class="ic" style="color:#EF9F27">📦</div>
+      <div><div class="val">8</div><div class="lbl">DI à traiter</div></div>
+    </div>
+    <div class="action-tile urgent-red" style="border-color:#e35d5b">
+      <div class="ic" style="color:#e35d5b">🛠</div>
+      <div><div class="val">3</div><div class="lbl">SAV à traiter</div></div>
+    </div>
+    <div class="action-tile" style="border-color:#7a6fb0">
+      <div class="ic" style="color:#7a6fb0">🔄</div>
+      <div><div class="val">2</div><div class="lbl">Transferts</div></div>
+    </div>
+    <div class="action-tile" style="border-color:#185FA5">
+      <div class="ic" style="color:#185FA5">📋</div>
+      <div><div class="val">128</div><div class="lbl">Articles</div></div>
+    </div>
+  </div>
+  <div style="font-size:9;color:#a8d8d8;letter-spacing:1.5;text-transform:uppercase;font-weight:700;margin:14px 0 6px">⚡ Accès rapides</div>
+  <div class="tiles-grid">
+    <div style="background:rgba(255,255,255,.05);border:1px solid #5a8f8f44;border-radius:10px;padding:10px;text-align:center;font-size:11"><i style="color:#5a8f8f;font-size:18">📦+</i><br>Nouvel article</div>
+    <div style="background:rgba(255,255,255,.05);border:1px solid #7CC8C844;border-radius:10px;padding:10px;text-align:center;font-size:11"><i style="color:#7CC8C8;font-size:18">📋</i><br>Bilans SAV</div>
+  </div>
+  <div style="font-size:9;color:#a8d8d8;letter-spacing:1.5;text-transform:uppercase;font-weight:700;margin:14px 0 6px">📋 À traiter maintenant</div>
+  <div style="background:rgba(255,255,255,.05);border-left:3px solid #e35d5b;border-radius:8px;padding:8px;font-size:11">
+    <i style="color:#e35d5b">🛠</i> <b>SAV SAV-20260606-042</b> <span style="background:#e35d5b;color:#fff;padding:1px 4px;border-radius:3px;font-size:8;font-weight:700">URGENT</span><br>
+    <span style="color:#a8d8d8;font-size:9">6 juin · 14h32</span><br>
+    <span style="color:#fdcecd;font-style:italic;font-size:9">Concentrateur ne démarre plus depuis hier soir...</span>
+  </div>
+</div>
+
+<h2>🔄 Cycle SAV complet</h2>
+
+<pre>1️⃣ Magasin crée bilans SAV (5 points par bilan)
+       ↓
+2️⃣ Magasin rattache bilans aux articles
+       ↓
+3️⃣ EC va sur /sav/nouvelle
+       → Sélectionne article (ex: concentrateur)
+       → Bilans rattachés à cet article apparaissent en priorité
+       → Décrit la panne + priorité
+       → Submit
+       ↓
+4️⃣ User magasin (en mode Action Mobile) reçoit notif + badge SAV rouge
+       → Tap SAV → page détail
+       → Voit panne_description + bilan attaché + 5 points
+       → Décide : Valider / Refuser
+       → (0.60.1) Exécute le bilan : saisit chaque point (mesure/oui-non/photo)
+       ↓
+5️⃣ Rapport SAV généré → notif EC</pre>
+
+<h2>🚀 Procédure</h2>
+
+<pre># 1. Applique le SQL (Supabase SQL Editor)
+# Colle migration-0.60.0-sav-bilans-transferts.sql → Run
+
+# 2. Code
+cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.60.0 - SAV bilans + page /sav/nouvelle + /mobile/magasin"
+git push origin main</pre>
+
+<h2>🔜 Reste pour 0.60.1+</h2>
+
+<div class="panel" style="border-left-color:#7a6fb0">
+<ol style="margin:0;padding-left:20px;color:#fdcecd;font-size:13;line-height:1.9">
+<li><b>Page d'exécution bilan SAV</b> côté magasin : saisie des points (mesure/oui-non/photo)</li>
+<li><b>Demande de transfert EC → dépôt via magasin</b> (utilise table etablissements_magasins_droits + type_demande='transfert')</li>
+<li><b>Génération rapport SAV PDF</b> (similaire BL, avec les points contrôlés + résultats + photos)</li>
+<li><b>Page admin droits magasin</b> pour configurer qui peut faire quoi avec quel magasin</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.60.0 · 6 juin 2026 · 🛠 SAV ULTRA-PRO + 📱 ACTION MOBILE</footer>
+</div></body></html>

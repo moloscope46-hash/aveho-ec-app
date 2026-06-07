@@ -33,10 +33,11 @@ export default function ChoixModePage() {
           // Force mode Magasin
           try {
             localStorage.setItem("av-view-mode", "magasin");
-            localStorage.setItem("av-launch-mode", "desktop");
+            localStorage.setItem("av-launch-mode", "mobile");
           } catch {}
           window.dispatchEvent(new Event("av-view-mode-change"));
-          router.push("/magasin");
+          // 0.60.0 : user magasin atterrit en vue Action Mobile dédiée
+          router.push("/mobile/magasin");
           return;
         }
       } catch (e) {

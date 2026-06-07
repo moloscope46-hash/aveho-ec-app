@@ -35,6 +35,8 @@ export default function DemandeInterneDetailPage() {
   const [actionInProgress, setActionInProgress] = useState(false);
   const [refusReason, setRefusReason] = useState("");
   const [showRefus, setShowRefus] = useState(false);
+  // 0.59.9 : modal création article rapide depuis ligne DI
+  const [createArticleFor, setCreateArticleFor] = useState(null);
 
   useEffect(() => {
     if (!id || !auth.ready) return;
@@ -339,24 +341,67 @@ export default function DemandeInterneDetailPage() {
             <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>Aucune ligne</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {lignes.map(l => (
-                <div key={l.id} style={{
-                  background: "#fff", border: "1px solid #e3e9ee", borderRadius: 8,
-                  padding: 10, display: "flex", alignItems: "center", gap: 10,
-                }}>
-                  <i className="ti ti-package" style={{ color: "#185FA5", fontSize: 20 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: "#142131" }}>{l.articles?.libelle || l.libelle || "Article ?"}</div>
-                    {(l.articles?.reference || l.articles?.code) && <div style={{ fontFamily: "Consolas,monospace", fontSize: 11, color: "#8a98a8" }}>{l.articles?.reference || l.articles?.code}</div>}
+              {lignes.map(l => {
+                const isOrphan = !l.article_id && (l.libelle || l.code);
+                return (
+                  <div key={l.id} style={{
+                    background: "#fff",
+                    border: `1px solid ${isOrphan ? "#EF9F27" : "#e3e9ee"}`,
+                    borderLeft: `3px solid ${isOrphan ? "#EF9F27" : "#185FA5"}`,
+                    borderRadius: 8, padding: 10,
+                    display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+                  }}>
+                    <i className={`ti ${isOrphan ? "ti-package-off" : "ti-package"}`} style={{ color: isOrphan ? "#EF9F27" : "#185FA5", fontSize: 20 }} />
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontWeight: 600, color: "#142131" }}>
+                        {l.articles?.libelle || l.libelle || <em style={{ color: "#8a98a8" }}>Article sans nom</em>}
+                      </div>
+                      {(l.articles?.reference || l.articles?.code || l.code) && <div style={{ fontFamily: "Consolas,monospace", fontSize: 11, color: "#8a98a8" }}>{l.articles?.reference || l.articles?.code || l.code}</div>}
+                      {isOrphan && (
+                        <div style={{ fontSize: 11, color: "#d48820", marginTop: 3, fontStyle: "italic" }}>
+                          ⚠ Article non rattaché au catalogue
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ padding: "4px 12px", background: "#fafbfc", border: "1px solid #cfd8e0", borderRadius: 6, fontWeight: 700, fontSize: 13 }}>
+                      {l.quantite_demandee || 0} {l.unite || "u"}
+                    </span>
+                    {/* 0.59.9 : bouton créer article si orphelin et user magasin */}
+                    {isOrphan && viewMode.isMagasin && (
+                      <button onClick={() => setCreateArticleFor(l)} style={{
+                        background: "linear-gradient(135deg,#5a8f8f,#477676)", color: "#fff",
+                        border: "none", padding: "6px 12px", borderRadius: 6,
+                        fontFamily: "inherit", fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                      }}>
+                        <i className="ti ti-plus" /> Créer article
+                      </button>
+                    )}
                   </div>
-                  <span style={{ padding: "4px 12px", background: "#fafbfc", border: "1px solid #cfd8e0", borderRadius: 6, fontWeight: 700, fontSize: 13 }}>
-                    {l.quantite_demandee || 0} {l.unite || "u"}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Panel>
+
+        {/* 0.59.9 : Modal création article rapide depuis ligne DI */}
+        {createArticleFor && (
+          <CreateArticleQuickModal
+            ligne={createArticleFor}
+            supabase={supabase}
+            structureId={auth.structureId}
+            userId={auth.user?.id}
+            onClose={() => setCreateArticleFor(null)}
+            onCreated={async (articleId) => {
+              // Lier la ligne à l'article créé
+              await supabase.from("demandes_internes_lignes")
+                .update({ article_id: articleId })
+                .eq("id", createArticleFor.id);
+              setCreateArticleFor(null);
+              await reload();
+              alert("✓ Article créé et rattaché à la ligne");
+            }}
+          />
+        )}
       </div>
     </div>
   );
@@ -503,3 +548,159 @@ ${di.commentaire ? `
   `);
   w.document.close();
 }
+
+// =============================================================
+// 0.59.9 : Modal création article rapide depuis ligne DI
+// =============================================================
+function CreateArticleQuickModal({ ligne, supabase, structureId, userId, onClose, onCreated }) {
+  const [form, setForm] = useState({
+    libelle: ligne.libelle || ligne.articles?.libelle || "",
+    code: ligne.code || ligne.articles?.code || "",
+    reference: "",
+    famille: "",
+    unite: ligne.unite || "unité",
+    est_catalogue_magasin: true,  // Pré-coché car créé depuis le magasin
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function create() {
+    if (!form.libelle?.trim()) { setError("Le libellé est obligatoire"); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const payload = {
+        structure_id: structureId,
+        libelle: form.libelle.trim(),
+        code: form.code?.trim() || null,
+        reference: form.reference?.trim() || null,
+        famille: form.famille?.trim() || null,
+        unite: form.unite || "unité",
+        est_catalogue_magasin: !!form.est_catalogue_magasin,
+        actif: true,
+        created_by: userId,
+      };
+      const r = await supabase.from("articles").insert(payload).select("id").single();
+      if (r.error) throw r.error;
+      onCreated(r.data.id);
+    } catch (e) {
+      setError(`${e.message} (${e.code || "?"})`);
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,.5)",
+      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+      padding: 20,
+    }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{
+        background: "#fff", borderRadius: 14, padding: 24, maxWidth: 500, width: "100%",
+        boxShadow: "0 20px 60px rgba(0,0,0,.3)", color: "#142131",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <h2 style={{ margin: 0, fontSize: 18, color: "#5a8f8f" }}>
+            <i className="ti ti-package-plus" /> Créer un article catalogue
+          </h2>
+          <button onClick={onClose} style={{ background: "transparent", border: "none", fontSize: 22, color: "#8a98a8", cursor: "pointer" }}>×</button>
+        </div>
+
+        <div style={{ fontSize: 12.5, color: "#5a6878", marginBottom: 14 }}>
+          Cet article sera ajouté au catalogue magasin Aveho et rattaché à la ligne de la DI.
+        </div>
+
+        {error && (
+          <div style={{ background: "rgba(227,93,91,.10)", border: "1px solid #e35d5b", borderRadius: 8, padding: 10, marginBottom: 12, color: "#c0392b", fontSize: 12.5, fontWeight: 600 }}>
+            <i className="ti ti-alert-triangle" /> {error}
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <Fld label="Libellé *" required>
+            <input value={form.libelle} onChange={(e) => setForm({ ...form, libelle: e.target.value })} autoFocus
+              placeholder="Tubulure perfusion 100ml..."
+              style={inputStyleLight} />
+          </Fld>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <Fld label="Référence interne">
+              <input value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value.toUpperCase() })} placeholder="REF-001" style={{ ...inputStyleLight, fontFamily: "Consolas,monospace" }} />
+            </Fld>
+            <Fld label="Code produit">
+              <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="CIP, EAN..." style={{ ...inputStyleLight, fontFamily: "Consolas,monospace" }} />
+            </Fld>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <Fld label="Famille">
+              <input value={form.famille} onChange={(e) => setForm({ ...form, famille: e.target.value })} placeholder="Perfusion, oxygène..." style={inputStyleLight} />
+            </Fld>
+            <Fld label="Unité">
+              <select value={form.unite} onChange={(e) => setForm({ ...form, unite: e.target.value })} style={inputStyleLight}>
+                <option value="unité">Unité</option>
+                <option value="boîte">Boîte</option>
+                <option value="lot">Lot</option>
+                <option value="paquet">Paquet</option>
+                <option value="ml">ml</option>
+                <option value="L">Litre</option>
+                <option value="kg">kg</option>
+                <option value="m">Mètre</option>
+              </select>
+            </Fld>
+          </div>
+          <label style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: 12, borderRadius: 8,
+            background: form.est_catalogue_magasin ? "rgba(94,143,143,.10)" : "#fafbfc",
+            border: `2px solid ${form.est_catalogue_magasin ? "#5a8f8f" : "#e3e9ee"}`,
+            cursor: "pointer",
+          }}>
+            <input type="checkbox" checked={!!form.est_catalogue_magasin}
+              onChange={(e) => setForm({ ...form, est_catalogue_magasin: e.target.checked })}
+              style={{ width: 16, height: 16, accentColor: "#5a8f8f" }} />
+            <div style={{ flex: 1, fontSize: 12.5 }}>
+              <div style={{ fontWeight: 700, color: form.est_catalogue_magasin ? "#5a8f8f" : "#142131" }}>
+                <i className="ti ti-building-warehouse" /> Article du catalogue magasin
+              </div>
+              <div style={{ fontSize: 11, color: "#5a6878" }}>
+                Recommandé : permet aux EC de référencer cet article dans leurs DI futures
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
+          <button onClick={onClose} style={btnGhost}>Annuler</button>
+          <button onClick={create} disabled={saving} style={btnPrimary}>
+            <i className="ti ti-device-floppy" /> {saving ? "Création..." : "Créer et rattacher"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Fld({ label, required, children }) {
+  return (
+    <div>
+      <label style={{ display: "block", fontSize: 11, color: "#5a6878", fontWeight: 600, marginBottom: 4, textTransform: "uppercase", letterSpacing: ".5px" }}>
+        {label}{required && <span style={{ color: "#e35d5b" }}> *</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+const inputStyleLight = {
+  width: "100%", padding: "9px 12px",
+  background: "#fafbfc", border: "1px solid #cfd8e0", borderRadius: 8,
+  fontFamily: "inherit", fontSize: 13, color: "#142131",
+};
+const btnGhost = {
+  padding: "9px 18px", background: "#fff", color: "#5a6878",
+  border: "1px solid #cfd8e0", borderRadius: 8,
+  fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
+};
+const btnPrimary = {
+  padding: "9px 18px", background: "linear-gradient(135deg,#5a8f8f,#477676)", color: "#fff",
+  border: "none", borderRadius: 8,
+  fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
+};

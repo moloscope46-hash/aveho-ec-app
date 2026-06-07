@@ -115,19 +115,19 @@ export default function MobileNewPatientPage() {
     : chambres;
 
   function next() {
-    // 0.59.1 : validation établissement obligatoire pour passer de l'étape 1 à 2
-    if (step === 1 && !form.etablissement_id) {
-      setSaveError("⚠ L'établissement est obligatoire pour passer à l'étape suivante");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+    // 0.59.9 : validation 5 étapes
     if (step === 1 && !form.nom?.trim()) {
       setSaveError("⚠ Le nom est obligatoire");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    if (step === 2 && !form.etablissement_id) {
+      setSaveError("⚠ L'établissement est obligatoire pour passer à l'étape suivante");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     setSaveError("");
-    setStep(Math.min(step + 1, 4));
+    setStep(Math.min(step + 1, 5));
   }
   function prev() { setStep(Math.max(step - 1, 1)); }
 
@@ -213,18 +213,18 @@ export default function MobileNewPatientPage() {
     }}>
       <MobileSubHeader title="Nouveau patient" icon="ti-user-plus" color="#C9867F" />
 
-      {/* 0.59.3 : Stepper visuel 5 étapes avec icônes */}
+      {/* 0.59.9 : Stepper visuel 5 VRAIES étapes avec icônes */}
       <div style={{ padding: "16px 16px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, gap: 4 }}>
           {[
             { n: 1, ic: "ti-id", lbl: "Identité" },
-            { n: 1.5, ic: "ti-building", lbl: "Affectation" }, // sous-étape de 1
-            { n: 2, ic: "ti-phone", lbl: "Contact" },
-            { n: 3, ic: "ti-stethoscope", lbl: "Médical" },
-            { n: 4, ic: "ti-check", lbl: "Validation" },
-          ].map((s, idx, arr) => {
-            const reached = step >= Math.ceil(s.n);
-            const isCurrent = (step === 1 && (s.n === 1 || s.n === 1.5)) || (step === Math.ceil(s.n) && s.n !== 1.5);
+            { n: 2, ic: "ti-building", lbl: "Affectation" },
+            { n: 3, ic: "ti-phone", lbl: "Contact" },
+            { n: 4, ic: "ti-stethoscope", lbl: "Médical" },
+            { n: 5, ic: "ti-check", lbl: "Validation" },
+          ].map((s, idx) => {
+            const reached = step >= s.n;
+            const isCurrent = step === s.n;
             return (
               <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, position: "relative" }}>
                 {idx > 0 && <div style={{ position: "absolute", left: "-50%", top: 14, width: "100%", height: 2, background: reached ? "#C9867F" : "rgba(255,255,255,.10)" }} />}
@@ -236,7 +236,10 @@ export default function MobileNewPatientPage() {
                   fontSize: 13, fontWeight: 700, zIndex: 1,
                   border: isCurrent ? "2px solid #fff" : "none",
                   boxShadow: isCurrent ? "0 0 0 3px rgba(255,255,255,.20)" : "none",
-                }}>
+                  cursor: reached ? "pointer" : "default",
+                  transition: "all 200ms",
+                }}
+                onClick={() => { if (reached) setStep(s.n); }}>
                   <i className={`ti ${s.ic}`} />
                 </div>
                 <div style={{ fontSize: 9, color: reached ? "#fff" : "#8a98a8", marginTop: 3, fontWeight: isCurrent ? 700 : 500, textAlign: "center" }}>
@@ -247,13 +250,13 @@ export default function MobileNewPatientPage() {
           })}
         </div>
         <div style={{ color: "#bfe6e6", fontSize: 12.5, marginBottom: 14, textAlign: "center", fontWeight: 600 }}>
-          Étape {step} / 4 · {step === 1 ? "Identité + Affectation + Médecin" : step === 2 ? "Coordonnées + Urgence" : step === 3 ? "Médical complet" : "Récapitulatif & validation"}
+          Étape {step} / 5 · {step === 1 ? "Identité" : step === 2 ? "Affectation + Médecin" : step === 3 ? "Coordonnées + Urgence" : step === 4 ? "Médical complet" : "Récapitulatif & validation"}
         </div>
       </div>
 
       <div style={{ padding: "0 16px" }}>
         {/* 0.59.1 : Erreur de validation affichée en haut quel que soit l'étape */}
-        {saveError && step < 4 && (
+        {saveError && step < 5 && (
           <div style={{ background: "rgba(227,93,91,.12)", border: "1px solid #e35d5b", borderRadius: 10, padding: 10, color: "#fff", fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>
             <i className="ti ti-alert-triangle" style={{ color: "#e35d5b" }} /> {saveError}
           </div>
@@ -286,8 +289,8 @@ export default function MobileNewPatientPage() {
           </Section>
         )}
 
-        {/* ÉTAPE 1bis dans étape 1 : Affectation */}
-        {step === 1 && (
+        {/* ÉTAPE 2 — AFFECTATION (étab/bât/service/chambre + matériel + médecin/pathologie) */}
+        {step === 2 && (
           <>
           <Section title="Affectation" icon="ti-building" color="#185FA5">
             {/* 0.59.1 : Établissement OBLIGATOIRE (affiché même si 1 seul, pour validation) */}
@@ -419,8 +422,8 @@ export default function MobileNewPatientPage() {
           </>
         )}
 
-        {/* ÉTAPE 2 — COORDONNÉES */}
-        {step === 2 && (
+        {/* ÉTAPE 3 — COORDONNÉES + URGENCE */}
+        {step === 3 && (
           <>
             <Section title="Coordonnées" icon="ti-phone" color="#5aa05a">
               <Field label="Téléphone personnel">
@@ -459,8 +462,8 @@ export default function MobileNewPatientPage() {
           </>
         )}
 
-        {/* ÉTAPE 3 — MÉDICAL */}
-        {step === 3 && (
+        {/* ÉTAPE 4 — MÉDICAL */}
+        {step === 4 && (
           <Section title="Informations médicales" icon="ti-stethoscope" color="#7a6fb0">
             <Field label="Médecin traitant">
               <input value={form.medecin_traitant} onChange={e => setForm({ ...form, medecin_traitant: e.target.value })} placeholder="Dr Lambert" style={inputStyle} />
@@ -494,8 +497,8 @@ export default function MobileNewPatientPage() {
           </Section>
         )}
 
-        {/* ÉTAPE 4 — RÉCAP & VALIDATION */}
-        {step === 4 && (
+        {/* ÉTAPE 5 — RÉCAP & VALIDATION */}
+        {step === 5 && (
           <Section title="Récapitulatif" icon="ti-check" color="#5aa05a">
             <div style={{ background: "rgba(255,255,255,.04)", borderRadius: 10, padding: 14, marginBottom: 12 }}>
               <div style={{ color: "#bfe6e6", fontSize: 11, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Patient à créer</div>
@@ -541,7 +544,7 @@ export default function MobileNewPatientPage() {
         }}>
           <i className="ti ti-chevron-left" /> Retour
         </button>
-        {step < 4 ? (
+        {step < 5 ? (
           <button onClick={next} style={{
             flex: 1, background: "linear-gradient(135deg, #C9867F, #b3756e)",
             color: "#fff", border: "none",

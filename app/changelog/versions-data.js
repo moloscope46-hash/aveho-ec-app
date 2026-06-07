@@ -240,6 +240,47 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.60.0",
+    "kind": "feat",
+    "titre": "🛠 SAV ultra-pro : bilans avec 5 points de contrôle + page /sav/nouvelle EC + vue Action Mobile pour user magasin",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.60.0-sav-bilans-transferts.sql`** : 6 nouveaux objets DB. (1) Table `bilans_sav` (templates de contrôles côté magasin avec code, nom, description, durée estimée, icône/couleur). (2) Table `bilans_sav_points` (les points de contrôle avec ordre, libellé, type=oui_non/mesure/texte/photo, unité, min/max). (3) Table `bilans_sav_articles` (M:N rattachement bilan↔article). (4) ALTER `demandes_internes` (`type_demande`=di/sav/transfert, `bilan_sav_id`, `article_concerne_id`, `panne_description`, `depot_source_id`). (5) Table `sav_executions` (résultats des contrôles exécutés). (6) Table `etablissements_magasins_droits` (qui peut commander/SAV/transférer via quel magasin)" },
+      { "code": "AI", "txt": "🆕 **Page `/magasin/bilans-sav`** : CRUD complet pour gérer les bilans. Création de bilans avec leurs 5 points de contrôle (modifiable jusqu'à N points), chaque point avec son type (✓/✗, 📏 mesure avec unité/min/max, 📝 texte, 📷 photo) et flag obligatoire. Rattachement multi-articles via grid checkboxes. Suppression cascade (points + rattachements + bilan)" },
+      { "code": "AI", "txt": "🆕 **Page `/sav/nouvelle`** (EC) : formulaire de création SAV en 3 panels. (1) **Article concerné** sélecteur dans le catalogue de la structure, indique si rattaché au catalogue magasin. (2) **Bilan SAV** filtré automatiquement par les bilans rattachés à l'article (via `bilans_sav_articles`) - si aucun spécifique, montre tous les bilans actifs. Click pour sélectionner card avec icône+couleur. (3) **Panne description** obligatoire, priorité normale/urgente, magasin destinataire, commentaire libre. Submit → INSERT dans demandes_internes avec type_demande='sav'" },
+      { "code": "AI", "txt": "🆕 **Page `/mobile/magasin`** : vue **Action Mobile dédiée aux users magasin**. Header avec logo + nom + bouton 'EC' pour switch rapide. 4 tuiles statistiques colorées : DI à traiter (amber, urgent si >5), SAV à traiter (rouge, urgent si >0), Transferts (violet), Articles catalogue (bleu). 4 boutons accès rapide : Nouvel article, Bilans SAV, Vue magasin, Scanner. Section 'À traiter maintenant' avec 10 DI/SAV/Transferts récents non traités, badge URGENT si priorité=urgente, click → page détail" },
+      { "code": "AI", "txt": "🔁 **User magasin auto-redirect → /mobile/magasin** (au lieu de /magasin) : choix-mode détecte `role_professionnel=utilisateur_magasin` → force `av-launch-mode=mobile` + `av-view-mode=magasin` → atterrit sur la vue Action Mobile. UX dédiée pour les techniciens magasin sur tablette/mobile" },
+      { "code": "AI", "txt": "📑 **Magasin tabs étendus** (4 → 6) : ajout 'SAV reçues' (rouge, filtre demandes_internes par type='sav') et 'Bilans SAV' (teal, lien vers /magasin/bilans-sav). Tableau de bord enrichi avec stat 'SAV à traiter' séparée des DI" },
+      { "code": "AI", "txt": "📍 **Menu Livraison** : nouveau lien 'Demande SAV' (icône ti-tool, couleur rouge #e35d5b) sous 'Mes demandes (DI)'. Accès direct au formulaire de création SAV" },
+      { "code": "INFO", "txt": "🎯 **Workflow SAV complet** : (1) Magasin crée des bilans dans /magasin/bilans-sav avec leurs 5 points · (2) Magasin rattache chaque bilan à un ou plusieurs articles · (3) EC va sur /sav/nouvelle, choisit l'article concerné · (4) Les bilans rattachés à cet article sont automatiquement proposés en priorité · (5) EC décrit la panne, envoie · (6) User magasin reçoit dans /mobile/magasin (badge rouge SAV), click → page détail · (7) Validation/refus/exécution du bilan (à implémenter en 0.60.1 : page exécution avec saisie des points)" },
+      { "code": "INFO", "txt": "🔜 **Reste pour 0.60.1+** : (a) Page d'exécution bilan SAV (saisie des points avec photos), (b) Demande de transfert EC → dépôt via magasin (droits etablissements_magasins_droits), (c) Génération rapport SAV PDF" }
+    ],
+    "themes": ["feat", "sav", "bilans", "mobile", "magasin"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.60.0.html"
+  },
+  {
+    "v": "0.59.9",
+    "kind": "feat",
+    "titre": "📋 Wizard patient 5 vraies étapes guidées + 🆕 Création article rapide depuis détail DI",
+    "chantiers": [
+      { "code": "AI", "txt": "📋 **Wizard patient mobile refactoré en 5 vraies étapes** (au lieu de 4 avec sous-étape) : (1) **Identité** seule (civilité/nom/prénom/naissance/sécu), (2) **Affectation + Médecin** (étab/bât/service/chambre + matériel chambre + collaborateur référent + pathologie), (3) **Coordonnées + Urgence** (adresse/téléphone/contact urgence), (4) **Médical complet** (allergies/GIR/médecin traitant), (5) **Récapitulatif & validation**. Bouton 'Suivant' bloque entre étapes selon validation : étape 1→2 si pas de nom, étape 2→3 si pas d'établissement",
+        "code_snippet": {
+          "file": "app/mobile/patient/new/page.js",
+          "note": "Validation par étape",
+          "lang": "javascript",
+          "after": "function next() {\n  if (step === 1 && !form.nom?.trim()) { setSaveError('⚠ Le nom est obligatoire'); return; }\n  if (step === 2 && !form.etablissement_id) { setSaveError('⚠ L\\'établissement est obligatoire'); return; }\n  setSaveError('');\n  setStep(Math.min(step + 1, 5));  // 5 étapes max\n}"
+        }
+      },
+      { "code": "AI", "txt": "👆 **Bullets stepper cliquables** : si une étape est atteinte (`step >= s.n`), click sur la bullet permet de revenir directement à cette étape. Transition smooth 200ms. Le user peut naviguer librement entre étapes déjà validées" },
+      { "code": "AI", "txt": "🆕 **Création article rapide depuis détail DI** (`/demandes-internes/[id]`) : les lignes sans `article_id` sont marquées en amber avec icône ti-package-off et message '⚠ Article non rattaché au catalogue'. En mode magasin, bouton vert teal 'Créer article' à droite ouvre un modal de création rapide" },
+      { "code": "AI", "txt": "🪟 **Modal CreateArticleQuickModal** : libellé pré-rempli depuis la ligne, champs Référence/Code/Famille/Unité, checkbox **'Article du catalogue magasin' pré-cochée** (recommandé). Click 'Créer et rattacher' → INSERT dans articles → UPDATE de la ligne DI avec le nouveau article_id → reload de la DI. Cycle vertueux : les articles orphelins deviennent référencés dans le catalogue" },
+      { "code": "INFO", "txt": "🎯 **Workflow complet maintenant possible** : (1) EC envoie une DI avec un article qui n'existe pas encore au catalogue magasin (juste libellé/code en texte libre) · (2) Magasin reçoit DI · (3) Voit ligne en amber avec ⚠ · (4) Click 'Créer article' · (5) Modal pré-rempli · (6) Confirme → article créé + ligne mise à jour · (7) Les EC pourront le référencer dans leurs prochaines DI" }
+    ],
+    "themes": ["feat", "wizard", "patient", "magasin"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.9.html"
+  },
+  {
     "v": "0.59.8",
     "kind": "feat",
     "titre": "🖨 Génération BL imprimable + ✅ Confirmer réception EC + 📊 Alertes stock bas + 🩹 Fix tables demandes_internes",
