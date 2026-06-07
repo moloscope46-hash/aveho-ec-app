@@ -245,7 +245,10 @@ export default function PatientQrPage({ params }) {
             // QR : layout horizontal infos + QR
             <div style={{ border: "3px solid #185FA5", borderRadius: 10, padding: 14, display: "flex", gap: 14, alignItems: "center", boxSizing: "border-box" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO BRACELET</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {structureLogo && <img src={structureLogo} alt="L" style={{ width: 22, height: 22, objectFit: "contain" }} />}
+                  <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>BRACELET</div>
+                </div>
                 <h1 style={{ fontSize: 18, margin: "4px 0 2px", color: "#142131", fontWeight: 700, lineHeight: 1 }}>
                   {patient.nom}
                 </h1>
@@ -273,7 +276,10 @@ export default function PatientQrPage({ params }) {
             <div style={{ border: "3px solid #185FA5", borderRadius: 10, padding: 14, boxSizing: "border-box" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO BRACELET</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {structureLogo && <img src={structureLogo} alt="L" style={{ width: 22, height: 22, objectFit: "contain" }} />}
+                    <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>BRACELET</div>
+                  </div>
                   <h1 style={{ fontSize: 20, margin: "4px 0 2px", color: "#142131", fontWeight: 700, lineHeight: 1 }}>
                     {patient.nom} <span style={{ fontWeight: 500 }}>{patient.prenom || ""}</span>
                   </h1>

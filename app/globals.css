@@ -4631,3 +4631,238 @@ button:disabled:not([class*="ghost"]) {
 [role="tablist"] {
   flex-wrap: wrap !important;
 }
+
+/* =============================================================
+   0.62.70 — COUP DE PEINTURE : tuiles premium + burger responsive
+   ============================================================= */
+
+/* Tuiles data-3d : effet hover premium MULTI-couches */
+[data-3d="true"] {
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 280ms ease-out, border-color 280ms;
+  position: relative;
+  overflow: hidden;
+}
+[data-3d="true"]::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.5) 50%, transparent 60%);
+  opacity: 0;
+  transition: opacity 400ms, transform 600ms;
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+[data-3d="true"]:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 28px rgba(20,33,49,.15), 0 4px 8px rgba(20,33,49,.08);
+}
+[data-3d="true"]:hover::before {
+  opacity: 1;
+  transform: translateX(100%);
+}
+
+/* Bordure latérale animée pour tuiles */
+[data-3d="true"][data-shimmer]::after {
+  content: "";
+  position: absolute;
+  left: 0; top: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, transparent, currentColor, transparent);
+  opacity: 0;
+  transition: opacity 300ms;
+}
+[data-3d="true"][data-shimmer]:hover::after {
+  opacity: 1;
+  animation: av-side-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes av-side-shimmer {
+  0%, 100% { transform: translateY(0); opacity: .5; }
+  50% { transform: translateY(0); opacity: 1; }
+}
+
+/* Effet reveal au scroll : tuiles apparaissent en cascade */
+.av-stagger > * {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: av-stagger-in 500ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.av-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.av-stagger > *:nth-child(2)  { animation-delay: 30ms; }
+.av-stagger > *:nth-child(3)  { animation-delay: 60ms; }
+.av-stagger > *:nth-child(4)  { animation-delay: 90ms; }
+.av-stagger > *:nth-child(5)  { animation-delay: 120ms; }
+.av-stagger > *:nth-child(6)  { animation-delay: 150ms; }
+.av-stagger > *:nth-child(7)  { animation-delay: 180ms; }
+.av-stagger > *:nth-child(8)  { animation-delay: 210ms; }
+.av-stagger > *:nth-child(9)  { animation-delay: 240ms; }
+.av-stagger > *:nth-child(10) { animation-delay: 270ms; }
+.av-stagger > *:nth-child(n+11) { animation-delay: 300ms; }
+@keyframes av-stagger-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pattern subtil dans le fond de certaines tuiles */
+.av-pattern-dots {
+  background-image:
+    radial-gradient(circle, rgba(0,0,0,.04) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.av-pattern-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Section expand animation */
+@keyframes av-section-expand {
+  from { max-height: 0; opacity: 0; }
+  to   { max-height: 600px; opacity: 1; }
+}
+
+/* Page deploy : truc qui se déploie sur toute la page (gradient overlay) */
+.av-page-deploy {
+  position: relative;
+}
+.av-page-deploy::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(124,200,200,.04), transparent 60%),
+              radial-gradient(ellipse at bottom left, rgba(94,143,143,.04), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+  animation: av-bg-shift 20s ease-in-out infinite;
+}
+@keyframes av-bg-shift {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.05) translate(-2%, 2%); }
+}
+
+/* Burger responsive : mobile < 900px */
+@media (max-width: 900px) {
+  .magasin-burger-btn {
+    display: inline-flex !important;
+  }
+  .magasin-sidebar-erp {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0;
+    height: 100vh !important;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 0 40px rgba(0,0,0,.3);
+  }
+  .magasin-sidebar-erp.burger-open {
+    transform: translateX(0);
+  }
+  .magasin-sidebar-erp .magasin-burger-close {
+    display: inline-flex !important;
+  }
+  .magasin-sidebar-erp .magasin-collapse-btn {
+    display: none !important;
+  }
+}
+
+/* Tuiles : effet shine continu sur les KPIs importants */
+.av-kpi-glow {
+  position: relative;
+}
+.av-kpi-glow::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+  animation: av-kpi-shine 3s ease-in-out infinite;
+}
+@keyframes av-kpi-shine {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+/* Page hero : effet de release au mount */
+.av-page-hero {
+  animation: av-hero-entrance 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes av-hero-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Hover plus marqué sur les boutons primary */
+button:hover:not(:disabled):not([class*="ghost"]) {
+  filter: brightness(1.1);
+}
+
+/* Cards qui pulsent doucement quand on a un warning/alert */
+.av-pulse-warning {
+  animation: av-pulse-warn 2s ease-in-out infinite;
+}
+@keyframes av-pulse-warn {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,159,39,.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239,159,39,0); }
+}
+.av-pulse-danger {
+  animation: av-pulse-danger 2s ease-in-out infinite;
+}
+@keyframes av-pulse-danger {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227,93,91,.4); }
+  50% { box-shadow: 0 0 0 8px rgba(227,93,91,0); }
+}
+
+/* KPI premium : effet de profondeur via inner shadow + gradient */
+.av-kpi-premium {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff, #fafbfc) !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.8) inset,
+    0 -1px 0 rgba(20,33,49,.04) inset,
+    0 2px 6px rgba(20,33,49,.06);
+}
+.av-kpi-premium::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--av-accent, #185FA5), transparent);
+  opacity: .5;
+}
+
+/* Effet de bord lumineux sur PageHead premium */
+.av-page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top left, rgba(124,200,200,.08), transparent 50%);
+  pointer-events: none;
+}
+
+/* Forms : labels qui glissent en focus */
+.fld label,
+label > span:first-child {
+  transition: color 200ms, transform 200ms;
+}
+.fld:focus-within label,
+label:focus-within > span:first-child {
+  color: #185FA5;
+  transform: translateY(-1px);
+}
+
+/* Inputs : focus ring premium */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #185FA5 !important;
+  box-shadow: 0 0 0 3px rgba(24,95,165,.15) !important;
+  transition: border-color 150ms, box-shadow 150ms;
+}

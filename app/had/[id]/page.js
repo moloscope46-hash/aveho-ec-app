@@ -51,6 +51,7 @@ export default function HadDetailPage() {
   // Données onglets
   const [collabs, setCollabs] = useState([]);
   const [users, setUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);  /* 0.62.70 : pour picker visuel */
   const [vehicules, setVehicules] = useState([]);
   const [allVehicules, setAllVehicules] = useState([]);
   const [garages, setGarages] = useState([]);
@@ -94,6 +95,7 @@ export default function HadDetailPage() {
       const allUsersR = await supabase.from("membres_structure")
         .select("user_id, nom, prenom, email, role")
         .eq("structure_id", auth.structureId);
+      setAllUsers(allUsersR.data || []);
       // Filtrer ceux pas encore dans HAD
       const inHadIds = new Set((mR.data || []).map(m => m.user_id));
       // (gardé tel quel; on filtrera dans le picker)
@@ -538,18 +540,72 @@ export default function HadDetailPage() {
         )}
 
         {/* MODALS PICKERS */}
-        <Modal open={modalCollab} onClose={() => setModalCollab(false)} title="Ajouter un collaborateur" size="sm"
-          footer={<><Btn variant="ghost" onClick={() => setModalCollab(false)}>Annuler</Btn><Btn variant="primary" onClick={addCollab}>Ajouter</Btn></>}>
-          <div style={{ display: "grid", gap: 10 }}>
-            <label>Rôle
+        <Modal open={modalCollab} onClose={() => setModalCollab(false)} title="Ajouter un collaborateur" size="md"
+          footer={<><Btn variant="ghost" onClick={() => setModalCollab(false)}>Annuler</Btn><Btn variant="primary" onClick={addCollab} disabled={!pickerForm.user_id}>Ajouter</Btn></>}>
+          <div style={{ display: "grid", gap: 12 }}>
+            <label>Rôle dans la HAD
               <select value={pickerForm.role || ""} onChange={(e) => setPickerForm({ ...pickerForm, role: e.target.value })} style={inp()}>
                 {ROLES_HAD.map(r => <option key={r.v} value={r.v}>{r.l}</option>)}
               </select>
             </label>
-            <label>Collaborateur (user_id)
-              <input value={pickerForm.user_id || ""} onChange={(e) => setPickerForm({ ...pickerForm, user_id: e.target.value })} placeholder="UUID utilisateur" style={inp()} />
-              <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 4 }}>💡 0.62.70 : sélecteur visuel auto-complete depuis membres_structure</div>
-            </label>
+            {/* 0.62.70 : Sélecteur visuel auto-complete avec search + cards */}
+            <div>
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.4 }}>Sélectionner un utilisateur</span>
+              <input
+                value={pickerForm.search || ""}
+                onChange={(e) => setPickerForm({ ...pickerForm, search: e.target.value })}
+                placeholder="🔍 Rechercher par nom, prénom ou email..."
+                style={{ ...inp(), marginTop: 4, padding: "10px 12px" }}
+              />
+              <div style={{ marginTop: 10, maxHeight: 280, overflowY: "auto", display: "grid", gap: 6 }}>
+                {(() => {
+                  const inHadIds = new Set(collabs.map(c => c.user_id));
+                  const filtered = allUsers.filter(u => {
+                    if (inHadIds.has(u.user_id)) return false;
+                    if (!pickerForm.search?.trim()) return true;
+                    const q = pickerForm.search.toLowerCase();
+                    return `${u.nom || ""} ${u.prenom || ""} ${u.email || ""}`.toLowerCase().includes(q);
+                  });
+                  if (filtered.length === 0) {
+                    return <div style={{ padding: 14, textAlign: "center", color: "#8a98a8", fontSize: 12, background: "#fafbfc", borderRadius: 8 }}>
+                      <i className="ti ti-user-off" /> Aucun utilisateur disponible
+                    </div>;
+                  }
+                  return filtered.slice(0, 20).map(u => {
+                    const selected = pickerForm.user_id === u.user_id;
+                    return (
+                      <button key={u.user_id} type="button" onClick={() => setPickerForm({ ...pickerForm, user_id: u.user_id })}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          padding: "8px 12px",
+                          background: selected ? "linear-gradient(135deg, rgba(24,95,165,.12), rgba(24,95,165,.06))" : "#fff",
+                          border: `1px solid ${selected ? "#185FA5" : "#e3e9ee"}`,
+                          borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+                          textAlign: "left",
+                          transition: "all 150ms",
+                          boxShadow: selected ? "0 2px 8px rgba(24,95,165,.15)" : "none",
+                        }}>
+                        <div style={{
+                          width: 32, height: 32, borderRadius: "50%",
+                          background: selected ? "linear-gradient(135deg, #185FA5, #134e87)" : "#f4f7fa",
+                          color: selected ? "#fff" : "#5a6878",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 13, fontWeight: 700, flexShrink: 0,
+                        }}>
+                          {(u.prenom?.[0] || "?")}{(u.nom?.[0] || "")}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#142131" }}>{u.prenom || ""} {u.nom || "—"}</div>
+                          <div style={{ fontSize: 11, color: "#8a98a8" }}>{u.email}</div>
+                          {u.role && <span style={{ fontSize: 10, color: "#7a6fb0", background: "rgba(122,111,176,.1)", padding: "1px 5px", borderRadius: 3, marginTop: 2, display: "inline-block" }}>{u.role}</span>}
+                        </div>
+                        {selected && <i className="ti ti-check" style={{ color: "#185FA5", fontSize: 18 }} />}
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
           </div>
         </Modal>
 
