@@ -43,6 +43,7 @@ const MENU = [
   // 1. GROUPEMENT (entité morale)
   { section: "Groupement", sectionIcon: "ti-building-community", items: [
     { p: "/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#7CC8C8" },
+    { p: "/collaborateurs-fournisseurs", ic: "ti-users-group", lbl: "Collaborateurs fournisseurs", col: "#5a8f8f" },
     { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
     { p: "/direction", ic: "ti-building-skyscraper", lbl: "Dashboard direction", col: "#7a6fb0" },
     // 2. ÉTABLISSEMENTS, BÂTIMENTS, SERVICES, ÉQUIPES (organisationnel)

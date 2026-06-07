@@ -25,6 +25,11 @@ const MAG_NAV = [
     { p: "/magasin?tab=fournisseurs", ic: "ti-truck-delivery", lbl: "Partenaires", col: "#7a6fb0" },
     { p: "/magasin/droits", ic: "ti-shield-lock", lbl: "Droits EC", col: "#5e4a8c" },
   ]},
+  // 0.60.2 : profil + paramètres dédiés magasin
+  { section: "Mon espace", items: [
+    { p: "/magasin/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7CC8C8" },
+    { p: "/magasin/parametres", ic: "ti-settings", lbl: "Paramètres", col: "#5a6878" },
+  ]},
 ];
 
 export function MagasinSidebar() {

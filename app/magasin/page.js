@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { useViewMode } from "../../lib/useViewMode";
+import { useMagasinContext } from "../../lib/useMagasinContext";
 import { MagasinSidebar } from "../components/MagasinSidebar";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
@@ -28,6 +29,7 @@ export default function MagasinPage() {
   const supabase = createClient();
   const auth = useAuth();
   const viewMode = useViewMode();
+  const magasinCtx = useMagasinContext();
   const cart = useCart();
 
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -40,16 +42,21 @@ export default function MagasinPage() {
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     reload();
-  }, [auth.ready, auth.structureId]);
+  }, [auth.ready, auth.structureId, magasinCtx.loading, magasinCtx.magasinId]);
 
   async function reload() {
     setLoading(true);
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
 
+    // 0.60.2 : Si user magasin, filtrer les DI par son magasin_id
+    let disQuery = supabase.from("v_magasin_di").select("*").limit(100);
+    if (magasinCtx.isUserMagasin && magasinCtx.magasinId) {
+      disQuery = disQuery.eq("magasin_id", magasinCtx.magasinId);
+    }
+
     const [artsCat, dis, parts] = await Promise.all([
-      // Catalogue magasin = articles avec est_catalogue_magasin=true OU sans rattachement
       tryFetch(supabase.from("articles").select("id, libelle, code, prix_vente_ht, type_article, photo_url, est_catalogue_magasin").limit(500)),
-      tryFetch(supabase.from("v_magasin_di").select("*").limit(100)),
+      tryFetch(disQuery),
       tryFetch(supabase.from("etablissements_partenaires").select("*").eq("est_fournisseur", true).order("nom")),
     ]);
 

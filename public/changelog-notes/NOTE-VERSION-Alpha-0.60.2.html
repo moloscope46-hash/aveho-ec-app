@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.60.2 — HOTFIX SQL + Cantonnement vues</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #4a1a1a 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(227,93,91,.25));border:1px solid rgba(227,93,91,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#f08a88;font-weight:700;background:rgba(227,93,91,.18);border:1px solid rgba(227,93,91,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#fdcecd;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#fdcecd}
+.meta b{color:#fff}.meta code{background:rgba(227,93,91,.16);color:#fff;border:1px solid rgba(227,93,91,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#e35d5b,#5a8f8f)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(227,93,91,.20);border-left:4px solid #e35d5b;border-radius:14px;padding:20px 24px;margin:14px 0}
+.alert-critique{background:rgba(227,93,91,.20);border:2px solid #e35d5b;border-radius:14px;padding:20px;margin:14px 0;color:#fff}
+.alert-critique h3{color:#f08a88;font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #e35d5b}
+pre.err{color:#f08a88;background:rgba(227,93,91,.10);border-left-color:#e35d5b}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(227,93,91,.18);font-size:13px}
+table th{color:#f08a88;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(227,93,91,.18);font-size:11.5px;color:#fdcecd;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🔥 0.60.2 · HOTFIX + CANTONNEMENT</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩹 HOTFIX SQL complet + 👥 Collaborateurs fournisseurs EC + 🔒 Cantonnement vues magasin<small>+ 👤 Profil et ⚙ Paramètres dédiés magasin (séparés des pages EC pour éviter fuites)</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.60.2-alpha</code></span>
+    <span><b>SQL :</b> <code>HOTFIX-aveho-0.60.2-tout-en-un.sql</code></span>
+    <span><b>Type :</b> Critique</span>
+  </div>
+</header>
+
+<div class="alert-critique">
+<h3>⚠ Erreurs corrigées</h3>
+<pre class="err">ERROR 42703: column m.code_postal does not exist (LINE 46 v_magasins_disponibles)
+GET articles?est_catalogue_magasin=eq.true → 400 Bad Request
+GET etablissements_partenaires?est_fournisseur=eq.true → 400 Bad Request
+GET bilans-sav → 503 Service Unavailable</pre>
+<p style="margin:8px 0 0;font-size:13"><b>Cause</b> : tu n'as pas appliqué tous les SQL des versions 0.59.5 → 0.60.1, donc certaines colonnes/tables manquent. La vue v_magasins_disponibles plante car magasins.code_postal n'existe pas encore.</p>
+<p style="margin:8px 0 0;font-size:13"><b>Solution</b> : applique le SQL hotfix <code>HOTFIX-aveho-0.60.2-tout-en-un.sql</code>. Il crée TOUT dans l'ordre correct (ALTER avant les vues) et est 100% idempotent.</p>
+</div>
+
+<h2>🔥 1. SQL hotfix tout-en-un</h2>
+
+<p style="color:#fdcecd;font-size:13;margin:0 0 8px">Le fichier remplace tous les SQL précédents et crée tout ce qui pourrait manquer :</p>
+
+<table>
+<tr><th>Section</th><th>Contenu</th></tr>
+<tr><td>1. Magasins</td><td>ALTER avec code_postal, ville, telephone, email, responsable, etablissement_rattache_id, etc.</td></tr>
+<tr><td>2. Articles</td><td>ALTER ADD COLUMN magasin_id, article_magasin_id, est_catalogue_magasin, stock_actuel</td></tr>
+<tr><td>3. Partenaires</td><td>ALTER ADD COLUMN est_fournisseur, magasin_id</td></tr>
+<tr><td>4. Demandes internes</td><td>CREATE + ALTER avec type_demande, bilan_sav_id, panne_description, validee_par, etc.</td></tr>
+<tr><td>5. Bilans SAV</td><td>CREATE bilans_sav + points + articles + executions</td></tr>
+<tr><td>6. Droits magasin</td><td>CREATE etablissements_magasins_droits + ALTER membres_structure (magasin_fournisseur_id UNIQUE)</td></tr>
+<tr><td>7. Vues</td><td>v_magasin_di + v_magasins_disponibles (APRÈS tous les ALTER)</td></tr>
+</table>
+
+<h2>👥 2. Nouvelle page /collaborateurs-fournisseurs (EC)</h2>
+
+<div class="panel" style="border-left-color:#5a8f8f">
+<p style="margin:0;color:#fff">Côté EC, nouvelle vue dédiée aux users magasin. Liste tous les utilisateurs tagués "Utilisateur Magasin" avec leur magasin rattaché. Cards avec :</p>
+<ul style="margin:8px 0 0;color:#fdcecd;font-size:13">
+<li>Avatar + identité + rôle</li>
+<li>Badge teal si rattaché : nom magasin, code, ville, agence rattachée</li>
+<li>Badge amber si pas rattaché</li>
+<li>Email + téléphone</li>
+</ul>
+<p style="margin:8px 0 0;color:#fdcecd;font-size:13">Recherche par nom/email. 4 stat tiles (users magasin, rattachés, sans magasin, magasins définis). Lien ajouté au menu Groupement.</p>
+</div>
+
+<h2>🔒 3. Cantonnement des vues magasin</h2>
+
+<div class="panel" style="border-left-color:#7a6fb0">
+<p style="margin:0 0 8px;color:#fff;font-weight:700">Nouveau hook <code>useMagasinContext</code></p>
+<pre>const magasinCtx = useMagasinContext();
+// Retourne :
+// {
+//   magasin,              // L'entité magasin du user
+//   etablissement,        // L'agence à laquelle le magasin est rattaché
+//   magasinId,
+//   etablissementId,
+//   isUserMagasin,        // true si rôle = utilisateur_magasin
+//   isRattache,           // true si magasin défini
+//   loading
+// }</pre>
+
+<p style="margin:8px 0 0;color:#fdcecd;font-size:13">Sur <code>/magasin</code>, le reload des DI est maintenant filtré par <code>magasin_id</code> du user. Un user magasin ne voit que ses propres DI/SAV/transferts.</p>
+</div>
+
+<h2>👤 4. Page /magasin/profil dédiée magasin</h2>
+
+<p style="color:#fdcecd;font-size:13;margin:0 0 8px">Au lieu d'utiliser /profil (vue EC qui montrerait des données non pertinentes), le user magasin a sa propre page avec 4 cards :</p>
+
+<table>
+<tr><th>Card</th><th>Contenu</th></tr>
+<tr><td>👤 Identité</td><td>Prenom, nom, email, téléphone (éditables)</td></tr>
+<tr><td>🏬 Magasin rattaché</td><td>Toutes les coordonnées de SON magasin</td></tr>
+<tr><td>🏥 Agence rattachée</td><td>L'agence cliente · note "tu verras uniquement les DI/SAV de cette agence"</td></tr>
+<tr><td>📊 Mon activité</td><td>DI traitées par moi, SAV traités, articles catalogue</td></tr>
+</table>
+
+<h2>⚙ 5. Page /magasin/parametres dédiée magasin</h2>
+
+<table>
+<tr><th>Section</th><th>Contenu</th></tr>
+<tr><td>🏬 Coordonnées magasin</td><td>Édition nom/code/responsable/adresse/CP/ville/téléphone/email du magasin</td></tr>
+<tr><td>⚙ Préférences</td><td>Notifications cloche, mode mobile par défaut (toggles)</td></tr>
+<tr><td>🚪 Session</td><td>Repasser en EC · Se déconnecter</td></tr>
+</table>
+
+<h2>🚀 Procédure</h2>
+
+<pre># 1. CRITIQUE : applique le SQL hotfix d'abord
+# Supabase Dashboard → SQL Editor → HOTFIX-aveho-0.60.2-tout-en-un.sql → Run
+# Attends "TABLES OK" + "COLONNES MAGASINS OK" dans le résultat
+
+# 2. Code
+cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.60.2 - HOTFIX SQL + collab fournisseurs + cantonnement + profil/parametres magasin"
+git push origin main</pre>
+
+<h2>🧪 Test rapide</h2>
+
+<ol style="color:#fdcecd;font-size:13;line-height:1.9">
+<li>Applique le SQL hotfix → vérifie que les 12 tables existent et magasins a bien code_postal/ville/etablissement_rattache_id</li>
+<li>Recharge la page /magasin/bilans-sav → plus d'erreur 503</li>
+<li>Recharge /magasin → plus d'erreur 400 (articles, partenaires)</li>
+<li>Côté EC : menu Groupement → "Collaborateurs fournisseurs" → tu vois la liste</li>
+<li>User magasin → sidebar → "Mon profil" → vue dédiée avec son magasin</li>
+<li>User magasin → "Paramètres" → édite son magasin</li>
+</ol>
+
+<h2>🔜 Reste pour 0.60.3+</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;color:#fdcecd;font-size:13;line-height:1.9">
+<li>Page exécution bilan SAV (saisie 5 points + photos + rapport)</li>
+<li>Demande de transfert EC → dépôt via magasin (<code>type_demande='transfert'</code>)</li>
+<li>Page admin droits magasin <code>/magasin/droits</code></li>
+<li>Génération rapport SAV PDF</li>
+<li>Étendre le filtrage à toutes les pages magasin (articles, bilans, etc.)</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.60.2 · 6 juin 2026 · 🩹 HOTFIX · 🔒 CANTONNEMENT</footer>
+</div></body></html>

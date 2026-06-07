@@ -240,6 +240,37 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.60.3",
+    "kind": "fix",
+    "titre": "🩹 HOTFIX 2 critiques : imports magasins/nouveau + SQL DROP VIEW avant CREATE",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **Fix Module not found `/magasins/nouveau`** : les imports avaient un niveau de `../` manquant. La page est à `app/magasins/nouveau/page.js`, donc il faut **3 `../`** pour atteindre `lib/` (pas 2). Corrections : `../../lib/supabase` → `../../../lib/supabase`, `../TopBar` → `../../TopBar`, `../useCart` → `../../useCart`, `../ui` → `../../ui`, `../components/BackButton` → `../../components/BackButton`. Le build Vercel passera maintenant" },
+      { "code": "SQL", "txt": "🔥 **Fix erreur SQL 42P16** : `cannot change name of view column nb_lignes to type_demande`. PostgreSQL refuse `CREATE OR REPLACE VIEW` quand l'ordre/nom des colonnes change vs la version précédente. Solution : `DROP VIEW IF EXISTS v_magasin_di;` AVANT `CREATE VIEW`. Idem pour v_magasins_disponibles. Le SQL `HOTFIX-aveho-0.60.2-tout-en-un.sql` est mis à jour" },
+      { "code": "INFO", "txt": "🎯 **Si tu as eu l'erreur SQL** : re-télécharge `HOTFIX-aveho-0.60.2-tout-en-un.sql` (mis à jour) et re-applique. Il fait maintenant DROP VIEW avant CREATE, c'est sans risque (les vues n'ont pas de données, juste une définition)" }
+    ],
+    "themes": ["fix", "imports", "sql", "view"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.60.2",
+    "kind": "fix",
+    "titre": "🩹 HOTFIX SQL complet + 👥 Collaborateurs fournisseurs EC + 🔒 Cantonnement vues magasin + 👤 Profil + ⚙ Paramètres dédiés magasin",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔥 **`HOTFIX-aveho-0.60.2-tout-en-un.sql`** — fix des erreurs 400/503/42703 que tu as vu. SQL **idempotent et exhaustif** qui crée TOUT dans l'ordre correct : (1) ALTER magasins avec toutes les colonnes (code_postal, ville, etablissement_rattache_id...) AVANT les vues, (2) ALTER articles avec est_catalogue_magasin/magasin_id/article_magasin_id/stock_actuel, (3) ALTER etablissements_partenaires avec est_fournisseur, (4) Tables demandes_internes + lignes + BL avec tous les champs (type_demande, bilan_sav_id, panne_description, etc.), (5) Tables bilans_sav + points + articles + executions, (6) Tables droits magasin + UNIQUE INDEX rattachement membre, (7) Vues v_magasin_di et v_magasins_disponibles APRÈS les ALTER. **Applique ce SQL SEUL, il remplace tous les SQL précédents 0.59.5 → 0.60.1**" },
+      { "code": "AI", "txt": "👥 **Nouvelle page `/collaborateurs-fournisseurs`** côté EC : liste tous les users tagués 'Utilisateur Magasin' avec leur magasin de rattachement. Cards avec avatar, identité, badge magasin teal si rattaché (avec code+ville+agence rattachée), badge amber 'sans magasin' sinon. Recherche par nom/email. 4 stat tiles (users magasin, rattachés, sans magasin, magasins définis). Ajouté au menu Groupement" },
+      { "code": "AI", "txt": "🔒 **Nouveau hook `useMagasinContext`** dans `lib/useMagasinContext.js` : récupère pour l'user courant son rôle, le magasin rattaché, et l'agence rattachée au magasin. Retourne `{ magasin, etablissement, magasinId, etablissementId, isUserMagasin, isRattache, loading }`. Permet de **cantonner toutes les vues** : un user magasin ne voit que les données de son magasin" },
+      { "code": "AI", "txt": "🔒 **Filtrage DI sur /magasin** : reload des demandes filtré par `magasin_id = magasinCtx.magasinId` si l'user est utilisateur_magasin. Plus de fuites de données entre magasins" },
+      { "code": "AI", "txt": "👤 **Nouvelle page `/magasin/profil`** : vue dédiée magasin avec sidebar ERP + 4 cards. (1) Identité user éditable (prenom, nom, téléphone, notes), (2) Magasin rattaché (toutes les coordonnées du magasin), (3) Agence rattachée au magasin (avec note 'tu verras uniquement les DI/SAV de cette agence'), (4) Mon activité (DI traitées, SAV traités, articles catalogue)" },
+      { "code": "AI", "txt": "⚙ **Nouvelle page `/magasin/parametres`** : configuration magasin avec sidebar ERP. (1) Coordonnées du magasin éditables (nom, code, responsable, adresse complète, téléphone, email), (2) Préférences (notifications cloche, mode mobile par défaut, etc. avec toggles), (3) Session (bouton 'Repasser en mode EC' + 'Se déconnecter')" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin étendue** : nouvelle section 'Mon espace' avec 'Mon profil' et 'Paramètres' pointant vers les pages dédiées magasin (au lieu des pages EC qui pourraient causer des fuites). User magasin reste cantonné dans son espace" },
+      { "code": "INFO", "txt": "🎯 **Sécurité données** : un user magasin n'a accès qu'à (a) son profil personnel, (b) les coordonnées de SON magasin, (c) les DI/SAV envoyées à SON magasin, (d) le catalogue magasin partagé. Aucune fuite vers les données d'autres établissements" }
+    ],
+    "themes": ["fix", "feat", "magasin", "cantonnement", "rgpd"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.60.2.html"
+  },
+  {
     "v": "0.60.1",
     "kind": "feat",
     "titre": "🩹 Fix layout tuiles + 🏬 CRUD magasins EC + 🔗 Rattachement user magasin avec lock + 🖥 Sidebar ERP magasin",

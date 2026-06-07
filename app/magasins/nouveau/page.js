@@ -5,12 +5,12 @@
 // =============================================================
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "../../lib/supabase";
-import { useAuth } from "../../lib/useAuth";
-import TopBar from "../TopBar";
-import { useCart } from "../useCart";
-import { PageHead, Panel, Btn, Modal } from "../ui";
-import BackButton from "../components/BackButton";
+import { createClient } from "../../../lib/supabase";
+import { useAuth } from "../../../lib/useAuth";
+import TopBar from "../../TopBar";
+import { useCart } from "../../useCart";
+import { PageHead, Panel, Btn, Modal } from "../../ui";
+import BackButton from "../../components/BackButton";
 
 const emptyMagasin = {
   nom: "", code: "", adresse: "", code_postal: "", ville: "",
