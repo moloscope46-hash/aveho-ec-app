@@ -62,7 +62,7 @@ export default function FlottePage() {
     if (magasinCtx.isUserMagasin && magasinCtx.magasinId) q = q.eq("magasin_id", magasinCtx.magasinId);
     const [veh, ch] = await Promise.all([
       tryFetch(q),
-      tryFetch(supabase.from("membres_structure").select("user_id, prenom, nom, email").eq("role_professionnel", "utilisateur_magasin")),
+      tryFetch(supabase.from("membres_structure").select("user_id, prenom, nom").limit(200)),
     ]);
     setVehicules(veh);
     setChauffeurs(ch);

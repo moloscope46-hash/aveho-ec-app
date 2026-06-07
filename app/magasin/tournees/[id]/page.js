@@ -69,7 +69,7 @@ export default function DetailTourneePage() {
       const [e, v, c] = await Promise.all([
         (async () => { try { const r = await supabase.from("tournees_etapes").select("*").eq("tournee_id", id).order("ordre"); return r.data || []; } catch { return []; } })(),
         t.vehicule_id ? tryFetch(supabase.from("vehicules_magasin").select("*").eq("id", t.vehicule_id).single()) : null,
-        t.chauffeur_user_id ? tryFetch(supabase.from("membres_structure").select("prenom, nom, telephone").eq("user_id", t.chauffeur_user_id).single()) : null,
+        t.chauffeur_user_id ? tryFetch(supabase.from("membres_structure").select("prenom, nom").eq("user_id", t.chauffeur_user_id).single()) : null,
       ]);
       setEtapes(e);
       setVehicule(v);
@@ -149,6 +149,25 @@ export default function DetailTourneePage() {
         L.polyline(points, { color: "#5a8f8f", weight: 3, opacity: 0.6, dashArray: "8, 4" }).addTo(map);
       }
 
+      // 0.61.9 : Polyline rouge du tracé GPS chauffeur (historique réel)
+      if (gpsTrack.length > 1) {
+        const gpsPoints = gpsTrack.map(g => [parseFloat(g.latitude), parseFloat(g.longitude)]);
+        L.polyline(gpsPoints, { color: "#e35d5b", weight: 4, opacity: 0.85 }).addTo(map);
+        // Marker fin (dernière position) = camion
+        const last = gpsPoints[gpsPoints.length - 1];
+        const truckIcon = L.divIcon({
+          html: `<div style="
+            width: 36px; height: 36px; border-radius: 18px;
+            background: #e35d5b; color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 18px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(227,93,91,0.4);
+            animation: pulse 1.5s infinite;
+          ">🚛</div>
+          <style>@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }</style>`,
+          className: "", iconSize: [36, 36], iconAnchor: [18, 18],
+        });
+        L.marker(last, { icon: truckIcon, zIndexOffset: 1000 }).addTo(map).bindPopup(`<b>🚛 Position actuelle</b><br/>Dernière maj : ${new Date(gpsTrack[gpsTrack.length-1].recorded_at).toLocaleTimeString("fr-FR")}`);
+      }
+
       // Fit bounds
       if (markers.length > 1) {
         const group = L.featureGroup(markers);
@@ -164,7 +183,7 @@ export default function DetailTourneePage() {
         mapInstance.current = null;
       }
     };
-  }, [etapes]);
+  }, [etapes, gpsTrack]);
 
   async function changerStatutEtape(etape, newStatut) {
     // 0.61.8 : si étape passe à "terminée", demande signature
@@ -209,10 +228,159 @@ export default function DetailTourneePage() {
       }).eq("id", signatureEtape.etape.id);
       const newNbCompletees = etapes.filter(e => e.id === signatureEtape.etape.id ? true : e.statut === "terminee").length;
       await supabase.from("tournees").update({ nb_completees: newNbCompletees }).eq("id", id);
+
+      // 0.61.9 : Notification push à l'EC créateur de la DI
+      try {
+        if (signatureEtape.etape.demande_id) {
+          const di = await supabase.from("demandes_internes").select("created_by, etablissement_id, numero").eq("id", signatureEtape.etape.demande_id).maybeSingle();
+          if (di.data?.created_by) {
+            await supabase.from("notifications").insert({
+              user_id: di.data.created_by,
+              structure_id: di.data.structure_id,
+              type: "livraison",
+              titre: `📦 Livraison effectuée : ${signatureEtape.etape.label}`,
+              message: `Ta DI ${di.data.numero || ""} a été livrée par le chauffeur. ${signatureUrl ? "Signature client : reçue." : "Sans signature."}`,
+              url: `/demandes-internes/${signatureEtape.etape.demande_id}`,
+              lue: false,
+            });
+          }
+        }
+      } catch (e) { console.warn("[notif EC]", e); }
+
       setSignatureEtape(null);
       await reload();
     } catch (e) { alert("Erreur signature : " + e.message); }
     finally { setActionInProgress(false); }
+  }
+
+  // 0.61.9 : Charger historique GPS pour affichage polyline rouge sur carte
+  const [gpsTrack, setGpsTrack] = useState([]);
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const r = await supabase.from("tournees_gps_track")
+          .select("latitude, longitude, recorded_at")
+          .eq("tournee_id", id)
+          .order("recorded_at");
+        setGpsTrack(r.data || []);
+      } catch (e) { console.warn("[gps track load]", e); }
+    })();
+  }, [id, tournee?.statut]);
+
+  // 0.61.9 : Imprime la feuille de route PDF du chauffeur
+  function imprimerFeuilleRoute() {
+    const w = window.open("", "_blank", "width=900,height=1200");
+    if (!w) { alert("Bloque les popups"); return; }
+    const etapesHTML = etapes.map((e, i) => `
+      <tr style="border-bottom:1px solid #e3e9ee;${e.statut === 'terminee' ? 'background:rgba(94,160,90,.06)' : ''}">
+        <td style="padding:10px;text-align:center;color:#5a8f8f;font-weight:700;font-size:18px">${e.ordre || (i+1)}</td>
+        <td style="padding:10px">
+          <div style="font-weight:700;font-size:13px">${e.label || "—"}</div>
+          ${e.adresse ? `<div style="font-size:11px;color:#5a6878">${e.adresse}</div>` : ""}
+          ${e.ville ? `<div style="font-size:11px;color:#8a98a8">${e.code_postal || ""} ${e.ville}</div>` : ""}
+        </td>
+        <td style="padding:10px;text-align:center">
+          <span style="padding:2px 8px;background:#${e.type_etape === 'sav' ? 'e35d5b15' : 'e3e9ee'};border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase">${e.type_etape}</span>
+        </td>
+        <td style="padding:10px;text-align:center;font-size:11px">
+          ${e.heure_arrivee_prevue ? e.heure_arrivee_prevue.slice(0,5) : "—"}
+          <br/><span style="color:#8a98a8">⏱ ${e.duree_estimee_min || 15} min</span>
+        </td>
+        <td style="padding:10px;text-align:center">
+          ${e.statut === 'terminee' ? '✅' : e.statut === 'en_cours' ? '🚛' : '☐'}
+          <div style="font-size:9px;color:#8a98a8">${e.statut}</div>
+        </td>
+        <td style="padding:10px;font-size:11px">
+          ${e.notes ? `<div style="color:#5a6878">${e.notes}</div>` : ""}
+          <div style="border-top:1px dashed #cfd8e0;height:30px;margin-top:8px;font-size:9px;color:#cfd8e0;text-align:center;padding-top:4px">Signature</div>
+        </td>
+      </tr>
+    `).join("");
+
+    w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Feuille de route ${tournee?.numero || ""}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Quicksand',sans-serif;color:#142131;padding:30px;background:#fff;font-size:13px;line-height:1.55}
+.header{display:flex;justify-content:space-between;border-bottom:3px solid #142131;padding-bottom:18px;margin-bottom:24px}
+.logo{font-size:36px;font-weight:600;letter-spacing:3px}.logo span{color:#7CC8C8}
+h1{font-size:22px;color:#7a6fb0;font-weight:700;margin-bottom:6px}
+.num{font-family:Consolas,monospace;font-size:13px;background:#7a6fb0;color:#fff;padding:3px 10px;border-radius:4px;display:inline-block}
+.meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;background:#fafbfc;padding:14px;border-radius:8px}
+.meta-grid h2{font-size:10px;color:#7a6fb0;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px}
+.meta-grid p{font-weight:700;font-size:13px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:12px}
+th{background:#7a6fb0;color:#fff;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:1px;text-align:left;font-weight:700}
+.signature-zone{margin-top:30px;padding:14px;background:#fafbfc;border-radius:8px;border:1px dashed #cfd8e0;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.sign-box h4{font-size:10px;color:#5a6878;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+footer{margin-top:30px;padding-top:14px;border-top:1px solid #e3e9ee;text-align:center;font-size:10.5px;color:#8a98a8}
+@media print{body{padding:15mm} .no-print{display:none}}
+</style></head><body>
+
+<div class="header">
+  <div>
+    <div class="logo">a<span>v</span>eho</div>
+    <div style="font-size:10.5px;color:#5a6878;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Feuille de route chauffeur</div>
+  </div>
+  <div style="text-align:right">
+    <h1>FEUILLE DE ROUTE</h1>
+    <div class="num">${tournee?.numero || ""}</div>
+    <div style="font-size:11.5px;color:#5a6878;margin-top:6px">Émise le ${new Date().toLocaleDateString("fr-FR")}</div>
+  </div>
+</div>
+
+<h1 style="margin-bottom:14px">${tournee?.nom || ""}</h1>
+
+<div class="meta-grid">
+  <div><h2>📅 Date</h2><p>${tournee?.date_tournee ? new Date(tournee.date_tournee).toLocaleDateString("fr-FR") : "—"}</p></div>
+  <div><h2>🕐 Horaires</h2><p>${tournee?.heure_depart?.slice(0,5) || "—"} → ${tournee?.heure_retour_prevue?.slice(0,5) || "—"}</p></div>
+  <div><h2>🚛 Véhicule</h2><p style="font-family:Consolas,monospace">${vehicule?.immatriculation || "—"}</p><p style="font-size:11px;color:#5a6878;font-weight:400">${vehicule?.marque || ""} ${vehicule?.modele || ""}</p></div>
+  <div><h2>👤 Chauffeur</h2><p>${chauffeur?.prenom || ""} ${chauffeur?.nom || ""}</p>${chauffeur?.telephone ? `<p style="font-size:11px;color:#5a6878;font-weight:400">📞 ${chauffeur.telephone}</p>` : ""}</div>
+  <div><h2>📍 Étapes</h2><p>${etapes.length} arrêts prévus</p></div>
+  <div><h2>📏 Distance estimée</h2><p>${tournee?.distance_estimee_km ? `${tournee.distance_estimee_km} km` : "—"}</p></div>
+</div>
+
+<h2 style="font-size:14px;color:#7a6fb0;text-transform:uppercase;letter-spacing:1.5px;margin:18px 0 10px;font-weight:700;border-bottom:2px solid #7a6fb0;padding-bottom:4px">📍 Itinéraire détaillé</h2>
+
+<table>
+  <thead><tr>
+    <th style="width:40px;text-align:center">#</th>
+    <th>Adresse</th>
+    <th style="width:80px;text-align:center">Type</th>
+    <th style="width:90px;text-align:center">Heure prévue</th>
+    <th style="width:60px;text-align:center">Statut</th>
+    <th>Notes & signature</th>
+  </tr></thead>
+  <tbody>${etapesHTML || '<tr><td colspan="6" style="padding:20px;text-align:center;color:#8a98a8">Aucune étape</td></tr>'}</tbody>
+</table>
+
+<div class="signature-zone">
+  <div class="sign-box">
+    <h4>✍ Signature du chauffeur (départ)</h4>
+    <div style="height:60px"></div>
+    <p style="font-size:10px;color:#8a98a8;border-top:1px solid #cfd8e0;padding-top:4px">Date + heure départ</p>
+  </div>
+  <div class="sign-box">
+    <h4>✍ Signature du chauffeur (retour)</h4>
+    <div style="height:60px"></div>
+    <p style="font-size:10px;color:#8a98a8;border-top:1px solid #cfd8e0;padding-top:4px">Date + heure retour + km final</p>
+  </div>
+</div>
+
+<footer>
+  Feuille de route ${tournee?.numero || ""} · Aveho · Imprimée le ${new Date().toLocaleDateString("fr-FR")}<br>
+  Document à conserver dans le véhicule pendant la tournée
+</footer>
+
+<div class="no-print" style="margin-top:30px;text-align:center">
+  <button onclick="window.print()" style="background:#7a6fb0;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Quicksand,sans-serif">
+    🖨 Imprimer / PDF
+  </button>
+</div>
+
+<script>setTimeout(() => window.print(), 500);</script>
+</body></html>`);
+    w.document.close();
   }
 
   // 0.61.8 : Optimisation OSRM de l'ordre des étapes
@@ -298,6 +466,8 @@ export default function DetailTourneePage() {
               {tournee.statut === "en_cours" && (
                 <Btn variant="primary" icon="ti-check" onClick={() => changerStatutTournee("terminee")} disabled={actionInProgress}>✓ Terminer la tournée</Btn>
               )}
+              {/* 0.61.9 : Feuille de route PDF imprimable */}
+              <Btn variant="ghost" icon="ti-printer" onClick={imprimerFeuilleRoute}>📄 Feuille de route PDF</Btn>
               {tournee.statut !== "annulee" && tournee.statut !== "terminee" && (
                 <Btn variant="ghost" icon="ti-x" onClick={() => changerStatutTournee("annulee")} disabled={actionInProgress} style={{ color: "#e35d5b" }}>Annuler</Btn>
               )}
@@ -350,6 +520,12 @@ export default function DetailTourneePage() {
             {osrmRoute && (
               <div style={{ marginBottom: 10, padding: 8, background: "rgba(94,143,143,.12)", borderRadius: 6, fontSize: 11.5, color: "#5a8f8f", fontWeight: 600 }}>
                 ✓ Itinéraire OSRM : <b>{osrmRoute.distance_km} km</b> · <b>{osrmRoute.duree_min} min</b>
+              </div>
+            )}
+            {/* 0.61.9 : Bandeau historique GPS (tracé rouge) */}
+            {gpsTrack.length > 0 && (
+              <div style={{ marginBottom: 10, padding: 8, background: "rgba(227,93,91,.10)", borderRadius: 6, fontSize: 11.5, color: "#e35d5b", fontWeight: 600 }}>
+                🚛 Tracé GPS chauffeur : <b>{gpsTrack.length}</b> points enregistrés · Polyline rouge sur la carte avec position actuelle (📍)
               </div>
             )}
             <div ref={mapRef} style={{ height: 400, borderRadius: 10, overflow: "hidden", background: "#fafbfc" }} />

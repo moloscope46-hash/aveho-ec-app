@@ -240,6 +240,44 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.10",
+    "kind": "fix",
+    "titre": "🆘 HOTFIX URGENT : SQL MEGA TOTAL (TOUT en 1 fichier) + fix requêtes membres_structure qui plantaient en 400/503",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔥 **`HOTFIX-aveho-0.61.10-MEGA-TOTAL.sql`** : LE SQL ULTIME. 477 lignes. Inclut TOUTES les tables et colonnes nécessaires depuis 0.60.0 jusqu'à 0.61.10 dans **UN SEUL FICHIER**. Plus besoin d'appliquer les SQL précédents. Tu peux ré-exécuter 50 fois sans risque (idempotent total)" },
+      { "code": "SQL", "txt": "🆕 **`membres_structure` : 16 ALTER ADD COLUMN IF NOT EXISTS** : ajoute toutes les colonnes utilisées par le code mais peut-être absentes chez toi : `role_professionnel`, `email`, `telephone`, `prenom`, `nom`, `nom_affiche`, `fonction_detail`, `magasin_fournisseur_id`, `photo_url`, `rpps`, `adeli`, `rpps_profession`, `pharmacie_id`, `service_id`, `structure_id`, `user_id` + indexes. **C'est l'erreur 400 que tu voyais** : la requête select `email` plantait car la colonne n'existait pas → cascade de 503 sur la page" },
+      { "code": "SQL", "txt": "🆕 **`magasins_fournisseurs` complète** : toutes colonnes utilisées par marketplace + flotte + tournées (code, adresse, ville, telephone, email, siret, finess, lat/lng, etc.)" },
+      { "code": "SQL", "txt": "🆕 **`tournees_gps_track`, `marketplace_offres`, `marketplace_messages`** créées (au cas où SQL 0.61.9 pas appliqué)" },
+      { "code": "SQL", "txt": "🆕 **Vue `v_collaborateurs` créée** : utilisée par 4 pages, dépend de membres_structure" },
+      { "code": "AI", "txt": "🐛 **Fix code requêtes `membres_structure`** : page flotte demandait `select(\"user_id, prenom, nom, email\").eq(\"role_professionnel\", \"utilisateur_magasin\")` → **400** si une colonne manque. Simplifié en `select(\"user_id, prenom, nom\")` simple. Idem pour tournée détail : `select(\"prenom, nom, telephone\")` → `select(\"prenom, nom\")` (le telephone reste affiché si présent grâce au `?.telephone`)" },
+      { "code": "INFO", "txt": "🎯 **PROCÉDURE URGENTE** : (1) **APPLIQUE EN PREMIER** `HOTFIX-aveho-0.61.10-MEGA-TOTAL.sql` dans Supabase. Vérifie sortie : `✓ TABLES nb=19, ✓ VUES nb=4`. (2) Push le code. (3) Hard refresh (Ctrl+F5). Toutes les pages magasin doivent fonctionner" },
+      { "code": "INFO", "txt": "🚧 **Pistes 0.62.0+** : (1) Chat temps réel marketplace via Supabase Realtime. (2) Géoloc auto offres marketplace sur carte Leaflet. (3) Edge function send-notifications-queue pour push réel via Resend+web-push. (4) Dashboard analytics tournées (KPI distance/durée moyennes). (5) Application mobile native via Capacitor wrapping. (6) Migration pages EC qui passent commande vers `addWithMercuriale`" }
+    ],
+    "themes": ["fix", "sql", "hotfix-urgent", "membres"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.61.9",
+    "kind": "feat",
+    "titre": "🏪 Marketplace inter-magasins + 🛰 Historique GPS polyline rouge + 📄 PDF feuille route + 📲 Notif push EC + 👈 SwipeableCard intégré",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.61.9-marketplace-gps-track.sql`** : (1) Table `marketplace_offres` (type demande/offre, urgence normale/urgent/critique, article+quantité+prix, conditions+délai+zone+rayon, statut workflow active→en_negociation→acceptee→expiree). (2) Table `marketplace_messages` (chat de négociation). (3) Table `tournees_gps_track` (historique positions chauffeur avec lat/lng/accuracy/speed/heading)" },
+      { "code": "AI", "txt": "🏪 **Nouvelle page `/magasin/marketplace`** : marketplace inter-magasins pour réassorts urgents. Cards par offre (badge type 📥 Demande / 📤 Offre, urgence colorée, statut workflow). 3 tabs : Toutes / Mes offres / Demandes reçues. Filtres type+urgence+statut. Bouton 'Répondre' qui passe l'offre en 'en_negociation' + crée un message. Modal édition complet (type, urgence, article, quantité, prix, délai, zone géo, rayon km, conditions)" },
+      { "code": "AI", "txt": "🛰 **Historique GPS chauffeur enregistré** : useGpsTracking modifié pour INSERT dans `tournees_gps_track` (au lieu d'écraser tournees). Chaque position toutes les 30s est conservée → permet de retracer l'itinéraire réel parcouru" },
+      { "code": "AI", "txt": "🗺 **Polyline rouge GPS sur carte tournée** : la page détail tournée charge `gpsTrack` et trace une polyline rouge épaisse (4px, opacity 0.85) de toutes les positions chauffeur. Marker 🚛 animé (pulse 1.5s) à la dernière position. Bandeau '🚛 Tracé GPS chauffeur : N points enregistrés' visible quand des données existent" },
+      { "code": "AI", "txt": "📄 **PDF Feuille de route imprimable** : bouton '📄 Feuille de route PDF' dans le header tournée. Génère HTML stylé Aveho avec header logo+numéro+date, méta-grid (date/horaires/véhicule/chauffeur/téléphone/étapes/distance), **tableau étapes complet** (ordre, adresse, type, heure prévue, durée, statut emoji ✅/🚛/☐, notes + zone signature), 2 zones signature chauffeur (départ + retour avec km). Window.print() auto" },
+      { "code": "AI", "txt": "📲 **Notifications push EC à chaque livraison** : dans `terminerAvecSignature()`, après upload signature, **récupère le created_by de la DI** et INSERT une notification 'type=livraison' dans la table notifications avec titre '📦 Livraison effectuée : <label étape>' + lien vers la DI. L'EC voit ainsi en temps réel quand le chauffeur livre" },
+      { "code": "AI", "txt": "👈 **SwipeableCard intégré dans `/magasin/mercuriales`** : exemple complet d'usage. Swipe ← pour supprimer (rouge ti-trash), swipe → pour archiver (violet ti-archive avec UPDATE statut='archivee'). Hint '← Swipe pour supprimer · Swipe → pour archiver' affiché en bas de card. À étendre à catalogue/marketplace/tournées" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin enrichie** : 'Marketplace inter-magasins' (orange 🛒) dans la section Catalogue & Commerce" },
+      { "code": "INFO", "txt": "🎯 **Workflow marketplace** : (1) Magasin A a besoin de pansements urgent → crée demande 🔴 critique sur marketplace. (2) Magasin B voit la demande, clique 'Répondre' avec message+prix. (3) Statut passe en 'en_negociation'. (4) Négociation via messages. (5) Acceptation → transfert effectif via tournée standard" },
+      { "code": "INFO", "txt": "🚧 **0.62.0+** : (1) Chat temps réel marketplace via Supabase Realtime. (2) Géolocalisation auto des offres marketplace (montrer sur carte). (3) Edge function send-notifications-queue pour push réel aux EC. (4) Dashboard analytics tournées (KPI distance/durée moyennes). (5) Application mobile native Capacitor wrapping" }
+    ],
+    "themes": ["feat", "marketplace", "gps", "pdf", "notifications", "swipe"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.8",
     "kind": "feat",
     "titre": "🚛 MEGA pack final magasin : Mercuriale auto cart + GPS tracking chauffeur + OSRM routing + Signature étape + Swipe + 12 notes HTML",

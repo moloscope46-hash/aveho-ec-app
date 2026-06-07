@@ -12,6 +12,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
+import { SwipeableCard } from "../../components/SwipeableCard";
 
 const TYPES = {
   mercuriale: { lbl: "📋 Mercuriale", col: "#7a6fb0" },
@@ -254,26 +255,39 @@ export default function MercurialesPage() {
                   const st = STATUTS[m.statut] || STATUTS.brouillon;
                   const etab = etabs.find(e => e.id === m.etablissement_id);
                   return (
-                    <div key={m.id} onClick={() => openEdit(m)} style={{
-                      background: "#fff", border: `1px solid ${type.col}33`, borderLeft: `4px solid ${type.col}`,
-                      borderRadius: 10, padding: 14, cursor: "pointer",
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, color: "#142131", fontSize: 14 }}>{m.nom}</div>
-                          <div style={{ fontFamily: "Consolas,monospace", fontSize: 10.5, color: "#8a98a8" }}>{m.numero}</div>
+                    <SwipeableCard
+                      key={m.id}
+                      onSwipeLeft={() => del(m)}
+                      onSwipeRight={async () => {
+                        // Archive
+                        await supabase.from("mercuriales").update({ statut: "archivee" }).eq("id", m.id);
+                        await reload();
+                      }}
+                      leftLabel="Supprimer" leftIcon="ti-trash" leftColor="#e35d5b"
+                      rightLabel="Archiver" rightIcon="ti-archive" rightColor="#7a6fb0"
+                    >
+                      <div onClick={() => openEdit(m)} style={{
+                        background: "#fff", border: `1px solid ${type.col}33`, borderLeft: `4px solid ${type.col}`,
+                        borderRadius: 10, padding: 14, cursor: "pointer",
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 700, color: "#142131", fontSize: 14 }}>{m.nom}</div>
+                            <div style={{ fontFamily: "Consolas,monospace", fontSize: 10.5, color: "#8a98a8" }}>{m.numero}</div>
+                          </div>
+                          <span style={{ padding: "2px 8px", borderRadius: 4, background: `${st.col}15`, color: st.col, fontSize: 10.5, fontWeight: 700 }}>{st.lbl}</span>
                         </div>
-                        <span style={{ padding: "2px 8px", borderRadius: 4, background: `${st.col}15`, color: st.col, fontSize: 10.5, fontWeight: 700 }}>{st.lbl}</span>
+                        <div style={{ display: "flex", gap: 8, fontSize: 11, color: "#5a6878", flexWrap: "wrap" }}>
+                          <span style={{ padding: "2px 6px", background: `${type.col}15`, color: type.col, borderRadius: 3, fontWeight: 700 }}>{type.lbl}</span>
+                          {etab && <span>🏥 {etab.nom}</span>}
+                        </div>
+                        <div style={{ display: "flex", gap: 10, fontSize: 11, color: "#8a98a8", marginTop: 6 }}>
+                          {m.date_debut && <span>📅 {new Date(m.date_debut).toLocaleDateString("fr-FR")}</span>}
+                          {m.date_fin && <span>→ {new Date(m.date_fin).toLocaleDateString("fr-FR")}</span>}
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 10, color: "#cfd8e0", fontStyle: "italic" }}>← Swipe pour supprimer · Swipe → pour archiver</div>
                       </div>
-                      <div style={{ display: "flex", gap: 8, fontSize: 11, color: "#5a6878", flexWrap: "wrap" }}>
-                        <span style={{ padding: "2px 6px", background: `${type.col}15`, color: type.col, borderRadius: 3, fontWeight: 700 }}>{type.lbl}</span>
-                        {etab && <span>🏥 {etab.nom}</span>}
-                      </div>
-                      <div style={{ display: "flex", gap: 10, fontSize: 11, color: "#8a98a8", marginTop: 6 }}>
-                        {m.date_debut && <span>📅 {new Date(m.date_debut).toLocaleDateString("fr-FR")}</span>}
-                        {m.date_fin && <span>→ {new Date(m.date_fin).toLocaleDateString("fr-FR")}</span>}
-                      </div>
-                    </div>
+                    </SwipeableCard>
                   );
                 })}
               </div>
