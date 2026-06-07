@@ -40,6 +40,17 @@ export default function QrScanner({ onResult, onError, active = true, autoStop =
       setStatus("starting");
       setErrorDetail("");
       try {
+        // 0.62.87 : FORCE la demande de permission AVANT html5-qrcode
+        // Évite le bug où html5-qrcode échoue silencieusement sans demander la permission
+        const { requestCameraPermission } = await import("../lib/cameraPermissions");
+        const ok = await requestCameraPermission({ facingMode: "environment" });
+        if (!ok) {
+          setStatus("denied");
+          setErrorDetail("Permission caméra refusée. Autorise l'accès dans les réglages du navigateur puis recharge.");
+          onError?.("Permission caméra refusée");
+          return;
+        }
+
         const mod = await import("html5-qrcode");
         if (cancelled) return;
 
