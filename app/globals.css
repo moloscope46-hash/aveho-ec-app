@@ -1022,8 +1022,11 @@ table{min-width:560px}                 /* force le scroll plutôt que d'écraser
 
 @media(max-width:760px){
   .wrap{padding:18px 12px calc(160px + env(safe-area-inset-bottom, 0px))}
-  .h1{font-size:25px}
-  .h1.small{font-size:21px}
+  /* 0.62.23 : titres en mode mobile bien visibles (avant cachés derrière topbar) */
+  .page-content{padding:18px 12px calc(140px + env(safe-area-inset-bottom, 0px))!important}
+  .h1{font-size:23px;line-height:1.2}
+  .h1.small{font-size:19px}
+  .eyebrow{font-size:11px;padding:5px 10px}
   .sub{font-size:13px}
   /* KPIs : 2 par ligne sur mobile */
   .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}

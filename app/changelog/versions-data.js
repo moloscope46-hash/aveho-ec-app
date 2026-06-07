@@ -240,6 +240,51 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.25",
+    "kind": "fix",
+    "titre": "🚨 Fix syntax error versions-data (virgule manquante) + REFONTE HTML notes au format RICHE (toutes 0.62.x)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 **Fix CRITIQUE syntax error Vercel** : `versions-data.js:354` avait `\"noteFile\": \"...\" \"sqlFile\": ...` SANS VIRGULE entre les 2 propriétés → build webpack cassé. Script Python qui ajoutait `sqlFile` après coup ne gérait pas le cas où noteFile était la dernière propriété du bloc. **Fix global** : regex `re.sub` qui détecte le pattern `\"noteFile\":...\\n  \"sqlFile\"` et ajoute la virgule. 7 versions impactées corrigées (0.62.10, 11, 13, 16, 17, etc.)" },
+      { "code": "AI", "txt": "📄 **REFONTE COMPLÈTE DES HTML NOTES** au format RICHE (style ancien d'avant Alpha 0.55) : avant mes scripts ne faisaient que copier-coller les chantiers dans une div basique = 'note tchat'. **Nouveau format** avec : (1) **Header gradient navy → couleur kind → navy** avec eyebrow uppercase + logo aveho + titre + sous-titre + badges meta (date, version, type, compteur chantiers, themes en pills). (2) **Sections groupées par type de code** (SQL, AI, FIX, UX, INFO) avec h2 souligné ambre + icône colorée 32×32 + compteur. (3) **Panels colorés** : `.violet` pour SQL, `.warn` pour FIX, `.hi` pour UX. (4) **Code inline** `<code>` avec fond #f4f7fa + border. (5) **Block SQL séparé** avec `pre` navy listant le fichier + chemin. (6) **Footer professionnel**" },
+      { "code": "AI", "txt": "🔧 **Nouveau script `scripts/gen-html-notes-rich.py`** : remplace les scripts précédents qui généraient des HTML pauvres. Parse versions-data.js avec regex robuste, extrait kind/titre/chantiers/themes/date/noteFile/sqlFile. Transforme `**bold**` en `<b>`, `\\`code\\`` en `<code>`, échappe HTML. Groupe les chantiers par code, ordre prioritaire (SQL > AI > FIX > UX > INFO). Génère 15 HTML pour 0.62.10 → 0.62.24. Responsive mobile" },
+      { "code": "AI", "txt": "♻ **15 HTML régénérés** au format riche : 0.62.10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24. Tous téléchargeables depuis la modale changelog avec format identique aux anciennes notes ultra-détaillées" }
+    ],
+    "themes": ["fix-critique", "html", "changelog", "vercel", "script"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.25.html"
+  },
+  {
+    "v": "0.62.24",
+    "kind": "feat",
+    "titre": "📄 Bon réception PDF + Onglets édition article + Page min stock par étape + Bouton créer tournée /carte",
+    "chantiers": [
+      { "code": "AI", "txt": "📄 **Bon de réception PDF exportable** : ajout bouton 'PDF' sur chaque bon dans `/bons-reception`. Charge jsPDF depuis CDN cloudflare (lazy load, cache global). PDF A4 avec : header navy + titre AVEHO, numéro BR-XXXXXX en grand, date / source / signataire, badge coloré statut (CONFORME vert / LITIGE orange / REFUSE rouge), anomalies + commentaire avec splitTextToSize pour wrap automatique. Téléchargement direct via `doc.save(numero + '.pdf')`" },
+      { "code": "AI", "txt": "📑 **Vue onglets dans la modale édition article** : refonte de la modale `setEditModal` sur `/article/[id]`. **5 onglets** : (1) 📝 Général (libellé, code, référence, description). (2) 🏷 Codes (EAN13 + GS1/UDI + LPP avec descriptions). (3) 💰 Tarifs (prix public + achat HT + calcul marge live). (4) 📦 Stock (min + max + lien vers /articles-min-stock-etape). (5) ⚙ Avancé (immobilisation + lien /articles). Composant `ArticleEditTabs` factorisé. Save payload enrichi : prix_achat_ht, stock_max, ref_lpp, is_immobilisation" },
+      { "code": "AI", "txt": "📦 **Nouvelle page `/articles-min-stock-etape`** : CRUD pour définir des seuils min/max par bâtiment / service / dépôt. Sélection cascadée intelligente (filtre bâtiments par étab, services par bâtiment, dépôts par étab). Liste : article + localisation + min rouge + max vert + notes + boutons Éditer/Supprimer. Lien ajouté dans menu Stock (icône ti-stack-pop rouge)" },
+      { "code": "AI", "txt": "🗺 **Bouton flottant 'Créer tournée' sur /carte** : bouton FAB en position fixed bottom-right (z-index 8000) gradient orange-ambre avec icône ti-route. Click → navigation vers `/magasin/tournees/nouvelle` où on retrouve les sources multiples (DI, transferts, SAV, maint, retours, bilans). À terme : faire passer les DI sélectionnées en query string pour pré-cocher" },
+      { "code": "INFO", "txt": "🚧 **Toujours en attente** : Cantonnement étab livraisons (JOIN tournees_etapes.etablissement_id), Module étiquettes enrichi GS1/QR, Scan QR mode magasin dédié, Garages côté magasin UI, Mail dédié magasin (edge function), Création membres_structure à l'inscription, Dashboard temps réel poussé, Commande EC → magasin, Statuts tournée enrichis calendrier" }
+    ],
+    "themes": ["feat", "pdf", "onglets", "stock", "carte"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.24.html"
+  },
+  {
+    "v": "0.62.23",
+    "kind": "feat",
+    "titre": "✨ Code établissement + Stock auto à la réception + Min stock par étape + Mode mobile titres",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.23-code-etab-stock-reception.sql`** : (1) ajoute `etablissements.code` (TEXT) — code court interne type 'CHU-LYON-01'. (2) Fonction `fn_bon_reception_creer_mouvements()` + trigger AFTER INSERT sur `bons_reception` : si réception conforme + statut valide + type_source=transfert → crée automatiquement un mouvement `entree` dans `stock_mouvements` sur le dépôt destination. RAISE WARNING en cas d'erreur (ne bloque jamais le bon). (3) Table `articles_min_stock_etape` : permet de définir des stocks min/max par bâtiment/service/dépôt (pas juste global) avec contrainte UNIQUE (article_id, batiment_id, service_id, depot_id). 4 RLS policies" },
+      { "code": "AI", "txt": "🏥 **Champ Code établissement** ajouté sur `/etablissement/fiche` : nouvelle colonne dans le bloc identification, à côté de FINESS et SIRET. Layout grid 3 colonnes (au lieu de 2). Affiché en police monospace Consolas pour un look code. Save inclus dans le payload UPDATE" },
+      { "code": "AI", "txt": "📱 **Mode mobile : titres bien visibles** : ajout `.page-content` mobile avec padding 18/12, h1 font-size 23px (au lieu de 25px qui débordait), line-height 1.2, eyebrow plus compact (11px). Plus de titres cachés derrière la topbar sur les écrans étroits" },
+      { "code": "AI", "txt": "📦 **Stock auto à la réception conforme** : le trigger SQL fait que dès qu'un bon de réception est validé sur un transfert avec statut valide, un mouvement d'entrée stock est créé automatiquement sur le dépôt destination avec commentaire 'Réception conforme du bon BR-XXXXXX'. Plus besoin de saisir manuellement. Les SAV/maintenances/DI nécessiteront un workflow dédié (TODO)" },
+      { "code": "INFO", "txt": "🚧 **Toujours en attente** : Cantonnement étab livraisons (JOIN tournees_etapes.etablissement_id), Bon réception PDF (jsPDF CDN), Vue onglets édition article, Module étiquettes enrichi GS1/QR, Scan QR mode magasin, Garages côté magasin UI, Mail dédié magasin (edge function), Création membres_structure à l'inscription, Dashboard temps réel poussé, /carte bouton créer tournée depuis DI, Commande EC → magasin, page UI articles min stock par étape (table créée, page à venir)" }
+    ],
+    "themes": ["feat", "sql", "stock", "etab", "mobile", "trigger"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.23.html",
+    "sqlFile": "migration-0.62.23-code-etab-stock-reception.sql"
+  },
+  {
     "v": "0.62.22",
     "kind": "feat",
     "titre": "🚛 Refonte menu (Stock+Maintenance+Facturation+Catalogue dans Mon espace) + Page Livraisons planifiées + Bons réception",
@@ -350,7 +395,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "garages", "materiels", "tracabilite", "equipes", "vehicules"],
     "date": "6 juin 2026",
-    "noteFile": "NOTE-FEAT-0.62.16.html"
+    "noteFile": "NOTE-FEAT-0.62.16.html",
     "sqlFile": "migration-0.62.16-garages.sql"
   },
   {
@@ -394,7 +439,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "magasin", "etablissement", "calendrier", "invitations"],
     "date": "6 juin 2026",
-    "noteFile": "NOTE-FEAT-0.62.13.html"
+    "noteFile": "NOTE-FEAT-0.62.13.html",
     "sqlFile": "migration-0.62.13-invitations-role-magasin.sql"
   },
   {
@@ -426,7 +471,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "sql", "mobile", "changelog", "rattachements"],
     "date": "6 juin 2026",
-    "noteFile": "NOTE-FIX-0.62.11.html"
+    "noteFile": "NOTE-FIX-0.62.11.html",
     "sqlFile": "migration-0.62.9-perf-indexes-DEFENSIF.sql"
   },
   {
@@ -442,7 +487,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "react-hooks", "magasin", "rattachements"],
     "date": "6 juin 2026",
-    "noteFile": "NOTE-FIX-0.62.10.html"
+    "noteFile": "NOTE-FIX-0.62.10.html",
     "sqlFile": "migration-0.62.10-magasins-rattachements.sql"
   },
   {
@@ -457,7 +502,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "etablissement", "fab", "indexes-perf"],
     "date": "6 juin 2026",
-    "noteFile": "NOTE-FEAT-0.62.9.html"
+    "noteFile": "NOTE-FEAT-0.62.9.html",
     "sqlFile": "migration-0.62.9-perf-indexes-DEFENSIF.sql"
   },
   {

@@ -1,23 +1,95 @@
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aveho 0.62.21</title><style>
-body { font-family: 'Quicksand', 'Segoe UI', sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
-h1 { color: #EF9F27; border-bottom: 3px solid #EF9F27; padding-bottom: 10px; font-size: 28px; }
-.header { background: linear-gradient(135deg, #EF9F2711, #EF9F2705); padding: 20px; border-left: 6px solid #EF9F27; border-radius: 10px; margin-bottom: 24px; }
-.kind { display: inline-block; background: #EF9F27; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
-.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
-h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
-.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
-.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; margin-right: 8px; font-family: monospace; }
-strong, b { color: #142131; }
-.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
-@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } }
-</style></head><body>
-<div class="header"><span class="kind">🐛 FIX</span><h1>Aveho 0.62.21</h1><div class="titre">🐛 SQL v_collaborateurs ULTRA défensif (m.id n'existe pas) + Burger caché magasin + Carte renommée + Familles magasin</div><div class="date">📅 6 juin 2026</div></div>
-<h2>📋 Chantiers (6)</h2>
-<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🚨 **`migration-0.62.21-v-collaborateurs-ULTRA-DEFENSIF.sql`** : la migration 0.62.20 plantait `ERROR 42703: column m.id does not exist`. Fix radical : on **TEST chaque colonne individuellement** via `information_schema.columns` avant de l'inclure dans le SELECT. Boucle `FOREACH c IN ARRAY candidate_cols` qui construit dynamiquement la liste de colonnes existantes. Plus jamais aucune erreur 42703 possible. Bonus : SELECT diagnostic à la fin qui liste TOUTES les vraies colonnes de `membres_structure`</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🍔 **Burger menu CACHÉ en mode magasin** : avant le burger ti-menu-2 en haut à gauche apparaissait aussi côté magasin (alors que la sidebar magasin propre est déjà là). Maintenant `{!isMagasin && <button className='burger'>}`. Plus de menu dupliqué en haut à gauche du magasin</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🗺 **'Carte logistique' renommée 'Carte'** dans le menu Groupement. Plus court, plus clair, cohérent avec l'URL `/carte`</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🗑 **'Dashboard direction' retiré** du menu Groupement. Page `/direction` reste accessible directement par URL mais n'apparait plus dans le menu déplié</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🎨 **Icône Infirmières fixée** : `ti-heart-rate-monitor` n'existe pas dans Tabler Icons actuel. Remplacé par `ti-medical-cross` (croix médicale) qui est dans toutes les versions. L'item 'Infirmières' affiche enfin son icône</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🏬 **Familles articles côté MAGASIN** : page `/familles-articles` ajoutée dans la sidebar magasin (section 'Catalogue & Commerce'). Filtre intelligent : `magasin_id.eq.${magasinId} OR magasin_id.is.null` → le user magasin voit ses propres familles + les familles globales du groupement. À la création depuis l'espace magasin, `magasin_id` est rempli automatiquement (la famille appartient au magasin)</div>
-<div class="footer">Aveho Espace Collectivité — Version 0.62.21</div></body></html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.21 — Note d'évolution</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
+  .wrap { }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #EF9F27 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta b { color: #fff; }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { margin: 8px 0; }
+  b { color: var(--navy); }
+  .themes-row { margin-top: 14px; }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <h1>Version 0.62.21
+      <small>🐛 SQL v_collaborateurs ULTRA défensif (m.id n'existe pas) + Burger caché magasin + Carte renommée + Familles magasin</small>
+    </h1>
+    <div class="meta">
+      <span><b>📅 Date :</b> 6 juin 2026</span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.21-alpha</span></span>
+      <span><b>📋 Type :</b> Correction de bug</span>
+      <span><b>🔧 Chantiers :</b> 1 SQL · 5 AI</span>
+    </div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">fix-critique</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">sql</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">ui</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">magasin</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">familles</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">navigation</span></div>
+  </header>
+
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7CC8C822;color:#7CC8C8;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🗄</span>SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel violet">
+    <ul>
+    <li>🚨 <b><code>migration-0.62.21-v-collaborateurs-ULTRA-DEFENSIF.sql</code></b> : la migration 0.62.20 plantait <code>ERROR 42703: column m.id does not exist</code>. Fix radical : on <b>TEST chaque colonne individuellement</b> via <code>information_schema.columns</code> avant de l'inclure dans le SELECT. Boucle <code>FOREACH c IN ARRAY candidate_cols</code> qui construit dynamiquement la liste de colonnes existantes. Plus jamais aucune erreur 42703 possible. Bonus : SELECT diagnostic à la fin qui liste TOUTES les vraies colonnes de <code>membres_structure</code></li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(5 chantiers)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🍔 <b>Burger menu CACHÉ en mode magasin</b> : avant le burger ti-menu-2 en haut à gauche apparaissait aussi côté magasin (alors que la sidebar magasin propre est déjà là). Maintenant <code>{!isMagasin &amp;&amp; &lt;button className='burger'&gt;}</code>. Plus de menu dupliqué en haut à gauche du magasin</li>
+    <li>🗺 <b>'Carte logistique' renommée 'Carte'</b> dans le menu Groupement. Plus court, plus clair, cohérent avec l'URL <code>/carte</code></li>
+    <li>🗑 <b>'Dashboard direction' retiré</b> du menu Groupement. Page <code>/direction</code> reste accessible directement par URL mais n'apparait plus dans le menu déplié</li>
+    <li>🎨 <b>Icône Infirmières fixée</b> : <code>ti-heart-rate-monitor</code> n'existe pas dans Tabler Icons actuel. Remplacé par <code>ti-medical-cross</code> (croix médicale) qui est dans toutes les versions. L'item 'Infirmières' affiche enfin son icône</li>
+    <li>🏬 <b>Familles articles côté MAGASIN</b> : page <code>/familles-articles</code> ajoutée dans la sidebar magasin (section 'Catalogue &amp; Commerce'). Filtre intelligent : <code>magasin_id.eq.${magasinId} OR magasin_id.is.null</code> → le user magasin voit ses propres familles + les familles globales du groupement. À la création depuis l'espace magasin, <code>magasin_id</code> est rempli automatiquement (la famille appartient au magasin)</li>
+    </ul>
+  </div>
+
+
+  <h2>📦 Migration SQL</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL à appliquer dans Supabase SQL Editor :</p>
+    <pre style="margin-top:10px">migration-0.62.21-v-collaborateurs-ULTRA-DEFENSIF.sql</pre>
+    <p style="margin-top:8px;font-size:12px;color:#5a6878">📍 Disponible dans <code>public/sql/migration-0.62.21-v-collaborateurs-ULTRA-DEFENSIF.sql</code>. Lance-la AVANT de déployer cette version.</p>
+  </div>
+
+
+  <footer>
+    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
+    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,36 +1,95 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.16 — FEAT</title>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.16 — Note d'évolution</title>
 <style>
-body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
-h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
-.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
-.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
-.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
-.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
-.themes { margin-top: 10px; }
-.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
-h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
-.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
-.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
-code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
-strong, b { color: #142131; }
-.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
-@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
-</style></head><body>
-<div class="header">
-<span class="kind">✨ FEATURE</span>
-<h1>Aveho 0.62.16</h1>
-<div class="titre">🚗 Garages + 🚛 Fiche matériel enrichie logistique + Icônes équipes auto + Fix 400 vehicules</div>
-<div class="date">📅 6 juin 2026</div>
-<div class="themes"><span class="theme">#feat</span> <span class="theme">#garages</span> <span class="theme">#materiels</span> <span class="theme">#tracabilite</span> <span class="theme">#equipes</span> <span class="theme">#vehicules</span></div>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
+  .wrap { }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta b { color: #fff; }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { margin: 8px 0; }
+  b { color: var(--navy); }
+  .themes-row { margin-top: 14px; }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <h1>Version 0.62.16
+      <small>🚗 Garages + 🚛 Fiche matériel enrichie logistique + Icônes équipes auto + Fix 400 vehicules</small>
+    </h1>
+    <div class="meta">
+      <span><b>📅 Date :</b> 6 juin 2026</span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.16-alpha</span></span>
+      <span><b>📋 Type :</b> Nouvelle fonctionnalité majeure</span>
+      <span><b>🔧 Chantiers :</b> 1 SQL · 5 AI</span>
+    </div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">garages</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">materiels</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">tracabilite</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">equipes</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">vehicules</span></div>
+  </header>
+
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7CC8C822;color:#7CC8C8;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🗄</span>SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel violet">
+    <ul>
+    <li>🆕 <b><code>migration-0.62.16-garages.sql</code></b> : nouvelle table <code>garages</code> (id, structure_id, etablissement_id, magasin_id, nom, adresse, ville, capacité, type [garage/parking/atelier/depot_logistique], téléphone, responsable, horaires, lat/lng, notes, actif). 4 RLS policies SELECT/INSERT/UPDATE/DELETE filtrées par structure_id du user. Ajout <code>vehicules.garage_id</code> (UUID) + index</li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(5 chantiers)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🅿️ <b>Nouvelle page <code>/garages</code></b> : CRUD complet avec 4 types (garage 🏠 / parking 🅿️ / atelier mécanique 🔧 / dépôt logistique 📦). Cards avec border-left coloré par type, comptage véhicules rattachés + capacité, modal édition (nom, type, capacité, adresse, CP, ville, tél, responsable, horaires, notes, actif). À la suppression : <code>vehicules.garage_id</code> mis à NULL avant DELETE. Banner d'alerte si table absente avec lien vers le SQL</li>
+    <li>🐛 <b>Fix 400 sur <code>/vehicules</code></b> : la jointure PostgREST <code>vehicules?select=*,etablissements(nom)</code> plantait (FK non déclarée). Retiré complètement la jointure (les noms étab sont joints client-side via <code>setEtabs</code>). Plus d'erreur console</li>
+    <li>🚛 <b>Fiche matériel TRACABILITÉ ENRICHIE</b> : ajout des champs : marque, modèle, fournisseur, UDI (GS1/HIBC réglementaire), chambre actuelle (select), <b>dépôt de rattachement avec distinction EC 🏢 / magasin 🏬</b>, date achat, prix achat HT, date mise en service, durée amortissement (mois), valeur nette comptable, prochaine maintenance, état enrichi (Disponible/Location/Maintenance/Hors service/Réformé), notes textarea. <b>Table 'étage' totalement abandonnée</b> (dropée en 0.58.85, on ne référence plus du tout)</li>
+    <li>📋 <b>Liste matériels MAX colonnes</b> : libellé (lien fiche) + tags, n° série, n° parc, n° lot, UDI (Consolas), patient affecté, <b>chambre actuelle</b>, <b>dépôt</b> (icône 🏬 magasin / 🏢 étab), date achat, prix HT, état avec badge + drapeau IMMO. Toutes triables. Charge <code>chambres</code> (id, nom, service_id) + <code>depots</code> (id, nom, magasin_id, etablissement_id) au mount</li>
+    <li>🎨 <b>Icônes équipes auto-détectées</b> : avant les équipes apparaissaient juste avec leur nom. Maintenant chaque tuile a une icône 38x38px à gauche, fond <code>couleur 10%</code>, déduite intelligemment du nom : infirmières → ti-medical-cross, médecins → ti-stethoscope, aide-soignants → ti-heart-handshake, kiné → ti-massage, pharma → ti-pill, admin → ti-id-badge-2, logistique → ti-truck-loading, livraison → ti-truck-delivery, maintenance → ti-tool, équipe nuit → ti-moon, équipe jour → ti-sun, restauration → ti-tools-kitchen-2, ménage → ti-spray, animation → ti-music, direction → ti-crown, fallback → ti-users-group. Si <code>e.icone</code> rempli en DB, il est prioritaire</li>
+    </ul>
+  </div>
+
+
+  <h2>📦 Migration SQL</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL à appliquer dans Supabase SQL Editor :</p>
+    <pre style="margin-top:10px">migration-0.62.16-garages.sql</pre>
+    <p style="margin-top:8px;font-size:12px;color:#5a6878">📍 Disponible dans <code>public/sql/migration-0.62.16-garages.sql</code>. Lance-la AVANT de déployer cette version.</p>
+  </div>
+
+
+  <footer>
+    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
+    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+  </footer>
+
 </div>
-<h2>📋 Chantiers (6)</h2>
-<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.16-garages.sql`** : nouvelle table `garages` (id, structure_id, etablissement_id, magasin_id, nom, adresse, ville, capacité, type [garage/parking/atelier/depot_logistique], téléphone, responsable, horaires, lat/lng, notes, actif). 4 RLS policies SELECT/INSERT/UPDATE/DELETE filtrées par structure_id du user. Ajout `vehicules.garage_id` (UUID) + index</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🅿️ **Nouvelle page `/garages`** : CRUD complet avec 4 types (garage 🏠 / parking 🅿️ / atelier mécanique 🔧 / dépôt logistique 📦). Cards avec border-left coloré par type, comptage véhicules rattachés + capacité, modal édition (nom, type, capacité, adresse, CP, ville, tél, responsable, horaires, notes, actif). À la suppression : `vehicules.garage_id` mis à NULL avant DELETE. Banner d'alerte si table absente avec lien vers le SQL</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🐛 **Fix 400 sur `/vehicules`** : la jointure PostgREST `vehicules?select=*,etablissements(nom)` plantait (FK non déclarée). Retiré complètement la jointure (les noms étab sont joints client-side via `setEtabs`). Plus d'erreur console</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🚛 **Fiche matériel TRACABILITÉ ENRICHIE** : ajout des champs : marque, modèle, fournisseur, UDI (GS1/HIBC réglementaire), chambre actuelle (select), **dépôt de rattachement avec distinction EC 🏢 / magasin 🏬**, date achat, prix achat HT, date mise en service, durée amortissement (mois), valeur nette comptable, prochaine maintenance, état enrichi (Disponible/Location/Maintenance/Hors service/Réformé), notes textarea. **Table 'étage' totalement abandonnée** (dropée en 0.58.85, on ne référence plus du tout)</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📋 **Liste matériels MAX colonnes** : libellé (lien fiche) + tags, n° série, n° parc, n° lot, UDI (Consolas), patient affecté, **chambre actuelle**, **dépôt** (icône 🏬 magasin / 🏢 étab), date achat, prix HT, état avec badge + drapeau IMMO. Toutes triables. Charge `chambres` (id, nom, service_id) + `depots` (id, nom, magasin_id, etablissement_id) au mount</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🎨 **Icônes équipes auto-détectées** : avant les équipes apparaissaient juste avec leur nom. Maintenant chaque tuile a une icône 38x38px à gauche, fond `couleur 10%`, déduite intelligemment du nom : infirmières → ti-medical-cross, médecins → ti-stethoscope, aide-soignants → ti-heart-handshake, kiné → ti-massage, pharma → ti-pill, admin → ti-id-badge-2, logistique → ti-truck-loading, livraison → ti-truck-delivery, maintenance → ti-tool, équipe nuit → ti-moon, équipe jour → ti-sun, restauration → ti-tools-kitchen-2, ménage → ti-spray, animation → ti-music, direction → ti-crown, fallback → ti-users-group. Si `e.icone` rempli en DB, il est prioritaire</div>
-<div class="footer">Aveho Espace Collectivité — Version 0.62.16<br>Généré automatiquement</div>
-</body></html>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.17 — Note d'évolution</title>
+<title>Aveho 0.62.24 — Note d'évolution</title>
 <style>
   :root {
     --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
@@ -45,26 +45,33 @@
   <header class="cover">
     <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
     <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
-    <h1>Version 0.62.17
-      <small>📑 Onglets manquants Groupement + Établissement + Cantonnement /magasin/rattachements + Garage sur form véhicule</small>
+    <h1>Version 0.62.24
+      <small>📄 Bon réception PDF + Onglets édition article + Page min stock par étape + Bouton créer tournée /carte</small>
     </h1>
     <div class="meta">
       <span><b>📅 Date :</b> 6 juin 2026</span>
-      <span><b>📦 Version :</b> <span class="badge">v0.62.17-alpha</span></span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.24-alpha</span></span>
       <span><b>📋 Type :</b> Nouvelle fonctionnalité majeure</span>
-      <span><b>🔧 Chantiers :</b> 4 AI</span>
+      <span><b>🔧 Chantiers :</b> 4 AI · 1 INFO</span>
     </div>
-    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">navigation</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">onglets</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">cantonnement</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">vehicules</span></div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">pdf</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">onglets</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">stock</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">carte</span></div>
   </header>
 
 
   <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(4 chantiers)</small></h2>
   <div class="panel ">
     <ul>
-    <li>📑 <b>Page Collectivité/Groupement : 4 nouveaux onglets</b> : 🚑 Véhicules (rouge #e35d5b) + 🅿️ Garages (bleu #185FA5) + 🏬 Magasins (teal #5a8f8f) + 🛣 Tournées (violet #7a6fb0). L'onglet Tournées propose 3 boutons : 'Liste tournées' / 'Calendrier' / 'Analytics'. Helper <code>btnGradient(c1, c2)</code> factorisé pour les boutons (fond gradient, shadow couleur, icône inline)</li>
-    <li>📑 <b>Page Établissement : 5 nouveaux onglets</b> : 🅿️ Garages (#185FA5) + 👥 Équipes (#5a4a90) + 👤 Collaborateurs (#7CC8C8) + ❤ Patients (#e35d5b) + 📦 Matériels (#7a6fb0). Composant <code>RedirectTab</code> réutilisable : icône 56px + titre + description + bouton gradient 'Ouvrir la page'. Pratique pour naviguer dans les ressources liées à l'étab</li>
-    <li>🎯 <b>Cantonnement <code>/magasin/rattachements</code></b> : la liste des étabs accessibles est maintenant filtrée selon <b>2 critères combinés</b> : (1) <b>Cantonnement de l'agence/magasin</b> via les <code>magasins_rattachements.actif=true</code> → seuls les étabs rattachés au magasin courant apparaissent. (2) <b>Cantonnement du collaborateur</b> : si <code>membres_structure.lock_assignment = true</code> et <code>etablissement_ids</code> rempli → intersection avec le périmètre du magasin. Si intersection = vide → message 'Aucun étab autorisé'. console.info trace les filtres pour debug</li>
-    <li>🅿️ <b>Bouton 'Garage / Parking' sur form véhicule</b> : nouveau sélecteur entre Établissement et Immatriculation. Charge <code>garages</code> au mount (filtré par structure_id), affiche nom + ville. Si liste vide → lien rapide 'Créer un garage →' vers <code>/garages</code>. À l'enregistrement, <code>vehicules.garage_id</code> est sauvegardé (colonne ajoutée par migration-0.62.16-garages.sql)</li>
+    <li>📄 <b>Bon de réception PDF exportable</b> : ajout bouton 'PDF' sur chaque bon dans <code>/bons-reception</code>. Charge jsPDF depuis CDN cloudflare (lazy load, cache global). PDF A4 avec : header navy + titre AVEHO, numéro BR-XXXXXX en grand, date / source / signataire, badge coloré statut (CONFORME vert / LITIGE orange / REFUSE rouge), anomalies + commentaire avec splitTextToSize pour wrap automatique. Téléchargement direct via <code>doc.save(numero + '.pdf')</code></li>
+    <li>📑 <b>Vue onglets dans la modale édition article</b> : refonte de la modale <code>setEditModal</code> sur <code>/article/[id]</code>. <b>5 onglets</b> : (1) 📝 Général (libellé, code, référence, description). (2) 🏷 Codes (EAN13 + GS1/UDI + LPP avec descriptions). (3) 💰 Tarifs (prix public + achat HT + calcul marge live). (4) 📦 Stock (min + max + lien vers /articles-min-stock-etape). (5) ⚙ Avancé (immobilisation + lien /articles). Composant <code>ArticleEditTabs</code> factorisé. Save payload enrichi : prix_achat_ht, stock_max, ref_lpp, is_immobilisation</li>
+    <li>📦 <b>Nouvelle page <code>/articles-min-stock-etape</code></b> : CRUD pour définir des seuils min/max par bâtiment / service / dépôt. Sélection cascadée intelligente (filtre bâtiments par étab, services par bâtiment, dépôts par étab). Liste : article + localisation + min rouge + max vert + notes + boutons Éditer/Supprimer. Lien ajouté dans menu Stock (icône ti-stack-pop rouge)</li>
+    <li>🗺 <b>Bouton flottant 'Créer tournée' sur /carte</b> : bouton FAB en position fixed bottom-right (z-index 8000) gradient orange-ambre avec icône ti-route. Click → navigation vers <code>/magasin/tournees/nouvelle</code> où on retrouve les sources multiples (DI, transferts, SAV, maint, retours, bilans). À terme : faire passer les DI sélectionnées en query string pour pré-cocher</li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#5a687822;color:#5a6878;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">ℹ</span>Info / Tâche <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🚧 <b>Toujours en attente</b> : Cantonnement étab livraisons (JOIN tournees_etapes.etablissement_id), Module étiquettes enrichi GS1/QR, Scan QR mode magasin dédié, Garages côté magasin UI, Mail dédié magasin (edge function), Création membres_structure à l'inscription, Dashboard temps réel poussé, Commande EC → magasin, Statuts tournée enrichis calendrier</li>
     </ul>
   </div>
 

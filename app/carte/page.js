@@ -1845,6 +1845,34 @@ export default function CartePage() {
           100% { transform: scale(.95); opacity: 0; }
         }
       `}</style>
+
+      {/* 0.62.24 : Bouton flottant Créer tournée depuis la carte */}
+      <button
+        onClick={() => (window.location.href = "/magasin/tournees/nouvelle")}
+        title="Créer une tournée depuis les DI affichées"
+        style={{
+          position: "fixed",
+          bottom: 90,
+          right: 20,
+          zIndex: 8000,
+          background: "linear-gradient(135deg, #EF9F27, #c97a2a)",
+          color: "#fff",
+          border: "none",
+          borderRadius: 28,
+          padding: "12px 18px",
+          fontSize: 13,
+          fontWeight: 700,
+          fontFamily: "inherit",
+          cursor: "pointer",
+          boxShadow: "0 6px 20px rgba(239,159,39,.4)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <i className="ti ti-route" style={{ fontSize: 16 }} />
+        Créer tournée
+      </button>
     </div>
   );
 }

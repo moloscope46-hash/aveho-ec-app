@@ -105,6 +105,7 @@ export default function FicheEtablissementPage() {
       const payload = {
         nom: form.nom?.trim(),
         type: form.type || null,
+        code: form.code?.trim() || null,
         finess: form.finess?.trim() || null,
         siret: form.siret?.trim() || null,
         adresse: form.adresse?.trim() || null,
@@ -360,7 +361,11 @@ export default function FicheEtablissementPage() {
                     </select>
                   </div>
                 </div>
-                <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <div>
+                    <label style={fldLabel}>Code interne</label>
+                    <input value={form.code || ""} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="ex: CHU-LYON-01" style={{ ...fldInput, fontFamily: "Consolas, monospace" }} />
+                  </div>
                   <div>
                     <label style={fldLabel}>N° FINESS</label>
                     <input value={form.finess || ""} onChange={(e) => setForm({ ...form, finess: e.target.value })} placeholder="9 chiffres" style={fldInput} />

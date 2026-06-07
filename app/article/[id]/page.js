@@ -724,8 +724,12 @@ export default function ArticleDetailPage({ params }) {
                     code_gs1: editForm.code_gs1 ?? article.code_gs1,
                     description: editForm.description ?? article.description,
                     prix_public_ht: editForm.prix_public_ht ?? article.prix_public_ht,
+                    prix_achat_ht: editForm.prix_achat_ht ?? article.prix_achat_ht,
                     stock_min: editForm.stock_min ?? article.stock_min,
+                    stock_max: editForm.stock_max ?? article.stock_max,
                     famille_id: editForm.famille_id ?? article.famille_id,
+                    ref_lpp: editForm.ref_lpp ?? article.ref_lpp,
+                    is_immobilisation: editForm.is_immobilisation ?? article.is_immobilisation,
                   };
                   const r = await supabase.from("articles").update(payload).eq("id", article.id);
                   if (r.error) throw r.error;
@@ -738,36 +742,112 @@ export default function ArticleDetailPage({ params }) {
               }}>{editSaving ? "Enregistrement…" : "Enregistrer"}</Btn>
             </>
           }>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}><b>Libellé *</b>
-              <input defaultValue={article.libelle || ""} onChange={(e) => setEditForm({ ...editForm, libelle: e.target.value })} style={editInp} autoFocus />
-            </label>
-            <label style={{ fontSize: 12, color: "#5a6878" }}>Code interne
-              <input defaultValue={article.code || ""} onChange={(e) => setEditForm({ ...editForm, code: e.target.value })} style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
-            </label>
-            <label style={{ fontSize: 12, color: "#5a6878" }}>Référence
-              <input defaultValue={article.reference || ""} onChange={(e) => setEditForm({ ...editForm, reference: e.target.value })} style={editInp} />
-            </label>
-            <label style={{ fontSize: 12, color: "#5a6878" }}>Code EAN13
-              <input defaultValue={article.code_ean13 || ""} onChange={(e) => setEditForm({ ...editForm, code_ean13: e.target.value })} placeholder="13 chiffres" maxLength={13} style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
-            </label>
-            <label style={{ fontSize: 12, color: "#5a6878" }}>Code GS1 / UDI
-              <input defaultValue={article.code_gs1 || ""} onChange={(e) => setEditForm({ ...editForm, code_gs1: e.target.value })} placeholder="(01)..." style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
-            </label>
-            <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}>Description
-              <textarea defaultValue={article.description || ""} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} style={{ ...editInp, minHeight: 60 }} />
-            </label>
-            <label style={{ fontSize: 12, color: "#5a6878" }}>Prix public HT (€)
-              <input type="number" step="0.01" defaultValue={article.prix_public_ht || ""} onChange={(e) => setEditForm({ ...editForm, prix_public_ht: e.target.value })} style={editInp} />
-            </label>
-            <label style={{ fontSize: 12, color: "#5a6878" }}>Stock min
-              <input type="number" defaultValue={article.stock_min || ""} onChange={(e) => setEditForm({ ...editForm, stock_min: e.target.value })} style={editInp} />
-            </label>
-            <div style={{ gridColumn: "1 / -1", padding: 10, background: "rgba(122,111,176,.08)", borderLeft: "3px solid #7a6fb0", borderRadius: 6, fontSize: 11.5, color: "#5a6878" }}>
-              ℹ Modifie ici les champs principaux. Pour les paramètres avancés (location, fournisseurs, tags, immobilisation), va sur <a href="/articles" style={{ color: "#185FA5", fontWeight: 700 }}>la page Articles</a>.
-            </div>
-          </div>
+          {/* 0.62.24 : Onglets pour mieux organiser les champs */}
+          <ArticleEditTabs article={article} editForm={editForm} setEditForm={setEditForm} editInp={editInp} />
         </Modal>
+      )}
+    </div>
+  );
+}
+
+// 0.62.24 : composant onglets édition article
+function ArticleEditTabs({ article, editForm, setEditForm, editInp }) {
+  const [tab, setTab] = useState("general");
+  const TABS = [
+    { v: "general",  l: "📝 Général", col: "#185FA5" },
+    { v: "codes",    l: "🏷 Codes",    col: "#7a6fb0" },
+    { v: "tarifs",   l: "💰 Tarifs",   col: "#EF9F27" },
+    { v: "stock",    l: "📦 Stock",    col: "#5a8f8f" },
+    { v: "avance",   l: "⚙ Avancé",   col: "#5a6878" },
+  ];
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 4, borderBottom: "2px solid #e3e9ee", marginBottom: 14, paddingBottom: 4, flexWrap: "wrap" }}>
+        {TABS.map(t => (
+          <button key={t.v} type="button" onClick={() => setTab(t.v)} style={{
+            padding: "7px 14px", borderRadius: 6,
+            background: tab === t.v ? t.col : "transparent",
+            color: tab === t.v ? "#fff" : t.col,
+            border: `1px solid ${t.col}40`,
+            fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer",
+          }}>{t.l}</button>
+        ))}
+      </div>
+
+      {tab === "general" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}><b>Libellé *</b>
+            <input defaultValue={article.libelle || ""} onChange={(e) => setEditForm({ ...editForm, libelle: e.target.value })} style={editInp} autoFocus />
+          </label>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Code interne
+            <input defaultValue={article.code || ""} onChange={(e) => setEditForm({ ...editForm, code: e.target.value })} style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+          </label>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Référence
+            <input defaultValue={article.reference || ""} onChange={(e) => setEditForm({ ...editForm, reference: e.target.value })} style={editInp} />
+          </label>
+          <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}>Description
+            <textarea defaultValue={article.description || ""} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} style={{ ...editInp, minHeight: 80 }} />
+          </label>
+        </div>
+      )}
+
+      {tab === "codes" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Code EAN13
+            <input defaultValue={article.code_ean13 || ""} onChange={(e) => setEditForm({ ...editForm, code_ean13: e.target.value })} placeholder="13 chiffres" maxLength={13} style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+            <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 4 }}>Code-barres standard 13 chiffres pour scan supermarché-style</div>
+          </label>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Code GS1 / UDI
+            <input defaultValue={article.code_gs1 || ""} onChange={(e) => setEditForm({ ...editForm, code_gs1: e.target.value })} placeholder="(01)..." style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+            <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 4 }}>Identifiant unique dispositif médical (DataMatrix)</div>
+          </label>
+          <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}>Référence LPP / LPPR
+            <input defaultValue={article.ref_lpp || ""} onChange={(e) => setEditForm({ ...editForm, ref_lpp: e.target.value })} placeholder="ex: 1101238" style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+            <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 4 }}>Code Liste des Produits et Prestations (Sécu sociale)</div>
+          </label>
+        </div>
+      )}
+
+      {tab === "tarifs" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Prix public HT (€)
+            <input type="number" step="0.01" defaultValue={article.prix_public_ht || ""} onChange={(e) => setEditForm({ ...editForm, prix_public_ht: e.target.value })} style={editInp} />
+          </label>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Prix achat HT (€)
+            <input type="number" step="0.01" defaultValue={article.prix_achat_ht || ""} onChange={(e) => setEditForm({ ...editForm, prix_achat_ht: e.target.value })} style={editInp} />
+          </label>
+          <div style={{ gridColumn: "1 / -1", padding: 10, background: "rgba(239,159,39,.08)", borderLeft: "3px solid #EF9F27", borderRadius: 6, fontSize: 11.5, color: "#5a6878" }}>
+            ℹ Marge prévisionnelle : {editForm.prix_public_ht && editForm.prix_achat_ht
+              ? <b>{((parseFloat(editForm.prix_public_ht) - parseFloat(editForm.prix_achat_ht)) / parseFloat(editForm.prix_public_ht) * 100).toFixed(1)} %</b>
+              : <i>(saisis les 2 prix)</i>}
+          </div>
+        </div>
+      )}
+
+      {tab === "stock" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Stock min (alerte)
+            <input type="number" defaultValue={article.stock_min || ""} onChange={(e) => setEditForm({ ...editForm, stock_min: e.target.value })} style={editInp} />
+          </label>
+          <label style={{ fontSize: 12, color: "#5a6878" }}>Stock max
+            <input type="number" defaultValue={article.stock_max || ""} onChange={(e) => setEditForm({ ...editForm, stock_max: e.target.value })} style={editInp} />
+          </label>
+          <div style={{ gridColumn: "1 / -1", padding: 10, background: "rgba(94,143,143,.08)", borderLeft: "3px solid #5a8f8f", borderRadius: 6, fontSize: 11.5, color: "#5a6878" }}>
+            ℹ Pour des seuils <b>par bâtiment / service / dépôt</b>, va sur <a href={`/etablissement/edition`} style={{ color: "#185FA5", fontWeight: 700 }}>/etablissement/edition</a> → table `articles_min_stock_etape`
+          </div>
+        </div>
+      )}
+
+      {tab === "avance" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878", display: "flex", alignItems: "center", gap: 8 }}>
+            <input type="checkbox" defaultChecked={article.is_immobilisation} onChange={(e) => setEditForm({ ...editForm, is_immobilisation: e.target.checked })} />
+            <b>Article immobilisé</b> (matériel inventoriable avec n° de série)
+          </label>
+          <div style={{ gridColumn: "1 / -1", padding: 10, background: "rgba(122,111,176,.08)", borderLeft: "3px solid #7a6fb0", borderRadius: 6, fontSize: 11.5, color: "#5a6878" }}>
+            ℹ Pour les paramètres avancés (location, fournisseurs, tags, immobilisation détaillée, comptabilité), va sur <a href="/articles" style={{ color: "#185FA5", fontWeight: 700 }}>la page Articles</a>.
+          </div>
+        </div>
       )}
     </div>
   );

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.10 — Note d'évolution</title>
+<title>Aveho 0.62.23 — Note d'évolution</title>
 <style>
   :root {
     --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
@@ -13,7 +13,7 @@
   * { box-sizing: border-box; }
   body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
   .wrap { }
-  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #EF9F27 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
   .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
   .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
   .logo .v { color: var(--teal); }
@@ -43,41 +43,41 @@
 <div class="wrap">
 
   <header class="cover">
-    <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
     <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
-    <h1>Version 0.62.10
-      <small>🔥 Fix /materiels React #310 (hooks order) + click libellé article = fiche globale + Filtres TopBar restaurés en mode magasin (filtrés par rattachements)</small>
+    <h1>Version 0.62.23
+      <small>✨ Code établissement + Stock auto à la réception + Min stock par étape + Mode mobile titres</small>
     </h1>
     <div class="meta">
       <span><b>📅 Date :</b> 6 juin 2026</span>
-      <span><b>📦 Version :</b> <span class="badge">v0.62.10-alpha</span></span>
-      <span><b>📋 Type :</b> Correction de bug</span>
-      <span><b>🔧 Chantiers :</b> 3 AI · 1 SQL · 1 INFO</span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.23-alpha</span></span>
+      <span><b>📋 Type :</b> Nouvelle fonctionnalité majeure</span>
+      <span><b>🔧 Chantiers :</b> 1 SQL · 3 AI · 1 INFO</span>
     </div>
-    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">fix-critique</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">react-hooks</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">magasin</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">rattachements</span></div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">feat</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">sql</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">stock</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">etab</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">mobile</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">trigger</span></div>
   </header>
 
 
   <h2><span style="display:inline-block;width:32px;height:32px;background:#7CC8C822;color:#7CC8C8;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🗄</span>SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
   <div class="panel violet">
     <ul>
-    <li>🆕 <b><code>migration-0.62.10-magasins-rattachements.sql</code></b> : nouvelle table <code>magasins_rattachements</code> (magasin_id, etablissement_id, batiment_id, service_id, depot_id, actif, notes) — permet de rattacher un magasin granulairement à des bâtiments/services/dépôts précis d'établissements partenaires. + colonne <code>depots.magasin_id</code> (rattachement direct simple). + 2 vues helper : <code>v_etabs_du_magasin</code> et <code>v_perimetre_magasin</code>. RLS activé. 6 indexes</li>
+    <li>🆕 <b><code>migration-0.62.23-code-etab-stock-reception.sql</code></b> : (1) ajoute <code>etablissements.code</code> (TEXT) — code court interne type 'CHU-LYON-01'. (2) Fonction <code>fn_bon_reception_creer_mouvements()</code> + trigger AFTER INSERT sur <code>bons_reception</code> : si réception conforme + statut valide + type_source=transfert → crée automatiquement un mouvement <code>entree</code> dans <code>stock_mouvements</code> sur le dépôt destination. RAISE WARNING en cas d'erreur (ne bloque jamais le bon). (3) Table <code>articles_min_stock_etape</code> : permet de définir des stocks min/max par bâtiment/service/dépôt (pas juste global) avec contrainte UNIQUE (article_id, batiment_id, service_id, depot_id). 4 RLS policies</li>
     </ul>
   </div>
 
   <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3 chantiers)</small></h2>
   <div class="panel ">
     <ul>
-    <li>🔥 <b>Fix React error #310 /materiels</b> : les 3 <code>usePageAction()</code> étaient appelés APRÈS le <code>if (!auth.ready || !relReady) return null;</code> ligne 130. React strict : <b>le nombre de hooks appelés doit être identique entre tous les renders</b>. Quand auth pas prêt → return null → hooks pas appelés. Quand auth prêt → hooks appelés → React panique. <b>Fix</b> : déplacé les 3 usePageAction AVANT le early return. Pattern correct : tous les hooks en haut, early return après</li>
-    <li>📄 <b>Click libellé article = fiche globale (immobilisation, stock, mouvements)</b> : restaure le comportement antérieur. Le libellé navigue maintenant vers <code>/article/[id]</code> (vue détaillée complète). Le bouton crayon 🖉 ouvre toujours le modal d'édition rapide pour les modifs ponctuelles</li>
-    <li>🎯 <b>Filtres TopBar restaurés en mode magasin</b> : avant je les avais cachés avec <code>!isMagasin</code> (Cédric voulait pas rien quand pas rattaché). Maintenant je les <b>REMETS</b> mais le <code>BatimentServiceSwitcher</code> les <b>FILTRE</b> : import <code>useMagasinContext</code> + nouveau state <code>rattachementsMagasin</code> chargé via <code>magasins_rattachements.eq(magasin_id).eq(actif,true)</code>. Si rattachements ont des <code>batiment_id</code> précis, la liste bâtiments est filtrée. Sinon (rattachement niveau étab) on garde la liste complète</li>
+    <li>🏥 <b>Champ Code établissement</b> ajouté sur <code>/etablissement/fiche</code> : nouvelle colonne dans le bloc identification, à côté de FINESS et SIRET. Layout grid 3 colonnes (au lieu de 2). Affiché en police monospace Consolas pour un look code. Save inclus dans le payload UPDATE</li>
+    <li>📱 <b>Mode mobile : titres bien visibles</b> : ajout <code>.page-content</code> mobile avec padding 18/12, h1 font-size 23px (au lieu de 25px qui débordait), line-height 1.2, eyebrow plus compact (11px). Plus de titres cachés derrière la topbar sur les écrans étroits</li>
+    <li>📦 <b>Stock auto à la réception conforme</b> : le trigger SQL fait que dès qu'un bon de réception est validé sur un transfert avec statut valide, un mouvement d'entrée stock est créé automatiquement sur le dépôt destination avec commentaire 'Réception conforme du bon BR-XXXXXX'. Plus besoin de saisir manuellement. Les SAV/maintenances/DI nécessiteront un workflow dédié (TODO)</li>
     </ul>
   </div>
 
   <h2><span style="display:inline-block;width:32px;height:32px;background:#5a687822;color:#5a6878;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">ℹ</span>Info / Tâche <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
   <div class="panel ">
     <ul>
-    <li>🚧 <b>Workflow rattachement magasin — en cours</b> : il faut maintenant exécuter le SQL puis créer manuellement des <code>magasins_rattachements</code> (depuis Supabase ou bientôt une page admin). Exemple : <code>INSERT INTO magasins_rattachements (magasin_id, etablissement_id, batiment_id) VALUES ('&lt;ton-magasin&gt;', '&lt;étab-client&gt;', '&lt;bât-précis&gt;');</code>. Une fois rattaché, la TopBar du user magasin n'affichera que ce bâtiment dans le switcher</li>
+    <li>🚧 <b>Toujours en attente</b> : Cantonnement étab livraisons (JOIN tournees_etapes.etablissement_id), Bon réception PDF (jsPDF CDN), Vue onglets édition article, Module étiquettes enrichi GS1/QR, Scan QR mode magasin, Garages côté magasin UI, Mail dédié magasin (edge function), Création membres_structure à l'inscription, Dashboard temps réel poussé, /carte bouton créer tournée depuis DI, Commande EC → magasin, page UI articles min stock par étape (table créée, page à venir)</li>
     </ul>
   </div>
 
@@ -85,8 +85,8 @@
   <h2>📦 Migration SQL</h2>
   <div class="panel violet">
     <p>Cette version inclut une migration SQL à appliquer dans Supabase SQL Editor :</p>
-    <pre style="margin-top:10px">migration-0.62.10-magasins-rattachements.sql</pre>
-    <p style="margin-top:8px;font-size:12px;color:#5a6878">📍 Disponible dans <code>public/sql/migration-0.62.10-magasins-rattachements.sql</code>. Lance-la AVANT de déployer cette version.</p>
+    <pre style="margin-top:10px">migration-0.62.23-code-etab-stock-reception.sql</pre>
+    <p style="margin-top:8px;font-size:12px;color:#5a6878">📍 Disponible dans <code>public/sql/migration-0.62.23-code-etab-stock-reception.sql</code>. Lance-la AVANT de déployer cette version.</p>
   </div>
 
 

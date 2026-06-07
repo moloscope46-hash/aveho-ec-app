@@ -1,30 +1,99 @@
 <!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aveho 0.62.19 — FIX</title>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.19 — Note d'évolution</title>
 <style>
-body { font-family: 'Quicksand', 'Segoe UI', sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
-h1 { color: #EF9F27; border-bottom: 3px solid #EF9F27; padding-bottom: 10px; font-size: 28px; }
-.header { background: linear-gradient(135deg, #EF9F2711, #EF9F2705); padding: 20px; border-left: 6px solid #EF9F27; border-radius: 10px; margin-bottom: 24px; }
-.kind { display: inline-block; background: #EF9F27; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
-.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
-.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
-h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
-.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
-.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; margin-right: 8px; font-family: monospace; }
-strong, b { color: #142131; }
-.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
-@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } }
-</style></head><body>
-<div class="header">
-<span class="kind">🐛 FIX</span>
-<h1>Aveho 0.62.19</h1>
-<div class="titre">🐛 Fix tuile collab 'Sans nom' + v_collaborateurs ENRICHIE (étab/svc/magasin/pharmacie) + 8 HTML notes manquants régénérés</div>
-<div class="date">📅 6 juin 2026</div>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
+  .wrap { }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #EF9F27 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta b { color: #fff; }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { margin: 8px 0; }
+  b { color: var(--navy); }
+  .themes-row { margin-top: 14px; }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <h1>Version 0.62.19
+      <small>🐛 Fix tuile collab 'Sans nom' + v_collaborateurs ENRICHIE (étab/svc/magasin/pharmacie) + 8 HTML notes manquants régénérés</small>
+    </h1>
+    <div class="meta">
+      <span><b>📅 Date :</b> 6 juin 2026</span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.19-alpha</span></span>
+      <span><b>📋 Type :</b> Correction de bug</span>
+      <span><b>🔧 Chantiers :</b> 2 AI · 1 SQL · 1 INFO</span>
+    </div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">fix</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">collaborateurs</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">vue-sql</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">html-notes</span></div>
+  </header>
+
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7CC8C822;color:#7CC8C8;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🗄</span>SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel violet">
+    <ul>
+    <li>🆕 <b><code>migration-0.62.19-v-collaborateurs-enrichie.sql</code></b> : recrée la vue <code>v_collaborateurs</code> avec <b>TOUTES les infos jointes</b> : nom + ville de l'établissement (via etablissement_id OU etablissement_ids[0]), nom du service, nom du bâtiment (via services.batiment_id), nom + ville du magasin (via magasin_fournisseur_id), nom de la pharmacie (via pharmacie_id). Plus aussi nom_affiche, mobile, matricule, diplome, actif, date_arrivee, photo_url. DROP CASCADE → CREATE OR REPLACE. La tuile collab affiche maintenant toutes les infos disponibles</li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(2 chantiers)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🐛 <b>Fix tuile 'Sans nom' dans /collaborateurs</b> : avant fallback était juste <code>email</code>. Maintenant cascade complète : <code>nomComplet || nom_affiche || email || (tel ? '📞 ${tel}' : null) || 'Utilisateur ${user_id.substring(0,8)}' || 'Sans nom'</code>. Plus jamais de tuile sans label. Badge orange '👤 profil à compléter' si pas de prénom/nom rempli en DB. Solution durable : le user va dans son profil et complète prénom/nom</li>
+    <li>📄 <b>8 HTML notes manquants régénérés</b> : pour les versions 0.62.11 à 0.62.18 le <code>noteFile</code> était soit vide soit corrompu. Relancé <code>scripts/gen-html-notes-missing.py</code> → 8 HTML générés : NOTE-FIX-0.62.11/12/15.html, NOTE-FEAT-0.62.13/14/16/17/18.html. Format gradient + chantiers + footer dark, responsive mobile, téléchargeables depuis la modale changelog</li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#5a687822;color:#5a6878;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">ℹ</span>Info / Tâche <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>🚧 <b>À faire après ce SQL</b> : si tu as un user créé sans prénom/nom, ouvre son profil et complète. Pour les invitations en cours sans rôle pro, va sur <code>/utilisateurs</code> et édite-les. La nouvelle vue affichera tout automatiquement</li>
+    </ul>
+  </div>
+
+
+  <h2>📦 Migration SQL</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL à appliquer dans Supabase SQL Editor :</p>
+    <pre style="margin-top:10px">migration-0.62.19-v-collaborateurs-enrichie.sql</pre>
+    <p style="margin-top:8px;font-size:12px;color:#5a6878">📍 Disponible dans <code>public/sql/migration-0.62.19-v-collaborateurs-enrichie.sql</code>. Lance-la AVANT de déployer cette version.</p>
+  </div>
+
+
+  <footer>
+    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
+    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+  </footer>
+
 </div>
-<h2>📋 Chantiers (4)</h2>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🐛 **Fix tuile 'Sans nom' dans /collaborateurs** : avant fallback était juste `email`. Maintenant cascade complète : `nomComplet || nom_affiche || email || (tel ? '📞 ${tel}' : null) || 'Utilisateur ${user_id.substring(0,8)}' || 'Sans nom'`. Plus jamais de tuile sans label. Badge orange '👤 profil à compléter' si pas de prénom/nom rempli en DB. Solution durable : le user va dans son profil et complète prénom/nom</div>
-<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.19-v-collaborateurs-enrichie.sql`** : recrée la vue `v_collaborateurs` avec **TOUTES les infos jointes** : nom + ville de l'établissement (via etablissement_id OU etablissement_ids[0]), nom du service, nom du bâtiment (via services.batiment_id), nom + ville du magasin (via magasin_fournisseur_id), nom de la pharmacie (via pharmacie_id). Plus aussi nom_affiche, mobile, matricule, diplome, actif, date_arrivee, photo_url. DROP CASCADE → CREATE OR REPLACE. La tuile collab affiche maintenant toutes les infos disponibles</div>
-<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📄 **8 HTML notes manquants régénérés** : pour les versions 0.62.11 à 0.62.18 le `noteFile` était soit vide soit corrompu. Relancé `scripts/gen-html-notes-missing.py` → 8 HTML générés : NOTE-FIX-0.62.11/12/15.html, NOTE-FEAT-0.62.13/14/16/17/18.html. Format gradient + chantiers + footer dark, responsive mobile, téléchargeables depuis la modale changelog</div>
-<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **À faire après ce SQL** : si tu as un user créé sans prénom/nom, ouvre son profil et complète. Pour les invitations en cours sans rôle pro, va sur `/utilisateurs` et édite-les. La nouvelle vue affichera tout automatiquement</div>
-<div class="footer">Aveho Espace Collectivité — Version 0.62.19</div>
-</body></html>
+</body>
+</html>

@@ -1,6 +1,7 @@
 "use client";
 // =============================================================
 //  /bons-reception — Liste des bons de réception générés (0.62.22)
+//  0.62.24 : Bouton PDF par bon (jsPDF CDN)
 // =============================================================
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,82 @@ import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn } from "../ui";
 import BackButton from "../components/BackButton";
+
+// Charge jsPDF depuis CDN une seule fois
+let jspdfLoading = null;
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve(window.jspdf);
+  if (jspdfLoading) return jspdfLoading;
+  jspdfLoading = new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+    s.onload = () => res(window.jspdf);
+    s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  return jspdfLoading;
+}
+
+async function exportPDF(bon) {
+  try {
+    const { jsPDF } = await loadJsPDF();
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const lineH = 6;
+    let y = 20;
+    // Header
+    doc.setFillColor(20, 33, 49);
+    doc.rect(0, 0, 210, 12, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("AVEHO — Bon de Réception", 14, 8);
+    doc.setTextColor(0, 0, 0);
+    // Titre
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text(bon.numero || "BR-—", 14, y); y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Date : ${bon.receptionne_le ? new Date(bon.receptionne_le).toLocaleString("fr-FR") : "—"}`, 14, y); y += lineH;
+    doc.text(`Source : ${bon.type_source}  ${bon.source_id?.substring(0, 12)}…`, 14, y); y += lineH;
+    if (bon.signataire_email) { doc.text(`Signataire : ${bon.signataire_email}`, 14, y); y += lineH; }
+    y += 3;
+    // Statut
+    const col = bon.statut === "valide" ? [90, 160, 90] : bon.statut === "litige" ? [239, 159, 39] : [227, 93, 91];
+    doc.setFillColor(...col);
+    doc.setTextColor(255, 255, 255);
+    doc.roundedRect(14, y, 60, 8, 2, 2, "F");
+    doc.setFont("helvetica", "bold");
+    doc.text(bon.conforme ? "✓ CONFORME" : "⚠ LITIGE", 18, y + 5.5);
+    doc.setTextColor(0, 0, 0);
+    y += 14;
+    // Anomalies
+    if (bon.anomalies) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Anomalies :", 14, y); y += lineH;
+      doc.setFont("helvetica", "normal");
+      const lines = doc.splitTextToSize(bon.anomalies, 180);
+      lines.forEach(l => { doc.text(l, 14, y); y += lineH; });
+      y += 3;
+    }
+    // Commentaire
+    if (bon.commentaire) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Commentaire :", 14, y); y += lineH;
+      doc.setFont("helvetica", "normal");
+      const lines = doc.splitTextToSize(bon.commentaire, 180);
+      lines.forEach(l => { doc.text(l, 14, y); y += lineH; });
+      y += 3;
+    }
+    // Footer
+    doc.setFontSize(9);
+    doc.setTextColor(140, 152, 168);
+    doc.text(`Aveho Espace Collectivité — généré le ${new Date().toLocaleString("fr-FR")}`, 14, 285);
+    doc.save(`${bon.numero || "bon-reception"}.pdf`);
+  } catch (e) {
+    alert("Erreur PDF : " + e.message);
+  }
+}
 
 export default function BonsReceptionPage() {
   const router = useRouter();
@@ -44,7 +121,7 @@ export default function BonsReceptionPage() {
       <TopBar cartCount={cart.count} auth={auth} />
       <div className="page-content" style={{ padding: "20px 24px" }}>
         <BackButton />
-        <PageHead icon="ti-receipt" title="Bons de réception" subtitle="Historique des livraisons validées" />
+        <PageHead icon="ti-receipt" title="Bons de réception" subtitle="Historique des livraisons validées · PDF exportable" />
 
         {tableMissing && (
           <Panel style={{ marginTop: 12, borderLeft: "4px solid #e35d5b", background: "rgba(227,93,91,.06)" }}>
@@ -70,7 +147,7 @@ export default function BonsReceptionPage() {
                     background: "#fff", border: "1px solid #e3e9ee",
                     borderLeft: `4px solid ${statCol}`,
                     borderRadius: 8, padding: 12,
-                    display: "grid", gridTemplateColumns: "auto 120px 1fr 110px 100px", gap: 10, alignItems: "center",
+                    display: "grid", gridTemplateColumns: "auto 120px 1fr 110px 100px 80px", gap: 10, alignItems: "center",
                   }}>
                     <i className="ti ti-receipt" style={{ color: statCol, fontSize: 22 }} />
                     <div style={{ fontFamily: "Consolas,monospace", fontWeight: 700, fontSize: 12 }}>{b.numero}</div>
@@ -86,6 +163,13 @@ export default function BonsReceptionPage() {
                     <span style={{ padding: "3px 8px", borderRadius: 6, background: `${statCol}1A`, color: statCol, border: `1px solid ${statCol}40`, fontSize: 11, fontWeight: 700, textAlign: "center" }}>
                       {b.conforme ? "✓ Conforme" : "⚠ Litige"}
                     </span>
+                    <button onClick={() => exportPDF(b)} title="Exporter PDF" style={{
+                      background: "transparent", color: "#185FA5", border: "1px solid #185FA5",
+                      borderRadius: 6, padding: "5px 10px",
+                      fontFamily: "inherit", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                    }}>
+                      <i className="ti ti-file-type-pdf" /> PDF
+                    </button>
                   </div>
                 );
               })}
