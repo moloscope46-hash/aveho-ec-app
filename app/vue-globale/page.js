@@ -34,11 +34,12 @@ export default function VueGlobale() {
             .select("id,nom,type,ville,cp,adresse,telephone,email,siret,finess,capacite,latitude,longitude,actif,est_partenaire,est_had,had_id,logo_url")
             .eq("structure_id", auth.structureId)
             .order("nom"),
+          // 0.62.100 : enlevé .eq("archive", false) qui plantait en 400
+          // (colonne archive peut ne pas exister sur le schéma)
           supabase
             .from("etablissements_partenaires")
-            .select("id,nom,type,ville,cp,adresse,telephone,email,siret,finess,actif,archive,link_to_etablissement_id,type_relation,contact_nom,contact_email,contact_telephone")
+            .select("id,nom,type,ville,cp,adresse,telephone,email,siret,finess,actif,link_to_etablissement_id,type_relation,contact_nom,contact_email,contact_telephone")
             .eq("structure_id", auth.structureId)
-            .eq("archive", false)
             .order("nom"),
           supabase.from("patients").select("id,etablissement_id"),
           supabase.from("materiels").select("id,etablissement_id,etat"),

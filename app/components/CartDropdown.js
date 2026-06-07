@@ -74,7 +74,7 @@ export default function CartDropdown({ open, onClose, anchorRef }) {
   if (!open) return null;
 
   return (
-    <div ref={dropdownRef} style={{
+    <div ref={dropdownRef} className="tb-dropdown" style={{
       position: "absolute", top: "calc(100% + 8px)", right: 0,
       width: 380, maxHeight: "calc(100vh - 80px)",
       background: "#fff", color: "#142131",

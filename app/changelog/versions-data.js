@@ -240,6 +240,36 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.101",
+    "kind": "fix",
+    "titre": "📱 BOTTOM-SHEET pour TOUS les dropdowns TopBar mobile (CartDropdown panier, NotifBell preview, etc) — classe tb-dropdown ajoutée + CSS force fixed bottom 0",
+    "chantiers": [
+      { "code": "AI", "txt": "📱 **Bottom-sheet dropdowns TopBar mobile** : règle CSS qui cible `.tb-dropdown` en @media max-width 768px et force position fixed bottom 0 + width 100% + max-height 80vh + border-radius 20 20 0 0 + box-shadow up + animation av-bottom-sheet-up 280ms cubic-bezier élastique + z-index 10001. **Handle drag iOS-style** : pseudo ::before barre blanche/35 40x4 centrée en haut. **Backdrop sombre** : body:has(.tb-dropdown)::after = position fixed inset 0 + rgba navy/55 + blur 6 + z-index 10000. Plus aucun popup TopBar caché hors écran" },
+      { "code": "AI", "txt": "🏷 **Classe tb-dropdown ajoutée** : (1) **CartDropdown** : ajout className=tb-dropdown sur la div racine du panier (qui était en position absolute top calc(100% + 8px) right 0). (2) **NotifBell** : ajout className=tb-dropdown sur la preview panel des notifications (même pattern). Sur desktop : la classe n a aucun effet visuel (les styles inline gardent position absolute relatif au bouton). **Sur mobile <768px** : le CSS force le bottom-sheet" },
+      { "code": "INFO", "txt": "🛠 **Autres dropdowns TopBar à classer tb-dropdown** : si Cédric voit encore d autres popups qui s ouvrent au mauvais endroit, ajouter className=tb-dropdown sur leur conteneur principal. Composants candidats : MobileContextPicker, BatimentServiceSwitcher (dropdowns ouverts depuis la TopBar)" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.102+** : (a) **ImageUploader patient**. (b) **Vrai favicon Aveho**. (c) **Buckets Supabase Storage** manuels. (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Refacto /materiels** custom. (h) **Workflow commande fournisseur** PDF+Resend. (i) **Footers PDF BL/devis**. (j) Si autres dropdowns TopBar dépassent : ajouter className=tb-dropdown dessus"
+      }
+    ],
+    "themes": ["fix", "mobile", "dropdown", "topbar"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.101.html"
+  },
+  {
+    "v": "0.62.100",
+    "kind": "fix",
+    "titre": "🔥 Désactivation DÉFINITIVE bloc membres_magasin (table inexistante = spam 404) + Fix 400 etablissements_partenaires sur vue-globale (retrait .eq archive=false sur colonne absente)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔥 **Désactivation TOTALE bloc membres_magasin dans useAuth** : malgré sessionStorage flag en 0.62.99, le 404 spammait toujours car la table n existe pas sur le schéma Cédric. **0.62.100** : bloc entièrement commenté avec marker `/* 0.62.100 : DÉSACTIVÉ */`. **À réactiver** quand la table sera créée. Le fallback `etabs[0]` continue de fonctionner normalement pour sélectionner un étab par défaut. Plus AUCUN 404 sur membres_magasin dans la console" },
+      { "code": "FIX", "txt": "🔧 **Fix 400 etablissements_partenaires sur /vue-globale** : la requête `.eq(archive, false)` plantait en 400 — la colonne `archive` n existe pas sur la table etablissements_partenaires sur ce schéma. **Fix** : retiré le `.eq(archive, false)` ET la colonne archive du SELECT. Les partenaires apparaissent tous (l app n a pas de filtrage archive ailleurs sur cette page). Plus aucun 400 sur la requête etablissements_partenaires" },
+      { "code": "INFO", "txt": "⚠️ **IMPORTANT : il faut PUSH** : les versions 0.62.97/98/99 contenaient déjà des fixes pour ces problèmes mais les erreurs persistent car le code n a pas été push sur Vercel. L URL fautive contenait encore la jointure `magasins(id,etablissement_id,nom)` (split en 0.62.98). À chaque bump, faire impérativement : (1) `cd C:/aveho-ec-app`. (2) Décompresser le nouveau zip par-dessus l ancien (en répondant Oui à tout). (3) `npm install --legacy-peer-deps`. (4) `npm run build`. (5) `git add -A && git commit -m X.Y.Z && git push origin main`. (6) Attendre 1-2 min le déploiement Vercel. (7) Hard refresh navigateur Ctrl+Shift+R" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.101+** : (a) **ImageUploader patient** /patient/[id]. (b) **Vrai favicon Aveho** logo. (c) **Buckets Supabase Storage** manuels (4 buckets). (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Refacto /materiels** custom. (h) **Workflow commande fournisseur** PDF+Resend. (i) **Footers PDF BL/devis**. (j) **Audit /parametres** si plante encore (envoyer screenshot console)"
+      }
+    ],
+    "themes": ["fix", "critical", "404", "400"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.100.html"
+  },
+  {
     "v": "0.62.99",
     "kind": "fix",
     "titre": "🔧 Fix 404 membres_magasin (table absente → skip silencieux session) + 🔔 Fix realtime postgres_changes after subscribe (cleanup robuste + nom canal unique) + 🖼 favicon.ico placeholder",

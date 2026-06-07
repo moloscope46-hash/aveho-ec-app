@@ -186,6 +186,7 @@ export default function NotifBell({ structureId, userId }) {
       {/* 0.58.27 : Preview hover des 3 dernières notifs */}
       {previewOpen && !open && (
         <div
+          className="tb-dropdown"
           onMouseEnter={handlePreviewEnter}
           onMouseLeave={handlePreviewLeave}
           style={{
