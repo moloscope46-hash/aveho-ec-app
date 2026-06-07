@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.37",
+    "kind": "feat",
+    "titre": "🏥 Page liste établissements (tuiles + liste) · click → fiche dédiée · menu Mon espace mis à jour",
+    "chantiers": [
+      { "code": "AI", "txt": "🏥 **Page `/etablissements` enrichie** avec **double vue** : (1) **Vue Tuiles** (par défaut configurable) : grille `auto-fill 280px` avec cards 4 px border top couleur du type, photo ou gradient si pas de photo, hover translateY -3px + box-shadow couleur. Affichage : nom + type (pill colorée) + badge Partenaire si applicable + ville/CP + FINESS + capacité lits + bouton 'Ouvrir la fiche'. (2) **Vue Liste** : table existante conservée, **enrichie d'un click sur la row** (cursor pointer, hover background) qui ouvre la fiche. (3) **Toggle vue** en haut à droite, persisté dans `localStorage.etabs_view`" },
+      { "code": "AI", "txt": "🔗 **Click sur établissement → ouvre `/etablissement/fiche?id={uuid}`** : la fiche établissement existante a été refactorisée pour accepter un query param `?id=`. (1) Wrapping dans `<Suspense>` (requis par Next.js pour `useSearchParams`). (2) Composant interne `FicheEtablissementInner` qui lit `searchParams.get('id')`. (3) Logique de chargement : si `?id=xxx` présent → charge CET étab spécifique, sinon → fallback `auth.etabId` (étab du user connecté). (4) Permet de naviguer entre les étabs d'un groupement sans changer de contexte" },
+      { "code": "UX", "txt": "🏠 **Menu Mon espace mis à jour** : ancien lien 'Fiche établissement' (`/etablissement/fiche`) remplacé par **'Établissements'** (`/etablissements`) qui pointe vers la nouvelle page liste avec tuiles + filtres. C'est le bon point d'entrée pour parcourir les étabs du groupement. La fiche reste accessible via click sur un étab (avec `?id=` automatique)" },
+      { "code": "INFO", "txt": "📅 **Prochain lot 0.62.38 : Marketplace + Notifs push** — Auto-géoloc des offres marketplace via API data.gouv.fr/api-adresse, géoloc auto des offres sur carte Leaflet, chat temps réel via Supabase Realtime channels, edge function `send-notifications-queue` pour push notifications réelles (Resend + web-push), push à chaque étape tournée terminée" }
+    ],
+    "themes": ["feat", "etabs", "liste", "tuiles", "menu"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.37.html"
+  },
+  {
     "v": "0.62.36",
     "kind": "feat",
     "titre": "🚚 Lot Tournées GPS COMPLET : OSRM routing + tracking chauffeur temps réel + polyline historique + PDF feuille route + signature étape canvas",

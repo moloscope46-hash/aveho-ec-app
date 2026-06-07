@@ -40,7 +40,7 @@ const MENU = [
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
     // 0.62.35 : Fiches groupement + étab en accès rapide
     { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
-    { p: "/etablissement/fiche", ic: "ti-building-hospital", lbl: "Fiche établissement", col: "#1c5454" },
+    { p: "/etablissements", ic: "ti-building-hospital", lbl: "Établissements", col: "#1c5454" },
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/magasin/catalogue", ic: "ti-shopping-bag", lbl: "Catalogue magasin", col: "#5a8f8f" },
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },

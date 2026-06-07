@@ -61,6 +61,17 @@ function EtablissementsListPageInner() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
   const [sortBy, setSortBy] = useState("nom");
+  // 0.62.37 : toggle vue tuiles/liste (persisté dans localStorage)
+  const [view, setView] = useState("liste");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("etabs_view");
+    if (saved === "tuiles" || saved === "liste") setView(saved);
+  }, []);
+  function switchView(v) {
+    setView(v);
+    if (typeof window !== "undefined") localStorage.setItem("etabs_view", v);
+  }
   const [sortDir, setSortDir] = useState("asc");
   const [modal, setModal] = useState(null);
   const [pickedFiness, setPickedFiness] = useState(null);
@@ -407,6 +418,27 @@ function EtablissementsListPageInner() {
           </div>
         </Panel>
 
+        {/* 0.62.37 : Toggle vue tuiles / liste */}
+        <Panel style={{ marginTop: 10, padding: "8px 12px", display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#5a6878", letterSpacing: 1 }}>Affichage</span>
+          <div style={{ display: "flex", border: "1px solid #cfd8e0", borderRadius: 6, overflow: "hidden" }}>
+            <button onClick={() => switchView("tuiles")} title="Vue tuiles" style={{
+              padding: "6px 14px",
+              background: view === "tuiles" ? "#185FA5" : "#fff",
+              color: view === "tuiles" ? "#fff" : "#5a6878",
+              border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}><i className="ti ti-layout-grid" /> Tuiles</button>
+            <button onClick={() => switchView("liste")} title="Vue liste" style={{
+              padding: "6px 14px",
+              background: view === "liste" ? "#185FA5" : "#fff",
+              color: view === "liste" ? "#fff" : "#5a6878",
+              border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}><i className="ti ti-list" /> Liste</button>
+          </div>
+        </Panel>
+
         {/* Liste */}
         {loading ? (
           <Panel><StateMsg>Chargement…</StateMsg></Panel>
@@ -418,6 +450,52 @@ function EtablissementsListPageInner() {
                 : "Aucun résultat pour ces filtres."}
             </StateMsg>
           </Panel>
+        ) : view === "tuiles" ? (
+          // 0.62.37 : Vue TUILES
+          <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+            {filtered.map(e => {
+              const couleur = TYPE_COULEURS[e.type] || "#185FA5";
+              return (
+                <div key={e.id} onClick={() => router.push(`/etablissement/fiche?id=${e.id}`)} style={{
+                  background: "#fff", border: `1px solid ${couleur}30`,
+                  borderTop: `4px solid ${couleur}`,
+                  borderRadius: 12, overflow: "hidden", cursor: "pointer",
+                  transition: "transform 150ms, box-shadow 150ms",
+                }}
+                onMouseEnter={(ev) => { ev.currentTarget.style.transform = "translateY(-3px)"; ev.currentTarget.style.boxShadow = `0 8px 16px ${couleur}25`; }}
+                onMouseLeave={(ev) => { ev.currentTarget.style.transform = "translateY(0)"; ev.currentTarget.style.boxShadow = "none"; }}>
+                  {e.photo_url ? (
+                    <div style={{ width: "100%", height: 110, background: `url(${e.photo_url}) center/cover`, backgroundColor: `${couleur}10` }} />
+                  ) : (
+                    <div style={{ width: "100%", height: 110, background: `linear-gradient(135deg, ${couleur}15, ${couleur}30)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 48, color: couleur }}>
+                      <i className="ti ti-building-hospital" />
+                    </div>
+                  )}
+                  <div style={{ padding: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: "#142131", lineHeight: 1.2 }}>{e.nom}</div>
+                        {e.est_partenaire && <span style={{ display: "inline-block", marginTop: 4, padding: "1px 8px", background: "#e6f7f7", color: "#1c5454", borderRadius: 10, fontSize: 10, fontWeight: 700 }}><i className="ti ti-route" /> Partenaire</span>}
+                      </div>
+                      <span style={{ background: `${couleur}1A`, color: couleur, padding: "2px 8px", borderRadius: 4, fontSize: 10.5, fontWeight: 700, whiteSpace: "nowrap" }}>{e.type || "—"}</span>
+                    </div>
+                    {e.ville && <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 6 }}>📍 {e.code_postal ? `${e.code_postal} ` : ""}{e.ville}</div>}
+                    {e.finess && <div style={{ fontSize: 10.5, color: "#8a98a8", fontFamily: "Consolas,monospace", marginTop: 2 }}>FINESS : {e.finess}</div>}
+                    {e.capacite && <div style={{ fontSize: 11, color: "#5a6878", marginTop: 4 }}>🛏 <b>{e.capacite}</b> lits</div>}
+                    <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
+                      <button onClick={(ev) => { ev.stopPropagation(); router.push(`/etablissement/fiche?id=${e.id}`); }} style={{
+                        flex: 1, background: couleur, color: "#fff", border: "none",
+                        borderRadius: 6, padding: "6px 10px",
+                        fontFamily: "inherit", fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                      }}>
+                        <i className="ti ti-arrow-right" /> Ouvrir la fiche
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <Panel style={{ padding: 0, overflow: "hidden" }}>
             <div className="panel-table" style={{ overflowX: "auto" }}>
@@ -440,6 +518,7 @@ function EtablissementsListPageInner() {
                     return (
                       <tr 
                         key={e.id} 
+                        onClick={() => router.push(`/etablissement/fiche?id=${e.id}`)}
                         style={{ 
                           borderBottom: idx < filtered.length - 1 ? "1px solid #f0f0f0" : "none",
                           cursor: "pointer",
@@ -538,9 +617,9 @@ function EtablissementsListPageInner() {
                                 <i className="ti ti-navigation" />
                               </button>
                             )}
-                            {/* Plugin Fiche */}
+                            {/* Plugin Fiche - 0.62.37 : passe l'id pour ouvrir CET établissement */}
                             <button
-                              onClick={(ev) => { ev.stopPropagation(); router.push("/etablissement/fiche"); }}
+                              onClick={(ev) => { ev.stopPropagation(); router.push(`/etablissement/fiche?id=${e.id}`); }}
                               style={{
                                 background: "transparent",
                                 border: "1px solid #e3e9ee",

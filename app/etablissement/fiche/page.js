@@ -3,7 +3,8 @@
 //  /etablissement/fiche — Édition fiche établissement
 //  Alpha 0.54.0 (AX) — Avec autocomplete adresse + géoloc auto
 // =============================================================
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
@@ -23,9 +24,20 @@ const TYPES_ETAB = [
 ];
 
 export default function FicheEtablissementPage() {
+  return (
+    <Suspense fallback={null}>
+      <FicheEtablissementInner />
+    </Suspense>
+  );
+}
+
+function FicheEtablissementInner() {
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
+  const searchParams = useSearchParams();
+  // 0.62.37 : si ?id=xxx → ouvre CET établissement, sinon → étab du user
+  const overrideEtabId = searchParams?.get("id");
   const [etab, setEtab] = useState(null);
   const [form, setForm] = useState({});
   const [loading, setLoading] = useState(true);
@@ -37,18 +49,19 @@ export default function FicheEtablissementPage() {
   const isAdmin = auth.role?.nom === "Administrateur" || (auth.can && auth.can("gerer_roles"));
 
   async function load() {
-    if (!auth.etabId) { setLoading(false); return; }
+    const etabId = overrideEtabId || auth.etabId;
+    if (!etabId) { setLoading(false); return; }
     const { data } = await supabase
       .from("etablissements")
       .select("*")
-      .eq("id", auth.etabId)
+      .eq("id", etabId)
       .maybeSingle();
     setEtab(data);
     setForm(data || {});
     setLoading(false);
   }
 
-  useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.etabId]);
+  useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.etabId, overrideEtabId]);
 
   function handleAddressSelect(addr) {
     setForm({
