@@ -11,6 +11,8 @@ import TopBar from "../../../../TopBar";
 import { useCart } from "../../../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../../../ui";
 import BackButton from "../../../../components/BackButton";
+import { cacheTournee, getCachedTournee, smartWrite } from "../../../../../lib/offlineSync";  /* 0.62.79 */
+import { isOnline } from "../../../../../lib/offlineQueue";  /* 0.62.79 */
 
 let leafletLoading = null;
 function loadLeaflet() {
@@ -90,6 +92,18 @@ export default function ChauffeurTrackingPage({ params }) {
   async function reload() {
     setLoading(true);
     try {
+      // 0.62.79 : Si offline, charger depuis le cache local IndexedDB
+      if (!isOnline()) {
+        const cached = await getCachedTournee(p.id);
+        if (cached) {
+          setTournee(cached.tournee || null);
+          setEtapes(cached.etapes || []);
+          setGpsTrack(cached.gpsTrack || []);
+          setLoading(false);
+          return;
+        }
+      }
+
       const [t, e, g] = await Promise.all([
         supabase.from("tournees").select("*").eq("id", p.id).maybeSingle(),
         supabase.from("tournees_etapes").select("*").eq("tournee_id", p.id).order("ordre"),
@@ -98,6 +112,18 @@ export default function ChauffeurTrackingPage({ params }) {
       setTournee(t.data || null);
       setEtapes(e.data || []);
       setGpsTrack(g.data || []);
+
+      // 0.62.79 : Cacher en local pour mode offline
+      if (t.data) {
+        try {
+          await cacheTournee({
+            id: p.id,
+            tournee: t.data,
+            etapes: e.data || [],
+            gpsTrack: g.data || [],
+          });
+        } catch (cacheErr) { console.warn("[chauffeur] cache fail:", cacheErr); }
+      }
     } catch (e) { console.error(e); }
     setLoading(false);
   }
