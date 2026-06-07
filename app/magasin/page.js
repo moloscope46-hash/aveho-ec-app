@@ -205,15 +205,18 @@ export default function MagasinPage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {demandes.slice(0, 50).map(d => (
-                  <div key={d.id} onClick={() => router.push(`/demandes-internes/${d.id}`)} style={{
+                  <div key={d.id} onClick={() => router.push(d.source_table === "intervention" ? `/interventions?id=${d.id}` : `/demandes-internes/${d.id}`)} style={{
                     background: "#fff", border: "1px solid #e3e9ee",
                     borderLeft: `3px solid ${d.statut === "validee" ? "#5aa05a" : d.statut === "refusee" ? "#e35d5b" : "#EF9F27"}`,
                     borderRadius: 8, padding: 10, cursor: "pointer",
                     display: "flex", alignItems: "center", gap: 12,
                   }}>
-                    <i className="ti ti-truck-loading" style={{ color: "#EF9F27", fontSize: 20 }} />
+                    <i className={`ti ${d.source_table === "intervention" ? "ti-tool" : "ti-truck-loading"}`} style={{ color: d.source_table === "intervention" ? "#7a6fb0" : "#EF9F27", fontSize: 20 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>{d.numero || `DI-${d.id?.substring(0, 8)}`}</div>
+                      <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>
+                        {d.numero || `DI-${d.id?.substring(0, 8)}`}
+                        {d.source_table === "intervention" && <span style={{ marginLeft: 6, padding: "1px 6px", background: "rgba(122,111,176,.15)", color: "#7a6fb0", borderRadius: 3, fontSize: 9, fontWeight: 700, textTransform: "uppercase" }}>Intervention</span>}
+                      </div>
                       <div style={{ fontSize: 11, color: "#8a98a8" }}>
                         {new Date(d.created_at).toLocaleString("fr-FR")} · {d.nb_lignes || 0} lignes · {d.qte_totale || 0} unités
                       </div>

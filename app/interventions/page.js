@@ -173,6 +173,40 @@ function InterventionsInner() {
     if (!form.description?.trim()) { toast.error("Description obligatoire"); return; }
     setBusy(true);
     try {
+      // 0.62.1 : Si le matériel est rattaché à un magasin, on récupère son magasin_id
+      // pour que le magasin reçoive automatiquement la DI dans son espace
+      let magasinIdDetecte = null;
+      let magasinNomDetecte = null;
+      if (form.materiel_id) {
+        try {
+          // 1. Récupère article_id du matériel
+          const mat = await supabase.from("materiels").select("article_id, libelle").eq("id", form.materiel_id).maybeSingle();
+          const articleId = mat.data?.article_id;
+          if (articleId) {
+            // 2a. Cherche rattachement étab → magasin pour cet article
+            const rat = await supabase.from("articles_rattachements")
+              .select("article_magasin_id, magasin_id")
+              .eq("article_etablissement_id", articleId)
+              .eq("etablissement_id", auth.etabId)
+              .maybeSingle();
+            if (rat.data?.magasin_id) {
+              magasinIdDetecte = rat.data.magasin_id;
+            } else {
+              // 2b. Fallback : article lui-même est catalogue magasin (magasin_id direct)
+              const art = await supabase.from("articles").select("magasin_id, est_catalogue_magasin").eq("id", articleId).maybeSingle();
+              if (art.data?.magasin_id && art.data?.est_catalogue_magasin) {
+                magasinIdDetecte = art.data.magasin_id;
+              }
+            }
+            // 3. Récupère le nom du magasin pour le toast
+            if (magasinIdDetecte) {
+              const m = await supabase.from("magasins_fournisseurs").select("nom").eq("id", magasinIdDetecte).maybeSingle();
+              magasinNomDetecte = m.data?.nom || null;
+            }
+          }
+        } catch (e) { console.warn("[détection magasin DI]", e); }
+      }
+
       const payload = {
         structure_id: auth.structureId,
         etablissement_id: auth.etabId || null,
@@ -189,17 +223,45 @@ function InterventionsInner() {
         cree_par_scan: !!form.cree_par_scan,
         resolution: form.resolution || null,
         duree_estimee_min: form.duree_estimee_min ? parseInt(form.duree_estimee_min, 10) : null,
+        // 0.62.1 : magasin destinataire détecté automatiquement
+        magasin_id: magasinIdDetecte,
       };
       const userId = auth.user?.id;
+      let interventionId = modal?.id;
       if (modal?.id) {
         const { error } = await safeUpdate(supabase, "interventions", payload, { id: modal.id }, { userId });
         if (error) throw error;
         toast.success(`${form.numero} mis à jour`);
       } else {
         payload.created_by = auth.user?.id;
+        const newId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : null;
+        if (newId) payload.id = newId;
         const { error } = await safeInsert(supabase, "interventions", payload, { userId });
         if (error) throw error;
-        toast.success(`DI ${form.numero} créée`);
+        interventionId = newId;
+        // 0.62.1 : Notification au magasin si détecté
+        if (magasinIdDetecte && interventionId) {
+          try {
+            // Récupère les membres du magasin pour les notifier
+            const membres = await supabase.from("membres_structure")
+              .select("user_id")
+              .eq("magasin_fournisseur_id", magasinIdDetecte);
+            const notifs = (membres.data || []).map(m => ({
+              user_id: m.user_id,
+              structure_id: auth.structureId,
+              type: "intervention_recue",
+              titre: `🔧 Nouvelle DI reçue : ${form.type}`,
+              message: `${auth.structureNom || "Un établissement"} a créé une DI sur un matériel rattaché à votre magasin. ${form.description.slice(0, 100)}`,
+              url: `/magasin/interventions/${interventionId}`,
+              lue: false,
+            }));
+            if (notifs.length > 0) {
+              await supabase.from("notifications").insert(notifs);
+            }
+          } catch (e) { console.warn("[notif magasin DI]", e); }
+        }
+        const suffixMagasin = magasinNomDetecte ? ` → envoyée au magasin ${magasinNomDetecte}` : "";
+        toast.success(`DI ${form.numero} créée${suffixMagasin}`);
       }
       setModal(null);
       await loadAll();

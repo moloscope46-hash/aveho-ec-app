@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.1",
+    "kind": "feat",
+    "titre": "🔧 Workflow EC→Magasin pour les DI : intervention sur matériel rattaché magasin remonte auto dans /magasin?tab=di",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.1-vue-magasin-di-unifiee.sql`** : (1) Ajoute `magasin_id` sur la table `interventions` + index partiel. (2) Étend la vue `v_magasin_di` existante avec UNION ALL pour inclure aussi les **interventions** (table `interventions`) qui ont un magasin_id rempli. Plus de nouvelle table, plus de nouvelle page : on enrichit l'existant" },
+      { "code": "AI", "txt": "🔧 **`app/interventions/page.js` save()** : quand un EC crée une intervention sur un matériel, le code détecte automatiquement le magasin destinataire via la chaîne `materiels.article_id` → `articles_rattachements.article_etablissement_id` → `article_magasin_id` → magasin. Fallback : `articles.magasin_id` direct si l'article est déjà au catalogue magasin. Stocke `magasin_id` sur l'intervention" },
+      { "code": "AI", "txt": "📲 **Notification automatique au magasin** : une fois l'intervention créée, INSERT en masse dans `notifications` pour tous les `membres_structure` du magasin destinataire (filtrés sur `magasin_fournisseur_id`). Type = 'intervention_recue', lien direct vers la DI. Le magasin voit la cloche TopBar s'allumer en temps réel" },
+      { "code": "AI", "txt": "🏷 **Toast EC enrichi** : à la création, le message indique le magasin destinataire détecté (`DI INT-1234 créée → envoyée au magasin Mon-Magasin`). Si pas de magasin détecté, message standard. Pas de comportement bloquant" },
+      { "code": "AI", "txt": "👀 **Tab DI magasin enrichi** : `/magasin?tab=di` affiche maintenant les 2 sources avec icône distincte (🔧 violet pour interventions, 🚚 orange pour demandes_internes) + badge 'INTERVENTION' violet. Click sur intervention → redirige vers `/interventions?id=X`. Click sur demande_interne → `/demandes-internes/X` (comportement existant)" },
+      { "code": "INFO", "txt": "🎯 **Workflow complet** : EC ouvre `/interventions` → 'Nouvelle DI' → choisit matériel rattaché à un magasin → 'Enregistrer' → toast `→ envoyée au magasin XXX` → magasin voit cloche notification → ouvre `/magasin?tab=di` → voit l'intervention dans sa liste avec badge violet" }
+    ],
+    "themes": ["feat", "workflow", "interventions", "magasin"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.0",
     "kind": "feat",
     "titre": "💬 Chat Realtime marketplace + 🗺 Géoloc marketplace + 📊 Analytics tournées + 📱 Capacitor wrapping + ⚡ Migration EC mercuriale",
