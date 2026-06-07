@@ -611,7 +611,7 @@ export default function Patients() {
                             aria-label="Sélectionner tous les patients affichés"
                           />
                         </th>
-                        <th>Patient</th><th>Emplacement</th><th>Entrée</th><th></th>
+                        <th>Patient</th><th>Emplacement</th><th>DDN</th><th>Pathologie</th><th>DI / Achats</th><th>Entrée</th><th></th>
                       </tr></thead>
                       <tbody>
                         {filtered.map((r) => {
@@ -734,6 +734,47 @@ export default function Patients() {
                         <td style={{ fontSize: 13 }}>
                           {lit ? <span><i className="ti ti-bed" style={{ color: "#5aa05a" }} /> {lit.chambrePath} — Lit {lit.nom}</span>
                                : <span style={{ color: "#8a98a8" }}><i className="ti ti-alert-circle" /> Sans chambre</span>}
+                        </td>
+                        {/* 0.62.38 : DDN + âge */}
+                        <td style={{ fontSize: 12.5, whiteSpace: "nowrap" }}>
+                          {r.date_naissance ? (
+                            <>
+                              <div>{fmtDate(r.date_naissance)}</div>
+                              <div style={{ fontSize: 10.5, color: "#8a98a8" }}>
+                                {(() => {
+                                  const d = new Date(r.date_naissance);
+                                  const age = Math.floor((Date.now() - d.getTime()) / (365.25 * 24 * 3600 * 1000));
+                                  return `${age} ans`;
+                                })()}
+                              </div>
+                            </>
+                          ) : <span style={{ color: "#cfd8e0" }}>—</span>}
+                        </td>
+                        {/* 0.62.38 : Pathologie principale */}
+                        <td style={{ fontSize: 12.5 }}>
+                          {r.pathologie_principale || r.pathologie ? (
+                            <span style={{ display: "inline-block", padding: "2px 8px", background: "rgba(122,111,176,.12)", color: "#7a6fb0", borderRadius: 4, fontSize: 11, fontWeight: 600 }}>
+                              <i className="ti ti-stethoscope" /> {r.pathologie_principale || r.pathologie}
+                            </span>
+                          ) : <span style={{ color: "#cfd8e0" }}>—</span>}
+                        </td>
+                        {/* 0.62.38 : compteurs DI + achats */}
+                        <td style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                          {(() => {
+                            const s = patStats[r.id] || {};
+                            const nbDI = s.nbDI || 0;
+                            const nbAchats = s.nbAchats || 0;
+                            return (
+                              <div style={{ display: "flex", gap: 6 }}>
+                                <span title="Demandes d'intervention" style={{ display: "inline-flex", alignItems: "center", gap: 2, padding: "1px 6px", background: nbDI > 0 ? "rgba(227,93,91,.12)" : "transparent", color: nbDI > 0 ? "#e35d5b" : "#cfd8e0", border: `1px solid ${nbDI > 0 ? "#e35d5b40" : "transparent"}`, borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
+                                  <i className="ti ti-tools" /> {nbDI}
+                                </span>
+                                <span title="Achats" style={{ display: "inline-flex", alignItems: "center", gap: 2, padding: "1px 6px", background: nbAchats > 0 ? "rgba(239,159,39,.12)" : "transparent", color: nbAchats > 0 ? "#EF9F27" : "#cfd8e0", border: `1px solid ${nbAchats > 0 ? "#EF9F2740" : "transparent"}`, borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
+                                  <i className="ti ti-shopping-bag" /> {nbAchats}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td>{fmtDate(r.date_entree)}</td>
                         <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>

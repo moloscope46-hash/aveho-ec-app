@@ -240,6 +240,34 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.39",
+    "kind": "fix",
+    "titre": "🚨 Fix SQL marketplace défensif (column magasin_id does not exist) + 🏠 Menu Groupement remis dans Groupement (pas Mon espace)",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.39-marketplace-FIX.sql`** : fix l'erreur `column 'magasin_id' does not exist` du SQL 0.62.38. Cause : la table `marketplace_offres` existait déjà d'une version antérieure (probablement 0.61.x) sans les nouvelles colonnes. `CREATE TABLE IF NOT EXISTS` ne fait rien si la table existe → les nouvelles colonnes ne sont pas ajoutées → CREATE INDEX plante car magasin_id n'existe pas. **Solution** : pattern ULTRA défensif avec `ALTER TABLE IF EXISTS ADD COLUMN IF NOT EXISTS` répété PUIS `CREATE TABLE IF NOT EXISTS` minimal PUIS re-ALTER de toutes les colonnes pour les 4 tables (marketplace_offres, marketplace_messages, notifications_queue, push_subscriptions). 100% idempotent, relançable plusieurs fois sans erreur" },
+      { "code": "UX", "txt": "🏠 **Menu : Établissements + Fiche groupement remis dans le menu Groupement** (pas Mon espace). Cédric : 'ETABLISSEMENT ET GROUPEMENT DOIVENT ETRE DANS LE MENU GROUPEMENT PAS MON ESPACE'. Mon espace nettoyé : Accueil, Vue globale, Mon profil, Articles, Catalogue magasin, Magasins Aveho, Promotions. Groupement enrichi : **Fiche groupement** (en tête) + **Établissements** (liste tuiles/liste) + Collaborateurs + Collab. fournisseurs + **Plan détaillé** (anciennement Établissements, page /etablissement avec arbre 5 niveaux) + Bâtiments/Services + Équipes + Carte + Patients. Le `/etablissement` (page arbre/plan) renommé en 'Plan détaillé' pour distinguer de la liste tuiles `/etablissements`" }
+    ],
+    "themes": ["fix-sql", "menu", "groupement"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.39.html",
+    "sqlFile": "migration-0.62.39-marketplace-FIX.sql"
+  },
+  {
+    "v": "0.62.38",
+    "kind": "feat",
+    "titre": "🛒 Lot Marketplace + Notifications push : SQL tables + helper géocodage data.gouv + colonnes patients enrichies (DDN/pathologie/DI/achats)",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.38-marketplace-notifs.sql`** : 4 tables + RLS. (1) `marketplace_offres` : id, numero, magasin_id, type_offre (reassort/depannage/cession/location), article_id, libelle, quantite, prix_ht, statut (disponible/reservee/vendue/expiree), description, **géoloc** (ville, code_postal, adresse, lat, lng, geoloc_source), workflow (created_by, reserved_by_magasin_id, reserved_at, closed_at, expires_at), photo_url. Index sur magasin/statut/type + index géoloc partiel WHERE latitude IS NOT NULL. (2) `marketplace_messages` : chat lié à une offre avec sender + FK CASCADE. (3) `notifications_queue` : titre, message, url_action, payload JSONB, channel (web_push/email/sms), status. (4) `push_subscriptions` : endpoint + p256dh + auth pour web-push. RLS strict par user_id" },
+      { "code": "AI", "txt": "📍 **Helper `lib/geocode.js`** pour géocodage via **API data.gouv.fr** (gratuite, illimitée, France). 3 fonctions : (1) `geocodeAddress(query, limit=5)` → cherche dans `api-adresse.data.gouv.fr/search/` et retourne `[{label, ville, code_postal, latitude, longitude, score, type}]`. (2) `reverseGeocode(lat, lng)` → inverse via `/reverse/?lon=X&lat=Y`. (3) `distanceKm(lat1, lng1, lat2, lng2)` → distance Haversine en km. Utilisable dans toutes les pages qui ont besoin de coordonnées (marketplace, étabs, dépôts, magasins, etc.). Co-existe avec `lib/geoloc.js` existant" },
+      { "code": "INFO", "txt": "📋 **Audit composants existants** (déjà actifs 0.61.x/0.62.x) : (1) Page `/magasin/marketplace` existe avec workflow complet de création d'offres + chat. (2) Composant `MarketplaceChat` (Realtime channel) existe. (3) Edge function `send-notifications-queue` existe avec Resend + web-push. (4) Edge function `send-push` séparée pour push direct. (5) Helper `lib/geoloc.js` avec `geocoderAdresse()` déjà utilisé par marketplace. Le lot 0.62.38 est **majoritairement déjà fait** — ce SQL formalise les tables manquantes et ajoute le helper geocode.js complémentaire" },
+      { "code": "UX", "txt": "🏥 **Page `/patients` : 3 colonnes ajoutées** dans le tableau. (1) **DDN** : date de naissance formatée + âge calculé en années (sous-ligne grise). (2) **Pathologie** : pill violette avec icône stéthoscope si `pathologie_principale` ou `pathologie` renseigné, '—' sinon. (3) **DI / Achats** : 2 badges colorés côte à côte → 🔧 rouge avec nb DI ouvertes, 🛍 ambre avec nb achats. Compteurs depuis `patStats[r.id]` déjà chargés. Si 0 → badge gris discret pas distractif" }
+    ],
+    "themes": ["feat", "marketplace", "push", "geoloc", "patients", "colonnes"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.38.html",
+    "sqlFile": "migration-0.62.38-marketplace-notifs.sql"
+  },
+  {
     "v": "0.62.37",
     "kind": "feat",
     "titre": "🏥 Page liste établissements (tuiles + liste) · click → fiche dédiée · menu Mon espace mis à jour",
