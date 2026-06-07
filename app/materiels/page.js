@@ -586,6 +586,7 @@ function MaterielsInner() {
           </>
         )}
       </Modal>
+      </div>{/* 0.62.107 : fermeture wrap manquante */}
     </div>
   );
 }

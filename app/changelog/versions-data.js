@@ -240,6 +240,54 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.107",
+    "kind": "feat",
+    "titre": "🚨 FIX BUILD VERCEL /materiels (div manquante ligne 589) + 📅 Agenda dans Mon Espace + 🎨 Logo Aveho SVG haute qualité animé pour PWA splash (splash-aveho.svg)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 **FIX BUILD VERCEL critique** : Unexpected eof sur app/materiels/page.js ligne 591. Cause : déséquilibre balises - 15 div ouvertes vs 14 fermées. Le wrapper du Crud display:viewMode===list ajouté en 0.62.103 avait sa div fermée correctement, mais cela faisait que la div className=wrap n était plus fermée. **Fix** : ajout d un </div> supplémentaire avant le </div> final pour fermer le wrap. Build Vercel passera maintenant" },
+      { "code": "AI", "txt": "📅 **Agenda dans Mon Espace** : ajout entrée { p:/planning, ic:ti-calendar-event, lbl:Agenda, col:#EF9F27 } dans la section Mon Espace de TopBar.js, juste après Vue Globale et avant Mon Profil. Couleur amber (orange) pour visibilité. Mène vers la page /planning existante" },
+      { "code": "AI", "txt": "🎨 **Logo Aveho SVG haute qualité animé (public/splash-aveho.svg)** : SVG 400x400 pour PWA splash screen avec : (1) **Gradient principal** navy→bleu→teal qui pulse en boucle 6s. (2) **Cercle pulsation breathing** radial gradient teal/navy 100→130px en 3s. (3) **Cercle rotatif extérieur** stroke dasharray 20-10 rotation 20s. (4) **Cercle rotatif intérieur** sens inverse 15s. (5) **Hexagone central** avec croix médicale blanche + filtre glow + rotation 40s. (6) **Texte AVEHO** Quicksand 48 bold letter-spacing 4 avec drop-shadow. (7) **Tagline ESPACE COLLECTIVITÉ** sous-texte. (8) **4 particules décoratives** colorées qui flottent avec opacités animées. (9) **Loader 3 points en bas** avec opacity stagger 0/0.2/0.4s. Effet premium tech-santé qui claque" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.108+** : (a) **Refacto custom /signalements** avec ViewModeToggle (mode tuiles avec couleurs urgence et badges template). (b) **Refacto custom /commandes** avec ViewModeToggle (mode tuiles avec statut et total). (c) **MobileActionsBar déploiement pages clés** : ajouter MobileActionsBar component sur /patients, /materiels, /magasin/articles, /interventions, /signalements, /commandes avec FAB (+) + actions contextuelles. (d) **Widget ChartCard /accueil drag&drop** : refonte dashboard /accueil avec widgets KPI ChartCard réordonnables + sauvegarde widgetOrder en localStorage. (e) **doc.addImage logo statistiques-rgpd** : intégrer le logo SVG dans les PDF RGPD via jsPDF.addImage. (f) **Intégrer addPdfFooter** sur les PDF existants BL/devis/commande. (g) **Workflow commande fournisseur** PDF+Resend"
+      }
+    ],
+    "themes": ["fix", "feature", "build", "agenda", "logo"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.107.html"
+  },
+  {
+    "v": "0.62.106",
+    "kind": "feat",
+    "titre": "🎆 GROSSE VERSION : Menu TV dans Mon Espace + Fix icône Familles articles (ti-categories → ti-category-2) + Favicon Aveho réel (32x32) + Footer PDF BL/devis commun (lib/pdfFooter) + photos materiels/patients déjà en place via ImageUploader 0.62.98/104",
+    "chantiers": [
+      { "code": "AI", "txt": "📺 **Menu TV dans Mon Espace** : ajout entrée { p:/presentation/interventions, ic:ti-device-tv, lbl:Mode TV, col:#142131 } dans la section Mon Espace de TopBar.js. Le mode TV affiche le bandeau 6 KPI (DI/SAV/Tournées/Maintenances/Patients/CMD) en plein écran pour affichage sur écran de salle de réunion ou hall d accueil" },
+      { "code": "FIX", "txt": "🎨 **Fix icône Familles articles** : remplacé `ti-categories` (n existe pas dans tabler-icons) par `ti-category-2` qui est l icône officielle. L item Familles articles a maintenant son icône violet correctement affichée dans le menu Stock" },
+      { "code": "FIX", "txt": "🖼 **Favicon Aveho réel** : remplacé le placeholder 18 bytes par favicon-32.png copié dans public/favicon.ico. Les navigateurs acceptent les PNG en .ico. Plus de favicon vide ni 404, l onglet navigateur affiche maintenant le vrai logo Aveho" },
+      { "code": "AI", "txt": "📄 **Footer PDF BL/devis commun (lib/pdfFooter.js)** : composant utilitaire centralisé pour ajouter un footer professionnel sur tous les PDF générés. **Functions** : (1) addPdfFooter(doc, options) : footer multi-page avec nom structure bold, adresse, SIRET, RCS, contact tel/email/web, pagination Page X/Y, type doc + numéro à droite, mentions légales sur dernière page. (2) addPdfFooterSimple : version sans mentions. (3) getStructureFooterInfo(supabase, structureId) : récupère auto les infos depuis la table structures. **Style** : ligne séparation navy, fontSize 7.5/7/6.5, couleurs navy/teal/gris" },
+      { "code": "INFO", "txt": "ℹ️ **Photos materiels et patients DÉJÀ EN PLACE** : ImageUploader matériel via icône cliquable header + modal bucket=materiels-photos (0.62.98), ImageUploader patient via avatar circulaire 72px + badge camera + modal bucket=patients-photos (0.62.104). Le mode tuiles /materiels affiche déjà la photo en bannière 120px via r.photo_url (0.62.103). Les buckets sont créés par SQL 0.62.105. Aucun travail supplémentaire nécessaire" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.107+** : (a) **MobileActionsBar** déploiement pages clés. (b) **Widget ChartCard /accueil** drag&drop. (c) **doc.addImage logo statistiques-rgpd**. (d) **Workflow commande fournisseur** PDF+Resend avec lib/pdfFooter. (e) **Intégrer addPdfFooter sur les PDF existants** : BL livraison, devis, bon de commande, facture (find all PDF generators). (f) Refacto custom /signalements et /commandes avec ViewModeToggle Tuiles si Cédric le souhaite. (g) Logo Aveho SVG haute qualité animé pour PWA splash"
+      }
+    ],
+    "themes": ["feature", "fix", "menu", "favicon", "pdf"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.106.html"
+  },
+  {
+    "v": "0.62.105",
+    "kind": "feat",
+    "titre": "🗄️ SQL CRÉATION BUCKETS Storage (articles/materiels/patients/fournisseurs) avec RLS policies + 🛠 Refacto /interventions Vue Tuiles custom (3ème mode après Liste/Kanban)",
+    "chantiers": [
+      { "code": "SQL", "txt": "🗄️ **buckets-storage-0.62.105.sql** : (1) **INSERT storage.buckets** des 4 buckets : articles-photos (public 5Mo jpeg/png/webp/gif), materiels-photos (public 5Mo), patients-photos (PRIVÉ 5Mo jpeg/png/webp), fournisseurs-logos (public 2Mo + svg). ON CONFLICT DO UPDATE pour idempotence. (2) **Policies RLS sur storage.objects** : 4 policies par bucket (SELECT public ou authenticated, INSERT/UPDATE/DELETE authenticated). DROP IF EXISTS avant CREATE pour idempotence. (3) **ALTER TABLE ADD COLUMN IF NOT EXISTS photo_url TEXT** sur patients/materiels/articles et logo_url sur fournisseurs (défensif EXCEPTION WHEN OTHERS NULL). (4) **VÉRIF finale** : SELECT buckets créés + policies en place" },
+      { "code": "AI", "txt": "🛠 **Refacto /interventions Vue Tuiles custom** : ajout 3ème bouton dans le toggle (Liste | Kanban | **Tuiles**) avec icône ti-grid-dots. Nouveau rendu conditionnel `view === tuiles` avec grille auto-fill minmax(280px, 1fr) gap 12. **Chaque tuile** data-3d data-accent=bleu : (a) **Header** : numéro DI Consolas + titre + badge statut color top-right gradient avec ombre statutColor/55 (statuts : Nouvelle=navy, En cours=amber, Planifiée=teal, Terminée=vert, Refusée=rouge, Clôturée=gris). (b) **Patient** icône user violet. (c) **Bâtiment + service** icône building bleu. (d) **Footer** : badge urgence (Urgent=rouge, Prioritaire=amber) + date created_at au format FR" },
+      { "code": "INFO", "txt": "💡 **Ordre d exécution** : (1) Lancer le SQL buckets-storage-0.62.105.sql dans Supabase SQL Editor. (2) Push 0.62.105. (3) Hard refresh. (4) Tester upload photos sur /materiel/[id] (icône cliquable bucket=materiels-photos) et /patient/[id] (avatar cliquable bucket=patients-photos)" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.106+** : (a) **Vrai favicon Aveho** logo .ico ou .png 32x32. (b) **MobileActionsBar** déploiement pages clés. (c) **Widget ChartCard /accueil** drag&drop. (d) **doc.addImage logo statistiques-rgpd**. (e) **Workflow commande fournisseur** PDF+Resend. (f) **Footers PDF BL/devis**. (g) Refacto custom /materiels avec photos via materiels.photo_url. (h) Refacto custom autres pages : /signalements, /commandes"
+      }
+    ],
+    "themes": ["feature", "sql", "storage", "interventions"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.105.html",
+    "sqlFile": "buckets-storage-0.62.105.sql"
+  },
+  {
     "v": "0.62.104",
     "kind": "feat",
     "titre": "📸 ImageUploader patient header (avatar circulaire 72px + badge camera) + 🔧 Fix 400 etablissements_partenaires (SELECT minimal défensif sans colonnes optionnelles)",

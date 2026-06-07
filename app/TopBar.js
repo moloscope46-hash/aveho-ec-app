@@ -39,7 +39,9 @@ const MENU = [
   { section: "Mon espace", sectionIcon: "ti-home", items: [
     { p: "/accueil", ic: "ti-home", lbl: "Accueil", col: "#7CC8C8" },
     { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
+    { p: "/planning", ic: "ti-calendar-event", lbl: "Agenda", col: "#EF9F27" },  /* 0.62.107 */
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
+    { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV", col: "#142131" },  /* 0.62.106 */
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/magasin/catalogue", ic: "ti-shopping-bag", lbl: "Catalogue magasin", col: "#5a8f8f" },
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
@@ -69,7 +71,7 @@ const MENU = [
     { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
     { p: "/magasins/nouveau", ic: "ti-building-warehouse", lbl: "Magasins fournisseurs", col: "#5a8f8f" },
     { p: "/garages", ic: "ti-parking", lbl: "Garages", col: "#EF9F27" },
-    { p: "/familles-articles", ic: "ti-categories", lbl: "Familles articles", col: "#7a6fb0" },
+    { p: "/familles-articles", ic: "ti-category-2", lbl: "Familles articles", col: "#7a6fb0" },
     { p: "/articles-min-stock-etape", ic: "ti-stack-pop", lbl: "Min stock par étape", col: "#e35d5b" },
   ] },
   // 0.58.53 : nouvelle section "Mes partenaires" avec sous-types + raccourcis vers les annuaires officiels

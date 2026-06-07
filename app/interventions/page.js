@@ -386,6 +386,10 @@ function InterventionsInner() {
               <button onClick={() => setView("kanban")} style={{ background: view === "kanban" ? "#142131" : "#fff", color: view === "kanban" ? "#fff" : "#5a6878", border: "none", padding: "7px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
                 <i className="ti ti-layout-kanban" /> Kanban
               </button>
+              {/* 0.62.105 : Vue Tuiles custom */}
+              <button onClick={() => setView("tuiles")} style={{ background: view === "tuiles" ? "#142131" : "#fff", color: view === "tuiles" ? "#fff" : "#5a6878", border: "none", padding: "7px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+                <i className="ti ti-grid-dots" /> Tuiles
+              </button>
             </div>
             <NeonButton variant="teal" icon="ti-plus" onClick={() => openNew()}>Nouvelle DI</NeonButton>
           </div>
@@ -404,6 +408,88 @@ function InterventionsInner() {
           />
         ) : view === "kanban" ? (
           <KanbanView filtered={filtered} onCardClick={openEdit} />
+        ) : view === "tuiles" ? (
+          /* 0.62.105 : Vue tuiles custom */
+          <div className="av-stagger" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 12,
+          }}>
+            {filtered.map(r => {
+              const statutColors = {
+                "Nouvelle": "#185FA5",
+                "En cours": "#EF9F27",
+                "Planifiée": "#7CC8C8",
+                "Terminée": "#5aa05a",
+                "Refusée": "#e35d5b",
+                "Clôturée": "#8a98a8",
+              };
+              const statColor = statutColors[r.statut] || "#5a6878";
+              const urgenceColor = r.urgence === "Urgent" ? "#e35d5b" : r.urgence === "Prioritaire" ? "#EF9F27" : "#8a98a8";
+              return (
+                <div key={r.id} data-3d="true" data-accent="bleu" onClick={() => openEdit(r)}
+                  style={{
+                    background: "#fff",
+                    borderRadius: 14,
+                    padding: 14,
+                    cursor: "pointer",
+                    border: `1px solid ${statColor}22`,
+                    borderLeft: `4px solid ${statColor}`,
+                  }}>
+                  {/* Header tuile */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: "#8a98a8", fontFamily: "Consolas, monospace", letterSpacing: 0.3 }}>
+                        {r.numero || "—"}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#142131", marginTop: 2 }}>
+                        {r.titre || "Demande"}
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: "3px 8px", borderRadius: 6,
+                      background: statColor, color: "#fff",
+                      fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                      boxShadow: `0 2px 6px ${statColor}55`,
+                      whiteSpace: "nowrap",
+                    }}>
+                      {r.statut || "?"}
+                    </span>
+                  </div>
+                  {/* Patient + lieu */}
+                  {(r.patient_nom || r.patient_prenom) && (
+                    <div style={{ fontSize: 12, color: "#5a6878", marginBottom: 4 }}>
+                      <i className="ti ti-user" style={{ color: "#7a6fb0", marginRight: 3 }} />
+                      {r.patient_nom || ""} {r.patient_prenom || ""}
+                    </div>
+                  )}
+                  {r.batiment_nom && (
+                    <div style={{ fontSize: 11.5, color: "#5a6878", marginBottom: 4 }}>
+                      <i className="ti ti-building" style={{ color: "#185FA5", marginRight: 3 }} />
+                      {r.batiment_nom}{r.service_nom ? ` · ${r.service_nom}` : ""}
+                    </div>
+                  )}
+                  {/* Footer : urgence + date */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f3f6" }}>
+                    {r.urgence && (
+                      <span style={{
+                        padding: "2px 7px", borderRadius: 4,
+                        background: `${urgenceColor}22`, color: urgenceColor,
+                        fontSize: 10, fontWeight: 700,
+                      }}>
+                        {r.urgence}
+                      </span>
+                    )}
+                    {r.created_at && (
+                      <span style={{ fontSize: 10.5, color: "#8a98a8" }}>
+                        <i className="ti ti-calendar" /> {new Date(r.created_at).toLocaleDateString("fr-FR")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <ListeView filtered={filtered} onClick={openEdit} onChangeStatut={changeStatut} />
         )}

@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <!-- Gradient principal navy → teal -->
+    <linearGradient id="splash-grad-main" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#142131">
+        <animate attributeName="stop-color" values="#142131;#185FA5;#142131" dur="6s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" stop-color="#185FA5">
+        <animate attributeName="stop-color" values="#185FA5;#7CC8C8;#185FA5" dur="6s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#7CC8C8">
+        <animate attributeName="stop-color" values="#7CC8C8;#185FA5;#7CC8C8" dur="6s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+
+    <!-- Gradient pulsation -->
+    <radialGradient id="splash-pulse-grad">
+      <stop offset="0%" stop-color="#7CC8C8" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#185FA5" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#142131" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Filtre glow -->
+    <filter id="splash-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="splash-shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#142131" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Fond avec gradient subtil -->
+  <rect width="400" height="400" fill="#fafbfc"/>
+
+  <!-- Cercle pulsation (animation breathing) -->
+  <circle cx="200" cy="180" r="100" fill="url(#splash-pulse-grad)" opacity="0.5">
+    <animate attributeName="r" values="100;130;100" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Cercle rotatif extérieur -->
+  <circle cx="200" cy="180" r="80" fill="none" stroke="url(#splash-grad-main)" stroke-width="2"
+          stroke-dasharray="20 10" opacity="0.6">
+    <animateTransform attributeName="transform" type="rotate" from="0 200 180" to="360 200 180"
+                      dur="20s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Cercle rotatif intérieur (sens inverse) -->
+  <circle cx="200" cy="180" r="60" fill="none" stroke="#7CC8C8" stroke-width="2"
+          stroke-dasharray="10 5" opacity="0.4">
+    <animateTransform attributeName="transform" type="rotate" from="360 200 180" to="0 200 180"
+                      dur="15s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Icône hexagonale centrale (santé / qualité) -->
+  <g filter="url(#splash-shadow)">
+    <polygon points="200,120 245,150 245,210 200,240 155,210 155,150"
+             fill="url(#splash-grad-main)" filter="url(#splash-glow)">
+      <animateTransform attributeName="transform" type="rotate"
+                        from="0 200 180" to="360 200 180" dur="40s" repeatCount="indefinite"/>
+    </polygon>
+    <!-- Croix médicale blanche -->
+    <rect x="190" y="160" width="20" height="40" fill="#fff" rx="2"/>
+    <rect x="180" y="170" width="40" height="20" fill="#fff" rx="2"/>
+  </g>
+
+  <!-- Texte AVEHO -->
+  <text x="200" y="310" text-anchor="middle"
+        font-family="'Quicksand', 'Segoe UI', sans-serif"
+        font-size="48" font-weight="700" letter-spacing="4"
+        fill="url(#splash-grad-main)" filter="url(#splash-shadow)">
+    aveho
+  </text>
+
+  <!-- Tagline -->
+  <text x="200" y="340" text-anchor="middle"
+        font-family="'Quicksand', 'Segoe UI', sans-serif"
+        font-size="13" font-weight="500" letter-spacing="3"
+        fill="#5a6878">
+    ESPACE COLLECTIVITÉ
+  </text>
+
+  <!-- Particules décoratives -->
+  <circle cx="100" cy="100" r="3" fill="#7CC8C8" opacity="0.6">
+    <animate attributeName="cy" values="100;90;100" dur="4s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="4s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="320" cy="120" r="2" fill="#185FA5" opacity="0.5">
+    <animate attributeName="cy" values="120;110;120" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="80" cy="250" r="2" fill="#EF9F27" opacity="0.5">
+    <animate attributeName="cy" values="250;240;250" dur="5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="330" cy="270" r="3" fill="#7a6fb0" opacity="0.6">
+    <animate attributeName="cy" values="270;260;270" dur="3.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;1;0.6" dur="3.5s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Loader dots en bas -->
+  <g transform="translate(200, 370)">
+    <circle cx="-15" cy="0" r="3" fill="#185FA5">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="0" cy="0" r="3" fill="#185FA5">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="15" cy="0" r="3" fill="#185FA5">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" begin="0.4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>
