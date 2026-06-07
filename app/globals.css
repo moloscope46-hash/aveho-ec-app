@@ -5160,3 +5160,20 @@ body.av-anim-off .av-page-hero {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* =============================================================
+   0.62.75 — AutoCompleteList animation + push notifications
+   ============================================================= */
+@keyframes av-autocomplete-fade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Highlight match dans autocomplete */
+.av-autocomplete-match {
+  background: rgba(124,200,200,.30);
+  color: #142131;
+  padding: 0 2px;
+  border-radius: 3px;
+  font-weight: 700;
+}

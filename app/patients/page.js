@@ -31,6 +31,7 @@ import { safeFetch } from "../../lib/offlineCache";
 import { useStickyState } from "../../lib/useStickyState";
 import AdresseAutocomplete from "../AdresseAutocomplete";
 import EtabContextHeader from "../components/EtabContextHeader";  /* 0.62.73 */
+import ViewModeToggle, { useViewMode } from "../components/ViewModeToggle";  /* 0.62.75 */
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
@@ -38,6 +39,7 @@ import { logger } from "../../lib/logger";
 import { NeonButton } from "../components/ui-premium";
 export default function Patients() {
   const supabase = createClient();
+  const [viewMode, setViewMode] = useViewMode("patients-list", "list");  /* 0.62.75 */
   const router = useRouter();
   const auth = useAuth();
   const { lbl } = useLibelles(auth.structureId);
@@ -366,6 +368,8 @@ export default function Patients() {
         {staleData && <StaleDataBanner />}
         <Panel>
           <div className="di-toolbar">
+            {/* 0.62.75 : Mode Liste/Tuiles */}
+            <ViewModeToggle value={viewMode} onChange={setViewMode} accentColor="#7a6fb0" />
             {auth.can("ecrire") && (
               /* 0.58.23 : NeonButton variant=teal pour "Nouveau patient" */
               <NeonButton
