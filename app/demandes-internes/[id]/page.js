@@ -12,6 +12,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { Panel, Btn } from "../../ui";
 import BackButton from "../../components/BackButton";
+import { SignatureCanvas } from "../../components/SignatureCanvas";
 
 const STATUTS = {
   nouvelle:  { lbl: "Nouvelle",      col: "#EF9F27", ic: "ti-inbox" },
@@ -237,14 +238,33 @@ export default function DemandeInterneDetailPage() {
   }
 
   // 0.60.6 : Validation rapport SAV côté EC (avec signature)
-  async function validerRapportSav(signature, commentaire) {
-    if (!signature?.trim()) { alert("Signature requise (nom de la personne qui valide)"); return; }
+  async function validerRapportSav(signature, commentaire, signatureImageBase64) {
+    if (!signature?.trim()) { alert("Nom requis"); return; }
     setActionInProgress(true);
     try {
+      let signatureUrl = null;
+      // 0.61.1 : Upload signature dessinée vers Supabase Storage
+      if (signatureImageBase64) {
+        try {
+          // Convertir base64 en Blob
+          const res = await fetch(signatureImageBase64);
+          const blob = await res.blob();
+          const fileName = `sig-${id}-${Date.now()}.png`;
+          const { error: upErr } = await supabase.storage.from("sav-photos").upload(fileName, blob, {
+            cacheControl: "3600", upsert: false, contentType: "image/png",
+          });
+          if (!upErr) {
+            const { data: pub } = supabase.storage.from("sav-photos").getPublicUrl(fileName);
+            signatureUrl = pub.publicUrl;
+          }
+        } catch (e) { console.warn("[signature upload]", e); }
+      }
+
       const r = await supabase.from("demandes_internes").update({
         rapport_sav_valide_par_ec: auth.user?.id,
         rapport_sav_validee_at: new Date().toISOString(),
         rapport_sav_signature: signature.trim(),
+        rapport_sav_signature_url: signatureUrl,
         rapport_sav_commentaire_ec: commentaire?.trim() || null,
         statut: "cloturee",
         cloturee_at: new Date().toISOString(),
@@ -543,6 +563,7 @@ export default function DemandeInterneDetailPage() {
 function ValidationRapportSavPanel({ di, onValider, actionInProgress }) {
   const [show, setShow] = useState(false);
   const [signature, setSignature] = useState("");
+  const [signatureCanvas, setSignatureCanvas] = useState(null); // base64 PNG
   const [commentaire, setCommentaire] = useState("");
 
   return (
@@ -563,11 +584,17 @@ function ValidationRapportSavPanel({ di, onValider, actionInProgress }) {
         <div style={{ background: "#fff", border: "1px solid #5a8f8f", borderRadius: 8, padding: 12 }}>
           <div style={{ marginBottom: 10 }}>
             <label style={{ display: "block", fontSize: 11, color: "#5a6878", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>
-              ✍ Signature (nom de la personne qui valide) *
+              ✍ Nom du validateur *
             </label>
             <input value={signature} onChange={(e) => setSignature(e.target.value)} autoFocus
               placeholder="Prénom Nom"
-              style={{ width: "100%", padding: "10px 12px", border: "1px solid #cfd8e0", borderRadius: 8, fontFamily: "inherit", fontSize: 14, fontWeight: 600, fontStyle: "italic" }} />
+              style={{ width: "100%", padding: "10px 12px", border: "1px solid #cfd8e0", borderRadius: 8, fontFamily: "inherit", fontSize: 14, fontWeight: 600 }} />
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ display: "block", fontSize: 11, color: "#5a6878", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>
+              ✍ Signature manuscrite
+            </label>
+            <SignatureCanvas onChange={setSignatureCanvas} />
           </div>
           <div style={{ marginBottom: 10 }}>
             <label style={{ display: "block", fontSize: 11, color: "#5a6878", fontWeight: 700, marginBottom: 4, textTransform: "uppercase", letterSpacing: 1 }}>
@@ -581,8 +608,8 @@ function ValidationRapportSavPanel({ di, onValider, actionInProgress }) {
             En validant, tu certifies avoir consulté le rapport et accepté les conclusions. La DI sera clôturée.
           </div>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <Btn variant="ghost" onClick={() => { setShow(false); setSignature(""); setCommentaire(""); }}>Annuler</Btn>
-            <Btn variant="primary" icon="ti-check" onClick={() => onValider(signature, commentaire)} disabled={actionInProgress || !signature.trim()}>
+            <Btn variant="ghost" onClick={() => { setShow(false); setSignature(""); setCommentaire(""); setSignatureCanvas(null); }}>Annuler</Btn>
+            <Btn variant="primary" icon="ti-check" onClick={() => onValider(signature, commentaire, signatureCanvas)} disabled={actionInProgress || !signature.trim()}>
               ✓ Valider et signer
             </Btn>
           </div>

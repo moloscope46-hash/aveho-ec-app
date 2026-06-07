@@ -240,6 +240,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.1",
+    "kind": "feat",
+    "titre": "🔥 Fix build Suspense + 📋 Workflow inventaire ultra-pro + ✍ Signature canvas dessinée + 📨 Edge Functions notifications/RBEU",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **Fix build Vercel** : `useSearchParams() should be wrapped in a suspense boundary at /magasin/inventaires`. Next.js 15 exige un wrapper Suspense quand on utilise useSearchParams dans un client component pré-rendu. Fix : `export default function InventairesPageWrapper()` qui wrap le composant dans `<Suspense fallback={...}>`. Build Vercel passera maintenant" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.61.1-inventaires-historique.sql`** : (1) Table `inventaires` (session avec numéro, statut, stats, signature, ajustement_stock_genere). (2) Table `inventaires_lignes` (résultats par article : qté théorique, qté comptée, écart). (3) ALTER `stock_mouvements` ADD `inventaire_id` + `source_motif` (traçabilité origine du mouvement)" },
+      { "code": "AI", "txt": "📋 **Pack 0.60.9 — Workflow inventaire ultra-pro** dans `/magasin/inventaires` : (1) **Sauvegarde session** : INSERT inventaire + lignes en DB, stats auto (nb_exact/sur-stock/manquants). (2) **Bouton 'Valider + ajuster stock'** : génère automatiquement des `stock_mouvements` pour chaque écart (entrée pour sur-stock, sortie pour manquant) + statut inventaire=valide + ajustement_stock_genere=true. (3) **Scan code-barres** : input dédié en haut, lecture du code + Enter → auto-incrémente la quantité comptée de l'article correspondant (10x plus rapide). (4) **Export CSV** : génère un fichier `inventaire-INV-...csv` téléchargeable avec Code,Libellé,Théo,Compté,Écart,Unité. (5) **Onglet Historique** : liste des inventaires précédents pour le dépôt avec statut, stats, et bouton 'Reprendre' pour rouvrir une session en cours" },
+      { "code": "AI", "txt": "✍ **Pack 0.60.10 — Signature canvas dessinée** : nouveau composant `<SignatureCanvas>` (canvas HTML5 réactif souris+tactile) avec touch-action: none pour mobile. Trace fluide avec lineCap round + lineWidth 2.5. Export base64 PNG via toDataURL. Bouton 'Effacer' rouge. Placeholder italique 'Signez ici avec souris ou doigt'. Intégré dans le panneau validation rapport SAV côté EC : capture la signature dessinée + upload vers `sav-photos` bucket Supabase + stocke l'URL dans `rapport_sav_signature_url`" },
+      { "code": "AI", "txt": "📨 **Pack 0.61.1 — Edge Function `send-notifications-queue`** (Deno/TypeScript) : traite la queue `notifications_log` canal='email' via **Resend API**. Wrapper HTML Aveho (header navy+teal logo, body, footer charte). Traite aussi canal='push' via **web-push lib** avec VAPID keys. Marque envoye=true + envoye_at. À déployer avec `supabase functions deploy send-notifications-queue` + secrets RESEND_API_KEY/VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY. À cron via pg_cron (1 min)" },
+      { "code": "AI", "txt": "🛡 **Edge Function `rbeu-renouvellement-cron`** (Deno) : détecte quotidiennement les RBEU > 11 mois (à renouveler) et > 12 mois (DÉPASSÉ urgent). Pour chaque cas : envoie une notif in-app + queue email à l'admin de la structure (premier user créé). Dédupe : pas de notif si une a déjà été envoyée dans les 7 derniers jours. Cron Supabase : `SELECT cron.schedule('rbeu-daily', '0 9 * * *', ...)`" },
+      { "code": "INFO", "txt": "🎯 **Cycle inventaire complet maintenant** : (1) Choisir dépôt + sauvegarde session · (2) Saisie classique OU scan code-barres ultra-rapide · (3) Export CSV pour Excel · (4) Rapport PDF pour archive papier · (5) **Valider + ajuster stock** → mouvements stock auto · (6) Historique consultable + reprise session" },
+      { "code": "INFO", "txt": "🚧 **À configurer côté infra (1 fois)** : (1) Compte Resend.com gratuit (3k emails/mois) + clé API → secret `RESEND_API_KEY`. (2) `npx web-push generate-vapid-keys` → secrets VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY. (3) Déployer les 2 edge functions. (4) Activer pg_cron extension dans Supabase. (5) Schedule les crons. (6) Ajouter VAPID_PUBLIC_KEY dans `lib/useNotificationPrefs.js` (ligne applicationServerKey commentée)" }
+    ],
+    "themes": ["fix", "feat", "inventaire", "signature", "edge-functions", "cron", "rbeu"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.0",
     "kind": "feat",
     "titre": "🛡 MEGA PACK 0.61 : Module RBEU Décret 2025-247 + Préférences notifications multi-canal + Bases PWA push",

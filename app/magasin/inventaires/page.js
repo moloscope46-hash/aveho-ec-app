@@ -3,7 +3,7 @@
 //  /magasin/inventaires — Génération inventaires (0.60.7)
 //  Liste articles + stock par dépôt + saisie comptage + export
 // =============================================================
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
@@ -13,7 +13,16 @@ import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
 
-export default function InventairesPage() {
+// 0.61.1 : Wrap pour Suspense (useSearchParams le requiert en build)
+export default function InventairesPageWrapper() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center" }}>Chargement...</div>}>
+      <InventairesPage />
+    </Suspense>
+  );
+}
+
+function InventairesPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialDepotId = searchParams?.get("depot") || "";
@@ -31,6 +40,12 @@ export default function InventairesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
+  // 0.61.1 : Session inventaire + scan + historique
+  const [activeInventaire, setActiveInventaire] = useState(null);     // session en cours
+  const [historique, setHistorique] = useState([]);                    // inventaires précédents
+  const [tab, setTab] = useState("saisie");                           // saisie | historique
+  const [scanInput, setScanInput] = useState("");
+  const [scanMessage, setScanMessage] = useState("");
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId || magasinCtx.loading) return;
@@ -102,6 +117,157 @@ export default function InventairesPage() {
     const ecart = val !== null ? val - theo : null;
     setComptages({ ...comptages, [articleId]: { quantite_comptee: val, ecart } });
   }
+
+  // 0.61.1 : Sauvegarder la session inventaire (brouillon)
+  async function sauvegarderSession() {
+    if (!selectedDepot || Object.keys(comptages).length === 0) {
+      alert("Saisis au moins un comptage");
+      return;
+    }
+    setSaving(true);
+    try {
+      let invId = activeInventaire?.id;
+      if (!invId) {
+        const numero = `INV-${new Date().toISOString().slice(0,10).replace(/-/g, "")}-${Math.floor(Math.random() * 10000)}`;
+        const r = await supabase.from("inventaires").insert({
+          structure_id: auth.structureId,
+          depot_id: selectedDepot,
+          numero,
+          statut: "en_cours",
+          created_by: auth.user?.id,
+        }).select("id, numero").single();
+        if (r.error) throw r.error;
+        invId = r.data.id;
+        setActiveInventaire({ id: invId, numero: r.data.numero });
+      }
+      // Sauvegarde lignes
+      await supabase.from("inventaires_lignes").delete().eq("inventaire_id", invId);
+      const lignes = articles.filter(a => comptages[a.id]).map(a => ({
+        inventaire_id: invId,
+        article_id: a.id,
+        libelle: a.libelle,
+        code: a.code,
+        quantite_theorique: stocksTheoriques[a.id] || 0,
+        quantite_comptee: comptages[a.id].quantite_comptee,
+        ecart: comptages[a.id].ecart,
+      }));
+      if (lignes.length > 0) await supabase.from("inventaires_lignes").insert(lignes);
+      // MAJ stats inventaire
+      const nbExact = lignes.filter(l => l.ecart === 0).length;
+      const nbSurstock = lignes.filter(l => l.ecart > 0).length;
+      const nbManquants = lignes.filter(l => l.ecart < 0).length;
+      await supabase.from("inventaires").update({
+        nb_articles_comptes: lignes.length,
+        nb_exact: nbExact,
+        nb_surstock: nbSurstock,
+        nb_manquants: nbManquants,
+      }).eq("id", invId);
+      alert(`✓ Session sauvegardée (${lignes.length} comptages)`);
+      await loadHistorique();
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setSaving(false); }
+  }
+
+  // 0.61.1 : Valider l'inventaire + générer ajustements stock
+  async function validerInventaire() {
+    if (!activeInventaire) { alert("Sauvegarde d'abord la session"); return; }
+    const lignesAvecEcart = Object.entries(comptages).filter(([_, c]) => c.ecart !== 0 && c.ecart !== null);
+    if (!confirm(`Valider l'inventaire ?\n\n${lignesAvecEcart.length} ajustements de stock seront générés automatiquement.\n\nCette action est définitive.`)) return;
+    setSaving(true);
+    try {
+      // 1. Sauvegarde finale
+      await sauvegarderSession();
+      // 2. Génère stock_mouvements pour les écarts
+      const mouvements = lignesAvecEcart.map(([articleId, c]) => ({
+        article_id: articleId,
+        quantite: Math.abs(c.ecart),
+        type: c.ecart > 0 ? "entree" : "sortie",
+        lot: null,
+        num_serie: null,
+        date_peremption: null,
+        notes: `Ajustement inventaire ${activeInventaire.numero}`,
+        user_email: auth.user?.email,
+        source_motif: "inventaire",
+        inventaire_id: activeInventaire.id,
+      }));
+      if (mouvements.length > 0) {
+        const r = await supabase.from("stock_mouvements").insert(mouvements);
+        if (r.error) console.warn("[stock_mouvements]", r.error);
+      }
+      // 3. MAJ inventaire = validé
+      await supabase.from("inventaires").update({
+        statut: "valide",
+        valide_at: new Date().toISOString(),
+        valide_par: auth.user?.id,
+        ajustement_stock_genere: true,
+        date_fin: new Date().toISOString(),
+      }).eq("id", activeInventaire.id);
+      alert(`✓ Inventaire validé. ${mouvements.length} ajustements de stock générés.`);
+      setActiveInventaire(null);
+      setComptages({});
+      await loadHistorique();
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setSaving(false); }
+  }
+
+  // 0.61.1 : Scan code-barres : recherche article + auto-incrément quantité
+  function handleScan(barcode) {
+    if (!barcode?.trim()) return;
+    const code = barcode.trim();
+    const a = articles.find(a => (a.code === code || a.reference === code));
+    if (!a) {
+      setScanMessage(`❌ Article introuvable : ${code}`);
+      setTimeout(() => setScanMessage(""), 3000);
+      return;
+    }
+    const current = comptages[a.id]?.quantite_comptee || 0;
+    updateComptage(a.id, current + 1);
+    setScanMessage(`✓ ${a.libelle} : ${current + 1}`);
+    setScanInput("");
+    setTimeout(() => setScanMessage(""), 1500);
+  }
+
+  // 0.61.1 : Export CSV
+  function exporterCSV() {
+    const lignes = articles.filter(a => comptages[a.id]).map(a => {
+      const c = comptages[a.id];
+      const theo = stocksTheoriques[a.id] || 0;
+      return [
+        a.code || "",
+        a.libelle || "",
+        theo,
+        c.quantite_comptee,
+        c.ecart,
+        a.unite || "unité",
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(",");
+    });
+    const csv = "Code,Libellé,Stock théorique,Compté,Écart,Unité\n" + lignes.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `inventaire-${activeInventaire?.numero || new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // 0.61.1 : Charger l'historique des inventaires pour ce dépôt
+  async function loadHistorique() {
+    if (!selectedDepot) return;
+    try {
+      const r = await supabase.from("inventaires")
+        .select("*")
+        .eq("depot_id", selectedDepot)
+        .order("date_debut", { ascending: false })
+        .limit(20);
+      setHistorique(r.data || []);
+    } catch (e) { console.warn("[historique]", e); }
+  }
+
+  // Charger historique automatiquement quand dépôt change
+  useEffect(() => {
+    if (selectedDepot) loadHistorique();
+  }, [selectedDepot]);
 
   async function genererRapport() {
     if (Object.keys(comptages).length === 0) { alert("Saisis au moins un comptage"); return; }
@@ -202,16 +368,70 @@ export default function InventairesPage() {
 
           {selectedDepot && (
             <>
-              <Panel style={{ marginTop: 12 }}>
+              {/* Onglets : Saisie / Historique */}
+              <div style={{ display: "flex", gap: 4, marginTop: 12 }}>
+                <button onClick={() => setTab("saisie")} style={{
+                  padding: "8px 16px", border: "none",
+                  borderTopLeftRadius: 8, borderTopRightRadius: 8,
+                  background: tab === "saisie" ? "#fff" : "rgba(255,255,255,.5)",
+                  color: tab === "saisie" ? "#5a8f8f" : "#5a6878",
+                  fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  borderBottom: tab === "saisie" ? "3px solid #5a8f8f" : "3px solid transparent",
+                }}><i className="ti ti-pencil" /> Saisie</button>
+                <button onClick={() => setTab("historique")} style={{
+                  padding: "8px 16px", border: "none",
+                  borderTopLeftRadius: 8, borderTopRightRadius: 8,
+                  background: tab === "historique" ? "#fff" : "rgba(255,255,255,.5)",
+                  color: tab === "historique" ? "#7a6fb0" : "#5a6878",
+                  fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  borderBottom: tab === "historique" ? "3px solid #7a6fb0" : "3px solid transparent",
+                }}><i className="ti ti-history" /> Historique ({historique.length})</button>
+              </div>
+
+              {tab === "saisie" ? (
+              <Panel style={{ marginTop: 0, borderTopLeftRadius: 0 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-                  <h3 style={{ margin: 0, color: "#185FA5" }}>2. Saisie comptage — {depot?.nom}</h3>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div>
+                    <h3 style={{ margin: 0, color: "#185FA5" }}>Comptage — {depot?.nom}</h3>
+                    {activeInventaire && <div style={{ fontSize: 11, color: "#5a8f8f", marginTop: 2 }}>📋 Session : <code>{activeInventaire.numero}</code></div>}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ padding: "4px 10px", background: "rgba(94,143,143,.10)", borderRadius: 4, fontSize: 12, color: "#5a8f8f", fontWeight: 700 }}>{nbComptes} comptés</span>
-                    <Btn variant="primary" icon="ti-file-text" onClick={genererRapport} disabled={nbComptes === 0}>
-                      🖨 Rapport PDF
+                    <Btn variant="ghost" icon="ti-device-floppy" onClick={sauvegarderSession} disabled={saving || nbComptes === 0}>
+                      Sauvegarder
                     </Btn>
+                    <Btn variant="ghost" icon="ti-file-export" onClick={exporterCSV} disabled={nbComptes === 0}>
+                      CSV
+                    </Btn>
+                    <Btn variant="ghost" icon="ti-file-text" onClick={genererRapport} disabled={nbComptes === 0}>
+                      🖨 PDF
+                    </Btn>
+                    {activeInventaire && (
+                      <Btn variant="primary" icon="ti-check" onClick={validerInventaire} disabled={saving || nbComptes === 0}>
+                        Valider + ajuster stock
+                      </Btn>
+                    )}
                   </div>
                 </div>
+
+                {/* 0.61.1 : Scanner de code-barres */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
+                  <input
+                    value={scanInput}
+                    onChange={(e) => setScanInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { handleScan(scanInput); } }}
+                    placeholder="📷 Scan code-barres ou tape code + Entrée pour incrémenter qté"
+                    autoFocus
+                    style={{ flex: 1, padding: "10px 14px", border: "2px solid #5a8f8f", borderRadius: 8, fontFamily: "Consolas,monospace", fontSize: 13, fontWeight: 600 }}
+                  />
+                  <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/article")}>Scanner caméra</Btn>
+                </div>
+                {scanMessage && (
+                  <div style={{ marginBottom: 10, padding: 8, background: scanMessage.startsWith("✓") ? "rgba(94,160,90,.10)" : "rgba(227,93,91,.10)", color: scanMessage.startsWith("✓") ? "#5aa05a" : "#c0392b", borderRadius: 6, fontSize: 12.5, fontWeight: 700 }}>
+                    {scanMessage}
+                  </div>
+                )}
+
                 <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="🔍 Rechercher article..." style={{ width: "100%", padding: "8px 12px", border: "1px solid #cfd8e0", borderRadius: 8, fontFamily: "inherit", fontSize: 13, marginBottom: 10 }} />
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
@@ -254,6 +474,64 @@ export default function InventairesPage() {
                   {filtered.length > 100 && <div style={{ padding: 10, textAlign: "center", color: "#8a98a8", fontSize: 11 }}>{filtered.length - 100} articles non affichés. Affine ta recherche.</div>}
                 </div>
               </Panel>
+              ) : (
+                /* 0.61.1 : Onglet Historique */
+                <Panel style={{ marginTop: 0, borderTopLeftRadius: 0 }}>
+                  <h3 style={{ margin: "0 0 12px", color: "#7a6fb0" }}>📋 Historique des inventaires de {depot?.nom}</h3>
+                  {historique.length === 0 ? (
+                    <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+                      <i className="ti ti-history" style={{ fontSize: 48, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+                      Aucun inventaire encore réalisé pour ce dépôt.
+                    </div>
+                  ) : (
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+                      <thead>
+                        <tr style={{ background: "#fafbfc" }}>
+                          <th style={th}>Numéro</th>
+                          <th style={th}>Date</th>
+                          <th style={th}>Statut</th>
+                          <th style={{ ...th, textAlign: "center" }}>Articles</th>
+                          <th style={{ ...th, textAlign: "center" }}>Exact</th>
+                          <th style={{ ...th, textAlign: "center" }}>Sur-stock</th>
+                          <th style={{ ...th, textAlign: "center" }}>Manquants</th>
+                          <th style={th}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historique.map(inv => {
+                          const stCol = inv.statut === "valide" ? "#5aa05a" : inv.statut === "en_cours" ? "#EF9F27" : "#8a98a8";
+                          const stLbl = inv.statut === "valide" ? "✓ Validé" : inv.statut === "en_cours" ? "⏳ En cours" : "📦 Archivé";
+                          return (
+                            <tr key={inv.id} style={{ borderTop: "1px solid #f0f3f6" }}>
+                              <td style={{ padding: 8, fontFamily: "Consolas,monospace", fontSize: 11.5, fontWeight: 700 }}>{inv.numero}</td>
+                              <td style={{ padding: 8, fontSize: 11.5 }}>{new Date(inv.date_debut).toLocaleDateString("fr-FR")}</td>
+                              <td style={{ padding: 8 }}><span style={{ padding: "2px 8px", borderRadius: 4, background: `${stCol}15`, color: stCol, fontSize: 10.5, fontWeight: 700 }}>{stLbl}</span></td>
+                              <td style={{ padding: 8, textAlign: "center", fontFamily: "Consolas,monospace" }}>{inv.nb_articles_comptes || 0}</td>
+                              <td style={{ padding: 8, textAlign: "center", color: "#5aa05a", fontWeight: 700 }}>{inv.nb_exact || 0}</td>
+                              <td style={{ padding: 8, textAlign: "center", color: "#185FA5", fontWeight: 700 }}>{inv.nb_surstock || 0}</td>
+                              <td style={{ padding: 8, textAlign: "center", color: "#e35d5b", fontWeight: 700 }}>{inv.nb_manquants || 0}</td>
+                              <td style={{ padding: 8, textAlign: "right" }}>
+                                {inv.ajustement_stock_genere && <span title="Stock ajusté" style={{ color: "#5aa05a", marginRight: 6 }} ><i className="ti ti-stack-2" /></span>}
+                                {inv.statut === "en_cours" && (
+                                  <Btn variant="ghost" icon="ti-edit" onClick={async () => {
+                                    // Reprendre la session
+                                    const r = await supabase.from("inventaires_lignes").select("*").eq("inventaire_id", inv.id);
+                                    const map = {};
+                                    (r.data || []).forEach(l => { map[l.article_id] = { quantite_comptee: parseFloat(l.quantite_comptee), ecart: parseFloat(l.ecart) }; });
+                                    setComptages(map);
+                                    setActiveInventaire({ id: inv.id, numero: inv.numero });
+                                    setTab("saisie");
+                                  }} style={{ fontSize: 11 }}>Reprendre</Btn>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </Panel>
+              )}
             </>
           )}
         </div>
