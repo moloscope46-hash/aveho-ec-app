@@ -5177,3 +5177,58 @@ body.av-anim-off .av-page-hero {
   border-radius: 3px;
   font-weight: 700;
 }
+
+/* =============================================================
+   0.62.76 — FIX DÉFINITIF sélecteur étab blanc/blanc
+   ============================================================= */
+
+/* Override TOUT — fond solid teal foncé + texte blanc lisible */
+.topbar .etab-switch {
+  background: rgba(20, 33, 49, .85) !important;
+  border: 2px solid rgba(124, 200, 200, .60) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .25), inset 0 1px 0 rgba(255,255,255,.1) !important;
+  border-radius: 10px !important;
+  padding: 0 8px 0 12px !important;
+  height: 38px !important;
+  color: #fff !important;
+}
+.topbar .etab-switch:hover {
+  background: rgba(20, 33, 49, .95) !important;
+  border-color: #7CC8C8 !important;
+  box-shadow: 0 3px 10px rgba(124, 200, 200, .35) !important;
+}
+.topbar .etab-switch i.ti {
+  color: #7CC8C8 !important;
+  font-size: 18px !important;
+}
+.topbar .etab-switch select {
+  background: transparent !important;
+  color: #fff !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237CC8C8' d='M6 8L0 0h12z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 4px center !important;
+  padding-right: 18px !important;
+  cursor: pointer !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,.3);
+}
+/* Options du dropdown natif : background blanc + texte navy */
+.topbar .etab-switch select option {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #142131 !important;
+  font-weight: 600 !important;
+  padding: 8px !important;
+}
+/* Firefox specific */
+.topbar .etab-switch select option:checked {
+  background: linear-gradient(#185FA5, #185FA5) !important;
+  color: #ffffff !important;
+}
+

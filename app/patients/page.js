@@ -608,6 +608,81 @@ export default function Patients() {
                       </div>
                     )}
 
+                    {/* 0.62.76 : Rendu tuiles OU liste */}
+                    {viewMode === "tiles" ? (
+                      <div className="av-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                        {filtered.map(p => {
+                          const isSelected = selectedIds.has(p.id);
+                          const etatColor = p.etat === "Sorti" ? "#8a98a8" : p.etat === "Hospitalisé" ? "#5aa05a" : p.etat === "En attente" ? "#EF9F27" : "#7a6fb0";
+                          return (
+                            <div key={p.id} data-3d="true" onClick={() => router.push(`/patient/${p.id}`)} style={{
+                              background: "#fff",
+                              border: `1px solid ${isSelected ? "#7a6fb0" : "#e3e9ee"}`,
+                              borderLeft: `4px solid ${etatColor}`,
+                              borderRadius: 12, padding: 14, cursor: "pointer",
+                              boxShadow: isSelected ? "0 4px 12px rgba(122,111,176,.2)" : "0 1px 3px rgba(0,0,0,.04)",
+                            }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                                  <div style={{
+                                    width: 40, height: 40, borderRadius: "50%",
+                                    background: `linear-gradient(135deg, ${etatColor}, ${etatColor}dd)`,
+                                    color: "#fff",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 14, fontWeight: 700, flexShrink: 0,
+                                  }}>
+                                    {(p.prenom?.[0] || "?")}{(p.nom?.[0] || "")}
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 14, fontWeight: 700, color: "#142131", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                      {p.nom} {p.prenom || ""}
+                                    </div>
+                                    {p.numero_dossier && (
+                                      <div style={{ fontSize: 10.5, color: "#185FA5", fontFamily: "Consolas, monospace", fontWeight: 600 }}>
+                                        {p.numero_dossier}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <input type="checkbox" checked={isSelected} onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => {
+                                    const next = new Set(selectedIds);
+                                    if (e.target.checked) next.add(p.id); else next.delete(p.id);
+                                    setSelectedIds(next);
+                                  }} style={{ marginLeft: 6, cursor: "pointer" }} />
+                              </div>
+
+                              <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 11.5, color: "#5a6878" }}>
+                                {p.date_naissance && (
+                                  <div><i className="ti ti-cake" /> {new Date(p.date_naissance).toLocaleDateString("fr-FR")}{p.date_naissance ? ` (${Math.floor((Date.now() - new Date(p.date_naissance)) / (365.25 * 24 * 3600 * 1000))}a)` : ""}</div>
+                                )}
+                                {p.chambre_id && (
+                                  <div style={{ color: "#EF9F27" }}><i className="ti ti-bed" /> Chambre rattachée</div>
+                                )}
+                                {p.gir && (
+                                  <div><i className="ti ti-activity" /> GIR {p.gir}</div>
+                                )}
+                                {p.had_id && (
+                                  <div style={{ color: "#185FA5" }}><i className="ti ti-home-heart" /> Patient HAD</div>
+                                )}
+                              </div>
+
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10, paddingTop: 8, borderTop: "1px solid #f4f7fa" }}>
+                                <span style={{ background: `${etatColor}1A`, color: etatColor, padding: "2px 8px", borderRadius: 4, fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>
+                                  {p.etat || "—"}
+                                </span>
+                                <button onClick={(e) => { e.stopPropagation(); openEdit(p); }} style={{
+                                  background: "transparent", border: "none", color: "#7a6fb0", cursor: "pointer", padding: 4,
+                                  fontSize: 16, fontFamily: "inherit",
+                                }} title="Modifier">
+                                  <i className="ti ti-edit" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
                     <div className="panel-table"><table>
                       <thead><tr>
                         <th style={{ width: 32 }}>
@@ -813,6 +888,7 @@ export default function Patients() {
                   })}
                 </tbody>
               </table></div>
+                    )}{/* 0.62.76 : fin conditionnel viewMode */}
                   </>
                 );
               })()}
