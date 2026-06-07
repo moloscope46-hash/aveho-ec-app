@@ -240,6 +240,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.8",
+    "kind": "feat",
+    "titre": "🗺 CAMIONS_DEMO retirés → vraies tournées GPS sur /carte EC + nouvelle carte /magasin/tournees avec popups complets",
+    "chantiers": [
+      { "code": "AI", "txt": "🚨 **Re-fix build /materiels** : `export const dynamic = \"force-dynamic\"` ajouté en plus du wrapper Suspense déjà en place. Garde-fou ceinture+bretelles si le Suspense ne suffisait pas selon ton environnement Vercel. Identifier le commit qui passe : le SHA contenant `0.62.8-alpha` dans `package.json` ET la ligne `export const dynamic = \"force-dynamic\"` au début de `app/materiels/page.js`" },
+      { "code": "AI", "txt": "🗺 **CAMIONS_DEMO retirés** : les 12 camions hardcodés (Pierre L. Lyon, Marie D. Marseille...) sont remplacés par les **vraies tournées Supabase**. Nouveau state `tourneesReelles` + fonction `loadTourneesReelles()` qui charge depuis `tournees` (statut=en_cours OR date=today). Enrichit chaque tournée avec véhicule + chauffeur (`membres_structure`) + étapes (`tournees_etapes`) + dernière position GPS (`tournees_gps_track`). Refresh toutes les 30s" },
+      { "code": "AI", "txt": "🎯 **Popup hover camion enrichi MAX** : chauffeur, magasin (+ville), véhicule (immat + marque/modèle), date tournée, distance, durée estimée, prochaine étape, contenu DI, **barre de progression étapes** (X/Y terminées avec %), **dernière maj GPS**. Badge pulsant vert si statut=en_cours. Tooltip rapide au survol (chauffeur + destination)" },
+      { "code": "AI", "txt": "🗺 **Nouveau composant `<TourneesMap>`** réutilisable côté magasin : carte Leaflet avec markers camions (position GPS) + markers numérotés pour étapes (couleur selon statut : 🟢 terminée, 🟡 en cours, 🟣 à faire) + polylines entre étapes (pleine si en cours, pointillée sinon). Auto-fit bounds. Refresh 30s. Compteur en cours / planifiées en overlay top-right" },
+      { "code": "AI", "txt": "📍 **Carte intégrée dans `/magasin/tournees`** : Panel '🗺 Carte des livraisons' inséré entre les stats KPI et les filtres. Hauteur 420px. Filtre automatique sur `magasin_id` du user. Popup étape : nom étab + ville + adresse + DI rattachée + notes + statut. Popup camion : tout comme côté EC + bouton 'Voir détail →'" }
+    ],
+    "themes": ["feat", "carte", "tournees", "gps", "fix-build"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.7",
     "kind": "fix",
     "titre": "👥 Fix collaborateurs (user courant toujours inclus) + 📋 Activité récente dans dashboard magasin",

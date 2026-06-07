@@ -103,6 +103,8 @@ export default function CartePage() {
   const [etabs, setEtabs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
+  // 0.62.8 : Vraies tournées en cours (remplace CAMIONS_DEMO)
+  const [tourneesReelles, setTourneesReelles] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const etabsLayerRef = useRef(null);
@@ -228,7 +230,76 @@ export default function CartePage() {
     setLoading(false);
   }
 
-  useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.structureId]);
+  // 0.62.8 : Charger les VRAIES tournées en cours des magasins (remplace CAMIONS_DEMO)
+  async function loadTourneesReelles() {
+    if (!auth.structureId) return;
+    try {
+      // Tournées en cours : statut='en_cours' (et planifiées du jour)
+      const today = new Date().toISOString().slice(0, 10);
+      const r = await supabase.from("tournees")
+        .select("*, vehicules_magasin(immatriculation, marque, modele, type_vehicule), magasins(nom, ville)")
+        .or(`statut.eq.en_cours,date_tournee.eq.${today}`)
+        .order("date_tournee", { ascending: false })
+        .limit(50);
+      const tournees = r.data || [];
+      if (tournees.length === 0) { setTourneesReelles([]); return; }
+      // Pour chaque tournée, récupérer étapes + dernière position GPS + chauffeur
+      const enrichies = await Promise.all(tournees.map(async (t) => {
+        const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+        const [etapes, chauffeur, gps] = await Promise.all([
+          tryFetch(supabase.from("tournees_etapes").select("*, etablissements(nom, ville), demandes_internes(numero, commentaire)").eq("tournee_id", t.id).order("ordre")),
+          t.chauffeur_user_id ? tryFetch(supabase.from("membres_structure").select("prenom, nom").eq("user_id", t.chauffeur_user_id).limit(1)) : Promise.resolve([]),
+          tryFetch(supabase.from("tournees_gps_track").select("latitude, longitude, recorded_at").eq("tournee_id", t.id).order("recorded_at", { ascending: false }).limit(1)),
+        ]);
+        const chauffeurInfo = chauffeur[0] ? `${chauffeur[0].prenom || ""} ${chauffeur[0].nom || ""}`.trim() : "Non assigné";
+        const dernierePos = gps[0];
+        const etapeCourante = etapes.find(e => e.statut === "en_cours") || etapes.find(e => e.statut === "a_faire");
+        const etapesRestantes = etapes.filter(e => e.statut !== "terminee").length;
+        const etapesTerminees = etapes.filter(e => e.statut === "terminee").length;
+        // Position : GPS récent si dispo, sinon position courante magasin/tournée
+        const positionCourante = dernierePos
+          ? [parseFloat(dernierePos.latitude), parseFloat(dernierePos.longitude)]
+          : (t.point_depart_lat && t.point_depart_lng ? [parseFloat(t.point_depart_lat), parseFloat(t.point_depart_lng)] : null);
+        if (!positionCourante) return null;
+        const prochaineEtape = etapeCourante;
+        return {
+          id: t.id,
+          plaque: t.vehicules_magasin?.immatriculation || "—",
+          type: t.statut === "en_cours" ? "livraison" : (t.statut === "planifiee" ? "transit" : "livraison"),
+          statut: t.statut,
+          chauffeur: chauffeurInfo,
+          magasin: t.magasins?.nom || "—",
+          magasin_ville: t.magasins?.ville || "",
+          vehicule: `${t.vehicules_magasin?.marque || ""} ${t.vehicules_magasin?.modele || ""}`.trim(),
+          numero: t.numero,
+          nom: t.nom,
+          date_tournee: t.date_tournee,
+          position: positionCourante,
+          depart: positionCourante,  // pour compat avec drawCamions existant
+          arrivee: prochaineEtape && prochaineEtape.latitude && prochaineEtape.longitude
+            ? [parseFloat(prochaineEtape.latitude), parseFloat(prochaineEtape.longitude)]
+            : positionCourante,
+          etabDest: prochaineEtape?.etablissements?.nom || prochaineEtape?.label || "Retour magasin",
+          contenu: prochaineEtape?.demandes_internes?.commentaire || prochaineEtape?.notes || `${etapesRestantes}/${etapes.length} étape(s) restante(s)`,
+          etapesRestantes,
+          etapesTerminees,
+          nbEtapesTotal: etapes.length,
+          derniereMaj: dernierePos?.recorded_at,
+          distance_km: t.distance_estimee_km,
+          duree_min: t.duree_estimee_min,
+        };
+      }));
+      setTourneesReelles(enrichies.filter(Boolean));
+    } catch (e) { console.warn("[loadTourneesReelles]", e); }
+  }
+
+  useEffect(() => { if (auth.ready) { load(); loadTourneesReelles(); } }, [auth.ready, auth.structureId]);
+  // 0.62.8 : Rafraîchit les tournées réelles toutes les 30s pour suivre les déplacements GPS
+  useEffect(() => {
+    if (!auth.ready) return;
+    const itv = setInterval(loadTourneesReelles, 30000);
+    return () => clearInterval(itv);
+  }, [auth.ready, auth.structureId]);
 
   // 0.58.59 : Charge les pharmacies de la structure
   useEffect(() => {
@@ -374,36 +445,31 @@ export default function CartePage() {
   }, [leafletReady, showPharmacies, pharmacies, pharmaciesFilter, ctx.equipeId, ctx.active]);
 
   // 0.55.8 : 2e effect — animation des camions (la map est créée dans le 1er useEffect)
+  // 0.62.8 : Utilise tourneesReelles (vraies tournées) au lieu de CAMIONS_DEMO
   useEffect(() => {
     if (!leafletReady || !mapInstanceRef.current || !camionsLayerRef.current) return;
 
+    // Si pas de vraies tournées chargées, ne rien afficher (au lieu des camions démo)
+    if (tourneesReelles.length === 0) {
+      camionsStateRef.current = [];
+      drawCamions();
+      return;
+    }
+
     // Initialiser état mouvements camions (progress 0..1 entre depart et arrivee)
-    camionsStateRef.current = CAMIONS_DEMO.map(c => ({
+    camionsStateRef.current = tourneesReelles.map(c => ({
       ...c,
-      progress: Math.random(),  // démarre à un point aléatoire du trajet
-      vitesse: 0.0015 + Math.random() * 0.002,  // vitesse aléatoire
-      direction: 1,  // 1 = aller, -1 = retour
+      progress: 0.5,  // au milieu du trajet (sera mis à jour par les vrais GPS)
+      vitesse: 0,  // pas d'animation : les positions viennent du GPS réel
+      direction: 1,
     }));
 
-    // Lancer animation
-    function step() {
-      camionsStateRef.current = camionsStateRef.current.map(c => {
-        let p = c.progress + c.vitesse * c.direction;
-        let dir = c.direction;
-        if (p >= 1) { p = 1; dir = -1; }
-        if (p <= 0) { p = 0; dir = 1; }
-        return { ...c, progress: p, direction: dir };
-      });
-      drawCamions();
-      animRef.current = requestAnimationFrame(step);
-    }
-    step();
+    drawCamions();
 
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
-      // Note : on ne détruit pas la map ici (elle est gérée par le 1er useEffect)
     };
-  }, [leafletReady]);
+  }, [leafletReady, tourneesReelles]);
 
   // Dessiner / mettre à jour les marqueurs établissements
   useEffect(() => {
@@ -499,11 +565,11 @@ export default function CartePage() {
     // Auto-fit bounds si plusieurs étabs
     if (geolocalises.length > 0) {
       const bounds = L.latLngBounds(geolocalises.map(e => [Number(e.latitude), Number(e.longitude)]));
-      // Inclure aussi les camions visibles dans les bounds
-      CAMIONS_DEMO.forEach(c => { 
+      // 0.62.8 : Inclure aussi les vraies tournées visibles dans les bounds
+      tourneesReelles.forEach(c => {
         if (filtreType[c.type]) {
-          bounds.extend(c.depart); 
-          bounds.extend(c.arrivee); 
+          if (c.depart) bounds.extend(c.depart);
+          if (c.arrivee) bounds.extend(c.arrivee);
         }
       });
       // Alpha 0.55.0 : inclure la position user si dispo
@@ -1166,54 +1232,75 @@ export default function CartePage() {
 
     camionsStateRef.current.forEach(c => {
       if (!filtreType[c.type]) return;
-      const lat = c.depart[0] + (c.arrivee[0] - c.depart[0]) * c.progress;
-      const lng = c.depart[1] + (c.arrivee[1] - c.depart[1]) * c.progress;
+      // 0.62.8 : Position courante = c.position (GPS réel) au lieu d'interpolation
+      const lat = c.position ? c.position[0] : c.depart[0];
+      const lng = c.position ? c.position[1] : c.depart[1];
       const meta = TYPE_META[c.type];
-      
+
       const icon = L.divIcon({
         className: "camion-marker",
         html: `<div style="
-          width: 32px; height: 32px; 
+          width: 32px; height: 32px;
           background: ${meta.color};
           border: 2px solid #fff; border-radius: 8px;
           box-shadow: 0 2px 6px rgba(0,0,0,.25);
           display: flex; align-items: center; justify-content: center;
           font-size: 16px;
-          transform: rotate(${c.direction > 0 ? "0" : "180"}deg);
-          transition: transform 0.3s;
-        ">🚚</div>`,
+          position: relative;
+        ">🚚${c.statut === "en_cours" ? '<span style="position:absolute;top:-3px;right:-3px;width:10px;height:10px;background:#5aa05a;border:2px solid #fff;border-radius:50%;animation:pulse 1.5s infinite;"></span>' : ""}</div>`,
         iconSize: [32, 32],
         iconAnchor: [16, 16],
       });
 
       const marker = L.marker([lat, lng], { icon }).addTo(camionsLayerRef.current);
-      
+
+      // 0.62.8 : Popup MAX d'infos sur vraies tournées
+      const dernierMaj = c.derniereMaj ? new Date(c.derniereMaj).toLocaleString("fr-FR") : null;
+      const dureeRestante = c.duree_min ? `${Math.floor(c.duree_min / 60)}h${(c.duree_min % 60).toString().padStart(2, "0")}` : null;
+      const statutLabel = { en_cours: "🟢 EN COURS", planifiee: "🔵 PLANIFIÉE", a_faire: "⏳ À FAIRE", terminee: "✅ TERMINÉE" }[c.statut] || c.statut?.toUpperCase();
+      const progressPct = c.nbEtapesTotal > 0 ? Math.round((c.etapesTerminees / c.nbEtapesTotal) * 100) : 0;
+
       const popupHtml = `
-        <div style="min-width: 260px; font-family: 'Segoe UI', sans-serif;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <div style="background: ${meta.color}; color: #fff; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;">${meta.icon}</div>
-            <div>
-              <div style="font-weight: 700; font-size: 14px; color: #142131;">${c.plaque}</div>
-              <div style="font-size: 11px; color: ${meta.color}; font-weight: 600;">${meta.label.toUpperCase()}</div>
+        <div style="min-width: 320px; max-width: 360px; font-family: 'Segoe UI', sans-serif;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e3e9ee;">
+            <div style="background: ${meta.color}; color: #fff; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px;">${meta.icon}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 700; font-size: 14px; color: #142131;">${c.numero || c.nom || c.plaque}</div>
+              <div style="font-size: 11px; color: ${meta.color}; font-weight: 700;">${statutLabel}</div>
             </div>
           </div>
-          <div style="font-size: 12px; color: #2a3a48; line-height: 1.6;">
-            <div><b>👤 Chauffeur :</b> ${c.chauffeur}</div>
-            <div><b>🏪 Magasin :</b> ${c.magasin}</div>
-            <div><b>🎯 Destination :</b> ${c.etabDest}</div>
-            <div style="margin-top: 6px; padding: 6px 10px; background: #f4f7fa; border-radius: 6px; font-size: 11.5px;">
-              <b>📋 Contenu :</b> ${c.contenu}
+          <div style="font-size: 12px; color: #2a3a48; line-height: 1.7;">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:4px 10px;">
+              <span style="color:#8a98a8;">🏪 Magasin</span><b>${c.magasin}${c.magasin_ville ? ` <span style="color:#8a98a8;">· ${c.magasin_ville}</span>` : ""}</b>
+              <span style="color:#8a98a8;">👤 Chauffeur</span><b>${c.chauffeur}</b>
+              <span style="color:#8a98a8;">🚚 Véhicule</span><b>${c.plaque}${c.vehicule ? ` <span style="color:#8a98a8;">(${c.vehicule})</span>` : ""}</b>
+              <span style="color:#8a98a8;">📅 Date</span><b>${c.date_tournee || "—"}</b>
+              <span style="color:#8a98a8;">🎯 Prochaine</span><b>${c.etabDest}</b>
+              ${c.distance_km ? `<span style="color:#8a98a8;">📏 Distance</span><b>${c.distance_km} km</b>` : ""}
+              ${dureeRestante ? `<span style="color:#8a98a8;">⏱ Durée est.</span><b>${dureeRestante}</b>` : ""}
             </div>
-            <div style="margin-top: 6px; font-size: 10.5px; color: #8a98a8; font-style: italic;">
-              Progression : ${Math.round(c.progress * 100)}% · ${c.direction > 0 ? "→ Aller" : "← Retour"}
+            <div style="margin-top: 8px; padding: 8px 10px; background: #f4f7fa; border-radius: 6px; font-size: 11.5px;">
+              <b>📋 Contenu / DI :</b><br/>${c.contenu}
             </div>
-          </div>
-          <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e3e9ee; font-size: 10px; color: #c0392b; font-weight: 600;">
-            ⚠️ Données de démonstration — positions simulées
+            <div style="margin-top: 8px;">
+              <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#5a6878;margin-bottom:3px;">
+                <span><b>Progression :</b> ${c.etapesTerminees}/${c.nbEtapesTotal} étapes</span>
+                <span>${progressPct}%</span>
+              </div>
+              <div style="background:#e3e9ee;border-radius:4px;height:6px;overflow:hidden;">
+                <div style="background:${meta.color};height:6px;width:${progressPct}%;transition:width .5s;"></div>
+              </div>
+            </div>
+            ${dernierMaj ? `<div style="margin-top: 6px; font-size: 10px; color: #5aa05a; font-style: italic;">📍 GPS mis à jour : ${dernierMaj}</div>` : ""}
           </div>
         </div>
       `;
       marker.bindPopup(popupHtml);
+      // 0.62.8 : Tooltip rapide au survol
+      marker.bindTooltip(
+        `<b>${c.numero || c.plaque}</b> · ${c.chauffeur} · ${c.etabDest}`,
+        { direction: "top", offset: [0, -18], opacity: 0.95 }
+      );
     });
   }
 
@@ -1297,7 +1384,7 @@ export default function CartePage() {
                       {nonGeolocalises.length} sans coordonnées
                     </span>
                   )}
-                  <span><i className="ti ti-truck" style={{ color: "#5aa05a", marginRight: 4 }} /> <b>{CAMIONS_DEMO.length}</b> camions (démo)</span>
+                  <span><i className="ti ti-truck" style={{ color: "#5aa05a", marginRight: 4 }} /> <b>{tourneesReelles.length}</b> tournée(s){tourneesReelles.length === 0 ? " — démarrer une tournée dans Magasin → Tournées" : " en cours / planifiée(s)"}</span>
                 </div>
                 <div className="chip-row">
                   {Object.entries(TYPE_META).map(([key, m]) => (
@@ -1729,10 +1816,13 @@ export default function CartePage() {
               )}
             </Panel>
 
-            <Panel style={{ marginTop: 14, padding: "12px 16px", background: "#fff8ec", borderColor: "#f0d59f" }}>
-              <p style={{ margin: 0, fontSize: 12, color: "#7a4f15" }}>
-                <i className="ti ti-info-circle" /> <b>Mode démo :</b> les 12 camions affichés sont des données simulées avec trajets aléatoires (livraisons, SAV, inter-établissements). 
-                Quand votre flotte sera équipée de balises GPS, ces marqueurs refléteront la position réelle de vos véhicules en temps réel.
+            <Panel style={{ marginTop: 14, padding: "12px 16px", background: tourneesReelles.length === 0 ? "#fff8ec" : "#eaf6ee", borderColor: tourneesReelles.length === 0 ? "#f0d59f" : "#b5dcc1" }}>
+              <p style={{ margin: 0, fontSize: 12, color: tourneesReelles.length === 0 ? "#7a4f15" : "#2d6a3d" }}>
+                <i className="ti ti-info-circle" />{" "}
+                {tourneesReelles.length === 0
+                  ? <><b>Aucune tournée en cours.</b> Démarre une tournée depuis l'espace Magasin (Magasin → Tournées → Nouvelle tournée). Les véhicules avec GPS actif apparaîtront ici en temps réel.</>
+                  : <><b>{tourneesReelles.length} tournée(s) suivie(s) en temps réel</b> — positions GPS rafraîchies toutes les 30 secondes. Hover sur un camion pour voir le détail (chauffeur, véhicule, contenu, prochaine étape).</>
+                }
               </p>
             </Panel>
           </>

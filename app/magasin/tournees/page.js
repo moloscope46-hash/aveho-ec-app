@@ -12,6 +12,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn } from "../../ui";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
+import { TourneesMap } from "../../components/TourneesMap";
 
 const STATUTS = {
   planifiee: { lbl: "📅 Planifiée", col: "#EF9F27" },
@@ -87,6 +88,12 @@ export default function TourneesPage() {
             <StatTile color="#7CC8C8" icon="ti-truck" lbl="En cours" val={stats.en_cours} />
             <StatTile color="#5aa05a" icon="ti-check" lbl="Terminées (7j)" val={stats.terminees_semaine} />
           </div>
+
+          {/* 0.62.8 : Carte tournées en cours + à faire */}
+          <Panel style={{ marginTop: 12, padding: 12 }}>
+            <h3 style={{ margin: "0 0 10px", color: "#185FA5" }}>🗺 Carte des livraisons</h3>
+            <TourneesMap magasinId={magasinCtx.magasinId} height={420} />
+          </Panel>
 
           {/* Filtres */}
           <Panel style={{ marginTop: 12 }}>

@@ -1,5 +1,7 @@
 "use client";
 // Page Materiels — Matériel médical : série, parc, lot, état, dépôt, zone (CRUD)
+// 0.62.8 : force-dynamic pour éviter erreur prerender Vercel useSearchParams
+export const dynamic = "force-dynamic";
 import { useEffect, useState, Suspense } from "react";
 import { createClient } from "../../lib/supabase";
 import { selectChambresContexte } from "../../lib/chambres";
