@@ -240,6 +240,79 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.59.8",
+    "kind": "feat",
+    "titre": "🖨 Génération BL imprimable + ✅ Confirmer réception EC + 📊 Alertes stock bas + 🩹 Fix tables demandes_internes",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`fix-demandes-internes-0.59.8.sql`** : crée les tables `demandes_internes` + `demandes_internes_lignes` + `bons_livraison` si absentes, recrée la vue `v_magasin_di`. Idempotent. Fix l'erreur 42P01 'relation demandes_internes does not exist' que Cédric a vue en appliquant le SQL 0.59.5" },
+      { "code": "AI", "txt": "🖨 **BL imprimable réel** : fonction `imprimerBL()` qui ouvre une fenêtre HTML stylée Aveho et déclenche `window.print()` après 500ms. Layout pro avec : header logo + numéro BL, méta-grid destinataire/référence DI, tableau lignes (#/code/désignation/qté demandée/qté livrée), totaux en bandeau noir, 2 zones signature (émetteur magasin + récepteur EC), QR placeholder, footer auto. Le navigateur permet d'imprimer OU 'Enregistrer en PDF' (Ctrl+P → destinataire = Enregistrer)" },
+      { "code": "AI", "txt": "✅ **Bouton 'Confirmer la réception'** côté EC : nouveau panneau bleu sur `/demandes-internes/[id]` quand `viewMode.isEC && statut=livree`. Click → DI passe en `cloturee`, set `cloturee_at` + `recue_at` + `recue_par`. INSERT notif pour l'user magasin (`validee_par`). Avec bouton 'Voir / Réimprimer BL'" },
+      { "code": "AI", "txt": "📊 **Alertes stock bas dans le Hub magasin** : nouveau composant `<AlertesStockBas>` ajouté au tableau de bord `/magasin`. Charge articles avec `est_catalogue_magasin=true` ET `stock_actuel <= stock_min`. Affiche cards avec barre de progression colorée (rouge=0%, amber<50%, beige>50%). Si tout OK → bandeau vert 'Stock OK'. Limité à 8 alertes (les plus critiques)" },
+      { "code": "AI", "txt": "🔁 **Notifications BL** : à la génération BL, INSERT notification 'BL XXX émis · Le magasin a livré ta DI. Confirme la réception une fois reçue.' pour l'user EC créateur. Cycle complet de notifications : Validation → BL émis → Réception confirmée" },
+      { "code": "AI", "txt": "🖨 **Réimpression BL** : bouton 'Réimprimer BL' visible en mode magasin si statut=livree, et en mode EC dans la card actions. Pas de re-INSERT, juste réouvre la fenêtre print du BL existant" },
+      { "code": "INFO", "txt": "🎯 **À faire avant** : applique d'abord `fix-demandes-internes-0.59.8.sql` dans Supabase pour créer les tables nécessaires" },
+      { "code": "INFO", "txt": "🔜 **Reste pour 0.59.9+** : workflow d'entrée patient guidé 5 étapes mobile (gros refacto wizard) · création article rapide depuis détail DI (si article inexistant dans la ligne)" }
+    ],
+    "themes": ["feat", "bl", "pdf", "stock", "reception"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.8.html"
+  },
+  {
+    "v": "0.59.7",
+    "kind": "feat",
+    "titre": "🩺 Cascade pathologies du service + 📋 Page /mes-demandes (suivi DI côté EC) + 🔔 Notifications auto sur actions DI",
+    "chantiers": [
+      { "code": "AI", "txt": "🩺 **Cascade pathologies du service** dans création patient mobile : quand un service est sélectionné, le select pathologies se transforme en optgroup à 2 niveaux. **★ Pathologies de ce service** en haut (préfixées d'une étoile), puis **Autres pathologies** en dessous. Si aucun service choisi → liste classique. Le rattachement est lu depuis `services_pathologies` (table 0.58.99) via un useEffect sur `form.service_id`. Le libellé du champ est mis à jour pour expliquer le ★",
+        "code_snippet": {
+          "file": "app/mobile/patient/new/page.js",
+          "note": "Optgroup pathologies recommandées",
+          "lang": "jsx",
+          "after": "{reco.length > 0 && (\n  <optgroup label='★ Pathologies de ce service'>\n    {reco.map(p => <option>★ [{p.code}] {p.nom}</option>)}\n  </optgroup>\n)}\n{autres.length > 0 && (\n  <optgroup label='Autres pathologies'>\n    {autres.map(p => <option>[{p.code}] {p.nom}</option>)}\n  </optgroup>\n)}"
+        }
+      },
+      { "code": "AI", "txt": "📋 **Nouvelle page `/mes-demandes`** : suivi des DI émises par la structure EC. Affiche compteurs cliquables par statut (Total / Envoyée / En attente / Validée / Refusée / Livrée / Clôturée), liste filtrable, click → page détail DI. Messages contextuels selon statut : motif de refus en rouge italique, n° BL en bleu pour les livrées, description du statut pour les validées. Réactualisable avec bouton" },
+      { "code": "AI", "txt": "🔔 **Notifications auto sur actions DI** : quand l'user magasin valide ou refuse une DI dans `/demandes-internes/[id]`, une notification est insérée dans la table `notifications` pour l'user EC (créateur de la DI). Type=`di`, titre + message contextuel, URL vers la DI. Apparaît dans la cloche de la TopBar (`NotifBell`) de l'EC. Try-catch défensif si table notifications absente" },
+      { "code": "AI", "txt": "📍 **Lien 'Mes demandes (DI)' ajouté en tête du menu Livraison** : icône ti-truck-loading, couleur amber (#EF9F27). Accessible directement depuis la nav de gauche" },
+      { "code": "INFO", "txt": "🎯 **Workflow** : (1) EC crée des pathologies, les rattache à des services (`/etablissement/edition`) · (2) Création patient → sélectionne un service → pathologies du service en ★ en haut · (3) Envoi DI au magasin · (4) Magasin valide → notification dans cloche EC · (5) EC va sur `/mes-demandes` voir le statut" }
+    ],
+    "themes": ["feat", "cascade", "notifications", "ec"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.7.html"
+  },
+  {
+    "v": "0.59.6",
+    "kind": "feat",
+    "titre": "🏬 Magasin Aveho complet : checkbox fournisseur + autocomplete catalogue + article magasin + DI validation/refus/BL + rôle utilisateur magasin",
+    "chantiers": [
+      { "code": "AI", "txt": "✅ **Checkbox 'Est fournisseur Aveho'** dans le formulaire de création/édition partenaire (`/etablissements-partenaires`) : bloc teal avec case à cocher + libellé descriptif. Détection URL `?new=1&fournisseur=1` qui ouvre le modal avec la case pré-cochée. Sauvegarde dans `est_fournisseur` (colonne SQL 0.59.5)" },
+      { "code": "AI", "txt": "🔍 **Autocomplete 'Article catalogue magasin'** dans l'édition article (`/articles`) : nouveau composant `<ArticleMagasinAutocomplete>` qui filtre par `est_catalogue_magasin=true`, search par libellé/reference/code, debounce 200ms, affichage 15 résultats max. Sélection mémorisée dans `form.article_magasin_id`. Pour rattacher un article étab à son équivalent magasin" },
+      { "code": "AI", "txt": "🏪 **Création article depuis vue Magasin** : nouvelle section teal dans le formulaire avec checkbox 'Article du catalogue magasin Aveho'. Détection URL `?new=1&magasin=1` (depuis bouton 'Ajouter un article' sur /magasin → catalogue) qui pré-coche automatiquement la case. Quand cochée, l'autocomplete article_magasin_id est masqué (pas pertinent)" },
+      { "code": "AI", "txt": "✓ ❌ 📦 **Page détail DI `/demandes-internes/[id]`** créée : affiche le détail d'une DI avec ses lignes. En mode Magasin, panneau d'actions teal avec : (1) Si statut=nouvelle/en_attente → boutons **Valider** ou **Refuser** (textarea motif obligatoire), (2) Si statut=validee → bouton **Générer le BL** (crée un BL dans `bons_livraison` ou pose `numero_bl` sur la DI si la table n'existe pas, statut DI → livrée), (3) Si autre statut → message contextuel avec motif refus ou n° BL si applicable" },
+      { "code": "AI", "txt": "🆕 **Rôle '🏬 Utilisateur Magasin'** ajouté dans `/collaborateurs` (9 rôles → 10). Couleur teal #5a8f8f, icône ti-building-warehouse. Permet de marquer un membre comme utilisateur dédié magasin" },
+      { "code": "AI", "txt": "🔁 **Auto-redirect mode Magasin** : sur `/choix-mode`, après login, requête `membres_structure.role_professionnel` du user → si = `utilisateur_magasin`, force `av-view-mode=magasin` + `av-launch-mode=desktop`, dispatch event de synchro, redirige vers `/magasin`. L'user magasin court-circuite la popup choix EC/Mobile et atterrit directement dans son espace" },
+      { "code": "INFO", "txt": "🎯 **Workflow complet** : (1) Marque un membre comme 'Utilisateur Magasin' dans /collaborateurs · (2) Au login, il atterrit auto sur /magasin · (3) Il crée des articles catalogue depuis 'Ajouter un article' → est_catalogue_magasin=true · (4) Les EC peuvent rattacher leurs articles via l'autocomplete · (5) Les DI reçues apparaissent dans l'onglet DI, l'user magasin clique → page détail → Valider/Refuser/Générer BL" }
+    ],
+    "themes": ["feat", "magasin", "workflow", "complete"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.6.html"
+  },
+  {
+    "v": "0.59.5",
+    "kind": "feat",
+    "titre": "🏬 Mode 'Magasin Aveho' (switch dans UserMenu) + page /magasin avec catalogue, DI reçues, partenaires fournisseurs",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.59.5-magasin-vue.sql`** : ajoute (1) `est_fournisseur` BOOLEAN sur etablissements_partenaires (case à cocher pour qu'un partenaire apparaisse dans la liste magasin), (2) `magasin_id` + `article_magasin_id` + `est_catalogue_magasin` sur articles (rattachement article étab → article catalogue magasin), (3) colonnes manquantes sur table magasins, (4) vue `v_magasin_di` qui liste les DI reçues avec compteurs lignes/quantité" },
+      { "code": "AI", "txt": "🆕 **Hook `useViewMode`** dans `lib/useViewMode.js` : toggle global entre vue EC (`ec`) et vue Magasin (`magasin`). Stocké dans localStorage clé `av-view-mode`. Dispatch event `av-view-mode-change` pour synchroniser les composants. Plus tard sera basé sur le rôle utilisateur (user magasin auto-redirigé)" },
+      { "code": "AI", "txt": "🆕 **Switch Mode dans UserMenu** : nouveau bloc teal au-dessus de 'Mon profil' avec 2 boutons. **EC** (Espace Collectivité) avec gradient bleu, **Magasin** (Aveho) avec gradient teal. Click → bascule + redirige vers la page d'accueil de chaque mode. Sous-libellé descriptif (côté demandeur / côté fournisseur)" },
+      { "code": "AI", "txt": "🆕 **Page `/magasin`** : nouvelle vue dédiée au magasin Aveho avec 4 onglets : (1) **Tableau de bord** (4 stat cards cliquables), (2) **Catalogue** (articles du magasin, bouton Ajouter), (3) **DI reçues** (vue v_magasin_di, click → page DI), (4) **Partenaires** (etablissements_partenaires avec est_fournisseur=true). Header avec bouton 'Retour mode EC' pour switch rapide" },
+      { "code": "AI", "txt": "💡 **Workflow imaginé** : (a) Tu crées un partenaire (formulaire existant) → coche 'Est fournisseur Aveho' → il apparaît dans /magasin → onglet Partenaires. (b) Tu bascules en mode Magasin via UserMenu → tu vois les DI reçues de tes établissements EC. (c) Tu crées des articles dans le catalogue magasin (`articles.est_catalogue_magasin=true`). (d) Les étabs peuvent rattacher leurs articles à un article du catalogue via `article_magasin_id`" },
+      { "code": "INFO", "txt": "📋 **À faire SQL** : applique `migration-0.59.5-magasin-vue.sql` dans Supabase. Le SQL `aveho-ALL-IN-ONE-fix-0.59.5.sql` que je t'ai fourni couvre déjà la création des tables manquantes (vehicules, cuves_oxygene, stock_mouvements, pharmacies, pathologies)" }
+    ],
+    "themes": ["feat", "magasin", "mode", "switch"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.59.5.html"
+  },
+  {
     "v": "0.59.4",
     "kind": "hotfix",
     "titre": "🩹 HOTFIX SQL critique : colonnes chambre_id/service_id/etc. manquantes + payload patient ULTRA-minimal",

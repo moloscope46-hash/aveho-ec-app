@@ -41,6 +41,8 @@ const emptyForm = {
   contact_nom: "", contact_fonction: "",
   telephone: "", email: "", site_web: "",
   notes: "",
+  // 0.59.6 : flag fournisseur Aveho
+  est_fournisseur: false,
 };
 
 export default function EtablissementsPartenaires() {
@@ -86,10 +88,20 @@ export default function EtablissementsPartenaires() {
 
   useEffect(() => { loadAll(); }, [auth.ready, auth.structureId]);
 
-  function openCreate() {
-    setForm(emptyForm);
+  function openCreate(prefillFournisseur = false) {
+    setForm({ ...emptyForm, est_fournisseur: prefillFournisseur });
     setEditModal({ mode: "create" });
   }
+
+  // 0.59.6 : détecter URL params ?new=1&fournisseur=1
+  useEffect(() => {
+    if (!auth.ready) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
+      openCreate(params.get("fournisseur") === "1");
+    }
+  }, [auth.ready]);
 
   function openEdit(p) {
     setForm({
@@ -108,6 +120,7 @@ export default function EtablissementsPartenaires() {
       email: p.email || "",
       site_web: p.site_web || "",
       notes: p.notes || "",
+      est_fournisseur: !!p.est_fournisseur,  // 0.59.6
     });
     setEditModal({ mode: "edit", data: p });
   }
@@ -664,6 +677,30 @@ export default function EtablissementsPartenaires() {
               <input value={form.site_web} onChange={(e) => setForm({ ...form, site_web: e.target.value })} placeholder="https://…" />
             </Field>
           </div>
+
+          {/* 0.59.6 : Case "Est fournisseur Aveho" */}
+          <Field label="">
+            <label style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "12px 14px", borderRadius: 10,
+              background: form.est_fournisseur ? "rgba(94,143,143,.10)" : "#fafbfc",
+              border: `2px solid ${form.est_fournisseur ? "#5a8f8f" : "#e3e9ee"}`,
+              cursor: "pointer", transition: "all 150ms",
+            }}>
+              <input type="checkbox"
+                checked={!!form.est_fournisseur}
+                onChange={(e) => setForm({ ...form, est_fournisseur: e.target.checked })}
+                style={{ width: 18, height: 18, accentColor: "#5a8f8f" }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, color: form.est_fournisseur ? "#5a8f8f" : "#142131", fontSize: 13 }}>
+                  <i className="ti ti-building-warehouse" /> Est fournisseur Aveho
+                </div>
+                <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 2 }}>
+                  Si coché, ce partenaire apparaîtra dans la vue Magasin → onglet Partenaires fournisseurs
+                </div>
+              </div>
+            </label>
+          </Field>
 
           {/* Notes */}
           <Field label="Notes">

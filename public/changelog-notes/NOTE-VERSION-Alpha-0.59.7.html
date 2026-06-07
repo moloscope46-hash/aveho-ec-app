@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.7 — Cascade + suivi DI + notifs</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4256 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(124,200,200,.20));border:1px solid rgba(124,200,200,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#7CC8C8;font-weight:700;background:rgba(124,200,200,.18);border:1px solid rgba(124,200,200,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#bfe6e6;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#bfe6e6}
+.meta b{color:#fff}.meta code{background:rgba(124,200,200,.16);color:#fff;border:1px solid rgba(124,200,200,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7CC8C8,#EF9F27)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(124,200,200,.20);border-left:4px solid #7CC8C8;border-radius:14px;padding:20px 24px;margin:14px 0}
+.select-demo{background:#fff;color:#142131;padding:14px;border-radius:10px;font-family:Quicksand;max-width:380px;margin:10px 0}
+.optgroup-label{font-weight:700;font-size:11.5px;color:#7CC8C8;background:#fafbfc;padding:8px 10px;border-radius:6px 6px 0 0;letter-spacing:.5px}
+.optgroup-2-label{font-weight:700;font-size:11.5px;color:#5a6878;background:#fafbfc;padding:8px 10px;letter-spacing:.5px;margin-top:8px}
+.opt{padding:6px 14px;font-size:12.5px;color:#142131;border-bottom:1px solid #f0f3f6}
+.opt.star{background:rgba(124,200,200,.10);color:#185FA5;font-weight:600}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:14px 0;max-width:600px}
+.stat-tile{background:#1a2434;border:2px solid #2a3645;border-radius:10px;padding:10px;display:flex;gap:8px;align-items:center}
+.stat-tile.active{background:rgba(239,159,39,.15);border-color:#EF9F27}
+.stat-tile .ic{font-size:20px}
+.stat-tile .lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.stat-tile .val{font-size:18px;font-weight:700;font-family:Consolas,monospace}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #7CC8C8}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(124,200,200,.18);font-size:11.5px;color:#bfe6e6;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🩺📋🔔 0.59.7 · CASCADE + SUIVI DI + NOTIFS</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩺 Cascade pathologies du service + 📋 /mes-demandes + 🔔 Notifications auto DI<small>3 features qui ferment la boucle EC ↔ Magasin avec UX cohérente</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.7-alpha</code></span>
+    <span><b>SQL :</b> aucun</span>
+    <span><b>Type :</b> Feature</span>
+  </div>
+</header>
+
+<h2>🩺 1. Cascade pathologies du service</h2>
+
+<p style="color:#bfe6e6;font-size:13;margin:0 0 8px">Quand l'utilisateur sélectionne un service dans la création patient, les pathologies rattachées à ce service apparaissent en haut du select avec une étoile ★ :</p>
+
+<div class="select-demo">
+  <div style="font-size:11px;color:#5a6878;margin-bottom:6px;font-weight:700">Pathologie principale (★ = recommandée pour ce service)</div>
+  <div class="optgroup-label">★ Pathologies de ce service</div>
+  <div class="opt star">★ [PERF] Perfusion à domicile</div>
+  <div class="opt star">★ [CICA] Cicatrisation</div>
+  <div class="optgroup-2-label">Autres pathologies</div>
+  <div class="opt">[PPC] PPC (Apnée du sommeil)</div>
+  <div class="opt">[OXY] Oxygénothérapie</div>
+  <div class="opt">[NED] Nutrition entérale</div>
+  <div class="opt">[VPH] VPH</div>
+</div>
+
+<p style="color:#bfe6e6;font-size:13;margin-top:8px">Le rattachement est lu depuis <code>services_pathologies</code> (table 0.58.99) via un useEffect sur <code>form.service_id</code>. Sans service sélectionné, liste classique.</p>
+
+<h2>📋 2. Nouvelle page /mes-demandes</h2>
+
+<p style="color:#bfe6e6;font-size:13;margin:0 0 8px">Suivi temps réel des DI envoyées au magasin, accessible depuis le menu Livraison. Compteurs cliquables par statut :</p>
+
+<div class="stat-grid">
+  <div class="stat-tile active" style="border-color:#5a6878">
+    <div class="ic" style="color:#5a6878">📋</div>
+    <div><div class="lbl" style="color:#5a6878">Total</div><div class="val" style="color:#fff">42</div></div>
+  </div>
+  <div class="stat-tile">
+    <div class="ic" style="color:#EF9F27">📤</div>
+    <div><div class="lbl" style="color:#EF9F27">Envoyée</div><div class="val" style="color:#fff">8</div></div>
+  </div>
+  <div class="stat-tile">
+    <div class="ic" style="color:#5aa05a">✓</div>
+    <div><div class="lbl" style="color:#5aa05a">Validée</div><div class="val" style="color:#fff">12</div></div>
+  </div>
+  <div class="stat-tile">
+    <div class="ic" style="color:#e35d5b">✗</div>
+    <div><div class="lbl" style="color:#e35d5b">Refusée</div><div class="val" style="color:#fff">2</div></div>
+  </div>
+  <div class="stat-tile">
+    <div class="ic" style="color:#185FA5">🚚</div>
+    <div><div class="lbl" style="color:#185FA5">Livrée</div><div class="val" style="color:#fff">15</div></div>
+  </div>
+  <div class="stat-tile">
+    <div class="ic" style="color:#7a6fb0">✅</div>
+    <div><div class="lbl" style="color:#7a6fb0">Clôturée</div><div class="val" style="color:#fff">5</div></div>
+  </div>
+</div>
+
+<p style="color:#bfe6e6;font-size:13;margin:8px 0 0">Chaque DI affiche son icône statut + messages contextuels : motif refus en rouge italique, n° BL en bleu pour les livrées, description du statut. Click → page détail DI.</p>
+
+<h2>🔔 3. Notifications auto sur actions DI</h2>
+
+<div class="panel">
+<p style="margin:0 0 6px;color:#fff;font-size:13.5px">Quand l'user magasin valide ou refuse une DI :</p>
+<ul style="margin:6px 0 0;color:#bfe6e6;font-size:13">
+<li>INSERT auto dans table <code>notifications</code></li>
+<li>Destinataire : <code>created_by</code> de la DI (l'user EC qui a fait la demande)</li>
+<li>Type <code>di</code>, titre + message contextuel, URL vers la DI</li>
+<li>Apparaît dans la cloche de la TopBar (composant NotifBell existant)</li>
+<li>Try-catch défensif si table notifications absente</li>
+</ul>
+</div>
+
+<pre>// Côté magasin après valider/refuser
+await supabase.from("notifications").insert({
+  user_id: di.created_by,
+  structure_id: di.structure_id,
+  type: "di",
+  titre: `DI ${di.numero} validée`,  // ou "refusée"
+  message: `Le magasin a validé ta demande.`,
+  url: `/demandes-internes/${id}`,
+  lu: false,
+});</pre>
+
+<h2>🔄 Boucle complète EC ↔ Magasin</h2>
+
+<pre>1️⃣ EC crée des pathologies (/pathologies)
+       ↓
+2️⃣ EC rattache pathos aux services (/etablissement/edition modal service)
+       ↓
+3️⃣ EC crée un patient mobile → sélectionne un service
+       → Pathologies du service en ★ en haut du select  [NEW 0.59.7]
+       ↓
+4️⃣ EC envoie une DI au magasin
+       ↓
+5️⃣ Magasin clique sur la DI → page détail → Valider/Refuser
+       → INSERT notification pour l'EC                  [NEW 0.59.7]
+       ↓
+6️⃣ EC voit le badge sur la cloche TopBar
+       → Click cloche → voit la notif
+       → Click notif → arrive sur la DI mise à jour
+       OU
+       → EC va sur /mes-demandes                        [NEW 0.59.7]
+       → Voit tous ses DI avec leurs statuts
+       ↓
+7️⃣ Magasin génère le BL → DI passe en "livrée"
+       → INSERT notification</pre>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.7 - Cascade patho service + /mes-demandes + notifs DI"
+git push origin main</pre>
+
+<h2>🔜 Suite (0.59.8+)</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;color:#bfe6e6;font-size:13px;line-height:1.9">
+<li>Génération BL PDF réelle (avec articles, signature, code-barres)</li>
+<li>Hub magasin avec stats temps réel et alertes stock bas</li>
+<li>Création article rapide depuis le détail DI (si article inexistant)</li>
+<li>Bouton "Confirmer réception" côté EC pour clôturer une DI livrée</li>
+<li>Workflow d'entrée patient guidé en mode mobile (5 étapes wizard)</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.7 · 6 juin 2026 · 🩺 CASCADE · 📋 SUIVI · 🔔 NOTIFS</footer>
+</div></body></html>

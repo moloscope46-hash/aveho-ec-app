@@ -98,7 +98,7 @@ export default function Articles() {
     } catch { setHoveredMateriels([]); }
   }
 
-  function newArticle() {
+  function newArticle(prefillCatalogueMagasin = false) {
     const defaultTva = tvaTaux.find(t => t.est_defaut) || tvaTaux[0];
     setForm({
       reference: "",
@@ -117,11 +117,22 @@ export default function Articles() {
       gere_lot: false,
       gere_serie: false,
       gere_peremption: false,
+      // 0.59.6 : si arrivé depuis /magasin → article catalogue magasin par défaut
+      est_catalogue_magasin: prefillCatalogueMagasin,
     });
     setModal({});
     setActiveTab("general");
     setErr("");
   }
+
+  // 0.59.6 : détecter URL ?new=1&magasin=1
+  useEffect(() => {
+    if (!auth.ready || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
+      newArticle(params.get("magasin") === "1");
+    }
+  }, [auth.ready]);
 
   function editArticle(a) {
     setForm({ ...a });
@@ -531,6 +542,33 @@ export default function Articles() {
                     <input type="checkbox" checked={!!form.usage_unique} onChange={(e) => setForm({ ...form, usage_unique: e.target.checked })} /> Usage unique
                   </label>
                 </div>
+
+                {/* 0.59.6 : Section Magasin Aveho */}
+                <div style={{
+                  marginTop: 12, padding: 12,
+                  background: form.est_catalogue_magasin ? "rgba(94,143,143,.10)" : "#fafbfc",
+                  border: `2px solid ${form.est_catalogue_magasin ? "#5a8f8f" : "#e3e9ee"}`,
+                  borderRadius: 10,
+                }}>
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", fontWeight: 700, color: form.est_catalogue_magasin ? "#5a8f8f" : "#142131" }}>
+                    <input type="checkbox" checked={!!form.est_catalogue_magasin} onChange={(e) => setForm({ ...form, est_catalogue_magasin: e.target.checked })} style={{ accentColor: "#5a8f8f", width: 16, height: 16 }} />
+                    <i className="ti ti-building-warehouse" /> Article du catalogue magasin Aveho
+                  </label>
+                  <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 4, marginLeft: 26 }}>
+                    Si coché, cet article apparaîtra dans la vue Magasin → onglet Catalogue. Les autres établissements pourront le référencer.
+                  </div>
+
+                  {!form.est_catalogue_magasin && (
+                    <div style={{ marginTop: 10, marginLeft: 26 }}>
+                      <ArticleMagasinAutocomplete
+                        supabase={supabase}
+                        structureId={auth.structureId}
+                        value={form.article_magasin_id}
+                        onChange={(id) => setForm({ ...form, article_magasin_id: id })}
+                      />
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
@@ -814,6 +852,103 @@ export default function Articles() {
           </Modal>
         )}
       </div>
+    </div>
+  );
+}
+
+// =============================================================
+// 0.59.6 : Autocomplete article catalogue magasin Aveho
+// =============================================================
+function ArticleMagasinAutocomplete({ supabase, structureId, value, onChange }) {
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  // Charger le label si une valeur est sélectionnée
+  useEffect(() => {
+    if (!value) { setSelected(null); return; }
+    (async () => {
+      const r = await supabase.from("articles").select("id, libelle, reference, code").eq("id", value).maybeSingle();
+      if (r.data) setSelected(r.data);
+    })();
+  }, [value]);
+
+  // Search avec debounce
+  useEffect(() => {
+    if (!open || search.length < 1) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      const r = await supabase
+        .from("articles")
+        .select("id, libelle, reference, code")
+        .eq("est_catalogue_magasin", true)
+        .or(`libelle.ilike.%${search}%,reference.ilike.%${search}%,code.ilike.%${search}%`)
+        .limit(15);
+      setResults(r.data || []);
+    }, 200);
+    return () => clearTimeout(t);
+  }, [search, open]);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <div style={{ fontSize: 11, color: "#5a6878", marginBottom: 4 }}>
+        <i className="ti ti-link" /> Rattacher à un article du catalogue magasin (optionnel)
+      </div>
+      {selected ? (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "8px 12px", background: "#fff",
+          border: "1px solid #5a8f8f", borderRadius: 8, fontSize: 12.5,
+        }}>
+          <i className="ti ti-package" style={{ color: "#5a8f8f" }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, color: "#142131" }}>{selected.libelle}</div>
+            {(selected.reference || selected.code) && <div style={{ fontFamily: "Consolas,monospace", fontSize: 10.5, color: "#8a98a8" }}>{selected.reference || selected.code}</div>}
+          </div>
+          <button onClick={() => { onChange(null); setSelected(null); setSearch(""); }} style={{
+            background: "transparent", border: "none", color: "#e35d5b", cursor: "pointer", fontSize: 16,
+          }}>×</button>
+        </div>
+      ) : (
+        <>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            placeholder="Tape pour chercher un article du catalogue..."
+            style={{
+              width: "100%", padding: "8px 12px",
+              background: "#fff", border: "1px solid #cfd8e0", borderRadius: 8,
+              fontFamily: "inherit", fontSize: 12.5,
+            }}
+          />
+          {open && results.length > 0 && (
+            <div style={{
+              position: "absolute", top: "100%", left: 0, right: 0,
+              background: "#fff", border: "1px solid #cfd8e0", borderRadius: 8,
+              marginTop: 4, maxHeight: 240, overflowY: "auto", zIndex: 100,
+              boxShadow: "0 4px 16px rgba(0,0,0,.08)",
+            }}>
+              {results.map(a => (
+                <div key={a.id} onClick={() => { onChange(a.id); setSelected(a); setSearch(""); setOpen(false); }} style={{
+                  padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #f0f3f6", fontSize: 12.5,
+                }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#fafbfc"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; }}>
+                  <div style={{ fontWeight: 600, color: "#142131" }}>{a.libelle}</div>
+                  {(a.reference || a.code) && <div style={{ fontFamily: "Consolas,monospace", fontSize: 10.5, color: "#8a98a8" }}>{a.reference || a.code}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+          {open && search.length >= 1 && results.length === 0 && (
+            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #cfd8e0", borderRadius: 8, marginTop: 4, padding: 12, fontSize: 11.5, color: "#8a98a8", textAlign: "center", zIndex: 100 }}>
+              Aucun article catalogue trouvé pour "{search}"
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

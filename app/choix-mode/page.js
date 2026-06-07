@@ -7,16 +7,43 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/useAuth";
+import { createClient } from "../../lib/supabase";
 
 export default function ChoixModePage() {
   const router = useRouter();
   const auth = useAuth();
+  const supabase = createClient();
   const [savedMode, setSavedMode] = useState(null);
 
   useEffect(() => {
     if (auth.ready && !auth.user) {
       router.push("/login");
+      return;
     }
+    if (!auth.ready || !auth.user) return;
+
+    // 0.59.6 : Vérifier si user a le rôle utilisateur_magasin → auto-redirect en mode Magasin
+    (async () => {
+      try {
+        const r = await supabase.from("membres_structure")
+          .select("role_professionnel")
+          .eq("user_id", auth.user.id)
+          .maybeSingle();
+        if (r.data?.role_professionnel === "utilisateur_magasin") {
+          // Force mode Magasin
+          try {
+            localStorage.setItem("av-view-mode", "magasin");
+            localStorage.setItem("av-launch-mode", "desktop");
+          } catch {}
+          window.dispatchEvent(new Event("av-view-mode-change"));
+          router.push("/magasin");
+          return;
+        }
+      } catch (e) {
+        console.warn("[choix-mode] check user role:", e);
+      }
+    })();
+
     try {
       setSavedMode(localStorage.getItem("av-launch-mode"));
     } catch {}

@@ -23,6 +23,8 @@ const ROLES_PRO = [
   { v: "secretaire",    l: "Secrétaire",       ic: "ti-keyboard",       col: "#8a98a8" },
   { v: "logistique",    l: "Logistique",       ic: "ti-truck",          col: "#EF9F27" },
   { v: "admin",         l: "Administratif",    ic: "ti-briefcase",      col: "#5e4a8c" },
+  // 0.59.6 : rôle dédié magasin Aveho
+  { v: "utilisateur_magasin", l: "🏬 Utilisateur Magasin", ic: "ti-building-warehouse", col: "#5a8f8f" },
   { v: "autre",         l: "Autre",            ic: "ti-user",           col: "#142131" },
 ];
 

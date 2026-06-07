@@ -1,0 +1,505 @@
+"use client";
+// =============================================================
+//  /demandes-internes/[id] — Détail DI (0.59.6)
+//  Si mode magasin : boutons Valider / Refuser + génération BL
+// =============================================================
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { createClient } from "../../../lib/supabase";
+import { useAuth } from "../../../lib/useAuth";
+import { useViewMode } from "../../../lib/useViewMode";
+import TopBar from "../../TopBar";
+import { useCart } from "../../useCart";
+import { Panel, Btn } from "../../ui";
+import BackButton from "../../components/BackButton";
+
+const STATUTS = {
+  nouvelle:  { lbl: "Nouvelle",      col: "#EF9F27", ic: "ti-inbox" },
+  en_attente: { lbl: "En attente",   col: "#EF9F27", ic: "ti-clock" },
+  validee:   { lbl: "Validée",       col: "#5aa05a", ic: "ti-check" },
+  refusee:   { lbl: "Refusée",       col: "#e35d5b", ic: "ti-x" },
+  livree:    { lbl: "Livrée",        col: "#185FA5", ic: "ti-truck-delivery" },
+  cloturee:  { lbl: "Clôturée",      col: "#7a6fb0", ic: "ti-circle-check" },
+};
+
+export default function DemandeInterneDetailPage() {
+  const router = useRouter();
+  const { id } = useParams();
+  const supabase = createClient();
+  const auth = useAuth();
+  const viewMode = useViewMode();
+  const cart = useCart();
+  const [di, setDi] = useState(null);
+  const [lignes, setLignes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionInProgress, setActionInProgress] = useState(false);
+  const [refusReason, setRefusReason] = useState("");
+  const [showRefus, setShowRefus] = useState(false);
+
+  useEffect(() => {
+    if (!id || !auth.ready) return;
+    reload();
+  }, [id, auth.ready]);
+
+  async function reload() {
+    setLoading(true);
+    try {
+      const tryFetch = async (q) => { try { const r = await q; return r.data; } catch { return null; } };
+      const [diData, lignesData] = await Promise.all([
+        tryFetch(supabase.from("demandes_internes").select("*").eq("id", id).single()),
+        tryFetch(supabase.from("demandes_internes_lignes").select("*, articles(libelle, code, reference)").eq("demande_id", id)),
+      ]);
+      setDi(diData);
+      setLignes(lignesData || []);
+    } finally { setLoading(false); }
+  }
+
+  async function valider() {
+    if (!confirm("Valider cette DI ?\nElle sera marquée comme validée et le BL pourra être généré.")) return;
+    setActionInProgress(true);
+    try {
+      const r = await supabase.from("demandes_internes").update({
+        statut: "validee",
+        validee_at: new Date().toISOString(),
+        validee_par: auth.user?.id,
+      }).eq("id", id);
+      if (r.error) throw r.error;
+      // 0.59.7 : créer notification côté EC (createur de la DI)
+      try {
+        if (di?.created_by && di.created_by !== auth.user?.id) {
+          await supabase.from("notifications").insert({
+            user_id: di.created_by,
+            structure_id: di.structure_id,
+            type: "di",
+            titre: `DI ${di.numero || "DI"} validée`,
+            message: `Le magasin a validé ta demande. Génération du BL en cours.`,
+            url: `/demandes-internes/${id}`,
+            lu: false,
+          });
+        }
+      } catch (e) { console.warn("[Notif]", e); }
+      await reload();
+      alert("✓ DI validée");
+    } catch (e) {
+      alert("Erreur : " + e.message);
+    } finally { setActionInProgress(false); }
+  }
+
+  async function refuser() {
+    if (!refusReason.trim()) {
+      alert("Indique un motif de refus");
+      return;
+    }
+    setActionInProgress(true);
+    try {
+      const r = await supabase.from("demandes_internes").update({
+        statut: "refusee",
+        motif_refus: refusReason,
+        refusee_at: new Date().toISOString(),
+        refusee_par: auth.user?.id,
+      }).eq("id", id);
+      if (r.error) throw r.error;
+      // 0.59.7 : notif refus
+      try {
+        if (di?.created_by && di.created_by !== auth.user?.id) {
+          await supabase.from("notifications").insert({
+            user_id: di.created_by,
+            structure_id: di.structure_id,
+            type: "di",
+            titre: `DI ${di.numero || "DI"} refusée`,
+            message: `Motif : ${refusReason}`,
+            url: `/demandes-internes/${id}`,
+            lu: false,
+          });
+        }
+      } catch (e) { console.warn("[Notif]", e); }
+      await reload();
+      setShowRefus(false);
+      setRefusReason("");
+      alert("DI refusée");
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setActionInProgress(false); }
+  }
+
+  async function genererBL() {
+    if (!confirm("Générer le bon de livraison pour cette DI ?\n\nUne fenêtre d'impression s'ouvrira ensuite.")) return;
+    setActionInProgress(true);
+    try {
+      const numero = di.numero_bl || `BL-${new Date().toISOString().slice(0,10).replace(/-/g, "")}-${Math.floor(Math.random() * 1000)}`;
+      // Tente INSERT BL si table existe + update DI
+      try {
+        const r = await supabase.from("bons_livraison").insert({
+          structure_id: auth.structureId,
+          demande_id: id,
+          numero,
+          statut: "emis",
+          date_emission: new Date().toISOString(),
+          created_by: auth.user?.id,
+        });
+        if (r.error && r.error.code !== "42P01") console.warn("[BL]", r.error);
+      } catch (e) { console.warn("[BL]", e); }
+
+      await supabase.from("demandes_internes").update({
+        statut: "livree",
+        livree_at: new Date().toISOString(),
+        numero_bl: numero,
+      }).eq("id", id);
+
+      // 0.59.8 : notification EC
+      try {
+        if (di?.created_by && di.created_by !== auth.user?.id) {
+          await supabase.from("notifications").insert({
+            user_id: di.created_by,
+            structure_id: di.structure_id,
+            type: "di",
+            titre: `BL ${numero} émis`,
+            message: `Le magasin a livré ta DI. Confirme la réception une fois reçue.`,
+            url: `/demandes-internes/${id}`,
+            lu: false,
+          });
+        }
+      } catch {}
+
+      await reload();
+      // 0.59.8 : ouvrir fenêtre impression BL
+      imprimerBL({ numero, di, lignes, auth });
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setActionInProgress(false); }
+  }
+
+  // 0.59.8 : Bouton "Confirmer réception" côté EC pour clôturer DI livrée
+  async function confirmerReception() {
+    if (!confirm("Confirmer la réception de cette DI ?\nElle sera marquée comme clôturée.")) return;
+    setActionInProgress(true);
+    try {
+      const r = await supabase.from("demandes_internes").update({
+        statut: "cloturee",
+        cloturee_at: new Date().toISOString(),
+        recue_at: new Date().toISOString(),
+        recue_par: auth.user?.id,
+      }).eq("id", id);
+      if (r.error) throw r.error;
+      // Notifier le magasin
+      try {
+        if (di?.validee_par && di.validee_par !== auth.user?.id) {
+          await supabase.from("notifications").insert({
+            user_id: di.validee_par,
+            structure_id: di.structure_id,
+            type: "di",
+            titre: `DI ${di.numero || ""} réceptionnée`,
+            message: `L'EC a confirmé la réception.`,
+            url: `/demandes-internes/${id}`,
+            lu: false,
+          });
+        }
+      } catch {}
+      await reload();
+      alert("✓ Réception confirmée — DI clôturée");
+    } catch (e) { alert("Erreur : " + e.message); }
+    finally { setActionInProgress(false); }
+  }
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center" }}>Chargement...</div>;
+  if (!di) return (
+    <div className="page-shell">
+      <TopBar cartCount={cart.count} auth={auth} />
+      <div className="page-content"><BackButton /><Panel><div style={{ padding: 40, textAlign: "center" }}>DI introuvable</div></Panel></div>
+    </div>
+  );
+
+  const statut = STATUTS[di.statut] || { lbl: di.statut || "?", col: "#8a98a8", ic: "ti-help" };
+
+  return (
+    <div className="page-shell">
+      <TopBar cartCount={cart.count} auth={auth} />
+      <div className="page-content">
+        <BackButton />
+
+        {/* Header */}
+        <div style={{
+          background: `linear-gradient(135deg, ${statut.col}22, ${statut.col}08)`,
+          borderLeft: `4px solid ${statut.col}`,
+          borderRadius: 12, padding: 20, marginBottom: 18,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+            <div style={{ width: 56, height: 56, background: `${statut.col}33`, color: statut.col, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26 }}>
+              <i className={`ti ${statut.ic}`} />
+            </div>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <h1 style={{ margin: "0 0 4px", fontSize: 22, color: "#142131" }}>
+                DI {di.numero || di.id?.substring(0, 8)}
+              </h1>
+              <div style={{ fontSize: 12.5, color: "#5a6878" }}>
+                Créée le {new Date(di.created_at).toLocaleString("fr-FR")}
+              </div>
+            </div>
+            <span style={{
+              padding: "6px 14px", borderRadius: 8,
+              background: statut.col, color: "#fff",
+              fontWeight: 700, fontSize: 12,
+            }}>{statut.lbl}</span>
+          </div>
+        </div>
+
+        {/* 0.59.8 : Actions EC — Confirmer réception si DI livrée */}
+        {viewMode.isEC && di.statut === "livree" && (
+          <Panel style={{ background: "rgba(24,95,165,.06)", borderLeft: "4px solid #185FA5" }}>
+            <h3 style={{ margin: "0 0 10px", color: "#185FA5", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-package" /> Actions Espace Collectivité
+            </h3>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <Btn variant="primary" icon="ti-check-bold" onClick={confirmerReception} disabled={actionInProgress}>
+                {actionInProgress ? "..." : "✓ Confirmer la réception"}
+              </Btn>
+              <Btn variant="ghost" icon="ti-printer" onClick={() => imprimerBL({ numero: di.numero_bl, di, lignes, auth })}>
+                Voir / Réimprimer BL
+              </Btn>
+              <span style={{ color: "#185FA5", fontSize: 12, fontWeight: 600 }}>
+                {di.numero_bl ? `📦 BL : ${di.numero_bl}` : "BL en cours"}
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: "#5a6878", marginTop: 8, fontStyle: "italic" }}>
+              Une fois la réception confirmée, la DI sera marquée comme clôturée.
+            </div>
+          </Panel>
+        )}
+
+        {/* Actions magasin */}
+        {viewMode.isMagasin && (
+          <Panel style={{ background: "rgba(94,143,143,.06)", borderLeft: "4px solid #5a8f8f" }}>
+            <h3 style={{ margin: "0 0 10px", color: "#5a8f8f", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-tool" /> Actions magasin
+            </h3>
+            {di.statut === "nouvelle" || di.statut === "en_attente" || !di.statut ? (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Btn variant="primary" icon="ti-check" onClick={valider} disabled={actionInProgress}>
+                  {actionInProgress ? "..." : "Valider la DI"}
+                </Btn>
+                <Btn variant="ghost" icon="ti-x" onClick={() => setShowRefus(!showRefus)} disabled={actionInProgress}>
+                  Refuser
+                </Btn>
+              </div>
+            ) : di.statut === "validee" ? (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Btn variant="primary" icon="ti-truck-delivery" onClick={genererBL} disabled={actionInProgress}>
+                  {actionInProgress ? "..." : "Générer le BL"}
+                </Btn>
+                <span style={{ padding: "8px 12px", color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
+                  ✓ DI validée — prête à livrer
+                </span>
+              </div>
+            ) : di.statut === "livree" ? (
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                <Btn variant="ghost" icon="ti-printer" onClick={() => imprimerBL({ numero: di.numero_bl, di, lignes, auth })} disabled={actionInProgress}>
+                  Réimprimer BL
+                </Btn>
+                {di.numero_bl && <span style={{ color: "#185FA5", fontSize: 12, fontWeight: 600 }}>📦 BL : <code>{di.numero_bl}</code></span>}
+              </div>
+            ) : (
+              <div style={{ color: "#5a6878", fontSize: 12.5 }}>
+                Statut <b>{statut.lbl}</b> — pas d'action disponible
+                {di.motif_refus && <div style={{ marginTop: 6, color: "#e35d5b" }}>Motif refus : {di.motif_refus}</div>}
+                {di.numero_bl && <div style={{ marginTop: 6, color: "#185FA5" }}>BL : <code>{di.numero_bl}</code></div>}
+              </div>
+            )}
+
+            {showRefus && (
+              <div style={{ marginTop: 12, padding: 12, background: "#fff", border: "1px solid #e35d5b", borderRadius: 8 }}>
+                <label style={{ display: "block", fontSize: 12, color: "#c0392b", fontWeight: 700, marginBottom: 6 }}>
+                  Motif de refus *
+                </label>
+                <textarea value={refusReason} onChange={(e) => setRefusReason(e.target.value)} rows={3} autoFocus
+                  placeholder="Article indisponible, quantité insuffisante, etc."
+                  style={{ width: "100%", padding: "8px 12px", background: "#fafbfc", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 12.5 }} />
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <Btn variant="ghost" onClick={() => { setShowRefus(false); setRefusReason(""); }}>Annuler</Btn>
+                  <Btn variant="primary" icon="ti-x" onClick={refuser} disabled={actionInProgress}>Confirmer refus</Btn>
+                </div>
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {/* Détails DI */}
+        <Panel style={{ marginTop: 12 }}>
+          <h3 style={{ margin: "0 0 12px", color: "#185FA5" }}>Détails</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, fontSize: 13 }}>
+            {di.priorite && <Info lbl="Priorité" val={di.priorite} />}
+            {di.depot_destination_id && <Info lbl="Dépôt destination" val={di.depot_destination_id.substring(0, 8) + "..."} />}
+            {di.magasin_id && <Info lbl="Magasin" val={di.magasin_id.substring(0, 8) + "..."} />}
+            <Info lbl="Nombre lignes" val={lignes.length} />
+            {di.commentaire && <div style={{ gridColumn: "1 / -1" }}><Info lbl="Commentaire" val={di.commentaire} /></div>}
+          </div>
+        </Panel>
+
+        {/* Lignes */}
+        <Panel style={{ marginTop: 12 }}>
+          <h3 style={{ margin: "0 0 12px", color: "#185FA5" }}>Articles demandés ({lignes.length})</h3>
+          {lignes.length === 0 ? (
+            <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>Aucune ligne</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {lignes.map(l => (
+                <div key={l.id} style={{
+                  background: "#fff", border: "1px solid #e3e9ee", borderRadius: 8,
+                  padding: 10, display: "flex", alignItems: "center", gap: 10,
+                }}>
+                  <i className="ti ti-package" style={{ color: "#185FA5", fontSize: 20 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "#142131" }}>{l.articles?.libelle || l.libelle || "Article ?"}</div>
+                    {(l.articles?.reference || l.articles?.code) && <div style={{ fontFamily: "Consolas,monospace", fontSize: 11, color: "#8a98a8" }}>{l.articles?.reference || l.articles?.code}</div>}
+                  </div>
+                  <span style={{ padding: "4px 12px", background: "#fafbfc", border: "1px solid #cfd8e0", borderRadius: 6, fontWeight: 700, fontSize: 13 }}>
+                    {l.quantite_demandee || 0} {l.unite || "u"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function Info({ lbl, val }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10.5, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700, letterSpacing: 1 }}>{lbl}</div>
+      <div style={{ fontSize: 13, color: "#142131", fontWeight: 600 }}>{val}</div>
+    </div>
+  );
+}
+
+// =============================================================
+// 0.59.8 : Génération BL imprimable (window.print → PDF)
+// =============================================================
+function imprimerBL({ numero, di, lignes, auth }) {
+  const w = window.open("", "_blank", "width=900,height=1200");
+  if (!w) { alert("Bloque les popups pour ouvrir le BL"); return; }
+  const dateStr = new Date().toLocaleDateString("fr-FR");
+  const heureStr = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const lignesHTML = lignes.length === 0
+    ? `<tr><td colspan="5" style="text-align:center;color:#8a98a8;padding:20px">Aucune ligne</td></tr>`
+    : lignes.map((l, i) => `
+        <tr style="border-bottom:1px solid #e3e9ee">
+          <td style="padding:8px;font-family:Consolas,monospace;color:#8a98a8">${i+1}</td>
+          <td style="padding:8px;font-family:Consolas,monospace">${l.articles?.code || l.code || l.articles?.reference || "—"}</td>
+          <td style="padding:8px;font-weight:600">${l.articles?.libelle || l.libelle || "Article ?"}</td>
+          <td style="padding:8px;text-align:center;font-weight:700">${l.quantite_demandee || 0} ${l.unite || "u"}</td>
+          <td style="padding:8px;text-align:center;color:#5aa05a;font-weight:700">${l.quantite_validee || l.quantite_demandee || 0}</td>
+        </tr>
+      `).join("");
+
+  w.document.write(`
+<!DOCTYPE html><html lang="fr"><head>
+<meta charset="UTF-8">
+<title>BL ${numero}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Quicksand','Segoe UI',sans-serif;color:#142131;padding:30px;background:#fff;font-size:13px;line-height:1.5}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #142131;padding-bottom:18px;margin-bottom:20px}
+  .logo{font-size:36px;font-weight:600;letter-spacing:3px;color:#142131}
+  .logo span{color:#7CC8C8}
+  .doc-info{text-align:right}
+  .doc-info h1{font-size:22px;font-weight:700;margin-bottom:6px}
+  .doc-info .num{font-family:Consolas,monospace;font-size:14px;background:#142131;color:#fff;padding:4px 10px;border-radius:4px;display:inline-block}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;background:#fafbfc;padding:16px;border-radius:8px}
+  .meta-block h3{font-size:11px;color:#7CC8C8;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px}
+  .meta-block p{font-size:13px;color:#142131}
+  table{width:100%;border-collapse:collapse;margin:20px 0}
+  th{background:#142131;color:#fff;padding:10px 8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;text-align:left;font-weight:700}
+  th:nth-child(4), th:nth-child(5){text-align:center}
+  .totaux{margin-top:20px;padding:12px;background:#142131;color:#fff;border-radius:8px;display:flex;justify-content:space-between;font-size:14px}
+  .signatures{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:50px}
+  .sign-box{border:1px solid #cfd8e0;border-radius:8px;padding:14px;min-height:120px}
+  .sign-box h4{font-size:11px;color:#5a6878;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .sign-box .name{font-size:12px;color:#142131;margin-bottom:4px}
+  .sign-box .date{font-size:11px;color:#8a98a8}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid #e3e9ee;text-align:center;font-size:10.5px;color:#8a98a8}
+  .qr-placeholder{display:inline-block;width:80px;height:80px;background:repeating-linear-gradient(45deg,#142131 0,#142131 4px,#fff 4px,#fff 8px);border:2px solid #142131;border-radius:8px;margin-top:8px}
+  @media print {body{padding:15mm} .no-print{display:none}}
+</style>
+</head><body>
+<div class="header">
+  <div>
+    <div class="logo">a<span>v</span>eho</div>
+    <div style="font-size:10.5;color:#5a6878;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Magasin · Bon de livraison</div>
+  </div>
+  <div class="doc-info">
+    <h1>BON DE LIVRAISON</h1>
+    <div class="num">${numero}</div>
+    <div style="font-size:11.5px;color:#5a6878;margin-top:6px">Émis le ${dateStr} à ${heureStr}</div>
+  </div>
+</div>
+
+<div class="meta-grid">
+  <div class="meta-block">
+    <h3>📥 DESTINATAIRE</h3>
+    <p><b>${auth.structureId ? "Structure EC" : "—"}</b></p>
+    ${di.depot_destination_id ? `<p style="font-size:11px;color:#5a6878;margin-top:4px">Dépôt destination · <code>${di.depot_destination_id.substring(0, 8)}</code></p>` : ""}
+  </div>
+  <div class="meta-block">
+    <h3>📋 RÉFÉRENCE DI</h3>
+    <p><b>${di.numero || "DI-" + di.id?.substring(0,8)}</b></p>
+    <p style="font-size:11px;color:#5a6878;margin-top:4px">DI émise le ${new Date(di.created_at).toLocaleDateString("fr-FR")}</p>
+    ${di.priorite ? `<p style="font-size:11px;color:#EF9F27;font-weight:700;margin-top:2px">Priorité ${di.priorite}</p>` : ""}
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:40px">#</th>
+      <th style="width:140px">Code</th>
+      <th>Désignation</th>
+      <th style="width:80px">Qté demandée</th>
+      <th style="width:80px">Qté livrée</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${lignesHTML}
+  </tbody>
+</table>
+
+<div class="totaux">
+  <span>Total lignes : <b>${lignes.length}</b></span>
+  <span>Total quantité : <b>${lignes.reduce((s, l) => s + (parseFloat(l.quantite_demandee) || 0), 0)} unités</b></span>
+</div>
+
+${di.commentaire ? `
+<div style="background:#fafbfc;border-left:3px solid #185FA5;padding:10px 14px;margin-top:14px;border-radius:6px">
+  <div style="font-size:10.5px;color:#185FA5;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Commentaire</div>
+  <div style="font-size:12.5px;color:#142131">${di.commentaire}</div>
+</div>
+` : ""}
+
+<div class="signatures">
+  <div class="sign-box">
+    <h4>✍ Émetteur (magasin)</h4>
+    <div class="name">${auth.user?.email || "—"}</div>
+    <div class="date">Le ${dateStr}</div>
+    <div class="qr-placeholder"></div>
+  </div>
+  <div class="sign-box">
+    <h4>✍ Réception (EC)</h4>
+    <div style="color:#8a98a8;font-style:italic;font-size:11px;margin-top:30px">À signer à la réception</div>
+  </div>
+</div>
+
+<footer>
+  Bon de livraison ${numero} · Aveho · Imprimé le ${dateStr} à ${heureStr}<br>
+  Document généré automatiquement. Référence DI : ${di.numero || di.id}
+</footer>
+
+<div class="no-print" style="margin-top:30px;text-align:center">
+  <button onclick="window.print()" style="background:#142131;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Quicksand,sans-serif">
+    🖨 Imprimer / Enregistrer en PDF
+  </button>
+</div>
+
+<script>setTimeout(() => window.print(), 500);</script>
+</body></html>
+  `);
+  w.document.close();
+}

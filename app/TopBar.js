@@ -86,6 +86,7 @@ const MENU = [
   ] },
   // 4. LIVRAISON (= interventions / DI / transferts / planning)
   { section: "Livraison", sectionIcon: "ti-truck-delivery", items: [
+    { p: "/mes-demandes", ic: "ti-truck-loading", lbl: "Mes demandes (DI)", col: "#EF9F27" },
     { p: "/interventions", ic: "ti-tools", lbl: "Interventions / DI", col: "#c0392b" },
     { p: "/transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
     { p: "/maintenance", ic: "ti-tool", lbl: "Maintenance", col: "#5a8f8f" },

@@ -1,0 +1,187 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.5 — Mode Magasin Aveho</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4040 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,143,143,.30));border:1px solid rgba(94,143,143,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#a8d8d8;font-weight:700;background:rgba(94,143,143,.18);border:1px solid rgba(94,143,143,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#c4dada;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#c4dada}
+.meta b{color:#fff}.meta code{background:rgba(94,143,143,.16);color:#fff;border:1px solid rgba(94,143,143,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5a8f8f,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(94,143,143,.20);border-left:4px solid #5a8f8f;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* Switch demo */
+.switch-demo{background:#1a2434;border-radius:10px;padding:14px;margin:14px 0;max-width:280px}
+.switch-title{font-size:11px;font-weight:800;color:#5a8f8f;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.switch-row{display:flex;gap:4px;margin-bottom:6px}
+.switch-btn{flex:1;padding:10px 12px;border-radius:6px;font-size:11.5px;font-weight:700;text-align:center}
+.switch-btn.ec{background:linear-gradient(135deg,#185FA5,#0e4480);color:#fff}
+.switch-btn.mag{background:#fff;color:#5a6878;border:1px solid #e3e9ee}
+.switch-btn.mag-active{background:linear-gradient(135deg,#5a8f8f,#477676);color:#fff;border:none}
+.switch-help{font-size:10px;color:#8a98a8}
+
+/* Tabs demo */
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 0;border-bottom:1px solid #2a3645}
+.tab{padding:8px 14px;border-radius:6px 6px 0 0;font-size:12;font-weight:700;display:flex;align-items:center;gap:5px}
+.tab.active{background:rgba(94,143,143,.20);color:#a8d8d8;border-bottom:3px solid #5a8f8f}
+.tab.inactive{color:#8a98a8}
+
+/* Stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin:14px 0}
+.stat-card{background:#1a2434;border:1px solid #2a3645;border-radius:10px;padding:14px;display:flex;align-items:center;gap:10px}
+.stat-card.bleu{border-left:4px solid #185FA5}
+.stat-card.amber{border-left:4px solid #EF9F27}
+.stat-card.purp{border-left:4px solid #7a6fb0}
+.stat-card.vert{border-left:4px solid #5aa05a}
+.stat-card .ic{font-size:22px}
+.stat-card .val{font-size:22px;font-weight:700;color:#fff;font-family:Consolas,monospace}
+.stat-card .lbl{font-size:9.5;color:#8a98a8;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #5a8f8f}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(94,143,143,.18);font-size:13px}
+table th{color:#a8d8d8;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(94,143,143,.18);font-size:11.5px;color:#c4dada;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🏬 0.59.5 · MODE MAGASIN AVEHO</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🏬 Mode 'Magasin Aveho' (switch dans UserMenu) + page /magasin avec catalogue, DI reçues, partenaires<small>Première brique pour la vue côté PSAD fournisseur — bascule via toggle dans le menu utilisateur</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.5-alpha</code></span>
+    <span><b>SQL :</b> <code>migration-0.59.5-magasin-vue.sql</code></span>
+    <span><b>Type :</b> Feature majeure</span>
+  </div>
+</header>
+
+<h2>🔄 Switch Mode dans UserMenu</h2>
+
+<p style="color:#c4dada;font-size:13;margin:0 0 10px">Dans le menu utilisateur (avatar en haut à droite), nouveau bloc teal qui permet de basculer entre les deux vues :</p>
+
+<div class="switch-demo">
+  <div class="switch-title">🔄 Mode de vue</div>
+  <div class="switch-row">
+    <div class="switch-btn ec">🏘 EC</div>
+    <div class="switch-btn mag">🏬 Magasin</div>
+  </div>
+  <div class="switch-help">Vue Espace Collectivité (côté demandeur)</div>
+</div>
+
+<p style="color:#c4dada;font-size:13;margin:10px 0 4px"><b>Click sur Magasin</b> :</p>
+
+<div class="switch-demo">
+  <div class="switch-title">🔄 Mode de vue</div>
+  <div class="switch-row">
+    <div class="switch-btn mag">🏘 EC</div>
+    <div class="switch-btn mag-active">🏬 Magasin</div>
+  </div>
+  <div class="switch-help">Vue Magasin Aveho (côté fournisseur)</div>
+</div>
+
+<p style="color:#c4dada;font-size:13;margin-top:10px">Le mode est mémorisé dans localStorage (clé <code>av-view-mode</code>). Plus tard ce sera basé sur le rôle de l'utilisateur (un user créé en tant que "user magasin" sera auto-redirigé en mode Magasin sans switch).</p>
+
+<h2>🏬 Page /magasin avec 4 onglets</h2>
+
+<div class="tabs">
+  <div class="tab active"><i>📊</i> Tableau de bord</div>
+  <div class="tab inactive"><i>📦</i> Catalogue</div>
+  <div class="tab inactive"><i>🚛</i> DI reçues</div>
+  <div class="tab inactive"><i>🤝</i> Partenaires</div>
+</div>
+
+<h3 style="color:#fff;margin:14px 0 8px">📊 Tableau de bord</h3>
+<div class="stat-grid">
+  <div class="stat-card bleu">
+    <div class="ic" style="color:#185FA5">📦</div>
+    <div>
+      <div class="lbl">Articles catalogue</div>
+      <div class="val">128</div>
+    </div>
+  </div>
+  <div class="stat-card amber">
+    <div class="ic" style="color:#EF9F27">🚛</div>
+    <div>
+      <div class="lbl">DI à traiter</div>
+      <div class="val">14</div>
+    </div>
+  </div>
+  <div class="stat-card purp">
+    <div class="ic" style="color:#7a6fb0">🤝</div>
+    <div>
+      <div class="lbl">Partenaires</div>
+      <div class="val">8</div>
+    </div>
+  </div>
+  <div class="stat-card vert">
+    <div class="ic" style="color:#5aa05a">📈</div>
+    <div>
+      <div class="lbl">DI traitées</div>
+      <div class="val">156</div>
+    </div>
+  </div>
+</div>
+
+<h2>🗄 SQL ajouté</h2>
+
+<pre>-- Flag fournisseur sur les partenaires
+ALTER TABLE etablissements_partenaires
+  ADD COLUMN est_fournisseur BOOLEAN DEFAULT false,
+  ADD COLUMN magasin_id UUID;
+
+-- Articles peuvent appartenir au catalogue magasin OU
+-- être rattachés à un article du catalogue magasin
+ALTER TABLE articles
+  ADD COLUMN magasin_id UUID,
+  ADD COLUMN article_magasin_id UUID,
+  ADD COLUMN est_catalogue_magasin BOOLEAN DEFAULT false;
+
+-- Vue v_magasin_di pour les DI reçues côté magasin
+CREATE VIEW v_magasin_di AS
+SELECT d.*, COUNT(lignes) AS nb_lignes
+FROM demandes_internes d ...</pre>
+
+<h2>💡 Workflow envisagé</h2>
+
+<table>
+<tr><th>Étape</th><th>Action</th></tr>
+<tr><td>1</td><td>Tu crées un partenaire (formulaire existant /etablissements-partenaires)</td></tr>
+<tr><td>2</td><td>Tu coches "Est fournisseur Aveho" (case à ajouter en 0.59.6)</td></tr>
+<tr><td>3</td><td>Il apparaît dans /magasin onglet "Partenaires"</td></tr>
+<tr><td>4</td><td>Tu bascules en mode Magasin via UserMenu → tu vois les DI reçues de tes établissements EC</td></tr>
+<tr><td>5</td><td>Tu crées des articles dans le catalogue magasin (`articles.est_catalogue_magasin=true`)</td></tr>
+<tr><td>6</td><td>Tes établissements peuvent rattacher leurs articles à un article du catalogue via `article_magasin_id`</td></tr>
+</table>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.5 - Mode Magasin Aveho + switch UserMenu + page /magasin"
+git push origin main
+
+# Puis dans Supabase SQL Editor :
+# Colle migration-0.59.5-magasin-vue.sql → Run</pre>
+
+<h2>🔜 Suite (0.59.6+)</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;color:#c4dada;font-size:13;line-height:1.9">
+<li>Case à cocher "Est fournisseur Aveho" dans le formulaire de création partenaire</li>
+<li>Lien "Article catalogue magasin" dans l'édition article (autocomplete)</li>
+<li>Création article depuis la vue Magasin (avec est_catalogue_magasin=true par défaut)</li>
+<li>Détail DI côté magasin avec validation/refus + génération BL</li>
+<li>Création utilisateur magasin (rôle dédié, auto-redirect en mode Magasin)</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.5 · 6 juin 2026 · 🏬 MODE MAGASIN</footer>
+</div></body></html>

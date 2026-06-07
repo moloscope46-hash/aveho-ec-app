@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.8 — BL + Réception + Alertes stock</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4040 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,143,143,.30));border:1px solid rgba(94,143,143,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#a8d8d8;font-weight:700;background:rgba(94,143,143,.18);border:1px solid rgba(94,143,143,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#c4dada;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#c4dada}
+.meta b{color:#fff}.meta code{background:rgba(94,143,143,.16);color:#fff;border:1px solid rgba(94,143,143,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5a8f8f,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(94,143,143,.20);border-left:4px solid #5a8f8f;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* BL preview */
+.bl-preview{background:#fff;color:#142131;padding:20px;border-radius:10px;font-family:Quicksand;max-width:600px;margin:14px 0;border:1px solid #e3e9ee}
+.bl-header{display:flex;justify-content:space-between;border-bottom:3px solid #142131;padding-bottom:14px;margin-bottom:14px}
+.bl-header .logo{font-size:28px;font-weight:600;letter-spacing:2px}
+.bl-header .logo span{color:#7CC8C8}
+.bl-header h1{font-size:18px;margin:0 0 4px}
+.bl-header .num{background:#142131;color:#fff;padding:3px 8px;border-radius:4px;font-family:Consolas,monospace;font-size:11.5px}
+.bl-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:11.5}
+.bl-table th{background:#142131;color:#fff;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+.bl-table td{padding:5px 8px;border-bottom:1px solid #e3e9ee}
+.bl-total{background:#142131;color:#fff;padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between;font-size:11.5;margin-top:8px}
+.bl-sign{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.bl-sign div{border:1px solid #cfd8e0;border-radius:6px;padding:10px;font-size:10.5}
+.bl-sign h4{font-size:9.5;color:#5a6878;text-transform:uppercase;letter-spacing:1px;margin:0 0 4px}
+
+/* Stock alert */
+.alert-stock{background:rgba(239,159,39,.10);border:1px solid rgba(239,159,39,.30);border-left:4px solid #EF9F27;border-radius:10px;padding:14px;margin:10px 0}
+.alert-stock .title{font-weight:700;color:#d48820;margin-bottom:8px}
+.alert-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+.alert-card{background:#fff;border:1px solid #EF9F2733;border-left:3px solid #EF9F27;border-radius:8px;padding:8px;font-size:11.5;color:#142131}
+.alert-card .nom{font-weight:700}
+.alert-card .stock{color:#EF9F27;font-weight:700}
+.alert-bar{height:4px;background:#f0f3f6;border-radius:2px;margin-top:4px}
+.alert-bar div{height:100%;background:#EF9F27;border-radius:2px;width:30%}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #5a8f8f}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(94,143,143,.18);font-size:11.5px;color:#c4dada;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🖨📋📊 0.59.8 · BL + RÉCEPTION + ALERTES STOCK</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🖨 Génération BL imprimable + ✅ Confirmer réception EC + 📊 Alertes stock bas<small>+ Fix tables demandes_internes manquantes</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.8-alpha</code></span>
+    <span><b>SQL :</b> <code>fix-demandes-internes-0.59.8.sql</code></span>
+    <span><b>Type :</b> Pack feature</span>
+  </div>
+</header>
+
+<h2>🩹 D'abord : Fix erreur SQL</h2>
+
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff;font-size:13.5">Tu as eu en applicant 0.59.5 :</p>
+<pre style="color:#f08a88;background:rgba(227,93,91,.10)">ERROR: 42P01: relation "demandes_internes" does not exist
+LINE 67: FROM demandes_internes d</pre>
+<p style="margin:8px 0 0;color:#c4dada;font-size:13">Cause : la vue v_magasin_di s'appuie sur des tables qui n'existent pas chez toi. Le fichier <code>fix-demandes-internes-0.59.8.sql</code> les crée toutes (demandes_internes + lignes + bons_livraison) + recrée la vue. <b>Applique-le AVANT de pusher 0.59.8</b>.</p>
+</div>
+
+<h2>🖨 1. BL imprimable réel</h2>
+
+<p style="color:#c4dada;font-size:13;margin:0 0 8px">Quand un user magasin clique "Générer le BL" sur une DI validée, une fenêtre print s'ouvre avec ce document professionnel :</p>
+
+<div class="bl-preview">
+  <div class="bl-header">
+    <div>
+      <div class="logo">a<span>v</span>eho</div>
+      <div style="font-size:9;color:#5a6878;letter-spacing:1px;text-transform:uppercase">Magasin · Bon de livraison</div>
+    </div>
+    <div style="text-align:right">
+      <h1>BON DE LIVRAISON</h1>
+      <div class="num">BL-20260606-123</div>
+      <div style="font-size:9.5;color:#5a6878;margin-top:4px">Émis le 6 juin 2026 à 14:32</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;background:#fafbfc;padding:10px;border-radius:6px;margin-bottom:10px;font-size:11">
+    <div>
+      <div style="font-size:9;color:#7CC8C8;text-transform:uppercase;letter-spacing:1px;font-weight:700">📥 DESTINATAIRE</div>
+      <div style="font-weight:700">Centre Hospitalier X</div>
+      <div style="font-size:10;color:#5a6878">Dépôt destination</div>
+    </div>
+    <div>
+      <div style="font-size:9;color:#7CC8C8;text-transform:uppercase;letter-spacing:1px;font-weight:700">📋 RÉFÉRENCE DI</div>
+      <div style="font-weight:700">DI-A1B2C3D4</div>
+      <div style="font-size:10;color:#5a6878">Émise le 5 juin 2026</div>
+    </div>
+  </div>
+
+  <table class="bl-table">
+    <thead>
+      <tr><th>#</th><th>Code</th><th>Désignation</th><th style="text-align:center">Qté</th><th style="text-align:center">Livré</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td style="font-family:Consolas,monospace">PERF-001</td><td>Tubulure perfusion 100ml</td><td style="text-align:center">10 u</td><td style="text-align:center;color:#5aa05a;font-weight:700">10</td></tr>
+      <tr><td>2</td><td style="font-family:Consolas,monospace">CICA-024</td><td>Pansement hydrocolloïde 10x10</td><td style="text-align:center">25 u</td><td style="text-align:center;color:#5aa05a;font-weight:700">25</td></tr>
+      <tr><td>3</td><td style="font-family:Consolas,monospace">OXY-LUNETTE</td><td>Lunettes oxygène nasales</td><td style="text-align:center">5 u</td><td style="text-align:center;color:#5aa05a;font-weight:700">5</td></tr>
+    </tbody>
+  </table>
+
+  <div class="bl-total">
+    <span>Total lignes : <b>3</b></span>
+    <span>Total quantité : <b>40 unités</b></span>
+  </div>
+
+  <div class="bl-sign">
+    <div>
+      <h4>✍ Émetteur (magasin)</h4>
+      <div>user@magasin.fr</div>
+      <div style="color:#8a98a8;font-size:9.5">Le 6 juin 2026</div>
+      <div style="display:inline-block;width:50px;height:50px;background:repeating-linear-gradient(45deg,#142131 0,#142131 3px,#fff 3px,#fff 6px);border:2px solid #142131;border-radius:6px;margin-top:6px"></div>
+    </div>
+    <div>
+      <h4>✍ Réception (EC)</h4>
+      <div style="color:#8a98a8;font-style:italic;font-size:9.5;margin-top:20px">À signer à la réception</div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#c4dada;font-size:12;margin:0">Le navigateur permet <b>Imprimer</b> ou <b>Enregistrer en PDF</b> (Ctrl+P → destinataire = Enregistrer en PDF).</p>
+
+<h2>✅ 2. Bouton "Confirmer la réception" côté EC</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13">Sur <code>/demandes-internes/[id]</code> en mode EC, si statut=livree → nouveau panneau bleu avec :</p>
+<ul style="margin:8px 0 0;color:#c4dada;font-size:13">
+<li>Bouton <b>✓ Confirmer la réception</b> → passe DI en `cloturee` + set `recue_at` + `recue_par` + notif magasin</li>
+<li>Bouton <b>Voir / Réimprimer BL</b> → réouvre la fenêtre print du BL</li>
+<li>Numéro BL affiché en chip bleu</li>
+</ul>
+</div>
+
+<h2>📊 3. Alertes stock bas (Hub magasin)</h2>
+
+<div class="alert-stock">
+  <div class="title"><i>⚠</i> 3 articles en stock bas</div>
+  <div class="alert-grid">
+    <div class="alert-card" style="border-left-color:#e35d5b">
+      <div class="nom">Tubulure perfusion 100ml</div>
+      <div style="font-family:Consolas,monospace;font-size:9.5;color:#8a98a8">PERF-001</div>
+      <div class="stock" style="color:#e35d5b">Stock : 0 / min 10</div>
+      <div class="alert-bar"><div style="background:#e35d5b;width:0%"></div></div>
+    </div>
+    <div class="alert-card">
+      <div class="nom">Pansement hydrocolloïde</div>
+      <div style="font-family:Consolas,monospace;font-size:9.5;color:#8a98a8">CICA-024</div>
+      <div class="stock">Stock : 8 / min 25</div>
+      <div class="alert-bar"><div style="width:32%"></div></div>
+    </div>
+    <div class="alert-card" style="border-left-color:#d48820">
+      <div class="nom">Lunettes oxygène nasales</div>
+      <div style="font-family:Consolas,monospace;font-size:9.5;color:#8a98a8">OXY-LUNETTE</div>
+      <div class="stock" style="color:#d48820">Stock : 15 / min 20</div>
+      <div class="alert-bar"><div style="background:#d48820;width:75%"></div></div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#c4dada;font-size:12;margin:0">Bandeau ambre quand alertes, bandeau vert "Stock OK" sinon. Limité à 8 alertes critiques.</p>
+
+<h2>🔄 Cycle complet avec notifications</h2>
+
+<pre>EC crée DI → INSERT notification magasin
+   ↓
+Magasin Valide → INSERT notif EC "DI validée"
+   ↓
+Magasin Génère BL → INSERT notif EC "BL XXX émis · Confirme à réception"
+   → fenêtre print BL s'ouvre
+   ↓
+EC reçoit notif → click → arrive sur DI livrée
+   → Bouton "Confirmer la réception"
+   ↓
+Click "Confirmer" → DI cloturee + INSERT notif magasin "DI réceptionnée"
+   ↓
+Cycle terminé ✓</pre>
+
+<h2>🚀 Procédure</h2>
+
+<pre># 1. Applique le SQL d'abord
+# Supabase Dashboard → SQL Editor → fix-demandes-internes-0.59.8.sql → Run
+
+# 2. Push le code
+cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.8 - BL imprimable + Confirmer reception + Alertes stock"
+git push origin main</pre>
+
+<h2>🔜 Reste pour 0.59.9+</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20px;color:#c4dada;font-size:13;line-height:1.9">
+<li>Workflow d'entrée patient guidé 5 étapes mobile (refacto wizard)</li>
+<li>Création article rapide depuis détail DI (si ligne sans article rattaché)</li>
+<li>Email/SMS notification (en plus de la cloche in-app)</li>
+<li>Export Excel/CSV des DI pour reporting magasin</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.59.8 · 6 juin 2026 · 🖨 BL · ✅ RÉCEPTION · 📊 STOCK</footer>
+</div></body></html>

@@ -58,6 +58,19 @@ export default function MobileNewPatientPage() {
   const [collaborateurs, setCollaborateurs] = useState([]);
   const [pathologies, setPathologies] = useState([]);
   const [chambresOccupees, setChambresOccupees] = useState(new Set()); // ids chambres avec patient présent
+  // 0.59.7 : pathologies rattachées au service sélectionné
+  const [pathologiesServiceIds, setPathologiesServiceIds] = useState(new Set());
+
+  // 0.59.7 : charger les pathologies du service quand service_id change
+  useEffect(() => {
+    if (!form.service_id) { setPathologiesServiceIds(new Set()); return; }
+    (async () => {
+      try {
+        const r = await supabase.from("services_pathologies").select("pathologie_id").eq("service_id", form.service_id);
+        setPathologiesServiceIds(new Set((r.data || []).map(x => x.pathologie_id)));
+      } catch { setPathologiesServiceIds(new Set()); }
+    })();
+  }, [form.service_id]);
 
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
@@ -351,10 +364,31 @@ export default function MobileNewPatientPage() {
           {(collaborateurs.length > 0 || pathologies.length > 0) && (
             <Section title="Médecin & Pathologie" icon="ti-stethoscope" color="#7a6fb0">
               {pathologies.length > 0 && (
-                <Field label="Pathologie principale">
+                <Field label={`Pathologie principale ${form.service_id && pathologiesServiceIds.size > 0 ? `(★ = recommandée pour ce service)` : ""}`}>
                   <select value={form.pathologie_id} onChange={e => setForm({ ...form, pathologie_id: e.target.value })} style={inputStyle}>
                     <option value="">— Aucune —</option>
-                    {pathologies.map(p => <option key={p.id} value={p.id}>{p.code ? `[${p.code}] ` : ""}{p.nom}</option>)}
+                    {/* 0.59.7 : Pathologies du service en haut avec ★, puis groupe "autres" */}
+                    {(() => {
+                      if (!form.service_id || pathologiesServiceIds.size === 0) {
+                        return pathologies.map(p => <option key={p.id} value={p.id}>{p.code ? `[${p.code}] ` : ""}{p.nom}</option>);
+                      }
+                      const reco = pathologies.filter(p => pathologiesServiceIds.has(p.id));
+                      const autres = pathologies.filter(p => !pathologiesServiceIds.has(p.id));
+                      return (
+                        <>
+                          {reco.length > 0 && (
+                            <optgroup label="★ Pathologies de ce service">
+                              {reco.map(p => <option key={p.id} value={p.id}>★ {p.code ? `[${p.code}] ` : ""}{p.nom}</option>)}
+                            </optgroup>
+                          )}
+                          {autres.length > 0 && (
+                            <optgroup label="Autres pathologies">
+                              {autres.map(p => <option key={p.id} value={p.id}>{p.code ? `[${p.code}] ` : ""}{p.nom}</option>)}
+                            </optgroup>
+                          )}
+                        </>
+                      );
+                    })()}
                   </select>
                 </Field>
               )}

@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase";
+import { useViewMode } from "../lib/useViewMode";
 // 0.58.5 : Avatar premium remplace les um-avatar custom
 import { Avatar } from "./components/ui-premium";
 // 0.58.36 : info bât/svc rattachés à l'utilisateur sous son nom
@@ -30,6 +31,7 @@ function initials(name) {
 export default function UserMenu({ auth }) {
   const supabase = createClient();
   const router = useRouter();
+  const viewMode = useViewMode();
   const [open, setOpen] = useState(false);
   // 0.58.55 : auto-flip si le menu déborde en bas de l'écran
   const [flipUp, setFlipUp] = useState(false);
@@ -287,6 +289,42 @@ export default function UserMenu({ auth }) {
                 <span>{quickFilterActive ? "Désactiver le filtre" : "Filtrer sur mon bâtiment/service"}</span>
               </button>
             )}
+
+            {/* 0.59.5 : Switch Mode EC ↔ Magasin Aveho */}
+            <div style={{
+              padding: 12, background: "rgba(94,143,143,.08)",
+              borderRadius: 10, margin: "8px 0",
+              borderLeft: "3px solid #5a8f8f",
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#5a8f8f", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+                <i className="ti ti-switch" /> Mode de vue
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                <button onClick={() => { viewMode.setMode("ec"); go("/collaborateurs"); }} style={{
+                  flex: 1, padding: "8px 10px",
+                  background: viewMode.isEC ? "linear-gradient(135deg,#185FA5,#0e4480)" : "#fff",
+                  color: viewMode.isEC ? "#fff" : "#5a6878",
+                  border: viewMode.isEC ? "none" : "1px solid #e3e9ee",
+                  borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}>
+                  <i className="ti ti-building-community" /> EC
+                </button>
+                <button onClick={() => { viewMode.setMode("magasin"); go("/magasin"); }} style={{
+                  flex: 1, padding: "8px 10px",
+                  background: viewMode.isMagasin ? "linear-gradient(135deg,#5a8f8f,#477676)" : "#fff",
+                  color: viewMode.isMagasin ? "#fff" : "#5a6878",
+                  border: viewMode.isMagasin ? "none" : "1px solid #e3e9ee",
+                  borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}>
+                  <i className="ti ti-building-warehouse" /> Magasin
+                </button>
+              </div>
+              <div style={{ fontSize: 10, color: "#8a98a8", marginTop: 6 }}>
+                {viewMode.isEC ? "Vue Espace Collectivité (côté demandeur)" : "Vue Magasin Aveho (côté fournisseur)"}
+              </div>
+            </div>
 
             <button className="um-item" onClick={() => go("/profil")}>
               <i className="ti ti-user-circle" /> <span>Mon profil</span>

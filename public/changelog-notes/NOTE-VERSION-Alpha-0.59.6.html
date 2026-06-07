@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.59.6 — Magasin complet</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4040 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,143,143,.30));border:1px solid rgba(94,143,143,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#a8d8d8;font-weight:700;background:rgba(94,143,143,.18);border:1px solid rgba(94,143,143,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#c4dada;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#c4dada}
+.meta b{color:#fff}.meta code{background:rgba(94,143,143,.16);color:#fff;border:1px solid rgba(94,143,143,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5a8f8f,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(94,143,143,.20);border-left:4px solid #5a8f8f;border-radius:14px;padding:20px 24px;margin:14px 0}
+.feature-card{background:#1a2434;border:1px solid #2a3645;border-left:4px solid #5a8f8f;border-radius:10px;padding:14px;margin:10px 0}
+.feature-card h3{margin:0 0 6px;color:#a8d8d8;font-size:14px}
+.feature-card p{margin:0;color:#c4dada;font-size:12.5}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #5a8f8f}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(94,143,143,.18);font-size:13px}
+table th{color:#a8d8d8;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(94,143,143,.18);font-size:11.5px;color:#c4dada;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🏬 0.59.6 · MAGASIN COMPLET</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🏬 Magasin Aveho complet : 5 features Cédric en une version<small>Checkbox fournisseur · Autocomplete catalogue · Article magasin · DI validation/refus/BL · Rôle utilisateur magasin auto-redirect</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.59.6-alpha</code></span>
+    <span><b>SQL :</b> aucun (utilise 0.59.5)</span>
+    <span><b>Type :</b> Pack feature</span>
+  </div>
+</header>
+
+<h2>📦 Les 5 features livrées</h2>
+
+<div class="feature-card">
+  <h3>✅ 1. Checkbox "Est fournisseur Aveho"</h3>
+  <p>Dans <code>/etablissements-partenaires</code> : nouvelle case à cocher (bloc teal) à la fin du formulaire avec libellé descriptif. Détection URL <code>?new=1&fournisseur=1</code> pré-coche automatiquement. Sauvegarde dans <code>est_fournisseur</code>.</p>
+</div>
+
+<div class="feature-card">
+  <h3>🔍 2. Autocomplete "Article catalogue magasin"</h3>
+  <p>Dans <code>/articles</code> édition : composant autocomplete avec debounce 200ms, filtre par <code>est_catalogue_magasin=true</code>, recherche libellé/reference/code, max 15 résultats. Sélectionné → affiché en chip avec ×. Sauve dans <code>article_magasin_id</code>.</p>
+</div>
+
+<div class="feature-card">
+  <h3>🏪 3. Création article depuis vue Magasin</h3>
+  <p>Section teal dans le form avec checkbox "Article du catalogue magasin Aveho". URL <code>?new=1&magasin=1</code> (bouton "Ajouter un article" sur /magasin → catalogue) pré-coche automatiquement <code>est_catalogue_magasin=true</code>.</p>
+</div>
+
+<div class="feature-card">
+  <h3>✓ ❌ 📦 4. Page détail DI avec validation/refus/BL</h3>
+  <p>Nouvelle page <code>/demandes-internes/[id]</code> : affiche détail DI + lignes. En mode Magasin, panneau actions teal :</p>
+  <ul style="margin:6px 0 0;color:#c4dada;font-size:12.5">
+    <li>Statut <b>nouvelle</b> → boutons <b>Valider</b> ou <b>Refuser</b> (motif obligatoire dans textarea)</li>
+    <li>Statut <b>validée</b> → bouton <b>Générer le BL</b> (crée dans bons_livraison ou pose numero_bl sur DI, statut → livrée)</li>
+    <li>Autre → message contextuel avec motif refus ou n° BL</li>
+  </ul>
+</div>
+
+<div class="feature-card">
+  <h3>🆕 5. Rôle "🏬 Utilisateur Magasin" + auto-redirect</h3>
+  <p>Nouveau rôle dans <code>/collaborateurs</code> (teal #5a8f8f). À l'ouverture de <code>/choix-mode</code> après login, requête le rôle du user : si = <code>utilisateur_magasin</code>, force le mode Magasin et redirige direct vers <code>/magasin</code> sans popup.</p>
+</div>
+
+<h2>🔄 Workflow complet</h2>
+
+<pre>1️⃣ Admin marque un membre comme "Utilisateur Magasin" dans /collaborateurs
+       ↓
+2️⃣ Au prochain login, il atterrit auto sur /magasin (court-circuit popup)
+       ↓
+3️⃣ Il crée des articles catalogue depuis 'Ajouter un article'
+       → est_catalogue_magasin pré-coché grâce à URL ?magasin=1
+       ↓
+4️⃣ Les EC peuvent rattacher leurs articles à un article catalogue
+       via l'autocomplete dans /articles édition
+       ↓
+5️⃣ Les EC créent des partenaires fournisseurs (case cochée)
+       → ils apparaissent dans /magasin → onglet Partenaires
+       ↓
+6️⃣ Les DI envoyées au magasin apparaissent dans /magasin → onglet DI
+       → user magasin clique sur une DI
+       → page détail → Valider / Refuser / Générer BL</pre>
+
+<h2>🚀 Procédure</h2>
+
+<pre>cd C:\aveho-ec-app
+npm run build
+git add -A
+git commit -m "0.59.6 - Magasin complet : checkbox + autocomplete + DI actions + role"
+git push origin main</pre>
+
+<p style="color:#c4dada;font-size:13;margin-top:14px"><b>Prérequis</b> : SQL 0.59.5 doit être appliqué (colonnes <code>est_fournisseur</code>, <code>est_catalogue_magasin</code>, <code>article_magasin_id</code>). Si pas encore : ALL-IN-ONE-fix-0.59.5.sql couvre tout.</p>
+
+<h2>🧪 Test rapide</h2>
+
+<table>
+<tr><th>#</th><th>Action</th><th>Résultat attendu</th></tr>
+<tr><td>1</td><td>Va sur /etablissements-partenaires → Nouveau</td><td>Tu vois la case "Est fournisseur Aveho" en bas du form</td></tr>
+<tr><td>2</td><td>Crée un partenaire avec la case cochée</td><td>Il apparaît dans /magasin → onglet Partenaires</td></tr>
+<tr><td>3</td><td>Va sur /collaborateurs → édite un membre</td><td>Tu vois le rôle "🏬 Utilisateur Magasin" dans la liste</td></tr>
+<tr><td>4</td><td>Assigne ce rôle, déconnecte/reconnecte ce user</td><td>Atterrit auto sur /magasin sans popup</td></tr>
+<tr><td>5</td><td>Sur /magasin → Catalogue → Ajouter un article</td><td>Le form s'ouvre avec "Article du catalogue magasin" pré-coché</td></tr>
+<tr><td>6</td><td>Sur /articles édite un article (sans cocher catalogue)</td><td>Tu vois l'autocomplete "Rattacher à un article du catalogue"</td></tr>
+</table>
+
+<footer>Aveho — Espace Collectivité · 0.59.6 · 6 juin 2026 · 🏬 MAGASIN COMPLET</footer>
+</div></body></html>
