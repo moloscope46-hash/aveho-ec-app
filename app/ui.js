@@ -257,7 +257,7 @@ export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, c
               lineHeight: 1.1,
               textShadow: "0 1px 2px rgba(0,0,0,.2)",
             }}>
-              {title} {accent && <span style={{ color: mainColor }}>{accent}</span>}
+              {title} {accent && <span style={{ color: "#EF9F27", textShadow: "0 1px 2px rgba(0,0,0,.3)" }}>{accent}</span>}
             </h1>
             {(subtitle || sub) && (
               <div className="av-page-hero-sub" style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginTop: 4, lineHeight: 1.4 }}>
@@ -304,7 +304,7 @@ export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, c
               lineHeight: 1.1,
               textShadow: "0 1px 2px rgba(0,0,0,.2)",
             }}>
-              {title} {accent && <span style={{ color: mainColor }}>{accent}</span>}
+              {title} {accent && <span style={{ color: "#EF9F27", textShadow: "0 1px 2px rgba(0,0,0,.3)" }}>{accent}</span>}
             </h1>
             {(subtitle || sub) && (
               <div className="av-page-hero-sub" style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginTop: 4, lineHeight: 1.4 }}>

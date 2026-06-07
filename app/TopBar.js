@@ -137,25 +137,20 @@ const MENU = [
     { p: "/parametres/integrations", ic: "ti-plug", lbl: "Intégrations API", col: "#4285F4" },
     { p: "/mentions-legales", ic: "ti-license", lbl: "Mentions légales", col: "#8a98a8" },
   ] },
-  // 6. ADMIN (tech)
+  // 6. ADMIN (tech) — 0.62.64 : nettoyage, les pages déplacées en onglets dans /parametres
   { section: "Administration", sectionIcon: "ti-shield-lock", items: [
     { p: "/utilisateurs", ic: "ti-users-group", lbl: "Utilisateurs", col: "#185FA5" },
-    { p: "/parametres/app-native", ic: "ti-device-mobile", lbl: "App native (iOS/Android)", col: "#185FA5" },
     { p: "/historique", ic: "ti-history", lbl: "Historique", col: "#7a6fb0" },
-    { p: "/audit", ic: "ti-list-search", lbl: "Audit log", col: "#5e4a8c" },
-    { p: "/statut", ic: "ti-activity-heartbeat", lbl: "Statut système", col: "#5aa05a" },
-    { p: "/app-logs", ic: "ti-bug", lbl: "Logs applicatifs", col: "#c0392b" },
-    { p: "/admin-perf", ic: "ti-bolt", lbl: "Performance SQL", col: "#EF9F27" },
-    { p: "/webhooks", ic: "ti-webhook", lbl: "Webhooks", col: "#5a8f8f" },
     { p: "/admin/rpps-diagnostic", ic: "ti-stethoscope", lbl: "Diagnostic API RPPS", col: "#7a6fb0" },
     { p: "/admin/rpps-dump", ic: "ti-database-import", lbl: "Dump RPPS (Plan B)", col: "#5aa05a" },
     { p: "/admin/bulletins-archive", ic: "ti-archive", lbl: "Bulletins archivés", col: "#185FA5" },
     { p: "/admin/referentiels-sante", ic: "ti-shield-check", lbl: "Caisses & Mutuelles", col: "#7a6fb0" },
     { p: "/admin/medecins-prescripteurs", ic: "ti-stethoscope", lbl: "Médecins prescripteurs", col: "#5a4a90" },
-    { p: "/admin/avis-google", ic: "ti-star", lbl: "Avis Google", col: "#EF9F27" },
-    { p: "/admin/doublons-forces", ic: "ti-copy", lbl: "Doublons forces", col: "#c0392b" },
     { p: "/admin/prescriptions-archive", ic: "ti-archive", lbl: "Prescriptions archive", col: "#5a4a90" },
-    { p: "/admin/mail-diagnostic", ic: "ti-mail-cog", lbl: "Diagnostic envoi mail", col: "#e35d5b" },
+    // 🔗 Les entrées suivantes sont maintenant accessibles via /parametres (onglets) :
+    // App native, Audit log, Statut système, Logs applicatifs, Performance SQL, Webhooks,
+    // Avis Google, Doublons forces, Diagnostic envoi mail, Intégrations
+    { p: "/parametres?tab=audit", ic: "ti-settings", lbl: "→ Paramètres (Audit, Statut, Webhooks…)", col: "#5e4a8c" },
   ] },
 ];
 

@@ -4387,3 +4387,30 @@ body.scrolled .topbar {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+
+/* =============================================================
+   0.62.64 — Embedded page dans onglet : cache le chrome dupliqué
+   (TopBar + BackButton + bg-dark wrapper)
+   ============================================================= */
+.av-tab-content .topbar,
+.av-tab-content [class*="TopBar"],
+.av-tab-content .back-btn,
+.av-tab-content [class*="BackButton"] {
+  display: none !important;
+}
+/* Sur une page embed, on n'a pas besoin du bg-dark wrapper */
+.av-tab-content > .bg-dark {
+  background: transparent !important;
+  padding: 0 !important;
+  min-height: auto !important;
+}
+.av-tab-content > .bg-dark > .wrap,
+.av-tab-content > .bg-dark > .page-content {
+  padding: 0 !important;
+  max-width: none !important;
+}
+/* Pas de PageHead dans l'onglet (on a déjà le PageHead du parent /parametres) */
+.av-tab-content .page-hero,
+.av-tab-content .av-page-hero {
+  display: none !important;
+}

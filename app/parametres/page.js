@@ -13,6 +13,26 @@ import { useTheme } from "../../lib/useTheme";
 import { useKiosque } from "../../lib/useKiosque";
 import NotificationOptIn from "../NotificationOptIn";
 import WebhookConfig from "../WebhookConfig";
+// 0.62.64 : dynamic imports des pages ramenées du menu Administration en onglets
+import dynamic from "next/dynamic";
+const DynNotifications = dynamic(() => import("./notifications/page.js"),   { ssr: false, loading: () => <Loading /> });
+const DynAppNative   = dynamic(() => import("./app-native/page.js"),    { ssr: false, loading: () => <Loading /> });
+const DynIntegrations= dynamic(() => import("./integrations/page.js"),  { ssr: false, loading: () => <Loading /> });
+const DynCompta      = dynamic(() => import("./compta/page.js"),        { ssr: false, loading: () => <Loading /> });
+const DynAudit       = dynamic(() => import("../audit/page.js"),        { ssr: false, loading: () => <Loading /> });
+const DynWebhooks    = dynamic(() => import("../webhooks/page.js"),     { ssr: false, loading: () => <Loading /> });
+const DynStatut      = dynamic(() => import("../statut/page.js"),       { ssr: false, loading: () => <Loading /> });
+const DynPerfSql     = dynamic(() => import("../admin-perf/page.js"),   { ssr: false, loading: () => <Loading /> });
+const DynLogApp      = dynamic(() => import("../app-logs/page.js"),     { ssr: false, loading: () => <Loading /> });
+const DynMailDiag    = dynamic(() => import("../admin/mail-diagnostic/page.js"), { ssr: false, loading: () => <Loading /> });
+const DynAvisGoogle  = dynamic(() => import("../admin/avis-google/page.js"),     { ssr: false, loading: () => <Loading /> });
+const DynDoublons    = dynamic(() => import("../admin/doublons-forces/page.js"), { ssr: false, loading: () => <Loading /> });
+
+function Loading() {
+  return <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+    <i className="ti ti-loader-2" style={{ fontSize: 24, animation: "av-spin 1s linear infinite" }} /> Chargement...
+  </div>;
+}
 
 // 0.58.41 : wrapper Suspense pour empêcher le SSG bail-out Vercel
 //  (createClient au top du composant requiert les env vars runtime)
@@ -34,7 +54,12 @@ function ParametresInner() {
   const [loading, setLoading] = useState(true);
   const [savedMsg, setSavedMsg] = useState("");
   // 0.58.5 : 3 onglets pour mieux organiser les paramètres
-  const [activeTab, setActiveTab] = useState("general");
+  // 0.62.64 : init activeTab depuis URL ?tab=X pour navigation directe
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window === "undefined") return "general";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t || "general";
+  });
 
   async function load() {
     if (!auth.structureId) return;
@@ -95,9 +120,21 @@ function ParametresInner() {
               reorderable
               storageKey="av-parametres-tabs-order"
               tabs={[
-                { id: "general",  label: "Général",       icon: "ti-adjustments" },
-                { id: "notifs",   label: "Notifications", icon: "ti-bell" },
-                { id: "rgpd",     label: "RGPD",          icon: "ti-shield-check" },
+                { id: "general",  label: "Général",         icon: "ti-adjustments" },
+                { id: "notifs",   label: "Notifications",   icon: "ti-bell" },
+                { id: "rgpd",     label: "RGPD",            icon: "ti-shield-check" },
+                // 0.62.64 : onglets ramenés du menu Administration
+                { id: "app-native",   label: "App native",        icon: "ti-device-mobile" },
+                { id: "integrations", label: "Intégrations",      icon: "ti-plug-connected" },
+                { id: "compta",       label: "Compta",            icon: "ti-receipt" },
+                { id: "audit",        label: "Audit log",         icon: "ti-history" },
+                { id: "webhooks",     label: "Webhooks",          icon: "ti-webhook" },
+                { id: "statut",       label: "Statut système",    icon: "ti-activity" },
+                { id: "perf-sql",     label: "Performance SQL",   icon: "ti-database" },
+                { id: "log-app",      label: "Log applicatif",    icon: "ti-file-text-ai" },
+                { id: "mail-diag",    label: "Diag mail",         icon: "ti-mail-bolt" },
+                { id: "avis-google",  label: "Avis Google",       icon: "ti-star" },
+                { id: "doublons",     label: "Doublons forcés",   icon: "ti-copy" },
               ]}
             />
           </div>
@@ -351,30 +388,42 @@ function ParametresInner() {
             </Panel>
             </div>)}
 
-            {/* === ONGLET NOTIFICATIONS (partie 2 : avancées) === */}
-            {activeTab === "notifs" && (
-            <Panel>
-              <h2 style={{ margin:"0 0 12px", fontSize:18, color:"#142131" }}>
-                <i className="ti ti-bell" style={{ color:"#7CC8C8", marginRight:6 }} /> Notifications avancées
-              </h2>
-              <p style={{ fontSize:12.5, color:"#6c7a89", margin:"0 0 16px" }}>
-                Active les notifications push natives sur cet appareil et configure les webhooks vers tes outils d'équipe (Teams, Slack).
-                <br /><i className="ti ti-info-circle" /> Pour choisir <b>quels événements</b> tu reçois en notif, va dans <a href="/profil" style={{ color: "#185FA5", fontWeight: 600 }}>Mon profil</a>.
-              </p>
-              <NotificationOptIn auth={auth} />
-              <WebhookConfig auth={auth} />
-            </Panel>
-            )}
+            {/* === ONGLET NOTIFICATIONS — page complète embed (0.62.64) === */}
+            {activeTab === "notifs" && <DynPage key="notifs" component={DynNotifications} />}
 
+            {/* 0.62.64 — Onglets ramenés du menu Administration via dynamic embed */}
+            {activeTab === "app-native"   && <DynPage key="app-native" component={DynAppNative} />}
+            {activeTab === "integrations" && <DynPage key="integrations" component={DynIntegrations} />}
+            {activeTab === "compta"       && <DynPage key="compta" component={DynCompta} />}
+            {activeTab === "audit"        && <DynPage key="audit" component={DynAudit} />}
+            {activeTab === "webhooks"     && <DynPage key="webhooks" component={DynWebhooks} />}
+            {activeTab === "statut"       && <DynPage key="statut" component={DynStatut} />}
+            {activeTab === "perf-sql"     && <DynPage key="perf-sql" component={DynPerfSql} />}
+            {activeTab === "log-app"      && <DynPage key="log-app" component={DynLogApp} />}
+            {activeTab === "mail-diag"    && <DynPage key="mail-diag" component={DynMailDiag} />}
+            {activeTab === "avis-google"  && <DynPage key="avis-google" component={DynAvisGoogle} />}
+            {activeTab === "doublons"     && <DynPage key="doublons" component={DynDoublons} />}
+
+            {(activeTab === "general" || activeTab === "notifs" || activeTab === "rgpd") && (
             <div style={{ textAlign: "right" }}>
               {/* 0.58.25 : NeonButton variant=navy pour Enregistrer les préférences */}
               <NeonButton variant="navy" icon="ti-device-floppy" onClick={save}>
                 Enregistrer les préférences
               </NeonButton>
             </div>
+            )}
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+// 0.62.64 : composant wrapper pour embed les pages existantes dans un onglet
+function DynPage({ component: Component }) {
+  return (
+    <div className="av-tab-content" style={{ marginTop: 8 }}>
+      <Component />
     </div>
   );
 }
