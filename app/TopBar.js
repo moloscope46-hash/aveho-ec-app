@@ -23,6 +23,8 @@ import Modal from "./components/Modal";
 import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
 // 0.58.87 : mini-panier dropdown style Amazon
 import CartDropdown from "./components/CartDropdown";
+// 0.61.4 : adapter TopBar selon mode magasin (catalogue, panier, etc.)
+import { useViewMode } from "../lib/useViewMode";
 
 // 0.56.15 : réorganisation par 5 sections métier dans l'ordre du workflow :
 // 1. COLLECTIVITÉ (vue globale, hiérarchie, équipes, patients, matériel)
@@ -183,6 +185,9 @@ const TITLES = Object.fromEntries(MENU.flatMap((s) => s.items).map((i) => [i.p, 
 export default function TopBar({ cartCount = 0, auth }) {
   const router = useRouter();
   const path = usePathname();
+  // 0.61.4 : mode magasin pour adapter l'UI
+  const viewMode = useViewMode();
+  const isMagasin = viewMode.ready && viewMode.isMagasin;
   const [open, setOpen] = useState(false);
   // Alpha 0.55.34 : popup info version (remplace la bulle visible)
   const [versionOpen, setVersionOpen] = useState(false);
@@ -302,10 +307,19 @@ export default function TopBar({ cartCount = 0, auth }) {
         {mounted && auth && <NotifBell structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <div style={{ position: "relative" }}>
-            <button ref={cartBtnRef} className="tb-icon" onClick={() => setCartOpen(o => !o)} aria-label="Panier" aria-expanded={cartOpen}>
-              <i className="ti ti-shopping-cart" />{cartCount > 0 && <span className="tb-badge">{cartCount}</span>}
-            </button>
-            <CartDropdown open={cartOpen} onClose={() => setCartOpen(false)} anchorRef={cartBtnRef} />
+            {isMagasin ? (
+              // 0.61.4 : Mode magasin → icône "Commandes reçues" (read-only), redirige vers /magasin?tab=di
+              <button className="tb-icon" onClick={() => router.push("/magasin?tab=di")} aria-label="Commandes reçues" title="Commandes reçues des EC">
+                <i className="ti ti-package" />{cartCount > 0 && <span className="tb-badge" style={{ background: "#5a8f8f" }}>{cartCount}</span>}
+              </button>
+            ) : (
+              <>
+                <button ref={cartBtnRef} className="tb-icon" onClick={() => setCartOpen(o => !o)} aria-label="Panier" aria-expanded={cartOpen}>
+                  <i className="ti ti-shopping-cart" />{cartCount > 0 && <span className="tb-badge">{cartCount}</span>}
+                </button>
+                <CartDropdown open={cartOpen} onClose={() => setCartOpen(false)} anchorRef={cartBtnRef} />
+              </>
+            )}
           </div>
         )}
         {/* 0.55.19 : icônes de statut (réseau, perm, bio…) */}

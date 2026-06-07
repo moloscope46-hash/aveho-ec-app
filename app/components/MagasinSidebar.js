@@ -16,6 +16,11 @@ const MAG_NAV = [
     { p: "/magasin/depots", ic: "ti-building-warehouse", lbl: "Dépôts clients", col: "#5a8f8f" },
     { p: "/magasin/inventaires", ic: "ti-clipboard-list", lbl: "Inventaires", col: "#EF9F27" },
   ]},
+  // 0.61.4 : Catalogue + commerce
+  { section: "Catalogue & Commerce", items: [
+    { p: "/magasin/catalogue", ic: "ti-package", lbl: "Catalogue articles", col: "#5a8f8f" },
+    { p: "/magasin/mercuriales", ic: "ti-file-text", lbl: "Mercuriales & marchés", col: "#7a6fb0" },
+  ]},
   // 0.61.3 : Flotte & livraisons
   { section: "Flotte & livraisons", items: [
     { p: "/magasin/flotte", ic: "ti-truck-delivery", lbl: "Flotte véhicules", col: "#185FA5" },

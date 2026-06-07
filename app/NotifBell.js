@@ -12,6 +12,9 @@ import { relativeTime } from "../lib/format";
 // 0.58.13 : Drawer pour panel notifications côté droit
 // 0.58.15 : Tooltip pour la cloche avec compteur dynamique
 import { Drawer, Tooltip } from "./components/ui-premium";
+// 0.61.4 : cantonnement notifs si user magasin
+import { useViewMode } from "../lib/useViewMode";
+import { useMagasinContext } from "../lib/useMagasinContext";
 
 const TYPES = {
   systeme:    { ic: "ti-info-circle",     color: "#185FA5" },
@@ -29,17 +32,25 @@ export default function NotifBell({ structureId, userId }) {
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  // 0.61.4 : cantonnement notifs si user magasin
+  const viewMode = useViewMode();
+  const magasinCtx = useMagasinContext();
 
-  // Charge mes notifications (les miennes + celles "à tous" dans ma collectivité)
+  // Charge mes notifications (filtrées par magasin si user magasin)
   async function load() {
     if (!structureId) return;
-    const { data } = await supabase.from("notifications")
+    let q = supabase.from("notifications")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(30);
+    // Si user magasin → ne montrer que les notifs liées au magasin (URL contient magasin_id, ou notifs dont user_id = moi)
+    if (viewMode.ready && viewMode.isMagasin && userId) {
+      q = q.eq("user_id", userId);
+    }
+    const { data } = await q;
     setItems(data || []);
   }
-  useEffect(() => { if (structureId) load(); }, [structureId]);
+  useEffect(() => { if (structureId) load(); }, [structureId, viewMode.ready, viewMode.isMagasin]);
 
   // Rafraîchit toutes les 60s (polling simple, suffisant pour l'alpha)
   useEffect(() => {

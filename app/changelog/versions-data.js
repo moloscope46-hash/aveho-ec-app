@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.4",
+    "kind": "feat",
+    "titre": "🛍 MEGA pack catalogue magasin : TopBar adapté magasin + Catalogue magasin propre + Mercuriales + Fix v_analytics_sav 404",
+    "chantiers": [
+      { "code": "SQL", "txt": "🔥 **HOTFIX v_analytics_sav** : la vue manquait → 404 sur /magasin/analytics-sav. Recréation idempotente avec ALTER ADD COLUMN IF NOT EXISTS sur les colonnes manquantes" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.61.4-mercuriales-catalogue-magasin.sql`** : (1) ALTER articles ADD `magasin_id` + `est_catalogue_magasin` + `prix_public_ht` + `prix_achat_ht`. (2) Table `articles_rattachements` (article_etablissement_id ↔ article_magasin_id avec prix négocié). (3) Table `mercuriales` (numéro, nom, type [mercuriale/marche/devis/contrat], magasin_id, etab_id, dates, statut, remise globale, conditions). (4) Table `mercuriales_lignes` (article + prix unitaire HT + remise% + prix négocié auto-calculé + quantités min/max). (5) Vue `v_catalogue_magasin` (avec compteurs étabs rattachés + mercuriales actives). (6) RPC `notifications_magasin(uuid)` pour cantonner notifs" },
+      { "code": "AI", "txt": "🛍 **TopBar magasin-aware** : importe `useViewMode`. Quand user magasin connecté, l'**icône panier** devient **'Commandes reçues'** (📦 ti-package teal) au lieu de 'Panier' (🛒). Click → redirige vers `/magasin?tab=di` (read-only). Pas de dropdown panier pour les magasins (ils ne créent pas de commandes)" },
+      { "code": "AI", "txt": "🔔 **NotifBell cantonné magasin** : si user magasin (viewMode.isMagasin), filtre les notifs sur `user_id=auth.user.id` uniquement (au lieu de toutes celles de la structure). Pas de notifs cross-magasin parasites" },
+      { "code": "AI", "txt": "📦 **Nouvelle page `/magasin/catalogue`** : catalogue propre au magasin avec CRUD complet. Cards par article (libellé, code, prix public/achat HT, badges 'rattachés étab' + 'en mercuriale'). Stats 4 tiles (total/actifs/rattachés/en mercuriale). Recherche libellé+code. Modal édition (libellé/code/référence/unité/famille/prix public/prix achat/description/actif). **`est_catalogue_magasin=true`** distingue ces articles du catalogue général" },
+      { "code": "AI", "txt": "📋 **Nouvelle page `/magasin/mercuriales`** : gestion des mercuriales/marchés/devis/contrats. **CRUD complet avec workflow** : brouillon → en_validation → active → expirée → archivée. **Rattachement à un établissement** (devient automatique pour ses commandes). **Lignes d'articles** avec calcul prix négocié = prix * (1-remise%) en temps réel. Filtres type+statut+étab. Cards colorées par type" },
+      { "code": "AI", "txt": "🎯 **Concept clair maintenant** : (1) Le **magasin** crée son catalogue d'articles dans `/magasin/catalogue` (ce sont SES articles, pas ceux d'un étab). (2) Le magasin crée des **mercuriales** négociées par client. (3) L'étab a son catalogue à lui, et **rattache** ses articles aux articles du magasin via `articles_rattachements`. (4) Quand l'étab commande, le prix vient de la mercuriale active si rattachement, sinon prix public" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin enrichie** : nouvelle section 'Catalogue & Commerce' avec 'Catalogue articles' et 'Mercuriales & marchés'" },
+      { "code": "AI", "txt": "📱 **Bottom nav magasin** mise à jour : remplace 'Inventaires' par 'Catalogue' (Inventaires accessible via sidebar/home)" },
+      { "code": "INFO", "txt": "🚧 **0.61.5+** : (1) Page de rattachement étab→magasin avec UI drag&drop. (2) Application auto de la mercuriale active au moment du panier EC. (3) Génération PDF mercuriale imprimable. (4) Historique des prix par article+étab. (5) Workflow signature mercuriale (canvas)" }
+    ],
+    "themes": ["feat", "catalogue", "mercuriales", "topbar", "magasin", "hotfix"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.3",
     "kind": "feat",
     "titre": "🚛 MEGA pack logistique magasin : Flotte véhicules + 🗺 Tournées avec carte + 🎨 UX dark mode/haptic/bottom sheet",

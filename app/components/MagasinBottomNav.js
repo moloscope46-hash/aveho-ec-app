@@ -7,11 +7,11 @@ import { useRouter, usePathname } from "next/navigation";
 import { useViewMode } from "../../lib/useViewMode";
 
 const ITEMS = [
-  { p: "/mobile/magasin", ic: "ti-home", lbl: "Accueil", col: "#5a8f8f" },
-  { p: "/magasin", ic: "ti-dashboard", lbl: "Vue d'ensemble", col: "#5a8f8f" },
+  { p: "/magasin", ic: "ti-dashboard", lbl: "Accueil", col: "#5a8f8f" },
+  { p: "/magasin/catalogue", ic: "ti-package", lbl: "Catalogue", col: "#185FA5" },
   { p: "/scan/article", ic: "ti-scan", lbl: "Scan", col: "#7CC8C8" },
-  { p: "/magasin/inventaires", ic: "ti-clipboard-list", lbl: "Inventaires", col: "#EF9F27" },
-  { p: "/magasin/profil", ic: "ti-user-circle", lbl: "Profil", col: "#185FA5" },
+  { p: "/magasin/tournees", ic: "ti-route", lbl: "Tournées", col: "#7a6fb0" },
+  { p: "/magasin/profil", ic: "ti-user-circle", lbl: "Profil", col: "#5a8f8f" },
 ];
 
 export function MagasinBottomNav() {
