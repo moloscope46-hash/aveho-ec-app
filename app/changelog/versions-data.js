@@ -240,6 +240,53 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.20",
+    "kind": "feat",
+    "titre": "🐛 Fix SQL v_collaborateurs (etablissement_ids) + Familles articles 3 niveaux + Fix édition article + EAN13/GS1 sur articles",
+    "chantiers": [
+      { "code": "SQL", "txt": "🚨 **Fix urgence : `migration-0.62.20-v-collaborateurs-FIX.sql`** : la migration 0.62.19 plantait en `ERROR 42703: column m.etablissement_ids does not exist`. Fix défensif avec `DO $$ BEGIN ... END $$` qui CHECK l'existence de la colonne via `information_schema.columns` AVANT de l'utiliser. Si présente → COALESCE(etablissement_id, etablissement_ids[0]). Sinon → juste etablissement_id. **À LANCER À LA PLACE de 0.62.19**" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.20-familles-articles-garages-magasin.sql`** : crée table `familles_articles` (id, structure_id, magasin_id, parent_id → auto-référence, niveau 1/2/3, nom, code, description, couleur, icone, ordre, actif). Ajoute `articles.famille_id`, `articles.code_ean13`, `articles.code_gs1`. Assure `garages.magasin_id`. 4 RLS policies. 4 indexes" },
+      { "code": "AI", "txt": "🗂 **Nouvelle page `/familles-articles`** : CRUD hiérarchique 3 niveaux. Arbre dépliable avec chevrons, icône colorée 32×32 par famille, badge code. Bouton '+ Sous-famille' apparaît si niveau < 3. Suppression cascade avec confirmation. Modal : nom, code, description, palette 9 couleurs, sélecteur 15 icônes Tabler" },
+      { "code": "AI", "txt": "🐛 **Fix bouton 'Éditer' article qui redirigeait vers /articles** : avant `router.push('/articles?edit=...')` quittait la page. Maintenant **modal d'édition LOCAL** sur `/article/[id]` qui édite directement : libellé, code interne, référence, **code EAN13** (13 chiffres), **code GS1/UDI** ((01)...), description, prix public HT, stock min, famille_id. Save = UPDATE direct + setArticle locale (pas de reload page). Note 'Pour params avancés → page Articles'" }
+    ],
+    "themes": ["fix-critique", "sql", "familles", "articles", "etiquettes", "edition"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.20.html",
+    "sqlFile": "migration-0.62.20-familles-articles-garages-magasin.sql"
+  },
+  {
+    "v": "0.62.19",
+    "kind": "fix",
+    "titre": "🐛 Fix tuile collab 'Sans nom' + v_collaborateurs ENRICHIE (étab/svc/magasin/pharmacie) + 8 HTML notes manquants régénérés",
+    "chantiers": [
+      { "code": "AI", "txt": "🐛 **Fix tuile 'Sans nom' dans /collaborateurs** : avant fallback était juste `email`. Maintenant cascade complète : `nomComplet || nom_affiche || email || (tel ? '📞 ${tel}' : null) || 'Utilisateur ${user_id.substring(0,8)}' || 'Sans nom'`. Plus jamais de tuile sans label. Badge orange '👤 profil à compléter' si pas de prénom/nom rempli en DB. Solution durable : le user va dans son profil et complète prénom/nom" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.19-v-collaborateurs-enrichie.sql`** : recrée la vue `v_collaborateurs` avec **TOUTES les infos jointes** : nom + ville de l'établissement (via etablissement_id OU etablissement_ids[0]), nom du service, nom du bâtiment (via services.batiment_id), nom + ville du magasin (via magasin_fournisseur_id), nom de la pharmacie (via pharmacie_id). Plus aussi nom_affiche, mobile, matricule, diplome, actif, date_arrivee, photo_url. DROP CASCADE → CREATE OR REPLACE. La tuile collab affiche maintenant toutes les infos disponibles" },
+      { "code": "AI", "txt": "📄 **8 HTML notes manquants régénérés** : pour les versions 0.62.11 à 0.62.18 le `noteFile` était soit vide soit corrompu. Relancé `scripts/gen-html-notes-missing.py` → 8 HTML générés : NOTE-FIX-0.62.11/12/15.html, NOTE-FEAT-0.62.13/14/16/17/18.html. Format gradient + chantiers + footer dark, responsive mobile, téléchargeables depuis la modale changelog" },
+      { "code": "INFO", "txt": "🚧 **À faire après ce SQL** : si tu as un user créé sans prénom/nom, ouvre son profil et complète. Pour les invitations en cours sans rôle pro, va sur `/utilisateurs` et édite-les. La nouvelle vue affichera tout automatiquement" }
+    ],
+    "themes": ["fix", "collaborateurs", "vue-sql", "html-notes"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.19.html",
+    "sqlFile": "migration-0.62.19-v-collaborateurs-enrichie.sql"
+  },
+  {
+    "v": "0.62.18",
+    "kind": "feat",
+    "titre": "🛣 Tournée multi-sources (DI+Transferts+SAV+Maint+Retour+Bilan) + Popup survol + Chauffeur enrichi + Page collab magasin",
+    "chantiers": [
+      { "code": "AI", "txt": "📦 **Page `/magasin/tournees/nouvelle` ENRICHIE** : avant juste DI à livrer. Maintenant **6 sources** dans des onglets : 📦 DI à livrer (orange) / 🔄 Transferts (violet) / 🛠 SAV (rouge) / 🔧 Maintenance (bleu) / ↩ Retours (vert) / 📋 Bilans (teal). Chaque onglet a son compteur. Boutons 'Tout cocher' / 'Tout décocher' par onglet" },
+      { "code": "AI", "txt": "🖱 **Popup au survol** : passe la souris sur une ligne → tooltip fixe en bas à droite (360px, fond #142131, border orange) affiche MAX infos : type, numéro, établissement, dépôt, ville, description/motif, quantité, lignes, badge URGENT si urgence, date de création. `onMouseEnter` / `onMouseLeave` stockent l'item courant" },
+      { "code": "AI", "txt": "📋 **Liste enrichie MAX colonnes** : avant flex simple. Maintenant grid 6-7 colonnes : checkbox, badge type, étab + numéro, métadonnée (nb lignes / qté / sous-type), ville, badge urgence. Texte tronqué proprement avec ellipsis sur l'étab" },
+      { "code": "AI", "txt": "🚛 **Chauffeur enrichi** : select affiche maintenant `Prénom Nom [role_pro] · fonction_detail ☎ tel`. À la sélection, encart violet affiche le rôle pro, l'email, et les **types de DI gérés** (depuis la table membres_structure). Champ `types_di_geres` libre, à remplir manuellement ou via la page collab magasin" },
+      { "code": "AI", "txt": "🔗 **Submit multi-sources** : construit dynamiquement les étapes depuis selectedDis + selectedTransferts + selectedAutres. type_etape adapté (livraison/transfert/sav/maintenance/retour/bilan). Adresse + lat/lng résolues automatiquement depuis les jointures. Durée estimée : 10min transferts, 15min DI, 20min SAV/retour/bilan, 30min maintenance" },
+      { "code": "AI", "txt": "👥 **Nouvelle page `/magasin/collaborateurs`** : voir tous les collab (filtres 🏬 Magasin / 🏥 Étab / Tous + recherche). Cards distinguent collab étab (bleu, ti-user) vs collab magasin (teal, ti-building-warehouse). Affiche fonction, email, tél, types DI gérés, boutons mailto/tel. Bouton 'Nouveau collab magasin' → modal d'invitation avec : email, prénom/nom, tél, fonction, **rôle magasin** (8 options : chauffeur-livreur, technicien SAV/maint, préparateur, responsable magasin, commercial, logisticien, administratif) + **types DI gérés multi-select** (livraison/transfert/sav/maintenance/retour/bilan/dépannage) qui sera utilisé pour auto-attribuer les demandes. Stocké dans `invitations` avec fallback si colonnes pas créées" },
+      { "code": "AI", "txt": "🔗 **Lien sidebar magasin** : 'Collaborateurs' ajouté dans section 'Flotte & livraisons' (couleur teal #5a8f8f, icône ti-users)" }
+    ],
+    "themes": ["feat", "tournees", "collaborateurs", "magasin", "ux", "popup"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.18.html"
+  },
+  {
     "v": "0.62.17",
     "kind": "feat",
     "titre": "📑 Onglets manquants Groupement + Établissement + Cantonnement /magasin/rattachements + Garage sur form véhicule",
@@ -251,7 +298,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "navigation", "onglets", "cantonnement", "vehicules"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.17.html"
   },
   {
     "v": "0.62.16",
@@ -267,7 +314,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "garages", "materiels", "tracabilite", "equipes", "vehicules"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.16.html"
+    "sqlFile": "migration-0.62.16-garages.sql"
   },
   {
     "v": "0.62.15",
@@ -282,7 +330,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "etablissement", "vue-plan", "modal", "creation"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.15.html"
   },
   {
     "v": "0.62.14",
@@ -295,7 +343,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "collaborateurs", "transferts", "magasin", "ux"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.14.html"
   },
   {
     "v": "0.62.13",
@@ -310,7 +358,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["feat", "magasin", "etablissement", "calendrier", "invitations"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FEAT-0.62.13.html"
+    "sqlFile": "migration-0.62.13-invitations-role-magasin.sql"
   },
   {
     "v": "0.62.12",
@@ -325,7 +374,7 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "collaborateurs", "depots", "etablissement", "rattachements"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.12.html"
   },
   {
     "v": "0.62.11",
@@ -341,7 +390,8 @@ export const ALL_VERSIONS = [
     ],
     "themes": ["fix-critique", "sql", "mobile", "changelog", "rattachements"],
     "date": "6 juin 2026",
-    "noteFile": ""
+    "noteFile": "NOTE-FIX-0.62.11.html"
+    "sqlFile": "migration-0.62.9-perf-indexes-DEFENSIF.sql"
   },
   {
     "v": "0.62.10",
@@ -357,6 +407,7 @@ export const ALL_VERSIONS = [
     "themes": ["fix-critique", "react-hooks", "magasin", "rattachements"],
     "date": "6 juin 2026",
     "noteFile": "NOTE-FIX-0.62.10.html"
+    "sqlFile": "migration-0.62.10-magasins-rattachements.sql"
   },
   {
     "v": "0.62.9",
@@ -371,6 +422,7 @@ export const ALL_VERSIONS = [
     "themes": ["fix-critique", "etablissement", "fab", "indexes-perf"],
     "date": "6 juin 2026",
     "noteFile": "NOTE-FEAT-0.62.9.html"
+    "sqlFile": "migration-0.62.9-perf-indexes-DEFENSIF.sql"
   },
   {
     "v": "0.62.8",

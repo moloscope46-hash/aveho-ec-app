@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.13 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.62.13</h1>
+<div class="titre">🏬 Création EC côté magasin avec workflow notif + Calendrier tournées (semaine/mois) + Invite user magasin avec rôle pro</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#magasin</span> <span class="theme">#etablissement</span> <span class="theme">#calendrier</span> <span class="theme">#invitations</span></div>
+</div>
+<h2>📋 Chantiers (5)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🏬 **Nouvelle page `/magasin/etablissements/nouveau`** : créer un EC client depuis l'espace magasin sans redirect vers la version EC. Form complet (nom, type, adresse, SIRET, FINESS, tél, notes). **Workflow intelligent** : (1) Cherche si l'étab existe déjà (par SIRET / FINESS / nom+ville). (2a) Si existe → écran 'Étab déjà existant' avec bouton 'Demander le rattachement' qui envoie une notif aux membres de l'étab (insert `magasins_rattachements` avec `actif=false` = pending). (2b) Si nouveau → géocode l'adresse via API data.gouv + crée l'étab + auto-rattache au magasin. Lien dans sidebar magasin section 'Demandes reçues' : '+ Nouvel EC client'</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📅 **Nouvelle page `/magasin/tournees/calendrier`** : vue calendrier complète. Toggle Semaine / Mois. Boutons Préc / Aujourd'hui / Suiv. Header dark + grille 7 colonnes. Chaque tournée affichée comme card colorée (couleur selon statut) avec icône + heure + numéro + véhicule + chauffeur. Click card → détail. Click 'cellule vide' un jour → création tournée pré-remplie pour ce jour (`?date=YYYY-MM-DD`). Aujourd'hui surligné en orange. Légende statuts en bas. Lien sidebar 'Calendrier tournées'</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.13-invitations-role-magasin.sql`** : ajoute `role_professionnel` (TEXT) et `magasin_fournisseur_id` (UUID) sur `invitations` + 2 indexes partiels. Permet de stocker dès la création d'invitation le rôle pro cible et son magasin de rattachement</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 👤 **Form invitation enrichi** : nouveau select 'Rôle professionnel' (10 options : infirmier, docteur, pharmacien, aide_soignant, kine, secretaire, logistique, admin, **utilisateur_magasin**, autre). Si rôle = `utilisateur_magasin` → encadré teal magasin apparaît avec select 'Magasin rattaché' obligatoire (chargé depuis table `magasins`). Le payload invitation inclut maintenant ces 2 champs avec **fallback retry** si la colonne n'existe pas (SQL pas exécuté)</div>
+<div class="chantier" style="border-left-color: #5a6878;"><span class="code-tag" style="background: #5a6878;">ℹ INFO</span> 🚧 **À venir** : mail dédié magasin (template différent au lieu du mail générique) — pour ça il faut modifier l'edge function `invite-user`. À ce stade, le rôle est stocké et tu vois directement le rattachement après inscription. Le mail générique fonctionne déjà</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.13<br>Généré automatiquement</div>
+</body></html>

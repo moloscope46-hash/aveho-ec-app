@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.20</title><style>
+body { font-family: 'Quicksand', 'Segoe UI', sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; margin-right: 8px; font-family: monospace; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } }
+</style></head><body>
+<div class="header"><span class="kind">✨ FEATURE</span><h1>Aveho 0.62.20</h1><div class="titre">🐛 Fix SQL v_collaborateurs (etablissement_ids) + Familles articles 3 niveaux + Fix édition article + EAN13/GS1 sur articles</div><div class="date">📅 6 juin 2026</div></div>
+<h2>📋 Chantiers (4)</h2>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🚨 **Fix urgence : `migration-0.62.20-v-collaborateurs-FIX.sql`** : la migration 0.62.19 plantait en `ERROR 42703: column m.etablissement_ids does not exist`. Fix défensif avec `DO $$ BEGIN ... END $$` qui CHECK l'existence de la colonne via `information_schema.columns` AVANT de l'utiliser. Si présente → COALESCE(etablissement_id, etablissement_ids[0]). Sinon → juste etablissement_id. **À LANCER À LA PLACE de 0.62.19**</div>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.20-familles-articles-garages-magasin.sql`** : crée table `familles_articles` (id, structure_id, magasin_id, parent_id → auto-référence, niveau 1/2/3, nom, code, description, couleur, icone, ordre, actif). Ajoute `articles.famille_id`, `articles.code_ean13`, `articles.code_gs1`. Assure `garages.magasin_id`. 4 RLS policies. 4 indexes</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🗂 **Nouvelle page `/familles-articles`** : CRUD hiérarchique 3 niveaux. Arbre dépliable avec chevrons, icône colorée 32×32 par famille, badge code. Bouton '+ Sous-famille' apparaît si niveau < 3. Suppression cascade avec confirmation. Modal : nom, code, description, palette 9 couleurs, sélecteur 15 icônes Tabler</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🐛 **Fix bouton 'Éditer' article qui redirigeait vers /articles** : avant `router.push('/articles?edit=...')` quittait la page. Maintenant **modal d'édition LOCAL** sur `/article/[id]` qui édite directement : libellé, code interne, référence, **code EAN13** (13 chiffres), **code GS1/UDI** ((01)...), description, prix public HT, stock min, famille_id. Save = UPDATE direct + setArticle locale (pas de reload page). Note 'Pour params avancés → page Articles'</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.20</div></body></html>

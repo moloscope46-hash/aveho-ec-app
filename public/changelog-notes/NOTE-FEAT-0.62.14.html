@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.14 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.62.14</h1>
+<div class="titre">🎯 Tuile collaborateur enrichie (mail+tél+actions) + Tab Transferts magasin → dépôt activé (filtré par rattachements)</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#collaborateurs</span> <span class="theme">#transferts</span> <span class="theme">#magasin</span> <span class="theme">#ux</span></div>
+</div>
+<h2>📋 Chantiers (3)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🎯 **Tuile collaborateur MAX d'infos** : avant juste nom + rôle + spécialité. Maintenant : nom (ou email fallback si pas de prénom/nom), badge 'profil à compléter' si _virtual, badge 'moi' si _self_added, fonction détaillée (📋), spécialité (🎓), magasin rattaché si utilisateur_magasin (🏬), pharmacie si pharmacien (💊), établissement + service (🏢), ADELI/RPPS, **email** (✉) et **téléphone** (📞). **Actions rapides** : bouton 'Email' (mailto:) bleu + bouton 'Appel' (tel:) vert avec `e.stopPropagation` pour pas déclencher l'édition</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🔄 **Tab Transferts magasin activé** : avant `/magasin?tab=transferts` redirigait sur DI. Maintenant son propre onglet (icône ti-transfer violet) avec liste + bouton 'Nouveau transfert'. Modal de création avec **dépôts destination filtrés par les rattachements** (`magasins_rattachements.depot_id` direct OU `etablissement_id` → tous les dépôts de l'étab). Sélecteur article depuis catalogue magasin. Quantité + motif + commentaire. INSERT dans table `transferts` avec statut='en_attente'. Bandeau d'alerte si aucun rattachement actif</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📋 **Liste transferts** : cards avec icône violette ↔, numéro, dépôt destination (+ nom étab), date, article + quantité, motif italique, badge statut coloré (validé vert / refusé rouge / en_attente orange). Limit 50 derniers</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.14<br>Généré automatiquement</div>
+</body></html>

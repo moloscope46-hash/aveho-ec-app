@@ -14,7 +14,7 @@ import BackButton from "../../components/BackButton";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
-import { PageHead, Panel, Btn, IconButton } from "../../ui";
+import { PageHead, Panel, Btn, IconButton, Modal } from "../../ui";
 import { EmptyState, SkeletonRow, toast } from "../../components/ui-premium";
 import { fmtEur } from "../../../lib/format";
 import { generateEan13Svg, isValidEan13 } from "../../../lib/barcode";
@@ -33,6 +33,10 @@ export default function ArticleDetailPage({ params }) {
   const [partenaire, setPartenaire] = useState(null);
   const [materiels, setMateriels] = useState([]);
   const [mouvements, setMouvements] = useState([]);
+  // 0.62.20 : modal d'édition local (au lieu de redirect /articles)
+  const [editModal, setEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
   // 0.58.72 : nouveaux états (fournisseurs multi, tags article)
   const [fournisseurs, setFournisseurs] = useState([]);  // article_fournisseurs
   const [articleTags, setArticleTags] = useState([]);
@@ -241,7 +245,7 @@ export default function ArticleDetailPage({ params }) {
             )}
             {/* Actions */}
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Btn variant="primary" icon="ti-edit" onClick={() => router.push(`/articles?edit=${article.id}`)}>Éditer</Btn>
+              <Btn variant="primary" icon="ti-edit" onClick={() => setEditModal(true)}>Éditer</Btn>
               <Btn variant="ghost" icon="ti-qrcode" onClick={() => router.push(`/scan/article?article_id=${article.id}`)}>
                 Entrée stock
               </Btn>
@@ -701,9 +705,79 @@ export default function ArticleDetailPage({ params }) {
           </Panel>
         )}
       </div>
+
+      {/* 0.62.20 : Modal édition locale (au lieu de redirect /articles) */}
+      {editModal && article && (
+        <Modal open={editModal} onClose={() => setEditModal(false)} kind="patient"
+          title={`Éditer ${article.libelle}`}
+          actions={
+            <>
+              <Btn variant="ghost" onClick={() => setEditModal(false)}>Annuler</Btn>
+              <Btn variant="primary" disabled={editSaving} onClick={async () => {
+                setEditSaving(true);
+                try {
+                  const payload = {
+                    libelle: editForm.libelle ?? article.libelle,
+                    code: editForm.code ?? article.code,
+                    reference: editForm.reference ?? article.reference,
+                    code_ean13: editForm.code_ean13 ?? article.code_ean13,
+                    code_gs1: editForm.code_gs1 ?? article.code_gs1,
+                    description: editForm.description ?? article.description,
+                    prix_public_ht: editForm.prix_public_ht ?? article.prix_public_ht,
+                    stock_min: editForm.stock_min ?? article.stock_min,
+                    famille_id: editForm.famille_id ?? article.famille_id,
+                  };
+                  const r = await supabase.from("articles").update(payload).eq("id", article.id);
+                  if (r.error) throw r.error;
+                  setEditModal(false);
+                  setArticle({ ...article, ...payload });
+                  toast?.success?.("Article mis à jour");
+                } catch (e) {
+                  alert("Erreur : " + e.message);
+                } finally { setEditSaving(false); }
+              }}>{editSaving ? "Enregistrement…" : "Enregistrer"}</Btn>
+            </>
+          }>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}><b>Libellé *</b>
+              <input defaultValue={article.libelle || ""} onChange={(e) => setEditForm({ ...editForm, libelle: e.target.value })} style={editInp} autoFocus />
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>Code interne
+              <input defaultValue={article.code || ""} onChange={(e) => setEditForm({ ...editForm, code: e.target.value })} style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>Référence
+              <input defaultValue={article.reference || ""} onChange={(e) => setEditForm({ ...editForm, reference: e.target.value })} style={editInp} />
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>Code EAN13
+              <input defaultValue={article.code_ean13 || ""} onChange={(e) => setEditForm({ ...editForm, code_ean13: e.target.value })} placeholder="13 chiffres" maxLength={13} style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>Code GS1 / UDI
+              <input defaultValue={article.code_gs1 || ""} onChange={(e) => setEditForm({ ...editForm, code_gs1: e.target.value })} placeholder="(01)..." style={{ ...editInp, fontFamily: "Consolas,monospace" }} />
+            </label>
+            <label style={{ gridColumn: "1 / -1", fontSize: 12, color: "#5a6878" }}>Description
+              <textarea defaultValue={article.description || ""} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} style={{ ...editInp, minHeight: 60 }} />
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>Prix public HT (€)
+              <input type="number" step="0.01" defaultValue={article.prix_public_ht || ""} onChange={(e) => setEditForm({ ...editForm, prix_public_ht: e.target.value })} style={editInp} />
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>Stock min
+              <input type="number" defaultValue={article.stock_min || ""} onChange={(e) => setEditForm({ ...editForm, stock_min: e.target.value })} style={editInp} />
+            </label>
+            <div style={{ gridColumn: "1 / -1", padding: 10, background: "rgba(122,111,176,.08)", borderLeft: "3px solid #7a6fb0", borderRadius: 6, fontSize: 11.5, color: "#5a6878" }}>
+              ℹ Modifie ici les champs principaux. Pour les paramètres avancés (location, fournisseurs, tags, immobilisation), va sur <a href="/articles" style={{ color: "#185FA5", fontWeight: 700 }}>la page Articles</a>.
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
+
+const editInp = {
+  width: "100%", padding: "8px 10px", marginTop: 4,
+  border: "1px solid #cfd8e0", borderRadius: 6,
+  fontFamily: "inherit", fontSize: 13,
+};
 
 function Field({ label, value, mono, multi }) {
   return (

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.17 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.62.17</h1>
+<div class="titre">📑 Onglets manquants Groupement + Établissement + Cantonnement /magasin/rattachements + Garage sur form véhicule</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#navigation</span> <span class="theme">#onglets</span> <span class="theme">#cantonnement</span> <span class="theme">#vehicules</span></div>
+</div>
+<h2>📋 Chantiers (4)</h2>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📑 **Page Collectivité/Groupement : 4 nouveaux onglets** : 🚑 Véhicules (rouge #e35d5b) + 🅿️ Garages (bleu #185FA5) + 🏬 Magasins (teal #5a8f8f) + 🛣 Tournées (violet #7a6fb0). L'onglet Tournées propose 3 boutons : 'Liste tournées' / 'Calendrier' / 'Analytics'. Helper `btnGradient(c1, c2)` factorisé pour les boutons (fond gradient, shadow couleur, icône inline)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📑 **Page Établissement : 5 nouveaux onglets** : 🅿️ Garages (#185FA5) + 👥 Équipes (#5a4a90) + 👤 Collaborateurs (#7CC8C8) + ❤ Patients (#e35d5b) + 📦 Matériels (#7a6fb0). Composant `RedirectTab` réutilisable : icône 56px + titre + description + bouton gradient 'Ouvrir la page'. Pratique pour naviguer dans les ressources liées à l'étab</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🎯 **Cantonnement `/magasin/rattachements`** : la liste des étabs accessibles est maintenant filtrée selon **2 critères combinés** : (1) **Cantonnement de l'agence/magasin** via les `magasins_rattachements.actif=true` → seuls les étabs rattachés au magasin courant apparaissent. (2) **Cantonnement du collaborateur** : si `membres_structure.lock_assignment = true` et `etablissement_ids` rempli → intersection avec le périmètre du magasin. Si intersection = vide → message 'Aucun étab autorisé'. console.info trace les filtres pour debug</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🅿️ **Bouton 'Garage / Parking' sur form véhicule** : nouveau sélecteur entre Établissement et Immatriculation. Charge `garages` au mount (filtré par structure_id), affiche nom + ville. Si liste vide → lien rapide 'Créer un garage →' vers `/garages`. À l'enregistrement, `vehicules.garage_id` est sauvegardé (colonne ajoutée par migration-0.62.16-garages.sql)</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.17<br>Généré automatiquement</div>
+</body></html>

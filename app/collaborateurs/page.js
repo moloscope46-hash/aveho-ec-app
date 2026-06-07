@@ -293,6 +293,13 @@ export default function CollaborateursPage() {
                 const tel = c.telephone || c.mobile || c.tel || null;
                 const email = c.email || null;
                 const magasinNom = c.magasin_fournisseur_nom || c.magasin_nom || (c.role_professionnel === "utilisateur_magasin" ? "Magasin" : null);
+                // 0.62.19 : Fallback nom robuste - email > tél > UUID partiel > Sans nom
+                const displayName = nomComplet
+                  || c.nom_affiche
+                  || email
+                  || (tel ? `📞 ${tel}` : null)
+                  || (c.user_id ? `Utilisateur ${c.user_id.substring(0, 8)}` : null)
+                  || "Sans nom";
                 return (
                   <div key={c.user_id || c.id} style={{
                     background: "#fff", border: `1px solid ${role.col}33`, borderLeft: `4px solid ${role.col}`,
@@ -307,8 +314,8 @@ export default function CollaborateursPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: "#142131" }}>
-                          {nomComplet || email || <em style={{ color: "#8a98a8" }}>Sans nom</em>}
-                          {c._virtual && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", background: "rgba(239,159,39,.2)", color: "#EF9F27", borderRadius: 3, fontWeight: 700, textTransform: "uppercase" }}>profil à compléter</span>}
+                          {displayName === "Sans nom" ? <em style={{ color: "#8a98a8" }}>Sans nom</em> : displayName}
+                          {!nomComplet && c.id && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", background: "rgba(239,159,39,.2)", color: "#EF9F27", borderRadius: 3, fontWeight: 700, textTransform: "uppercase" }}>👤 profil à compléter</span>}
                           {c._self_added && !c._virtual && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", background: "rgba(122,111,176,.2)", color: "#7a6fb0", borderRadius: 3, fontWeight: 700, textTransform: "uppercase" }}>moi</span>}
                         </div>
                         <div style={{ fontSize: 11.5, color: role.col, fontWeight: 600 }}>{role.l}</div>

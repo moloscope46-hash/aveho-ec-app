@@ -32,6 +32,7 @@ const MAG_NAV = [
     { p: "/magasin/flotte", ic: "ti-truck-delivery", lbl: "Flotte véhicules", col: "#185FA5" },
     { p: "/magasin/tournees", ic: "ti-route", lbl: "Tournées", col: "#7a6fb0" },
     { p: "/magasin/tournees/calendrier", ic: "ti-calendar", lbl: "Calendrier tournées", col: "#EF9F27" },
+    { p: "/magasin/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#5a8f8f" },
     { p: "/magasin/analytics-tournees", ic: "ti-chart-line", lbl: "Analytics tournées", col: "#5a8f8f" },
   ]},
   { section: "Catalogue & Articles", items: [

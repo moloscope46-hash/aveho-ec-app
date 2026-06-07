@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.16 — FEAT</title>
+<style>
+body { font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif; max-width: 880px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.6; }
+h1 { color: #185FA5; border-bottom: 3px solid #185FA5; padding-bottom: 10px; margin-top: 0; font-size: 28px; }
+.header { background: linear-gradient(135deg, #185FA511, #185FA505); padding: 20px 24px; border-left: 6px solid #185FA5; border-radius: 10px; margin-bottom: 24px; }
+.kind { display: inline-block; background: #185FA5; color: #fff; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.date { color: #8a98a8; font-size: 13px; margin-top: 8px; }
+.titre { font-size: 18px; color: #142131; font-weight: 700; margin-top: 14px; }
+.themes { margin-top: 10px; }
+.theme { display: inline-block; background: #fff; border: 1px solid #cfd8e0; padding: 3px 10px; border-radius: 12px; font-size: 11px; color: #5a6878; margin-right: 5px; margin-bottom: 4px; }
+h2 { color: #185FA5; font-size: 16px; margin-top: 30px; }
+.chantier { background: #fff; border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid #cfd8e0; }
+.code-tag { display: inline-block; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; font-family: 'Consolas', monospace; }
+code { background: #f0f3f6; padding: 2px 5px; border-radius: 3px; font-size: 90%; font-family: 'Consolas', monospace; color: #c0392b; }
+strong, b { color: #142131; }
+.footer { margin-top: 40px; padding: 16px; background: #142131; color: #fff; border-radius: 8px; text-align: center; font-size: 12px; }
+@media (max-width: 600px) { body { padding: 12px; } h1 { font-size: 22px; } .header { padding: 14px; } }
+</style></head><body>
+<div class="header">
+<span class="kind">✨ FEATURE</span>
+<h1>Aveho 0.62.16</h1>
+<div class="titre">🚗 Garages + 🚛 Fiche matériel enrichie logistique + Icônes équipes auto + Fix 400 vehicules</div>
+<div class="date">📅 6 juin 2026</div>
+<div class="themes"><span class="theme">#feat</span> <span class="theme">#garages</span> <span class="theme">#materiels</span> <span class="theme">#tracabilite</span> <span class="theme">#equipes</span> <span class="theme">#vehicules</span></div>
+</div>
+<h2>📋 Chantiers (6)</h2>
+<div class="chantier" style="border-left-color: #7CC8C8;"><span class="code-tag" style="background: #7CC8C8;">🗄 SQL</span> 🆕 **`migration-0.62.16-garages.sql`** : nouvelle table `garages` (id, structure_id, etablissement_id, magasin_id, nom, adresse, ville, capacité, type [garage/parking/atelier/depot_logistique], téléphone, responsable, horaires, lat/lng, notes, actif). 4 RLS policies SELECT/INSERT/UPDATE/DELETE filtrées par structure_id du user. Ajout `vehicules.garage_id` (UUID) + index</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🅿️ **Nouvelle page `/garages`** : CRUD complet avec 4 types (garage 🏠 / parking 🅿️ / atelier mécanique 🔧 / dépôt logistique 📦). Cards avec border-left coloré par type, comptage véhicules rattachés + capacité, modal édition (nom, type, capacité, adresse, CP, ville, tél, responsable, horaires, notes, actif). À la suppression : `vehicules.garage_id` mis à NULL avant DELETE. Banner d'alerte si table absente avec lien vers le SQL</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🐛 **Fix 400 sur `/vehicules`** : la jointure PostgREST `vehicules?select=*,etablissements(nom)` plantait (FK non déclarée). Retiré complètement la jointure (les noms étab sont joints client-side via `setEtabs`). Plus d'erreur console</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🚛 **Fiche matériel TRACABILITÉ ENRICHIE** : ajout des champs : marque, modèle, fournisseur, UDI (GS1/HIBC réglementaire), chambre actuelle (select), **dépôt de rattachement avec distinction EC 🏢 / magasin 🏬**, date achat, prix achat HT, date mise en service, durée amortissement (mois), valeur nette comptable, prochaine maintenance, état enrichi (Disponible/Location/Maintenance/Hors service/Réformé), notes textarea. **Table 'étage' totalement abandonnée** (dropée en 0.58.85, on ne référence plus du tout)</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 📋 **Liste matériels MAX colonnes** : libellé (lien fiche) + tags, n° série, n° parc, n° lot, UDI (Consolas), patient affecté, **chambre actuelle**, **dépôt** (icône 🏬 magasin / 🏢 étab), date achat, prix HT, état avec badge + drapeau IMMO. Toutes triables. Charge `chambres` (id, nom, service_id) + `depots` (id, nom, magasin_id, etablissement_id) au mount</div>
+<div class="chantier" style="border-left-color: #7a6fb0;"><span class="code-tag" style="background: #7a6fb0;">🤖 AI</span> 🎨 **Icônes équipes auto-détectées** : avant les équipes apparaissaient juste avec leur nom. Maintenant chaque tuile a une icône 38x38px à gauche, fond `couleur 10%`, déduite intelligemment du nom : infirmières → ti-medical-cross, médecins → ti-stethoscope, aide-soignants → ti-heart-handshake, kiné → ti-massage, pharma → ti-pill, admin → ti-id-badge-2, logistique → ti-truck-loading, livraison → ti-truck-delivery, maintenance → ti-tool, équipe nuit → ti-moon, équipe jour → ti-sun, restauration → ti-tools-kitchen-2, ménage → ti-spray, animation → ti-music, direction → ti-crown, fallback → ti-users-group. Si `e.icone` rempli en DB, il est prioritaire</div>
+<div class="footer">Aveho Espace Collectivité — Version 0.62.16<br>Généré automatiquement</div>
+</body></html>
