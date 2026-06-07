@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.96",
+    "kind": "fix",
+    "titre": "📱 REVOIR TOUS LES POP-UPS DU SOFT en mode mobile : bottom-sheet partout (slide-up depuis le bas, handle drag, 90vh max, padding, sticky footer, popup MobileActionsBar position fixed bottom 0). /patients migré mode Tous étabs",
+    "chantiers": [
+      { "code": "FIX", "txt": "📱 **Pop-ups bottom-sheet GLOBAL mobile** (@media max-width 768px) : (1) **modal-bg/overlay/role=dialog/data-modal** : align-items flex-end (s ouvrent depuis le bas) + padding 0 + backdrop blur 6 + fond navy/55. (2) **Contenu modal** : width 100% + max-height 90vh + min-height 50vh + border-radius 20 20 0 0 (coins arrondis HAUT seulement) + overflow-y auto + box-shadow -8px 32px navy/25 + animation av-bottom-sheet-up 280ms cubic-bezier élastique. (3) **Handle drag indicator** : pseudo-::before barre grise 40x4 centrée en haut (style iOS). (4) **Inputs** : font-size 16 (évite zoom iOS) + padding 10 12 + radius 10 + width 100%. (5) **Footer boutons** : sticky bottom 0 + gradient blanc transparent + padding 12 (les actions Annuler/Enregistrer restent toujours visibles)" },
+      { "code": "AI", "txt": "📱 **Pop-ups boutons toolbar (MobileActionsBar, kebab)** : classes `.av-mobile-popup` et `[data-popup=bottom-sheet]` = position fixed bottom 0 left 0 right 0 + max-height 80vh + border-radius 20 20 0 0 + box-shadow up + animation slide-up + z-index 10000. Backdrop `.av-mobile-popup-bg` : position fixed inset 0 + blur 6 + animation fade-in 200ms. **Plus aucun popup hors écran** : tout s ouvre depuis le bas vers le haut comme un menu iOS Safari" },
+      { "code": "AI", "txt": "🌐 **/patients migré vers mode Tous étabs** : (1) Suppression du `if (!auth.etabId) { setRows([]); return; }` qui bloquait tout. (2) Remplacé par `if (!auth.structureId) return;` (check structure existe). (3) Usage de `auth.applyEtabFilter(query)` pour filtrer automatiquement selon mode (Tous = filtre sur tous les etabIds via .in, sinon .eq). (4) Cache key adapté : `patients:all` si Tous étabs sinon `patients:etab:${etabId}`. (5) Batiments : si etabId → .eq filtré, sinon tous. (6) Interventions DI count : si etabId → eq, sinon eq structure_id. **Résultat** : quand tu choisis 🌐 Tous les établissements dans TopBar, /patients affiche TOUS les patients de la structure" },
+      { "code": "INFO", "txt": "ℹ️ **Autres pages /materiels, /interventions, /signalements, /commandes** : déjà compatibles ! Elles utilisent le pattern `if (auth.etabId) q = q.eq(...)` conditionnel — donc si etabId=null elles ne filtrent pas → affichent tout. Seule /patients avait le bloquant. Les pages plus complexes peuvent nécessiter une adaptation case par case en passant à auth.applyEtabFilter(q)" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.97+** : (a) **ImageUploader matériel/patient** (bouton Modifier photo dans header). (b) **Buckets Supabase Storage** manuels. (c) **MobileActionsBar** déploiement sur pages clés. (d) **Widget ChartCard /accueil** drag&drop. (e) **doc.addImage logo statistiques-rgpd**. (f) **Refacto /materiels** custom + ViewModeToggle. (g) **Workflow commande fournisseur** PDF+Resend. (h) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["fix", "mobile", "popups", "etab-filter"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.96.html"
+  },
+  {
     "v": "0.62.95",
     "kind": "fix",
     "titre": "🔧 FIX tuiles disparaissent vue-globale (pseudo z-index 0 + overflow visible si img/badges) + effet menu gauche PLUS CLAIR (hover lift+scale+color, active barre teal gauche) + 🌐 helper applyEtabFilter pour mode Tous étabs + 🗄️ SQL mouvements stock 100 + garages re-créés",

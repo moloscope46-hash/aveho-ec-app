@@ -94,12 +94,19 @@ export default function Patients() {
   const [staleData, setStaleData] = useState(false);
 
   async function load() {
-    if (!auth.etabId) { setRows([]); setLoading(false); return; }
+    // 0.62.96 : support mode "Tous les établissements" via applyEtabFilter
+    if (!auth.structureId) { setRows([]); setLoading(false); return; }
     // Alpha 0.27.0 : safeFetch pour cache offline. Si online → fetch + cache. Si offline → cache.
     const etabId = auth.etabId;
+    const cacheKey = etabId ? `patients:etab:${etabId}` : `patients:all`;
     const pa = await safeFetch(
-      `patients:etab:${etabId}`,
-      () => supabase.from("patients").select("*").eq("etablissement_id", etabId).order("nom")
+      cacheKey,
+      () => {
+        let q = supabase.from("patients").select("*");
+        if (auth.applyEtabFilter) q = auth.applyEtabFilter(q);
+        else if (etabId) q = q.eq("etablissement_id", etabId);
+        return q.order("nom");
+      }
     );
     // Indicateur "données potentiellement obsolètes" si on lit depuis cache
     setStaleData(pa.fromCache === true);
@@ -110,7 +117,10 @@ export default function Patients() {
       supabase.from("chambres").select("*"),
       supabase.from("services").select("*"),
       Promise.resolve({ data: [] }), // 0.58.85 etages dropped
-      supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId),
+      // 0.62.96 : bâtiments — tous si Tous étabs, sinon filtré
+      etabId
+        ? supabase.from("batiments").select("*").eq("etablissement_id", etabId)
+        : supabase.from("batiments").select("*"),
       supabase.from("lits").select("*"),
     ]);
     // on reconstruit le chemin "Bât / Étage / Service / Ch.X — Lit Y"
@@ -153,13 +163,16 @@ export default function Patients() {
     setConsentStatus(statusByPat);
 
     // Alpha 0.38.0 : compteurs DI ouvertes par patient (pour preview hover).
-    // Alpha 0.52.8 : retrait de la requête achats — la table achats n'a pas
-    // de patient_id (les achats sont rattachés à un établissement, pas à un
-    // patient). Le bug renvoyait silencieusement 400 Bad Request depuis la 0.38.
-    supabase.from("interventions")
-      .select("patient_id, statut")
-      .eq("etablissement_id", auth.etabId)
-      .not("statut", "in", "(\"Clôturée\",\"Refusée\")")
+    // 0.62.96 : conditionnel sur etabId pour mode Tous étabs
+    (auth.etabId
+      ? supabase.from("interventions")
+          .select("patient_id, statut")
+          .eq("etablissement_id", auth.etabId)
+          .not("statut", "in", "(\"Clôturée\",\"Refusée\")")
+      : supabase.from("interventions")
+          .select("patient_id, statut")
+          .eq("structure_id", auth.structureId)
+          .not("statut", "in", "(\"Clôturée\",\"Refusée\")"))
       .then((diResp) => {
         const stats = {};
         (diResp.data || []).forEach((d) => {

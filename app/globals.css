@@ -6323,3 +6323,139 @@ body.av-anim-off .av-page-hero {
   z-index: 1;
 }
 
+
+/* =============================================================
+   0.62.96 — POPUPS BOTTOM SHEET MOBILE (revoit tout)
+   ============================================================= */
+
+@media (max-width: 768px) {
+  /* TOUS les modals = bottom sheet (slide depuis le bas) */
+  .modal-bg,
+  .modal-overlay,
+  [role="dialog"]:not(.av-toast),
+  [data-modal="true"] {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    background: rgba(20, 33, 49, .55) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  /* Contenu du modal = bottom sheet avec coins arrondis HAUT seulement */
+  .modal-bg > *,
+  .modal-overlay > div,
+  [role="dialog"]:not(.av-toast) > div,
+  .modal-content,
+  [data-modal="true"] > div {
+    width: 100% !important;
+    max-width: 100vw !important;
+    max-height: 90vh !important;
+    min-height: 50vh !important;
+    height: auto !important;
+    border-radius: 20px 20px 0 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-shadow: 0 -8px 32px rgba(20, 33, 49, .25) !important;
+    animation: av-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    box-sizing: border-box !important;
+    padding: 16px !important;
+    margin: 0 !important;
+  }
+
+  /* Handle de drag indicator en haut du bottom sheet */
+  .modal-bg > *::before,
+  .modal-overlay > div::before,
+  [role="dialog"]:not(.av-toast) > div::before {
+    content: "";
+    display: block;
+    width: 40px; height: 4px;
+    background: rgba(20, 33, 49, .25);
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+
+  /* Force le contenu du popup à respecter les bords */
+  .modal-bg *,
+  .modal-overlay *,
+  [role="dialog"]:not(.av-toast) * {
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  /* Inputs en taille pour mobile (évite zoom iOS sur focus) */
+  .modal-bg input,
+  .modal-bg select,
+  .modal-bg textarea,
+  .modal-overlay input,
+  .modal-overlay select,
+  .modal-overlay textarea {
+    font-size: 16px !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+  }
+
+  /* Boutons en bas du modal = sticky pied de page */
+  .modal-footer,
+  .modal-actions,
+  .modal-content [style*="display: flex"][style*="justify-content: flex-end"]:last-child {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: linear-gradient(180deg, transparent, #fff 30%) !important;
+    padding: 12px 0 !important;
+    margin: 16px -16px -16px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    z-index: 10;
+  }
+
+  /* === Popups boutons toolbar (MobileActionsBar, kebab menus) === */
+  .av-mobile-popup,
+  [class*="actions-popup"],
+  [class*="kebab-menu"],
+  [data-popup="bottom-sheet"] {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    max-height: 80vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    background: #fff !important;
+    box-shadow: 0 -8px 32px rgba(20, 33, 49, .25) !important;
+    padding: 16px !important;
+    animation: av-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    z-index: 10000 !important;
+    overflow-y: auto;
+  }
+
+  /* Backdrop pour popups */
+  .av-mobile-popup-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 33, 49, .55);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    animation: av-fade-in 200ms ease-out;
+  }
+}
+
+/* Keyframes bottom sheet slide-up + fade */
+@keyframes av-bottom-sheet-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes av-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
