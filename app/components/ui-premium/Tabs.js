@@ -131,19 +131,21 @@ export default function Tabs({
   // === STYLE PILLS (par défaut) ===
   if (variant === "pills") {
     return (
-      <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: "100%" }}>
       <div
         ref={containerRef}
         role="tablist"
         style={{
-          display: "inline-flex",
+          display: "flex",
+          flexWrap: "wrap",  /* 0.62.67 : wrap les onglets si trop nombreux */
           gap: 4,
           padding: 4,
           background: "var(--av-g100)",
-          borderRadius: "var(--av-r-full)",
+          borderRadius: "var(--av-r-lg)",  /* 0.62.67 : radius standard (plus full) pour gérer le wrap */
           border: `1px solid ${reorderEditMode ? "var(--av-teal)" : "var(--av-g200)"}`,
           boxShadow: reorderEditMode ? "0 0 0 3px rgba(124,200,200,.15)" : "none",
           transition: "border-color 200ms, box-shadow 200ms",
+          maxWidth: "100%",
         }}
       >
         {orderedTabs.map((t) => {

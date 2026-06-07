@@ -20,12 +20,20 @@ export default function PatientQrPage({ params }) {
   const [consent, setConsent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [format, setFormat] = useState("a4"); // "a4" | "bracelet"
+  // 0.62.67 : choix type de code (QR ou code-barres horizontal)
+  const [codeType, setCodeType] = useState("qr"); // "qr" | "barcode"
 
   const targetUrl = typeof window !== "undefined"
     ? `${window.location.origin}/scan/patient/${id}`
     : `/scan/patient/${id}`;
   const qrSize = format === "bracelet" ? 200 : 400;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&margin=10&format=png&data=${encodeURIComponent(targetUrl)}`;
+  // 0.62.67 : code-barres horizontal pour bracelet (Code128 = supporte URL)
+  // Utilise patient.numero_dossier si dispo, sinon target URL court
+  const barcodeData = patient?.numero_dossier || id.slice(0, 16);
+  const barcodeWidth = format === "bracelet" ? 320 : 500;
+  const barcodeHeight = format === "bracelet" ? 60 : 80;
+  const barcodeUrl = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(barcodeData)}&scale=2&height=${barcodeHeight === 60 ? 12 : 16}&includetext&textxalign=center&textsize=10`;
 
   useEffect(() => {
     if (!auth.ready) return;
@@ -83,7 +91,16 @@ export default function PatientQrPage({ params }) {
             <i className="ti ti-file-text" /> A4 fiche
           </button>
           <button onClick={() => setFormat("bracelet")} style={{ background: format === "bracelet" ? "#7CC8C8" : "transparent", color: format === "bracelet" ? "#142131" : "#fff", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
-            <i className="ti ti-id" /> Bracelet A6
+            <i className="ti ti-id" /> Bracelet
+          </button>
+        </div>
+        {/* 0.62.67 : Switcher type de code QR / Code-barres */}
+        <div style={{ display: "inline-flex", border: "1px solid rgba(255,255,255,.22)", borderRadius: 8, overflow: "hidden" }}>
+          <button onClick={() => setCodeType("qr")} style={{ background: codeType === "qr" ? "#EF9F27" : "transparent", color: codeType === "qr" ? "#142131" : "#fff", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+            <i className="ti ti-qrcode" /> QR
+          </button>
+          <button onClick={() => setCodeType("barcode")} style={{ background: codeType === "barcode" ? "#EF9F27" : "transparent", color: codeType === "barcode" ? "#142131" : "#fff", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+            <i className="ti ti-barcode" /> Code-barres
           </button>
         </div>
         <button onClick={printPage} style={{ background: "linear-gradient(135deg, #7CC8C8, #5db5b5)", color: "#142131", border: "none", padding: "10px 18px", borderRadius: 8, fontFamily: "inherit", fontWeight: 700, cursor: "pointer" }}>
@@ -91,7 +108,16 @@ export default function PatientQrPage({ params }) {
         </button>
       </div>
 
-      <div className="print-page" style={{ maxWidth: format === "bracelet" ? 480 : 720, margin: "0 auto", padding: "30px 26px", background: "#fff", minHeight: "100vh", color: "#142131" }}>
+      <div className="print-page" style={{
+        maxWidth: format === "bracelet" ? "14.8cm" : "21cm",  /* A6 paysage / A4 portrait */
+        width: "100%",
+        margin: "0 auto",
+        padding: format === "bracelet" ? "0.5cm" : "1cm",
+        background: "#fff",
+        minHeight: "100vh",
+        color: "#142131",
+        boxSizing: "border-box",
+      }}>
         {format === "a4" ? (
           // ===== FICHE A4 =====
           <div style={{ border: "4px solid #185FA5", borderRadius: 14, padding: 28 }}>
@@ -148,14 +174,18 @@ export default function PatientQrPage({ params }) {
                 )}
               </div>
 
-              {/* Colonne droite : QR + RGPD */}
+              {/* Colonne droite : QR ou code-barres + RGPD */}
               <div style={{ textAlign: "center" }}>
                 <div style={{ background: "#fff", padding: 10, display: "inline-block", borderRadius: 8, border: "1px solid #e3e9ee" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={qrUrl} alt={`QR du patient ${patient.nom}`} width={qrSize} height={qrSize} style={{ display: "block" }} />
+                  {codeType === "qr" ? (
+                    <img src={qrUrl} alt={`QR du patient ${patient.nom}`} width={qrSize} height={qrSize} style={{ display: "block" }} />
+                  ) : (
+                    <img src={barcodeUrl} alt={`Code-barres ${patient.nom}`} style={{ maxWidth: 260, height: "auto", display: "block" }} />
+                  )}
                 </div>
                 <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 8, fontWeight: 600 }}>
-                  <i className="ti ti-scan" /> Scannez pour la fiche
+                  <i className={`ti ti-${codeType === "qr" ? "scan" : "barcode"}`} /> {codeType === "qr" ? "Scannez pour la fiche" : "Code-barres patient"}
                 </div>
                 <div style={{ fontSize: 9, color: "#8a98a8", marginTop: 4, fontFamily: "Consolas, monospace", wordBreak: "break-all" }}>
                   {targetUrl}
@@ -197,32 +227,70 @@ export default function PatientQrPage({ params }) {
             </div>
           </div>
         ) : (
-          // ===== BRACELET A6 PAYSAGE =====
-          <div style={{ border: "3px solid #185FA5", borderRadius: 10, padding: 14, display: "flex", gap: 14, alignItems: "center" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO BRACELET</div>
-              <h1 style={{ fontSize: 18, margin: "4px 0 2px", color: "#142131", fontWeight: 700, lineHeight: 1 }}>
-                {patient.nom}
-              </h1>
-              <div style={{ fontSize: 14, color: "#142131" }}>{patient.prenom || ""}</div>
-              {patient.date_naissance && <div style={{ fontSize: 10, color: "#5a6878", marginTop: 2 }}>{fmtDate(patient.date_naissance)}{ageYears ? ` · ${ageYears}a` : ""}</div>}
-              {chambre && <div style={{ fontSize: 11, color: "#EF9F27", fontWeight: 700, marginTop: 2 }}><i className="ti ti-bed" /> {chambre.nom}</div>}
-              {patient.numero_dossier && <div style={{ fontSize: 10, color: "#185FA5", fontFamily: "Consolas, monospace", marginTop: 2 }}>{patient.numero_dossier}</div>}
-              {patient.allergies && (
-                <div style={{ marginTop: 4, padding: "2px 6px", background: "rgba(227,93,91,.12)", border: "1px solid #e35d5b", borderRadius: 4, fontSize: 9, color: "#c0392b", fontWeight: 700 }}>
-                  ⚠ {patient.allergies.slice(0, 50)}
+          // ===== BRACELET A6 PAYSAGE (0.62.67 : QR ou code-barres horizontal) =====
+          codeType === "qr" ? (
+            // QR : layout horizontal infos + QR
+            <div style={{ border: "3px solid #185FA5", borderRadius: 10, padding: 14, display: "flex", gap: 14, alignItems: "center", boxSizing: "border-box" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO BRACELET</div>
+                <h1 style={{ fontSize: 18, margin: "4px 0 2px", color: "#142131", fontWeight: 700, lineHeight: 1 }}>
+                  {patient.nom}
+                </h1>
+                <div style={{ fontSize: 14, color: "#142131" }}>{patient.prenom || ""}</div>
+                {patient.date_naissance && <div style={{ fontSize: 10, color: "#5a6878", marginTop: 2 }}>{fmtDate(patient.date_naissance)}{ageYears ? ` · ${ageYears}a` : ""}</div>}
+                {chambre && <div style={{ fontSize: 11, color: "#EF9F27", fontWeight: 700, marginTop: 2 }}><i className="ti ti-bed" /> {chambre.nom}</div>}
+                {patient.numero_dossier && <div style={{ fontSize: 10, color: "#185FA5", fontFamily: "Consolas, monospace", marginTop: 2 }}>{patient.numero_dossier}</div>}
+                {patient.allergies && (
+                  <div style={{ marginTop: 4, padding: "2px 6px", background: "rgba(227,93,91,.12)", border: "1px solid #e35d5b", borderRadius: 4, fontSize: 9, color: "#c0392b", fontWeight: 700 }}>
+                    ⚠ {patient.allergies.slice(0, 50)}
+                  </div>
+                )}
+                {patient.gir && <div style={{ fontSize: 10, color: "#5a6878", marginTop: 2 }}>GIR {patient.gir}</div>}
+              </div>
+              <div style={{ textAlign: "center" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={qrUrl} alt="QR" width={180} height={180} style={{ display: "block", border: "1px solid #e3e9ee" }} />
+                <div style={{ fontSize: 8, color: consent?.a_consenti ? "#5aa05a" : "#EF9F27", fontWeight: 700, marginTop: 2 }}>
+                  {consent?.a_consenti ? "✓ RGPD signé" : "⚠ RGPD à recueillir"}
                 </div>
-              )}
-              {patient.gir && <div style={{ fontSize: 10, color: "#5a6878", marginTop: 2 }}>GIR {patient.gir}</div>}
-            </div>
-            <div style={{ textAlign: "center" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qrUrl} alt="QR" width={200} height={200} style={{ display: "block", border: "1px solid #e3e9ee" }} />
-              <div style={{ fontSize: 8, color: consent?.a_consenti ? "#5aa05a" : "#EF9F27", fontWeight: 700, marginTop: 2 }}>
-                {consent?.a_consenti ? "✓ RGPD signé" : "⚠ RGPD à recueillir"}
               </div>
             </div>
-          </div>
+          ) : (
+            // 0.62.67 : CODE-BARRES HORIZONTAL — layout vertical infos en haut, barcode en bas en longueur
+            <div style={{ border: "3px solid #185FA5", borderRadius: 10, padding: 14, boxSizing: "border-box" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 9, letterSpacing: 2, color: "#5a6878", textTransform: "uppercase", fontWeight: 700 }}>AVEHO BRACELET</div>
+                  <h1 style={{ fontSize: 20, margin: "4px 0 2px", color: "#142131", fontWeight: 700, lineHeight: 1 }}>
+                    {patient.nom} <span style={{ fontWeight: 500 }}>{patient.prenom || ""}</span>
+                  </h1>
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 4 }}>
+                    {patient.date_naissance && <span style={{ fontSize: 10.5, color: "#5a6878" }}>{fmtDate(patient.date_naissance)}{ageYears ? ` · ${ageYears}a` : ""}</span>}
+                    {chambre && <span style={{ fontSize: 10.5, color: "#EF9F27", fontWeight: 700 }}><i className="ti ti-bed" /> {chambre.nom}</span>}
+                    {patient.gir && <span style={{ fontSize: 10.5, color: "#5a6878" }}>GIR {patient.gir}</span>}
+                  </div>
+                </div>
+                {patient.numero_dossier && (
+                  <div style={{ fontSize: 11, fontFamily: "Consolas, monospace", color: "#185FA5", fontWeight: 700, textAlign: "right" }}>
+                    {patient.numero_dossier}
+                  </div>
+                )}
+              </div>
+              {patient.allergies && (
+                <div style={{ marginBottom: 6, padding: "3px 8px", background: "rgba(227,93,91,.12)", border: "1px solid #e35d5b", borderRadius: 4, fontSize: 10, color: "#c0392b", fontWeight: 700 }}>
+                  ⚠ ALLERGIES : {patient.allergies.slice(0, 80)}
+                </div>
+              )}
+              {/* Code-barres horizontal en bas, plein largeur */}
+              <div style={{ marginTop: 8, textAlign: "center" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={barcodeUrl} alt="Code-barres" style={{ maxWidth: "100%", height: "auto", display: "block", margin: "0 auto" }} />
+                <div style={{ fontSize: 8, color: consent?.a_consenti ? "#5aa05a" : "#EF9F27", fontWeight: 700, marginTop: 2 }}>
+                  {consent?.a_consenti ? "✓ RGPD signé" : "⚠ RGPD à recueillir"} · Scan via l'app Aveho mobile
+                </div>
+              </div>
+            </div>
+          )
         )}
       </div>
     </>

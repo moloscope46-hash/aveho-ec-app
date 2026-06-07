@@ -59,7 +59,7 @@ export function PwaInstallPrompt() {
 
   return (
     <div style={{
-      position: "fixed", bottom: 20, left: 16, right: 16, zIndex: 1000,
+      position: "fixed", bottom: 20, left: 16, right: 16, zIndex: 10000,
       background: "linear-gradient(135deg, #142131, #1c3548)",
       borderRadius: 16, padding: 16,
       boxShadow: "0 12px 40px rgba(0,0,0,0.30), 0 0 0 1px rgba(124,200,200,0.30)",

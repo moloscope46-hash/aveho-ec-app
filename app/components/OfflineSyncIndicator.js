@@ -88,7 +88,7 @@ export default function OfflineSyncIndicator() {
 
   return (
     <div style={{
-      position: "fixed", bottom: 12, right: 12, zIndex: 9999,
+      position: "fixed", top: 70, right: 12, zIndex: 9000,
       background: "#fff",
       border: `1px solid ${color}40`,
       borderLeft: `4px solid ${color}`,
