@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+import { MagasinSidebar } from "../../components/MagasinSidebar";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
@@ -164,8 +165,10 @@ export default function BilansSavPage() {
   return (
     <div className="page-shell">
       <TopBar cartCount={cart.count} auth={auth} />
-      <div className="page-content">
-        <BackButton />
+      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
+        <MagasinSidebar />
+        <div className="page-content" style={{ flex: 1, padding: "20px 24px" }}>
+          <BackButton />
         <PageHead icon="ti-clipboard-check" title="Bilans SAV" subtitle="Templates de contrôles techniques rattachés aux articles" />
 
         <Panel>
@@ -293,6 +296,7 @@ export default function BilansSavPage() {
             )}
           </Modal>
         )}
+        </div>
       </div>
     </div>
   );

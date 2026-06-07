@@ -56,6 +56,7 @@ const MENU = [
     { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
+    { p: "/magasins/nouveau", ic: "ti-building-warehouse", lbl: "Magasins fournisseurs", col: "#5a8f8f" },
     { p: "/stock", ic: "ti-stack-2", lbl: "Stock", col: "#c97a2a" },
   ] },
   // 0.58.53 : nouvelle section "Mes partenaires" avec sous-types + raccourcis vers les annuaires officiels

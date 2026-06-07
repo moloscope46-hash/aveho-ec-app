@@ -44,6 +44,9 @@ export default function CollaborateursPage() {
   const [pharmacies, setPharmacies] = useState([]);
   const [etabs, setEtabs] = useState([]);
   const [services, setServices] = useState([]);
+  // 0.60.1 : magasins fournisseurs disponibles
+  const [magasins, setMagasins] = useState([]);
+  const [magasinsRattaches, setMagasinsRattaches] = useState(new Map()); // magasin_id → user_id rattaché
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -100,6 +103,20 @@ export default function CollaborateursPage() {
         const rs = await supabase.from("services").select("id, nom, batiment_id").order("nom");
         setServices(rs.data || []);
       } catch {}
+
+      // 0.60.1 : Magasins fournisseurs disponibles + rattachements existants
+      try {
+        const rmag = await supabase.from("magasins").select("id, nom, ville, etablissement_rattache_id").order("nom");
+        setMagasins(rmag.data || []);
+      } catch {}
+      try {
+        const rmat = await supabase.from("membres_structure")
+          .select("user_id, magasin_fournisseur_id, prenom, nom")
+          .not("magasin_fournisseur_id", "is", null);
+        const map = new Map();
+        (rmat.data || []).forEach(m => map.set(m.magasin_fournisseur_id, { userId: m.user_id, nom: `${m.prenom || ""} ${m.nom || ""}`.trim() }));
+        setMagasinsRattaches(map);
+      } catch {}
     } finally { setLoading(false); }
   }
 
@@ -119,6 +136,8 @@ export default function CollaborateursPage() {
         numero_adeli: form.numero_adeli || null,
         numero_rpps: form.numero_rpps || null,
         pharmacie_id: form.role_professionnel === "pharmacien" ? (form.pharmacie_id || null) : null,
+        // 0.60.1 : rattachement magasin fournisseur (uniquement si user magasin)
+        magasin_fournisseur_id: form.role_professionnel === "utilisateur_magasin" ? (form.magasin_fournisseur_id || null) : null,
         etablissement_id: form.etablissement_id || null,
         service_id: form.service_id || null,
         prenom: form.prenom || null,
@@ -234,7 +253,7 @@ export default function CollaborateursPage() {
               Aucun collaborateur.
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,320px))", justifyContent: "start", gap: 12 }}>
               {filtered.map(c => {
                 const role = ROLES_PRO.find(r => r.v === c.role_professionnel) || ROLES_PRO[8]; // 'autre'
                 return (
@@ -335,6 +354,33 @@ export default function CollaborateursPage() {
                     Aucune pharmacie créée. <a href="/pharmacies" style={{ color: "#5aa05a" }}>Créer une pharmacie</a>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* 0.60.1 : Si Utilisateur Magasin → magasin fournisseur rattaché (avec lock si déjà pris) */}
+            {form.role_professionnel === "utilisateur_magasin" && (
+              <div className="fld" style={{ background: "rgba(94,143,143,.08)", padding: 12, borderRadius: 8, borderLeft: "3px solid #5a8f8f" }}>
+                <label><i className="ti ti-building-warehouse" style={{ color: "#5a8f8f" }} /> Magasin fournisseur rattaché</label>
+                <select value={form.magasin_fournisseur_id || ""} onChange={e => setForm({ ...form, magasin_fournisseur_id: e.target.value })}>
+                  <option value="">— Choisir un magasin —</option>
+                  {magasins.map(m => {
+                    const ratt = magasinsRattaches.get(m.id);
+                    // Locked si déjà rattaché à un AUTRE user (pas celui qu'on édite)
+                    const isLockedForMe = ratt && ratt.userId !== form.user_id;
+                    return (
+                      <option key={m.id} value={m.id} disabled={isLockedForMe}>
+                        {m.nom}{m.ville ? ` (${m.ville})` : ""}{isLockedForMe ? ` 🔒 rattaché à ${ratt.nom || "un autre user"}` : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+                <div style={{ fontSize: 11, color: "#5a6878", marginTop: 4 }}>
+                  {magasins.length === 0 ? (
+                    <>Aucun magasin créé. <a href="/magasins" style={{ color: "#5a8f8f" }}>Créer un magasin</a></>
+                  ) : (
+                    <>🔒 = magasin déjà rattaché à un autre utilisateur (un magasin = un user fournisseur)</>
+                  )}
+                </div>
               </div>
             )}
 

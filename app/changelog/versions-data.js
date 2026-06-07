@@ -240,6 +240,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.60.1",
+    "kind": "feat",
+    "titre": "🩹 Fix layout tuiles + 🏬 CRUD magasins EC + 🔗 Rattachement user magasin avec lock + 🖥 Sidebar ERP magasin",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.60.1-magasin-user-link.sql`** : (1) ALTER `membres_structure` add `magasin_fournisseur_id` UUID + UNIQUE INDEX (un magasin = un user fournisseur). (2) ALTER `magasins` add `etablissement_rattache_id` + `responsable_user_id`. (3) Vue `v_magasins_disponibles` (magasins non rattachés visibles dans la création utilisateur)" },
+      { "code": "AI", "txt": "🩹 **Fix layout tuiles centrées** : sur `/collaborateurs`, `/magasin`, `/etablissement/edition`, `/pathologies` les cards prenaient toute la largeur. Maintenant largeur max 280-320px avec `justifyContent: 'start'`. Beaucoup plus lisible sur grand écran, pas d'étirement disgracieux" },
+      { "code": "AI", "txt": "🏬 **Nouvelle page `/magasins/nouveau`** : CRUD magasins côté EC. Liste avec cards (icône magasin, ville, code, statut rattachement). Création/édition modal complet : nom*, code, responsable, **agence rattachée** (1 magasin = 1 agence max, agences déjà prises sont 🔒 grisées), coordonnées, favori/actif. Badge teal si rattaché, badge amber si pas encore rattaché" },
+      { "code": "AI", "txt": "🔗 **Rattachement utilisateur ↔ magasin avec lock** : dans `/collaborateurs` édition, si le rôle est 'Utilisateur Magasin', nouveau bloc teal avec select 'Magasin fournisseur rattaché'. Les magasins déjà rattachés à un AUTRE user sont **🔒 grisés avec le nom du user**. Le user actuel peut conserver son rattachement. Save : `magasin_fournisseur_id` est null si rôle ≠ utilisateur_magasin" },
+      { "code": "AI", "txt": "🖥 **Sidebar ERP côté magasin** : nouveau composant `<MagasinSidebar>` qui s'affiche uniquement en `viewMode.isMagasin`. Menu latéral 240px à la gauche style ERP avec : (1) header magasin avec nom user + bouton 'Repasser en EC', (2) Tableau de bord (Vue ensemble, Vue mobile), (3) Catalogue & Articles (liste, nouvel article), (4) Demandes reçues (DI, SAV, Transferts), (5) Configuration (Bilans SAV, Partenaires, Droits EC). Items actifs surlignés + bordure latérale colorée" },
+      { "code": "AI", "txt": "🔌 **Intégration sidebar** dans `/magasin` et `/magasin/bilans-sav` : nouveau layout `<div display: flex>` avec MagasinSidebar à gauche + contenu à droite. Plus tard à étendre à toutes les pages du mode magasin pour cohérence ERP" },
+      { "code": "AI", "txt": "📍 **Lien 'Magasins fournisseurs' ajouté au menu Groupement** : juste après Dépôts, icône ti-building-warehouse teal. Accès rapide à `/magasins/nouveau` pour créer/gérer les entités magasins" },
+      { "code": "INFO", "txt": "🎯 **Workflow complet** : (1) EC crée des magasins (`/magasins/nouveau`) · (2) EC rattache chaque magasin à une agence (1 max, lock automatique) · (3) Admin crée un user avec rôle 'Utilisateur Magasin' · (4) Lui rattache un magasin (lock si déjà pris) · (5) User magasin se connecte → atterrit sur /mobile/magasin · (6) Bascule vers vue desktop → voit la sidebar ERP avec tous ses outils" }
+    ],
+    "themes": ["fix", "feat", "magasin", "sidebar", "erp"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.60.1.html"
+  },
+  {
     "v": "0.60.0",
     "kind": "feat",
     "titre": "🛠 SAV ultra-pro : bilans avec 5 points de contrôle + page /sav/nouvelle EC + vue Action Mobile pour user magasin",

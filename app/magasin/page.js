@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { useViewMode } from "../../lib/useViewMode";
+import { MagasinSidebar } from "../components/MagasinSidebar";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, Modal } from "../ui";
@@ -66,8 +67,11 @@ export default function MagasinPage() {
   return (
     <div className="page-shell">
       <TopBar cartCount={cart.count} auth={auth} />
-      <div className="page-content">
-        <BackButton />
+      {/* 0.60.1 : Layout ERP avec sidebar magasin */}
+      <div style={{ display: "flex", minHeight: "calc(100vh - 60px)" }}>
+        <MagasinSidebar />
+        <div className="page-content" style={{ flex: 1, padding: "20px 24px" }}>
+          <BackButton />
 
         {/* Header avec banner switch */}
         <div style={{
@@ -133,7 +137,7 @@ export default function MagasinPage() {
                 Aucun article au catalogue.
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,260px))", justifyContent: "start", gap: 10 }}>
                 {articles.slice(0, 60).map(a => (
                   <div key={a.id} onClick={() => router.push(`/articles?id=${a.id}`)} style={{
                     background: "#fff", border: "1px solid #e3e9ee", borderLeft: "3px solid #185FA5",
@@ -246,7 +250,7 @@ export default function MagasinPage() {
                 <span style={{ fontSize: 12 }}>Crée un partenaire avec la case "Est fournisseur Aveho" cochée pour qu'il apparaisse ici.</span>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,300px))", justifyContent: "start", gap: 10 }}>
                 {partenaires.map(p => (
                   <div key={p.id} onClick={() => router.push(`/etablissements-partenaires/${p.id}`)} style={{
                     background: "#fff", border: "1px solid #e3e9ee", borderLeft: "3px solid #7a6fb0",
@@ -268,6 +272,7 @@ export default function MagasinPage() {
             )}
           </Panel>
         )}
+        </div>
       </div>
     </div>
   );

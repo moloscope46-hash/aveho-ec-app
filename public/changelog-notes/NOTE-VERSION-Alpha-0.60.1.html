@@ -1,0 +1,210 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.60.1 — Fix layout + CRUD magasins + Sidebar ERP</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4040 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(94,143,143,.30));border:1px solid rgba(94,143,143,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#a8d8d8;font-weight:700;background:rgba(94,143,143,.18);border:1px solid rgba(94,143,143,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#c4dada;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#c4dada}
+.meta b{color:#fff}.meta code{background:rgba(94,143,143,.16);color:#fff;border:1px solid rgba(94,143,143,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#5a8f8f,#7CC8C8)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(94,143,143,.20);border-left:4px solid #5a8f8f;border-radius:14px;padding:20px 24px;margin:14px 0}
+
+/* ERP Sidebar preview */
+.erp-mockup{display:flex;background:#fafbfc;border-radius:12px;overflow:hidden;border:1px solid #e3e9ee;margin:14px 0}
+.sidebar{background:linear-gradient(180deg,#142131,#0a141f);width:200px;padding:14px 8px;color:#fff}
+.sidebar .head{padding:8px 10px;background:rgba(94,143,143,.10);border:1px solid rgba(94,143,143,.30);border-radius:8px;margin-bottom:12px}
+.sidebar .lbl-sect{font-size:9px;color:#a8d8d8;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:0 8px 4px}
+.sidebar .item{display:flex;gap:8px;padding:6px 10px;font-size:11px;color:#bfe6e6;border-left:3px solid transparent}
+.sidebar .item.active{background:rgba(94,143,143,.18);color:#fff;font-weight:700;border-left-color:#5a8f8f}
+.sidebar .item.active.di{border-left-color:#EF9F27}
+.main{padding:18px;flex:1;color:#142131}
+.main h3{margin:0 0 10px;color:#5a8f8f;font-size:16px}
+
+/* Card */
+.card{background:#fff;border-radius:10px;padding:12px;border:1px solid #e3e9ee;border-left:4px solid #5a8f8f;color:#142131;max-width:280px;margin:10px 0}
+.card .head{display:flex;gap:10px;align-items:center}
+.card .icon{width:36px;height:36px;background:rgba(94,143,143,.22);color:#5a8f8f;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.card .nom{font-weight:700}
+.card .tag{padding:4px 6px;border-radius:6px;font-size:10.5;margin-top:8px}
+.card .tag.ok{background:rgba(94,143,143,.10);color:#5a8f8f}
+.card .tag.warn{background:rgba(239,159,39,.10);color:#d48820;font-style:italic}
+
+/* Layout fix preview */
+.before-after{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}
+.before-after > div{padding:14px;border-radius:12px}
+.before-after .before{background:rgba(227,93,91,.10);border:1px solid rgba(227,93,91,.30)}
+.before-after .after{background:rgba(94,160,90,.10);border:1px solid rgba(94,160,90,.30)}
+.dummy-card{background:#fff;color:#142131;border-radius:8px;padding:10px;margin:4px 0;font-size:11.5}
+
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #5a8f8f}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(94,143,143,.18);font-size:13px}
+table th{color:#a8d8d8;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(94,143,143,.18);font-size:11.5px;color:#c4dada;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🩹🏬🔗🖥 0.60.1 · LAYOUT + MAGASINS + ERP</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🩹 Fix layout + 🏬 CRUD magasins + 🔗 Rattachement user magasin + 🖥 Sidebar ERP magasin<small>4 features structurantes pour transformer la vue magasin en vrai ERP dédié</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.60.1-alpha</code></span>
+    <span><b>SQL :</b> <code>migration-0.60.1-magasin-user-link.sql</code></span>
+    <span><b>Type :</b> Pack feature</span>
+  </div>
+</header>
+
+<h2>🩹 1. Fix layout tuiles centrées</h2>
+
+<p style="color:#c4dada;font-size:13;margin:0 0 8px">Avant : sur grand écran, les cards collaborateurs/magasins/services prenaient toute la largeur disponible (`1fr`), créant des cards énormes et illisibles. Maintenant : largeur max 280-320px + `justifyContent: start`.</p>
+
+<div class="before-after">
+  <div class="before">
+    <div style="font-size:11;color:#e35d5b;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">❌ AVANT — 1fr full-width</div>
+    <div class="dummy-card" style="height:50">Card étirée full-width...</div>
+    <div class="dummy-card" style="height:50">Card étirée full-width...</div>
+  </div>
+  <div class="after">
+    <div style="font-size:11;color:#5aa05a;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">✓ APRÈS — minmax(280px, 320px)</div>
+    <div style="display:flex;gap:6;flex-wrap:wrap">
+      <div class="dummy-card" style="width:100px;height:50;display:inline-block;margin-right:4">Card 1</div>
+      <div class="dummy-card" style="width:100px;height:50;display:inline-block;margin-right:4">Card 2</div>
+      <div class="dummy-card" style="width:100px;height:50;display:inline-block">Card 3</div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#c4dada;font-size:12;margin:0">Pages corrigées : <code>/collaborateurs</code>, <code>/magasin</code>, <code>/etablissement/edition</code>, <code>/pathologies</code>.</p>
+
+<h2>🏬 2. CRUD magasins côté EC</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff;font-size:13.5">Nouvelle page <code>/magasins/nouveau</code> : l'EC crée et gère ses entités magasins fournisseurs. Liste avec cards :</p>
+</div>
+
+<div class="card">
+  <div class="head">
+    <div class="icon">🏬</div>
+    <div style="flex:1">
+      <div class="nom">⭐ Magasin Aveho Lyon</div>
+      <div style="font-size:11;color:#5a6878">Lyon · 69001</div>
+      <div style="font-family:Consolas,monospace;font-size:10;color:#8a98a8">MAG-LYON-01</div>
+    </div>
+  </div>
+  <div class="tag ok"><i>🔗</i> Rattaché à : <b>Agence Rhône-Alpes</b></div>
+</div>
+<div class="card" style="border-left-color:#EF9F27;border-color:#EF9F2733">
+  <div class="head">
+    <div class="icon" style="background:rgba(239,159,39,.22);color:#EF9F27">🏬</div>
+    <div style="flex:1">
+      <div class="nom">Magasin Marseille</div>
+      <div style="font-size:11;color:#5a6878">Marseille · 13001</div>
+    </div>
+  </div>
+  <div class="tag warn">⚠ Pas encore rattaché à une agence</div>
+</div>
+
+<p style="color:#c4dada;font-size:13;margin:8px 0 0">Édition modal complet : nom*, code, responsable, **agence rattachée** (1 magasin = 1 agence max, sélecteur avec 🔒 sur les agences déjà prises), coordonnées, favori/actif.</p>
+
+<h2>🔗 3. Rattachement user magasin avec lock</h2>
+
+<div class="panel">
+<p style="margin:0 0 10px;color:#fff;font-size:13.5">Dans `/collaborateurs` édition, si rôle = "🏬 Utilisateur Magasin", nouveau bloc teal apparaît :</p>
+<div style="background:#fff;color:#142131;padding:14px;border-radius:10px;border-left:3px solid #5a8f8f">
+  <div style="font-size:11.5;font-weight:600;margin-bottom:6"><i>🏬</i> Magasin fournisseur rattaché</div>
+  <select style="width:100%;padding:8px;border:1px solid #cfd8e0;border-radius:6;font-family:inherit;font-size:13" disabled>
+    <option>Magasin Lyon (Lyon)</option>
+    <option>🔒 Magasin Paris rattaché à Jean Dupont</option>
+    <option>🔒 Magasin Marseille rattaché à Marie Martin</option>
+  </select>
+  <div style="font-size:11;color:#5a6878;margin-top:4">🔒 = magasin déjà rattaché à un autre utilisateur (un magasin = un user fournisseur)</div>
+</div>
+</div>
+
+<p style="color:#c4dada;font-size:13;margin:0">Garanti par <code>UNIQUE INDEX uq_ms_magasin_four</code> en SQL : un magasin ne peut être lié qu'à un seul user. Save : <code>magasin_fournisseur_id</code> mis à null si rôle ≠ utilisateur_magasin.</p>
+
+<h2>🖥 4. Sidebar ERP côté magasin</h2>
+
+<p style="color:#c4dada;font-size:13;margin:0 0 8px">Composant <code>&lt;MagasinSidebar&gt;</code> affiché uniquement en mode magasin. Menu latéral 240px style ERP :</p>
+
+<div class="erp-mockup">
+  <div class="sidebar">
+    <div class="head">
+      <div style="font-size:9;color:#a8d8d8;letter-spacing:1.5;text-transform:uppercase;font-weight:700">🏬 ESPACE MAGASIN</div>
+      <div style="font-size:11;color:#fff;font-weight:600;margin-top:2">jean_magasin</div>
+      <button style="margin-top:6;padding:4px 8;background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.20);border-radius:4;font-size:9;width:100%;cursor:pointer;font-family:inherit">↔ Repasser en EC</button>
+    </div>
+    <div class="lbl-sect">Tableau de bord</div>
+    <div class="item active"><i>📊</i> Vue d'ensemble</div>
+    <div class="item"><i>📱</i> Vue mobile</div>
+    <div class="lbl-sect" style="margin-top:8">Catalogue</div>
+    <div class="item"><i>📦</i> Articles</div>
+    <div class="item"><i>➕</i> Nouvel article</div>
+    <div class="lbl-sect" style="margin-top:8">Demandes</div>
+    <div class="item active di"><i>🚛</i> DI reçues</div>
+    <div class="item"><i>🛠</i> SAV reçues</div>
+    <div class="item"><i>🔄</i> Transferts</div>
+    <div class="lbl-sect" style="margin-top:8">Configuration</div>
+    <div class="item"><i>📋</i> Bilans SAV</div>
+    <div class="item"><i>🤝</i> Partenaires</div>
+    <div class="item"><i>🔐</i> Droits EC</div>
+  </div>
+  <div class="main">
+    <h3>Vue d'ensemble Magasin</h3>
+    <p style="font-size:12.5;color:#5a6878">Contenu de la page sélectionnée (dashboard, catalogue, DI, etc.)</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8;margin-top:10">
+      <div style="background:rgba(239,159,39,.10);border-left:3px solid #EF9F27;padding:10;border-radius:8;font-size:12">📦 8 DI à traiter</div>
+      <div style="background:rgba(227,93,91,.10);border-left:3px solid #e35d5b;padding:10;border-radius:8;font-size:12">🛠 3 SAV à traiter</div>
+    </div>
+  </div>
+</div>
+
+<p style="color:#c4dada;font-size:13;margin:8px 0 0">Items actifs surlignés avec bordure latérale colorée. Header magasin avec nom user + bouton "Repasser en EC" pour switch rapide.</p>
+
+<h2>🔄 Workflow complet</h2>
+
+<table>
+<tr><th>Étape</th><th>Acteur</th><th>Action</th></tr>
+<tr><td>1</td><td>EC admin</td><td>Va sur <code>/magasins/nouveau</code> → crée magasin "Magasin Aveho Lyon"</td></tr>
+<tr><td>2</td><td>EC admin</td><td>Rattache le magasin à l'agence "Agence Rhône-Alpes" (lock auto si déjà pris)</td></tr>
+<tr><td>3</td><td>EC admin</td><td>Va sur <code>/collaborateurs</code> → crée user Jean avec rôle "🏬 Utilisateur Magasin"</td></tr>
+<tr><td>4</td><td>EC admin</td><td>Rattache Jean au magasin Lyon (autres magasins 🔒 si déjà pris)</td></tr>
+<tr><td>5</td><td>Jean</td><td>Se connecte → atterrit auto sur <code>/mobile/magasin</code></td></tr>
+<tr><td>6</td><td>Jean</td><td>Bascule vers vue desktop (UserMenu) → voit la sidebar ERP magasin complète</td></tr>
+</table>
+
+<h2>🚀 Procédure</h2>
+
+<pre># 1. SQL d'abord
+# Supabase SQL Editor → migration-0.60.1-magasin-user-link.sql → Run
+
+# 2. Code
+cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.60.1 - Fix layout + CRUD magasins + Sidebar ERP magasin"
+git push origin main</pre>
+
+<h2>🔜 Reste pour 0.60.2+</h2>
+
+<div class="panel" style="border-left-color:#7a6fb0">
+<ol style="margin:0;padding-left:20px;color:#c4dada;font-size:13;line-height:1.9">
+<li>Page exécution bilan SAV côté magasin (saisie des points + photos + rapport)</li>
+<li>Demande de transfert EC → dépôt via magasin (type_demande='transfert')</li>
+<li>Page admin droits magasin <code>/magasin/droits</code> (qui peut commander/SAV/transférer où)</li>
+<li>Génération rapport SAV PDF (similaire BL)</li>
+<li>Étendre la sidebar ERP aux autres pages magasin (articles, mobile, etc.)</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.60.1 · 6 juin 2026 · 🩹 LAYOUT · 🏬 MAGASINS · 🔗 LOCK · 🖥 SIDEBAR ERP</footer>
+</div></body></html>
