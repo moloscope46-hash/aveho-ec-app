@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.93 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.93
+      <small>🎯 INTÉGRATION DiTabsNav dans /demandes-internes/[id] (7 onglets Infos/Planning/Livraison/Matériels/Articles/Nomenclature/Magasin) + 📺 Vue TV ENRICHIE bandeau 6 KPI gros chiffres (DI/SAV/Tournées/Maintenances/Patients/CMD) + 📸 ImageUploader logo fournisseur</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.93-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>3</b> AI · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#di</span> <span class="theme-pill">#tv</span> <span class="theme-pill">#photo</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">DiTabsNav intégré dans /demandes-internes/[id]</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li>Infos = contenu existant wrapping (panels validation/livraison/commentaire/etc.)</li>
+      <li>Planning : Panel violet avec date_prevue + created_at + cloturee_at formatés FR</li>
+      <li>Livraison : grille 2x2 cartes color-coded avec adresse_livraison/date_prevue/chauffeur_nom/tournee_id</li>
+      <li>Matériels : liste cards navy avec numero_serie + quantite (empty state ti-package-off si vide)</li>
+      <li>Articles : liste cards teal avec libelle + code/reference + quantite (avec ×N à droite)</li>
+      <li>Nomenclature : badges amber avec codes LPP uniques extraits des articles</li>
+      <li>Magasin : 3 infos clés (magasin émetteur + type_demande + numero_bl)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Vue TV ENRICHIE</h3>
+  <div class="panel ">
+    <p>📺 (/presentation/interventions) : ajout state stats avec 6 compteurs (di nouvelle, sav non traités, tournées en_cours, maintenances planifiees, patients total, commandes en_attente_validation). <strong>Bandeau stats</strong> sous le header : grille 6 colonnes avec cards gradient color/33 + border color/55 + box-shadow color/22. Chaque card : icône 48x48 gradient color + chiffre 32px 800 Consolas monospace + label 11px uppercase letter-spacing. Couleurs : DI amber, SAV rouge, Tournées terra, Maintenances violet, Patients teal, CMD vert. Récupération via Promise.all en parallèle avec count:exact head:true (rapide, pas de scan). Tout en défensif try/catch retournant 0 si erreur. Auto-refresh avec le polling existant (60s par défaut, configurable via ?refresh=N)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">ImageUploader logo fournisseur</h3>
+  <div class="panel ">
+    <p>📸 déployé dans /magasin/fournisseurs modal en mode compact. Bucket=fournisseurs-logos + folder=modal?.id||nouveau + maxSizeMB=2 + label=Logo fournisseur. Position en tête du modal au-dessus de Raison sociale. Mode compact = preview 48x48 inline + bouton Changer/Photo gradient teal. Form.logo_url persistée à la sauvegarde</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Matériel/Patient ImageUploader</h3>
+  <div class="panel ">
+    
+    <p>📋 les pages /materiel/[id] et /patient/[id] sont des fiches détail en lecture, pas des modals d édition standards. Pour déployer ImageUploader il faut</p>
+    <ol class="steps">
+      <li>Ajouter un bouton Modifier photo dans le header</li>
+      <li>Mettre ImageUploader en mode compact au-dessus du titre</li>
+      <li>Ou créer un modal d édition séparé. À faire en 0.62.94</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO restantes 0.62.94+</h3>
+  <div class="panel ">
+    <p>📅 (a) <strong>ImageUploader sur matériel/patient</strong> (nécessite ajout bouton Modifier ou modal séparé). (b) <strong>Buckets Supabase Storage</strong> à créer Dashboard → Storage : articles-photos (public RLS), materiels-photos (public), patients-photos (privé RLS structure_id), fournisseurs-logos (public). (c) <strong>MobileActionsBar</strong> sur /patients, /materiels, /magasin/articles, /magasin/materiels, /interventions, /signalements, /commandes. (d) <strong>Widget ChartCard /accueil</strong> dans système widgets drag&amp;drop. (e) <strong>doc.addImage(logo) sur statistiques-rgpd</strong>. (f) <strong>Refacto /materiels</strong> en page custom + ViewModeToggle. (g) <strong>Workflow commande fournisseur</strong> + PDF BC + Resend. (h) <strong>Footers PDF custom BL/devis</strong></p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.93 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

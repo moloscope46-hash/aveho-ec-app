@@ -13,6 +13,7 @@ import { useCart } from "../../useCart";
 import { Panel, Btn } from "../../ui";
 import BackButton from "../../components/BackButton";
 import { SignatureCanvas } from "../../components/SignatureCanvas";
+import DiTabsNav from "../../components/DiTabsNav";  /* 0.62.93 */
 
 const STATUTS = {
   nouvelle:  { lbl: "Nouvelle",      col: "#EF9F27", ic: "ti-inbox" },
@@ -42,6 +43,8 @@ export default function DemandeInterneDetailPage() {
   const [showRefus, setShowRefus] = useState(false);
   // 0.59.9 : modal création article rapide depuis ligne DI
   const [createArticleFor, setCreateArticleFor] = useState(null);
+  // 0.62.93 : onglet courant DiTabsNav
+  const [diTab, setDiTab] = useState("infos");
 
   useEffect(() => {
     if (!id || !auth.ready) return;
@@ -332,6 +335,173 @@ export default function DemandeInterneDetailPage() {
           </div>
         </div>
 
+        {/* 0.62.93 : Navigation par onglets avec grosses flèches */}
+        <DiTabsNav
+          active={diTab}
+          onChange={setDiTab}
+          counts={{
+            materiels: lignes.filter(l => l.materiel_id).length,
+            articles: lignes.length,
+          }}
+        />
+
+        {/* Contenu onglet ACTIF — par défaut "infos" = tout l'existant */}
+        {diTab === "planning" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#5e4a8c", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-calendar-stats" /> Planning
+            </h3>
+            <div style={{ padding: 20, textAlign: "center", color: "#8a98a8" }}>
+              <i className="ti ti-calendar-event" style={{ fontSize: 48, color: "#5e4a8c" }} />
+              <div style={{ marginTop: 10, fontSize: 14 }}>
+                Date prévue : {di.date_prevue ? new Date(di.date_prevue).toLocaleString("fr-FR") : "Non planifiée"}
+              </div>
+              <div style={{ marginTop: 6, fontSize: 13, color: "#5a6878" }}>
+                Créée le {new Date(di.created_at).toLocaleString("fr-FR")}
+              </div>
+              {di.cloturee_at && (
+                <div style={{ marginTop: 6, fontSize: 13, color: "#5aa05a" }}>
+                  Clôturée le {new Date(di.cloturee_at).toLocaleString("fr-FR")}
+                </div>
+              )}
+            </div>
+          </Panel>
+        )}
+
+        {diTab === "livraison" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#C9867F", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-truck-delivery" /> Livraison
+            </h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+              <div style={{ padding: 12, background: "rgba(201,134,127,.06)", borderRadius: 8, borderLeft: "3px solid #C9867F" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700 }}>Adresse livraison</div>
+                <div style={{ fontSize: 13, color: "#142131", marginTop: 4 }}>
+                  {di.adresse_livraison || "Non renseignée"}
+                </div>
+              </div>
+              <div style={{ padding: 12, background: "rgba(124,200,200,.06)", borderRadius: 8, borderLeft: "3px solid #7CC8C8" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700 }}>Date prévue</div>
+                <div style={{ fontSize: 13, color: "#142131", marginTop: 4 }}>
+                  {di.date_prevue ? new Date(di.date_prevue).toLocaleDateString("fr-FR") : "—"}
+                </div>
+              </div>
+              <div style={{ padding: 12, background: "rgba(94,74,140,.06)", borderRadius: 8, borderLeft: "3px solid #5e4a8c" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700 }}>Chauffeur</div>
+                <div style={{ fontSize: 13, color: "#142131", marginTop: 4 }}>
+                  {di.chauffeur_nom || "Non attribué"}
+                </div>
+              </div>
+              <div style={{ padding: 12, background: "rgba(239,159,39,.06)", borderRadius: 8, borderLeft: "3px solid #EF9F27" }}>
+                <div style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700 }}>Tournée</div>
+                <div style={{ fontSize: 13, color: "#142131", marginTop: 4 }}>
+                  {di.tournee_id ? "Affectée" : "Aucune"}
+                </div>
+              </div>
+            </div>
+          </Panel>
+        )}
+
+        {diTab === "materiels" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#142131", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-armchair-2" /> Matériels rattachés
+            </h3>
+            {lignes.filter(l => l.materiel_id).length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+                <i className="ti ti-package-off" style={{ fontSize: 36 }} />
+                <div style={{ marginTop: 8 }}>Aucun matériel rattaché</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 6 }}>
+                {lignes.filter(l => l.materiel_id).map(l => (
+                  <div key={l.id} style={{ padding: 10, background: "#fafbfc", borderLeft: "3px solid #142131", borderRadius: 6 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#142131" }}>{l.materiel?.numero_serie || "Matériel"}</div>
+                    <div style={{ fontSize: 11, color: "#5a6878" }}>Qté : {l.quantite || 1}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {diTab === "articles" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#7CC8C8", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-package" /> Articles ({lignes.length})
+            </h3>
+            {lignes.length === 0 ? (
+              <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+                <i className="ti ti-package-off" style={{ fontSize: 36 }} />
+                <div style={{ marginTop: 8 }}>Aucun article</div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: 6 }}>
+                {lignes.map(l => (
+                  <div key={l.id} style={{ padding: 10, background: "#fafbfc", borderLeft: "3px solid #7CC8C8", borderRadius: 6, display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#142131" }}>
+                        {l.articles?.libelle || l.libelle || "Article"}
+                      </div>
+                      <div style={{ fontSize: 11, color: "#5a6878", fontFamily: "Consolas, monospace" }}>
+                        {l.articles?.code || l.articles?.reference || ""}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#7CC8C8" }}>×{l.quantite || 1}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {diTab === "nomenclature" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#EF9F27", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-list-numbers" /> Nomenclature LPP
+            </h3>
+            <div style={{ padding: 14, background: "rgba(239,159,39,.06)", borderRadius: 8 }}>
+              <div style={{ fontSize: 12, color: "#5a6878" }}>
+                Codes LPP utilisés dans cette DI :
+              </div>
+              <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {[...new Set(lignes.map(l => l.articles?.code_lpp).filter(Boolean))].map(code => (
+                  <span key={code} style={{
+                    padding: "4px 10px", background: "#EF9F27", color: "#fff",
+                    borderRadius: 6, fontSize: 12, fontWeight: 700, fontFamily: "Consolas, monospace",
+                  }}>{code}</span>
+                ))}
+                {lignes.every(l => !l.articles?.code_lpp) && (
+                  <span style={{ fontSize: 12, color: "#8a98a8" }}>Aucun code LPP</span>
+                )}
+              </div>
+            </div>
+          </Panel>
+        )}
+
+        {diTab === "magasin" && (
+          <Panel>
+            <h3 style={{ margin: "0 0 12px", color: "#5a8f8f", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-building-warehouse" /> Magasin
+            </h3>
+            <div style={{ padding: 14, background: "rgba(94,143,143,.06)", borderRadius: 8 }}>
+              <div style={{ fontSize: 13, color: "#142131" }}>
+                <strong>Magasin émetteur :</strong> {di.magasin_nom || "—"}
+              </div>
+              <div style={{ fontSize: 13, color: "#142131", marginTop: 6 }}>
+                <strong>Type demande :</strong> {di.type_demande || "interne"}
+              </div>
+              <div style={{ fontSize: 13, color: "#142131", marginTop: 6 }}>
+                <strong>Numéro BL :</strong> {di.numero_bl || "Non généré"}
+              </div>
+            </div>
+          </Panel>
+        )}
+
+        {/* Contenu INFOS = tout le contenu existant en dessous (les Panels conditionnels) */}
+        {diTab === "infos" && (
+        <>
+
         {/* 0.59.8 : Actions EC — Confirmer réception si DI livrée */}
         {/* 0.60.6 : Validation rapport SAV côté EC (sur DI SAV validée non encore signée) */}
         {viewMode.ready && viewMode.isEC && di.type_demande === "sav" && di.statut === "validee" && !di.rapport_sav_validee_at && (
@@ -534,6 +704,10 @@ export default function DemandeInterneDetailPage() {
             </div>
           )}
         </Panel>
+
+        {/* 0.62.93 : Fin du wrapper "infos" */}
+        </>
+        )}
 
         {/* 0.59.9 : Modal création article rapide depuis ligne DI */}
         {createArticleFor && (

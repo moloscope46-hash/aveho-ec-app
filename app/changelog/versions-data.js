@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.93",
+    "kind": "feat",
+    "titre": "🎯 INTÉGRATION DiTabsNav dans /demandes-internes/[id] (7 onglets Infos/Planning/Livraison/Matériels/Articles/Nomenclature/Magasin) + 📺 Vue TV ENRICHIE bandeau 6 KPI gros chiffres (DI/SAV/Tournées/Maintenances/Patients/CMD) + 📸 ImageUploader logo fournisseur",
+    "chantiers": [
+      { "code": "AI", "txt": "🎯 **DiTabsNav intégré dans /demandes-internes/[id]** : import du composant + state diTab useState(infos). Insertion juste après le Header gradient (ligne 333). Counts passé en props : materiels=lignes.filter(materiel_id).length et articles=lignes.length. **7 onglets avec rendu conditionnel** : (1) Infos = contenu existant wrapping (panels validation/livraison/commentaire/etc.). (2) Planning : Panel violet avec date_prevue + created_at + cloturee_at formatés FR. (3) Livraison : grille 2x2 cartes color-coded avec adresse_livraison/date_prevue/chauffeur_nom/tournee_id. (4) Matériels : liste cards navy avec numero_serie + quantite (empty state ti-package-off si vide). (5) Articles : liste cards teal avec libelle + code/reference + quantite (avec ×N à droite). (6) Nomenclature : badges amber avec codes LPP uniques extraits des articles. (7) Magasin : 3 infos clés (magasin émetteur + type_demande + numero_bl)" },
+      { "code": "AI", "txt": "📺 **Vue TV ENRICHIE** (/presentation/interventions) : ajout state stats avec 6 compteurs (di nouvelle, sav non traités, tournées en_cours, maintenances planifiees, patients total, commandes en_attente_validation). **Bandeau stats** sous le header : grille 6 colonnes avec cards gradient color/33 + border color/55 + box-shadow color/22. Chaque card : icône 48x48 gradient color + chiffre 32px 800 Consolas monospace + label 11px uppercase letter-spacing. Couleurs : DI amber, SAV rouge, Tournées terra, Maintenances violet, Patients teal, CMD vert. Récupération via Promise.all en parallèle avec count:exact head:true (rapide, pas de scan). Tout en défensif try/catch retournant 0 si erreur. Auto-refresh avec le polling existant (60s par défaut, configurable via ?refresh=N)" },
+      { "code": "AI", "txt": "📸 **ImageUploader logo fournisseur** : déployé dans /magasin/fournisseurs modal en mode compact. Bucket=fournisseurs-logos + folder=modal?.id||nouveau + maxSizeMB=2 + label=Logo fournisseur. Position en tête du modal au-dessus de Raison sociale. Mode compact = preview 48x48 inline + bouton Changer/Photo gradient teal. Form.logo_url persistée à la sauvegarde" },
+      { "code": "INFO", "txt": "📋 **Matériel/Patient ImageUploader** : les pages /materiel/[id] et /patient/[id] sont des fiches détail en lecture, pas des modals d édition standards. Pour déployer ImageUploader il faut : (1) Ajouter un bouton Modifier photo dans le header. (2) Mettre ImageUploader en mode compact au-dessus du titre. (3) Ou créer un modal d édition séparé. À faire en 0.62.94" },
+      { "code": "INFO", "txt": "📅 **TODO restantes 0.62.94+** : (a) **ImageUploader sur matériel/patient** (nécessite ajout bouton Modifier ou modal séparé). (b) **Buckets Supabase Storage** à créer Dashboard → Storage : articles-photos (public RLS), materiels-photos (public), patients-photos (privé RLS structure_id), fournisseurs-logos (public). (c) **MobileActionsBar** sur /patients, /materiels, /magasin/articles, /magasin/materiels, /interventions, /signalements, /commandes. (d) **Widget ChartCard /accueil** dans système widgets drag&drop. (e) **doc.addImage(logo) sur statistiques-rgpd**. (f) **Refacto /materiels** en page custom + ViewModeToggle. (g) **Workflow commande fournisseur** + PDF BC + Resend. (h) **Footers PDF custom BL/devis**"
+      }
+    ],
+    "themes": ["feat", "di", "tv", "photo"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.93.html"
+  },
+  {
     "v": "0.62.92",
     "kind": "feat",
     "titre": "✨ TUILES HI-TECH MERVEILLE (cyberpunk corners + light sweep + scan hint + entrance stagger + click pulse + halo coloré thématique data-accent) — refonte CSS complète différente du menu déroulant",

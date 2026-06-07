@@ -48,6 +48,8 @@ function PresentationInterventions() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [now, setNow] = useState(new Date());
+  // 0.62.93 : compteurs récents activité globale
+  const [stats, setStats] = useState({ di: 0, sav: 0, livraisons: 0, maintenances: 0, patients: 0, commandes: 0 });
   const timerRef = useRef(null);
   const clockRef = useRef(null);
 
@@ -66,6 +68,25 @@ function PresentationInterventions() {
     setRows(data || []);
     setLastUpdate(new Date());
     setLoading(false);
+
+    // 0.62.93 : compteurs activité globale (en parallèle, défensifs)
+    const tryCount = async (table, filters = {}) => {
+      try {
+        let qq = supabase.from(table).select("id", { count: "exact", head: true }).eq("structure_id", auth.structureId);
+        Object.entries(filters).forEach(([k, v]) => { qq = qq.eq(k, v); });
+        const { count } = await qq;
+        return count || 0;
+      } catch { return 0; }
+    };
+    const [di, sav, livraisons, maintenances, patients, commandes] = await Promise.all([
+      tryCount("demandes_internes", { statut: "nouvelle" }),
+      tryCount("signalements", { traite: false }),
+      tryCount("tournees", { statut: "en_cours" }),
+      tryCount("maintenances", { statut: "planifiee" }),
+      tryCount("patients"),
+      tryCount("commandes", { statut: "en_attente_validation" }),
+    ]);
+    setStats({ di, sav, livraisons, maintenances, patients, commandes });
   }
 
   // Polling auto-refresh
@@ -134,6 +155,49 @@ function PresentationInterventions() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 0.62.93 : Bandeau stats globales (gros chiffres) */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(6, 1fr)",
+        gap: 12,
+        marginBottom: 24,
+      }}>
+        {[
+          { k: "di",           lbl: "DI nouvelles",        v: stats.di,           col: "#EF9F27", ic: "ti-clipboard-list" },
+          { k: "sav",          lbl: "SAV à traiter",       v: stats.sav,          col: "#e35d5b", ic: "ti-alert-triangle" },
+          { k: "livraisons",   lbl: "Tournées en cours",   v: stats.livraisons,   col: "#C9867F", ic: "ti-truck-delivery" },
+          { k: "maintenances", lbl: "Maintenances",        v: stats.maintenances, col: "#7a6fb0", ic: "ti-tools" },
+          { k: "patients",     lbl: "Patients",            v: stats.patients,     col: "#7CC8C8", ic: "ti-users" },
+          { k: "commandes",    lbl: "CMD à valider",       v: stats.commandes,    col: "#5aa05a", ic: "ti-shopping-bag" },
+        ].map(s => (
+          <div key={s.k} style={{
+            background: `linear-gradient(135deg, ${s.col}33, ${s.col}11)`,
+            border: `1px solid ${s.col}55`,
+            borderRadius: 14,
+            padding: "14px 16px",
+            display: "flex", alignItems: "center", gap: 12,
+            boxShadow: `0 4px 16px ${s.col}22`,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 12,
+              background: `linear-gradient(135deg, ${s.col}, ${s.col}cc)`,
+              color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 24,
+            }}>
+              <i className={`ti ${s.ic}`} />
+            </div>
+            <div>
+              <div style={{ fontSize: 32, fontWeight: 800, color: "#fff", lineHeight: 1, fontFamily: "Consolas, monospace" }}>
+                {s.v}
+              </div>
+              <div style={{ fontSize: 11, color: "#bfe6e6", textTransform: "uppercase", letterSpacing: 1, marginTop: 4, fontWeight: 700 }}>
+                {s.lbl}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {loading ? (

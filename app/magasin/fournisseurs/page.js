@@ -10,6 +10,7 @@ import { useMagasinContext } from "../../../lib/useMagasinContext";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
+import ImageUploader from "../../components/ImageUploader";  /* 0.62.93 */
 import { EmptyState } from "../../components/PremiumKpi";
 import PageToolbar from "../../components/PageToolbar";
 import BackButton from "../../components/BackButton";
@@ -216,6 +217,16 @@ export default function FournisseursPage() {
             <Btn variant="primary" onClick={save} disabled={busy}>{busy ? "Enregistrement..." : "Enregistrer"}</Btn>
           </>}>
           <div style={{ display: "grid", gap: 10 }}>
+            {/* 0.62.93 : Logo fournisseur */}
+            <ImageUploader
+              value={form.logo_url}
+              onChange={(url) => setForm({ ...form, logo_url: url })}
+              bucket="fournisseurs-logos"
+              folder={modal?.id || "nouveau"}
+              label="Logo fournisseur"
+              maxSizeMB={2}
+              compact
+            />
             <label>Raison sociale *
               <input value={form.raison_sociale || ""} onChange={(e) => setForm({ ...form, raison_sociale: e.target.value })}
                 style={inputStyle()} />
