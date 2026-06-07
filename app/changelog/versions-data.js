@@ -240,6 +240,35 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.46",
+    "kind": "fix",
+    "titre": "🚨 HOTFIX build Vercel : conflit nom 'stats' dans /etablissements (state vs useMemo)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🚨 **Fix CRITIQUE build Vercel cassé** : erreur `Identifier 'stats' has already been declared (231:10)` dans `app/etablissements/page.js`. Cause : en 0.62.40 j'avais ajouté un `const [stats, setStats] = useState({})` pour les stats par établissement, mais il existait déjà un `const stats = useMemo(...)` agrégé global (Mes étabs / Partenaires / Géolocalisés / Lits cumulés). Conflit de noms dans le scope du component. **Solution** : renommage de MON state en `etabStats/setEtabStats` (stats par étab pour les tuiles), le useMemo global garde `stats` (utilisé par les StatCard du haut de page). Tous les usages dans les tuiles mis à jour avec `etabStats[e.id]`. Le build Vercel passe maintenant" },
+      { "code": "INFO", "txt": "💡 **Leçon** : à l'avenir, toujours grep les noms de variables existants avant d'ajouter un nouveau useState/useMemo dans une page. Les fichiers de >800 lignes ont souvent des hooks éparpillés qu'il est difficile de tracer visuellement" }
+    ],
+    "themes": ["fix", "build", "vercel", "rename"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FIX-0.62.46.html"
+  },
+  {
+    "v": "0.62.45",
+    "kind": "ui",
+    "titre": "✨ Refonte VISUELLE premium : ça claque ! CSS global premium + composants KpiCard + Skeleton + PageHead/Panel refondés",
+    "chantiers": [
+      { "code": "UX", "txt": "🎨 **CSS global premium : 250 lignes** ajoutées à `globals.css`. (1) **Variables CSS** : 4 shadows (sm, md, lg, xl), 2 glows (teal, amber), 3 easings (out, smooth, fast/base/slow). (2) **Background mesh gradient subtil** sur toutes les pages : 4 radial-gradients teal/violet/amber/vert disposés en coins, opacity 3-5%, pointer-events none, z-index 0 derrière le contenu. (3) **Boutons premium** : hover translateY(-1px) + brightness 1.05, active translateY(0) + brightness 0.95. NeonButton glow renforcé (box-shadow couleur + inset white). (4) **Hover rows tables** : background teal 4% au hover. (5) **Inputs focus** : border teal + box-shadow ring 3px teal/20%. (6) **5 animations CSS** : fade-in, slide-in-right, pop-in, shimmer, glow-pulse" },
+      { "code": "UX", "txt": "🔮 **Modal premium** : entrée animation `av-pop-in` (250ms easeOutBack), backdrop avec **`backdrop-filter: blur(4px)`** + couleur navy/45% pour effet glassmorphism. **Scrollbar customisée** : 10px width, thumb navy/18% arrondi, hover 32% (Webkit only). **Focus ring accessibilité** : outline 2px teal + offset 2px sur tous les `:focus-visible`" },
+      { "code": "AI", "txt": "🧩 **Nouveau composant `<KpiCard>` premium** dans `components/PremiumKpi.js` : carte stat avec **count-up animation** (700ms ease-out-cubic via requestAnimationFrame), icône carrée gradient 44×44 avec shadow couleur, valeur **30px font-weight 800** avec format intelligent (number/currency/percent via Intl.NumberFormat fr-FR), label uppercase 11px letterSpacing 0.6, trend badge optionnel avec arrow icon. Variantes size: sm/md/lg. Mode loading avec skeleton shimmer. Hover translateY(-3px) + box-shadow couleur si clickable. CSS-in-CSS via variables `--av-kpi-color` pour theming dynamique" },
+      { "code": "AI", "txt": "🧩 **Composants premium additionnels** : (1) `<KpiGrid>` : grid responsive auto-fill minmax pour les KpiCards. (2) `<Skeleton width height radius>` : shimmer loader réutilisable. (3) `<EmptyState icon title desc action>` : état vide premium centré avec icône grise 56px. (4) `<FloatingCard color onClick>` : carte avec effet lévitation hover (-4px + shadow xl). (5) `<SectionHead icon title subtitle actions>` : header de section avec icône gradient + titre Quicksand 16px + actions slot. (6) `<Pill color icon dot>` : badge rond premium. (7) Hook `useCountUp(target, duration)` exportable pour animations custom" },
+      { "code": "UX", "txt": "🎯 **`PageHead` refondu premium** dans `app/ui.js` : si `icon + title` fournis sans `eyebrow`, rend le nouveau **header hero** avec icône gradient 52×52 + shadow couleur + titre Quicksand 24px 800 letterSpacing -0.02em + subtitle 13px + border-bottom + animation fade-in. Sinon fallback legacy pour rétro-compatibilité. Props `color` pour theming. **`Panel` refondu** : borderRadius 14, padding 18, border + box-shadow sm, animation fade-in 350ms, props `color` (borderLeft 4px) + `hoverable` optionnels" },
+      { "code": "UX", "txt": "💎 **PageHero amélioré** avec radial-gradient teal subtil en haut à droite (effet luminosité douce). **Glass-effect** sur modal backdrop. **Hover transitions** sur tous les buttons (filter brightness), Panels (shadow upgrade), rows (background teal léger). L'ensemble crée une **cohérence visuelle premium** qui se ressent partout sans rien casser" },
+      { "code": "INFO", "txt": "🎨 **Prochains lots UI/UX** : 0.62.46 Refonte dashboard accueil avec nouveaux KpiCards animés + widgets premium, 0.62.47 Refonte sidebar magasin avec glass effect + active indicator animé, 0.62.48 Toasts premium + transitions de page, 0.62.49 Mode sombre complet (déjà partiellement supporté)" }
+    ],
+    "themes": ["ui", "ux", "premium", "css", "kpi", "skeleton"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-UI-0.62.45.html"
+  },
+  {
     "v": "0.62.44",
     "kind": "feat",
     "titre": "📱 App native Capacitor : config Vercel live + helper cross-platform + page tests features + doc déploiement complète",

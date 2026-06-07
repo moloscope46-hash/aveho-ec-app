@@ -3485,3 +3485,263 @@ html.av-presentation-mode.av-presentation-hide-notifs [data-focus-hide-on-notifs
   .modal { max-width: 96vw; width: 96vw; }
   .modal-body, .modal-v2 .modal-body { max-height: calc(80vh - 100px); }
 }
+
+/* =============================================================
+   0.62.45 — REFONTE VISUELLE PREMIUM (Cédric : "il faut que ça claque")
+   ============================================================= */
+
+/* ---- Variables globales d'animation ---- */
+:root {
+  --av-shadow-sm: 0 2px 4px rgba(20,33,49,.06), 0 1px 2px rgba(20,33,49,.04);
+  --av-shadow-md: 0 4px 12px rgba(20,33,49,.08), 0 2px 4px rgba(20,33,49,.04);
+  --av-shadow-lg: 0 12px 32px rgba(20,33,49,.12), 0 4px 8px rgba(20,33,49,.04);
+  --av-shadow-xl: 0 24px 48px rgba(20,33,49,.16), 0 8px 16px rgba(20,33,49,.04);
+  --av-shadow-glow-teal: 0 0 24px rgba(124,200,200,.4);
+  --av-shadow-glow-amber: 0 0 24px rgba(239,159,39,.4);
+  --av-easing-out: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --av-easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --av-transition-fast: 150ms var(--av-easing-smooth);
+  --av-transition-base: 250ms var(--av-easing-smooth);
+  --av-transition-slow: 400ms var(--av-easing-smooth);
+}
+
+/* ---- Background mesh gradient subtil sur toutes les pages ---- */
+.bg-dark, .page-content {
+  position: relative;
+}
+.page-content::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(at 20% 0%, rgba(124,200,200,.05) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(122,111,176,.04) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(239,159,39,.03) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(94,160,90,.04) 0px, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-content > * { position: relative; z-index: 1; }
+
+/* ---- Panel : effet glassmorphism subtil + hover ---- */
+.av-panel, .panel, [class*="Panel"] {
+  transition: box-shadow var(--av-transition-base), transform var(--av-transition-base);
+}
+.av-panel:hover, .panel:hover {
+  box-shadow: var(--av-shadow-md);
+}
+
+/* ---- Boutons premium : effet ripple + glow ---- */
+button {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--av-transition-fast), box-shadow var(--av-transition-fast), filter var(--av-transition-fast);
+}
+button:not(:disabled):hover { transform: translateY(-1px); filter: brightness(1.05); }
+button:not(:disabled):active { transform: translateY(0); filter: brightness(0.95); }
+
+/* NeonButton glow amélioré */
+.neon-btn-teal { box-shadow: 0 4px 12px rgba(124,200,200,.3), inset 0 1px 0 rgba(255,255,255,.2); }
+.neon-btn-teal:hover { box-shadow: 0 8px 20px rgba(124,200,200,.5), inset 0 1px 0 rgba(255,255,255,.3); }
+.neon-btn-amber { box-shadow: 0 4px 12px rgba(239,159,39,.3), inset 0 1px 0 rgba(255,255,255,.2); }
+.neon-btn-amber:hover { box-shadow: 0 8px 20px rgba(239,159,39,.5), inset 0 1px 0 rgba(255,255,255,.3); }
+
+/* ---- Table rows premium hover ---- */
+tbody tr {
+  transition: background var(--av-transition-fast), transform var(--av-transition-fast);
+}
+tbody tr:hover { background: rgba(124,200,200,.04) !important; }
+
+/* ---- Inputs premium ---- */
+input, select, textarea {
+  transition: border-color var(--av-transition-fast), box-shadow var(--av-transition-fast);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #7CC8C8 !important;
+  box-shadow: 0 0 0 3px rgba(124,200,200,.2) !important;
+}
+
+/* ---- Animations utilitaires ---- */
+@keyframes av-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes av-slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes av-pop-in {
+  0% { opacity: 0; transform: scale(.95); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes av-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes av-glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(124,200,200,.4); }
+  50% { box-shadow: 0 0 24px rgba(124,200,200,.7); }
+}
+.av-fade-in { animation: av-fade-in 400ms var(--av-easing-smooth); }
+.av-pop-in { animation: av-pop-in 350ms var(--av-easing-out); }
+.av-glow-pulse { animation: av-glow-pulse 2s infinite; }
+
+/* ---- Skeleton loader premium (shimmer) ---- */
+.av-skel {
+  background: linear-gradient(90deg, #eef1f4 25%, #f5f8fa 50%, #eef1f4 75%);
+  background-size: 200% 100%;
+  animation: av-shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+/* ---- KpiCard premium (compteurs avec animation) ---- */
+.av-kpi-card {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid #eef1f4;
+  overflow: hidden;
+  transition: transform var(--av-transition-base), box-shadow var(--av-transition-base), border-color var(--av-transition-base);
+  cursor: default;
+}
+.av-kpi-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--av-kpi-color, #185FA5) 0%, transparent 50%);
+  opacity: .03;
+  pointer-events: none;
+}
+.av-kpi-card[data-clickable="true"] { cursor: pointer; }
+.av-kpi-card[data-clickable="true"]:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px var(--av-kpi-shadow, rgba(20,33,49,.1));
+  border-color: var(--av-kpi-color, #185FA5);
+}
+.av-kpi-card .av-kpi-icon-box {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--av-kpi-color, #185FA5), var(--av-kpi-color-dark, #0d4a8c));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 4px 12px var(--av-kpi-shadow, rgba(20,33,49,.15));
+}
+.av-kpi-card .av-kpi-value {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--av-kpi-color, #142131);
+  line-height: 1;
+  font-family: "Quicksand", sans-serif;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.02em;
+}
+.av-kpi-card .av-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #5a6878;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 2px;
+}
+.av-kpi-card .av-kpi-trend {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.av-kpi-trend.up { background: rgba(94,160,90,.12); color: #5aa05a; }
+.av-kpi-trend.down { background: rgba(227,93,91,.12); color: #e35d5b; }
+.av-kpi-trend.neutral { background: #f4f7fa; color: #8a98a8; }
+
+/* ---- Section headers premium ---- */
+.av-section-head {
+  display: flex; align-items: center; gap: 12px;
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef1f4;
+}
+.av-section-head h2, .av-section-head h3 { margin: 0; font-family: "Quicksand", sans-serif; font-weight: 800; }
+
+/* ---- Badge premium plus arrondi ---- */
+.av-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* ---- Card flottante (effet lévitation) ---- */
+.av-card-float {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--av-shadow-md);
+  transition: transform var(--av-transition-base), box-shadow var(--av-transition-base);
+}
+.av-card-float:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--av-shadow-xl);
+}
+
+/* ---- Toast premium améliorations ---- */
+.toast-stack {
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,.12));
+}
+
+/* ---- Modal premium : entrée plus douce ---- */
+.modal {
+  animation: av-pop-in 280ms var(--av-easing-out);
+}
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  background: rgba(20,33,49,.45) !important;
+}
+
+/* ---- Scrollbar custom premium ---- */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(20,33,49,.18); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(20,33,49,.32); background-clip: padding-box; }
+
+/* ---- Focus ring accessibilité premium ---- */
+*:focus-visible {
+  outline: 2px solid #7CC8C8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Empty state premium ---- */
+.av-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #8a98a8;
+}
+.av-empty .icon {
+  font-size: 56px;
+  color: #e3e9ee;
+  display: block;
+  margin-bottom: 14px;
+  animation: av-fade-in 600ms;
+}
+.av-empty .title { font-size: 16px; font-weight: 700; color: #5a6878; margin-bottom: 6px; }
+.av-empty .desc { font-size: 13px; line-height: 1.5; }
+
+/* ---- Premium gradient sur le PageHead existant ---- */
+.page-hero {
+  position: relative;
+  overflow: hidden;
+}
+.page-hero::after {
+  content: "";
+  position: absolute;
+  top: -50%; right: -10%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(124,200,200,.15), transparent 70%);
+  pointer-events: none;
+}

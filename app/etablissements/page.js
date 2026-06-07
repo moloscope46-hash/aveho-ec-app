@@ -58,7 +58,7 @@ function EtablissementsListPageInner() {
   const searchParams = useSearchParams();
   const [rows, setRows] = useState([]);
   // 0.62.40 : stats riches par établissement (patients, lits, bâtiments, services, DI, livraisons, collaborateurs)
-  const [stats, setStats] = useState({});
+  const [etabStats, setEtabStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -140,7 +140,7 @@ function EtablissementsListPageInner() {
         di.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].di_en_cours++; });
         liv.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].livraisons++; });
         co.forEach(x => { if (s2[x.etablissement_id]) s2[x.etablissement_id].collaborateurs++; });
-        setStats(s2);
+        setEtabStats(s2);
       } catch (e) { console.warn("[stats etabs]:", e); }
     }
   }
@@ -501,7 +501,7 @@ function EtablissementsListPageInner() {
           <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 18 }}>
             {filtered.map(e => {
               const couleur = TYPE_COULEURS[e.type] || "#185FA5";
-              const st = stats[e.id] || {};
+              const st = etabStats[e.id] || {};
               return (
                 <div key={e.id} onClick={() => router.push(`/etablissement/fiche?id=${e.id}`)} style={{
                   background: "#fff",

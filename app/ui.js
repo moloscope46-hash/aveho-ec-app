@@ -211,20 +211,71 @@ export function CollapsibleSection({ title, icon, iconColor = "#185FA5", default
   );
 }
 
-// Carte blanche standard
-export function Panel({ children, style }) {
-  return <div className="panel" style={style}>{children}</div>;
+// Carte blanche premium (0.62.45 : rounded + shadow + animation entrée)
+export function Panel({ children, style, color, hoverable, className }) {
+  const base = {
+    background: "#fff",
+    borderRadius: 14,
+    padding: 18,
+    border: "1px solid #eef1f4",
+    boxShadow: "var(--av-shadow-sm, 0 2px 4px rgba(20,33,49,.06))",
+    animation: "av-fade-in 350ms cubic-bezier(0.4,0,0.2,1)",
+    ...(color ? { borderLeft: `4px solid ${color}` } : {}),
+    ...(hoverable ? { transition: "all 250ms", cursor: "pointer" } : {}),
+    ...style,
+  };
+  return <div className={`panel ${className || ""}`} style={base}>{children}</div>;
 }
 
-// En-tête de page : eyebrow (étiquette discrète) + titre + accent (mot en couleur) + sous-titre
-export function PageHead({ eyebrow, title, accent, sub, small, icon }) {
+// En-tête de page premium (0.62.45 : icône colorée + gradient + animation)
+export function PageHead({ eyebrow, title, accent, sub, small, icon, subtitle, color }) {
+  // 0.62.45 : Si icon + title fournis, on rend le header premium ; sinon le legacy
+  if (icon && title && !eyebrow) {
+    const mainColor = color || "#185FA5";
+    return (
+      <div className="page-hero av-fade-in" style={{ marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid #eef1f4" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 12,
+            background: `linear-gradient(135deg, ${mainColor} 0%, ${mainColor}dd 100%)`,
+            color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 26,
+            boxShadow: `0 6px 16px ${mainColor}40`,
+            flexShrink: 0,
+          }}>
+            <i className={`ti ${icon}`} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{
+              margin: 0,
+              fontSize: small ? 20 : 24,
+              fontWeight: 800,
+              fontFamily: "Quicksand, sans-serif",
+              color: "#142131",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.1,
+            }}>
+              {title} {accent && <span style={{ color: mainColor }}>{accent}</span>}
+            </h1>
+            {(subtitle || sub) && (
+              <div style={{ fontSize: 13, color: "#5a6878", marginTop: 4, lineHeight: 1.4 }}>
+                {subtitle || sub}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // Legacy fallback pour les pages qui utilisaient l'ancien format
   return (
     <>
       {eyebrow && <span className="eyebrow"><i className={`ti ${icon || "ti-building-hospital"}`} /> {eyebrow}</span>}
       <div className={`h1${small ? " small" : ""}`}>
         {title} {accent && <span className="accent">{accent}</span>}
       </div>
-      {sub && <div className="sub" style={{ marginBottom: 20 }}>{sub}</div>}
+      {(sub || subtitle) && <div className="sub" style={{ marginBottom: 20 }}>{sub || subtitle}</div>}
     </>
   );
 }
