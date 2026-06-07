@@ -71,7 +71,7 @@ export default function CalendrierTourneesPage() {
       dEnd = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 1);
     }
     let q = supabase.from("tournees")
-      .select("*, vehicules_magasin(immatriculation)")
+      .select("*")
       .gte("date_tournee", fmtISO(dStart))
       .lt("date_tournee", fmtISO(dEnd))
       .order("date_tournee").order("heure_depart");

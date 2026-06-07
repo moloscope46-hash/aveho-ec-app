@@ -230,7 +230,7 @@ export default function BilansSavPage() {
 
         {/* Modal édition */}
         {editing && (
-          <Modal title={editing.id ? `Éditer ${editing.nom}` : "Nouveau bilan SAV"}
+          <Modal open={true} title={editing.id ? `Éditer ${editing.nom}` : "Nouveau bilan SAV"}
             onClose={() => setEditing(null)}
             footer={<>
               <Btn variant="ghost" onClick={() => setEditing(null)}>Annuler</Btn>

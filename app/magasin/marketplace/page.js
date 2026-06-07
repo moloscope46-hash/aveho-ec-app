@@ -324,7 +324,7 @@ export default function MarketplacePage() {
 
           {/* Modal édition */}
           {editing && (
-            <Modal title={editing.mode === "create" ? "Nouvelle offre marketplace" : editing.data?.libelle}
+            <Modal open={true} title={editing.mode === "create" ? "Nouvelle offre marketplace" : editing.data?.libelle}
               onClose={() => setEditing(null)}
               footer={<>
                 <Btn variant="ghost" onClick={() => setEditing(null)}>Fermer</Btn>

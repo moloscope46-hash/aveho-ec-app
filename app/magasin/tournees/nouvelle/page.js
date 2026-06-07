@@ -63,7 +63,7 @@ export default function NouvelleTourneePage() {
     let chQ = supabase.from("membres_structure").select("user_id, prenom, nom, role_professionnel, fonction_detail, telephone, email, magasin_fournisseur_id, etablissement_nom, types_di_geres");
     promises.push(tryFetch(chQ));
     // 4. Transferts en attente
-    let trQ = supabase.from("transferts").select("*, depots:depot_destination_id(nom, etablissement_id, etablissements(nom, ville, adresse, latitude, longitude))").eq("statut", "en_attente");
+    let trQ = supabase.from("transferts").select("*").eq("statut", "en_attente");
     if (magasinCtx.isUserMagasin && magasinCtx.magasinId) trQ = trQ.eq("magasin_emetteur_id", magasinCtx.magasinId);
     promises.push(tryFetch(trQ));
     // 5. Retours / SAV / Maintenance / Bilans : depuis demandes_internes par sous-type

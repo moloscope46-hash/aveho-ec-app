@@ -300,7 +300,7 @@ export default function MercurialesPage() {
           </Panel>
 
           {editing && (
-            <Modal title={editing.mode === "create" ? "Nouvelle mercuriale" : `Éditer ${form.nom}`}
+            <Modal open={true} title={editing.mode === "create" ? "Nouvelle mercuriale" : `Éditer ${form.nom}`}
               onClose={() => setEditing(null)}
               footer={<>
                 {editing.mode === "edit" && <Btn variant="ghost" icon="ti-file-text" onClick={() => imprimerMercuriale({ mercu: editing.data, form, lignes, etabs })}>🖨 PDF</Btn>}

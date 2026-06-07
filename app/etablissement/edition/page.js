@@ -73,8 +73,8 @@ export default function EditionEtablissement() {
     if (!form.nom) { setErr("Le nom est obligatoire."); return; }
     setBusy(true);
     try {
-      const tables = { batiment: "batiments", etage: "etages", service: "services", chambre: "chambres", lit: "lits" };
-      const fkField = { etage: "batiment_id", service: "etage_id", chambre: "service_id", lit: "chambre_id" };
+      const tables = { batiment: "batiments", service: "services", chambre: "chambres", lit: "lits" };  // 0.62.35 : etages dropped
+      const fkField = { service: "batiment_id", chambre: "service_id", lit: "chambre_id" };  // 0.62.35 : services directement sous bâtiment
       const table = tables[k];
       let payload = { nom: form.nom };
       // Alpha 0.15.3 : ajout systématique de structure_id pour passer la RLS
@@ -104,7 +104,7 @@ export default function EditionEtablissement() {
   // ----- supprimer (avec confirmation) -----
   async function del(kind, row) {
     if (!await dialogs.confirm({ title: `Supprimer ${kind} "${row.nom}" et tous ses sous-éléments ?`, variant: "danger" })) return;
-    const tables = { batiment: "batiments", etage: "etages", service: "services", chambre: "chambres", lit: "lits" };
+    const tables = { batiment: "batiments", service: "services", chambre: "chambres", lit: "lits" };  // 0.62.35 : etages dropped
     await supabase.from(tables[kind]).delete().eq("id", row.id);
     await load();
   }

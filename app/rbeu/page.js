@@ -300,7 +300,7 @@ export default function RbeuPage() {
 
         {/* Modal édition */}
         {editing && (
-          <Modal title={editing.mode === "create" ? "Nouveau bénéficiaire effectif" : `Éditer ${form.prenom} ${form.nom}`}
+          <Modal open={true} title={editing.mode === "create" ? "Nouveau bénéficiaire effectif" : `Éditer ${form.prenom} ${form.nom}`}
             onClose={() => setEditing(null)}
             footer={<>
               <Btn variant="ghost" onClick={() => setEditing(null)}>Annuler</Btn>

@@ -215,7 +215,7 @@ export default function FlottePage() {
           </Panel>
 
           {editing && (
-            <Modal title={editing.mode === "create" ? "Nouveau véhicule" : `Éditer ${form.immatriculation}`}
+            <Modal open={true} title={editing.mode === "create" ? "Nouveau véhicule" : `Éditer ${form.immatriculation}`}
               onClose={() => setEditing(null)}
               footer={<>
                 {editing.mode === "edit" && <Btn variant="ghost" icon="ti-trash" onClick={() => { del(editing.data); setEditing(null); }} style={{ color: "#e35d5b" }}>Supprimer</Btn>}

@@ -38,20 +38,21 @@ const MENU = [
     { p: "/accueil", ic: "ti-home", lbl: "Accueil", col: "#7CC8C8" },
     { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
+    // 0.62.35 : Fiches groupement + étab en accès rapide
+    { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
+    { p: "/etablissement/fiche", ic: "ti-building-hospital", lbl: "Fiche établissement", col: "#1c5454" },
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/magasin/catalogue", ic: "ti-shopping-bag", lbl: "Catalogue magasin", col: "#5a8f8f" },
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
     { p: "/promotions", ic: "ti-discount-2", lbl: "Promotions", col: "#e35d5b" },
   ] },
   // 0.58.53 : refonte de la section Collectivité avec hiérarchie claire
-  // 1. GROUPEMENT (entité morale)
+  // 1. GROUPEMENT (entité morale) — 0.62.35 : fiches déplacées vers Mon espace
   { section: "Groupement", sectionIcon: "ti-building-community", items: [
     { p: "/collaborateurs", ic: "ti-users", lbl: "Collaborateurs", col: "#7CC8C8" },
     { p: "/collaborateurs-fournisseurs", ic: "ti-users-group", lbl: "Collaborateurs fournisseurs", col: "#5a8f8f" },
-    { p: "/collectivite", ic: "ti-building-community", lbl: "Fiche groupement", col: "#185FA5" },
     // 2. ÉTABLISSEMENTS, BÂTIMENTS, SERVICES, ÉQUIPES (organisationnel)
     { p: "/etablissement", ic: "ti-building-hospital", lbl: "Établissements", col: "#185FA5" },
-    { p: "/etablissement/fiche", ic: "ti-id-badge-2", lbl: "Fiche étab.", col: "#1c5454" },
     { p: "/etablissement/edition", ic: "ti-edit", lbl: "Bâtiments / Services", col: "#7a6fb0" },
     { p: "/equipes", ic: "ti-users-group", lbl: "Équipes", col: "#5a4a90" },
     { p: "/carte", ic: "ti-map", lbl: "Carte", col: "#5aa05a" },

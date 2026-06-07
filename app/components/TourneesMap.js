@@ -54,7 +54,7 @@ export function TourneesMap({ magasinId, height = 380 }) {
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch (e) { console.warn("[TourneesMap]", e); return []; } };
     // 0.62.12 : remplacer or() (qui plante 400 sur date) par in() + filter client
     let q = supabase.from("tournees")
-      .select("*, vehicules_magasin(immatriculation, marque, modele)")
+      .select("*")
       .in("statut", ["en_cours", "planifiee", "a_faire"])
       .order("date_tournee");
     if (magasinId) q = q.eq("magasin_id", magasinId);

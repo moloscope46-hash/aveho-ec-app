@@ -233,7 +233,7 @@ function VehiculesPageInner() {
 
         {/* Modal new/edit */}
         {modal && (
-          <Modal title={modal === "new" ? "Nouveau véhicule" : `Éditer ${modal.nom}`} onClose={() => { setModal(null); setSaveError(""); }}
+          <Modal open={!!modal} title={modal === "new" ? "Nouveau véhicule" : `Éditer ${modal.nom}`} onClose={() => { setModal(null); setSaveError(""); }}
             footer={<>
               <Btn variant="ghost" onClick={() => { setModal(null); setSaveError(""); }}>Annuler</Btn>
               <Btn variant="primary" icon="ti-device-floppy" onClick={save}>{saving ? "Enregistrement..." : "Enregistrer"}</Btn>

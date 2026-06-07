@@ -171,7 +171,7 @@ export default function MagasinsCRUDPage() {
         </Panel>
 
         {editing && (
-          <Modal title={editing.mode === "create" ? "Nouveau magasin" : `Éditer ${form.nom}`}
+          <Modal open={true} title={editing.mode === "create" ? "Nouveau magasin" : `Éditer ${form.nom}`}
             onClose={() => setEditing(null)}
             footer={<>
               <Btn variant="ghost" onClick={() => setEditing(null)}>Annuler</Btn>

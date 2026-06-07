@@ -399,7 +399,7 @@ export default function CollaborateursPage() {
 
         {/* Modal édition */}
         {modal && (
-          <Modal title={`Éditer ${modal.prenom || ""} ${modal.nom || ""}`.trim() || "Collaborateur"}
+          <Modal open={true} title={`Éditer ${modal.prenom || ""} ${modal.nom || ""}`.trim() || "Collaborateur"}
             onClose={() => { setModal(null); setSaveError(""); }}
             footer={<>
               <Btn variant="ghost" onClick={() => { setModal(null); setSaveError(""); }}>Annuler</Btn>

@@ -41,7 +41,7 @@ export default function AnalyticsTourneesPage() {
     const days = periode === "7j" ? 7 : periode === "30j" ? 30 : periode === "90j" ? 90 : 365;
     const dateMin = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
     try {
-      let q = supabase.from("tournees").select("*, vehicules_magasin(immatriculation, marque, modele)").gte("date_tournee", dateMin);
+      let q = supabase.from("tournees").select("*").gte("date_tournee", dateMin);
       if (magasinCtx.isUserMagasin && magasinCtx.magasinId) q = q.eq("magasin_id", magasinCtx.magasinId);
       // 0.62.3 : Filtres
       if (filterChauffeur) q = q.eq("chauffeur_user_id", filterChauffeur);

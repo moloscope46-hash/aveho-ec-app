@@ -238,7 +238,7 @@ export default function CartePage() {
       const today = new Date().toISOString().slice(0, 10);
       // 0.62.12 : Fix bug 400 — séparer en in() + filter client
       const r = await supabase.from("tournees")
-        .select("*, vehicules_magasin(immatriculation, marque, modele, type_vehicule), magasins(nom, ville)")
+        .select("*")
         .in("statut", ["en_cours", "planifiee", "a_faire"])
         .order("date_tournee", { ascending: false })
         .limit(50);

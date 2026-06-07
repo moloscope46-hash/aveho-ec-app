@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.36 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.36
+      <small>🚚 Lot Tournées GPS COMPLET : OSRM routing + tracking chauffeur temps réel + polyline historique + PDF feuille route + signature étape canvas</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.36-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>1</b> SQL · <b>4</b> AI · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feat</span> <span class="theme-pill">#gps</span> <span class="theme-pill">#osrm</span> <span class="theme-pill">#tournees</span> <span class="theme-pill">#signature</span> <span class="theme-pill">#leaflet</span> <span class="theme-pill">#pdf</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">`migration-0.62.36-tournees-gps.sql`</h3>
+  <div class="panel violet">
+    
+    <p>🆕</p>
+    <ol class="steps">
+      <li>Table <code>tournees_gps_track</code> pour positions GPS du chauffeur (tournee_id, chauffeur_user_id, latitude, longitude, accuracy_m, speed_kmh, heading, altitude_m, recorded_at) avec 2 indexes composites</li>
+      <li>Colonnes ajoutées sur <code>tournees_etapes</code> : osrm_polyline (segment précédent), osrm_distance_m, osrm_duration_s, arrived_at, completed_at, signature_url (dataURL canvas), signature_nom, signature_at, commentaire_livraison</li>
+      <li>Vue <code>v_tournees_gps_stats</code> aggrégée par tournée avec nb_points, durée, vitesse moy/max</li>
+      <li>RLS basique</li>
+    </ol><div style="margin-top:10px;padding-top:10px;border-top:1px dashed #e3e9ee;font-size:11px;color:#6c7a89"><b>📁 Fichiers concernés :</b> <code style="font-size:11px;display:inline-block;margin:2px 4px 2px 0">migration-0.62.36-tournees-gps.sql</code></div>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(4)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Nouvelle page `/magasin/tournees/[id]/chauffeur`</h3>
+  <div class="panel ">
+    
+    <p>🗺 vue chauffeur en tracking GPS temps réel</p>
+    <ol class="steps">
+      <li><strong>Carte Leaflet</strong> plein cadre avec étapes numérotées (markers ronds bleus pour à faire, verts pour livrés)</li>
+      <li><strong>Routing OSRM</strong> : appel automatique à <code>https://router.project-osrm.org/route/v1/driving/{coords}?overview=full&amp;geometries=geojson</code> avec toutes les coords étapes en série, dessine la polyline violette dashed prévue + log distance et durée OSRM</li>
+      <li><strong>Tracking GPS</strong> : bouton 'Démarrer tracking GPS' → <code>navigator.geolocation.watchPosition({enableHighAccuracy: true})</code> → marker rouge animé pulse en temps réel + insert dans <code>tournees_gps_track</code> à chaque update</li>
+      <li><strong>Polyline rouge</strong> dessine l'historique GPS de la journée (track recorded_at)</li>
+      <li><strong>Bouton 'Arrêter tracking'</strong> : <code>clearWatch</code> + reload</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Signature canvas par étape</h3>
+  <div class="panel ">
+    <p>✍ sur chaque étape, 2 boutons workflow : (a) <strong>📍 Arrivé</strong> quand le chauffeur arrive sur place → UPDATE arrived_at. (b) <strong>✍ Signer</strong> apparaît → modal avec <strong>canvas HTML5</strong> (mouse + touch events touch-action:none), input nom signataire + textarea commentaire (optionnel). Capture via <code>toDataURL('image/png')</code> stocké dans <code>signature_url</code>. UPDATE signature_nom + signature_at + completed_at + commentaire_livraison. L'étape passe au vert avec '✍ Signée par {nom}'</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Export feuille de route PDF jsPDF</h3>
+  <div class="panel ">
+    <p>📄 génération A4 avec header navy AVEHO + titre tournée + métadonnées (date, chauffeur, véhicule, nb étapes) + section 'Étapes dans l'ordre' avec status coloré (✓ vert si done, 📍 ambre si arrivé, ○ gris si en attente) + adresse + heure prévue. Footer 'Généré le {date} · {nb} points GPS enregistrés'. Save direct avec nom de fichier <code>feuille-route-{numero}.pdf</code></p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Fix audit Modal sans `open={true}`</h3>
+  <div class="panel ">
+    <p>🐛 régression similaire à 0.62.33 sur pathologies, mais cette fois sur les véhicules (Cédric a signalé 503 sur creer un véhicule). Script Python qui scanne tous les fichiers JS app/* et ajoute <code>open={true}</code> au Modal sans prop open. <strong>9 fichiers corrigés</strong> : rbeu, magasin/flotte, magasin/marketplace, magasin/bilans-sav, magasin/catalogue, magasin/mercuriales, magasins/nouveau, collaborateurs, vehicules. Le pattern bug est terminé partout désormais</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Roadmap restante</h3>
+  <div class="panel ">
+    <p>📅 0.62.37 Marketplace + Notifications push (auto-géoloc data.gouv, chat Realtime, edge function send-notifications-queue), 0.62.38 Patients workflows mobile (wizard 5 étapes + QR auto + dossier médical premium), 0.62.39 Magasin admin (page droits magasin, création étab côté mag), 0.62.40 Temps réel + Météo (Supabase Realtime, widget Open-Meteo), 0.62.41 App native Capacitor wrapping</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+migration-0.62.36-tournees-gps.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/migration-0.62.36-tournees-gps.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>migration-0.62.36-tournees-gps.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.36 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

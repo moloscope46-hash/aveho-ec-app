@@ -186,7 +186,7 @@ export default function CatalogueMagasinPage() {
           </Panel>
 
           {editing && (
-            <Modal title={editing.mode === "create" ? "Nouvel article catalogue" : `Éditer ${form.libelle}`}
+            <Modal open={true} title={editing.mode === "create" ? "Nouvel article catalogue" : `Éditer ${form.libelle}`}
               onClose={() => setEditing(null)}
               footer={<>
                 {editing.mode === "edit" && <Btn variant="ghost" icon="ti-trash" onClick={() => { del(editing.data); setEditing(null); }} style={{ color: "#e35d5b" }}>Supprimer</Btn>}
