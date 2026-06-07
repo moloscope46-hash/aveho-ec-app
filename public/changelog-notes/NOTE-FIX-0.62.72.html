@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.72 — FIX</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #EF9F27 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.72
+      <small>📱 PASS MOBILE COMPLET (modals slide-up, tuiles 1 col, KPIs 2 col, inputs no-zoom iOS) + 🎨 Fix filtre étab TopBar lisible + 🖼 LogoUploader services &amp; bâtiments + Fix SQL audit s.code</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.72-alpha</span></span>
+      <span>📋 <b>Type :</b> Correction de bug critique</span>
+      <span>🔧 <b>Chantiers :</b> <b>2</b> FIX · <b>3</b> AI · <b>1</b> SQL · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#fix</span> <span class="theme-pill">#mobile</span> <span class="theme-pill">#ui</span> <span class="theme-pill">#css</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">audit-etablissements-AUTO-FIX.sql</h3>
+  <div class="panel violet">
+    <p>🗄️ version corrigée du SQL audit qui retire la colonne s.code (inexistante dans services selon le schéma client). Section 8 nouvelle : query information_schema.columns WHERE table_name = services pour LISTER les vraies colonnes de la table services. Section 9 : pareil pour etablissements. Permet à Cédric de voir exactement quels champs existent et d adapter ses requêtes</p>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">PASS MOBILE COMPLET — rien ne dépasse</h3>
+  <div class="panel ">
+    
+    <p>📱</p>
+    <ol class="steps">
+      <li><strong>body overflow-x hidden</strong> + tous les containers .page-content/.wrap/main → max-width 100% + padding 12px + box-sizing border-box</li>
+      <li><strong>TopBar compact mobile</strong> : padding 10px, gap 6px, etab-switch max-width 110px (90px sur &lt; 480px), logo 18px, StructureLogo 22×22</li>
+      <li><strong>PageHead</strong> : titre 18px, icône 40×40</li>
+      <li><strong>Tuiles toutes en 1 colonne</strong> : sélecteur CSS qui override tous les grid-template-columns repeat(auto-fill/fit) → 1fr</li>
+      <li><strong>Tableaux scrollables horizontalement</strong> : display block + overflow-x auto + white-space nowrap + -webkit-overflow-scrolling touch</li>
+      <li><strong>PageToolbar empilée</strong> vertical</li>
+      <li><strong>KPIs : 2 colonnes max</strong> mobile</li>
+      <li><strong>Inputs font-size 16px</strong> pour empêcher le zoom iOS au focus</li>
+      <li><strong>Boutons icons 40×40 min</strong> (touch target accessibility)</li>
+      <li><strong>BatimentServiceSwitcher caché</strong> mobile</li>
+      <li><strong>Très petit mobile (&lt;480px)</strong> : encore plus compact (logo 16px, etab 90px, tb-icon 32×32)</li>
+      <li><strong>Burger menu .burger</strong> : forcer display inline-flex sur mobile</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Modals slide-up bottom-sheet mobile</h3>
+  <div class="panel ">
+    <p>🪟 sur mobile (&lt;768px), tous les modals .modal-overlay passent en align-items flex-end (au lieu center) + .modal-content prend full width + border-radius 16px 16px 0 0 (rounded top only, comme une bottom-sheet iOS) + max-height 90vh + padding-bottom env(safe-area-inset-bottom) pour respect des barres iOS. <strong>Animation av-modal-slide-up</strong> 280ms cubic-bezier(0.34, 1.56) qui fait remonter le modal du bas. Plus aucun popup ne s affiche en plein milieu coupé en mobile</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">LogoUploader services + bâtiments</h3>
+  <div class="panel ">
+    <p>🖼️ dans /etablissement/edition modal de création/édition (services ET bâtiments). LogoUploader 60×60 dans un block gradient teal/bleu juste sous IconPicker, sauvegarde dans services.logo_url (ou batiments.logo_url) avec pathPrefix qui inclut le type+id pour éviter les collisions. <strong>Conditions</strong> : visible uniquement si row existe (id défini = édition, pas création initiale). Import LogoUploader ajouté en haut</p>
+  </div>
+
+  <h2>🐛 Fix bug <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Fix filtre établissement TopBar lisible</h3>
+  <div class="panel warn">
+    <p>🎨 le .etab-switch avait un background trop transparent qui rendait quasiment invisible (texte blanc sur fond blanchâtre). Renforcement : background rgba(255,255,255,.12) + <strong>border rgba(255,255,255,.25)</strong> explicite + inset shadow + icône ti-building-hospital teal #7CC8C8 visible + texte select #fff 700 bold + <strong>flèche custom SVG teal</strong> au lieu de l arrow natif blanc invisible + options drop-down avec background blanc + texte navy (forcé via !important sur les options pour contourner les styles macOS/iOS qui forcent du blanc sur blanc). Hover : border teal #7CC8C8 + background plus opaque</p>
+  </div>
+  <h3 style="border-left:4px solid #EF9F27;padding-left:10px;color:#EF9F27;margin-top:24px">Touch-friendly mobile UX</h3>
+  <div class="panel warn">
+    <p>♿ (a) -webkit-overflow-scrolling touch global pour smooth scroll iOS, (b) inputs file capture mobile = font-size 13px lisible, (c) [style*=position fixed] mobile : max-width calc(100vw - 24px) + box-sizing border-box pour empêcher les widgets fixed (OfflineSync, PWA prompt, etc.) de dépasser la viewport mobile. PWA prompt mobile : bottom/left/right max(12px, env(safe-area-inset-*)) pour iPhone notch/home indicator</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO restantes 0.62.73+</h3>
+  <div class="panel ">
+    <p>📋 (a) <strong>AUDIT établissement par défaut dans forms create</strong> : passer en revue les modals create DI/achats/articles/materiels/transferts/signalements pour pré-remplir auth.etabId en haut + le verrouiller si étab unique. (b) <strong>Footers PDF BL/devis avec logo structure</strong> : chercher générateur PDF (probablement React-PDF ou WeasyPrint côté edge function), charger structures.logo_url + l injecter dans le template footer (logo + nom + SIRET + tel/email). (c) <strong>Tester sur Android</strong> la nouvelle UI mobile. (d) <strong>Workflow commande fournisseur</strong> + PDF BC + Resend mail</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+audit-etablissements-AUTO-FIX.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/audit-etablissements-AUTO-FIX.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>audit-etablissements-AUTO-FIX.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.72 - Correction de bug critique" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

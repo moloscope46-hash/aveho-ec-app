@@ -609,47 +609,170 @@ export default function HadDetailPage() {
           </div>
         </Modal>
 
-        <Modal open={modalVehic} onClose={() => setModalVehic(false)} title="Rattacher un véhicule" size="sm"
-          footer={<><Btn variant="ghost" onClick={() => setModalVehic(false)}>Annuler</Btn><Btn variant="primary" onClick={addVehic}>Rattacher</Btn></>}>
-          <label>Véhicule
-            <select value={pickerForm.vehicule_id || ""} onChange={(e) => setPickerForm({ ...pickerForm, vehicule_id: e.target.value })} style={inp()}>
-              <option value="">— Sélectionner —</option>
-              {allVehicules.filter(v => !vehicules.find(rv => rv.id === v.id)).map(v => (
-                <option key={v.id} value={v.id}>{v.immatriculation} — {v.marque} {v.modele}</option>
-              ))}
-            </select>
-          </label>
+        <Modal open={modalVehic} onClose={() => setModalVehic(false)} title="Rattacher un véhicule" size="md"
+          footer={<><Btn variant="ghost" onClick={() => setModalVehic(false)}>Annuler</Btn><Btn variant="primary" onClick={addVehic} disabled={!pickerForm.vehicule_id}>Rattacher</Btn></>}>
+          <div style={{ display: "grid", gap: 10 }}>
+            <input
+              value={pickerForm.search || ""}
+              onChange={(e) => setPickerForm({ ...pickerForm, search: e.target.value })}
+              placeholder="🔍 Rechercher par immatriculation, marque, modèle..."
+              style={{ ...inp(), padding: "10px 12px" }}
+            />
+            <div style={{ maxHeight: 320, overflowY: "auto", display: "grid", gap: 6 }}>
+              {(() => {
+                const filtered = allVehicules.filter(v => {
+                  if (vehicules.find(rv => rv.id === v.id)) return false;
+                  if (!pickerForm.search?.trim()) return true;
+                  const q = pickerForm.search.toLowerCase();
+                  return `${v.immatriculation || ""} ${v.marque || ""} ${v.modele || ""} ${v.type || ""}`.toLowerCase().includes(q);
+                });
+                if (filtered.length === 0) {
+                  return <div style={{ padding: 14, textAlign: "center", color: "#8a98a8", background: "#fafbfc", borderRadius: 8 }}>
+                    <i className="ti ti-car-off" /> Aucun véhicule disponible
+                  </div>;
+                }
+                return filtered.slice(0, 20).map(v => {
+                  const selected = pickerForm.vehicule_id === v.id;
+                  return (
+                    <button key={v.id} type="button" onClick={() => setPickerForm({ ...pickerForm, vehicule_id: v.id })}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+                        background: selected ? "linear-gradient(135deg, rgba(90,160,90,.12), rgba(90,160,90,.06))" : "#fff",
+                        border: `1px solid ${selected ? "#5aa05a" : "#e3e9ee"}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                        transition: "all 150ms", boxShadow: selected ? "0 2px 8px rgba(90,160,90,.15)" : "none",
+                      }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 8,
+                        background: selected ? "linear-gradient(135deg, #5aa05a, #4a8a4a)" : "#f4f7fa",
+                        color: selected ? "#fff" : "#5a6878",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0,
+                      }}>
+                        <i className="ti ti-car" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#142131", fontFamily: "Consolas, monospace" }}>{v.immatriculation || "—"}</div>
+                        <div style={{ fontSize: 11.5, color: "#5a6878" }}>{v.marque} {v.modele}{v.type ? ` · ${v.type}` : ""}</div>
+                      </div>
+                      {selected && <i className="ti ti-check" style={{ color: "#5aa05a", fontSize: 18 }} />}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
         </Modal>
 
-        <Modal open={modalGarage} onClose={() => setModalGarage(false)} title="Rattacher un garage" size="sm"
-          footer={<><Btn variant="ghost" onClick={() => setModalGarage(false)}>Annuler</Btn><Btn variant="primary" onClick={addGarage}>Rattacher</Btn></>}>
+        <Modal open={modalGarage} onClose={() => setModalGarage(false)} title="Rattacher un garage" size="md"
+          footer={<><Btn variant="ghost" onClick={() => setModalGarage(false)}>Annuler</Btn><Btn variant="primary" onClick={addGarage} disabled={!pickerForm.garage_id}>Rattacher</Btn></>}>
           <div style={{ display: "grid", gap: 10 }}>
-            <label>Garage
-              <select value={pickerForm.garage_id || ""} onChange={(e) => setPickerForm({ ...pickerForm, garage_id: e.target.value })} style={inp()}>
-                <option value="">— Sélectionner —</option>
-                {allGarages.filter(g => !garages.find(rg => rg.id === g.id)).map(g => (
-                  <option key={g.id} value={g.id}>{g.nom} — {g.ville || ""}</option>
-                ))}
-              </select>
-            </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              value={pickerForm.search || ""}
+              onChange={(e) => setPickerForm({ ...pickerForm, search: e.target.value })}
+              placeholder="🔍 Rechercher par nom, ville..."
+              style={{ ...inp(), padding: "10px 12px" }}
+            />
+            <div style={{ maxHeight: 280, overflowY: "auto", display: "grid", gap: 6 }}>
+              {(() => {
+                const filtered = allGarages.filter(g => {
+                  if (garages.find(rg => rg.id === g.id)) return false;
+                  if (!pickerForm.search?.trim()) return true;
+                  const q = pickerForm.search.toLowerCase();
+                  return `${g.nom || ""} ${g.adresse || ""} ${g.ville || ""}`.toLowerCase().includes(q);
+                });
+                if (filtered.length === 0) {
+                  return <div style={{ padding: 14, textAlign: "center", color: "#8a98a8", background: "#fafbfc", borderRadius: 8 }}>
+                    <i className="ti ti-parking-off" /> Aucun garage disponible
+                  </div>;
+                }
+                return filtered.slice(0, 20).map(g => {
+                  const selected = pickerForm.garage_id === g.id;
+                  return (
+                    <button key={g.id} type="button" onClick={() => setPickerForm({ ...pickerForm, garage_id: g.id })}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+                        background: selected ? "linear-gradient(135deg, rgba(239,159,39,.12), rgba(239,159,39,.06))" : "#fff",
+                        border: `1px solid ${selected ? "#EF9F27" : "#e3e9ee"}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                        transition: "all 150ms", boxShadow: selected ? "0 2px 8px rgba(239,159,39,.15)" : "none",
+                      }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 8,
+                        background: selected ? "linear-gradient(135deg, #EF9F27, #d48a1a)" : "#f4f7fa",
+                        color: selected ? "#fff" : "#5a6878",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0,
+                      }}>
+                        <i className="ti ti-parking" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#142131" }}>{g.nom}</div>
+                        {g.adresse && <div style={{ fontSize: 11.5, color: "#5a6878" }}>{g.adresse}</div>}
+                        {g.ville && <div style={{ fontSize: 10.5, color: "#8a98a8" }}>{g.ville}</div>}
+                      </div>
+                      {selected && <i className="ti ti-check" style={{ color: "#EF9F27", fontSize: 18 }} />}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, padding: 8, background: "#fafbfc", borderRadius: 6 }}>
               <input type="checkbox" checked={!!pickerForm.est_principal} onChange={(e) => setPickerForm({ ...pickerForm, est_principal: e.target.checked })} />
-              <span>Garage principal de cette HAD</span>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>Garage principal de cette HAD</span>
             </label>
           </div>
         </Modal>
 
-        <Modal open={modalEtab} onClose={() => setModalEtab(false)} title="Rattacher un établissement" size="sm"
-          footer={<><Btn variant="ghost" onClick={() => setModalEtab(false)}>Annuler</Btn><Btn variant="primary" onClick={addEtab}>Rattacher</Btn></>}>
+        <Modal open={modalEtab} onClose={() => setModalEtab(false)} title="Rattacher un établissement" size="md"
+          footer={<><Btn variant="ghost" onClick={() => setModalEtab(false)}>Annuler</Btn><Btn variant="primary" onClick={addEtab} disabled={!pickerForm.etablissement_id}>Rattacher</Btn></>}>
           <div style={{ display: "grid", gap: 10 }}>
-            <label>Établissement
-              <select value={pickerForm.etablissement_id || ""} onChange={(e) => setPickerForm({ ...pickerForm, etablissement_id: e.target.value })} style={inp()}>
-                <option value="">— Sélectionner —</option>
-                {allEtabs.filter(e => !etabs.find(re => re.id === e.id)).map(e => (
-                  <option key={e.id} value={e.id}>{e.nom} — {e.ville || ""}</option>
-                ))}
-              </select>
-            </label>
+            <input
+              value={pickerForm.search || ""}
+              onChange={(e) => setPickerForm({ ...pickerForm, search: e.target.value })}
+              placeholder="🔍 Rechercher par nom, ville, type..."
+              style={{ ...inp(), padding: "10px 12px" }}
+            />
+            <div style={{ maxHeight: 280, overflowY: "auto", display: "grid", gap: 6 }}>
+              {(() => {
+                const filtered = allEtabs.filter(et => {
+                  if (etabs.find(re => re.id === et.id)) return false;
+                  if (!pickerForm.search?.trim()) return true;
+                  const q = pickerForm.search.toLowerCase();
+                  return `${et.nom || ""} ${et.ville || ""} ${et.type || ""}`.toLowerCase().includes(q);
+                });
+                if (filtered.length === 0) {
+                  return <div style={{ padding: 14, textAlign: "center", color: "#8a98a8", background: "#fafbfc", borderRadius: 8 }}>
+                    <i className="ti ti-building-off" /> Aucun étab disponible
+                  </div>;
+                }
+                return filtered.slice(0, 20).map(et => {
+                  const selected = pickerForm.etablissement_id === et.id;
+                  return (
+                    <button key={et.id} type="button" onClick={() => setPickerForm({ ...pickerForm, etablissement_id: et.id })}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10, padding: "8px 12px",
+                        background: selected ? "linear-gradient(135deg, rgba(122,111,176,.12), rgba(122,111,176,.06))" : "#fff",
+                        border: `1px solid ${selected ? "#7a6fb0" : "#e3e9ee"}`,
+                        borderRadius: 8, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                        transition: "all 150ms", boxShadow: selected ? "0 2px 8px rgba(122,111,176,.15)" : "none",
+                      }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 8,
+                        background: selected ? "linear-gradient(135deg, #7a6fb0, #5e4a8c)" : "#f4f7fa",
+                        color: selected ? "#fff" : "#5a6878",
+                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0,
+                      }}>
+                        <i className="ti ti-building" />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#142131" }}>{et.nom}</div>
+                        <div style={{ fontSize: 11.5, color: "#5a6878" }}>{et.type || "—"}{et.ville ? ` · ${et.ville}` : ""}</div>
+                      </div>
+                      {selected && <i className="ti ti-check" style={{ color: "#7a6fb0", fontSize: 18 }} />}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
             <label>Type de relation
               <select value={pickerForm.type_relation || "partenaire"} onChange={(e) => setPickerForm({ ...pickerForm, type_relation: e.target.value })} style={inp()}>
                 <option value="partenaire">Partenaire</option>

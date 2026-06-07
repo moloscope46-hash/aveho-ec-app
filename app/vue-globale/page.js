@@ -27,17 +27,16 @@ export default function VueGlobale() {
     if (!auth.ready || !auth.structureId) return;
     (async () => {
       try {
-        // 0.55.31 : charge depuis 2 tables séparées
-        // Compat : si etablissements_partenaires n'existe pas encore, fallback sur est_partenaire
-        const [resMine, resPartners, pa, ma, di, cm] = await Promise.all([
+        // 0.62.71 : charge plus de champs pour grosse base contact + infos sur tuiles
+        const [resMine, resPartners, pa, ma, di, cm, had] = await Promise.all([
           supabase
             .from("etablissements")
-            .select("id,nom,type,ville,actif,est_partenaire")
+            .select("id,nom,type,ville,cp,adresse,telephone,email,siret,finess,capacite,latitude,longitude,actif,est_partenaire,est_had,had_id,logo_url")
             .eq("structure_id", auth.structureId)
             .order("nom"),
           supabase
             .from("etablissements_partenaires")
-            .select("id,nom,type,ville,actif,archive,link_to_etablissement_id,type_relation")
+            .select("id,nom,type,ville,cp,adresse,telephone,email,siret,finess,actif,archive,link_to_etablissement_id,type_relation,contact_nom,contact_email,contact_telephone")
             .eq("structure_id", auth.structureId)
             .eq("archive", false)
             .order("nom"),
@@ -45,7 +44,11 @@ export default function VueGlobale() {
           supabase.from("materiels").select("id,etablissement_id,etat"),
           supabase.from("interventions").select("id,etablissement_id,statut"),
           supabase.from("commandes").select("id,etablissement_id,total,statut"),
+          // 0.62.71 : récup HAD pour afficher dans les tuiles
+          supabase.from("had").select("id,nom,code,type").eq("structure_id", auth.structureId),
         ]);
+
+        const hadById = Object.fromEntries((had?.data || []).map(h => [h.id, h]));
 
         // 1) Mes établissements (non-partenaires)
         const mineEtabs = (resMine.data || []).filter((e) => !e.est_partenaire);
@@ -53,6 +56,7 @@ export default function VueGlobale() {
           ...e,
           est_partenaire: false,
           source: "mine",
+          had: e.had_id ? hadById[e.had_id] : null,
           patients: (pa.data || []).filter((x) => x.etablissement_id === e.id).length,
           materiels: (ma.data || []).filter((x) => x.etablissement_id === e.id).length,
           di: (di.data || []).filter((x) => x.etablissement_id === e.id && x.statut !== "Clôturée").length,
@@ -65,7 +69,6 @@ export default function VueGlobale() {
           ...p,
           est_partenaire: true,
           source: "partner_table",
-          // Si link_to_etablissement_id existe, on peut chercher les stats agrégées
           patients: p.link_to_etablissement_id ? (pa.data || []).filter((x) => x.etablissement_id === p.link_to_etablissement_id).length : 0,
           materiels: p.link_to_etablissement_id ? (ma.data || []).filter((x) => x.etablissement_id === p.link_to_etablissement_id).length : 0,
           di: 0,
@@ -73,23 +76,18 @@ export default function VueGlobale() {
           aRegler: 0,
         }));
 
-        // Legacy : partenaires encore dans etablissements (avant migration)
+        // Legacy
         const legacyPartnerIds = partnersFromNewTable.map((p) => p.link_to_etablissement_id).filter(Boolean);
         const legacyPartners = (resMine.data || [])
           .filter((e) => e.est_partenaire && !legacyPartnerIds.includes(e.id))
           .map((e) => ({
             ...e,
             source: "partner_legacy",
-            patients: 0,
-            materiels: 0,
-            di: 0,
-            commandes: 0,
-            aRegler: 0,
+            patients: 0, materiels: 0, di: 0, commandes: 0, aRegler: 0,
           }));
 
         setRows([...mineRows, ...partnersFromNewTable, ...legacyPartners]);
       } catch (e) {
-        // 0.57.5 : try/catch englobant pour pas crasher la page
         logger.error("[VueGlobale] load failed:", e);
       } finally {
         setLoading(false);
@@ -177,43 +175,100 @@ export default function VueGlobale() {
               {filter === "partners" ? "Aucun établissement partenaire." : filter === "mine" ? <>Aucun établissement. <a style={{ color: "#2a5a5a", fontWeight: 600, cursor: "pointer" }} onClick={() => router.push("/collectivite")}>Créer un établissement</a></> : "Aucun établissement."}
             </StateMsg></Panel>
           : (
-            <div className="mag-grid">
+            <div className="av-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 14 }}>
               {filteredRows.map((e) => (
-                <div className="mag-tile" key={e.id} onClick={() => entrer(e)}>
-                  <div className="mag-photo" style={{
-                    position: "relative",
-                    overflow: "hidden",
-                  }}>
-                    {/* 0.55.36 : photo bannière via Wikipedia + fallback gradient */}
-                    <EtabPhoto
-                      nom={e.nom}
-                      ville={e.ville}
-                      type={e.type}
-                      height={140}
-                      borderRadius={0}
-                    />
-                    {e.est_partenaire && (
-                      <span style={{
-                        position: "absolute", top: 8, right: 8,
-                        background: "#7a6fb0", color: "#fff",
-                        padding: "2px 8px", borderRadius: 8,
-                        fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                <div key={e.id} data-3d="true" data-shimmer="true" onClick={() => entrer(e)} style={{
+                  background: "#fff",
+                  border: `1px solid ${e.est_partenaire ? "#7a6fb030" : "#185FA530"}`,
+                  borderLeft: `4px solid ${e.est_partenaire ? "#7a6fb0" : (e.est_had ? "#EF9F27" : "#185FA5")}`,
+                  borderRadius: 14, overflow: "hidden", cursor: "pointer",
+                  color: e.est_partenaire ? "#7a6fb0" : (e.est_had ? "#EF9F27" : "#185FA5"),
+                }}>
+                  {/* Photo bannière */}
+                  <div style={{ position: "relative", overflow: "hidden", height: 120 }}>
+                    <EtabPhoto nom={e.nom} ville={e.ville} type={e.type} height={120} borderRadius={0} />
+                    {/* Badges */}
+                    <div style={{ position: "absolute", top: 8, right: 8, display: "flex", flexDirection: "column", gap: 4, zIndex: 2 }}>
+                      {e.est_partenaire && (
+                        <span style={{ background: "#7a6fb0", color: "#fff", padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: 0.4, boxShadow: "0 2px 6px rgba(122,111,176,.4)" }}>
+                          PARTENAIRE
+                        </span>
+                      )}
+                      {e.est_had && (
+                        <span style={{ background: "#EF9F27", color: "#fff", padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: 0.4, boxShadow: "0 2px 6px rgba(239,159,39,.4)" }}>
+                          HAD
+                        </span>
+                      )}
+                      {e.had && !e.est_had && (
+                        <span style={{ background: "rgba(239,159,39,.85)", color: "#fff", padding: "3px 8px", borderRadius: 6, fontSize: 9.5, fontWeight: 700, letterSpacing: 0.3 }}>
+                          🏠 {e.had.code || "HAD"}
+                        </span>
+                      )}
+                      {e.type_relation && (
+                        <span style={{ background: "rgba(255,255,255,.95)", color: "#7a6fb0", padding: "3px 8px", borderRadius: 6, fontSize: 9.5, fontWeight: 700, letterSpacing: 0.3 }}>
+                          {e.type_relation.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    {/* Logo en bas-gauche si dispo */}
+                    {e.logo_url && (
+                      <img src={e.logo_url} alt="" style={{
+                        position: "absolute", bottom: 8, left: 8,
+                        width: 38, height: 38, borderRadius: 8,
+                        background: "#fff", padding: 3, objectFit: "contain",
+                        boxShadow: "0 3px 8px rgba(0,0,0,.2)",
                         zIndex: 2,
-                      }}>
-                        PARTENAIRE
-                      </span>
+                      }} />
                     )}
                   </div>
-                  <div className="mag-body">
-                    <p className="mag-name">{e.nom}</p>
-                    <div className="mag-meta"><i className="ti ti-map-pin" /> {e.type || "—"}{e.ville ? ` · ${e.ville}` : ""}</div>
-                    <div className="mag-stats">
-                      <div className="mag-stat"><span className="v">{e.patients}</span><span className="l">patients</span></div>
-                      <div className="mag-stat"><span className="v">{e.materiels}</span><span className="l">matériel</span></div>
-                      <div className="mag-stat"><span className="v">{e.di}</span><span className="l">DI</span></div>
+
+                  <div style={{ padding: 14 }}>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#142131", lineHeight: 1.2 }}>{e.nom}</h3>
+                    <div style={{ fontSize: 11.5, color: "#5a6878", marginTop: 4, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      <span><i className="ti ti-tag" /> {e.type || "—"}</span>
+                      {e.ville && <span><i className="ti ti-map-pin" /> {e.ville}{e.cp ? ` (${e.cp})` : ""}</span>}
+                      {e.capacite && <span><i className="ti ti-bed" /> {e.capacite} lits</span>}
                     </div>
-                    <button className="mag-cta" style={{ background: e.est_partenaire ? "#7a6fb0" : "#142131" }}>
-                      <i className="ti ti-arrow-right" /> {e.est_partenaire ? "Voir la fiche partenaire" : "Entrer dans l'établissement"}
+
+                    {/* Contact rapide */}
+                    {(e.telephone || e.email) && (
+                      <div style={{ marginTop: 8, padding: "6px 8px", background: "#fafbfc", borderRadius: 6, fontSize: 11, color: "#5a6878" }}>
+                        {e.telephone && <div><i className="ti ti-phone" style={{ color: "#5aa05a" }} /> <span style={{ fontFamily: "Consolas, monospace" }}>{e.telephone}</span></div>}
+                        {e.email && <div style={{ marginTop: 2 }}><i className="ti ti-mail" style={{ color: "#185FA5" }} /> <span style={{ fontSize: 10.5 }}>{e.email}</span></div>}
+                        {e.contact_nom && <div style={{ marginTop: 2 }}><i className="ti ti-user" style={{ color: "#7a6fb0" }} /> {e.contact_nom}</div>}
+                      </div>
+                    )}
+
+                    {/* Identifiants pro */}
+                    {(e.finess || e.siret) && (
+                      <div style={{ marginTop: 6, fontSize: 10, color: "#8a98a8", fontFamily: "Consolas, monospace" }}>
+                        {e.finess && <span>FINESS {e.finess}</span>}
+                        {e.finess && e.siret && " · "}
+                        {e.siret && <span>SIRET {e.siret.slice(0, 9)}…</span>}
+                      </div>
+                    )}
+
+                    {/* Stats : 4 mini-pills */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, marginTop: 10, paddingTop: 10, borderTop: "1px solid #f4f7fa" }}>
+                      <MiniStat icon="ti-users"       value={e.patients}  label="Patients" color="#7a6fb0" />
+                      <MiniStat icon="ti-armchair-2"  value={e.materiels} label="Matériel" color="#142131" />
+                      <MiniStat icon="ti-tools"       value={e.di}        label="DI"       color="#e35d5b" />
+                      <MiniStat icon="ti-shopping-cart" value={e.commandes} label="Cmd"   color="#5aa05a" />
+                    </div>
+
+                    {/* CTA */}
+                    <button style={{
+                      marginTop: 10, width: "100%",
+                      background: e.est_partenaire
+                        ? "linear-gradient(135deg, #7a6fb0, #5e4a8c)"
+                        : "linear-gradient(135deg, #185FA5, #134e87)",
+                      color: "#fff", border: "none",
+                      padding: "8px 12px", borderRadius: 8,
+                      fontSize: 12.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                      display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 5,
+                      boxShadow: `0 3px 10px ${e.est_partenaire ? "rgba(122,111,176,.3)" : "rgba(24,95,165,.3)"}`,
+                    }}>
+                      <i className="ti ti-arrow-right" /> {e.est_partenaire ? "Voir la fiche" : "Entrer"}
                     </button>
                   </div>
                 </div>
@@ -221,6 +276,16 @@ export default function VueGlobale() {
             </div>
           )}
       </div>
+    </div>
+  );
+}
+
+function MiniStat({ icon, value, label, color }) {
+  return (
+    <div style={{ textAlign: "center" }}>
+      <i className={`ti ${icon}`} style={{ color, fontSize: 14 }} />
+      <div style={{ fontSize: 14, fontWeight: 800, color: "#142131", lineHeight: 1 }}>{value || 0}</div>
+      <div style={{ fontSize: 9, color: "#8a98a8", textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</div>
     </div>
   );
 }

@@ -14,6 +14,7 @@ import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, EntityIcon} from "../../ui";
 import IconPicker from "../../components/IconPicker";  // 0.58.60
+import LogoUploader from "../../components/LogoUploader";  // 0.62.72
 import { dialogs } from "../../dialogs";
 export default function EditionEtablissement() {
   const supabase = createClient();
@@ -264,6 +265,18 @@ export default function EditionEtablissement() {
               onChange={(ic) => setForm({ ...form, icone: ic })}
               suggestFor={form.nom}
               color={modal?.kind === "batiment" ? "#7CC8C8" : "#EF9F27"}
+            />
+          </div>
+        )}
+        {/* 0.62.72 : LogoUploader pour services (et bâtiments) */}
+        {(modal?.kind === "service" || modal?.kind === "batiment") && modal?.row?.id && (
+          <div style={{ marginTop: 12, padding: 12, background: "linear-gradient(135deg, rgba(24,95,165,.04), rgba(124,200,200,.04))", border: "1px solid #eef1f4", borderRadius: 10 }}>
+            <LogoUploader
+              value={form.logo_url}
+              onChange={(url) => setForm({ ...form, logo_url: url })}
+              pathPrefix={`${modal.kind}s/${modal.row.id}`}
+              label={`Logo du ${modal.kind}`}
+              size={60}
             />
           </div>
         )}
