@@ -50,14 +50,17 @@ export function TourneesMap({ magasinId, height = 380 }) {
 
   // Charger les tournées en cours + à faire
   async function loadTournees() {
-    const today = new Date().toISOString().slice(0, 10);
-    const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch (e) { console.warn("[TourneesMap]", e); return []; } };
+    // 0.62.12 : remplacer or() (qui plante 400 sur date) par in() + filter client
     let q = supabase.from("tournees")
       .select("*, vehicules_magasin(immatriculation, marque, modele)")
-      .or(`statut.eq.en_cours,statut.eq.planifiee,date_tournee.gte.${today}`)
+      .in("statut", ["en_cours", "planifiee", "a_faire"])
       .order("date_tournee");
     if (magasinId) q = q.eq("magasin_id", magasinId);
-    const list = await tryFetch(q);
+    let list = await tryFetch(q);
+    // Filtre client : statut en cours OU date_tournee >= today
+    list = list.filter(t => t.statut === "en_cours" || (t.date_tournee && t.date_tournee >= todayDate));
     const enrichies = await Promise.all(list.map(async (t) => {
       const [etapes, chauffeur, gps] = await Promise.all([
         tryFetch(supabase.from("tournees_etapes").select("*, etablissements(nom, ville, adresse), demandes_internes(numero, commentaire)").eq("tournee_id", t.id).order("ordre")),

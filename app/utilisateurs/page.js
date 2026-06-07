@@ -37,6 +37,8 @@ export default function Utilisateurs() {
   const [invitations, setInvitations] = useState([]);
   const [services, setServices] = useState([]);
   const [memServices, setMemServices] = useState([]);
+  // 0.62.13 : liste des magasins pour le sélecteur rôle pro
+  const [magasinsListe, setMagasinsListe] = useState([]);
   // Alpha 0.17.0 : dernière activité par user (depuis v_user_activity)
   const [lastActivity, setLastActivity] = useState({}); // {user_id: {derniere_activite, nb_actions, actions_7j}}
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,9 @@ export default function Utilisateurs() {
     //   on l'ajoute aussi dans partenaires_rpps avec les flags correspondants
     type_partenaire: "",  // "" | "prescripteur" | "infirmiere" | "pharmacien"
     est_collaborateur: false,  // badge "collaborateur" si activé
+    // 0.62.13 : rôle pro + magasin pour pré-rattacher un user magasin dès la création
+    role_professionnel: "",
+    magasin_fournisseur_id: "",
   });
   // 0.55.29 : modale de recherche RPPS pour pré-remplir
   const [rppsSearchOpen, setRppsSearchOpen] = useState(false);
@@ -97,15 +102,17 @@ export default function Utilisateurs() {
   const [authMethodsByUser, setAuthMethodsByUser] = useState({}); // { user_id: {has_empreinte, has_face, total_devices} }
 
   async function loadAll() {
-    const [m, r, i, s, ms] = await Promise.all([
+    const [m, r, i, s, ms, mag] = await Promise.all([
       supabase.from("membres_structure").select("*, roles(nom)"),
       supabase.from("roles").select("*").order("created_at"),
       supabase.from("invitations").select("*, roles(nom)").order("created_at", { ascending: false }),
       supabase.from("services").select("id,nom"),
       supabase.from("membres_services").select("*"),
+      supabase.from("magasins").select("id, nom, ville").order("nom"),
     ]);
     setMembres(m.data || []); setRoles(r.data || []); setInvitations(i.data || []);
     setServices(s.data || []); setMemServices(ms.data || []);
+    setMagasinsListe(mag.data || []);
     // Alpha 0.17.0 : charger la dernière activité de chaque membre (vue v_user_activity)
     if (m.data?.length) {
       const userIds = m.data.map(x => x.user_id);
@@ -415,6 +422,9 @@ export default function Utilisateurs() {
       rpps_profession: inviteForm.rpps_profession || null,
       rpps_specialite: inviteForm.rpps_specialite || null,
       rpps_mode_exercice: inviteForm.rpps_mode_exercice || null,
+      // 0.62.13 : rôle pro + magasin (pré-rattachement utilisateur_magasin)
+      role_professionnel: inviteForm.role_professionnel || null,
+      magasin_fournisseur_id: inviteForm.magasin_fournisseur_id || null,
     };
 
     let { data: invData, error: invErr } = await supabase
@@ -431,6 +441,15 @@ export default function Utilisateurs() {
       delete fallback.rpps_profession;
       delete fallback.rpps_specialite;
       delete fallback.rpps_mode_exercice;
+      const retry = await supabase.from("invitations").insert(fallback).select("token").single();
+      invData = retry.data;
+      invErr = retry.error;
+    }
+    // 0.62.13 : Si erreur sur role_professionnel/magasin_fournisseur_id (SQL 0.62.13 pas passé), retry
+    if (invErr && /role_professionnel|magasin_fournisseur_id/i.test(invErr.message || "")) {
+      const fallback = { ...insertPayload };
+      delete fallback.role_professionnel;
+      delete fallback.magasin_fournisseur_id;
       const retry = await supabase.from("invitations").insert(fallback).select("token").single();
       invData = retry.data;
       invErr = retry.error;
@@ -1148,6 +1167,36 @@ export default function Utilisateurs() {
                     {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
                   </select>
                 </div>
+                {/* 0.62.13 : Rôle professionnel */}
+                <div className="fld" style={{ marginTop: 10 }}>
+                  <label>Rôle professionnel</label>
+                  <select value={inviteForm.role_professionnel} onChange={(e) => setInviteForm({ ...inviteForm, role_professionnel: e.target.value, magasin_fournisseur_id: e.target.value !== "utilisateur_magasin" ? "" : inviteForm.magasin_fournisseur_id })}>
+                    <option value="">— Choisir (optionnel) —</option>
+                    <option value="infirmier">Infirmier·ère</option>
+                    <option value="docteur">Docteur / Médecin</option>
+                    <option value="pharmacien">Pharmacien·ne</option>
+                    <option value="aide_soignant">Aide-soignant·e</option>
+                    <option value="kine">Kinésithérapeute</option>
+                    <option value="secretaire">Secrétaire</option>
+                    <option value="logistique">Logistique</option>
+                    <option value="admin">Administratif</option>
+                    <option value="utilisateur_magasin">🏬 Utilisateur Magasin</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                </div>
+                {/* 0.62.13 : Magasin rattaché — visible UNIQUEMENT si rôle = utilisateur_magasin */}
+                {inviteForm.role_professionnel === "utilisateur_magasin" && (
+                  <div className="fld" style={{ marginTop: 10, padding: 10, background: "rgba(94,143,143,.08)", borderRadius: 6, borderLeft: "3px solid #5a8f8f" }}>
+                    <label style={{ color: "#5a8f8f", fontWeight: 700 }}>🏬 Magasin rattaché *</label>
+                    <select value={inviteForm.magasin_fournisseur_id} onChange={(e) => setInviteForm({ ...inviteForm, magasin_fournisseur_id: e.target.value })}>
+                      <option value="">— Choisir magasin —</option>
+                      {(magasinsListe || []).map(m => <option key={m.id} value={m.id}>{m.nom}{m.ville ? ` · ${m.ville}` : ""}</option>)}
+                    </select>
+                    <div style={{ fontSize: 11, color: "#5a6878", marginTop: 6, fontStyle: "italic" }}>
+                      Le user recevra un mail de bienvenue dédié magasin avec le bon contexte.
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 0.55.25 : Rattachement multi-établissements + lock */}

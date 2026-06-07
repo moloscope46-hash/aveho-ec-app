@@ -236,12 +236,14 @@ export default function CartePage() {
     try {
       // Tournées en cours : statut='en_cours' (et planifiées du jour)
       const today = new Date().toISOString().slice(0, 10);
+      // 0.62.12 : Fix bug 400 — séparer en in() + filter client
       const r = await supabase.from("tournees")
         .select("*, vehicules_magasin(immatriculation, marque, modele, type_vehicule), magasins(nom, ville)")
-        .or(`statut.eq.en_cours,date_tournee.eq.${today}`)
+        .in("statut", ["en_cours", "planifiee", "a_faire"])
         .order("date_tournee", { ascending: false })
         .limit(50);
-      const tournees = r.data || [];
+      const todayDate = new Date().toISOString().slice(0, 10);
+      const tournees = (r.data || []).filter(t => t.statut === "en_cours" || t.date_tournee === todayDate);
       if (tournees.length === 0) { setTourneesReelles([]); return; }
       // Pour chaque tournée, récupérer étapes + dernière position GPS + chauffeur
       const enrichies = await Promise.all(tournees.map(async (t) => {

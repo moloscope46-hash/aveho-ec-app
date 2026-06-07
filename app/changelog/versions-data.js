@@ -240,6 +240,36 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.13",
+    "kind": "feat",
+    "titre": "🏬 Création EC côté magasin avec workflow notif + Calendrier tournées (semaine/mois) + Invite user magasin avec rôle pro",
+    "chantiers": [
+      { "code": "AI", "txt": "🏬 **Nouvelle page `/magasin/etablissements/nouveau`** : créer un EC client depuis l'espace magasin sans redirect vers la version EC. Form complet (nom, type, adresse, SIRET, FINESS, tél, notes). **Workflow intelligent** : (1) Cherche si l'étab existe déjà (par SIRET / FINESS / nom+ville). (2a) Si existe → écran 'Étab déjà existant' avec bouton 'Demander le rattachement' qui envoie une notif aux membres de l'étab (insert `magasins_rattachements` avec `actif=false` = pending). (2b) Si nouveau → géocode l'adresse via API data.gouv + crée l'étab + auto-rattache au magasin. Lien dans sidebar magasin section 'Demandes reçues' : '+ Nouvel EC client'" },
+      { "code": "AI", "txt": "📅 **Nouvelle page `/magasin/tournees/calendrier`** : vue calendrier complète. Toggle Semaine / Mois. Boutons Préc / Aujourd'hui / Suiv. Header dark + grille 7 colonnes. Chaque tournée affichée comme card colorée (couleur selon statut) avec icône + heure + numéro + véhicule + chauffeur. Click card → détail. Click 'cellule vide' un jour → création tournée pré-remplie pour ce jour (`?date=YYYY-MM-DD`). Aujourd'hui surligné en orange. Légende statuts en bas. Lien sidebar 'Calendrier tournées'" },
+      { "code": "SQL", "txt": "🆕 **`migration-0.62.13-invitations-role-magasin.sql`** : ajoute `role_professionnel` (TEXT) et `magasin_fournisseur_id` (UUID) sur `invitations` + 2 indexes partiels. Permet de stocker dès la création d'invitation le rôle pro cible et son magasin de rattachement" },
+      { "code": "AI", "txt": "👤 **Form invitation enrichi** : nouveau select 'Rôle professionnel' (10 options : infirmier, docteur, pharmacien, aide_soignant, kine, secretaire, logistique, admin, **utilisateur_magasin**, autre). Si rôle = `utilisateur_magasin` → encadré teal magasin apparaît avec select 'Magasin rattaché' obligatoire (chargé depuis table `magasins`). Le payload invitation inclut maintenant ces 2 champs avec **fallback retry** si la colonne n'existe pas (SQL pas exécuté)" },
+      { "code": "INFO", "txt": "🚧 **À venir** : mail dédié magasin (template différent au lieu du mail générique) — pour ça il faut modifier l'edge function `invite-user`. À ce stade, le rôle est stocké et tu vois directement le rattachement après inscription. Le mail générique fonctionne déjà" }
+    ],
+    "themes": ["feat", "magasin", "etablissement", "calendrier", "invitations"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.62.12",
+    "kind": "fix",
+    "titre": "🐛 Fix bug 400 tournées + Fix collab user invisible + Icônes admin/inf + /depots sélecteur magasin + /etablissement onglet 'Magasins rattachés'",
+    "chantiers": [
+      { "code": "AI", "txt": "🐛 **Fix erreur 400 sur `/magasin/tournees`** : la syntaxe `.or(statut.eq.X,statut.eq.Y,date_tournee.gte.Z)` plantait avec un 400 (PostgREST n'aime pas les `-` de date dans un OR). **Fix** : remplacé par `.in('statut', ['en_cours','planifiee','a_faire'])` + filtre client `t.statut === 'en_cours' || t.date_tournee >= today`. Appliqué dans `TourneesMap.js` ET `app/carte/page.js`" },
+      { "code": "AI", "txt": "🐛 **Fix collaborateur user courant invisible** : si l'user existe dans `auth.users` (Supabase) mais a AUCUNE ligne dans `membres_structure`, le code 0.62.7 ne le trouvait pas. **Fix** : on crée une 'ligne virtuelle' depuis `auth.user.user_metadata` (prénom, nom, email) avec flag `_virtual: true`. console.warn affiche l'anomalie pour debug" },
+      { "code": "AI", "txt": "🎨 **Icônes Administratif + Infirmière fixées** : `ti-nurse` et `ti-briefcase` ne sont pas dans la version Tabler Icons actuelle. Remplacé par `ti-medical-cross` (infirmière) et `ti-id-badge-2` (administratif) qui existent dans toutes les versions" },
+      { "code": "AI", "txt": "📦 **`/depots` : sélecteur magasin TOUJOURS visible** : avant le sélecteur n'apparaissait QUE si `type === 'deporte'`. Maintenant visible pour tous types de dépôts. La colonne `depots.magasin_id` était déjà créée en 0.62.10. Label 'Magasin rattaché'" },
+      { "code": "AI", "txt": "🏥 **`/etablissement` : nouvel onglet 'Magasins rattachés'** : aux côtés des onglets Aperçu/Véhicules/Dépôts. Liste les `magasins_rattachements` où `etablissement_id = courant`. Cards avec nom magasin + ville + bât/svc/dépôt précis (s'il y en a) + notes. Bouton 'Rattacher un magasin' ouvre modal avec select des magasins dispo (filtre ceux déjà rattachés). À l'ajout : **notification automatique envoyée aux membres du magasin** (insert in `notifications` pour tous les `membres_structure.eq(magasin_fournisseur_id)`)" }
+    ],
+    "themes": ["fix-critique", "collaborateurs", "depots", "etablissement", "rattachements"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.11",
     "kind": "fix",
     "titre": "🔧 SQL défensif chambre_id + Changelog mobile responsive + 14 HTML manquants générés + Page UI rattachements périmètre magasin",

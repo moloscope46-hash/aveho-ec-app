@@ -31,6 +31,7 @@ const MAG_NAV = [
   { section: "Flotte & livraisons", items: [
     { p: "/magasin/flotte", ic: "ti-truck-delivery", lbl: "Flotte véhicules", col: "#185FA5" },
     { p: "/magasin/tournees", ic: "ti-route", lbl: "Tournées", col: "#7a6fb0" },
+    { p: "/magasin/tournees/calendrier", ic: "ti-calendar", lbl: "Calendrier tournées", col: "#EF9F27" },
     { p: "/magasin/analytics-tournees", ic: "ti-chart-line", lbl: "Analytics tournées", col: "#5a8f8f" },
   ]},
   { section: "Catalogue & Articles", items: [
@@ -41,6 +42,7 @@ const MAG_NAV = [
     { p: "/magasin?tab=di", ic: "ti-truck-loading", lbl: "DI reçues", col: "#EF9F27" },
     { p: "/magasin?tab=sav", ic: "ti-tool", lbl: "SAV reçues", col: "#e35d5b" },
     { p: "/magasin?tab=transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
+    { p: "/magasin/etablissements/nouveau", ic: "ti-building-plus", lbl: "+ Nouvel EC client", col: "#5aa05a" },
   ]},
   { section: "Configuration", items: [
     { p: "/magasin/bilans-sav", ic: "ti-clipboard-check", lbl: "Bilans SAV", col: "#7CC8C8" },

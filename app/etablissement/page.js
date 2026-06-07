@@ -7,7 +7,7 @@ import { useAuth } from "../../lib/useAuth";
 import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg } from "../ui";
+import { PageHead, Panel, StateMsg, Btn, Modal } from "../ui";
 import { flatten, computeRows, kpisFromRows } from "./lib";
 import { logger } from "../../lib/logger";
 // 0.58.87 : popup articles dépôt avec recherche vocale + ajout panier
@@ -171,6 +171,7 @@ export default function Etablissement() {
                 { k: "apercu",    lbl: "Aperçu",   ic: "ti-layout-grid", c: "#185FA5" },
                 { k: "vehicules", lbl: `Véhicules (${vehs.length})`, ic: "ti-ambulance", c: "#e35d5b" },
                 { k: "depots",    lbl: `Dépôts (${depots.length})`,    ic: "ti-building-warehouse", c: "#EF9F27" },
+                { k: "magasins",  lbl: `Magasins rattachés`, ic: "ti-link", c: "#5a8f8f" },
               ].map(t => {
                 const active = tab === t.k;
                 return (
@@ -438,6 +439,10 @@ export default function Etablissement() {
                 )}
               </Panel>
             )}
+            {/* === 0.62.12 : ONGLET MAGASINS RATTACHÉS === */}
+            {tab === "magasins" && (
+              <MagasinsRattachesPanel etabId={auth.etabId} auth={auth} supabase={supabase} />
+            )}
           </>
         )}
         {/* 0.58.87 : Modal articles du dépôt sélectionné */}
@@ -664,5 +669,159 @@ function DepotCard({ d, vehs, router, onOpenArticles }) {
         </button>
       </div>
     </div>
+  );
+}
+
+// =============================================================
+// 0.62.12 : Composant MagasinsRattachesPanel
+// Liste les magasins qui interviennent dans cet établissement
+// + permet d'ajouter/retirer des rattachements
+// =============================================================
+function MagasinsRattachesPanel({ etabId, auth, supabase }) {
+  const [rattachements, setRattachements] = useState([]);
+  const [magasinsDispo, setMagasinsDispo] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalAdd, setModalAdd] = useState(false);
+  const [form, setForm] = useState({ magasin_id: "", notes: "" });
+
+  useEffect(() => {
+    if (!etabId) return;
+    reload();
+  }, [etabId]);
+
+  async function reload() {
+    setLoading(true);
+    const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+    const [r, m] = await Promise.all([
+      tryFetch(supabase.from("magasins_rattachements")
+        .select("*, magasins(nom, ville, code), batiments(nom), services(nom), depots(nom)")
+        .eq("etablissement_id", etabId)),
+      tryFetch(supabase.from("magasins").select("id, nom, ville").order("nom")),
+    ]);
+    setRattachements(r);
+    setMagasinsDispo(m);
+    setLoading(false);
+  }
+
+  async function ajouter() {
+    if (!form.magasin_id) { alert("Choisis un magasin"); return; }
+    try {
+      const r = await supabase.from("magasins_rattachements").insert({
+        magasin_id: form.magasin_id,
+        etablissement_id: etabId,
+        actif: true,
+        notes: form.notes || null,
+        created_by: auth.user?.id,
+      });
+      if (r.error) throw r.error;
+      // 0.62.12 : Notification au magasin
+      try {
+        const membres = await supabase.from("membres_structure").select("user_id").eq("magasin_fournisseur_id", form.magasin_id);
+        const mag = magasinsDispo.find(m => m.id === form.magasin_id);
+        const notifs = (membres.data || []).map(m => ({
+          user_id: m.user_id,
+          type: "rattachement_magasin",
+          titre: `🔗 Nouveau rattachement étab → magasin`,
+          message: `L'établissement vient de te rattacher. Tu peux maintenant intervenir chez eux.`,
+          url: `/magasin/rattachements-perimetre`,
+          lue: false,
+        }));
+        if (notifs.length > 0) await supabase.from("notifications").insert(notifs);
+      } catch (e) { console.warn("[notif rattachement]", e); }
+      setModalAdd(false); setForm({ magasin_id: "", notes: "" });
+      await reload();
+    } catch (e) { alert("❌ " + e.message); }
+  }
+
+  async function retirer(r) {
+    if (!confirm(`Retirer le rattachement avec ${r.magasins?.nom || "ce magasin"} ?`)) return;
+    await supabase.from("magasins_rattachements").delete().eq("id", r.id);
+    reload();
+  }
+
+  // Magasins déjà rattachés (pour éviter doublons)
+  const dejaRattaches = new Set(rattachements.map(r => r.magasin_id));
+  const dispoFiltres = magasinsDispo.filter(m => !dejaRattaches.has(m.id));
+
+  return (
+    <Panel style={{ marginTop: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", marginBottom: 14, gap: 10, flexWrap: "wrap" }}>
+        <h2 style={{ margin: 0, flex: 1, fontSize: 16 }}>
+          <i className="ti ti-link" style={{ color: "#5a8f8f" }} /> Magasins rattachés ({rattachements.length})
+        </h2>
+        <button onClick={() => setModalAdd(true)}
+          style={{ background: "linear-gradient(135deg,#5a8f8f,#3a6f6f)", color: "#fff", border: "none", padding: "8px 14px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 12.5 }}>
+          <i className="ti ti-plus" /> Rattacher un magasin
+        </button>
+      </div>
+
+      <Panel style={{ background: "rgba(94,143,143,.06)", borderLeft: "4px solid #5a8f8f", padding: "10px 14px", marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: "#5a6878", lineHeight: 1.5 }}>
+          💡 <b>À quoi ça sert :</b> liste les magasins (PSAD/FBM) qui interviennent dans cet établissement. À l'ajout, une notification est envoyée à tous les membres du magasin.
+        </div>
+      </Panel>
+
+      {loading ? <div style={{ padding: 30, textAlign: "center" }}>Chargement...</div>
+        : rattachements.length === 0 ? (
+        <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+          <i className="ti ti-link-off" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+          Aucun magasin rattaché à cet établissement.
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
+          {rattachements.map(r => (
+            <div key={r.id} style={{
+              background: "#fff", border: "1px solid #e3e9ee",
+              borderLeft: `4px solid ${r.actif ? "#5a8f8f" : "#cfd8e0"}`,
+              borderRadius: 10, padding: 14,
+            }}>
+              <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>
+                <i className="ti ti-building-warehouse" style={{ color: "#5a8f8f", marginRight: 4 }} />
+                {r.magasins?.nom || "Magasin"}
+              </div>
+              {r.magasins?.ville && <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 2 }}>{r.magasins.ville}</div>}
+              {r.batiments?.nom && <div style={{ fontSize: 11.5, color: "#7a6fb0", marginTop: 5 }}><i className="ti ti-building" /> {r.batiments.nom}</div>}
+              {r.services?.nom && <div style={{ fontSize: 11.5, color: "#7CC8C8", marginTop: 3 }}><i className="ti ti-stethoscope" /> {r.services.nom}</div>}
+              {r.depots?.nom && <div style={{ fontSize: 11.5, color: "#EF9F27", marginTop: 3 }}><i className="ti ti-building-warehouse" /> Dépôt : {r.depots.nom}</div>}
+              {r.notes && <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 6, fontStyle: "italic" }}>{r.notes}</div>}
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px solid #f0f3f6", display: "flex", gap: 5 }}>
+                <span style={{ flex: 1, fontSize: 10.5, color: r.actif ? "#5aa05a" : "#8a98a8", fontWeight: 700 }}>{r.actif ? "✓ Actif" : "⊘ Inactif"}</span>
+                <button onClick={() => retirer(r)} style={{ background: "transparent", border: "1px solid #cfd8e0", color: "#e35d5b", padding: "4px 10px", borderRadius: 5, cursor: "pointer", fontSize: 11, fontFamily: "inherit" }}>
+                  <i className="ti ti-trash" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal d'ajout */}
+      {modalAdd && (
+        <Modal open={modalAdd} onClose={() => setModalAdd(false)} kind="patient" title="Rattacher un magasin" actions={
+          <>
+            <Btn variant="ghost" onClick={() => setModalAdd(false)}>Annuler</Btn>
+            <Btn variant="primary" onClick={ajouter}>Rattacher</Btn>
+          </>
+        }>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>
+              <b>Magasin *</b>
+              <select value={form.magasin_id} onChange={(e) => setForm({ ...form, magasin_id: e.target.value })} style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}>
+                <option value="">— Choisir un magasin —</option>
+                {dispoFiltres.map(m => <option key={m.id} value={m.id}>{m.nom} {m.ville ? `· ${m.ville}` : ""}</option>)}
+              </select>
+              {dispoFiltres.length === 0 && <div style={{ fontSize: 11, color: "#e35d5b", marginTop: 4 }}>Tous les magasins sont déjà rattachés.</div>}
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>
+              <b>Notes</b>
+              <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Périmètre, contact, conditions…" style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4, minHeight: 60 }} />
+            </label>
+            <div style={{ padding: 10, background: "rgba(122,111,176,.10)", borderRadius: 6, fontSize: 11.5, color: "#5a6878" }}>
+              ℹ Une notification sera envoyée aux membres du magasin pour les prévenir.
+            </div>
+          </div>
+        </Modal>
+      )}
+    </Panel>
   );
 }

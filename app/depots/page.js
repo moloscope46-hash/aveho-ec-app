@@ -478,15 +478,14 @@ export default function DepotsPage() {
                   {chambresForService.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}
                 </select>
               </div>
-              {form.type === "deporte" && (
-                <div className="fld">
-                  <label>Magasin</label>
-                  <select value={form.magasin_id || ""} onChange={(e) => setForm({ ...form, magasin_id: e.target.value || null })}>
-                    <option value="">— Aucun —</option>
-                    {magasins.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
-                  </select>
-                </div>
-              )}
+              {/* 0.62.12 : Sélecteur magasin TOUJOURS visible (pas que dépôt déporté) */}
+              <div className="fld">
+                <label>Magasin rattaché</label>
+                <select value={form.magasin_id || ""} onChange={(e) => setForm({ ...form, magasin_id: e.target.value || null })}>
+                  <option value="">— Aucun —</option>
+                  {magasins.map(m => <option key={m.id} value={m.id}>{m.nom}</option>)}
+                </select>
+              </div>
             </div>
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#7CC8C8", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #cfeaea", paddingBottom: 4 }}>

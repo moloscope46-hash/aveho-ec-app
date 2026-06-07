@@ -15,14 +15,14 @@ import { PageHead, Panel, Btn, Modal } from "../ui";
 import BackButton from "../components/BackButton";
 
 const ROLES_PRO = [
-  { v: "infirmier",     l: "Infirmier·ère",    ic: "ti-nurse",          col: "#7CC8C8" },
+  { v: "infirmier",     l: "Infirmier·ère",    ic: "ti-medical-cross",  col: "#7CC8C8" },
   { v: "docteur",       l: "Docteur / Médecin", ic: "ti-stethoscope",   col: "#185FA5" },
   { v: "pharmacien",    l: "Pharmacien·ne",    ic: "ti-prescription",  col: "#5aa05a" },
   { v: "aide_soignant", l: "Aide-soignant·e",   ic: "ti-heart-handshake", col: "#C9867F" },
   { v: "kine",          l: "Kinésithérapeute", ic: "ti-massage",        col: "#7a6fb0" },
   { v: "secretaire",    l: "Secrétaire",       ic: "ti-keyboard",       col: "#8a98a8" },
   { v: "logistique",    l: "Logistique",       ic: "ti-truck",          col: "#EF9F27" },
-  { v: "admin",         l: "Administratif",    ic: "ti-briefcase",      col: "#5e4a8c" },
+  { v: "admin",         l: "Administratif",    ic: "ti-id-badge-2",     col: "#5e4a8c" },
   // 0.59.6 : rôle dédié magasin Aveho
   { v: "utilisateur_magasin", l: "🏬 Utilisateur Magasin", ic: "ti-building-warehouse", col: "#5a8f8f" },
   { v: "autre",         l: "Autre",            ic: "ti-user",           col: "#142131" },
@@ -87,8 +87,9 @@ export default function CollaborateursPage() {
         collabData = r.data || [];
       }
 
-      // 0.62.7 : Si le user courant n'apparaît pas dans la liste, l'ajouter manuellement
-      // (cas : sa ligne membres_structure a un structure_id différent, ou il y en a plusieurs)
+      // 0.62.12 : Si le user courant n'apparaît pas dans la liste, on l'ajoute manuellement
+      // Cas 1 : sa ligne membres_structure a un structure_id différent
+      // Cas 2 : il n'a AUCUNE ligne membres_structure (créé seulement dans auth.users)
       if (auth.user?.id && !collabData.find(c => c.user_id === auth.user.id)) {
         try {
           const rself = await supabase.from("membres_structure")
@@ -96,8 +97,24 @@ export default function CollaborateursPage() {
             .eq("user_id", auth.user.id)
             .maybeSingle();
           if (rself.data) {
+            // Cas 1 : la ligne existe ailleurs
             collabData = [{ ...rself.data, _self_added: true }, ...collabData];
             console.info("[Collab] User courant ajouté manuellement (structure_id différent ?)", rself.data.structure_id, "vs auth.structureId=", auth.structureId);
+          } else {
+            // Cas 2 : aucune ligne membres_structure → on crée une ligne virtuelle depuis auth.user
+            const email = auth.user.email || "";
+            const meta = auth.user.user_metadata || {};
+            collabData = [{
+              user_id: auth.user.id,
+              email,
+              prenom: meta.prenom || meta.first_name || email.split("@")[0],
+              nom: meta.nom || meta.last_name || "",
+              role_professionnel: meta.role_professionnel || null,
+              structure_id: null,
+              _self_added: true,
+              _virtual: true,  // 0.62.12 : flag pour proposer création vraie ligne
+            }, ...collabData];
+            console.warn("[Collab] User courant n'a AUCUNE ligne membres_structure — affichage virtuel depuis auth.user");
           }
         } catch (e) { console.warn("[Collab] fetch self failed:", e); }
       }
