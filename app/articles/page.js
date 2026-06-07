@@ -131,6 +131,8 @@ export default function Articles() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("new") === "1") {
       newArticle(params.get("magasin") === "1");
+      // 0.60.5 : nettoyer l'URL pour éviter re-déclenchement
+      window.history.replaceState({}, "", "/articles");
     }
   }, [auth.ready]);
 

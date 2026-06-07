@@ -90,6 +90,7 @@ const MENU = [
   { section: "Livraison", sectionIcon: "ti-truck-delivery", items: [
     { p: "/mes-demandes", ic: "ti-truck-loading", lbl: "Mes demandes (DI)", col: "#EF9F27" },
     { p: "/sav/nouvelle", ic: "ti-tool", lbl: "Demande SAV", col: "#e35d5b" },
+    { p: "/transferts/nouvelle", ic: "ti-transfer", lbl: "Demande transfert", col: "#7a6fb0" },
     { p: "/interventions", ic: "ti-tools", lbl: "Interventions / DI", col: "#c0392b" },
     { p: "/transferts", ic: "ti-transfer", lbl: "Transferts", col: "#7a6fb0" },
     { p: "/maintenance", ic: "ti-tool", lbl: "Maintenance", col: "#5a8f8f" },

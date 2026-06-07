@@ -290,7 +290,8 @@ export default function UserMenu({ auth }) {
               </button>
             )}
 
-            {/* 0.59.5 : Switch Mode EC ↔ Magasin Aveho */}
+            {/* 0.59.5 : Switch Mode EC ↔ Magasin Aveho (0.60.5 : guard hydration) */}
+            {viewMode.ready && (
             <div style={{
               padding: 12, background: "rgba(94,143,143,.08)",
               borderRadius: 10, margin: "8px 0",
@@ -325,6 +326,7 @@ export default function UserMenu({ auth }) {
                 {viewMode.isEC ? "Vue Espace Collectivité (côté demandeur)" : "Vue Magasin Aveho (côté fournisseur)"}
               </div>
             </div>
+            )}
 
             <button className="um-item" onClick={() => go("/profil")}>
               <i className="ti ti-user-circle" /> <span>Mon profil</span>

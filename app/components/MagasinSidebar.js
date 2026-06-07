@@ -38,6 +38,8 @@ export function MagasinSidebar() {
   const viewMode = useViewMode();
   const auth = useAuth();
 
+  // 0.60.5 : ne rend rien tant que viewMode pas chargé (évite hydration mismatch React #418)
+  if (!viewMode.ready) return null;
   // Visible uniquement en mode magasin
   if (!viewMode.isMagasin) return null;
 

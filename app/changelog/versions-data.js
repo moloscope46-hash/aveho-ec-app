@@ -240,6 +240,40 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.60.5",
+    "kind": "fix",
+    "titre": "🩹 Fix React #418 (hydration) + 🩹 Fix article URL loop + 🩹 SQL hotfix colonnes materiels/stock",
+    "chantiers": [
+      { "code": "AI", "txt": "🔥 **Fix React error #418 (HTML hydration mismatch)** : `useViewMode` retournait des valeurs différentes entre le rendu serveur (default 'ec') et le rendu client (localStorage). Le `MagasinSidebar`, le switch dans `UserMenu`, et les blocs conditionnels dans `/demandes-internes/[id]` rendaient un HTML différent → React crashait. Fix : ajout d'un guard `viewMode.ready` sur tous les rendus conditionnels qui dépendent du mode. Tant que pas hydraté → on ne rend rien (return null ou condition false)" },
+      { "code": "AI", "txt": "🔥 **Fix création/édition article qui redirige** : l'URL `?new=1&magasin=1` restait dans l'URL après que le modal s'ouvre, donc à chaque re-render le useEffect pouvait redéclencher `newArticle()` qui resettait le form. Idem pour `/etablissements-partenaires`. Fix : `window.history.replaceState({}, '', '/articles')` après ouverture du modal pour nettoyer l'URL" },
+      { "code": "AI", "txt": "🔥 **Fix /magasin?tab=transferts → 503** : la sidebar magasin pointait vers `/magasin?tab=transferts` mais la page n'écoutait pas le param URL et plantait. Fix : nouveau useEffect qui lit `?tab=` de l'URL et set `activeTab`. Onglet 'transferts' redirige sur 'di' (intégration future)" },
+      { "code": "SQL", "txt": "🆕 **`HOTFIX-aveho-0.60.5-colonnes-materiels-stock.sql`** : fix erreurs 400 sur materiels et stock_mouvements. ALTER materiels ADD num_serie/num_lot/date_peremption/etat/depot_id/patient_id/article_id/libelle. ALTER stock_mouvements ADD num_serie/lot/date_peremption/notes/user_email/type/quantite/article_id. Idempotent" },
+      { "code": "INFO", "txt": "🎯 **À faire** : (1) Applique le SQL `HOTFIX-aveho-0.60.5-colonnes-materiels-stock.sql` pour les colonnes manquantes · (2) Push le code 0.60.5 pour les fixes React/UX" },
+      { "code": "INFO", "txt": "ℹ️ **L'erreur 403 sur audit_log** est un comportement normal (RLS strict). Aucune action requise, ça n'affecte pas le fonctionnement" }
+    ],
+    "themes": ["fix", "hydration", "react", "sql"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.60.4",
+    "kind": "feat",
+    "titre": "🩺 Exécution bilan SAV (5 points + rapport PDF) + 🔄 Transfert EC→dépôt via magasin + 🔐 Admin droits magasin + 🔒 Filtrage bilans",
+    "chantiers": [
+      { "code": "AI", "txt": "🩺 **Page `/demandes-internes/[id]/executer-bilan`** : interface complète d'exécution bilan SAV côté magasin. Header avec verdict, panne signalée, compteur points OK. Cards par point avec icône numéro + libellé + obligatoire (*) + description + plage attendue (mesure). Inputs adaptés au type : (1) **Oui/Non** = 3 boutons OK/KO/NA color-coded, (2) **Mesure** = input number + unité + détection HORS PLAGE rouge, (3) **Texte** = textarea, (4) **Photo** = URL + preview. Commentaire optionnel sur chaque point. Validation bloque si points obligatoires manquants. Save → INSERT dans sav_executions + statut DI = validee + notif EC" },
+      { "code": "AI", "txt": "🖨 **Génération rapport SAV PDF** : fonction `imprimerRapportSav()` ouvre fenêtre HTML stylée Aveho + window.print() auto. Header avec logo+numero+date, **verdict couleur** (🟢 CONFORME / 🔴 NON CONFORME / ⚠ INCOMPLET), méta-grid (référence DI + article concerné), bloc panne signalée si applicable, 4 stat cards (OK/KO/Mesures/N/A), tableau détaillé des points (résultat coloré + hors plage en rouge), 2 zones signature (technicien magasin + validation EC). Ctrl+P → enregistrer en PDF" },
+      { "code": "AI", "txt": "🔄 **Page `/transferts/nouvelle`** : EC demande un transfert via un magasin habilité. Workflow en 4 panels : (1) Trajet (dépôt source → dépôt destination, avec validation source ≠ destination), (2) Magasin de transit (cards cliquables, magasins avec droit_transfert mis en priorité, ou tous si aucun droit configuré), (3) Articles à transférer (lignes éditables libellé/qté/unité, add/remove), (4) Priorité + commentaire. Submit → INSERT demandes_internes avec type='transfert' + lignes" },
+      { "code": "AI", "txt": "🔐 **Page `/magasin/droits`** : admin des droits EC ↔ Magasins. Tableau par magasin avec ligne par établissement et 3 colonnes : **📦 Commande**, **🛠 SAV**, **🔄 Transfert** (toggles colorés). Bouton 'Tout activer' qui applique commande+SAV à tous les étabs en un click. Si user magasin → vue cantonnée à son magasin avec sidebar ERP" },
+      { "code": "AI", "txt": "🔒 **Filtrage bilans-sav** par magasin du user : reload filtré par `magasin_id = magasinCtx.magasinId` si user magasin. Nouveaux bilans tagués automatiquement avec le magasin_id du créateur. Le user magasin ne voit que SES bilans" },
+      { "code": "AI", "txt": "📍 **Liens menu** : 'Demande transfert' ajouté dans menu Livraison (icône ti-transfer, violet). 'Exécuter le bilan SAV' apparait sur DI validée de type SAV (au lieu de Générer BL)" },
+      { "code": "INFO", "txt": "🎯 **Cycle SAV complet** : (1) EC crée demande SAV avec bilan · (2) Magasin reçoit + valide · (3) Magasin exécute bilan → saisit chaque point · (4) Génère rapport PDF · (5) Statut DI=validee + notif EC · (6) EC voit le rapport · (7) Si tout OK, peut Confirmer réception → cloturee" },
+      { "code": "INFO", "txt": "🔜 **Reste pour 0.60.5+** : Validation du rapport SAV côté EC (signature) · Workflow transfert : magasin réceptionne/expédie (statuts intermédiaires) · Upload photos réel (storage Supabase) · Dashboard analytics SAV (% conformité, durée moyenne, etc.)" }
+    ],
+    "themes": ["feat", "sav", "transfert", "droits", "rapport"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.60.3",
     "kind": "fix",
     "titre": "🩹 HOTFIX 2 critiques : imports magasins/nouveau + SQL DROP VIEW avant CREATE",

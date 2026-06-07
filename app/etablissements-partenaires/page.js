@@ -100,6 +100,8 @@ export default function EtablissementsPartenaires() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("new") === "1") {
       openCreate(params.get("fournisseur") === "1");
+      // 0.60.5 : nettoyer l'URL pour éviter re-déclenchement
+      window.history.replaceState({}, "", "/etablissements-partenaires");
     }
   }, [auth.ready]);
 

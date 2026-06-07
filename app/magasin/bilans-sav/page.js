@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+import { useMagasinContext } from "../../../lib/useMagasinContext";
 import { MagasinSidebar } from "../../components/MagasinSidebar";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
@@ -24,6 +25,7 @@ export default function BilansSavPage() {
   const router = useRouter();
   const supabase = createClient();
   const auth = useAuth();
+  const magasinCtx = useMagasinContext();
   const cart = useCart();
 
   const [bilans, setBilans] = useState([]);
@@ -37,12 +39,17 @@ export default function BilansSavPage() {
   useEffect(() => {
     if (!auth.ready || !auth.structureId) return;
     reload();
-  }, [auth.ready, auth.structureId]);
+  }, [auth.ready, auth.structureId, magasinCtx.loading, magasinCtx.magasinId]);
 
   async function reload() {
     setLoading(true);
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
-    const data = await tryFetch(supabase.from("bilans_sav").select("*").eq("structure_id", auth.structureId).order("nom"));
+    // 0.60.4 : Filtrage par magasin du user
+    let q = supabase.from("bilans_sav").select("*").eq("structure_id", auth.structureId).order("nom");
+    if (magasinCtx.isUserMagasin && magasinCtx.magasinId) {
+      q = q.eq("magasin_id", magasinCtx.magasinId);
+    }
+    const data = await tryFetch(q);
     setBilans(data);
     setLoading(false);
   }
@@ -88,6 +95,8 @@ export default function BilansSavPage() {
       } else {
         const r = await supabase.from("bilans_sav").insert({
           structure_id: auth.structureId,
+          // 0.60.4 : rattache au magasin du user
+          magasin_id: magasinCtx.magasinId || null,
           nom: editing.nom, code: editing.code, description: editing.description,
           duree_estimee_min: editing.duree_estimee_min, icone: editing.icone, couleur: editing.couleur,
           actif: editing.actif !== false,

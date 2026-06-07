@@ -244,7 +244,8 @@ export default function DemandeInterneDetailPage() {
         </div>
 
         {/* 0.59.8 : Actions EC — Confirmer réception si DI livrée */}
-        {viewMode.isEC && di.statut === "livree" && (
+        {/* 0.60.5 : guard viewMode.ready pour éviter hydration mismatch */}
+        {viewMode.ready && viewMode.isEC && di.statut === "livree" && (
           <Panel style={{ background: "rgba(24,95,165,.06)", borderLeft: "4px solid #185FA5" }}>
             <h3 style={{ margin: "0 0 10px", color: "#185FA5", display: "flex", alignItems: "center", gap: 8 }}>
               <i className="ti ti-package" /> Actions Espace Collectivité
@@ -267,7 +268,7 @@ export default function DemandeInterneDetailPage() {
         )}
 
         {/* Actions magasin */}
-        {viewMode.isMagasin && (
+        {viewMode.ready && viewMode.isMagasin && (
           <Panel style={{ background: "rgba(94,143,143,.06)", borderLeft: "4px solid #5a8f8f" }}>
             <h3 style={{ margin: "0 0 10px", color: "#5a8f8f", display: "flex", alignItems: "center", gap: 8 }}>
               <i className="ti ti-tool" /> Actions magasin
@@ -283,12 +284,25 @@ export default function DemandeInterneDetailPage() {
               </div>
             ) : di.statut === "validee" ? (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Btn variant="primary" icon="ti-truck-delivery" onClick={genererBL} disabled={actionInProgress}>
-                  {actionInProgress ? "..." : "Générer le BL"}
-                </Btn>
-                <span style={{ padding: "8px 12px", color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
-                  ✓ DI validée — prête à livrer
-                </span>
+                {di.type_demande === "sav" ? (
+                  <>
+                    <Btn variant="primary" icon="ti-clipboard-check" onClick={() => router.push(`/demandes-internes/${id}/executer-bilan`)} disabled={actionInProgress}>
+                      Exécuter le bilan SAV
+                    </Btn>
+                    <span style={{ padding: "8px 12px", color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
+                      ✓ DI validée — bilan à exécuter
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Btn variant="primary" icon="ti-truck-delivery" onClick={genererBL} disabled={actionInProgress}>
+                      {actionInProgress ? "..." : "Générer le BL"}
+                    </Btn>
+                    <span style={{ padding: "8px 12px", color: "#5aa05a", fontSize: 12, fontWeight: 600 }}>
+                      ✓ DI validée — prête à livrer
+                    </span>
+                  </>
+                )}
               </div>
             ) : di.statut === "livree" ? (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>

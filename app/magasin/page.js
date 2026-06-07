@@ -33,6 +33,16 @@ export default function MagasinPage() {
   const cart = useCart();
 
   const [activeTab, setActiveTab] = useState("dashboard");
+
+  // 0.60.5 : lire ?tab= dans l'URL pour pré-sélectionner l'onglet (depuis sidebar)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab && ["dashboard", "catalogue", "di", "sav", "bilans", "transferts", "fournisseurs"].includes(tab)) {
+      setActiveTab(tab === "transferts" ? "di" : tab); // tab transferts redirige sur DI pour l'instant
+    }
+  }, []);
   const [articles, setArticles] = useState([]);
   const [demandes, setDemandes] = useState([]);
   const [partenaires, setPartenaires] = useState([]);
