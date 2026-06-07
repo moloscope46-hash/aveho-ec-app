@@ -240,6 +240,19 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.3",
+    "kind": "feat",
+    "titre": "🎯 Filtres toolbar EC cachés en mode magasin + Analytics tournées : filtres chauffeur/véhicule + Export CSV",
+    "chantiers": [
+      { "code": "AI", "txt": "🐛 **Fix TopBar mode magasin** : le sélecteur d'établissement et le `BatimentServiceSwitcher` (filtres bât/svc) ne s'affichent plus en mode magasin. Ces filtres EC n'ont aucun sens pour un user magasin. Condition simple : `{!isMagasin && ...}`. Si user magasin pas rattaché à un magasin, ces filtres ne s'affichent plus du tout" },
+      { "code": "AI", "txt": "🔍 **Analytics tournées — filtres chauffeur/véhicule** : 2 nouveaux selects 'Tous chauffeurs' / 'Tous véhicules' qui filtrent les requêtes Supabase. Chargement automatique des listes au reload. Bouton '✕ Réinitialiser' visible si filtre actif. Toutes les stats (KPI, par chauffeur, par jour) se recalculent dynamiquement" },
+      { "code": "AI", "txt": "📊 **Export CSV tournées filtrées** : bouton '📊 Export CSV' dans la barre de filtres. Génère un fichier `analytics-tournees-{periode}-{date}.csv` avec BOM UTF-8 (compatible Excel français) + séparateur point-virgule. Colonnes : Numéro, Nom, Date, Statut, Véhicule (immat + marque/modèle), Chauffeur (prénom + nom), Distance estimée/réelle (km), Durée estimée/réelle (min), Étapes prévues/complétées" }
+    ],
+    "themes": ["fix", "toolbar", "analytics", "filtres", "export"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.2",
     "kind": "fix",
     "titre": "🔧 Fix ciblés (analyse existant, pas de doublons) : éditer article ouvre le modal, /materiels lit ?article_id=X, erreurs CRUD magasin visibles",

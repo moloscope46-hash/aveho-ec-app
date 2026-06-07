@@ -23,22 +23,32 @@ export default function AnalyticsTourneesPage() {
   const [parChauffeur, setParChauffeur] = useState([]);
   const [parJour, setParJour] = useState([]);
   const [periode, setPeriode] = useState("30j");
+  // 0.62.3 : Filtres + listes de référence
+  const [filterChauffeur, setFilterChauffeur] = useState("");
+  const [filterVehicule, setFilterVehicule] = useState("");
+  const [chauffeursListe, setChauffeursListe] = useState([]);
+  const [vehiculesListe, setVehiculesListe] = useState([]);
+  const [tourneesRaw, setTourneesRaw] = useState([]);  // pour export CSV
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!auth.ready || magasinCtx.loading) return;
     reload();
-  }, [auth.ready, magasinCtx.loading, magasinCtx.magasinId, periode]);
+  }, [auth.ready, magasinCtx.loading, magasinCtx.magasinId, periode, filterChauffeur, filterVehicule]);
 
   async function reload() {
     setLoading(true);
     const days = periode === "7j" ? 7 : periode === "30j" ? 30 : periode === "90j" ? 90 : 365;
     const dateMin = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
     try {
-      let q = supabase.from("tournees").select("*, vehicules_magasin(immatriculation)").gte("date_tournee", dateMin);
+      let q = supabase.from("tournees").select("*, vehicules_magasin(immatriculation, marque, modele)").gte("date_tournee", dateMin);
       if (magasinCtx.isUserMagasin && magasinCtx.magasinId) q = q.eq("magasin_id", magasinCtx.magasinId);
+      // 0.62.3 : Filtres
+      if (filterChauffeur) q = q.eq("chauffeur_user_id", filterChauffeur);
+      if (filterVehicule) q = q.eq("vehicule_id", filterVehicule);
       const r = await q;
       const trns = r.data || [];
+      setTourneesRaw(trns);
 
       const newStats = {
         total: trns.length,
@@ -86,8 +96,45 @@ export default function AnalyticsTourneesPage() {
         jourMap[j].distance += parseFloat(t.distance_reelle_km || t.distance_estimee_km || 0);
       });
       setParJour(Object.values(jourMap).sort((a, b) => a.date.localeCompare(b.date)).slice(-30));
+
+      // 0.62.3 : Charger listes pour les select de filtre (uniquement la première fois)
+      if (chauffeursListe.length === 0 && chauffeurIds.length > 0) {
+        setChauffeursListe(chauffeursData);
+      }
+      if (vehiculesListe.length === 0) {
+        let qv = supabase.from("vehicules_magasin").select("id, immatriculation, marque, modele").eq("actif", true).order("immatriculation");
+        if (magasinCtx.isUserMagasin && magasinCtx.magasinId) qv = qv.eq("magasin_id", magasinCtx.magasinId);
+        const rv = await qv;
+        setVehiculesListe(rv.data || []);
+      }
     } catch (e) { console.error("[analytics]", e); }
     finally { setLoading(false); }
+  }
+
+  // 0.62.3 : Export CSV des tournées filtrées
+  function exporterCSV() {
+    if (!tourneesRaw.length) { alert("Rien à exporter"); return; }
+    const headers = ["Numéro", "Nom", "Date", "Statut", "Véhicule", "Chauffeur", "Distance estimée (km)", "Distance réelle (km)", "Durée estimée (min)", "Durée réelle (min)", "Étapes prévues", "Étapes complétées"];
+    const rows = tourneesRaw.map(t => {
+      const chau = chauffeursListe.find(c => c.user_id === t.chauffeur_user_id);
+      const veh = t.vehicules_magasin;
+      return [
+        t.numero || "", t.nom || "", t.date_tournee || "", t.statut || "",
+        veh ? `${veh.immatriculation || ""} ${veh.marque || ""} ${veh.modele || ""}`.trim() : "",
+        chau ? `${chau.prenom || ""} ${chau.nom || ""}`.trim() : "",
+        t.distance_estimee_km || 0, t.distance_reelle_km || 0,
+        t.duree_estimee_min || 0, t.duree_reelle_min || 0,
+        t.nb_etapes || 0, t.nb_completees || 0,
+      ];
+    });
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `analytics-tournees-${periode}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -109,6 +156,28 @@ export default function AnalyticsTourneesPage() {
               ))}
             </div>
           </div>
+
+          {/* 0.62.3 : Filtres chauffeur + véhicule + export CSV */}
+          <Panel style={{ marginTop: 10, padding: "10px 14px" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, color: "#5a6878", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Filtres :</span>
+              <select value={filterChauffeur} onChange={(e) => setFilterChauffeur(e.target.value)} style={{ padding: "6px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 12 }}>
+                <option value="">Tous chauffeurs</option>
+                {chauffeursListe.map(c => <option key={c.user_id} value={c.user_id}>{c.prenom} {c.nom}</option>)}
+              </select>
+              <select value={filterVehicule} onChange={(e) => setFilterVehicule(e.target.value)} style={{ padding: "6px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 12 }}>
+                <option value="">Tous véhicules</option>
+                {vehiculesListe.map(v => <option key={v.id} value={v.id}>{v.immatriculation} {v.marque} {v.modele}</option>)}
+              </select>
+              {(filterChauffeur || filterVehicule) && (
+                <button onClick={() => { setFilterChauffeur(""); setFilterVehicule(""); }} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #cfd8e0", borderRadius: 6, color: "#e35d5b", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>
+                  ✕ Réinitialiser
+                </button>
+              )}
+              <span style={{ flex: 1 }} />
+              <Btn variant="ghost" icon="ti-file-export" onClick={exporterCSV}>📊 Export CSV</Btn>
+            </div>
+          </Panel>
 
           {/* KPI Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,220px))", gap: 12, marginTop: 16, justifyContent: "start" }}>
