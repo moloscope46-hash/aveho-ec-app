@@ -240,6 +240,47 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.3",
+    "kind": "feat",
+    "titre": "🚛 MEGA pack logistique magasin : Flotte véhicules + 🗺 Tournées avec carte + 🎨 UX dark mode/haptic/bottom sheet",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.61.3-flotte-tournees.sql`** : (1) Table `vehicules_magasin` (immatriculation, marque, modèle, type, capacités kg/m³, carburant, kilométrage, échéances entretien/CT/assurance, chauffeur principal, statut, photo). (2) Table `tournees` (numéro, nom, date, heures, véhicule, chauffeur, statut, points départ/retour avec lat/lng, distance, durée, compteurs étapes). (3) Table `tournees_etapes` (ordre, type livraison/collecte/sav/transfert, lien DI, étab/dépôt/patient, lat/lng, statut workflow, arrivée/départ, signature, photo preuve). (4) ALTER `etablissements` et `depots` ADD `latitude/longitude` pour carte. (5) Vue `v_di_a_livrer` (DI validées non livrées avec jointures étab + dépôt)" },
+      { "code": "AI", "txt": "🚛 **Nouvelle page `/magasin/flotte`** : CRUD complet flotte. Cards par véhicule (icône type, immatriculation Consolas, marque/modèle, chauffeur, capacité kg/m³, kilométrage, carburant). 5 types (utilitaire/camion/voiture/scooter/vélo). 4 statuts (disponible/en_tournée/maintenance/hors_service). **Alertes bandeau amber** pour CT/entretien/assurance dans les 30 jours. 4 stat tiles (total/disponibles/en tournée/maintenance). Modal édition 4 sections (général/capacités/échéances/assurance+chauffeur)" },
+      { "code": "AI", "txt": "🗺 **Nouvelle page `/magasin/tournees`** : liste tournées avec progression % + filtres date+statut. 4 stat tiles (aujourd'hui/planifiées/en cours/terminées 7j). Cards avec barre progression colorée par statut" },
+      { "code": "AI", "txt": "➕ **Page `/magasin/tournees/nouvelle`** : workflow 3 étapes en 3 panels — (1) Infos (nom, date, heures), (2) Véhicule cards cliquables + chauffeur select, (3) Sélection DI à livrer via cards cochables depuis `v_di_a_livrer` (DI validées non livrées avec type + numéro + étab/dépôt + nb lignes + priorité). Bouton 'Tout cocher'. Submit → INSERT tournée + INSERT toutes les étapes ordonnées" },
+      { "code": "AI", "txt": "🗺 **Page `/magasin/tournees/[id]` avec carte Leaflet** : (1) **Header** avec progression % grosse, statut, dates, boutons workflow tournée (Démarrer/Terminer/Annuler). (2) Card véhicule + chauffeur. (3) **Carte Leaflet 400px** : lazy load Leaflet 1.9.4 via CDN, tuiles CartoDB light_all, markers numérotés colorés selon statut étape, polyline pointillée teal entre étapes, popups avec adresse/statut, auto-fit bounds. (4) **Liste étapes ordonnées** : cards avec numéro, label, adresse, badge type, lien DI source, boutons workflow individuels (Démarrer/Terminer chaque étape)" },
+      { "code": "AI", "txt": "🌙 **Mode sombre global** : helper `toggleDarkMode()` dans `lib/uxUtils.js`, attribut `data-theme=\"dark\"` sur html, persisté localStorage. CSS avec règles `[data-theme=\"dark\"]` pour body/wrap/page-content/inputs/labels. Init au boot via `initDarkMode()`" },
+      { "code": "AI", "txt": "📳 **Haptic feedback** : helper `haptic(pattern)` + presets `HAPTIC.light/medium/heavy/success/error/scan` via navigator.vibrate. À utiliser sur scan, validation, erreur, etc." },
+      { "code": "AI", "txt": "⬇ **Pull-to-refresh hook** `usePullToRefresh(onRefresh, threshold=80)` : détecte gesture touch quand scrollY=0, anime déplacement, déclenche refresh + haptic au seuil" },
+      { "code": "AI", "txt": "📱 **Composant `<BottomSheet>`** : modal touch-friendly qui slide depuis le bas. Animations slideUp/Down 300ms. Swipe-to-dismiss (touch drag > 80px = close). Backdrop avec fade. Body overflow hidden. Safe-area-inset-bottom. Title + children + footer slots" },
+      { "code": "AI", "txt": "📍 **Sidebar magasin étendue** : nouvelle section 'Flotte & livraisons' avec liens 'Flotte véhicules' (bleu) et 'Tournées' (violet)" },
+      { "code": "AI", "txt": "📝 **Note HTML 0.61.3** créée (rattrapage des notes manquantes pour cette version)" },
+      { "code": "INFO", "txt": "🎯 **Workflow logistique complet** : (1) Crée flotte de véhicules · (2) Crée users magasin (chauffeurs) · (3) EC émet DI · (4) Magasin valide · (5) Crée tournée + coche les DI · (6) Suit la carte étape par étape · (7) Démarre/termine chaque étape · (8) Statistiques temps réel" },
+      { "code": "INFO", "txt": "🚧 **0.61.4+** : (1) Routing GPS auto (Google Maps API ou OSRM). (2) Tracking temps réel chauffeur (geolocation API). (3) Signature client à chaque étape (canvas dessiné). (4) BarcodeDetector API native pour scan. (5) Export feuille de route PDF imprimable. (6) Notif push aux EC à chaque livraison" }
+    ],
+    "themes": ["feat", "logistique", "flotte", "tournees", "carte", "ux", "darkmode"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-VERSION-Alpha-0.61.3.html"
+  },
+  {
+    "v": "0.61.2",
+    "kind": "feat",
+    "titre": "📱 Pack UX mobile : Bottom nav magasin + PWA install prompt + Skeletons + Sidebar collapsible + Touch-friendly",
+    "chantiers": [
+      { "code": "INFO", "txt": "⚠ **Edge Functions 0.61.1 introuvables côté local** : `Entrypoint path does not exist`. Cause : tu n'as **pas extrait le zip 0.61.1** dans ton projet local C:\\aveho-ec-app. Les fichiers `supabase/functions/send-notifications-queue/index.ts` et `supabase/functions/rbeu-renouvellement-cron/index.ts` existent bien dans le zip. **Solution** : extrais le zip 0.61.2 (qui inclut tout), vérifie que `supabase/functions/send-notifications-queue/index.ts` existe sur ta machine, puis relance `supabase functions deploy`" },
+      { "code": "AI", "txt": "📱 **`<MagasinBottomNav>`** : navigation mobile en bas d'écran (5 onglets : Accueil, Vue d'ensemble, Scan, Inventaires, Profil) avec icônes Tabler colorées, indicateur d'onglet actif (barre teal en haut). Affichée uniquement quand `viewMode.isMagasin=true` ET écran < 768px. backdrop-blur + safe-area-inset-bottom pour iPhone. Ergonomique pour terrain (technicien magasin sur mobile)" },
+      { "code": "AI", "txt": "📲 **`<PwaInstallPrompt>`** : bannière 'Installer Aveho sur ton appareil'. Détecte `beforeinstallprompt` (Chrome/Edge/Android) et propose bouton 'Installer' qui déclenche prompt natif. Détecte iOS Safari (pas de beforeinstallprompt) et affiche les instructions manuelles 'Partager → Sur l'écran d'accueil'. Affichée après 3-5s. Dismissible avec localStorage (re-propose dans 7 jours). Animation slideUp douce" },
+      { "code": "AI", "txt": "💀 **Composants `<Skeleton>` + `<SkeletonCard>` + `<SkeletonTable>` + `<SkeletonStat>`** : loaders animés (gradient pulse 1.5s) qui remplacent les 'Chargement...' bruts. UX bien plus pro pendant les fetches. À utiliser dans les pages avec heavy loading" },
+      { "code": "AI", "txt": "🎨 **CSS UX mobile** dans globals.css : (1) **MagasinSidebar masquée < 768px** (la bottom nav la remplace). (2) **Padding bottom auto** pour les pages magasin (70px) pour ne pas masquer le contenu. (3) **Touch-friendly buttons** : min-height 36px sur mobile. (4) **Active feedback tap** : scale(0.97) sur :active pour devices touch (hover: none). (5) **Animations transition** : `.av-fadein` (300ms ease) et `.av-slidein` (250ms ease)" },
+      { "code": "AI", "txt": "🔌 **Intégration globale** : MagasinBottomNav et PwaInstallPrompt ajoutés à `LazyLayoutChrome.js` (lazy ssr: false), visibles sur toutes les pages de l'app sans modification" },
+      { "code": "INFO", "txt": "🎯 **Mobile UX professionnel maintenant** : technicien magasin terrain a une UI **app native-like** avec bottom nav + scan rapide + bottom-sheet feel. Installation PWA proposée naturellement → app sur écran d'accueil + hors-ligne (déjà géré par SW) + push (si activé dans /parametres/notifications)" },
+      { "code": "INFO", "txt": "🚧 **Prochaines pistes UX/mobilité** : (1) Pull-to-refresh sur listes. (2) Swipe actions (← supprimer / → archiver) sur cards. (3) Bottom sheet modals pour actions rapides. (4) Mode sombre toggle global. (5) Haptic feedback (Vibration API) sur scan code-barres. (6) Camera scan in-app (BarcodeDetector API au lieu de redirect /scan)" }
+    ],
+    "themes": ["feat", "ux", "mobile", "pwa", "responsive"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.61.1",
     "kind": "feat",
     "titre": "🔥 Fix build Suspense + 📋 Workflow inventaire ultra-pro + ✍ Signature canvas dessinée + 📨 Edge Functions notifications/RBEU",

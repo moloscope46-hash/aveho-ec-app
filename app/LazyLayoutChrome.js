@@ -34,6 +34,9 @@ const FocusMode = dynamic(() => import("./FocusMode"), { ssr: false });
 const GeolocPrompt = dynamic(() => import("./GeolocPrompt"), { ssr: false });
 const BiometricOptInModal = dynamic(() => import("./BiometricOptInModal"), { ssr: false });
 const FloatingActionBar = dynamic(() => import("./FloatingActionBar"), { ssr: false });
+// 0.61.2 : Mobile UX magasin
+const MagasinBottomNav = dynamic(() => import("./components/MagasinBottomNav").then(m => m.MagasinBottomNav), { ssr: false });
+const PwaInstallPrompt = dynamic(() => import("./components/PwaInstallPrompt").then(m => m.PwaInstallPrompt), { ssr: false });
 
 export default function LazyLayoutChrome() {
   return (
@@ -53,6 +56,9 @@ export default function LazyLayoutChrome() {
       <BiometricOptInModal />
       {/* Alpha 0.56.16 : barre d'actions flottante en bas (mobile + desktop) */}
       <FloatingActionBar />
+      {/* 0.61.2 : bottom nav magasin (mobile only) + prompt PWA install */}
+      <MagasinBottomNav />
+      <PwaInstallPrompt />
     </>
   );
 }

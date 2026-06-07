@@ -387,6 +387,52 @@ button{font-family:inherit;cursor:pointer}
    Quand utilisé dans un layout flex (mode magasin avec sidebar), le inline style flex:1 prend la priorité
    et le max-width: 1180px contraint la zone centrale.  */
 .page-content{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px));width:100%}
+
+/* 0.61.3 : Dark mode global (toggle via lib/uxUtils.js) */
+[data-theme="dark"] {
+  background: #0a141f !important;
+}
+[data-theme="dark"] body { background: #0a141f; color: #e8edf2; }
+[data-theme="dark"] .wrap, [data-theme="dark"] .page-content {
+  background: linear-gradient(180deg, rgba(20,33,49,0.6), rgba(10,20,30,0.4));
+}
+[data-theme="dark"] input, [data-theme="dark"] textarea, [data-theme="dark"] select {
+  background: rgba(20,33,49,0.6); color: #e8edf2; border-color: rgba(124,200,200,0.20) !important;
+}
+[data-theme="dark"] .fld label { color: #bfe6e6; }
+
+/* 0.61.3 : UI/UX mobile — bottom nav magasin + sidebar collapsible */
+@media (max-width: 768px) {
+  .magasin-bottom-nav { display: block !important; }
+  /* Quand la bottom nav est visible, on rajoute padding bas pour ne pas masquer le contenu */
+  .page-content { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important; }
+  /* Sidebar magasin cachée sur mobile (la bottom nav la remplace) */
+  .magasin-sidebar-erp { display: none !important; }
+}
+/* Sidebar magasin visible uniquement desktop */
+.magasin-sidebar-erp {
+  display: block;
+}
+
+/* 0.61.2 : Animations transitions douces */
+.av-fadein { animation: avFadeIn 300ms ease-out; }
+@keyframes avFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.av-slidein { animation: avSlideIn 250ms ease-out; }
+@keyframes avSlideIn { from { transform: translateX(-12px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* 0.61.2 : Touch-friendly buttons (minimum 44x44 sur mobile) */
+@media (max-width: 768px) {
+  button { min-height: 36px; }
+  /* Tappable area étendu pour cards cliquables */
+  .av-tappable { padding: 14px !important; }
+}
+
+/* 0.61.2 : Active feedback sur tap (mobile) */
+@media (hover: none) {
+  button:active, .av-tappable:active {
+    transform: scale(0.97); transition: transform 100ms;
+  }
+}
 /* 0.58.49 : cadre global pour les pages de l'app (sous .bg-dark) — délimitation visuelle subtile */
 /* 0.58.50 : cadre renforcé avec gradient border + ombre plus marquée pour démarcation claire */
 .bg-dark .wrap{

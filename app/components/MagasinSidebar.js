@@ -16,6 +16,11 @@ const MAG_NAV = [
     { p: "/magasin/depots", ic: "ti-building-warehouse", lbl: "Dépôts clients", col: "#5a8f8f" },
     { p: "/magasin/inventaires", ic: "ti-clipboard-list", lbl: "Inventaires", col: "#EF9F27" },
   ]},
+  // 0.61.3 : Flotte & livraisons
+  { section: "Flotte & livraisons", items: [
+    { p: "/magasin/flotte", ic: "ti-truck-delivery", lbl: "Flotte véhicules", col: "#185FA5" },
+    { p: "/magasin/tournees", ic: "ti-route", lbl: "Tournées", col: "#7a6fb0" },
+  ]},
   { section: "Catalogue & Articles", items: [
     { p: "/articles", ic: "ti-package", lbl: "Articles", col: "#185FA5" },
     { p: "/articles?new=1&magasin=1", ic: "ti-package-plus", lbl: "Nouvel article", col: "#5aa05a" },
@@ -49,7 +54,7 @@ export function MagasinSidebar() {
   if (!viewMode.isMagasin) return null;
 
   return (
-    <aside style={{
+    <aside className="magasin-sidebar-erp" style={{
       width: 240, minHeight: "calc(100vh - 60px)",
       background: "linear-gradient(180deg, #142131, #0a141f)",
       borderRight: "1px solid rgba(94,143,143,.20)",

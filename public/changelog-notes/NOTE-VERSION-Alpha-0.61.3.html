@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Aveho EC — 0.61.3 — Flotte + Tournées + UX</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;font-family:Quicksand,sans-serif;color:#e8edf2;line-height:1.55;background:radial-gradient(1500px 900px at 50% -10%, #1c4040 0%, #142131 50%, #050a14 100%);min-height:100vh}
+.page{max-width:1100px;margin:0 auto;padding:40px 24px 80px}
+header.cover{border-radius:28px;padding:46px 38px;margin-bottom:38px;background:linear-gradient(135deg,rgba(20,33,49,.85),rgba(122,111,176,.30));border:1px solid rgba(122,111,176,.40);box-shadow:0 28px 70px rgba(0,0,0,.50)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:3px;color:#c4c0e8;font-weight:700;background:rgba(122,111,176,.18);border:1px solid rgba(122,111,176,.4);padding:7px 16px;border-radius:99px;margin-bottom:20px}
+.logo-big{font-size:34px;font-weight:600;letter-spacing:3px;color:#fff;margin-bottom:6px}
+.logo-big .v{color:#7CC8C8;text-shadow:0 0 16px rgba(124,200,200,.7)}
+h1{font-size:24px;font-weight:700;margin:14px 0 10px;color:#fff}
+h1 small{font-size:13.5px;font-weight:500;color:#d4d0e8;display:block;margin-top:8px}
+.meta{display:flex;flex-wrap:wrap;gap:16px;margin-top:20px;font-size:12.5px;color:#d4d0e8}
+.meta b{color:#fff}.meta code{background:rgba(122,111,176,.16);color:#fff;border:1px solid rgba(122,111,176,.30);padding:3px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:11.5px}
+h2{font-size:22px;color:#fff;margin:36px 0 14px;display:flex;align-items:center;gap:12px}
+h2::before{content:"";width:4px;height:24px;border-radius:2px;background:linear-gradient(180deg,#7a6fb0,#5a8f8f)}
+.panel{background:rgba(20,33,49,.62);border:1px solid rgba(122,111,176,.20);border-left:4px solid #7a6fb0;border-radius:14px;padding:20px 24px;margin:14px 0}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0}
+.feat{background:rgba(20,33,49,.5);border-radius:12px;padding:16px;border:1px solid rgba(122,111,176,.16)}
+.feat .ic{font-size:32px;margin-bottom:8px;display:block}
+.feat h3{margin:6px 0 4px;font-size:14px;color:#fff}
+.feat p{margin:0;font-size:12px;color:#d4d0e8}
+pre{background:#050a14;color:#bfe6e6;padding:14px;border-radius:8px;overflow-x:auto;font-size:11.5px;line-height:1.6;border-left:3px solid #7a6fb0}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+table th,table td{padding:8px 12px;text-align:left;border-bottom:1px solid rgba(122,111,176,.18);font-size:13px}
+table th{color:#c4c0e8;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid rgba(122,111,176,.18);font-size:11.5px;color:#d4d0e8;text-align:center}
+</style></head><body>
+<div class="page">
+
+<header class="cover">
+  <div class="eyebrow">🚛 0.61.3 · FLOTTE + TOURNÉES + UX</div>
+  <div class="logo-big">a<span class="v">v</span>eho</div>
+  <h1>🚛 Module Flotte véhicules + 🗺 Tournées de livraison avec carte + 🎨 UX dark mode/haptic/bottom sheet<small>Mega pack 0.61.3 — Gestion complète logistique magasin + améliorations UX mobile</small></h1>
+  <div class="meta">
+    <span><b>Date :</b> 6 juin 2026</span>
+    <span><b>Version :</b> <code>v0.61.3-alpha</code></span>
+    <span><b>SQL :</b> <code>migration-0.61.3-flotte-tournees.sql</code></span>
+    <span><b>Type :</b> MEGA pack feature</span>
+  </div>
+</header>
+
+<h2>🚛 1. Module Flotte véhicules</h2>
+
+<div class="panel">
+<p style="margin:0;color:#fff">Page <code>/magasin/flotte</code> — CRUD complet des véhicules :</p>
+<ul style="margin:8px 0 0;color:#d4d0e8;font-size:13;line-height:1.8">
+<li><b>Cards par véhicule</b> : icône type (utilitaire/camion/voiture/scooter/vélo), immatriculation, marque/modèle, chauffeur, capacité kg/m³, kilométrage, carburant</li>
+<li><b>Statuts</b> : disponible, en tournée, maintenance, hors service</li>
+<li><b>Échéances</b> : prochain entretien, CT, assurance avec <b>alertes 30 jours</b> en bandeau</li>
+<li><b>4 stat tiles</b> : Total / Disponibles / En tournée / Maintenance</li>
+<li><b>Modal édition</b> ultra-complet : marque, modèle, type, carburant, capacités, échéances, assurance, chauffeur, notes</li>
+</ul>
+</div>
+
+<h2>🗺 2. Module Tournées de livraison</h2>
+
+<div class="grid-3">
+  <div class="feat">
+    <span class="ic">📋</span>
+    <h3>Liste tournées</h3>
+    <p>Cards avec progression % + statut + véhicule/chauffeur. Filtres date + statut. 4 stat tiles.</p>
+  </div>
+  <div class="feat">
+    <span class="ic">➕</span>
+    <h3>Création tournée</h3>
+    <p>Workflow 3 étapes : infos + véhicule/chauffeur + sélection DI à livrer (DI validées de v_di_a_livrer).</p>
+  </div>
+  <div class="feat">
+    <span class="ic">🗺</span>
+    <h3>Carte Leaflet</h3>
+    <p>Markers numérotés ordonnés + polyline entre étapes + popups. CartoDB tiles. Auto-fit bounds.</p>
+  </div>
+</div>
+
+<div class="panel">
+<p style="margin:0 0 8px;color:#fff"><b>Détail tournée</b> <code>/magasin/tournees/[id]</code> :</p>
+<ul style="margin:0;color:#d4d0e8;font-size:13;line-height:1.8">
+<li>Header avec progression %, statut, dates</li>
+<li>Carte Leaflet 400px avec tous les points (étabs + dépôts)</li>
+<li>Boutons workflow : Démarrer / Terminer / Annuler la tournée</li>
+<li>Étapes ordonnées avec boutons "Démarrer" / "Terminer" individuels</li>
+<li>Lien direct vers la DI source de chaque étape</li>
+</ul>
+</div>
+
+<h2>🎨 3. Améliorations UX</h2>
+
+<table>
+<tr><th>Feature</th><th>Description</th></tr>
+<tr><td><b>🌙 Dark mode</b></td><td>Toggle global via lib/uxUtils.js (toggleDarkMode), persist localStorage, CSS data-theme="dark"</td></tr>
+<tr><td><b>📳 Haptic feedback</b></td><td>Helper haptic(pattern) avec presets HAPTIC.light/medium/heavy/success/error/scan via Vibration API</td></tr>
+<tr><td><b>⬇ Pull-to-refresh</b></td><td>Hook usePullToRefresh(onRefresh) avec gesture touch + haptic feedback au seuil</td></tr>
+<tr><td><b>📱 Bottom Sheet</b></td><td>Composant &lt;BottomSheet&gt; touch-friendly avec swipe-to-dismiss, animations slideUp/Down, backdrop</td></tr>
+</table>
+
+<h2>🗄 SQL migration-0.61.3</h2>
+
+<pre>-- 3 nouvelles tables
+CREATE TABLE vehicules_magasin (immatriculation, marque, modele, type, capacités, échéances, chauffeur...)
+CREATE TABLE tournees (numero, date, vehicule, chauffeur, statut, points départ/retour, distance, durée...)
+CREATE TABLE tournees_etapes (ordre, type, demande_id, etab_id, depot_id, lat/lng, statut, arrivée/départ...)
+
+-- ALTER pour géoloc carte
+ALTER TABLE etablissements ADD latitude, longitude
+ALTER TABLE depots ADD latitude, longitude
+
+-- Vue DI à livrer (statut=validee non livrées) avec jointures étab + dépôt
+CREATE VIEW v_di_a_livrer AS ...</pre>
+
+<h2>🔄 Workflow logistique complet</h2>
+
+<table>
+<tr><th>#</th><th>Étape</th><th>Acteur</th></tr>
+<tr><td>1</td><td>Crée des véhicules dans <code>/magasin/flotte</code></td><td>Magasin admin</td></tr>
+<tr><td>2</td><td>Crée user magasin avec rôle "Utilisateur Magasin" pour chauffeur</td><td>EC admin</td></tr>
+<tr><td>3</td><td>EC émet DI/transferts/SAV → magasin valide</td><td>EC + Magasin</td></tr>
+<tr><td>4</td><td>Va sur <code>/magasin/tournees/nouvelle</code> → coche les DI à livrer</td><td>Chauffeur/magasin</td></tr>
+<tr><td>5</td><td>Tournée créée avec étapes ordonnées + carte</td><td>Auto</td></tr>
+<tr><td>6</td><td>Jour J : "Démarrer tournée" → suit la carte étape par étape</td><td>Chauffeur</td></tr>
+<tr><td>7</td><td>À chaque étape : "Démarrer" (arrivée) → "Terminer" (départ)</td><td>Chauffeur</td></tr>
+<tr><td>8</td><td>"Terminer la tournée" → statistiques mises à jour</td><td>Chauffeur</td></tr>
+</table>
+
+<h2>📍 Sidebar magasin étendue</h2>
+
+<div class="panel">
+<p style="margin:0;color:#d4d0e8">Nouvelle section <b>"Flotte & livraisons"</b> avec :</p>
+<ul style="margin:8px 0 0;color:#d4d0e8;font-size:13">
+<li>🚛 Flotte véhicules (ti-truck-delivery bleu)</li>
+<li>🗺 Tournées (ti-route violet)</li>
+</ul>
+</div>
+
+<h2>🚀 Procédure</h2>
+
+<pre># 1. SQL
+# Supabase SQL Editor → migration-0.61.3-flotte-tournees.sql → Run
+
+# 2. Code
+cd C:\aveho-ec-app
+npm install --legacy-peer-deps
+npm run build
+git add -A
+git commit -m "0.61.3 - Flotte véhicules + tournées avec carte Leaflet + UX dark mode/haptic/bottom sheet"
+git push origin main</pre>
+
+<h2>🔜 Pour 0.61.4+</h2>
+
+<div class="panel">
+<ol style="margin:0;padding-left:20;color:#d4d0e8;font-size:13;line-height:1.9">
+<li>Routing GPS : optimisation ordre étapes via Google Maps API ou OSRM</li>
+<li>Tracking temps réel (geolocation API du chauffeur)</li>
+<li>Signature client à chaque étape (canvas)</li>
+<li>BarcodeDetector API native pour scan in-app</li>
+<li>Notifications push aux EC à chaque livraison</li>
+<li>Export tournée PDF (feuille de route imprimable)</li>
+</ol>
+</div>
+
+<footer>Aveho — Espace Collectivité · 0.61.3 · 6 juin 2026 · 🚛 FLOTTE · 🗺 TOURNÉES · 🎨 UX</footer>
+</div></body></html>
