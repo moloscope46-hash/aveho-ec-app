@@ -1,6 +1,6 @@
 "use client";
 // Page Materiels — Matériel médical : série, parc, lot, état, dépôt, zone (CRUD)
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { createClient } from "../../lib/supabase";
 import { selectChambresContexte } from "../../lib/chambres";
 import { useAuth } from "../../lib/useAuth";
@@ -20,6 +20,14 @@ import { safeInsert, safeDelete } from "../../lib/safeWrite";
 import { logger } from "../../lib/logger";
 
 export default function Materiels() {
+  return (
+    <Suspense fallback={null}>
+      <MaterielsInner />
+    </Suspense>
+  );
+}
+
+function MaterielsInner() {
   const supabase = createClient();
   const auth = useAuth();
   const router = useRouter();

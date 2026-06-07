@@ -240,6 +240,44 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.7",
+    "kind": "fix",
+    "titre": "👥 Fix collaborateurs (user courant toujours inclus) + 📋 Activité récente dans dashboard magasin",
+    "chantiers": [
+      { "code": "AI", "txt": "🐛 **Fix liste collaborateurs sans user courant** : si Cédric (ou n'importe quel user) n'apparaît pas dans `v_collaborateurs.eq(structure_id, auth.structureId)`, c'est probablement que sa ligne `membres_structure` a un `structure_id` différent (cas multi-structure ou orphelin). **Fix** : après le fetch principal, si `auth.user.id` n'est pas dans `collabData`, on fait une requête séparée `from('membres_structure').eq('user_id', auth.user.id).maybeSingle()` et on l'ajoute en tête de liste avec un flag `_self_added`. console.info affiche la différence de structure_id pour debug" },
+      { "code": "AI", "txt": "📋 **Activité récente dans dashboard magasin** : nouveau Panel sous les KPI cards de `/magasin?tab=dashboard`. Liste les 5 dernières DI/SAV/transferts/interventions avec : icône colorée selon type, numéro, label type humanisé, **temps relatif** ('il y a 15min', 'il y a 3h', 'il y a 2j'), badge statut. Click sur item → navigation vers la fiche. Bouton 'Voir tout →' pour aller au tab DI complet. Aucune nouvelle requête (réutilise `demandes` déjà chargé)" }
+    ],
+    "themes": ["fix", "collaborateurs", "dashboard", "activite"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.62.6",
+    "kind": "feat",
+    "titre": "🔢 Compteurs sidebar magasin + Recherche/filtre DI + Actions rapides ✓ Valider / ✕ Refuser",
+    "chantiers": [
+      { "code": "AI", "txt": "🔢 **Compteurs badges sidebar magasin** : sur les items DI reçues, SAV reçues, Transferts et Marketplace inter-magasins. Badge coloré (couleur de l'item) avec le nombre d'éléments en attente. Calculé via 2 requêtes Supabase légères (`v_magasin_di` + `marketplace_offres` actives non émises par moi). Rafraîchi à chaque changement de page. D'un coup d'œil tu sais ce qui t'attend" },
+      { "code": "AI", "txt": "🔍 **Recherche + filtre statut dans tab DI magasin** : barre de recherche (numéro, description, commentaire) + select statut (Nouvelles, En attente, Validées, Refusées). Bouton ✕ pour reset. Filtre côté client sur les 50 dernières DI" },
+      { "code": "AI", "txt": "⚡ **Actions rapides ✓ Valider / ✕ Refuser** dans la liste DI magasin : visibles uniquement pour les DI en statut nouvelle/en_attente. Update direct le statut en DB sans ouvrir la fiche détaillée (UPDATE `interventions` ou `demandes_internes` selon source_table). `confirm()` sur Refuser pour éviter les clics accidentels. `e.stopPropagation()` pour éviter la navigation au click" }
+    ],
+    "themes": ["feat", "magasin", "sidebar", "di", "ux"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.62.5",
+    "kind": "fix",
+    "titre": "🚨 Fix BUILD Vercel : useSearchParams /materiels wrapper Suspense + confirme migration cart EC déjà complète",
+    "chantiers": [
+      { "code": "AI", "txt": "🚨 **Fix build Vercel** : Next.js 15 exige que `useSearchParams()` soit dans un Suspense boundary pour le static prerendering. J'ai ajouté `useSearchParams` en 0.62.2 sans wrapper → build crashait sur `/materiels`. **Fix** : `export default function Materiels()` renvoie maintenant `<Suspense fallback={null}><MaterielsInner /></Suspense>`. `MaterielsInner` contient tout l'ancien code. Pattern identique aux autres pages déjà migrées (inventaires, etc.)" },
+      { "code": "INFO", "txt": "✅ **Migration cart EC déjà complète** : analyse `grep -rln 'cart.add' app/` montre qu'une SEULE page EC fait du add to cart : `/promotions` (déjà migrée en 0.62.0 vers `addWithMercuriale`). Les autres usages de `cart` sont juste pour afficher le compteur dans TopBar. Donc rien à faire de plus côté EC" },
+      { "code": "INFO", "txt": "🎯 **Push directement** : `git push origin main` → build Vercel passe → tu peux tester l'auto-géoloc, le badge messages, push notif chat, et surtout vérifier le bandeau `<MagasinRattachementCheck>` qui te dira si ton compte est rattaché à un magasin" }
+    ],
+    "themes": ["fix-build", "vercel", "suspense"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.4",
     "kind": "fix",
     "titre": "🔥 Fix création magasin (bug racine table) + 🩺 Bandeau diagnostic + Auto-géoloc marketplace + Badge messages + Push notif chat",

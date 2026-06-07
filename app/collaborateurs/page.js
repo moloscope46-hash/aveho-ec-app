@@ -86,6 +86,22 @@ export default function CollaborateursPage() {
       } else {
         collabData = r.data || [];
       }
+
+      // 0.62.7 : Si le user courant n'apparaît pas dans la liste, l'ajouter manuellement
+      // (cas : sa ligne membres_structure a un structure_id différent, ou il y en a plusieurs)
+      if (auth.user?.id && !collabData.find(c => c.user_id === auth.user.id)) {
+        try {
+          const rself = await supabase.from("membres_structure")
+            .select("*")
+            .eq("user_id", auth.user.id)
+            .maybeSingle();
+          if (rself.data) {
+            collabData = [{ ...rself.data, _self_added: true }, ...collabData];
+            console.info("[Collab] User courant ajouté manuellement (structure_id différent ?)", rself.data.structure_id, "vs auth.structureId=", auth.structureId);
+          }
+        } catch (e) { console.warn("[Collab] fetch self failed:", e); }
+      }
+
       setCollabs(collabData);
 
       // Pharmacies

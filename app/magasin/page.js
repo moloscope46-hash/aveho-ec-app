@@ -45,6 +45,9 @@ export default function MagasinPage() {
   }, []);
   const [articles, setArticles] = useState([]);
   const [demandes, setDemandes] = useState([]);
+  // 0.62.6 : recherche + filtre statut dans tab DI
+  const [diSearch, setDiSearch] = useState("");
+  const [diStatutFilter, setDiStatutFilter] = useState("");
   const [partenaires, setPartenaires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ articles: 0, di_pendantes: 0, partenaires: 0, etabs_clients: 0 });
@@ -157,6 +160,48 @@ export default function MagasinPage() {
 
             {/* 0.59.8 : Alertes stock bas */}
             <AlertesStockBas supabase={supabase} structureId={auth.structureId} />
+
+            {/* 0.62.7 : Activité récente — 5 dernières DI */}
+            <Panel style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <h3 style={{ margin: 0, color: "#5a8f8f" }}>📋 Activité récente</h3>
+                <button onClick={() => setActiveTab("di")} style={{ background: "transparent", border: "none", color: "#185FA5", fontFamily: "inherit", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  Voir tout →
+                </button>
+              </div>
+              {demandes.length === 0 ? (
+                <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Aucune activité récente</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {demandes.slice(0, 5).map(d => {
+                    const t = d.source_table === "intervention" ? "intervention" : (d.type_demande || "di");
+                    const ic = t === "sav" ? "ti-tool" : t === "intervention" ? "ti-tool" : t === "transfert" ? "ti-transfer" : "ti-truck-loading";
+                    const col = t === "sav" ? "#e35d5b" : t === "intervention" ? "#7a6fb0" : t === "transfert" ? "#7a6fb0" : "#EF9F27";
+                    const ago = Math.floor((Date.now() - new Date(d.created_at).getTime()) / 60000);
+                    const agoLabel = ago < 60 ? `il y a ${ago}min` : ago < 1440 ? `il y a ${Math.floor(ago/60)}h` : `il y a ${Math.floor(ago/1440)}j`;
+                    return (
+                      <div key={d.id} onClick={() => router.push(d.source_table === "intervention" ? `/interventions?id=${d.id}` : `/demandes-internes/${d.id}`)} style={{
+                        padding: "8px 10px", borderRadius: 6, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 10,
+                        borderLeft: `3px solid ${col}`,
+                        background: "rgba(0,0,0,.02)",
+                      }}>
+                        <i className={`ti ${ic}`} style={{ color: col, fontSize: 16 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 600, color: "#142131" }}>{d.numero || d.id?.substring(0, 8)}</div>
+                          <div style={{ fontSize: 10.5, color: "#8a98a8" }}>
+                            {t === "sav" ? "Demande SAV" : t === "intervention" ? "Intervention" : t === "transfert" ? "Transfert" : "Demande interne"} · {agoLabel}
+                          </div>
+                        </div>
+                        <span style={{ padding: "1px 8px", borderRadius: 4, background: d.statut === "validee" ? "rgba(94,160,90,.15)" : "rgba(239,159,39,.15)", color: d.statut === "validee" ? "#5aa05a" : "#EF9F27", fontSize: 10, fontWeight: 700 }}>
+                          {d.statut || "nouvelle"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Panel>
           </>
         )}
 
@@ -194,38 +239,94 @@ export default function MagasinPage() {
         {/* DI RECUES */}
         {activeTab === "di" && (
           <Panel>
-            <h3 style={{ margin: "0 0 12px", color: "#EF9F27" }}>DI reçues ({demandes.length})</h3>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
+              <h3 style={{ margin: 0, color: "#EF9F27", flexShrink: 0 }}>DI reçues ({demandes.length})</h3>
+              <input
+                value={diSearch}
+                onChange={(e) => setDiSearch(e.target.value)}
+                placeholder="🔍 Rechercher numéro, description..."
+                style={{ padding: "6px 12px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 12, minWidth: 200, flex: 1, maxWidth: 320 }}
+              />
+              <select value={diStatutFilter} onChange={(e) => setDiStatutFilter(e.target.value)} style={{ padding: "6px 10px", border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 12 }}>
+                <option value="">Tous statuts</option>
+                <option value="nouvelle">Nouvelles</option>
+                <option value="en_attente">En attente</option>
+                <option value="validee">Validées</option>
+                <option value="refusee">Refusées</option>
+              </select>
+              {(diSearch || diStatutFilter) && (
+                <button onClick={() => { setDiSearch(""); setDiStatutFilter(""); }} style={{ padding: "6px 10px", background: "transparent", border: "1px solid #cfd8e0", borderRadius: 6, color: "#e35d5b", cursor: "pointer", fontFamily: "inherit", fontSize: 11 }}>
+                  ✕
+                </button>
+              )}
+            </div>
             {loading ? (
               <div style={{ padding: 30, textAlign: "center" }}>Chargement...</div>
-            ) : demandes.length === 0 ? (
-              <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
-                <i className="ti ti-inbox" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
-                Aucune DI reçue.
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {demandes.slice(0, 50).map(d => (
-                  <div key={d.id} onClick={() => router.push(d.source_table === "intervention" ? `/interventions?id=${d.id}` : `/demandes-internes/${d.id}`)} style={{
-                    background: "#fff", border: "1px solid #e3e9ee",
-                    borderLeft: `3px solid ${d.statut === "validee" ? "#5aa05a" : d.statut === "refusee" ? "#e35d5b" : "#EF9F27"}`,
-                    borderRadius: 8, padding: 10, cursor: "pointer",
-                    display: "flex", alignItems: "center", gap: 12,
-                  }}>
-                    <i className={`ti ${d.source_table === "intervention" ? "ti-tool" : "ti-truck-loading"}`} style={{ color: d.source_table === "intervention" ? "#7a6fb0" : "#EF9F27", fontSize: 20 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>
-                        {d.numero || `DI-${d.id?.substring(0, 8)}`}
-                        {d.source_table === "intervention" && <span style={{ marginLeft: 6, padding: "1px 6px", background: "rgba(122,111,176,.15)", color: "#7a6fb0", borderRadius: 3, fontSize: 9, fontWeight: 700, textTransform: "uppercase" }}>Intervention</span>}
-                      </div>
-                      <div style={{ fontSize: 11, color: "#8a98a8" }}>
-                        {new Date(d.created_at).toLocaleString("fr-FR")} · {d.nb_lignes || 0} lignes · {d.qte_totale || 0} unités
-                      </div>
-                    </div>
-                    <span style={{ padding: "2px 8px", borderRadius: 6, background: "#fafbfc", border: "1px solid #cfd8e0", fontSize: 11, fontWeight: 600, color: "#5a6878" }}>{d.statut || "nouvelle"}</span>
+            ) : (() => {
+              const filtered = demandes.filter(d => {
+                if (diStatutFilter && d.statut !== diStatutFilter) return false;
+                if (diSearch) {
+                  const s = diSearch.toLowerCase();
+                  const hay = `${d.numero || ""} ${d.commentaire || ""} ${d.panne_description || ""}`.toLowerCase();
+                  if (!hay.includes(s)) return false;
+                }
+                return true;
+              });
+              if (filtered.length === 0) {
+                return (
+                  <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+                    <i className="ti ti-inbox" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+                    {demandes.length === 0 ? "Aucune DI reçue." : "Aucune DI ne correspond aux filtres."}
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {filtered.slice(0, 50).map(d => (
+                    <div key={d.id} onClick={() => router.push(d.source_table === "intervention" ? `/interventions?id=${d.id}` : `/demandes-internes/${d.id}`)} style={{
+                      background: "#fff", border: "1px solid #e3e9ee",
+                      borderLeft: `3px solid ${d.statut === "validee" ? "#5aa05a" : d.statut === "refusee" ? "#e35d5b" : "#EF9F27"}`,
+                      borderRadius: 8, padding: 10, cursor: "pointer",
+                      display: "flex", alignItems: "center", gap: 12,
+                    }}>
+                      <i className={`ti ${d.source_table === "intervention" ? "ti-tool" : "ti-truck-loading"}`} style={{ color: d.source_table === "intervention" ? "#7a6fb0" : "#EF9F27", fontSize: 20 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>
+                          {d.numero || `DI-${d.id?.substring(0, 8)}`}
+                          {d.source_table === "intervention" && <span style={{ marginLeft: 6, padding: "1px 6px", background: "rgba(122,111,176,.15)", color: "#7a6fb0", borderRadius: 3, fontSize: 9, fontWeight: 700, textTransform: "uppercase" }}>Intervention</span>}
+                        </div>
+                        <div style={{ fontSize: 11, color: "#8a98a8" }}>
+                          {new Date(d.created_at).toLocaleString("fr-FR")} · {d.nb_lignes || 0} lignes · {d.qte_totale || 0} unités
+                        </div>
+                      </div>
+                      {/* 0.62.6 : Actions rapides selon statut */}
+                      {(d.statut === "nouvelle" || d.statut === "en_attente" || !d.statut) && (
+                        <div style={{ display: "flex", gap: 4 }} onClick={(e) => e.stopPropagation()}>
+                          <button onClick={async () => {
+                            const table = d.source_table === "intervention" ? "interventions" : "demandes_internes";
+                            await supabase.from(table).update({ statut: "validee" }).eq("id", d.id);
+                            reload();
+                          }} title="Valider rapidement" style={{
+                            background: "rgba(94,160,90,.15)", color: "#5aa05a", border: "1px solid rgba(94,160,90,.3)",
+                            padding: "4px 10px", borderRadius: 5, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                          }}>✓ Valider</button>
+                          <button onClick={async () => {
+                            if (!confirm("Refuser cette DI ?")) return;
+                            const table = d.source_table === "intervention" ? "interventions" : "demandes_internes";
+                            await supabase.from(table).update({ statut: "refusee" }).eq("id", d.id);
+                            reload();
+                          }} title="Refuser" style={{
+                            background: "transparent", color: "#e35d5b", border: "1px solid rgba(227,93,91,.3)",
+                            padding: "4px 8px", borderRadius: 5, fontSize: 11, cursor: "pointer", fontFamily: "inherit",
+                          }}>✕</button>
+                        </div>
+                      )}
+                      <span style={{ padding: "2px 8px", borderRadius: 6, background: "#fafbfc", border: "1px solid #cfd8e0", fontSize: 11, fontWeight: 600, color: "#5a6878" }}>{d.statut || "nouvelle"}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </Panel>
         )}
 

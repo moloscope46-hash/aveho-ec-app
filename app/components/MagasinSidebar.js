@@ -3,8 +3,11 @@
 //  MagasinSidebar — Layout ERP avec menu latéral pour mode Magasin (0.60.1)
 // =============================================================
 import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useViewMode } from "../../lib/useViewMode";
 import { useAuth } from "../../lib/useAuth";
+import { useMagasinContext } from "../../lib/useMagasinContext";
+import { createClient } from "../../lib/supabase";
 
 const MAG_NAV = [
   { section: "Tableau de bord", items: [
@@ -55,6 +58,38 @@ export function MagasinSidebar() {
   const pathname = usePathname();
   const viewMode = useViewMode();
   const auth = useAuth();
+  // 0.62.6 : Compteurs DI/SAV/Transferts en attente
+  const magasinCtx = useMagasinContext();
+  const supabase = createClient();
+  const [counts, setCounts] = useState({ di: 0, sav: 0, transferts: 0, marketplace: 0 });
+
+  useEffect(() => {
+    if (!auth?.user || !viewMode.ready || !viewMode.isMagasin) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+        // DI/SAV en attente sur ce magasin
+        let q = supabase.from("v_magasin_di").select("statut, type_demande");
+        if (magasinCtx.magasinId) q = q.eq("magasin_id", magasinCtx.magasinId);
+        const dis = await tryFetch(q);
+        const pending = dis.filter(d => ["nouvelle", "en_attente", null, "draft"].includes(d.statut));
+        // Marketplace : offres non répondues vers moi
+        let mktQ = supabase.from("marketplace_offres").select("id").eq("statut", "active");
+        if (magasinCtx.magasinId) mktQ = mktQ.neq("magasin_emetteur_id", magasinCtx.magasinId);
+        const mkt = await tryFetch(mktQ);
+        if (!cancelled) {
+          setCounts({
+            di: pending.filter(d => !d.type_demande || d.type_demande === "di").length,
+            sav: pending.filter(d => d.type_demande === "sav").length,
+            transferts: pending.filter(d => d.type_demande === "transfert").length,
+            marketplace: mkt.length,
+          });
+        }
+      } catch (e) { console.warn("[sidebar counts]", e); }
+    })();
+    return () => { cancelled = true; };
+  }, [auth?.user, viewMode.ready, viewMode.isMagasin, magasinCtx.magasinId, pathname]);
 
   // 0.60.5 : ne rend rien tant que viewMode pas chargé (évite hydration mismatch React #418)
   if (!viewMode.ready) return null;
@@ -103,6 +138,12 @@ export function MagasinSidebar() {
           </div>
           {sect.items.map(it => {
             const isActive = pathname === it.p.split("?")[0];
+            // 0.62.6 : compteur badge sur certains items
+            let badge = null;
+            if (it.p === "/magasin?tab=di" && counts.di > 0) badge = counts.di;
+            else if (it.p === "/magasin?tab=sav" && counts.sav > 0) badge = counts.sav;
+            else if (it.p === "/magasin?tab=transferts" && counts.transferts > 0) badge = counts.transferts;
+            else if (it.p === "/magasin/marketplace" && counts.marketplace > 0) badge = counts.marketplace;
             return (
               <button key={it.p} onClick={() => router.push(it.p)} style={{
                 display: "flex", alignItems: "center", gap: 10,
@@ -116,7 +157,15 @@ export function MagasinSidebar() {
                 marginBottom: 2,
               }}>
                 <i className={`ti ${it.ic}`} style={{ color: it.col, fontSize: 16 }} />
-                {it.lbl}
+                <span style={{ flex: 1 }}>{it.lbl}</span>
+                {badge !== null && (
+                  <span style={{
+                    background: it.col, color: "#fff",
+                    fontSize: 10, fontWeight: 700,
+                    padding: "1px 6px", borderRadius: 8,
+                    minWidth: 18, textAlign: "center",
+                  }}>{badge}</span>
+                )}
               </button>
             );
           })}
