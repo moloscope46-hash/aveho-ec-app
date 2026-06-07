@@ -289,8 +289,12 @@ export default function CollaborateursPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,320px))", justifyContent: "start", gap: 12 }}>
               {filtered.map(c => {
                 const role = ROLES_PRO.find(r => r.v === c.role_professionnel) || ROLES_PRO[8]; // 'autre'
+                const nomComplet = c.prenom || c.nom ? `${c.prenom || ""} ${c.nom || ""}`.trim() : null;
+                const tel = c.telephone || c.mobile || c.tel || null;
+                const email = c.email || null;
+                const magasinNom = c.magasin_fournisseur_nom || c.magasin_nom || (c.role_professionnel === "utilisateur_magasin" ? "Magasin" : null);
                 return (
-                  <div key={c.user_id} style={{
+                  <div key={c.user_id || c.id} style={{
                     background: "#fff", border: `1px solid ${role.col}33`, borderLeft: `4px solid ${role.col}`,
                     borderRadius: 12, padding: 14, cursor: "pointer",
                   }} onClick={() => openEdit(c)}>
@@ -303,25 +307,78 @@ export default function CollaborateursPage() {
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: "#142131" }}>
-                          {c.prenom || c.nom ? `${c.prenom || ""} ${c.nom || ""}`.trim() : <em style={{ color: "#8a98a8" }}>Sans nom</em>}
+                          {nomComplet || email || <em style={{ color: "#8a98a8" }}>Sans nom</em>}
+                          {c._virtual && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", background: "rgba(239,159,39,.2)", color: "#EF9F27", borderRadius: 3, fontWeight: 700, textTransform: "uppercase" }}>profil à compléter</span>}
+                          {c._self_added && !c._virtual && <span style={{ marginLeft: 6, fontSize: 9, padding: "1px 5px", background: "rgba(122,111,176,.2)", color: "#7a6fb0", borderRadius: 3, fontWeight: 700, textTransform: "uppercase" }}>moi</span>}
                         </div>
                         <div style={{ fontSize: 11.5, color: role.col, fontWeight: 600 }}>{role.l}</div>
-                        {c.specialite && <div style={{ fontSize: 11, color: "#5a6878" }}>{c.specialite}</div>}
+                        {c.fonction_detail && <div style={{ fontSize: 11, color: "#5a6878", marginTop: 2 }}>📋 {c.fonction_detail}</div>}
+                        {c.specialite && <div style={{ fontSize: 11, color: "#5a6878" }}>🎓 {c.specialite}</div>}
+
+                        {/* 0.62.14 : Magasin rattaché */}
+                        {magasinNom && c.role_professionnel === "utilisateur_magasin" && (
+                          <div style={{ fontSize: 11, color: "#5a8f8f", marginTop: 3, fontWeight: 600 }}>
+                            <i className="ti ti-building-warehouse" /> {magasinNom}
+                          </div>
+                        )}
+
                         {c.role_professionnel === "pharmacien" && c.pharmacie_nom && (
                           <div style={{ fontSize: 11, color: "#5aa05a", marginTop: 3 }}>
                             <i className="ti ti-pill" /> {c.pharmacie_nom}
                           </div>
                         )}
+
+                        {/* Étab/Service */}
                         {c.etablissement_nom && (
                           <div style={{ fontSize: 11, color: "#5a6878", marginTop: 3 }}>
                             <i className="ti ti-building" /> {c.etablissement_nom}
                             {c.service_nom && <span> · {c.service_nom}</span>}
                           </div>
                         )}
+                        {c.batiment_nom && !c.etablissement_nom && (
+                          <div style={{ fontSize: 11, color: "#5a6878", marginTop: 3 }}>
+                            <i className="ti ti-building" /> {c.batiment_nom}
+                          </div>
+                        )}
+
+                        {/* Contact email + tél */}
+                        {(email || tel) && (
+                          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 5 }}>
+                            {email && <div style={{ fontSize: 10.5, color: "#5a6878" }}><i className="ti ti-mail" style={{ color: "#185FA5" }} /> {email}</div>}
+                            {tel && <div style={{ fontSize: 10.5, color: "#5a6878" }}><i className="ti ti-phone" style={{ color: "#5aa05a" }} /> {tel}</div>}
+                          </div>
+                        )}
+
                         {(c.numero_adeli || c.numero_rpps) && (
                           <div style={{ fontSize: 10, color: "#8a98a8", fontFamily: "Consolas,monospace", marginTop: 3 }}>
                             {c.numero_adeli && <>ADELI: {c.numero_adeli} </>}
                             {c.numero_rpps && <>RPPS: {c.numero_rpps}</>}
+                          </div>
+                        )}
+
+                        {/* 0.62.14 : Actions rapides — boutons mail + appel */}
+                        {(email || tel) && (
+                          <div style={{ display: "flex", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f3f6" }} onClick={(e) => e.stopPropagation()}>
+                            {email && (
+                              <a href={`mailto:${email}`} style={{
+                                flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
+                                padding: "5px 8px", background: "rgba(24,95,165,.10)", color: "#185FA5",
+                                border: "1px solid rgba(24,95,165,.25)", borderRadius: 5,
+                                fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "inherit",
+                              }} title={`Envoyer un mail à ${email}`}>
+                                <i className="ti ti-mail" /> Email
+                              </a>
+                            )}
+                            {tel && (
+                              <a href={`tel:${tel.replace(/\s/g, "")}`} style={{
+                                flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
+                                padding: "5px 8px", background: "rgba(94,160,90,.10)", color: "#5aa05a",
+                                border: "1px solid rgba(94,160,90,.25)", borderRadius: 5,
+                                fontSize: 11, fontWeight: 700, textDecoration: "none", fontFamily: "inherit",
+                              }} title={`Appeler ${tel}`}>
+                                <i className="ti ti-phone" /> Appel
+                              </a>
+                            )}
                           </div>
                         )}
                       </div>

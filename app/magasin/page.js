@@ -20,6 +20,7 @@ const TABS = [
   { id: "catalogue", icon: "ti-package",          lbl: "Catalogue",        col: "#185FA5" },
   { id: "di",        icon: "ti-truck-loading",    lbl: "DI reçues",        col: "#EF9F27" },
   { id: "sav",       icon: "ti-tool",             lbl: "SAV reçues",       col: "#e35d5b" },
+  { id: "transferts", icon: "ti-transfer",        lbl: "Transferts",       col: "#7a6fb0" },
   { id: "bilans",    icon: "ti-clipboard-check",  lbl: "Bilans SAV",       col: "#7CC8C8" },
   { id: "fournisseurs", icon: "ti-truck-delivery", lbl: "Partenaires",     col: "#7a6fb0" },
 ];
@@ -40,7 +41,7 @@ export default function MagasinPage() {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
     if (tab && ["dashboard", "catalogue", "di", "sav", "bilans", "transferts", "fournisseurs"].includes(tab)) {
-      setActiveTab(tab === "transferts" ? "di" : tab); // tab transferts redirige sur DI pour l'instant
+      setActiveTab(tab); // 0.62.14 : transferts a maintenant son propre onglet (plus de redirect)
     }
   }, []);
   const [articles, setArticles] = useState([]);
@@ -360,6 +361,16 @@ export default function MagasinPage() {
           </Panel>
         )}
 
+        {/* 0.62.14 : TRANSFERTS magasin → dépôt (étabs rattachés) */}
+        {activeTab === "transferts" && (
+          <TransfertsMagasinPanel
+            supabase={supabase}
+            auth={auth}
+            magasinCtx={magasinCtx}
+            router={router}
+          />
+        )}
+
         {/* 0.60.0 : Bilans SAV (lien direct vers la page CRUD) */}
         {activeTab === "bilans" && (
           <Panel>
@@ -499,5 +510,189 @@ function AlertesStockBas({ supabase, structureId }) {
         })}
       </div>
     </div>
+  );
+}
+
+// =============================================================
+// 0.62.14 : TransfertsMagasinPanel
+// Liste transferts magasin → dépôt + bouton créer
+// Filtre dépôts par rattachements (magasins_rattachements.depot_id)
+// =============================================================
+function TransfertsMagasinPanel({ supabase, auth, magasinCtx, router }) {
+  const [transferts, setTransferts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalNew, setModalNew] = useState(false);
+  const [depotsAutorises, setDepotsAutorises] = useState([]);
+  const [articlesMagasin, setArticlesMagasin] = useState([]);
+  const [form, setForm] = useState({ depot_destination_id: "", article_id: "", quantite: 1, motif: "", commentaire: "" });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!auth.ready || magasinCtx.loading) return;
+    reload();
+  }, [auth.ready, magasinCtx.loading, magasinCtx.magasinId]);
+
+  async function reload() {
+    setLoading(true);
+    const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+    // 1. Liste transferts émis par mon magasin
+    let q = supabase.from("transferts").select("*").order("created_at", { ascending: false }).limit(50);
+    if (magasinCtx.magasinId) q = q.eq("magasin_emetteur_id", magasinCtx.magasinId);
+    const t = await tryFetch(q);
+    setTransferts(t);
+    // 2. Dépôts autorisés via rattachements
+    if (magasinCtx.magasinId) {
+      const ratt = await tryFetch(supabase.from("magasins_rattachements")
+        .select("etablissement_id, depot_id")
+        .eq("magasin_id", magasinCtx.magasinId)
+        .eq("actif", true));
+      // Si rattachement précise un depot_id, on prend celui-là ; sinon, tous les dépôts de l'étab rattaché
+      const depotIdsExplicites = ratt.filter(r => r.depot_id).map(r => r.depot_id);
+      const etabIds = ratt.filter(r => !r.depot_id && r.etablissement_id).map(r => r.etablissement_id);
+      const depots = [];
+      if (depotIdsExplicites.length > 0) {
+        const r1 = await tryFetch(supabase.from("depots").select("id, nom, etablissement_id, etablissements(nom)").in("id", depotIdsExplicites));
+        depots.push(...r1);
+      }
+      if (etabIds.length > 0) {
+        const r2 = await tryFetch(supabase.from("depots").select("id, nom, etablissement_id, etablissements(nom)").in("etablissement_id", etabIds));
+        depots.push(...r2);
+      }
+      // Dédup
+      const dedup = Object.values(Object.fromEntries(depots.map(d => [d.id, d])));
+      setDepotsAutorises(dedup);
+    }
+    // 3. Catalogue articles magasin
+    const a = await tryFetch(supabase.from("articles").select("id, libelle, code").eq("magasin_id", magasinCtx.magasinId).limit(500));
+    setArticlesMagasin(a);
+    setLoading(false);
+  }
+
+  async function creer() {
+    if (!form.depot_destination_id) { alert("Choisis un dépôt destination"); return; }
+    if (!form.article_id) { alert("Choisis un article"); return; }
+    if (!form.quantite || form.quantite < 1) { alert("Quantité invalide"); return; }
+    setSaving(true);
+    try {
+      const numero = `TRF-${Date.now().toString().slice(-6)}`;
+      const r = await supabase.from("transferts").insert({
+        numero,
+        magasin_emetteur_id: magasinCtx.magasinId,
+        depot_destination_id: form.depot_destination_id,
+        article_id: form.article_id,
+        quantite: parseFloat(form.quantite),
+        motif: form.motif || null,
+        commentaire: form.commentaire || null,
+        statut: "en_attente",
+        structure_id: auth.structureId,
+        created_by: auth.user?.id,
+      });
+      if (r.error) throw r.error;
+      setModalNew(false);
+      setForm({ depot_destination_id: "", article_id: "", quantite: 1, motif: "", commentaire: "" });
+      await reload();
+    } catch (e) {
+      console.error("[transfert create]", e);
+      alert("❌ Erreur : " + (e.message || JSON.stringify(e)));
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
+        <h3 style={{ margin: 0, color: "#7a6fb0" }}>🔄 Transferts émis ({transferts.length})</h3>
+        <Btn variant="primary" icon="ti-plus" onClick={() => setModalNew(true)}>Nouveau transfert</Btn>
+      </div>
+
+      {depotsAutorises.length === 0 && (
+        <Panel style={{ background: "rgba(239,159,39,.08)", borderLeft: "4px solid #EF9F27", padding: "10px 14px", marginBottom: 12 }}>
+          <div style={{ fontSize: 12, color: "#5a6878" }}>
+            ⚠ Aucun dépôt rattaché à ton magasin. Va sur <a href="/magasin/rattachements-perimetre" style={{ color: "#185FA5", fontWeight: 700 }}>Périmètre intervention</a> pour rattacher des dépôts ou des établissements.
+          </div>
+        </Panel>
+      )}
+
+      {loading ? <div style={{ padding: 30, textAlign: "center" }}>Chargement...</div>
+        : transferts.length === 0 ? (
+        <div style={{ padding: 30, textAlign: "center", color: "#8a98a8" }}>
+          <i className="ti ti-transfer" style={{ fontSize: 40, color: "#e3e9ee", display: "block", marginBottom: 8 }} />
+          Aucun transfert émis.<br/>
+          <span style={{ fontSize: 11 }}>Click "Nouveau transfert" pour commencer.</span>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {transferts.map(t => {
+            const dest = depotsAutorises.find(d => d.id === t.depot_destination_id);
+            const art = articlesMagasin.find(a => a.id === t.article_id);
+            const statutCol = t.statut === "valide" ? "#5aa05a" : t.statut === "refuse" ? "#e35d5b" : "#EF9F27";
+            return (
+              <div key={t.id} style={{
+                background: "#fff", border: "1px solid #e3e9ee",
+                borderLeft: `3px solid ${statutCol}`,
+                borderRadius: 8, padding: 10,
+                display: "flex", alignItems: "center", gap: 12,
+              }}>
+                <i className="ti ti-transfer" style={{ color: "#7a6fb0", fontSize: 20 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: "#142131", fontSize: 13 }}>
+                    {t.numero || `TRF-${t.id.substring(0, 8)}`}
+                    {dest && <span style={{ marginLeft: 8, fontSize: 11, color: "#5a6878" }}>→ {dest.nom}{dest.etablissements?.nom ? ` (${dest.etablissements.nom})` : ""}</span>}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#8a98a8" }}>
+                    {new Date(t.created_at).toLocaleString("fr-FR")}
+                    {art && <> · {art.libelle}</>}
+                    {t.quantite && <> · {t.quantite} unité(s)</>}
+                  </div>
+                  {t.motif && <div style={{ fontSize: 10.5, color: "#5a6878", fontStyle: "italic", marginTop: 2 }}>{t.motif}</div>}
+                </div>
+                <span style={{ padding: "2px 8px", borderRadius: 6, background: `${statutCol}1A`, color: statutCol, border: `1px solid ${statutCol}40`, fontSize: 11, fontWeight: 700 }}>{t.statut || "en_attente"}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal création */}
+      {modalNew && (
+        <Modal open={modalNew} onClose={() => setModalNew(false)} kind="patient" title="Nouveau transfert magasin → dépôt" actions={
+          <>
+            <Btn variant="ghost" onClick={() => setModalNew(false)}>Annuler</Btn>
+            <Btn variant="primary" onClick={creer} disabled={saving}>{saving ? "Création..." : "Créer le transfert"}</Btn>
+          </>
+        }>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>
+              <b>Dépôt destination *</b>
+              <select value={form.depot_destination_id} onChange={(e) => setForm({ ...form, depot_destination_id: e.target.value })} style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}>
+                <option value="">— Choisir dépôt —</option>
+                {depotsAutorises.map(d => <option key={d.id} value={d.id}>{d.nom}{d.etablissements?.nom ? ` · ${d.etablissements.nom}` : ""}</option>)}
+              </select>
+              <div style={{ fontSize: 10, color: "#8a98a8", marginTop: 4 }}>Liste filtrée selon les rattachements actifs de ton magasin</div>
+            </label>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>
+              <b>Article *</b>
+              <select value={form.article_id} onChange={(e) => setForm({ ...form, article_id: e.target.value })} style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}>
+                <option value="">— Choisir article —</option>
+                {articlesMagasin.map(a => <option key={a.id} value={a.id}>{a.libelle}{a.code ? ` (${a.code})` : ""}</option>)}
+              </select>
+            </label>
+            <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 10 }}>
+              <label style={{ fontSize: 12, color: "#5a6878" }}>
+                <b>Quantité *</b>
+                <input type="number" min="1" value={form.quantite} onChange={(e) => setForm({ ...form, quantite: e.target.value })} style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }} />
+              </label>
+              <label style={{ fontSize: 12, color: "#5a6878" }}>
+                <b>Motif</b>
+                <input value={form.motif} onChange={(e) => setForm({ ...form, motif: e.target.value })} placeholder="Réassort, urgence, demande étab..." style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }} />
+              </label>
+            </div>
+            <label style={{ fontSize: 12, color: "#5a6878" }}>
+              <b>Commentaire</b>
+              <textarea value={form.commentaire} onChange={(e) => setForm({ ...form, commentaire: e.target.value })} placeholder="Précisions logistiques..." style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4, minHeight: 60 }} />
+            </label>
+          </div>
+        </Modal>
+      )}
+    </Panel>
   );
 }

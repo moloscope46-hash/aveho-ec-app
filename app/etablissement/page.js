@@ -33,6 +33,92 @@ export default function Etablissement() {
   const [depots, setDepots] = useState([]);
   // 0.58.87 : modal articles du dépôt
   const [depotModal, setDepotModal] = useState(null);
+  // 0.62.15 : modal création bât/svc/chambre/lit
+  const [createModal, setCreateModal] = useState(null);
+  const [createForm, setCreateForm] = useState({});
+  const [creating, setCreating] = useState(false);
+
+  // 0.62.15 : Reset form quand on ouvre le modal de création
+  useEffect(() => {
+    if (createModal) {
+      setCreateForm({
+        nom: "",
+        batiment_id: createModal.batiment_id || "",
+        service_id: createModal.service_id || "",
+        chambre_id: createModal.chambre_id || "",
+        nb_lits: 1,
+      });
+    }
+  }, [createModal]);
+
+  // 0.62.15 : Recharger l'arbre après création
+  async function reloadTree() {
+    if (!auth.etabId) return;
+    const [b, s, c, l] = await Promise.all([
+      supabase.from("batiments").select("*").eq("etablissement_id", auth.etabId).order("nom"),
+      supabase.from("services").select("*").order("nom"),
+      supabase.from("chambres").select("*").order("nom"),
+      supabase.from("lits").select("*").order("nom"),
+    ]);
+    const lits = l.data || [];
+    const chambres = (c.data || []).map((ch) => ({ ...ch, lits: lits.filter((x) => x.chambre_id === ch.id) }));
+    const services = (s.data || []).map((sv) => ({ ...sv, chambres: chambres.filter((x) => x.service_id === sv.id) }));
+    const servicesOrphelins = services.filter(sv => !sv.batiment_id);
+    const bats = (b.data || []).map((ba, idx) => {
+      let svcsBat = services.filter((x) => x.batiment_id === ba.id);
+      if (idx === 0 && servicesOrphelins.length > 0) svcsBat = [...svcsBat, ...servicesOrphelins];
+      return { ...ba, etages: [{ id: `${ba.id}-default`, nom: "—", services: svcsBat }] };
+    });
+    if (bats.length === 0 && services.length > 0) {
+      bats.push({ id: "virtual-bat", nom: "📍 Établissement (sans bâtiment)", etages: [{ id: "virtual-etage", nom: "—", services }] });
+    }
+    setTree(bats);
+  }
+
+  // 0.62.15 : Créer bâtiment / service / chambre / lit
+  async function createEntity() {
+    if (!createForm.nom?.trim()) { alert("Nom obligatoire"); return; }
+    setCreating(true);
+    try {
+      const type = createModal.type;
+      let payload = { nom: createForm.nom.trim(), structure_id: auth.structureId };
+      if (type === "batiment") payload.etablissement_id = auth.etabId;
+      if (type === "service") {
+        if (!createForm.batiment_id) { alert("Choisis un bâtiment"); setCreating(false); return; }
+        payload.batiment_id = createForm.batiment_id;
+        payload.etablissement_id = auth.etabId;
+      }
+      if (type === "chambre") {
+        if (!createForm.service_id) { alert("Choisis un service"); setCreating(false); return; }
+        payload.service_id = createForm.service_id;
+      }
+      if (type === "lit") {
+        if (!createForm.chambre_id) { alert("Choisis une chambre"); setCreating(false); return; }
+        payload.chambre_id = createForm.chambre_id;
+      }
+      const table = type === "batiment" ? "batiments" : type === "service" ? "services" : type === "chambre" ? "chambres" : "lits";
+      const r = await supabase.from(table).insert(payload);
+      if (r.error) throw r.error;
+      // Si chambre + nb_lits > 0 → créer les lits associés
+      if (type === "chambre" && createForm.nb_lits > 0) {
+        const created = await supabase.from("chambres").select("id").eq("nom", createForm.nom.trim()).eq("service_id", createForm.service_id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (created.data?.id) {
+          const litsPayload = [];
+          for (let i = 1; i <= createForm.nb_lits; i++) {
+            litsPayload.push({ chambre_id: created.data.id, nom: `Lit ${i}`, structure_id: auth.structureId });
+          }
+          await supabase.from("lits").insert(litsPayload);
+        }
+      }
+      setCreateModal(null);
+      await reloadTree();
+    } catch (e) {
+      console.error("[create entity]", e);
+      alert("❌ Erreur : " + (e.message || JSON.stringify(e)));
+    } finally {
+      setCreating(false);
+    }
+  }
 
   // 0.58.86 : chargement véhicules + dépôts au mount
   useEffect(() => {
@@ -66,33 +152,39 @@ export default function Etablissement() {
           supabase.from("materiels").select("*").eq("etablissement_id", auth.etabId),
           supabase.from("interventions").select("id,patient_id,materiel_id,type,urgence,statut,numero,description,created_at").eq("etablissement_id", auth.etabId),
         ]);
-        // 0.62.9 : reconstruire l'arbre SANS les étages (table supprimée en 0.58.85)
+        // 0.62.15 : reconstruire l'arbre SANS les étages (table supprimée en 0.58.85)
         // Services rattachés DIRECTEMENT aux bâtiments via services.batiment_id
         const lits = l.data || [];
         const chambres = (c.data || []).map((ch) => ({ ...ch, lits: lits.filter((x) => x.chambre_id === ch.id) }));
         const services = (s.data || []).map((sv) => ({ ...sv, chambres: chambres.filter((x) => x.service_id === sv.id) }));
-        // Bâtiments → services directs (avec etages factice pour compat)
-        const bats = (b.data || []).map((ba) => {
-          const svcsBat = services.filter((x) => x.batiment_id === ba.id);
-          // Fallback : si aucun service n'a batiment_id rempli, on prend TOUS les services
-          // (cas DB plus ancienne sans batiment_id sur services)
-          const svcsFinal = svcsBat.length > 0
-            ? svcsBat
-            : (services.filter(sv => !sv.batiment_id && b.data.length === 1) || []);
+        // Services orphelins (sans batiment_id)
+        const servicesOrphelins = services.filter(sv => !sv.batiment_id);
+        // Bâtiments → services rattachés via batiment_id
+        const bats = (b.data || []).map((ba, idx) => {
+          let svcsBat = services.filter((x) => x.batiment_id === ba.id);
+          // 0.62.15 : Si premier bâtiment ET il y a des services orphelins → on les ajoute ici
+          // (cas DB pas migrée : services sans batiment_id mais qu'on veut quand même afficher)
+          if (idx === 0 && servicesOrphelins.length > 0) {
+            svcsBat = [...svcsBat, ...servicesOrphelins];
+          }
           return {
             ...ba,
-            // pseudo-étage "Rez-de-chaussée" pour garder la structure attendue par PlanView/TreeView
-            etages: [{ id: `${ba.id}-default`, nom: "—", services: svcsFinal }],
+            // pseudo-étage "—" pour garder la structure attendue par PlanView/TreeView
+            etages: [{ id: `${ba.id}-default`, nom: "—", services: svcsBat }],
           };
         });
         // Si aucun bâtiment mais on a des services, créer un bâtiment virtuel
         if (bats.length === 0 && services.length > 0) {
           bats.push({
             id: "virtual-bat",
-            nom: "Établissement",
+            nom: "📍 Établissement (sans bâtiment)",
             etages: [{ id: "virtual-etage", nom: "—", services }],
           });
         }
+        // Diagnostic console
+        console.info("[Etab] Bâtiments:", b.data?.length, "Services:", services.length,
+          "Orphelins (sans batiment_id):", servicesOrphelins.length,
+          "Chambres:", chambres.length, "Lits:", lits.length);
         setTree(bats); setPatients(pa.data || []); setMateriels(ma.data || []); setDis(di.data || []);
       } catch (e) {
         // 0.57.5 : try/catch englobant pour pas crasher la page
@@ -207,6 +299,23 @@ export default function Etablissement() {
                   <button className={view === "plan" ? "on" : ""} onClick={() => setView("plan")}><i className="ti ti-layout-grid" /> Plan</button>
                   <button className={view === "tree" ? "on" : ""} onClick={() => setView("tree")}><i className="ti ti-binary-tree" /> Arbre</button>
                 </div>
+              </div>
+
+              {/* 0.62.15 : Boutons rapides création structure (modal local, pas redirect) */}
+              <div style={{ display: "flex", gap: 6, marginTop: 10, marginBottom: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: "#5a6878", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, alignSelf: "center", marginRight: 4 }}>+ Créer :</span>
+                <button onClick={() => setCreateModal({ type: "batiment" })} style={btnQuick("#185FA5")}>
+                  <i className="ti ti-building" /> Bâtiment
+                </button>
+                <button onClick={() => setCreateModal({ type: "service", batiment_id: st.bat })} style={btnQuick("#7CC8C8")}>
+                  <i className="ti ti-stethoscope" /> Service
+                </button>
+                <button onClick={() => setCreateModal({ type: "chambre", service_id: st.service })} style={btnQuick("#7a6fb0")}>
+                  <i className="ti ti-door" /> Chambre
+                </button>
+                <button onClick={() => setCreateModal({ type: "lit", chambre_id: st.chambre })} style={btnQuick("#EF9F27")}>
+                  <i className="ti ti-bed" /> Lit
+                </button>
               </div>
 
               <div style={{ marginBottom: 12 }}>
@@ -447,6 +556,74 @@ export default function Etablissement() {
         )}
         {/* 0.58.87 : Modal articles du dépôt sélectionné */}
         {depotModal && <DepotArticlesModal depot={depotModal} onClose={() => setDepotModal(null)} />}
+
+        {/* 0.62.15 : Modal création bât/svc/chambre/lit */}
+        {createModal && (
+          <Modal open={!!createModal} onClose={() => setCreateModal(null)} kind="patient"
+            title={`Créer ${createModal.type === "batiment" ? "un bâtiment" : createModal.type === "service" ? "un service" : createModal.type === "chambre" ? "une chambre" : "un lit"}`}
+            actions={
+              <>
+                <Btn variant="ghost" onClick={() => setCreateModal(null)}>Annuler</Btn>
+                <Btn variant="primary" onClick={createEntity} disabled={creating}>{creating ? "Création..." : "Créer"}</Btn>
+              </>
+            }>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <label style={{ fontSize: 12, color: "#5a6878" }}>
+                <b>Nom *</b>
+                <input value={createForm.nom || ""} onChange={(e) => setCreateForm({ ...createForm, nom: e.target.value })}
+                  placeholder={createModal.type === "batiment" ? "Bâtiment A" : createModal.type === "service" ? "Cardiologie" : createModal.type === "chambre" ? "101" : "Lit 1"}
+                  style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}
+                  autoFocus
+                />
+              </label>
+
+              {/* Pour service : sélecteur bâtiment */}
+              {createModal.type === "service" && (
+                <label style={{ fontSize: 12, color: "#5a6878" }}>
+                  <b>Bâtiment *</b>
+                  <select value={createForm.batiment_id || ""} onChange={(e) => setCreateForm({ ...createForm, batiment_id: e.target.value })}
+                    style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}>
+                    <option value="">— Choisir un bâtiment —</option>
+                    {tree.filter(b => !b.id.startsWith("virtual")).map(b => <option key={b.id} value={b.id}>{b.nom}</option>)}
+                  </select>
+                </label>
+              )}
+
+              {/* Pour chambre : sélecteur service + nb lits */}
+              {createModal.type === "chambre" && (
+                <>
+                  <label style={{ fontSize: 12, color: "#5a6878" }}>
+                    <b>Service *</b>
+                    <select value={createForm.service_id || ""} onChange={(e) => setCreateForm({ ...createForm, service_id: e.target.value })}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}>
+                      <option value="">— Choisir un service —</option>
+                      {tree.flatMap(b => b.etages.flatMap(e => e.services)).map(s => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                    </select>
+                  </label>
+                  <label style={{ fontSize: 12, color: "#5a6878" }}>
+                    <b>Créer combien de lits ?</b>
+                    <input type="number" min="0" max="20" value={createForm.nb_lits || 0} onChange={(e) => setCreateForm({ ...createForm, nb_lits: parseInt(e.target.value, 10) || 0 })}
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}
+                    />
+                    <div style={{ fontSize: 10, color: "#8a98a8", marginTop: 4 }}>0 = aucun lit (vide). Les lits seront créés automatiquement (Lit 1, Lit 2, ...)</div>
+                  </label>
+                </>
+              )}
+
+              {/* Pour lit : sélecteur chambre */}
+              {createModal.type === "lit" && (
+                <label style={{ fontSize: 12, color: "#5a6878" }}>
+                  <b>Chambre *</b>
+                  <select value={createForm.chambre_id || ""} onChange={(e) => setCreateForm({ ...createForm, chambre_id: e.target.value })}
+                    style={{ width: "100%", padding: "8px 10px", borderRadius: 6, border: "1px solid #cfd8e0", fontFamily: "inherit", fontSize: 13, marginTop: 4 }}>
+                    <option value="">— Choisir une chambre —</option>
+                    {tree.flatMap(b => b.etages.flatMap(e => e.services.flatMap(s => s.chambres))).map(c => <option key={c.id} value={c.id}>Ch. {c.nom}</option>)}
+                  </select>
+                </label>
+              )}
+            </div>
+          </Modal>
+        )}
       </div>
     </div>
   );
@@ -824,4 +1001,22 @@ function MagasinsRattachesPanel({ etabId, auth, supabase }) {
       )}
     </Panel>
   );
+}
+
+// 0.62.15 : helper bouton création rapide
+function btnQuick(color) {
+  return {
+    background: `${color}15`,
+    color,
+    border: `1px solid ${color}40`,
+    padding: "5px 12px",
+    borderRadius: 6,
+    fontFamily: "inherit",
+    fontSize: 11.5,
+    fontWeight: 700,
+    cursor: "pointer",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+  };
 }

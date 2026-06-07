@@ -240,6 +240,34 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.15",
+    "kind": "fix",
+    "titre": "🏗 Vue plan ROBUSTE + boutons création Bâtiment/Service/Chambre/Lit en modal universel (plus de redirect 404)",
+    "chantiers": [
+      { "code": "AI", "txt": "🐛 **Fix vue plan TOUJOURS vide** : avant si les services n'avaient pas tous `batiment_id`, ils étaient ignorés sauf cas particulier (1 seul bât). **Fix** : maintenant les services orphelins (sans `batiment_id`) sont **ajoutés au PREMIER bâtiment** (cas DB pas complètement migrée). console.info diagnostic affiche : 'Bâtiments: X Services: Y Orphelins: Z Chambres: W Lits: V' pour debug rapide" },
+      { "code": "AI", "txt": "🏗 **Boutons '+ Créer' au-dessus de la vue plan/arbre** : 4 boutons rapides colorés (📘 Bâtiment, 🩺 Service, 🚪 Chambre, 🛏 Lit). Avant : `router.push('/batiments?new=1...')` qui menait à un **404** car ces pages n'existent pas. **Fix** : **modal universel local** avec champs conditionnels selon le type. Pas de navigation, création sur place" },
+      { "code": "AI", "txt": "🪟 **Modal de création universel** : champ Nom obligatoire avec autoFocus + placeholder adapté ('Bâtiment A', 'Cardiologie', '101', 'Lit 1'). Champs conditionnels : pour service → select bâtiment (parmi `tree`), pour chambre → select service (parmi tous les services de l'arbre) + champ 'Créer combien de lits ?' (0-20) qui crée automatiquement les lits associés, pour lit → select chambre. Helper `reloadTree()` recharge l'arbre instantanément après création (sans refresh page)" },
+      { "code": "AI", "txt": "🎨 **Helper `btnQuick(color)`** : style commun pour les 4 boutons création (fond couleur 15%, border 40%, padding 5px 12px, font 11.5px, fontWeight 700, icône + label inline)" },
+      { "code": "INFO", "txt": "🚧 **Erreurs 404 / 503 / MIME text/plain sur /collaborateurs-fournisseurs et /etablissement?etab=...** : ce ne sont PAS des bugs de code. Ce sont des erreurs Vercel typiques de **build cassé** ou de **cache obsolète** (chunks .js servis avec mauvais Content-Type). **Solution** : (1) Sur Vercel dashboard, redéploie manuellement le dernier build OU (2) clean cache navigateur Ctrl+Shift+R OU (3) attends la fin du build automatique" }
+    ],
+    "themes": ["fix-critique", "etablissement", "vue-plan", "modal", "creation"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
+    "v": "0.62.14",
+    "kind": "feat",
+    "titre": "🎯 Tuile collaborateur enrichie (mail+tél+actions) + Tab Transferts magasin → dépôt activé (filtré par rattachements)",
+    "chantiers": [
+      { "code": "AI", "txt": "🎯 **Tuile collaborateur MAX d'infos** : avant juste nom + rôle + spécialité. Maintenant : nom (ou email fallback si pas de prénom/nom), badge 'profil à compléter' si _virtual, badge 'moi' si _self_added, fonction détaillée (📋), spécialité (🎓), magasin rattaché si utilisateur_magasin (🏬), pharmacie si pharmacien (💊), établissement + service (🏢), ADELI/RPPS, **email** (✉) et **téléphone** (📞). **Actions rapides** : bouton 'Email' (mailto:) bleu + bouton 'Appel' (tel:) vert avec `e.stopPropagation` pour pas déclencher l'édition" },
+      { "code": "AI", "txt": "🔄 **Tab Transferts magasin activé** : avant `/magasin?tab=transferts` redirigait sur DI. Maintenant son propre onglet (icône ti-transfer violet) avec liste + bouton 'Nouveau transfert'. Modal de création avec **dépôts destination filtrés par les rattachements** (`magasins_rattachements.depot_id` direct OU `etablissement_id` → tous les dépôts de l'étab). Sélecteur article depuis catalogue magasin. Quantité + motif + commentaire. INSERT dans table `transferts` avec statut='en_attente'. Bandeau d'alerte si aucun rattachement actif" },
+      { "code": "AI", "txt": "📋 **Liste transferts** : cards avec icône violette ↔, numéro, dépôt destination (+ nom étab), date, article + quantité, motif italique, badge statut coloré (validé vert / refusé rouge / en_attente orange). Limit 50 derniers" }
+    ],
+    "themes": ["feat", "collaborateurs", "transferts", "magasin", "ux"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.62.13",
     "kind": "feat",
     "titre": "🏬 Création EC côté magasin avec workflow notif + Calendrier tournées (semaine/mois) + Invite user magasin avec rôle pro",
