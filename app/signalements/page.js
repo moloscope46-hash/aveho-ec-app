@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
+import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn} from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
@@ -255,6 +256,15 @@ export default function SignalementsPage() {
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
+      {/* 0.62.110 : barre actions mobile + desktop */}
+      <MobileActionsBar
+        primary={[
+          { icon: "ti-plus", label: "Nouveau signalement", onClick: openNew, color: "#7CC8C8" },
+        ]}
+        secondary={[
+          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
+        ]}
+      />
       <div className="wrap">
         <PageHead eyebrow="COMMUNICATION" icon="ti-message" title="Signalements" accent="anonymes"
           sub="Boîte à idées et problèmes terrain — tu peux signer ou rester anonyme" />

@@ -273,15 +273,17 @@ export default function Etablissement() {
               ].map(t => {
                 const active = tab === t.k;
                 return (
-                  <button key={t.k} onClick={() => setTab(t.k)} style={{
+                  <button key={t.k} onClick={() => setTab(t.k)}
+                    aria-selected={active}
+                    style={{
                     background: active ? "#fff" : "transparent",
                     color: active ? t.c : "#5a6878",
-                    border: active ? `1px solid ${t.c}33` : "1px solid transparent",
-                    borderLeft: active ? `3px solid ${t.c}` : "1px solid transparent",
+                    border: active ? `2px solid ${t.c}` : "2px solid transparent",
                     padding: "9px 14px", borderRadius: 10,
-                    fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                    transition: "all .15s",
-                    boxShadow: active ? `0 4px 10px ${t.c}22` : "none",
+                    fontFamily: "inherit", fontSize: 12.5, fontWeight: active ? 700 : 600, cursor: "pointer",
+                    transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    boxShadow: active ? `0 4px 12px ${t.c}33, 0 0 0 1px ${t.c}` : "none",
+                    transform: active ? "translateY(-1px)" : "translateY(0)",
                   }}>
                     <i className={`ti ${t.ic}`} style={{ marginRight: 5 }} /> {t.lbl}
                   </button>

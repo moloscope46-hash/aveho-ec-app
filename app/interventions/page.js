@@ -16,6 +16,7 @@ import { useAuth } from "../../lib/useAuth";
 // 0.62.47 : filtre contexte bât/svc courant (TODO depuis 0.58.36)
 import { useCurrentContext } from "../../lib/useCurrentContext";
 import TopBar from "../TopBar";
+import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, Modal } from "../ui";
 import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-premium";
@@ -317,6 +318,18 @@ function InterventionsInner() {
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
+      {/* 0.62.110 : barre actions mobile + desktop */}
+      <MobileActionsBar
+        primary={[
+          { icon: "ti-plus", label: "Nouvelle DI", onClick: () => openNew(), color: "#7CC8C8" },
+        ]}
+        secondary={[
+          { icon: "ti-list", label: "Liste", onClick: () => setView("liste") },
+          { icon: "ti-layout-kanban", label: "Kanban", onClick: () => setView("kanban") },
+          { icon: "ti-grid-dots", label: "Tuiles", onClick: () => setView("tuiles") },
+          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
+        ]}
+      />
       <div className="wrap">
         <BackButton />
         <PageHead

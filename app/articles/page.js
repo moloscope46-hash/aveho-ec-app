@@ -482,20 +482,28 @@ export default function Articles() {
                 { key: "tracabilite", lbl: "Tracabilité", icon: "ti-search" },
                 { key: "rattachement", lbl: "Rattachements", icon: "ti-link" },
                 { key: "compta", lbl: "Compta", icon: "ti-calculator" },
-              ].map(tab => (
+              ].map(tab => {
+                const active = activeTab === tab.key;
+                return (
                 <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                  aria-selected={active}
                   style={{
-                    background: activeTab === tab.key ? "linear-gradient(135deg, rgba(124,200,200,.20), transparent)" : "transparent",
-                    color: activeTab === tab.key ? "#185FA5" : "#5a6878",
-                    border: "none", borderBottom: `3px solid ${activeTab === tab.key ? "#185FA5" : "transparent"}`,
-                    padding: "8px 14px", fontSize: 12.5, fontWeight: activeTab === tab.key ? 700 : 500,
+                    background: active ? "#fff" : "transparent",
+                    color: active ? "#185FA5" : "#5a6878",
+                    border: active ? "2px solid #185FA5" : "2px solid transparent",
+                    padding: "9px 14px", borderRadius: 10,
+                    fontSize: 12.5, fontWeight: active ? 700 : 600,
                     cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
                     display: "inline-flex", alignItems: "center", gap: 5,
+                    boxShadow: active ? "0 4px 12px rgba(24,95,165,.20), 0 0 0 1px #185FA5" : "none",
+                    transform: active ? "translateY(-1px)" : "translateY(0)",
+                    transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                   }}
                 >
                   <i className={`ti ${tab.icon}`} /> {tab.lbl}
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             {/* Tab : Général */}

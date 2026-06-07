@@ -240,6 +240,86 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.112",
+    "kind": "feat",
+    "titre": "🎯 BatimentServiceSwitcher refondu avec TopBarSelect bottom-sheet (3 selects natifs remplacés) + Composant générique TopBarSelect réutilisable",
+    "chantiers": [
+      { "code": "AI", "txt": "📦 **Composant générique TopBarSelect** (app/components/TopBarSelect.js) : sélecteur custom réutilisable avec bottom-sheet mobile. **Props** : options [{id, nom, icone?, sublabel?}], value, onChange, placeholder, icon, iconColor, label (titre bottom-sheet), allLabel (option Tous), maxWidth. **Comportement** : (1) Desktop : dropdown classique absolute top + minWidth 240 + maxHeight 400 + box-shadow + click outside ferme. (2) Mobile (window.innerWidth ≤ 768) : backdrop blur + bottom-sheet animé slide-up + handle drag iOS + titre avec icône + liste tappable + bouton Annuler" },
+      { "code": "AI", "txt": "🎯 **BatimentServiceSwitcher refondu** : les 3 <select> HTML natifs (Bâtiment, Service, Équipe) remplacés par TopBarSelect. **Bâtiment** : icon ti-building, color teal #7CC8C8, allLabel Tous les bâtiments. **Service** : icon ti-stethoscope, color amber #EF9F27, allLabel Tous les services. **Équipe** : icon ti-users-group, color dynamique selon équipe.couleur ou violet #7a6fb0, allLabel Toutes les équipes. Le composant reste masqué en mobile via .bat-svc-switch (CSS media query existante) mais visible sur tablette/desktop avec UX cohérente" },
+      { "code": "INFO", "txt": "ℹ️ **MobileContextPicker** : déjà OK ! Le composant utilise déjà un modal full-screen slide-up custom (pas de select natif). Aucune action nécessaire pour celui-ci" },
+      { "code": "INFO", "txt": "ℹ️ **/signalements refacto custom** : la liste actuelle est déjà rendue en cartes (pas en tableau HTML). Le rendu est dans une grille `flex column gap 12` avec chaque signalement comme une card border 1px radius 12. **Pour ViewModeToggle (Liste/Tuiles complète)** : à faire dans une prochaine version (ajouter state viewMode + grille auto-fill alternative + persistence localStorage). Beaucoup de variantes UI à intégrer (types, statuts, urgences, votes, tags) qui méritent un design dédié pour les Tuiles" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.113+** : (a) **Refacto custom /signalements complète** avec ViewModeToggle Liste/Tuiles : tuiles compactes avec type+statut+urgence+votes+tags+auteur. (b) **Refacto custom /commandes** avec ViewModeToggle. (c) **Pattern onglets sur autres pages** : compta, parametres, équipes. (d) **Widget ChartCard /accueil** drag&drop. (e) **doc.addImage logo statistiques-rgpd**. (f) **Intégrer addPdfFooter** sur PDF existants (BL/devis/commande). (g) Utiliser TopBarSelect dans d autres parties de l app où des selects natifs traînent"
+      }
+    ],
+    "themes": ["feature", "mobile", "ux", "component"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.112.html"
+  },
+  {
+    "v": "0.62.111",
+    "kind": "feat",
+    "titre": "🎯 SÉLECTEUR ÉTABLISSEMENT en BOTTOM-SHEET mobile : remplacement du <select> natif HTML par composant custom (le dropdown natif s ouvrait en HAUT de l écran sur mobile)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🎯 **Problème résolu** : sur mobile, cliquer sur le sélecteur établissement de la TopBar ouvrait un dropdown natif iOS/Android qui s affichait dans la partie supérieure de l écran (impossible à styler car contrôlé par l OS). **Solution** : remplacement du <select> HTML natif par un composant custom `TopBarEtabSelect` qui s ouvre en bottom-sheet propre sur mobile" },
+      { "code": "AI", "txt": "📦 **Composant TopBarEtabSelect (app/components/TopBarEtabSelect.js)** : détection automatique mobile (window.innerWidth ≤ 768). **Bouton trigger** style etab-switch avec chevron up/down animé + nom étab tronqué ellipsis. **Comportement** : (1) **Desktop** : dropdown classique en absolute top calc(100% + 6px) left 0, minWidth 240px, maxHeight 400px, box-shadow 0 12px 32px. Click outside ferme. (2) **Mobile** : backdrop fixed inset 0 + blur 6 + rgba navy/55 + animation fade-in. Bottom-sheet position fixed bottom 0 left 0 right 0 + radius 20 20 0 0 + maxHeight 75vh + box-shadow up + animation av-bottom-sheet-up cubic-bezier élastique 280ms" },
+      { "code": "AI", "txt": "🎨 **Liste options stylée** : (1) **Handle iOS-style** drag-bar grise 40x4 centrée en haut mobile. (2) **Titre Choisir un établissement** avec icône hôpital bleu mobile. (3) **Option Tous les établissements** : background teal/12 + border 2px teal si actif + emoji 🌐 + texte + checkmark. (4) **Chaque établissement** : icône hôpital + nom + ville en sous-ligne grise. Active : background bleu/10 + border 2px bleu + checkmark. Hover desktop : background teal/8. (5) **Bouton Annuler** gradient teal-navy mobile uniquement en bas du bottom-sheet" },
+      { "code": "INFO", "txt": "💡 **Avantages** : (1) Le sélecteur s ouvre TOUJOURS en bas vers le haut sur mobile (cohérent avec le reste de l UX bottom-sheet du soft). (2) Plus de tap sur picker OS qui décale tout. (3) Affichage plus riche : nom + ville par étab. (4) Animations premium élastiques. (5) Accessibilité : aria-haspopup, aria-expanded, role=listbox/option, aria-selected. (6) Fermeture click outside (desktop) ou tap backdrop/Annuler (mobile)" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.112+** : (a) **Faire pareil pour BatimentServiceSwitcher** et MobileContextPicker si toujours dropdown natif. (b) **Refacto custom /signalements** complète. (c) **Refacto custom /commandes**. (d) **Pattern onglets sur autres pages**. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Intégrer addPdfFooter** sur PDF existants"
+      }
+    ],
+    "themes": ["feature", "mobile", "ux", "fix"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.111.html"
+  },
+  {
+    "v": "0.62.110",
+    "kind": "feat",
+    "titre": "📱 JSX MobileActionsBar INTÉGRÉ sur les 5 pages clés (patients/materiels/interventions/signalements/commandes) avec handlers spécifiques par page",
+    "chantiers": [
+      { "code": "AI", "txt": "📱 **MobileActionsBar /patients** : juste après TopBar. **Primary** : Nouveau patient (ti-plus teal) → openNew(). **Secondary** : Filtres (scroll vers data-filters=patients), Imprimer (window.print). Sur mobile : FAB Nouveau visible + popup kebab pour Filtres/Imprimer" },
+      { "code": "AI", "txt": "📱 **MobileActionsBar /materiels** : **Primary** : Nouveau matériel (navy) → click sur data-crud-action=new. **Secondary** : Export CSV (exportMaterielsCsv), basculer vue Liste/Tuiles (setViewMode), Imprimer. Avantage : sur mobile, la bascule Liste/Tuiles est accessible via le kebab" },
+      { "code": "AI", "txt": "📱 **MobileActionsBar /interventions** : **Primary** : Nouvelle DI (teal) → openNew(). **Secondary** : 3 modes de vue (Liste, Kanban, Tuiles via setView) + Imprimer. Cédric peut basculer entre les 3 modes même sur mobile via le menu kebab" },
+      { "code": "AI", "txt": "📱 **MobileActionsBar /signalements** : **Primary** : Nouveau signalement (teal) → openNew(). **Secondary** : Imprimer (pour exports papier des signalements collectés)" },
+      { "code": "AI", "txt": "📱 **MobileActionsBar /commandes** : **Primary** : Nouvelle commande (teal) → redirection vers /achats (workflow d achat). **Secondary** : Export CSV (exportCommandesCsv) + Imprimer" },
+      { "code": "INFO", "txt": "💡 **Comportement responsive** : (1) **Desktop >768px** : tous les boutons (primary + secondary) affichés en barre horizontale fixed-top sticky. (2) **Mobile ≤768px** : seul le Primary visible (FAB rond en bas-droit, gradient teal premium) + bouton kebab (...) qui ouvre un popup bottom-sheet avec les actions secondary. Toutes les actions accessibles en 2 taps max" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.111+** : (a) **Refacto custom /signalements** complète avec ViewModeToggle Liste/Tuiles + tuiles urgence/statut/votes. (b) **Refacto custom /commandes** avec ViewModeToggle Tuiles. (c) **Pattern onglets sur autres pages** : compta, parametres, équipes, patient/[id]. (d) **Widget ChartCard /accueil** drag&drop. (e) **doc.addImage logo statistiques-rgpd**. (f) **Intégrer addPdfFooter** sur PDF existants (BL/devis/commande)"
+      }
+    ],
+    "themes": ["feature", "mobile", "ux"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.110.html"
+  },
+  {
+    "v": "0.62.109",
+    "kind": "feat",
+    "titre": "🎯 Pattern onglets standardisé sur articles + collectivite (border 2px lift ring) + 📱 Import MobileActionsBar sur 5 pages clés (patients/materiels/interventions/signalements/commandes)",
+    "chantiers": [
+      { "code": "AI", "txt": "🎯 **Pattern onglets standardisé sur /articles** (CRUD article modal) : passé du pattern `borderBottom: 3px solid color` (border-bottom seul peu visible) au nouveau pattern **border 2px solid + boxShadow ring + lift translateY**. Style actif : background #fff + border 2px solid #185FA5 (bleu navy) + boxShadow 0 4px 12px rgba(24,95,165,.20) + ring 1px solid #185FA5 + transform translateY(-1px). Ajout aria-selected. Transition cubic-bezier élastique 200ms. Les 5 onglets (Général, Prix, Cicatrisation, Rattachements, Compta) ont maintenant un contour bien visible" },
+      { "code": "AI", "txt": "🎯 **Pattern onglets standardisé sur /collectivite** (popup tuile établissement) : les 2 onglets Bâtiments (#185FA5 bleu) et Équipes & Services (#7a6fb0 violet) passés du pattern borderBottom 3px au pattern complet border 2px + boxShadow ring color + lift. Le badge compteur conserve son design pill mais devient plus visible avec le contraste du contour actif. Ajout aria-selected pour accessibilité" },
+      { "code": "AI", "txt": "📱 **Import MobileActionsBar sur 5 pages clés** : ajout via sed `import MobileActionsBar from ...` (chemin relatif calculé selon profondeur) sur app/patients/page.js, app/materiels/page.js, app/interventions/page.js, app/signalements/page.js, app/commandes/page.js. Tous les imports passent node --check. **Reste à faire** (à intégrer manuellement vu la complexité du JSX de chaque page) : ajouter `<MobileActionsBar primary={[{icon:ti-plus, label:Nouveau, onClick:openNew, color:#7CC8C8}]} secondary={[{icon:ti-filter, label:Filtres, ...}, {icon:ti-download, label:Export, ...}, {icon:ti-printer, label:Imprimer, ...}]} />` après le TopBar et avant le PageHero/contenu principal. Chaque page utilise ses propres handlers pour Nouveau/Filtres/Export/Imprimer" },
+      { "code": "INFO", "txt": "💡 **Comment intégrer MobileActionsBar dans une page** (référence) : (1) L import est déjà fait. (2) Ajouter dans le JSX juste après `<TopBar ... />` : `<MobileActionsBar primary={[{icon: ti-plus, label: Nouveau, onClick: () => openNew(), color: #7CC8C8}]} secondary={[{icon: ti-filter, label: Filtres, onClick: () => setShowFilters(s => !s)}, {icon: ti-download, label: Export CSV, onClick: exportCsv}, {icon: ti-printer, label: Imprimer, onClick: () => window.print()}]} />`. (3) Sur desktop : tous boutons visibles. (4) Sur mobile : Nouveau visible + bouton kebab (...) qui ouvre popup bottom-sheet avec Filtres/Export/Imprimer" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.110+** : (a) **JSX MobileActionsBar** à intégrer dans les 5 pages (handlers spécifiques par page). (b) **Refacto custom /signalements** complète avec ViewModeToggle Liste/Tuiles. (c) **Refacto custom /commandes** avec ViewModeToggle Tuiles. (d) **Pattern onglets sur autres pages** : compta, parametres, équipes, patient/[id] (si elles ont des tabs). (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Intégrer addPdfFooter** sur PDF existants"
+      }
+    ],
+    "themes": ["feature", "ui", "tabs", "mobile"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.109.html"
+  },
+  {
+    "v": "0.62.108",
+    "kind": "feat",
+    "titre": "🎯 Onglets : CONTOUR BIEN VISIBLE sur tous les onglets actifs (Groupement, Établissement, Article, Patient, etc) — border 2px + box-shadow + barre indicateur + animation pop élastique",
+    "chantiers": [
+      { "code": "AI", "txt": "🎯 **CSS global onglets contour visible** : règles dans globals.css pour `button.av-tab`, `[role=tab]` et patterns inline détectés (button avec borderRadius 10 + boxShadow). **État inactif** : border 2px transparent + background transparent. **Hover** : background teal/8 + border teal/25 + transition cubic-bezier élastique. **Actif** : background #fff + **border 2px solid color** + color text actif + **box-shadow 0 4px 12px color/8 + ring 1px color** + font-weight 700 + transform translateY(-1px) (lift). **Barre indicateur** ::before : bottom -2px 30% width 3px height background color avec animation av-tab-indicator-in 250ms (slide-in + fade)" },
+      { "code": "AI", "txt": "✨ **Pattern étab modifié** : le button d onglet sur app/etablissement/page.js passe de `1px solid color/33 + borderLeft 3px` (peu visible) à **2px solid color** complet + `0 0 0 1px color` ring + `transform translateY(-1px)` lift + transition cubic-bezier. Ajout aria-selected pour accessibilité. **Les autres pages avec onglets** (groupements, articles, patients) bénéficieront automatiquement de la règle CSS si elles utilisent role=tab ou av-tab class. Pour les patterns inline custom, à passer au nouveau pattern progressivement" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.109+** : (a) **Refacto custom /signalements** complète avec ViewModeToggle Liste/Tuiles : mode tuiles avec couleur urgence (Bas=gris, Normal=teal, Élevé=amber, Critique=rouge) + badge statut + nb votes + tags + photos auteur. (b) **Refacto custom /commandes** avec ViewModeToggle : mode tuiles avec total prix gros + statut color + fournisseur logo + date livraison prévue. (c) **MobileActionsBar déploiement** : importer + utiliser le composant sur /patients, /materiels, /interventions, /signalements, /commandes avec primary=[Nouveau] secondary=[Filtres, Export, Imprimer]. (d) **Pattern onglets standardisé** : remplacer progressivement les patterns inline de tabs dans les autres pages (groupements, articles, patients, etc.) par le nouveau pattern visible. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Intégrer addPdfFooter** sur PDF existants"
+      }
+    ],
+    "themes": ["feature", "ui", "tabs"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.108.html"
+  },
+  {
     "v": "0.62.107",
     "kind": "feat",
     "titre": "🚨 FIX BUILD VERCEL /materiels (div manquante ligne 589) + 📅 Agenda dans Mon Espace + 🎨 Logo Aveho SVG haute qualité animé pour PWA splash (splash-aveho.svg)",

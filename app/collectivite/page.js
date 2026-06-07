@@ -807,21 +807,23 @@ export default function GroupementPage() {
                 }}>
                   <button
                     onClick={() => setPopupTab("bats")}
+                    aria-selected={popupTab === "bats"}
                     style={{
-                      background: "transparent",
-                      border: "none",
-                      borderBottom: popupTab === "bats" ? "3px solid #185FA5" : "3px solid transparent",
-                      marginBottom: -2,
-                      padding: "10px 16px",
+                      background: popupTab === "bats" ? "#fff" : "transparent",
+                      border: popupTab === "bats" ? "2px solid #185FA5" : "2px solid transparent",
+                      borderRadius: 10,
+                      padding: "9px 14px",
                       cursor: "pointer",
                       fontFamily: "inherit",
                       fontSize: 13,
-                      fontWeight: popupTab === "bats" ? 700 : 500,
+                      fontWeight: popupTab === "bats" ? 700 : 600,
                       color: popupTab === "bats" ? "#185FA5" : "#6c7a89",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      transition: "all 150ms",
+                      boxShadow: popupTab === "bats" ? "0 4px 12px rgba(24,95,165,.20), 0 0 0 1px #185FA5" : "none",
+                      transform: popupTab === "bats" ? "translateY(-1px)" : "translateY(0)",
+                      transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                     }}
                   >
                     <i className="ti ti-stack-2" />
@@ -838,21 +840,23 @@ export default function GroupementPage() {
                   </button>
                   <button
                     onClick={() => setPopupTab("equipes")}
+                    aria-selected={popupTab === "equipes"}
                     style={{
-                      background: "transparent",
-                      border: "none",
-                      borderBottom: popupTab === "equipes" ? "3px solid #7a6fb0" : "3px solid transparent",
-                      marginBottom: -2,
-                      padding: "10px 16px",
+                      background: popupTab === "equipes" ? "#fff" : "transparent",
+                      border: popupTab === "equipes" ? "2px solid #7a6fb0" : "2px solid transparent",
+                      borderRadius: 10,
+                      padding: "9px 14px",
                       cursor: "pointer",
                       fontFamily: "inherit",
                       fontSize: 13,
-                      fontWeight: popupTab === "equipes" ? 700 : 500,
+                      fontWeight: popupTab === "equipes" ? 700 : 600,
                       color: popupTab === "equipes" ? "#7a6fb0" : "#6c7a89",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,
-                      transition: "all 150ms",
+                      boxShadow: popupTab === "equipes" ? "0 4px 12px rgba(122,111,176,.20), 0 0 0 1px #7a6fb0" : "none",
+                      transform: popupTab === "equipes" ? "translateY(-1px)" : "translateY(0)",
+                      transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                     }}
                   >
                     <i className="ti ti-sitemap" />

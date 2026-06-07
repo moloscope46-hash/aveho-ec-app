@@ -11,6 +11,7 @@ import { useCurrentContext } from "../../lib/useCurrentContext";
 // 0.58.43 : hook pour écouter les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
+import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageHead, Statut, Modal, Btn } from "../ui";
@@ -203,6 +204,20 @@ function MaterielsInner() {
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
+      {/* 0.62.110 : barre actions mobile + desktop */}
+      <MobileActionsBar
+        primary={[
+          { icon: "ti-plus", label: "Nouveau matériel", onClick: () => {
+            const btn = document.querySelector('[data-crud-action="new"]');
+            if (btn) btn.click();
+          }, color: "#142131" },
+        ]}
+        secondary={[
+          { icon: "ti-file-spreadsheet", label: "Export CSV", onClick: exportMaterielsCsv },
+          { icon: "ti-layout-grid", label: viewMode === "grid" ? "Vue liste" : "Vue tuiles", onClick: () => setViewMode(viewMode === "grid" ? "list" : "grid") },
+          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
+        ]}
+      />
       <div className="wrap">
         {/* 0.58.4 : PageHero premium avec stats inline */}
         <PageHero

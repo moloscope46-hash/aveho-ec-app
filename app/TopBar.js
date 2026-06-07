@@ -23,6 +23,7 @@ import Modal from "./components/Modal";
 import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
 // 0.58.87 : mini-panier dropdown style Amazon
 import CartDropdown from "./components/CartDropdown";
+import TopBarEtabSelect from "./components/TopBarEtabSelect";  /* 0.62.111 */
 import StructureLogo from "./components/StructureLogo";  /* 0.62.69 */
 import MobileContextPicker from "./components/MobileContextPicker";  /* 0.62.74 */
 // 0.61.4 : adapter TopBar selon mode magasin (catalogue, panier, etc.)
@@ -315,17 +316,15 @@ export default function TopBar({ cartCount = 0, auth }) {
           </button>
         )}
         {/* 0.62.10 : Sélecteur établissement + filtres bât/svc en MODE MAGASIN AUSSI
-            0.62.94 : option "Tous les établissements" pour mode multi-étab */}
+            0.62.94 : option "Tous les établissements" pour mode multi-étab
+            0.62.111 : remplacement du <select> natif par composant custom bottom-sheet mobile */}
         {mounted && auth && auth.etablissements && auth.etablissements.length > 0 && (
-          <div className="etab-switch">
-            <i className="ti ti-building-hospital" />
-            <select value={auth.etabId || ""} onChange={(e) => auth.setEtab(e.target.value || null)}>
-              {auth.etablissements.length > 1 && (
-                <option value="">🌐 Tous les établissements</option>
-              )}
-              {auth.etablissements.map((et) => <option key={et.id} value={et.id}>{et.nom}</option>)}
-            </select>
-          </div>
+          <TopBarEtabSelect
+            etablissements={auth.etablissements}
+            etabId={auth.etabId}
+            etabNom={auth.etabNom}
+            onChange={(id) => auth.setEtab(id)}
+          />
         )}
         {/* 0.62.74 : Bouton context mobile (popup avec étab/bât/svc) */}
         {mounted && auth && <MobileContextPicker auth={auth} />}

@@ -13,6 +13,7 @@
 // =============================================================
 
 import { useEffect, useState } from "react";
+import TopBarSelect from "./TopBarSelect";  /* 0.62.112 */
 import { createClient } from "../../lib/supabase";
 // 0.58.84 : helper sondage batiment_id (évite 400 cascadants)
 import { selectServicesContexte } from "../../lib/services";
@@ -236,137 +237,45 @@ export default function BatimentServiceSwitcher({ auth }) {
         marginLeft: 4,
       }}
     >
+      {/* 0.62.112 : refonte avec TopBarSelect (bottom-sheet mobile + pas de <select> natif) */}
       {/* Bâtiment */}
-      <div
-        title="Bâtiment courant"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 4,
-          background: "rgba(255,255,255,.06)",
-          border: "1px solid rgba(255,255,255,.10)",
-          borderRadius: 8,
-          padding: "4px 4px 4px 8px",
-        }}
-      >
-        <i
-          className={`ti ti-${batiments.find(b => b.id === batId)?.icone || "building"}`}
-          style={{ color: "#7CC8C8", fontSize: 14 }}
-        />
-        <select
-          value={batId}
-          onChange={(e) => changeBat(e.target.value)}
-          aria-label="Bâtiment courant"
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#dde4eb",
-            fontSize: 12,
-            fontFamily: "inherit",
-            cursor: "pointer",
-            maxWidth: 130,
-            outline: "none",
-          }}
-        >
-          {batiments.length === 0 && <option value="">—</option>}
-          {/* 0.58.98 : option "Tous les bâtiments" pour ne pas filtrer */}
-          {batiments.length > 0 && (
-            <option value="" style={{ color: "#142131", fontWeight: 700 }}>
-              ★ Tous les bâtiments
-            </option>
-          )}
-          {batiments.map(b => (
-            <option key={b.id} value={b.id} style={{ color: "#142131" }}>{b.nom}</option>
-          ))}
-        </select>
-      </div>
+      <TopBarSelect
+        options={batiments.map(b => ({ id: b.id, nom: b.nom, icone: b.icone }))}
+        value={batId}
+        onChange={changeBat}
+        placeholder="—"
+        icon="ti-building"
+        iconColor="#7CC8C8"
+        label="Choisir un bâtiment"
+        allLabel={batiments.length > 0 ? "Tous les bâtiments" : null}
+      />
 
       {/* Service */}
       {services.length > 0 && (
-        <div
-          title="Service courant"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            background: "rgba(255,255,255,.06)",
-            border: "1px solid rgba(255,255,255,.10)",
-            borderRadius: 8,
-            padding: "4px 4px 4px 8px",
-          }}
-        >
-          <i
-            className={`ti ti-${services.find(s => s.id === svcId)?.icone || "stethoscope"}`}
-            style={{ color: "#EF9F27", fontSize: 14 }}
-          />
-          <select
-            value={svcId}
-            onChange={(e) => changeSvc(e.target.value)}
-            aria-label="Service courant"
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#dde4eb",
-              fontSize: 12,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              maxWidth: 130,
-              outline: "none",
-            }}
-          >
-            {/* 0.58.98 : option "Tous les services" */}
-            <option value="" style={{ color: "#142131", fontWeight: 700 }}>
-              ★ Tous les services
-            </option>
-            {services.map(s => (
-              <option key={s.id} value={s.id} style={{ color: "#142131" }}>{s.nom}</option>
-            ))}
-          </select>
-        </div>
+        <TopBarSelect
+          options={services.map(s => ({ id: s.id, nom: s.nom, icone: s.icone }))}
+          value={svcId}
+          onChange={changeSvc}
+          placeholder="Service"
+          icon="ti-stethoscope"
+          iconColor="#EF9F27"
+          label="Choisir un service"
+          allLabel="Tous les services"
+        />
       )}
 
-      {/* 0.58.60 : Équipe */}
+      {/* Équipe */}
       {equipes.length > 0 && (
-        <div
-          title="Équipe courante (filtre)"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            background: "rgba(255,255,255,.06)",
-            border: "1px solid rgba(255,255,255,.10)",
-            borderRadius: 8,
-            padding: "4px 4px 4px 8px",
-          }}
-        >
-          <i
-            className="ti ti-users-group"
-            style={{
-              color: equipes.find(e => e.id === equipeId)?.couleur || "#7a6fb0",
-              fontSize: 14,
-            }}
-          />
-          <select
-            value={equipeId}
-            onChange={(e) => changeEquipe(e.target.value)}
-            aria-label="Équipe courante"
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#dde4eb",
-              fontSize: 12,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              maxWidth: 130,
-              outline: "none",
-            }}
-          >
-            <option value="" style={{ color: "#142131" }}>— Toutes les équipes —</option>
-            {equipes.map(e => (
-              <option key={e.id} value={e.id} style={{ color: "#142131" }}>{e.nom}</option>
-            ))}
-          </select>
-        </div>
+        <TopBarSelect
+          options={equipes.map(e => ({ id: e.id, nom: e.nom }))}
+          value={equipeId}
+          onChange={changeEquipe}
+          placeholder="Équipe"
+          icon="ti-users-group"
+          iconColor={equipes.find(e => e.id === equipeId)?.couleur || "#7a6fb0"}
+          label="Choisir une équipe"
+          allLabel="Toutes les équipes"
+        />
       )}
 
       <style jsx global>{`

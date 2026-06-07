@@ -10,6 +10,7 @@ import { usePageAction } from "../../lib/usePageAction";
 import { useContextPatientIds } from "../../lib/useContextPatientIds";
 import { fmtEur, fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
+import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, Statut, StateMsg } from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
@@ -94,6 +95,18 @@ export default function Commandes() {
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
+      {/* 0.62.110 : barre actions mobile + desktop */}
+      <MobileActionsBar
+        primary={[
+          { icon: "ti-plus", label: "Nouvelle commande", onClick: () => {
+            window.location.href = "/achats";
+          }, color: "#7CC8C8" },
+        ]}
+        secondary={[
+          { icon: "ti-file-spreadsheet", label: "Export CSV", onClick: exportCommandesCsv },
+          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
+        ]}
+      />
       <div className="wrap">
         <PageHead small title="Mes commandes" sub="Historique des commandes passées auprès de vos magasins" />
         <KpiRow tiles={[

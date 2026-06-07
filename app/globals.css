@@ -6559,3 +6559,78 @@ body.av-anim-off .av-page-hero {
   visibility: visible !important;
 }
 
+
+/* =============================================================
+   0.62.108 — Onglets : contour visible bien marqué
+   ============================================================= */
+
+/* Pattern d'onglets : button avec border-radius 10px + boxShadow active */
+button.av-tab,
+[role="tab"] {
+  position: relative;
+  background: transparent;
+  color: #5a6878;
+  border: 2px solid transparent !important;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-family: "Quicksand", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button.av-tab:hover,
+[role="tab"]:hover {
+  background: rgba(124, 200, 200, 0.08);
+  border-color: rgba(124, 200, 200, 0.25) !important;
+}
+
+button.av-tab.active,
+button.av-tab[aria-selected="true"],
+[role="tab"][aria-selected="true"] {
+  background: #fff !important;
+  border: 2px solid var(--av-tab-color, #7CC8C8) !important;
+  color: var(--av-tab-color, #7CC8C8) !important;
+  box-shadow: 0 4px 12px rgba(20, 33, 49, 0.08), 0 0 0 1px var(--av-tab-color, #7CC8C8);
+  font-weight: 700;
+  transform: translateY(-1px);
+}
+
+button.av-tab.active::before,
+button.av-tab[aria-selected="true"]::before,
+[role="tab"][aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 3px;
+  background: var(--av-tab-color, #7CC8C8);
+  border-radius: 2px;
+  animation: av-tab-indicator-in 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes av-tab-indicator-in {
+  from { width: 0; opacity: 0; }
+  to { width: 30%; opacity: 1; }
+}
+
+/* Cible aussi le pattern inline : button avec borderLeft 3px solid */
+button[style*="borderLeft: 3px solid"]:hover,
+button[style*="border-left: 3px solid"]:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+/* Forcer un contour visible sur tous les boutons d'onglets ACTIFS via inline style */
+button[style*="boxShadow: 0 4px"][style*="border-radius: 10"],
+button[style*="box-shadow: 0 4px"][style*="border-radius: 10"] {
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+

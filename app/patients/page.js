@@ -16,6 +16,7 @@ import { fmtDate } from "../../lib/format";
 // 0.58.42 : hook pour écouter les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
+import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
@@ -369,6 +370,19 @@ export default function Patients() {
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
+      {/* 0.62.110 : barre actions mobile + desktop */}
+      <MobileActionsBar
+        primary={[
+          { icon: "ti-plus", label: "Nouveau patient", onClick: () => openNew(), color: "#7CC8C8" },
+        ]}
+        secondary={[
+          { icon: "ti-filter", label: "Filtres", onClick: () => {
+            const el = document.querySelector('[data-filters="patients"]');
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }},
+          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
+        ]}
+      />
       <div className="wrap" style={{ position: "relative" }}>
         {/* 0.62.29 : ParticlesBackground premium en arrière-plan */}
         <ParticlesBackground count={25} speed={0.18} linkDistance={120} mode="teal" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 160, pointerEvents: "none", opacity: 0.6, zIndex: 0 }} />
