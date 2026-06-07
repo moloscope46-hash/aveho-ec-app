@@ -5232,3 +5232,200 @@ body.av-anim-off .av-page-hero {
   color: #ffffff !important;
 }
 
+
+/* =============================================================
+   0.62.77 — PASS MOBILE PRO : toolbar + popups + listes internes
+   ============================================================= */
+
+/* === TOOLBAR : icônes qui se chevauchent en mobile === */
+@media (max-width: 768px) {
+  /* PageToolbar gere container responsive */
+  .av-pagetoolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+  .av-pagetoolbar > * {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* di-toolbar (utilisé dans patients, di, materiels) */
+  .di-toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 8px 6px !important;
+  }
+  .di-toolbar > * {
+    flex-shrink: 0;
+  }
+  .di-toolbar button {
+    padding: 8px 10px !important;
+    font-size: 11.5px !important;
+    min-height: 36px !important;
+  }
+
+  /* Boutons icon-only mobile : taille fixe propre */
+  .di-toolbar button[aria-label]:not(:has(span)),
+  button.tb-icon {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Action bar avec plusieurs boutons : wrap sur plusieurs lignes */
+  div[style*="display: flex"][style*="gap"] button,
+  div[style*="display: flex"][style*="gap"] a {
+    flex-shrink: 0;
+  }
+
+  /* Header de page : flex column en mobile */
+  .av-page-hero + div,
+  div[style*="justify-content: space-between"][style*="flex-wrap"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+}
+
+/* === POPUPS : listes internes mieux organisées en mobile === */
+@media (max-width: 768px) {
+  /* Le modal-body doit scroller correctement */
+  .modal-body, .modal > .modal-body {
+    max-height: calc(90vh - 120px) !important;
+    overflow-y: auto !important;
+    padding: 14px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Listes dans les popups : 1 colonne max */
+  .modal-body [style*="grid-template-columns: repeat(auto-fill"],
+  .modal-body [style*="grid-template-columns: repeat(auto-fit"],
+  .modal-body [style*="grid-template-columns: 1fr 1fr"],
+  [role="dialog"] [style*="grid-template-columns: repeat(auto-fill"],
+  [role="dialog"] [style*="grid-template-columns: repeat(auto-fit"],
+  [role="dialog"] [style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Fld-row dans modals : empilé vertical */
+  .modal-body .fld-row,
+  [role="dialog"] .fld-row {
+    grid-template-columns: 1fr !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .modal-body .fld-row > .fld,
+  [role="dialog"] .fld-row > .fld {
+    width: 100% !important;
+  }
+
+  /* Cards internes dans modal : padding réduit */
+  .modal-body [data-3d="true"],
+  [role="dialog"] [data-3d="true"] {
+    padding: 10px !important;
+  }
+
+  /* Tableaux dans modals : scrollable + font réduite */
+  .modal-body table,
+  [role="dialog"] table {
+    font-size: 11.5px !important;
+  }
+  .modal-body th, .modal-body td,
+  [role="dialog"] th, [role="dialog"] td {
+    padding: 6px 8px !important;
+  }
+
+  /* Footer modal : sticky bas pour rester visible */
+  .modal-foot, .modal > .modal-foot,
+  [role="dialog"] > div:last-child {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid #e3e9ee;
+    padding: 10px 14px !important;
+    margin: 0 -14px -14px;
+    z-index: 5;
+  }
+
+  /* Boutons footer modal : full width 2 colonnes */
+  .modal-foot button,
+  [role="dialog"] > div:last-child button {
+    flex: 1;
+    min-height: 40px !important;
+  }
+
+  /* Sections internes modals : padding réduit */
+  .modal-body fieldset {
+    padding: 10px !important;
+  }
+  .modal-body legend {
+    font-size: 10.5px !important;
+  }
+
+  /* IconPicker et autres pickers : grille adapter */
+  .av-icon-picker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)) !important;
+  }
+
+  /* Labels dans formulaires : moins de gap */
+  .modal-body label {
+    font-size: 12px !important;
+    margin-bottom: 4px;
+  }
+
+  /* Inputs et textareas dans modal */
+  .modal-body input,
+  .modal-body textarea,
+  .modal-body select,
+  [role="dialog"] input,
+  [role="dialog"] textarea,
+  [role="dialog"] select {
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 10px 12px !important;
+    font-size: 16px !important; /* iOS no-zoom */
+  }
+}
+
+/* === Très petit mobile (< 480px) : modal full screen === */
+@media (max-width: 480px) {
+  .modal-overlay, [class*="modal-overlay"], [role="dialog"]:not(.av-toast) {
+    padding: 0 !important;
+  }
+  .modal-content, .modal-overlay > div, [role="dialog"] > div {
+    max-height: 100vh !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  /* Toolbar icônes : plus compact */
+  .di-toolbar button {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+  .di-toolbar button i.ti {
+    font-size: 14px;
+  }
+}
+
+/* === ScrollIntoView pour les éléments focus en modal === */
+.modal-body input:focus,
+.modal-body textarea:focus,
+.modal-body select:focus {
+  scroll-margin-top: 60px;
+}
+
+/* === AutoCompleteList dropdown : reste dans modal sur mobile === */
+@media (max-width: 768px) {
+  .modal-body [style*="z-index: 100"][style*="position: absolute"] {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    max-height: 250px !important;
+  }
+}
+
