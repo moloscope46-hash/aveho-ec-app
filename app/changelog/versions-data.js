@@ -240,6 +240,36 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.104",
+    "kind": "feat",
+    "titre": "📸 ImageUploader patient header (avatar circulaire 72px + badge camera) + 🔧 Fix 400 etablissements_partenaires (SELECT minimal défensif sans colonnes optionnelles)",
+    "chantiers": [
+      { "code": "FIX", "txt": "🔧 **Fix 400 etablissements_partenaires** : malgré le retrait de archive en 0.62.100, le 400 persistait. Cause : d autres colonnes optionnelles (siret, finess, actif, link_to_etablissement_id, type_relation, contact_nom, contact_email, contact_telephone) n existent pas non plus sur le schéma. **Fix** : SELECT minimal défensif `id,nom,type,ville,cp,adresse,telephone,email` (colonnes universelles). Plus aucun 400 sur la requête partenaires" },
+      { "code": "AI", "txt": "📸 **ImageUploader patient** (/patient/[id]) : (1) Imports ImageUploader + toast. (2) State `photoEditing` boolean. (3) **Avatar circulaire 72px** dans le header, cliquable : `background: r.photo_url ? url(...) cover : linear-gradient(135deg, #7CC8C8, #185FA5)`. Si pas de photo : icône `ti-user` blanc 36px sur le gradient. **Badge camera** 26x26 gradient navy-teal en bottom-right + border 2px blanc + shadow. (4) **Modal édition** : overlay fixed inset 0 + backdrop blur + card 480px. Contient ImageUploader bucket=patients-photos folder=pat.id maxSizeMB=3. À l upload : setPat optimiste + supabase.from(patients).update({photo_url}) + toast. **Le patient a maintenant un visage dans son header de fiche, super pour les longues listes**" },
+      { "code": "INFO", "txt": "ℹ️ **Refacto /articles, /patients, /interventions** : /articles ne utilise pas Crud (déjà custom complexe). /patients utilise un layout custom avec table HTML. /interventions utilise Crud — refacto similaire à /materiels possible. Reporté pour 0.62.105+ vu la priorité fix 400 et ImageUploader patient" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.105+** : (a) **Refacto /interventions custom** avec ViewModeToggle (similaire /materiels). (b) **Vrai favicon Aveho** logo. (c) **Buckets Supabase Storage** manuels (4 buckets) — créer patients-photos privé avec RLS structure_id. (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Workflow commande fournisseur** PDF+Resend. (h) **Footers PDF BL/devis**"
+      }
+    ],
+    "themes": ["feature", "fix", "photo", "patient"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.104.html"
+  },
+  {
+    "v": "0.62.103",
+    "kind": "feat",
+    "titre": "🛠 Refacto /materiels custom : ajout ViewModeToggle Liste/Tuiles + rendu tuiles custom avec photos bannières + badges état + tags miniatures",
+    "chantiers": [
+      { "code": "AI", "txt": "🛠 **Refacto /materiels en page custom** : ajout state `viewMode = list|grid` persistant en localStorage av:materiels:viewMode. Toggle dans la toolbar avec 2 boutons gradient teal-navy au selected (Liste / Tuiles)" },
+      { "code": "AI", "txt": "🎨 **Mode Tuiles custom** : grille auto-fill minmax(260px, 1fr) avec rendu de cartes data-3d data-accent=bleu : (1) **Photo bannière** 120px de hauteur — background image r.photo_url ou gradient avec icône getEtatMeta sur fond coloré meta.color/22 → /08. (2) **Badge état** top-right gradient meta.color avec couleur+ombre. (3) **Tags miniatures** bottom-left max 3 tags. (4) **Contenu** padding 12 avec libellé bold + S/N (Consolas violet) + Lot (Consolas teal) + dépôt avec icône warehouse. (5) Cursor pointer → router.push(/materiel/${r.id})" },
+      { "code": "AI", "txt": "🔄 **Le Crud reste actif** : rendu en `display: none` quand mode=grid (gère add/edit/delete en arrière-plan). Mode Liste affiche le Crud normalement. Permet de garder toutes les fonctionnalités existantes (filtres, tri, recherche, bulk actions) tout en ajoutant le mode Tuiles visuel" },
+      { "code": "INFO", "txt": "📅 **TODO 0.62.104+** : (a) **ImageUploader patient** /patient/[id]. (b) **Vrai favicon Aveho** logo. (c) **Buckets Supabase Storage** manuels (4 buckets). (d) **MobileActionsBar** pages clés. (e) **Widget ChartCard /accueil** drag&drop. (f) **doc.addImage logo statistiques-rgpd**. (g) **Workflow commande fournisseur** PDF+Resend. (h) **Footers PDF BL/devis**. (i) Continuer refacto custom sur autres pages (/articles, /patients, /interventions)"
+      }
+    ],
+    "themes": ["feature", "refacto", "materiels"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-FEAT-0.62.103.html"
+  },
+  {
     "v": "0.62.102",
     "kind": "fix",
     "titre": "🎯 OVERRIDE FINAL tuiles : 6 règles CSS conflictuelles trouvées (isolation:isolate persistante ligne 5837) → force overflow:visible + isolation:auto + animation off + opacity 1 partout. + RAPPEL PUSH ULTRA IMPORTANT",

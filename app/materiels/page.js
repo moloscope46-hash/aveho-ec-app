@@ -40,6 +40,14 @@ function MaterielsInner() {
   const [rel, setRel] = useState({ article_id: [], patient_id: [] });
   const [relReady, setRelReady] = useState(false);
   const [items, setItems] = useState([]);
+  // 0.62.103 : Mode d'affichage tuiles/liste
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window === "undefined") return "list";
+    return localStorage.getItem("av:materiels:viewMode") || "list";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("av:materiels:viewMode", viewMode); } catch {}
+  }, [viewMode]);
   // Alpha 0.11 : tags matériel
   const [tags, setTags] = useState([]);
   const [matTags, setMatTags] = useState({});      // {materiel_id: [tag_id, ...]}
@@ -271,7 +279,123 @@ function MaterielsInner() {
           >
             <i className="ti ti-file-spreadsheet" /> Export CSV
           </button>
+          {/* 0.62.103 : Toggle vue Liste / Tuiles */}
+          <div style={{ display: "inline-flex", background: "#f4f7fa", borderRadius: 8, padding: 3, gap: 2 }}>
+            <button onClick={() => setViewMode("list")} title="Vue liste"
+              style={{
+                padding: "5px 10px", borderRadius: 6,
+                background: viewMode === "list" ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                color: viewMode === "list" ? "#fff" : "#5a6878",
+                border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
+              }}>
+              <i className="ti ti-list" /> Liste
+            </button>
+            <button onClick={() => setViewMode("grid")} title="Vue tuiles"
+              style={{
+                padding: "5px 10px", borderRadius: 6,
+                background: viewMode === "grid" ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                color: viewMode === "grid" ? "#fff" : "#5a6878",
+                border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
+              }}>
+              <i className="ti ti-grid-dots" /> Tuiles
+            </button>
+          </div>
         </div>
+
+        {/* 0.62.103 : Rendu TUILES custom (au-dessus du Crud caché en mode grid) */}
+        {viewMode === "grid" && items.length > 0 && (
+          <div className="av-stagger" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            gap: 12,
+            marginBottom: 20,
+          }}>
+            {items.filter(r => {
+              if (ctx.active && ctxPatientIds && (!r.patient_id || !ctxPatientIds.has(r.patient_id))) return false;
+              if (ctx.active && ctx.equipeId && r.equipe_id !== ctx.equipeId) return false;
+              if (filterArticleId && r.article_id !== filterArticleId) return false;
+              return true;
+            }).map(r => {
+              const meta = getEtatMeta ? getEtatMeta(r.etat) : { color: "#185FA5", icon: "ti-package" };
+              return (
+                <div key={r.id} data-3d="true" data-accent="bleu"
+                  onClick={() => router.push(`/materiel/${r.id}`)}
+                  style={{
+                    background: "#fff",
+                    borderRadius: 14,
+                    padding: 0,
+                    cursor: "pointer",
+                    border: `1px solid ${meta.color}22`,
+                    borderLeft: `4px solid ${meta.color}`,
+                  }}>
+                  {/* Photo bannière */}
+                  <div style={{
+                    height: 120, position: "relative",
+                    background: r.photo_url
+                      ? `url(${r.photo_url}) center/cover`
+                      : `linear-gradient(135deg, ${meta.color}22, ${meta.color}08)`,
+                    borderRadius: "14px 14px 0 0",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {!r.photo_url && <i className={`ti ${meta.icon}`} style={{ fontSize: 48, color: meta.color }} />}
+                    {/* Badge état */}
+                    <div style={{
+                      position: "absolute", top: 8, right: 8,
+                      padding: "3px 9px", borderRadius: 6,
+                      background: meta.color, color: "#fff",
+                      fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                      boxShadow: `0 2px 6px ${meta.color}55`,
+                    }}>
+                      {r.etat || "?"}
+                    </div>
+                    {/* Tags miniatures */}
+                    {(matTags[r.id] || []).length > 0 && (
+                      <div style={{ position: "absolute", bottom: 8, left: 8, display: "flex", gap: 3, flexWrap: "wrap" }}>
+                        {(matTags[r.id] || []).slice(0, 3).map(tid => {
+                          const t = tags.find(x => x.id === tid);
+                          if (!t) return null;
+                          return (
+                            <span key={tid} style={{
+                              background: (t.couleur || "#5a6878") + "ee",
+                              color: "#fff", padding: "1px 6px",
+                              borderRadius: 4, fontSize: 9, fontWeight: 700,
+                            }}>{t.libelle}</span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  {/* Contenu */}
+                  <div style={{ padding: 12 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: "#142131", marginBottom: 6, lineHeight: 1.25 }}>
+                      {r.libelle || "Matériel"}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3, fontSize: 11, color: "#5a6878" }}>
+                      {r.num_serie && (
+                        <span>
+                          <i className="ti ti-hash" /> S/N <code style={{ fontFamily: "Consolas, monospace", color: "#7a6fb0" }}>{r.num_serie}</code>
+                        </span>
+                      )}
+                      {r.num_lot && (
+                        <span>
+                          <i className="ti ti-tag" /> Lot <code style={{ fontFamily: "Consolas, monospace", color: "#7CC8C8" }}>{r.num_lot}</code>
+                        </span>
+                      )}
+                      {r.depot_id && depots.find(d => d.id === r.depot_id) && (
+                        <span><i className="ti ti-warehouse" /> {depots.find(d => d.id === r.depot_id).nom}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Le Crud reste TOUJOURS rendu pour gérer add/edit/delete, mais caché en mode grid */}
+        <div style={{ display: viewMode === "list" ? "block" : "none" }}>
         <Crud
           structureId={auth.structureId}
           etabId={auth.etabId}

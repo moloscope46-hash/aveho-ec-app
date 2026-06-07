@@ -14,6 +14,8 @@ import { Panel, StateMsg, Btn, Modal} from "../../ui";
 import { fmtDate } from "../../../lib/format";
 import Tooltip from "../../Tooltip";
 import { safeInsert, safeDelete } from "../../../lib/safeWrite";
+import ImageUploader from "../../components/ImageUploader";  /* 0.62.104 */
+import { toast } from "../../components/ui-premium";  /* 0.62.104 */
 
 const COULEUR_DI = { "Nouvelle": "#e35d5b", "En cours": "#EF9F27", "Résolue": "#5aa05a", "Annulée": "#8a98a8" };
 
@@ -39,6 +41,8 @@ export default function FichePatient() {
   const [caisseInfo, setCaisseInfo] = useState(null);
   const [mutuelleInfo, setMutuelleInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  // 0.62.104 : mode édition photo patient
+  const [photoEditing, setPhotoEditing] = useState(false);
   const patId = params?.id;
 
   useEffect(() => {
@@ -179,7 +183,33 @@ export default function FichePatient() {
             <b style={{ color: "#142131" }}>{pat.nom} {pat.prenom || ""}</b>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, display: "flex", gap: 14, alignItems: "flex-start" }}>
+              {/* 0.62.104 : Avatar photo patient avec bouton modifier */}
+              <div onClick={() => setPhotoEditing(true)} title="Modifier la photo"
+                style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: pat.photo_url
+                    ? `url(${pat.photo_url}) center/cover`
+                    : `linear-gradient(135deg, #7CC8C8, #185FA5)`,
+                  flexShrink: 0, position: "relative", cursor: "pointer",
+                  boxShadow: "0 6px 18px rgba(124,200,200,.35)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                {!pat.photo_url && (
+                  <i className="ti ti-user" style={{ fontSize: 36, color: "#fff" }} />
+                )}
+                <div style={{
+                  position: "absolute", bottom: -2, right: -2,
+                  width: 26, height: 26, borderRadius: 13,
+                  background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                  color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, boxShadow: "0 2px 6px rgba(20,33,49,.25)",
+                  border: "2px solid #fff",
+                }}>
+                  <i className="ti ti-camera" />
+                </div>
+              </div>
+              <div style={{ flex: 1 }}>
               <span style={{ fontSize: 11, letterSpacing: 2, color: "#7CC8C8", fontWeight: 700 }}><i className="ti ti-user" /> FICHE PATIENT</span>
               <h1 style={{ margin: "8px 0 6px", fontSize: 24, color: "#142131" }}>{pat.nom} {pat.prenom || ""}</h1>
               {/* Ligne principale toujours visible : âge, chambre, établissement */}
@@ -236,6 +266,7 @@ export default function FichePatient() {
                 <span><b>État :</b> <span style={{ color: pat.etat === "Présent" ? "#5aa05a" : "#8a98a8" }}>{pat.etat || "—"}</span></span>
               </div>
             </div>
+            </div>{/* 0.62.104 : fin wrapper avatar+contenu */}
             {auth.can("ecrire") && (
               <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
                 <Btn variant="ghost" icon="ti-printer" onClick={async () => {
@@ -513,6 +544,44 @@ export default function FichePatient() {
       >
         <i className="ti ti-qrcode" />
       </button>
+
+      {/* 0.62.104 : Modal édition photo patient */}
+      {photoEditing && (
+        <div className="modal-bg" onClick={(e) => { if (e.target === e.currentTarget) setPhotoEditing(false); }}
+          style={{ position: "fixed", inset: 0, background: "rgba(20,33,49,.55)", backdropFilter: "blur(6px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: 22, maxWidth: 480, width: "100%" }}>
+            <h3 style={{ margin: "0 0 14px", color: "#142131", display: "flex", alignItems: "center", gap: 8 }}>
+              <i className="ti ti-camera" style={{ color: "#7CC8C8" }} /> Photo de {pat.nom} {pat.prenom || ""}
+            </h3>
+            <ImageUploader
+              value={pat.photo_url}
+              onChange={async (url) => {
+                setPat({ ...pat, photo_url: url });
+                try {
+                  await supabase.from("patients").update({ photo_url: url }).eq("id", pat.id);
+                  toast.success("Photo enregistrée");
+                } catch (e) {
+                  toast.error("Erreur sauvegarde photo");
+                }
+              }}
+              bucket="patients-photos"
+              folder={pat.id}
+              label="Photo patient"
+              maxSizeMB={3}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+              <button onClick={() => setPhotoEditing(false)} style={{
+                padding: "10px 18px", borderRadius: 10,
+                background: "linear-gradient(135deg, #185FA5, #7CC8C8)",
+                color: "#fff", border: "none", fontSize: 13, fontWeight: 700,
+                fontFamily: "inherit", cursor: "pointer",
+              }}>
+                <i className="ti ti-check" /> Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

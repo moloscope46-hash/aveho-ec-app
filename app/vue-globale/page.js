@@ -35,10 +35,10 @@ export default function VueGlobale() {
             .eq("structure_id", auth.structureId)
             .order("nom"),
           // 0.62.100 : enlevé .eq("archive", false) qui plantait en 400
-          // (colonne archive peut ne pas exister sur le schéma)
+          // 0.62.104 : SELECT minimal défensif (colonnes optionnelles manquantes sur certains schémas)
           supabase
             .from("etablissements_partenaires")
-            .select("id,nom,type,ville,cp,adresse,telephone,email,siret,finess,actif,link_to_etablissement_id,type_relation,contact_nom,contact_email,contact_telephone")
+            .select("id,nom,type,ville,cp,adresse,telephone,email")
             .eq("structure_id", auth.structureId)
             .order("nom"),
           supabase.from("patients").select("id,etablissement_id"),
