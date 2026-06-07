@@ -109,6 +109,8 @@ const MENU = [
     { p: "/consent-verifications", ic: "ti-shield-search", lbl: "Audit vérif RGPD", col: "#5aa05a" },
     { p: "/parametres-rgpd", ic: "ti-shield-cog", lbl: "Modèles consentement", col: "#8c2a23" },
     { p: "/statistiques-rgpd", ic: "ti-chart-pie", lbl: "Statistiques RGPD", col: "#7a6fb0" },
+    { p: "/rbeu", ic: "ti-shield-check", lbl: "RBEU - Bénéficiaires effectifs", col: "#7a6fb0" },
+    { p: "/parametres/notifications", ic: "ti-bell-cog", lbl: "Préférences notifications", col: "#EF9F27" },
     { p: "/digest-dashboard", ic: "ti-mail-bolt", lbl: "Digests dashboard", col: "#7a6fb0" },
     { p: "/annonces", ic: "ti-speakerphone", lbl: "Annonces", col: "#EF9F27" },
     { p: "/etiquettes", ic: "ti-tags", lbl: "Étiquettes", col: "#C9867F" },

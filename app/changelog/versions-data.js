@@ -240,6 +240,25 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.61.0",
+    "kind": "feat",
+    "titre": "🛡 MEGA PACK 0.61 : Module RBEU Décret 2025-247 + Préférences notifications multi-canal + Bases PWA push",
+    "chantiers": [
+      { "code": "SQL", "txt": "🆕 **`migration-0.61.0-rbeu-notifications-pwa.sql`** : (1) Table `beneficiaires_effectifs` avec 40+ colonnes pour RBEU Tracfin (identité, adresse, % capital/droits, qualité, type contrôle, pièce identité, workflow statut brouillon→en_validation→valide→archive). (2) Table `rbeu_declarations` (historique dépôts INPI). (3) Table `notifications_preferences` par user (email/sms/push toggles + 9 types de notifs configurables + push_subscription JSON). (4) Table `notifications_templates` avec 5 templates Aveho préchargés (di_nouvelle, sav_executee, rapport_valide, stock_bas, rbeu_renouvellement). (5) Table `notifications_log` (historique envois multi-canal). (6) Bucket Storage `rbeu-documents` (PDF pièces identité, privé). (7) Vue `v_rbeu_etat` (synthèse par étab avec compteurs + état renouvellement a_jour/a_renouveler/depasse)" },
+      { "code": "AI", "txt": "🛡 **Nouvelle page `/rbeu`** : Registre des Bénéficiaires Effectifs Ultimes. Bandeau réglementaire violet (Décret 2025-247, sanctions 7500€+6 mois prison). **État RBEU par établissement** : cards colorées (vert=à jour, amber=à renouveler, rouge=dépassé) avec bouton 'Générer attestation'. Filtres étab+statut. 4 stat tiles (total/validés/en cours/archivés). Cards bénéficiaires avec avatar initiales, qualité, étab parent, badges détention (% capital + % droits), workflow boutons (Soumettre→Valider→Archiver)" },
+      { "code": "AI", "txt": "📋 **Modal édition bénéficiaire ultra-complet** : 4 sections — Identité (prénom*, nom*, nom naissance, date+lieu naissance, nationalité), Adresse perso, Établissement+Qualité (Associé/Dirigeant/etc., type contrôle direct/indirect/de fait), Détention (% capital, % droits de vote, modalités), Période (début/fin qualité) + Pièce identité (CNI/Passeport/Titre séjour + numéro)" },
+      { "code": "AI", "txt": "📄 **Génération attestation RBEU PDF** : fonction `imprimerAttestation()` ouvre fenêtre HTML stylée Aveho violet. Header logo+numéro ATT-RBEU-YYYYMMDD-XXXX, **bandeau réglementaire** rappelant Décret 2025-247, méta-grid (étab + date), **tableau bénéficiaires** (identité+adresse+qualité+détention), **déclaration sur l'honneur** avec sanctions, 2 signatures (représentant légal + dépôt INPI). Ctrl+P → PDF" },
+      { "code": "AI", "txt": "🔔 **Nouveau hook `useNotificationPrefs`** dans `lib/useNotificationPrefs.js` : récupère/met à jour les préférences user. Crée des préférences par défaut au premier login. Helper `sendNotification(supabase, {userId, templateCode, variables, urlPath})` qui : (1) récupère prefs+template, (2) interpole {{variables}}, (3) crée notif in-app (toujours), (4) queue email/sms/push selon prefs activés. Helper `subscribeWebPush(supabase, userId)` qui demande permission browser + souscrit via Push Manager + sauvegarde subscription en DB" },
+      { "code": "AI", "txt": "⚙ **Nouvelle page `/parametres/notifications`** : configuration complète multi-canal. **3 canaux** : 📧 Email (toggle + input email), 📞 SMS (toggle + tel, à venir), 📲 Push (bouton 'Activer sur cet appareil' qui lance subscribeWebPush, vert si activé). **9 types d'événements** configurables avec toggles compacts (DI/SAV/transferts/stock/RBEU/digest). Bandeau info expliquant chaque canal" },
+      { "code": "AI", "txt": "📍 **Menu Administratif étendu** : ajout 'RBEU - Bénéficiaires effectifs' (ti-shield-check violet) et 'Préférences notifications' (ti-bell-cog amber). Accès direct depuis n'importe quelle page" },
+      { "code": "INFO", "txt": "🎯 **Conformité Tracfin** : module RBEU prêt pour produire les attestations exigées par le Décret 2025-247. Workflow état par étab + renouvellement annuel + sanctions affichées. **Argument commercial fort** pour tes clients PSAD/FBM" },
+      { "code": "INFO", "txt": "🚧 **À compléter en 0.61.1+** : (1) Edge Function Supabase send-email (Resend) pour traiter la queue notifications_log canal='email'. (2) Edge Function send-push (web-push lib + VAPID keys). (3) Edge Function send-sms (Twilio). (4) Génération VAPID keys + ajout dans applicationServerKey du subscribe. (5) Dépôt RBEU automatisé via API INPI (si dispo)" }
+    ],
+    "themes": ["feat", "rbeu", "notifications", "pwa", "tracfin", "conformite"],
+    "date": "6 juin 2026",
+    "noteFile": ""
+  },
+  {
     "v": "0.60.8",
     "kind": "fix",
     "titre": "🔥 Fix tuiles définitif — règle CSS .page-content manquante + Fix 503 /transferts/nouvelle (duplicate fontFamily)",
