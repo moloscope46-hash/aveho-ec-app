@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.62.29",
+    "kind": "ux",
+    "titre": "🎨 Lot Premium UI : ParticlesBackground patients + NeonButton transferts + audit complet composants premium déjà actifs",
+    "chantiers": [
+      { "code": "UX", "txt": "✨ **ParticlesBackground sur `/patients`** : ajouté en arrière-plan absolute top 160px hauteur, opacity 0.6, pointer-events none, mode 'teal', count 25, speed 0.18, linkDistance 120. Le header de la page baigne dans une nappe de particules animées discrète (effet WOW sans gêner la lecture). z-index 0/1 pour conserver l'interaction" },
+      { "code": "UX", "txt": "🔘 **NeonButton sur `/transferts`** : bouton 'Nouveau transfert' migré de `<Btn variant='primary'>` vers `<NeonButton variant='teal' icon='ti-plus'>`. Avec son effet border conic-gradient rotative + glow multi-layer au hover. Page transferts désormais aux standards premium 0.58.x" },
+      { "code": "AI", "txt": "📋 **AUDIT COMPLET des composants premium déjà actifs** (livrés en 0.58.x mais oubliés dans le suivi TODO) : (a) **PageTransition slide-in** : actif dans `app/layout.js` ligne 99, animations `av-page-slide-in-right/left` direction-aware (forward/back via history stack). (b) **Toast premium stack** : `showToast()` + `toast.success/error/info/warning/promise` actif via `components/ui-premium/Toast.js`. (c) **Empty states SVG animés** : 6 illustrations animées (`inbox/search/folder/clipboard/chart/users`) avec keyframes `av-float-doc`. (d) **Skeleton premium dans Drawers** : `DrawerSkeleton` automatique pendant chargement (0.58.22). (e) **OnboardingTour** : tour produit maison sans Driver.js (-50KB bundle), actif dans `/accueil`. (f) **ConicCard signalements urgents** + **RGPD à renouveler** : déjà actifs dans `HeroDashboard` (lignes 301-322). (g) **PageHero particles** sur `/statistiques` (lignes 286+) et `/accueil` (HeroDashboard). (h) **NeonButton** déjà actif sur 6/8 pages cibles : patients(7), utilisateurs(10), interventions(2), achats(4), signalements(6), historique" },
+      { "code": "INFO", "txt": "✅ **Lot 0.62.29 Premium UI TERMINÉ**. Reste pour la roadmap : 8 lots planifiés (0.62.30 filtres équipes + stats, 0.62.31 SAV complet, 0.62.32 tournées GPS, 0.62.33 marketplace+push, 0.62.34 patients workflows, 0.62.35 magasin admin, 0.62.36 temps réel+météo, 0.62.37 app native Capacitor)" }
+    ],
+    "themes": ["ux", "premium", "particles", "neonbutton", "audit"],
+    "date": "6 juin 2026",
+    "noteFile": "NOTE-UX-0.62.29.html"
+  },
+  {
     "v": "0.62.28",
     "kind": "feat",
     "titre": "📧 Edge function mail magasin (Resend + Auth fallback) + Workflow Commande EC → DI magasin (2 étapes validation)",

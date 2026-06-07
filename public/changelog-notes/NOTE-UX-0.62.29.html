@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.29 — Note d'évolution</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+    --aveho-text: #2a3a48; --aveho-muted: #6c7a89;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: var(--aveho-text); line-height: 1.65; }
+  .wrap { }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #5aa05a 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta b { color: #fff; }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); display: flex; align-items: center; }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 12px 0; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; font-family: 'Consolas', monospace; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { margin: 8px 0; }
+  b { color: var(--navy); }
+  .themes-row { margin-top: 14px; }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: var(--aveho-muted); text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · UX</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7">Espace Collectivité</span></div>
+    <h1>Version 0.62.29
+      <small>🎨 Lot Premium UI : ParticlesBackground patients + NeonButton transferts + audit complet composants premium déjà actifs</small>
+    </h1>
+    <div class="meta">
+      <span><b>📅 Date :</b> 6 juin 2026</span>
+      <span><b>📦 Version :</b> <span class="badge">v0.62.29-alpha</span></span>
+      <span><b>📋 Type :</b> Amélioration interface</span>
+      <span><b>🔧 Chantiers :</b> 2 UX · 1 AI · 1 INFO</span>
+    </div>
+    <div class="themes-row"><span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">ux</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">premium</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">particles</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">neonbutton</span> <span style="display:inline-block;padding:2px 8px;background:rgba(24,95,165,.10);color:#185FA5;border-radius:12px;font-size:11px;font-weight:600;margin:2px">audit</span></div>
+  </header>
+
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#7a6fb022;color:#7a6fb0;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🤖</span>Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>📋 <b>AUDIT COMPLET des composants premium déjà actifs</b> (livrés en 0.58.x mais oubliés dans le suivi TODO) : (a) <b>PageTransition slide-in</b> : actif dans <code>app/layout.js</code> ligne 99, animations <code>av-page-slide-in-right/left</code> direction-aware (forward/back via history stack). (b) <b>Toast premium stack</b> : <code>showToast()</code> + <code>toast.success/error/info/warning/promise</code> actif via <code>components/ui-premium/Toast.js</code>. (c) <b>Empty states SVG animés</b> : 6 illustrations animées (<code>inbox/search/folder/clipboard/chart/users</code>) avec keyframes <code>av-float-doc</code>. (d) <b>Skeleton premium dans Drawers</b> : <code>DrawerSkeleton</code> automatique pendant chargement (0.58.22). (e) <b>OnboardingTour</b> : tour produit maison sans Driver.js (-50KB bundle), actif dans <code>/accueil</code>. (f) <b>ConicCard signalements urgents</b> + <b>RGPD à renouveler</b> : déjà actifs dans <code>HeroDashboard</code> (lignes 301-322). (g) <b>PageHero particles</b> sur <code>/statistiques</code> (lignes 286+) et <code>/accueil</code> (HeroDashboard). (h) <b>NeonButton</b> déjà actif sur 6/8 pages cibles : patients(7), utilisateurs(10), interventions(2), achats(4), signalements(6), historique</li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#5aa05a22;color:#5aa05a;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">🎨</span>Interface <small style="color:#8a98a8;font-weight:400;font-size:13px">(2 chantiers)</small></h2>
+  <div class="panel hi">
+    <ul>
+    <li>✨ <b>ParticlesBackground sur <code>/patients</code></b> : ajouté en arrière-plan absolute top 160px hauteur, opacity 0.6, pointer-events none, mode 'teal', count 25, speed 0.18, linkDistance 120. Le header de la page baigne dans une nappe de particules animées discrète (effet WOW sans gêner la lecture). z-index 0/1 pour conserver l'interaction</li>
+    <li>🔘 <b>NeonButton sur <code>/transferts</code></b> : bouton 'Nouveau transfert' migré de <code>&lt;Btn variant='primary'&gt;</code> vers <code>&lt;NeonButton variant='teal' icon='ti-plus'&gt;</code>. Avec son effet border conic-gradient rotative + glow multi-layer au hover. Page transferts désormais aux standards premium 0.58.x</li>
+    </ul>
+  </div>
+
+  <h2><span style="display:inline-block;width:32px;height:32px;background:#5a687822;color:#5a6878;border-radius:8px;text-align:center;line-height:32px;margin-right:8px">ℹ</span>Info / Tâche <small style="color:#8a98a8;font-weight:400;font-size:13px">(1 chantier)</small></h2>
+  <div class="panel ">
+    <ul>
+    <li>✅ <b>Lot 0.62.29 Premium UI TERMINÉ</b>. Reste pour la roadmap : 8 lots planifiés (0.62.30 filtres équipes + stats, 0.62.31 SAV complet, 0.62.32 tournées GPS, 0.62.33 marketplace+push, 0.62.34 patients workflows, 0.62.35 magasin admin, 0.62.36 temps réel+météo, 0.62.37 app native Capacitor)</li>
+    </ul>
+  </div>
+
+
+
+  <footer>
+    <p>Aveho Espace Collectivité — Note générée le 6 juin 2026</p>
+    <p>Pour toute question, contacte ton chef de produit ou consulte le changelog complet sur <code>/changelog</code></p>
+  </footer>
+
+</div>
+</body>
+</html>

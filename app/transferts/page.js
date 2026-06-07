@@ -19,7 +19,7 @@ import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, IconButton, Modal } from "../ui";
-import { EmptyState, SkeletonRow, toast } from "../components/ui-premium";
+import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-premium";
 import BackButton from "../components/BackButton";
 import { safeInsert, safeUpdate } from "../../lib/safeWrite";
 
@@ -314,7 +314,7 @@ function TransfertsInner() {
               {PRIORITES.map(p => <option key={p.value} value={p.value}>{p.lbl}</option>)}
             </select>
             <Btn variant="ghost" icon="ti-scan" onClick={() => router.push("/scan/quick")}>Scanner</Btn>
-            <Btn variant="primary" icon="ti-plus" onClick={openNew}>Nouveau transfert</Btn>
+            <NeonButton variant="teal" icon="ti-plus" onClick={openNew}>Nouveau transfert</NeonButton>
           </div>
         </Panel>
 
