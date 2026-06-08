@@ -1,16 +1,20 @@
 "use client";
+// Page Magasins — Magasins Aveho fournisseurs (vitrine)
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { useLibelles } from "../../lib/useLibelles";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, StateMsg } from "../ui";
+import { logger } from "../../lib/logger";
 
 export default function Magasins() {
   const supabase = createClient();
   const router = useRouter();
   const auth = useAuth();
+  const { lbl } = useLibelles(auth.structureId);
   const cart = useCart();
   const [magasins, setMagasins] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,13 +22,19 @@ export default function Magasins() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const { data } = await supabase
-        .from("magasins")
-        .select("*")
-        .order("favori", { ascending: false })
-        .order("nom");
-      setMagasins(data || []);
-      setLoading(false);
+      try {
+        const { data } = await supabase
+          .from("magasins")
+          .select("*")
+          .order("favori", { ascending: false })
+          .order("nom");
+        setMagasins(data || []);
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Magasins] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready]);
 

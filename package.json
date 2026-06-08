@@ -1,17 +1,45 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.1.0-alpha",
+  "version": "0.65.18-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prebuild": "node scripts/sync-sw-version.js",
+    "sync-sw": "node scripts/sync-sw-version.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:visual": "playwright test tests/e2e/visual-regression.spec.js",
+    "test:visual:update": "playwright test tests/e2e/visual-regression.spec.js --update-snapshots",
+    "test:all": "npm run test && npm run test:e2e",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.0",
-    "next": "14.2.5",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  }
+    "@tabler/icons-webfont": "^2.47.0",
+    "glob": "^13.0.6",
+    "html5-qrcode": "^2.3.8",
+    "jszip": "^3.10.1",
+    "leaflet": "^1.9.4",
+    "next": "^15.5.19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "@supabase/ssr": "^0.5.2"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8",
+    "@playwright/test": "^1.48.0"
+  },
+  "browserslist": [
+    "last 2 Chrome major versions",
+    "last 2 Firefox major versions",
+    "last 2 Safari major versions",
+    "last 2 Edge major versions",
+    "not dead",
+    "not IE 11",
+    "not op_mini all"
+  ]
 }

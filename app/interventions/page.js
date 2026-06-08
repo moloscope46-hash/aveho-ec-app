@@ -1,213 +1,806 @@
 "use client";
-import { useEffect, useState } from "react";
+// =============================================================
+//  /interventions — Demandes d'intervention (0.58.80)
+//  Refonte ultra-pro avec :
+//   - Hero stats par statut (5 tuiles cliquables)
+//   - Toggle Liste / Kanban
+//   - Filtres urgence/équipe/dépôt/statut
+//   - Workflow scan : DI pré-remplie depuis ?depot=X ou ?materiel=X
+//   - Cards visuelles, actions rapides selon statut
+// =============================================================
+
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
-import { fmtDate } from "../../lib/format";
+// 0.62.47 : filtre contexte bât/svc courant (TODO depuis 0.58.36)
+import { useCurrentContext } from "../../lib/useCurrentContext";
 import TopBar from "../TopBar";
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
+import LockBanner from "../components/LockBanner";  /* 0.62.124 */
+import SmartInput from "../components/SmartInput";  /* 0.62.130 */
+import SmartSelect from "../components/SmartSelect";  /* 0.62.132 */
+import VoiceDictation from "../components/VoiceDictation";  /* 0.63.0 */
+import AttachmentsPanel from "../components/AttachmentsPanel";  /* 0.63.0 */
+import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
+import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg } from "../ui";
-import { KpiRow } from "../kpis";
+import { PageHead, Panel, Btn, Modal } from "../ui";
+import { EmptyState, SkeletonRow, toast, NeonButton } from "../components/ui-premium";
+import { fmtDate } from "../../lib/format";
+import { safeInsert, safeUpdate } from "../../lib/safeWrite";
+import BackButton from "../components/BackButton";
+import EtabContextHeader from "../components/EtabContextHeader";  /* 0.62.73 */
 
-const STATUTS = ["Nouvelle", "Planifiée", "En cours", "Clôturée"];
-const TYPES = ["Panne / réparation", "Maintenance préventive", "Livraison", "Reprise matériel"];
-const next = (s) => STATUTS[STATUTS.indexOf(s) + 1] || null;
-const stCls = (s) => ({ "Nouvelle": "s-nouvelle", "Planifiée": "s-validee", "En cours": "s-encours2", "Clôturée": "s-livree" }[s] || "s-nouvelle");
-const typeIcon = (t) => ({ "Panne / réparation": "ti-alert-triangle", "Maintenance préventive": "ti-tool", "Livraison": "ti-truck-delivery", "Reprise matériel": "ti-arrow-back-up" }[t] || "ti-tools");
+const STATUTS = [
+  { value: "Nouvelle",  color: "#e35d5b", icon: "ti-alert-circle",   bg: "rgba(227,93,91,.10)",   order: 0 },
+  { value: "Planifiée", color: "#EF9F27", icon: "ti-calendar-clock", bg: "rgba(239,159,39,.10)",  order: 1 },
+  { value: "En cours",  color: "#185FA5", icon: "ti-progress-bolt",  bg: "rgba(24,95,165,.10)",   order: 2 },
+  { value: "Résolue",   color: "#5aa05a", icon: "ti-check",          bg: "rgba(90,160,90,.10)",   order: 3 },
+  { value: "Clôturée",  color: "#8a98a8", icon: "ti-archive",        bg: "rgba(138,152,168,.10)", order: 4 },
+];
 
-export default function Interventions() {
+const URGENCES = [
+  { value: "Normal",   color: "#5a6878", icon: "ti-circle",         bg: "rgba(90,104,120,.10)" },
+  { value: "Urgent",   color: "#EF9F27", icon: "ti-alert-triangle", bg: "rgba(239,159,39,.15)" },
+  { value: "Critique", color: "#c0392b", icon: "ti-urgent",         bg: "rgba(192,57,43,.18)"  },
+];
+
+const TYPES_DI = [
+  { value: "Panne / réparation",        icon: "ti-tools",         color: "#e35d5b" },
+  { value: "Maintenance préventive",    icon: "ti-shield-check",  color: "#5aa05a" },
+  { value: "Nettoyage / désinfection",  icon: "ti-spray",         color: "#7CC8C8" },
+  { value: "Remplacement / changement", icon: "ti-replace",       color: "#7a6fb0" },
+  { value: "Vérification / contrôle",   icon: "ti-checklist",     color: "#185FA5" },
+  { value: "Autre",                      icon: "ti-question-mark", color: "#8a98a8" },
+];
+
+function statutMeta(s) { return STATUTS.find(x => x.value === s) || STATUTS[0]; }
+function urgenceMeta(u) { return URGENCES.find(x => x.value === u) || URGENCES[0]; }
+function typeMeta(t) { return TYPES_DI.find(x => x.value === t) || TYPES_DI[5]; }
+
+export default function InterventionsPage() {
+  return (
+    <Suspense fallback={<div className="bg-dark"><div className="wrap"><Panel>Chargement...</Panel></div></div>}>
+      <InterventionsInner />
+    </Suspense>
+  );
+}
+
+function InterventionsInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const auth = useAuth();
   const cart = useCart();
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refs, setRefs] = useState({ materiels: [], patients: [], depots: [], zones: [] });
-  const [fStatut, setFStatut] = useState("");
-  const [fType, setFType] = useState("");
-  const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ type: "Panne / réparation", urgence: "Normal" });
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
 
-  async function load() {
-    let q = supabase
-      .from("interventions")
-      .select("*, materiels(libelle,num_serie,num_parc,num_lot), patients(nom,prenom,chambre), depots(nom), zones(nom)")
-      .order("created_at", { ascending: false });
-    if (auth.etabId) q = q.eq("etablissement_id", auth.etabId);
-    const { data } = await q;
-    setRows(data || []);
-    setLoading(false);
+  const [rows, setRows] = useState([]);
+  const [equipes, setEquipes] = useState([]);
+  const [depots, setDepots] = useState([]);
+  const [materiels, setMateriels] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 0.62.47 : filtre par contexte bât/svc (depuis BatimentServiceSwitcher)
+  const ctx = useCurrentContext();
+  const [ctxMaterielIds, setCtxMaterielIds] = useState(null);
+  useEffect(() => {
+    if (!ctx.batimentId && !ctx.serviceId) {
+      setCtxMaterielIds(null);
+      return;
+    }
+    (async () => {
+      try {
+        // Récupère les patients/matériels liés à ce contexte (via lits → chambres → services → bâtiment)
+        let q = supabase.from("materiels").select("id, batiment_id, service_id");
+        if (ctx.batimentId) q = q.eq("batiment_id", ctx.batimentId);
+        if (ctx.serviceId) q = q.eq("service_id", ctx.serviceId);
+        const r = await q;
+        setCtxMaterielIds(new Set((r.data || []).map(x => x.id)));
+      } catch (e) { setCtxMaterielIds(null); }
+    })();
+  }, [ctx.batimentId, ctx.serviceId, ctx.active]);
+
+  const [view, setView] = useState("liste");
+  const [fStatut, setFStatut] = useState("");
+  const [fUrgence, setFUrgence] = useState("");
+  const [fEquipe, setFEquipe] = useState("");
+  const [fDepot, setFDepot] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [modal, setModal] = useState(null);
+  // 0.62.124 : Lock anti-collision sur édition
+  const interventionLock = useEditLock("intervention", modal?.id, !!modal?.id && modal?.mode !== "new");
+  const [form, setForm] = useState({});
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!auth.ready) return;
+    const depotId = searchParams.get("depot");
+    const materielId = searchParams.get("materiel");
+    const newFlag = searchParams.get("new");
+    if (depotId || materielId || newFlag) {
+      openNew({ depot_id: depotId || null, materiel_id: materielId || null, cree_par_scan: !!(depotId || materielId) });
+    }
+  }, [auth.ready, searchParams]);
+
+  async function loadAll() {
+    if (!auth.ready || !auth.structureId) return;
+    setLoading(true);
+    const tryFetch = async (q) => {
+      try { const r = await q; return r.data || []; }
+      catch (e) {
+        if (e.code === "42P01" || e.code === "42703") return [];
+        throw e;
+      }
+    };
+    try {
+      let q = supabase.from("interventions")
+        .select("*, materiels(libelle, num_serie), depots(nom, couleur), equipes(nom)")
+        .eq("structure_id", auth.structureId)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (auth.etabId) q = q.eq("etablissement_id", auth.etabId);
+      const [r, e, d, m] = await Promise.all([
+        tryFetch(q),
+        tryFetch(supabase.from("equipes").select("id, nom, couleur").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("depots").select("id, nom, couleur").eq("structure_id", auth.structureId)),
+        tryFetch(supabase.from("materiels").select("id, libelle, num_serie").eq("structure_id", auth.structureId).limit(500)),
+      ]);
+      setRows(r); setEquipes(e); setDepots(d); setMateriels(m);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
-  async function loadRefs() {
-    const [ma, pa, dp, zn] = await Promise.all([
-      supabase.from("materiels").select("id,libelle,num_serie"),
-      supabase.from("patients").select("id,nom,prenom,chambre"),
-      supabase.from("depots").select("id,nom"),
-      supabase.from("zones").select("id,nom"),
-    ]);
-    setRefs({
-      materiels: (ma.data || []).map((m) => ({ value: m.id, label: `${m.libelle}${m.num_serie ? ` (${m.num_serie})` : ""}` })),
-      patients: (pa.data || []).map((p) => ({ value: p.id, label: `${p.nom} ${p.prenom || ""}${p.chambre ? ` (ch.${p.chambre})` : ""}` })),
-      depots: (dp.data || []).map((d) => ({ value: d.id, label: d.nom })),
-      zones: (zn.data || []).map((z) => ({ value: z.id, label: z.nom })),
+  useEffect(() => { loadAll(); }, [auth.ready, auth.structureId, auth.etabId]);
+
+  const stats = useMemo(() => {
+    const s = { total: rows.length };
+    STATUTS.forEach(st => { s[st.value] = rows.filter(r => r.statut === st.value).length; });
+    s.urgentes = rows.filter(r => r.urgence === "Urgent" || r.urgence === "Critique").length;
+    return s;
+  }, [rows]);
+
+  const filtered = useMemo(() => {
+    return rows.filter(r => {
+      if (fStatut && r.statut !== fStatut) return false;
+      if (fUrgence && r.urgence !== fUrgence) return false;
+      if (fEquipe && r.equipe_id !== fEquipe) return false;
+      if (fDepot && r.depot_id !== fDepot) return false;
+      // 0.62.47 : filtre par contexte bât/svc → ne garde que les DI liées aux matériels du contexte
+      if (ctx.active && ctxMaterielIds && r.materiel_id && !ctxMaterielIds.has(r.materiel_id)) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const hay = `${r.numero || ""} ${r.type || ""} ${r.description || ""} ${r.materiels?.libelle || ""} ${r.depots?.nom || ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
     });
+  }, [rows, fStatut, fUrgence, fEquipe, fDepot, search, ctx.active, ctxMaterielIds]);
+
+  function nextNumero() {
+    const year = new Date().getFullYear();
+    const maxNum = rows.reduce((max, r) => {
+      const m = (r.numero || "").match(new RegExp(`DI-${year}-(\\d+)`));
+      return m ? Math.max(max, parseInt(m[1], 10)) : max;
+    }, 0);
+    return `DI-${year}-${String(maxNum + 1).padStart(3, "0")}`;
   }
-  useEffect(() => { if (auth.ready) { load(); loadRefs(); } }, [auth.ready, auth.etabId]);
+
+  function openNew(preset = {}) {
+    setForm({
+      numero: nextNumero(),
+      type: "Panne / réparation",
+      urgence: "Normal",
+      statut: "Nouvelle",
+      ...preset,
+    });
+    setModal({ mode: "new" });
+  }
+
+  function openEdit(r) {
+    setForm({ ...r });
+    setModal({ mode: "edit", id: r.id });
+  }
 
   async function save() {
-    setErr("");
-    if (!form.type) { setErr("Type requis."); return; }
+    if (!form.description?.trim()) { toast.error("Description obligatoire"); return; }
     setBusy(true);
     try {
-      const numero = "DI-" + Math.floor(1000 + Math.random() * 9000);
-      const { error } = await supabase.from("interventions").insert({
-        structure_id: auth.structureId, etablissement_id: auth.etabId, numero, type: form.type, urgence: form.urgence || "Normal",
-        materiel_id: form.materiel_id || null, patient_id: form.patient_id || null,
-        depot_id: form.depot_id || null, zone_id: form.zone_id || null,
-        description: form.description || null, statut: "Nouvelle", created_by: auth.user.id,
-      });
+      // 0.62.1 : Si le matériel est rattaché à un magasin, on récupère son magasin_id
+      // pour que le magasin reçoive automatiquement la DI dans son espace
+      let magasinIdDetecte = null;
+      let magasinNomDetecte = null;
+      if (form.materiel_id) {
+        try {
+          // 1. Récupère article_id du matériel
+          const mat = await supabase.from("materiels").select("article_id, libelle").eq("id", form.materiel_id).maybeSingle();
+          const articleId = mat.data?.article_id;
+          if (articleId) {
+            // 2a. Cherche rattachement étab → magasin pour cet article
+            const rat = await supabase.from("articles_rattachements")
+              .select("article_magasin_id, magasin_id")
+              .eq("article_etablissement_id", articleId)
+              .eq("etablissement_id", auth.etabId)
+              .maybeSingle();
+            if (rat.data?.magasin_id) {
+              magasinIdDetecte = rat.data.magasin_id;
+            } else {
+              // 2b. Fallback : article lui-même est catalogue magasin (magasin_id direct)
+              const art = await supabase.from("articles").select("magasin_id, est_catalogue_magasin").eq("id", articleId).maybeSingle();
+              if (art.data?.magasin_id && art.data?.est_catalogue_magasin) {
+                magasinIdDetecte = art.data.magasin_id;
+              }
+            }
+            // 3. Récupère le nom du magasin pour le toast
+            if (magasinIdDetecte) {
+              const m = await supabase.from("magasins").select("nom").eq("id", magasinIdDetecte).maybeSingle();
+              magasinNomDetecte = m.data?.nom || null;
+            }
+          }
+        } catch (e) { console.warn("[détection magasin DI]", e); }
+      }
+
+      const payload = {
+        structure_id: auth.structureId,
+        etablissement_id: auth.etabId || null,
+        numero: form.numero,
+        type: form.type || "Autre",
+        urgence: form.urgence || "Normal",
+        statut: form.statut || "Nouvelle",
+        description: form.description.trim(),
+        emplacement: form.emplacement || null,
+        materiel_id: form.materiel_id || null,
+        depot_id: form.depot_id || null,
+        equipe_id: form.equipe_id || null,
+        assigne_a: form.assigne_a || null,
+        cree_par_scan: !!form.cree_par_scan,
+        resolution: form.resolution || null,
+        duree_estimee_min: form.duree_estimee_min ? parseInt(form.duree_estimee_min, 10) : null,
+        // 0.62.1 : magasin destinataire détecté automatiquement
+        magasin_id: magasinIdDetecte,
+      };
+      const userId = auth.user?.id;
+      let interventionId = modal?.id;
+      if (modal?.id) {
+        const { error } = await safeUpdate(supabase, "interventions", payload, { id: modal.id }, { userId });
+        if (error) throw error;
+        toast.success(`${form.numero} mis à jour`);
+      } else {
+        payload.created_by = auth.user?.id;
+        const newId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : null;
+        if (newId) payload.id = newId;
+        const { error } = await safeInsert(supabase, "interventions", payload, { userId });
+        if (error) throw error;
+        interventionId = newId;
+        // 0.62.1 : Notification au magasin si détecté
+        if (magasinIdDetecte && interventionId) {
+          try {
+            // Récupère les membres du magasin pour les notifier
+            const membres = await supabase.from("membres_structure")
+              .select("user_id")
+              .eq("magasin_fournisseur_id", magasinIdDetecte);
+            const notifs = (membres.data || []).map(m => ({
+              user_id: m.user_id,
+              structure_id: auth.structureId,
+              type: "intervention_recue",
+              titre: `🔧 Nouvelle DI reçue : ${form.type}`,
+              message: `${auth.structureNom || "Un établissement"} a créé une DI sur un matériel rattaché à votre magasin. ${form.description.slice(0, 100)}`,
+              url: `/magasin/interventions/${interventionId}`,
+              lue: false,
+            }));
+            if (notifs.length > 0) {
+              await supabase.from("notifications").insert(notifs);
+            }
+          } catch (e) { console.warn("[notif magasin DI]", e); }
+        }
+        const suffixMagasin = magasinNomDetecte ? ` → envoyée au magasin ${magasinNomDetecte}` : "";
+        toast.success(`DI ${form.numero} créée${suffixMagasin}`);
+      }
+      setModal(null);
+      await loadAll();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function changeStatut(r, newStatut) {
+    try {
+      const updates = { statut: newStatut };
+      const now = new Date().toISOString();
+      if (newStatut === "Planifiée" && !r.date_assignation) updates.date_assignation = now;
+      if (newStatut === "En cours" && !r.date_demarrage) updates.date_demarrage = now;
+      if (newStatut === "Résolue" && !r.date_resolution) updates.date_resolution = now;
+      if (newStatut === "Clôturée") { updates.date_cloture = now; updates.cloture_par = auth.user?.id; }
+      const { error } = await safeUpdate(supabase, "interventions", updates, { id: r.id }, { userId: auth.user?.id });
       if (error) throw error;
-      setModal(false); setForm({ type: "Panne / réparation", urgence: "Normal" }); await load();
-    } catch (e) { setErr(e.message); } finally { setBusy(false); }
-  }
-
-  async function advance(r) {
-    const n = next(r.statut); if (!n) return;
-    await supabase.from("interventions").update({ statut: n }).eq("id", r.id);
-    await load();
-  }
-
-  // génère un transfert depuis une DI (ex : reprise matériel -> dépôt général)
-  async function genTransfert(r) {
-    if (!r.materiel_id) { alert("Aucun matériel rattaché à cette DI."); return; }
-    const depGeneral = refs.depots[0];
-    if (!depGeneral) { alert("Aucun dépôt disponible."); return; }
-    const numero = "TRF-" + Math.floor(1000 + Math.random() * 9000);
-    const matLabel = refs.materiels.find((m) => m.value === r.materiel_id)?.label || "Matériel";
-    const srcLabel = r.patients ? `Ch. ${r.patients.chambre || "?"} — ${r.patients.nom}` : "Emplacement";
-    const { data: trf, error } = await supabase.from("transferts").insert({
-      structure_id: auth.structureId, numero, motif: "Retour", statut: "Demandé",
-      src_type: r.patient_id ? "chambre" : "depot", src_id: r.patient_id || r.depot_id, src_label: srcLabel,
-      dst_type: "depot", dst_id: depGeneral.value, dst_label: depGeneral.label,
-      contenu: "materiel", materiel_id: r.materiel_id, libelle: matLabel, quantite: 1, created_by: auth.user.id,
-    }).select().single();
-    if (error) { alert(error.message); return; }
-    await supabase.from("interventions").update({ transfert_id: trf.id }).eq("id", r.id);
-    await load();
-    alert(`Transfert ${numero} généré (reprise vers ${depGeneral.label}).`);
+      toast.success(`${r.numero} → ${newStatut}`);
+      await loadAll();
+    } catch (e) { toast.error(e.message); }
   }
 
   if (!auth.ready) return null;
 
-  const visible = rows.filter((r) => (!fStatut || r.statut === fStatut) && (!fType || r.type === fType));
-
   return (
     <div className="bg-dark">
       <TopBar cartCount={cart.count} auth={auth} />
+      {/* 0.62.110 : barre actions mobile + desktop */}
+      <MobileActionsBar
+        primary={[
+          { icon: "ti-plus", label: "Nouvelle DI", onClick: () => openNew(), color: "#7CC8C8" },
+        ]}
+        secondary={[
+          { icon: "ti-list", label: "Liste", onClick: () => setView("liste") },
+          { icon: "ti-layout-kanban", label: "Kanban", onClick: () => setView("kanban") },
+          { icon: "ti-grid-dots", label: "Tuiles", onClick: () => setView("tuiles") },
+          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
+        ]}
+      />
       <div className="wrap">
-        <PageHead small title="Mes demandes d'intervention" sub="Panne, maintenance, livraison ou reprise — rattachées au matériel et au patient" />
-        <KpiRow tiles={[
-          { label: "Demandes", value: rows.length, icon: "ti-tools", color: "#185FA5" },
-          { label: "Urgentes", value: rows.filter((r) => r.urgence === "Urgent").length, icon: "ti-alert-triangle", color: "#c0392b" },
-          { label: "En cours", value: rows.filter((r) => r.statut === "En cours" || r.statut === "Planifiée").length, icon: "ti-progress", color: "#EF9F27" },
-          { label: "Clôturées", value: rows.filter((r) => r.statut === "Clôturée").length, icon: "ti-check", color: "#5aa05a" },
-        ]} />
-        <Panel>
-          <div className="di-toolbar">
-            <button className="btn-new" onClick={() => { setErr(""); setModal(true); }} disabled={!auth.structureId}><i className="ti ti-plus" /> Nouvelle demande</button>
-            <div className="di-filters">
-              <select value={fStatut} onChange={(e) => setFStatut(e.target.value)}>
-                <option value="">Tous les statuts</option>{STATUTS.map((s) => <option key={s}>{s}</option>)}
-              </select>
-              <select value={fType} onChange={(e) => setFType(e.target.value)}>
-                <option value="">Tous les types</option>{TYPES.map((t) => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
+        <BackButton />
+        <PageHead
+          icon="ti-tools"
+          title="Demandes d'intervention"
+          subtitle={`${stats.total} DI · ${stats.urgentes} urgentes · Workflow scan-driven · Vue Liste ou Kanban`}
+          color="#e35d5b"
+        />
 
-          {loading ? <StateMsg>Chargement…</StateMsg>
-            : visible.length === 0 ? <StateMsg>Aucune demande. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => setModal(true)}>Créer une demande</a></StateMsg>
-            : (
-              <table>
-                <thead><tr><th>N°</th><th>Date</th><th>Type</th><th>Urgence</th><th>Matériel (série/parc/lot)</th><th>Patient</th><th>Statut</th><th></th></tr></thead>
-                <tbody>
-                  {visible.map((r) => (
-                    <tr key={r.id}>
-                      <td style={{ fontWeight: 600 }}>{r.numero}{r.transfert_id && <i className="ti ti-transfer" title="Transfert généré" style={{ marginLeft: 6, color: "#2a5a5a" }} />}</td>
-                      <td>{fmtDate(r.created_at)}</td>
-                      <td><span className="tag-type"><i className={`ti ${typeIcon(r.type)}`} /> {r.type}</span></td>
-                      <td><span className={`urg ${r.urgence === "Urgent" ? "urg-urgent" : "urg-normal"}`}>{r.urgence}</span></td>
-                      <td style={{ fontSize: 12 }}>
-                        {r.materiels ? <>{r.materiels.libelle}<br /><span style={{ color: "#8a98a8" }}>
-                          {[r.materiels.num_serie && `S/N ${r.materiels.num_serie}`, r.materiels.num_parc && `Parc ${r.materiels.num_parc}`, r.materiels.num_lot && `Lot ${r.materiels.num_lot}`].filter(Boolean).join(" · ") || "—"}
-                        </span></> : "—"}
-                      </td>
-                      <td style={{ fontSize: 12 }}>{r.patients ? `${r.patients.nom} ${r.patients.prenom || ""}${r.patients.chambre ? ` (ch.${r.patients.chambre})` : ""}` : "—"}</td>
-                      <td><span className={`statut ${stCls(r.statut)}`}>{r.statut}</span></td>
-                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                        {next(r.statut) && <button className="btn-mini" onClick={() => advance(r)} title={`Passer à « ${next(r.statut)} »`}><i className="ti ti-arrow-right" /> {next(r.statut)}</button>}
-                        {r.materiel_id && !r.transfert_id && (
-                          <button className="btn-mini" style={{ marginLeft: 6 }} onClick={() => genTransfert(r)} title="Générer un transfert (reprise)"><i className="ti ti-transfer" /> Transfert</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-        </Panel>
-      </div>
-
-      {modal && (
-        <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setModal(false)}>
-          <div className="modal">
-            <div className="modal-head">Nouvelle demande d'intervention <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setModal(false)} /></div>
-            <div className="modal-body">
-              {err && <div className="err">{err}</div>}
-              <div className="fld"><label>Type de demande</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
-              </div>
-              <div className="fld"><label>Niveau d'urgence</label>
-                <div className="seg">
-                  <button className={form.urgence === "Normal" ? "on" : ""} onClick={() => setForm({ ...form, urgence: "Normal" })}>Normal</button>
-                  <button className={form.urgence === "Urgent" ? "on" : ""} onClick={() => setForm({ ...form, urgence: "Urgent" })}>Urgent</button>
+        {/* Hero stats — 5 tuiles cliquables par statut */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 18 }}>
+          {STATUTS.map(s => {
+            const count = stats[s.value] || 0;
+            const active = fStatut === s.value;
+            return (
+              <button key={s.value} onClick={() => setFStatut(active ? "" : s.value)} style={{
+                padding: "14px 16px",
+                border: `2px solid ${active ? s.color : "#e3e9ee"}`,
+                background: active ? s.bg : "#fff",
+                borderLeft: `4px solid ${s.color}`,
+                borderRadius: 12, cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                transition: "all .15s",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <i className={`ti ${s.icon}`} style={{ color: s.color, fontSize: 16 }} />
+                  <span style={{ fontSize: 11, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>{s.value}</span>
                 </div>
-              </div>
-              <div className="fld-row">
-                <div className="fld"><label>Matériel concerné</label>
-                  <select value={form.materiel_id || ""} onChange={(e) => setForm({ ...form, materiel_id: e.target.value })}>
-                    <option value="">— Aucun —</option>{refs.materiels.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                </div>
-                <div className="fld"><label>Patient concerné</label>
-                  <select value={form.patient_id || ""} onChange={(e) => setForm({ ...form, patient_id: e.target.value })}>
-                    <option value="">— Aucun —</option>{refs.patients.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="fld-row">
-                <div className="fld"><label>Dépôt (emplacement)</label>
-                  <select value={form.depot_id || ""} onChange={(e) => setForm({ ...form, depot_id: e.target.value })}>
-                    <option value="">— Aucun —</option>{refs.depots.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                  </select>
-                </div>
-                <div className="fld"><label>Zone</label>
-                  <select value={form.zone_id || ""} onChange={(e) => setForm({ ...form, zone_id: e.target.value })}>
-                    <option value="">— Aucune —</option>{refs.zones.map((z) => <option key={z.value} value={z.value}>{z.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="fld"><label>Description</label>
-                <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Décrivez le problème ou la demande…" />
-              </div>
-            </div>
-            <div className="modal-foot">
-              <button className="btn-ghost" onClick={() => setModal(false)}>Annuler</button>
-              <button className="btn-save" onClick={save} disabled={busy}>{busy ? "…" : "Envoyer la demande"}</button>
-            </div>
-          </div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: s.color, fontFamily: "Consolas, monospace" }}>{count}</div>
+              </button>
+            );
+          })}
         </div>
-      )}
+
+        {/* 0.62.123 : FoldableFilters avec search + filtres avancés */}
+        <FoldableFilters
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher (numéro, description, matériel, dépôt…)"
+          activeFiltersCount={[fStatut, fUrgence, fEquipe, fDepot].filter(Boolean).length + (search ? 1 : 0)}
+          onResetAll={() => { setFStatut(""); setFUrgence(""); setFEquipe(""); setFDepot(""); setSearch(""); }}
+          storageKey="interventions"
+        >
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <select value={fUrgence} onChange={(e) => setFUrgence(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e3e9ee", fontSize: 13, fontFamily: "inherit" }}>
+              <option value="">Toutes urgences</option>
+              {URGENCES.map(u => <option key={u.value} value={u.value}>{u.value}</option>)}
+            </select>
+            {equipes.length > 0 && (
+              <select value={fEquipe} onChange={(e) => setFEquipe(e.target.value)}
+                style={{ padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e3e9ee", fontSize: 13, fontFamily: "inherit" }}>
+                <option value="">Toutes équipes</option>
+                {equipes.map(eq => <option key={eq.id} value={eq.id}>{eq.nom}</option>)}
+              </select>
+            )}
+            {depots.length > 0 && (
+              <select value={fDepot} onChange={(e) => setFDepot(e.target.value)}
+                style={{ padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e3e9ee", fontSize: 13, fontFamily: "inherit" }}>
+                <option value="">Tous dépôts</option>
+                {depots.map(d => <option key={d.id} value={d.id}>{d.nom}</option>)}
+              </select>
+            )}
+            <div style={{ display: "inline-flex", border: "1px solid #e3e9ee", borderRadius: 8, overflow: "hidden", marginLeft: "auto" }}>
+              <button onClick={() => setView("liste")} style={{ background: view === "liste" ? "#142131" : "#fff", color: view === "liste" ? "#fff" : "#5a6878", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+                <i className="ti ti-list" /> Liste
+              </button>
+              <button onClick={() => setView("kanban")} style={{ background: view === "kanban" ? "#142131" : "#fff", color: view === "kanban" ? "#fff" : "#5a6878", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+                <i className="ti ti-layout-kanban" /> Kanban
+              </button>
+              <button onClick={() => setView("tuiles")} style={{ background: view === "tuiles" ? "#142131" : "#fff", color: view === "tuiles" ? "#fff" : "#5a6878", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+                <i className="ti ti-grid-dots" /> Tuiles
+              </button>
+            </div>
+            <NeonButton variant="teal" icon="ti-plus" onClick={() => openNew()}>Nouvelle DI</NeonButton>
+          </div>
+        </FoldableFilters>
+
+        {/* Toolbar legacy retirée */}
+        <Panel style={{ marginBottom: 14, padding: "12px 14px", display: "none" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          </div>
+        </Panel>
+
+        {loading ? (
+          <Panel><SkeletonRow count={6} /></Panel>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            illustration="folder"
+            variant="terra"
+            title={rows.length === 0 ? "Aucune DI" : "Aucun résultat"}
+            message={rows.length === 0 ? "Crée ta première demande d'intervention, ou scanne le QR d'un dépôt pour démarrer." : "Élargis tes filtres."}
+            actionLabel={rows.length === 0 ? "Créer la 1ère DI" : null}
+            onAction={rows.length === 0 ? () => openNew() : null}
+          />
+        ) : view === "kanban" ? (
+          <KanbanView filtered={filtered} onCardClick={openEdit} />
+        ) : view === "tuiles" ? (
+          /* 0.62.105 : Vue tuiles custom */
+          <div className="av-stagger" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+            gap: 12,
+          }}>
+            {filtered.map(r => {
+              const statutColors = {
+                "Nouvelle": "#185FA5",
+                "En cours": "#EF9F27",
+                "Planifiée": "#7CC8C8",
+                "Terminée": "#5aa05a",
+                "Refusée": "#e35d5b",
+                "Clôturée": "#8a98a8",
+              };
+              const statColor = statutColors[r.statut] || "#5a6878";
+              const urgenceColor = r.urgence === "Urgent" ? "#e35d5b" : r.urgence === "Prioritaire" ? "#EF9F27" : "#8a98a8";
+              return (
+                <div key={r.id} data-3d="true" data-accent="bleu" onClick={() => openEdit(r)}
+                  style={{
+                    background: "#fff",
+                    borderRadius: 14,
+                    padding: 14,
+                    cursor: "pointer",
+                    border: `1px solid ${statColor}22`,
+                    borderLeft: `4px solid ${statColor}`,
+                  }}>
+                  {/* Header tuile */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, color: "#8a98a8", fontFamily: "Consolas, monospace", letterSpacing: 0.3 }}>
+                        {r.numero || "—"}
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: "#142131", marginTop: 2 }}>
+                        {r.titre || "Demande"}
+                      </div>
+                    </div>
+                    <span style={{
+                      padding: "3px 8px", borderRadius: 6,
+                      background: statColor, color: "#fff",
+                      fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                      boxShadow: `0 2px 6px ${statColor}55`,
+                      whiteSpace: "nowrap",
+                    }}>
+                      {r.statut || "?"}
+                    </span>
+                  </div>
+                  {/* Patient + lieu */}
+                  {(r.patient_nom || r.patient_prenom) && (
+                    <div style={{ fontSize: 12, color: "#5a6878", marginBottom: 4 }}>
+                      <i className="ti ti-user" style={{ color: "#7a6fb0", marginRight: 3 }} />
+                      {r.patient_nom || ""} {r.patient_prenom || ""}
+                    </div>
+                  )}
+                  {r.batiment_nom && (
+                    <div style={{ fontSize: 11.5, color: "#5a6878", marginBottom: 4 }}>
+                      <i className="ti ti-building" style={{ color: "#185FA5", marginRight: 3 }} />
+                      {r.batiment_nom}{r.service_nom ? ` · ${r.service_nom}` : ""}
+                    </div>
+                  )}
+                  {/* Footer : urgence + date */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f3f6" }}>
+                    {r.urgence && (
+                      <span style={{
+                        padding: "2px 7px", borderRadius: 4,
+                        background: `${urgenceColor}22`, color: urgenceColor,
+                        fontSize: 10, fontWeight: 700,
+                      }}>
+                        {r.urgence}
+                      </span>
+                    )}
+                    {r.created_at && (
+                      <span style={{ fontSize: 10.5, color: "#8a98a8" }}>
+                        <i className="ti ti-calendar" /> {new Date(r.created_at).toLocaleDateString("fr-FR")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <ListeView filtered={filtered} onClick={openEdit} onChangeStatut={changeStatut} />
+        )}
+
+        {/* Modal create/edit */}
+        {modal && (
+          <Modal open={!!modal} onClose={() => setModal(null)} kind="materiel"
+            title={modal.mode === "new" ? "Nouvelle demande d'intervention" : `Édition · ${form.numero}`}
+            footer={
+              <>
+                <Btn variant="ghost" onClick={() => setModal(null)}>Annuler</Btn>
+                <Btn variant="primary" icon="ti-check" onClick={save} disabled={busy}>{busy ? "..." : "Enregistrer"}</Btn>
+              </>
+            }>
+            {form.cree_par_scan && (
+              <div style={{ padding: "8px 12px", background: "rgba(124,200,200,.12)", borderLeft: "3px solid #7CC8C8", borderRadius: 6, fontSize: 12, color: "#1c5454", marginBottom: 12 }}>
+                <i className="ti ti-scan" /> <b>DI créée depuis le scan d'un QR</b> · Les rattachements sont pré-remplis automatiquement
+              </div>
+            )}
+            {/* 0.62.124 : LockBanner si édition concurrente */}
+            {interventionLock?.locked && <LockBanner lockedBy={interventionLock.lockedBy} onTakeover={interventionLock.takeover} resourceLabel="cette intervention" />}
+            {modal.mode === "new" && <EtabContextHeader auth={auth} color="#e35d5b" icon="ti-tools" />}
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div className="fld">
+                <label>Numéro</label>
+                <input value={form.numero || ""} onChange={(e) => setForm({ ...form, numero: e.target.value })} style={{ fontFamily: "Consolas, monospace", fontWeight: 700 }} />
+              </div>
+              <div className="fld">
+                <label>Type</label>
+                {/* 0.62.132 : SmartSelect avec historique + options */}
+                <SmartSelect
+                  value={form.type || "Panne / réparation"}
+                  onChange={(v) => setForm({ ...form, type: v })}
+                  options={TYPES_DI.map(t => ({ value: t.value, label: t.value }))}
+                  contextKey="intervention.type"
+                  allowCustom={false}
+                  placeholder="Choisir un type"
+                />
+              </div>
+            </div>
+
+            <div className="fld" style={{ marginTop: 8 }}>
+              <label>Description du problème *</label>
+              <div style={{ position: "relative" }}>
+                <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
+                  placeholder="Décris précisément le problème observé, les conditions, les symptômes…"
+                  style={{ paddingRight: 44 }} />
+                {/* 0.63.0 : Saisie vocale */}
+                <div style={{ position: "absolute", bottom: 8, right: 8 }}>
+                  <VoiceDictation
+                    onTranscript={(t) => setForm(prev => ({ ...prev, description: (prev.description || "") + (prev.description && !prev.description.endsWith(" ") ? " " : "") + t }))}
+                    size="sm"
+                  />
+                </div>
+              </div>
+            </div>
+            {/* 0.63.0 : Pièces jointes (photo de panne) */}
+            {modal?.id && (
+              <AttachmentsPanel
+                resourceType="intervention"
+                resourceId={modal.id}
+                structureId={auth.structureId}
+                compact
+              />
+            )}
+
+            <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#e35d5b", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #ffd5d2", paddingBottom: 4 }}>
+              <i className="ti ti-flame" /> Urgence
+            </h4>
+            <div style={{ display: "flex", gap: 6 }}>
+              {URGENCES.map(u => (
+                <button key={u.value} type="button" onClick={() => setForm({ ...form, urgence: u.value })}
+                  style={{
+                    flex: 1, background: form.urgence === u.value ? u.color : "#fff",
+                    color: form.urgence === u.value ? "#fff" : u.color,
+                    border: `1px solid ${u.color}`,
+                    padding: "8px 12px", borderRadius: 8, fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5,
+                  }}>
+                  <i className={`ti ${u.icon}`} /> {u.value}
+                </button>
+              ))}
+            </div>
+
+            <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#185FA5", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #cfe1f5", paddingBottom: 4 }}>
+              <i className="ti ti-map-pin" /> Rattachements
+            </h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div className="fld">
+                <label>Dépôt concerné</label>
+                <select value={form.depot_id || ""} onChange={(e) => setForm({ ...form, depot_id: e.target.value || null })}>
+                  <option value="">— Aucun —</option>
+                  {depots.map(d => <option key={d.id} value={d.id}>{d.nom}</option>)}
+                </select>
+              </div>
+              <div className="fld">
+                <label>Matériel concerné</label>
+                <select value={form.materiel_id || ""} onChange={(e) => setForm({ ...form, materiel_id: e.target.value || null })}>
+                  <option value="">— Aucun —</option>
+                  {materiels.slice(0, 200).map(m => <option key={m.id} value={m.id}>{m.libelle}{m.num_serie ? ` (${m.num_serie})` : ""}</option>)}
+                </select>
+              </div>
+              <div className="fld" style={{ gridColumn: "span 2" }}>
+                <label>Emplacement précis (texte libre)</label>
+                <SmartInput
+                  value={form.emplacement || ""}
+                  onChange={(v) => setForm({ ...form, emplacement: v })}
+                  contextKey="intervention.emplacement"
+                  placeholder="Ex: Étagère 3, casier B / Chambre 204, derrière le lit…"
+                />
+              </div>
+            </div>
+
+            <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#5aa05a", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #d5ecd5", paddingBottom: 4 }}>
+              <i className="ti ti-users" /> Assignation
+            </h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div className="fld">
+                <label>Équipe</label>
+                <select value={form.equipe_id || ""} onChange={(e) => setForm({ ...form, equipe_id: e.target.value || null })}>
+                  <option value="">— Non assigné —</option>
+                  {equipes.map(eq => <option key={eq.id} value={eq.id}>{eq.nom}</option>)}
+                </select>
+              </div>
+              <div className="fld">
+                <label>Durée estimée (min)</label>
+                <input type="number" min="0" step="15" value={form.duree_estimee_min || ""} onChange={(e) => setForm({ ...form, duree_estimee_min: e.target.value })} placeholder="30" />
+              </div>
+            </div>
+
+            {modal.mode === "edit" && (
+              <>
+                <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e3e9ee", paddingBottom: 4 }}>
+                  <i className="ti ti-progress-check" /> Statut & résolution
+                </h4>
+                <select value={form.statut || "Nouvelle"} onChange={(e) => setForm({ ...form, statut: e.target.value })} style={{ width: "100%", padding: 8, fontSize: 13, fontFamily: "inherit", border: "1px solid #e3e9ee", borderRadius: 6 }}>
+                  {STATUTS.map(s => <option key={s.value} value={s.value}>{s.value}</option>)}
+                </select>
+                {(form.statut === "Résolue" || form.statut === "Clôturée") && (
+                  <div className="fld" style={{ marginTop: 10 }}>
+                    <label>Résolution / Compte-rendu</label>
+                    <textarea value={form.resolution || ""} onChange={(e) => setForm({ ...form, resolution: e.target.value })} rows={2}
+                      placeholder="Décris ce qui a été fait, pièces changées, temps passé…" />
+                  </div>
+                )}
+              </>
+            )}
+          </Modal>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Vue Liste
+// ============================================================
+function ListeView({ filtered, onClick, onChangeStatut }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {filtered.map(r => {
+        const st = statutMeta(r.statut);
+        const ur = urgenceMeta(r.urgence);
+        const ty = typeMeta(r.type);
+        return (
+          <div key={r.id} style={{
+            background: "#fff", border: "1px solid #e3e9ee", borderRadius: 12,
+            borderLeft: `4px solid ${st.color}`,
+            padding: "14px 18px", transition: "all .15s", cursor: "pointer",
+          }}
+          onClick={() => onClick(r)}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = `0 6px 16px ${st.color}22`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: `${ty.color}1a`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <i className={`ti ${ty.icon}`} style={{ color: ty.color, fontSize: 22 }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                  <span style={{ fontFamily: "Consolas, monospace", fontWeight: 700, color: "#142131", fontSize: 13 }}>{r.numero}</span>
+                  <span style={{ background: st.bg, color: st.color, padding: "2px 8px", borderRadius: 12, fontSize: 10.5, fontWeight: 700, border: `1px solid ${st.color}44`, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                    <i className={`ti ${st.icon}`} /> {st.value}
+                  </span>
+                  {r.urgence !== "Normal" && (
+                    <span style={{ background: ur.bg, color: ur.color, padding: "2px 8px", borderRadius: 12, fontSize: 10.5, fontWeight: 700, border: `1px solid ${ur.color}44`, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                      <i className={`ti ${ur.icon}`} /> {r.urgence}
+                    </span>
+                  )}
+                  {r.cree_par_scan && <span style={{ background: "rgba(124,200,200,.18)", color: "#1c5454", padding: "2px 7px", borderRadius: 4, fontSize: 9.5, fontWeight: 700 }}><i className="ti ti-scan" /> SCAN</span>}
+                  <span style={{ fontSize: 11.5, color: "#8a98a8" }}>{r.type}</span>
+                </div>
+                <div style={{ fontSize: 13.5, color: "#142131", marginBottom: 6, lineHeight: 1.4 }}>{r.description}</div>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11.5, color: "#5a6878" }}>
+                  {r.materiels?.libelle && <span><i className="ti ti-package" style={{ color: "#185FA5" }} /> {r.materiels.libelle}{r.materiels.num_serie ? ` (${r.materiels.num_serie})` : ""}</span>}
+                  {r.depots?.nom && <span style={{ color: r.depots.couleur || "#7CC8C8" }}><i className="ti ti-building-warehouse" /> {r.depots.nom}</span>}
+                  {r.equipes?.nom && <span><i className="ti ti-users" style={{ color: "#5aa05a" }} /> {r.equipes.nom}</span>}
+                  {r.emplacement && <span style={{ color: "#7a6fb0", fontWeight: 600 }}><i className="ti ti-map-pin" /> {r.emplacement}</span>}
+                  <span style={{ marginLeft: "auto", color: "#8a98a8" }}><i className="ti ti-clock" /> {fmtDate(r.created_at)}</span>
+                </div>
+              </div>
+              <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end", flexShrink: 0 }}>
+                {r.statut === "Nouvelle" && (
+                  <Btn variant="ghost" icon="ti-calendar-plus" onClick={() => onChangeStatut(r, "Planifiée")} style={{ fontSize: 11 }}>Planifier</Btn>
+                )}
+                {r.statut === "Planifiée" && (
+                  <Btn variant="ghost" icon="ti-player-play" onClick={() => onChangeStatut(r, "En cours")} style={{ fontSize: 11 }}>Démarrer</Btn>
+                )}
+                {r.statut === "En cours" && (
+                  <Btn variant="ghost" icon="ti-check" onClick={() => onChangeStatut(r, "Résolue")} style={{ fontSize: 11 }}>Résolue</Btn>
+                )}
+                {r.statut === "Résolue" && (
+                  <Btn variant="ghost" icon="ti-archive" onClick={() => onChangeStatut(r, "Clôturée")} style={{ fontSize: 11 }}>Clôturer</Btn>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
+// Vue Kanban
+// ============================================================
+function KanbanView({ filtered, onCardClick }) {
+  const byStatut = useMemo(() => {
+    const map = {};
+    STATUTS.forEach(s => map[s.value] = []);
+    filtered.forEach(r => {
+      if (map[r.statut]) map[r.statut].push(r);
+    });
+    return map;
+  }, [filtered]);
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${STATUTS.length}, 1fr)`, gap: 10, overflowX: "auto" }}>
+      {STATUTS.map(st => {
+        const cards = byStatut[st.value] || [];
+        return (
+          <div key={st.value} style={{
+            minWidth: 220, background: st.bg, borderRadius: 12, padding: 10,
+            borderTop: `3px solid ${st.color}`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10, padding: "0 4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <i className={`ti ${st.icon}`} style={{ color: st.color, fontSize: 14 }} />
+                <span style={{ fontSize: 11.5, color: st.color, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>{st.value}</span>
+              </div>
+              <span style={{ background: "#fff", color: st.color, fontFamily: "Consolas, monospace", fontWeight: 700, padding: "1px 8px", borderRadius: 10, fontSize: 11, border: `1px solid ${st.color}33` }}>{cards.length}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: "70vh", overflowY: "auto" }}>
+              {cards.map(r => {
+                const ur = urgenceMeta(r.urgence);
+                const ty = typeMeta(r.type);
+                return (
+                  <div key={r.id} onClick={() => onCardClick(r)} style={{
+                    background: "#fff", border: `1px solid ${ty.color}22`, borderRadius: 8,
+                    padding: "8px 10px", cursor: "pointer", transition: "all .15s",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 4px 10px ${ty.color}33`; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                      <i className={`ti ${ty.icon}`} style={{ color: ty.color, fontSize: 13 }} />
+                      <span style={{ fontFamily: "Consolas, monospace", fontWeight: 700, fontSize: 10.5, color: "#142131" }}>{r.numero}</span>
+                      {r.urgence !== "Normal" && <span style={{ marginLeft: "auto", background: ur.bg, color: ur.color, padding: "0 5px", borderRadius: 8, fontSize: 9, fontWeight: 700 }}>{r.urgence.charAt(0).toUpperCase()}</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#142131", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{r.description}</div>
+                    {(r.materiels?.libelle || r.depots?.nom) && (
+                      <div style={{ marginTop: 4, fontSize: 10, color: "#5a6878", display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {r.materiels?.libelle && <span><i className="ti ti-package" /> {r.materiels.libelle.slice(0, 20)}</span>}
+                        {r.depots?.nom && <span style={{ color: r.depots.couleur || "#7CC8C8" }}>● {r.depots.nom}</span>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {cards.length === 0 && <div style={{ textAlign: "center", color: "#8a98a8", fontSize: 11, padding: 20, fontStyle: "italic" }}>Aucune</div>}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
