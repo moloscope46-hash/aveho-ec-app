@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.18",
+    "kind": "feat",
+    "titre": "MEGA SQL : +140 materiels (20 par etat) + 10 cuves + patients TOUS champs completes + articles fiche complete",
+    "chantiers": [
+      { "code": "AI", "txt": "SQL 0.65.18 : +140 materiels repartis 20 par etat. 20 En service (chez patient HAD ou en service EHPAD/clinique). 20 En panne avec descriptions detaillees (CPAP fuite, concentrateur HS, lit moteur bloque, pompe alarme batterie...). 20 Maintenance (etalonnage, MAJ firmware, calibration, test cellules...). 20 En stock NEUFS au depot central pret a deployer. 20 A recuperer (patient DCD, fin PEC, demenagement, changement modele...). 20 En transit entre depots ou en livraison. 20 Au rebut (CPAP S9 obsolete, lit gen1 1995, concentrateur DeVilbiss obsolete, pompe PHC-A1 1995...)" },
+      { "code": "AI", "txt": "Tous les materiels rattaches a etablissement + batiment + depot_id pour pouvoir filtrer dans l app et les voir dans les vues globales" },
+      { "code": "AI", "txt": "+10 cuves O2 supplementaires : 3 EHPAD (CUV-EHPAD-A01, A02, B01), 3 Clinique (CUV-CLIN-01, 02, 03), 4 HAD (CUV-HAD-01 a 04). Statuts varies (En service, A remplir, Maintenance)" },
+      { "code": "AI", "txt": "Patients : UPDATE massif pour completer TOUS les champs manquants. sexe, GIR (1-6), mobilite (Autonome/Aidee/Fauteuil/Alite), regime (Normal/Diabetique/Sans sel/Mixe/Sans gluten), allergies, medecin traitant + telephone, contact urgence (nom + tel + lien de parente), commentaire enrichi (antecedents + traitement chronique + suivi medical). Tous remplis avec rotation deterministe sur 6-8 profils types" },
+      { "code": "AI", "txt": "Articles : UPDATE massif pour completer la fiche complete. reference, description (Article medical professionnel...), unite, TVA (5.5 consommables ou 20% materiel), code LPP automatique selon libelle (1101230 CPAP, 1100620 concentrateur, 1208005 lit medicalise, 1244925 matelas, 4108090 fauteuil, 1129995 pompe PCA, 1230050 pompe nutrition), actif=true" },
+      { "code": "INFO", "txt": "Procedure : rejouer SQL (234K) qui contient maintenant TOUT. Pas de changement code. Tests : (1) /materiel filtre par etat -> chaque etat a 20+ materiels. (2) /patient -> tous les champs remplis dans la fiche. (3) /catalogue articles -> reference + LPP + TVA + description. (4) /cuves -> 16+ cuves" }
+    ],
+    "themes": ["feature", "demo-data"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.18.html"
+  },
+{
     "v": "0.65.17",
     "kind": "fix",
     "titre": "FIX 400 restantes (etat→statut SLA + notifs.lu→lue NotifCenter) + FAB bas-droite + BackButton mobile mi-largeur + ShareButton milieu + SQL centre de soin complet (+11 equipes +61 chambres +16 vehicules +30 patients)",
