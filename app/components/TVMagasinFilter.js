@@ -32,7 +32,7 @@ export default function TVMagasinFilter({ onChange }) {
     (async () => {
       try {
         const { data } = await supabase.from("magasins")
-          .select("id, nom, fournisseur_id")
+          .select("id, nom")
           .eq("structure_id", auth.structureId)
           .order("nom");
         setMagasins(data || []);

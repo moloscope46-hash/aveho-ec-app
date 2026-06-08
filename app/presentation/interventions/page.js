@@ -63,7 +63,7 @@ function PresentationInterventions() {
 
   async function load() {
     if (!auth.structureId) return;
-    // 0.65.25 : SELECT selon colonnes RÉELLES (interventions n'a PAS batiment_id, service_id, chambre_id, technicien_nom, date_planifiee)
+    // 0.65.25 : SELECT selon colonnes RÉELLES (interventions n'a PAS batiment_id, service_id, chambre_id, assignee_email, date_planifiee)
     // Vraies colonnes : etablissement_id, materiel_id, patient_id, intervenant (via maintenances), assignee_email, due_date, equipe_id, magasin_id, depot_id
     const baseFilter = (q) => {
       q = q.eq("structure_id", auth.structureId)
@@ -100,7 +100,7 @@ function PresentationInterventions() {
         (d.numero || "").toLowerCase().includes(s) ||
         (d.type || "").toLowerCase().includes(s) ||
         (d.description || "").toLowerCase().includes(s) ||
-        (d.technicien_nom || "").toLowerCase().includes(s) ||
+        (d.assignee_email || "").toLowerCase().includes(s) ||
         (d.materiels?.libelle || "").toLowerCase().includes(s) ||
         (d.materiels?.code || "").toLowerCase().includes(s) ||
         (d.patients?.nom || "").toLowerCase().includes(s) ||
@@ -419,9 +419,9 @@ function Card({ r, urgent = false }) {
       )}
 
       {/* 0.64.0 : Technicien assigné si planifié */}
-      {r.technicien_nom && (
+      {r.assignee_email && (
         <div style={{ fontSize: 12, color: "#7CC8C8", marginTop: 6 }}>
-          <i className="ti ti-user-check" /> {r.technicien_nom}
+          <i className="ti ti-user-check" /> {r.assignee_email}
           {r.date_planifiee && <span style={{ marginLeft: 6, color: "#9bb5b5" }}>· {new Date(r.date_planifiee).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>}
         </div>
       )}

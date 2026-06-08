@@ -89,7 +89,7 @@ function PresentationCarteHAD() {
 
     // 1. Patients HAD avec lat/lng
     let qHAD = supabase.from("patients")
-      .select("id, nom, prenom, latitude, longitude, ville, mode_residence, chambre, etablissement_id, batiment_id, service_id, chambre_id")
+      .select("id, nom, prenom, latitude, longitude, ville, notes, chambre, etablissement_id, batiment_id, service_id, chambre_id")
       .eq("structure_id", auth.structureId)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
@@ -100,7 +100,7 @@ function PresentationCarteHAD() {
     if (advFilters.svcId)     qHAD = qHAD.eq("service_id", advFilters.svcId);
     if (advFilters.chambreId) qHAD = qHAD.eq("chambre_id", advFilters.chambreId);
     if (advFilters.patientId) qHAD = qHAD.eq("id", advFilters.patientId);
-    // Approche défensive : on filtre côté client si "mode_residence" est HAD/domicile
+    // Approche défensive : on filtre côté client si "notes" est HAD/domicile
     let allPatients = await tryFetch(qHAD);
     // Recherche libre côté client
     if (advFilters.search?.trim()) {
@@ -113,7 +113,7 @@ function PresentationCarteHAD() {
       );
     }
     const hadPatients = allPatients.filter(p =>
-      !p.mode_residence || /domicile|HAD/i.test(p.mode_residence || "")
+      !p.notes || /domicile|HAD/i.test(p.notes || "")
     );
 
     // 2. Étapes livraison du jour vers domicile patients
@@ -136,18 +136,15 @@ function PresentationCarteHAD() {
 
     // 3. DI en cours avec géoloc patient
     let qDI = supabase.from("interventions")
-      .select("id, numero, type, statut, urgence, created_at, patient_id, etablissement_id, batiment_id, service_id, chambre_id, materiels(libelle), patients!inner(nom, prenom, latitude, longitude, ville, mode_residence)")
+      .select("id, numero, type, statut, urgence, created_at, patient_id, etablissement_id, materiels(libelle), patients!inner(nom, prenom, latitude, longitude, ville, notes)")
       .eq("structure_id", auth.structureId)
       .neq("statut", "Clôturée").neq("statut", "Refusée")
       .not("patients.latitude", "is", null)
       .not("patients.longitude", "is", null)
       .order("created_at", { ascending: false })
       .limit(100);
-    // 0.65.3 : filtres avancés sur DI
+    // 0.65.29 : filtres avancés - retrait batId/svcId/chambreId (colonnes inexistantes sur interventions)
     if (advFilters.etabId)    qDI = qDI.eq("etablissement_id", advFilters.etabId);
-    if (advFilters.batId)     qDI = qDI.eq("batiment_id", advFilters.batId);
-    if (advFilters.svcId)     qDI = qDI.eq("service_id", advFilters.svcId);
-    if (advFilters.chambreId) qDI = qDI.eq("chambre_id", advFilters.chambreId);
     if (advFilters.patientId) qDI = qDI.eq("patient_id", advFilters.patientId);
     let dis = await tryFetch(qDI);
     if (advFilters.search?.trim()) {
@@ -194,7 +191,7 @@ function PresentationCarteHAD() {
               <div style="padding:10px 12px;font-size:12px">
                 <div style="font-weight:700;color:#142131;font-size:13px">${p.nom} ${p.prenom || ""}</div>
                 ${p.ville ? `<div style="color:#8a98a8;margin-top:3px">📍 ${p.ville}</div>` : ""}
-                ${p.mode_residence ? `<div style="color:#5a6878;margin-top:3px;font-size:11px"><b>Mode:</b> ${p.mode_residence}</div>` : ""}
+                ${p.notes ? `<div style="color:#5a6878;margin-top:3px;font-size:11px"><b>Mode:</b> ${p.notes}</div>` : ""}
                 ${p.chambre ? `<div style="color:#5a6878;margin-top:3px;font-size:11px"><b>Chambre:</b> ${p.chambre}</div>` : ""}
               </div>
             </div>

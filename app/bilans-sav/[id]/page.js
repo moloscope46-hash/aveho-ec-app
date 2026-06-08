@@ -52,7 +52,7 @@ export default function BilanSavDetailPage() {
     >
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
         <InfoBlock label="Matériel" value={item.materiels?.libelle || "—"} icon="ti-package" color="#185FA5" />
-        {item.technicien_nom && <InfoBlock label="Technicien" value={item.technicien_nom} icon="ti-user" color="#5aa05a" />}
+        {item.assignee_email && <InfoBlock label="Technicien" value={item.assignee_email} icon="ti-user" color="#5aa05a" />}
         {item.cout_total && <InfoBlock label="Coût total" value={`${item.cout_total} €`} icon="ti-currency-euro" color="#EF9F27" highlight />}
         {item.duree_min && <InfoBlock label="Durée" value={`${item.duree_min} min`} icon="ti-clock" color="#7CC8C8" />}
       </div>

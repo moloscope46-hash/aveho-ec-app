@@ -68,7 +68,7 @@ export default function BilansSAVPage() {
         materiel_id: form.materiel_id || null,
         article_id: form.article_id || null,
         technicien_user_id: auth.user?.id,
-        technicien_nom: form.technicien_nom || auth.user?.email || "—",
+        assignee_email: form.assignee_email || auth.user?.email || "—",
         statut: "en_cours",
         date_debut: new Date().toISOString(),
         points: [
@@ -100,7 +100,7 @@ export default function BilansSAVPage() {
         <BackButton />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <PageHead icon="ti-clipboard-check" title="Bilans SAV" subtitle="5 points de contrôle · Photos · Signature" />
-          <Btn variant="primary" icon="ti-plus" onClick={() => { setForm({ technicien_nom: auth.user?.email || "" }); setNewModal(true); }} disabled={tableMissing}>Démarrer un bilan</Btn>
+          <Btn variant="primary" icon="ti-plus" onClick={() => { setForm({ assignee_email: auth.user?.email || "" }); setNewModal(true); }} disabled={tableMissing}>Démarrer un bilan</Btn>
         </div>
 
         {tableMissing && (
@@ -158,7 +158,7 @@ export default function BilansSAVPage() {
                     <div style={{ fontFamily: "Consolas,monospace", fontSize: 12, fontWeight: 700, color: "#142131" }}>{b.numero}</div>
                     <div>
                       <div style={{ fontSize: 12.5, color: "#142131" }}>
-                        🔧 <b>{b.technicien_nom || "—"}</b>
+                        🔧 <b>{b.assignee_email || "—"}</b>
                       </div>
                       {b.diagnostic && <div style={{ fontSize: 11, color: "#5a6878", fontStyle: "italic", marginTop: 2 }}>{b.diagnostic.substring(0, 80)}{b.diagnostic.length > 80 ? "…" : ""}</div>}
                       {b.motif_refus && <div style={{ fontSize: 11, color: "#e35d5b", fontStyle: "italic", marginTop: 2 }}>⊘ {b.motif_refus.substring(0, 80)}</div>}
@@ -186,7 +186,7 @@ export default function BilansSAVPage() {
               </>
             }>
             <label style={{ fontSize: 12, color: "#5a6878" }}><b>Technicien</b>
-              <input value={form.technicien_nom || ""} onChange={(e) => setForm({ ...form, technicien_nom: e.target.value })} placeholder="Nom du technicien" style={{ width: "100%", padding: "8px 10px", marginTop: 4, border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13 }} />
+              <input value={form.assignee_email || ""} onChange={(e) => setForm({ ...form, assignee_email: e.target.value })} placeholder="Nom du technicien" style={{ width: "100%", padding: "8px 10px", marginTop: 4, border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13 }} />
             </label>
             <label style={{ fontSize: 12, color: "#5a6878", display: "block", marginTop: 12 }}><b>SAV d'origine (optionnel)</b>
               <select value={form.sav_id || ""} onChange={(e) => setForm({ ...form, sav_id: e.target.value || null })} style={{ width: "100%", padding: "8px 10px", marginTop: 4, border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13 }}>

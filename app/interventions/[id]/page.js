@@ -74,7 +74,7 @@ export default function InterventionDetailPage() {
         <InfoBlock label="Matériel" value={item.materiels?.libelle || item.materiel_code || "—"} icon="ti-package" color="#185FA5" />
         <InfoBlock label="Emplacement" value={item.emplacement || "—"} icon="ti-map-pin" color="#7CC8C8" />
         {item.date_planifiee && <InfoBlock label="Date planifiée" value={new Date(item.date_planifiee).toLocaleDateString("fr-FR")} icon="ti-calendar" color="#7a6fb0" />}
-        {item.technicien_nom && <InfoBlock label="Technicien" value={item.technicien_nom} icon="ti-user" color="#5aa05a" />}
+        {item.assignee_email && <InfoBlock label="Technicien" value={item.assignee_email} icon="ti-user" color="#5aa05a" />}
         {item.duree_estimee_min && <InfoBlock label="Durée estimée" value={`${item.duree_estimee_min} min`} icon="ti-clock" color="#EF9F27" />}
       </div>
 

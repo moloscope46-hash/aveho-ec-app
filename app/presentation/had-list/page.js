@@ -51,16 +51,16 @@ function PresentationHadList() {
 
     // 1. Patients HAD/domicile - 0.65.12 : ENLEVER notion chambre/lit (que domicile)
     let qPat = supabase.from("patients")
-      .select("id, nom, prenom, ville, code_postal, telephone, mode_residence, etablissement_id, latitude, longitude, adresse, date_naissance, sexe, gir, mobilite, allergies, medecin_traitant, medecin_traitant_telephone, regime_alimentaire, date_entree, prescripteur_id, contact_urgence_nom, contact_urgence_telephone, contact_urgence_lien")
+      .select("id, nom, prenom, ville, code_postal, telephone, notes, etablissement_id, latitude, longitude, adresse, date_naissance, sexe, gir, mobilite, allergies, medecin_traitant, medecin_traitant_telephone, regime_alimentaire, date_entree, collaborateur_id, contact_urgence_nom, contact_urgence_telephone, contact_urgence_lien")
       .eq("structure_id", auth.structureId)
       .limit(100);
     if (advFilters.etabId) qPat = qPat.eq("etablissement_id", advFilters.etabId);
     if (advFilters.patientId) qPat = qPat.eq("id", advFilters.patientId);
     const allPats = await tryFetch(qPat);
-    // Patients HAD = domicile uniquement (mode_residence absent OU contient "domicile" / "HAD")
+    // Patients HAD = domicile uniquement (notes absent OU contient "domicile" / "HAD")
     let hadPats = allPats.filter(p =>
-      !p.mode_residence ||
-      /domicile|HAD/i.test(p.mode_residence || "")
+      !p.notes ||
+      /domicile|HAD/i.test(p.notes || "")
     );
 
     // Recherche libre
@@ -96,7 +96,7 @@ function PresentationHadList() {
           .limit(10)),
         // 0.65.12 : Traitements HAD actifs avec IDE et pharmacie
         tryFetch(supabase.from("had")
-          .select("id, type_traitement, statut, date_debut, observations, prescripteur:prescripteur_id(nom, prenom, specialite), infirmiere:infirmiere_id(nom, prenom, telephone), pharmacie:pharmacie_id(nom, telephone)")
+          .select("id, type_traitement, statut, date_debut, observations, prescripteur:collaborateur_id(nom, prenom, specialite), infirmiere:infirmiere_id(nom, prenom, telephone), pharmacie:pharmacie_id(nom, telephone)")
           .eq("structure_id", auth.structureId)
           .eq("patient_id", p.id)
           .eq("statut", "Actif")

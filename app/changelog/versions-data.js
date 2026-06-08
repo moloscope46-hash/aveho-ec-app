@@ -240,6 +240,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.29",
+    "kind": "fix",
+    "titre": "MEGA FIX COLONNES FANTOMES dans tout le CODE (pas que le SQL) - 11 fichiers corriges - les patients vont enfin saffisher",
+    "chantiers": [
+      { "code": "AI", "txt": "AUDIT GLOBAL : recherche toutes les references aux colonnes fantomes dans tout le code JS (pas juste SQL). 11 fichiers contenaient encore des references" },
+      { "code": "AI", "txt": "FIX mode_residence → notes dans 5 fichiers : presentation/carte-had/page.js, presentation/had-list/page.js + tout fichier qui faisait patients.select(...mode_residence) ou d.mode_residence. C est pour ca que la LISTE PATIENTS etait VIDE - le SELECT foirait en 400" },
+      { "code": "AI", "txt": "FIX technicien_nom → assignee_email dans 10 fichiers : presentation/planning, presentation/interventions, presentation/dashboard, components/DashboardWidgets, planning/page.js, bilans-sav, interventions/[id], bilan-sav/[id]" },
+      { "code": "AI", "txt": "FIX prescripteur_id → collaborateur_id dans patients (had-list, api prescriptions)" },
+      { "code": "AI", "txt": "FIX magasins.fournisseur_id : RETIRE du SELECT magasins dans TVMagasinFilter (cette colonne nexiste pas sur magasins)" },
+      { "code": "AI", "txt": "FIX materiels.code → num_parc dans presentation/dashboard (materiels na pas de colonne code, vraie colonne est num_parc ou code_barre_principal)" },
+      { "code": "AI", "txt": "FIX carte-had : SELECT interventions sans batiment_id/service_id/chambre_id. Filtres advFilters.batId/svcId/chambreId retires car colonnes inexistantes" },
+      { "code": "INFO", "txt": "Maintenant LISTE PATIENTS va saffisher car le SELECT ne contient plus mode_residence qui foirait en 400 systematiquement. Et la TopBar TVMagasinFilter ne fait plus de 400 a chaque load" }
+    ],
+    "themes": ["fix-bugs-400", "audit-code", "schema-real"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.29.html"
+  },
+{
     "v": "0.65.28",
     "kind": "fix",
     "titre": "AUDIT COLONNES SQL : 7 colonnes fantomes corrigees (patients.mode_residence, maintenances.libelle/technicien_nom/description, interventions.batiment_id/service_id/date_planifiee/technicien_nom, services.etage, materiels.batiment_id/marque/modele)",

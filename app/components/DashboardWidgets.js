@@ -2942,14 +2942,14 @@ export function TopCollaborateursWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("technicien_user_id, technicien_nom")
+          .select("technicien_user_id, assignee_email")
           .eq("structure_id", auth.structureId)
           .gte("created_at", since);
         const counts = {};
         (intervs || []).forEach(i => {
           if (!i.technicien_user_id) return;
           const k = i.technicien_user_id;
-          if (!counts[k]) counts[k] = { id: k, count: 0, nom: i.technicien_nom || "—" };
+          if (!counts[k]) counts[k] = { id: k, count: 0, nom: i.assignee_email || "—" };
           counts[k].count++;
         });
         const top = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);

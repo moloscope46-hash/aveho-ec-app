@@ -53,7 +53,7 @@ function PresentationPlanning() {
 
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
 
-    // Sources parallèles (0.65.25 : VRAIES colonnes - due_date au lieu de date_planifiee, intervenant au lieu de technicien_nom)
+    // Sources parallèles (0.65.25 : VRAIES colonnes - due_date au lieu de date_planifiee, intervenant au lieu de assignee_email)
     const [interventions, tournees, maintenances, planEvts] = await Promise.all([
       tryFetch(supabase.from("interventions")
         .select("id, numero, type, urgence, due_date, statut, assignee_email, equipe_id, materiel_id, patient_id")
@@ -90,7 +90,7 @@ function PresentationPlanning() {
       chambre: null,
       heure: d.date_planifiee ? new Date(d.date_planifiee).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?",
       time_ms: d.date_planifiee ? new Date(d.date_planifiee).getTime() : 0,
-      assignee: d.technicien_nom || "Non assigné",
+      assignee: d.assignee_email || "Non assigné",
       statut: d.statut,
       urgent: d.urgence === "Urgent",
     }));

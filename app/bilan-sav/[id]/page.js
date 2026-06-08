@@ -207,7 +207,7 @@ export default function BilanSAVPage({ params }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
             <div>
               <div style={{ fontSize: 10.5, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>Technicien</div>
-              <div style={{ fontSize: 13, fontWeight: 700 }}>{bilan.technicien_nom || "—"}</div>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{bilan.assignee_email || "—"}</div>
             </div>
             <div>
               <div style={{ fontSize: 10.5, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>Début</div>
@@ -550,7 +550,7 @@ async function exportPDF(bilan, points, photos) {
     doc.text(bilan.numero || "Bilan SAV", 14, y); y += 8;
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Technicien : ${bilan.technicien_nom || "—"}`, 14, y); y += 5;
+    doc.text(`Technicien : ${bilan.assignee_email || "—"}`, 14, y); y += 5;
     doc.text(`Début : ${bilan.date_debut ? new Date(bilan.date_debut).toLocaleString("fr-FR") : "—"}`, 14, y); y += 5;
     doc.text(`Fin : ${bilan.date_fin ? new Date(bilan.date_fin).toLocaleString("fr-FR") : "En cours"}`, 14, y); y += 5;
     doc.text(`Statut : ${bilan.statut} · Résultat : ${bilan.resultat || "—"}`, 14, y); y += 8;
