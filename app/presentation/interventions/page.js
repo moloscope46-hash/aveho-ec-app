@@ -19,6 +19,7 @@ import { fmtDate } from "../../../lib/format";
 import TVScreenNav from "../../components/TVScreenNav";  /* 0.64.0 */
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
 import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
+import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 const COULEUR_STATUT = {
   "Nouvelle": "#185FA5",
@@ -187,6 +188,7 @@ function PresentationInterventions() {
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
             <TVFiltersBar pageKey="interventions" onChange={setAdvFilters} />
+            <TVCastButton refreshSec={refreshSec} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>
             Demandes d'intervention en cours

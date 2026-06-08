@@ -161,6 +161,7 @@ function PresentationHadList() {
             <i className="ti ti-home-heart" /> AVEHO — HAD & DOMICILE
             <TVMagasinFilter onChange={setMagasinId} />
             <TVFiltersBar pageKey="had-list" onChange={setAdvFilters} />
+            <TVCastButton refreshSec={refreshSec} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 700, letterSpacing: 1 }}>
             Patients à domicile {patients.length > 0 ? `· ${patients.length}` : ""}

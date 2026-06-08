@@ -10,6 +10,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
 import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
+import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 import { fmtDate } from "../../../lib/format";
 
 export default function PresentationStatsPage() {

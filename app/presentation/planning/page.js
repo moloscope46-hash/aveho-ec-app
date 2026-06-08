@@ -11,6 +11,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
 import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
+import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 export default function PresentationPlanningPage() {
   return (
@@ -186,7 +187,8 @@ function PresentationPlanning() {
       }}>
         <div>
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>AVEHO — TV DE SERVICE<TVMagasinFilter onChange={setMagasinId} />
-            <TVFiltersBar pageKey="planning" onChange={setAdvFilters} /></div>
+            <TVFiltersBar pageKey="planning" onChange={setAdvFilters} />
+            <TVCastButton refreshSec={refreshSec} /></div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>
             Planning du jour
           </h1>

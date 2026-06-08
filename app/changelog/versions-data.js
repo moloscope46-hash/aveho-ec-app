@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.10",
+    "kind": "feat",
+    "titre": "📺 Mode TV ULTRA : bouton Cast (Chromecast/AirPlay/MultiÉcran) + page Paramètres TV complète + fix SQL fournisseurs/articles",
+    "chantiers": [
+      { "code": "AI", "txt": "📺 **TVCastButton.js (NOUVEAU)** : bouton de cast premium dans le header de TOUTES les pages TV (interventions, planning, architecture, livraisons, carte-had, had-list, dashboard, stats). **Menu déroulant teal avec gradient** au click. **Détection auto des APIs disponibles** : (1) **Google Cast** (window.chrome.cast - Chrome desktop) → bouton Caster vers Chromecast. (2) **AirPlay** (window.WebKitPlaybackTargetAvailabilityEvent - Safari iOS/macOS) → bouton AirPlay. (3) **Multi-écran** (window.getScreenDetails - Chrome 100+) → détecte tous les écrans branchés au PC et permet de pousser la page sur chacun via window.open(features=left/top/width/height). (4) **Plein écran** (Fullscreen API - F11). (5) **QR Code** pour ouvrir sur smartphone (génération via api.qrserver.com). (6) **Copier lien direct** avec paramètres. (7) Toast feedback élégant en bas écran. État live des 4 APIs affiché en bas du menu" },
+      { "code": "AI", "txt": "⚙ **Page TV Paramètres NOUVELLE (/presentation/parametres)** : page de config ULTRA complète. **Sections** : (1) **Capacités détectées** : badges OK/KO pour Chromecast / AirPlay / Multi-écran / PiP. (2) **Multi-écrans physiques** : détection via getScreenDetails(), liste avec label/résolution/écran principal, sélecteur de page à déployer par écran, bouton \"Lancer la diffusion sur tous\" qui ouvre N popups en plein écran. (3) **Cast vers TV** : explications Chromecast/AirPlay/SmartTV + boutons copier lien + QR Code. (4) **Refresh & rotation** : slider 15s-5min, checkbox auto-rotation entre pages avec slider interval + multi-select des pages à inclure. (5) **Thèmes** : 6 thèmes (Aveho/Navy/Ember/Violet/Rouge/Clair) avec preview gradient. (6) **Options** : plein écran auto + masquer topbar. (7) **Astuces & raccourcis clavier** : F11, 1-8, R, P P P. **Persistance localStorage** : tous les réglages sauvegardés (av-tv-params)" },
+      { "code": "AI", "txt": "🐛 **Fix SQL démo : colonnes fournisseurs et articles** : (1) **fournisseurs** : la colonne s''appelle `raison_sociale` et non `nom`. Mise à jour de l''INSERT et du SELECT du récap. (2) **articles** : retrait des colonnes inexistantes `famille_id` et `lpp_code`. `prix_vente_ht` → `prix_public_ht` (la vraie colonne). Garde libelle/code/structure_id/unite/actif qui sont obligatoires. Maintenant le SQL démo passe complètement"
+      },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.10** : (1) Rejouer le SQL `aveho-DEMO-data-import.sql` mis à jour. (2) Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (a) /presentation/interventions → bouton CASTER teal en haut → menu déroulant. (b) Sur Chrome → \"Détecter mes écrans\" → liste des écrans branchés + bouton \"Déployer sur cet écran\". (c) /presentation/parametres → page complète avec sliders, thèmes, multi-écran assignment. (d) Choisir 6 pages dans la rotation auto et 60s d''intervalle → click déployer → popups s''ouvrent en plein écran"
+      }
+    ],
+    "themes": ["feature", "tv", "cast", "multi-screen"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.10.html"
+  },
+  {
     "v": "0.65.9",
     "kind": "feat",
     "titre": "🏥 Architecture TV : Bouton + Patient rapide + Transfert patient + Lits de surplus par étage + SQL démo fixé",

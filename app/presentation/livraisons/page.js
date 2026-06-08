@@ -113,6 +113,7 @@ function PresentationLivraisons() {
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
             <TVFiltersBar pageKey="livraisons" onChange={setAdvFilters} />
+            <TVCastButton refreshSec={refreshSec} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>Livraisons prévues du jour</h1>
         </div>

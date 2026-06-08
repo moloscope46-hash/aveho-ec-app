@@ -296,6 +296,7 @@ function PresentationCarteHAD() {
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
             <TVFiltersBar pageKey="carte-had" onChange={setAdvFilters} />
+            <TVCastButton refreshSec={refreshSec} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 700, letterSpacing: 1 }}>Carte HAD & Domicile</h1>
         </div>
