@@ -71,10 +71,32 @@ export default function CartDropdown({ open, onClose, anchorRef }) {
   const subtotal = items.reduce((s, it) => s + ((parseFloat(it.prix_vente_ht || it.prix) || 0) * (it.qte || 1)), 0);
   const totalQte = items.reduce((s, it) => s + (it.qte || 1), 0);
 
+  // 0.65.6 : Détection mobile pour forcer bottom-sheet (belt-and-suspenders)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 720);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   if (!open) return null;
 
   return (
-    <div ref={dropdownRef} className="tb-dropdown" style={{
+    <div ref={dropdownRef} className="tb-dropdown" style={isMobile ? {
+      position: "fixed", top: "auto", bottom: 0, left: 0, right: 0,
+      width: "100vw", maxWidth: "100vw", maxHeight: "80vh",
+      background: "#fff", color: "#142131",
+      borderRadius: "18px 18px 0 0",
+      boxShadow: "0 -10px 30px rgba(20,33,49,.4)",
+      border: "none",
+      zIndex: 99998,
+      display: "flex", flexDirection: "column",
+      fontFamily: "Quicksand, sans-serif",
+      overflowY: "auto",
+      animation: "av-cart-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+      paddingTop: 18,
+    } : {
       position: "absolute", top: "calc(100% + 8px)", right: 0,
       width: 380, maxHeight: "calc(100vh - 80px)",
       background: "#fff", color: "#142131",
@@ -90,7 +112,15 @@ export default function CartDropdown({ open, onClose, anchorRef }) {
           from { opacity: 0; transform: translateY(-8px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes av-cart-bottom-sheet-up {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
       `}</style>
+      {/* Drag-handle mobile */}
+      {isMobile && (
+        <div style={{ width: 40, height: 4, background: "rgba(20,33,49,.25)", borderRadius: 99, margin: "0 auto 10px", flexShrink: 0 }} />
+      )}
 
       {/* Header */}
       <div style={{

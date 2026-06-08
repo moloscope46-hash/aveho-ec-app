@@ -240,6 +240,37 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.6",
+    "kind": "fix",
+    "titre": "🔧 Fix DÉFINITIF popups mobile : triple protection (CSS ULTRA agressif + MobilePopupForcer JS + CartDropdown belt-and-suspenders)",
+    "chantiers": [
+      { "code": "AI", "txt": "📱 **Fix popups mobile — TRIPLE protection** : malgré les hotfix précédents 0.65.2 et 0.65.4, certains popups continuaient à sortir de l''écran. **3 défenses superposées** : (1) **CSS ULTRA agressif** dans globals.css : règle @media (max-width:720px) qui force position:fixed + bottom:0 + width:100vw + max-height:80vh + overflow-y:auto + transform:none !important sur 8 classes (.tb-dropdown, .notif-center-popup, .status-popover, .av-dropdown, .av-popover, .av-popup + [role=menu] + [role=listbox]). Drag-handle iOS-style en sticky top. (2) **MobilePopupForcer.js** : nouveau composant global dans layout.js qui surveille le DOM via MutationObserver. Dès qu''un popup est ajouté au DOM avec position:absolute/fixed et top<120px (= ancré près de la topbar), il FORCE les styles inline avec setProperty important. Détection auto sans dépendre des classes. (3) **CartDropdown belt-and-suspenders** : ajout d''un useState isMobile + style conditionnel sur le composant lui-même. Si isMobile, le style inline applique direct bottom-sheet (pas besoin que le CSS override fonctionne). Drag-handle visible" },
+      { "code": "AI", "txt": "🎯 **MobilePopupForcer (MutationObserver intelligent)** : (1) Observe toute mutation du DOM. (2) Si nouvel élément avec position absolute/fixed → vérifie son rect.top : si <120px (= popup ancré à la topbar), force le bottom-sheet. (3) Vérifie aussi via classNames : tb-dropdown / notif-center-popup / status-popover etc. (4) Marque les éléments traités avec data-bottom-sheet-forced=1 pour éviter re-application. (5) Reload de page si l''utilisateur passe de desktop à mobile au resize (pour ré-activer l''observer). **Avantage** : marche même pour les popups qu''on n''aurait pas identifiés" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.6** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) DevTools en mode iPhone 13 (390px). (2) Cliquer cloche notif → popup glisse DEPUIS LE BAS, pas du haut. (3) Cliquer panier → idem. (4) Click icônes statut (micro/caméra/GPS) → popover en bottom-sheet. (5) Click avatar user → menu en bottom-sheet. Si UN seul popup persiste à sortir en haut, le MutationObserver doit le forcer dans la seconde"
+      }
+    ],
+    "themes": ["fix", "mobile", "critical"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.6.html"
+  },
+  {
+    "v": "0.65.5",
+    "kind": "feat",
+    "titre": "🚀 MEGA Sprint TV : Permissions browser (Micro/Caméra/GPS/Notifs) + 2 nouvelles pages TV (Architecture bâtiments + Liste HAD anticipation) + Fix Export PDF",
+    "chantiers": [
+      { "code": "AI", "txt": "🔐 **StatusIcons enrichi : permissions navigateur complètes** : ajout de 2 nouvelles icônes dans la toolbar (Micro + Caméra) en plus de GPS, Notifs, Réseau, PWA, ServiceWorker, Empreinte, Face ID. **Détection via navigator.permissions.query()** pour chacune. **Couleurs dynamiques** : vert (granted), rouge (denied), orange/clignotant (prompt/unknown), gris (unsupported). **Click direct sur icône** = demande la permission (au lieu d''ouvrir le popup d''info). **Animation blink orange** sur icônes non encore demandées pour attirer l''attention. **Fonctions request** : `requestMicro()` et `requestCamera()` utilisent `navigator.mediaDevices.getUserMedia({audio/video:true})` puis ferment le stream juste après obtention de la permission. **Feedback** : toast vert si OK, rouge si denied avec explication, warning sinon" },
+      { "code": "AI", "txt": "🏗 **Page TV Architecture bâtiment NOUVELLE (/presentation/architecture)** : vue éclatée multi-bâtiments. **Layout** : grille N colonnes (1 par bâtiment, max 4). **Pour chaque bâtiment** : (1) Header avec nom + établissement + ville. (2) **5 mini-stats** : DI en cours, urgentes (pulse rouge), matériels, maintenances, dépôts. (3) **Liste verticale étages → services** avec bordure orange si DI dedans + badges nb DI + nb matériels. (4) **Dépôts rattachés**. (5) **Maintenances à venir** avec dates J/M. (6) **Équipe rattachée** : badges initiales (PM, JD, etc.). **Filtre établissement via TVFiltersBar** + droits utilisateur respectés" },
+      { "code": "AI", "txt": "🏠 **Page TV Liste HAD NOUVELLE (/presentation/had-list)** : vue d''anticipation pour patients à domicile. **Différente de /carte-had** (qui était une vue carte). **Layout** : cards patients en grille (380px min). **4 KPIs en haut** : DI en cours / patients en retard (pulse) / livraisons 7j / maintenances 7j. **Pour chaque patient HAD** : (1) Nom + ville + code postal + téléphone. (2) **Badge URGENT (rouge pulse) ou EN RETARD (orange)** selon priorité. (3) **DI en cours** (max 3) avec numéro + matériel + statut + bordure rouge si urgent. (4) **Livraisons prévues** avec date J/M format compact. (5) **Maintenances 7j à venir** avec date. (6) **Prochaine échéance globale** en badge teal en coin. **Tri** : urgents → en retard → volume. Recherche libre vocale via TVFiltersBar" },
+      { "code": "AI", "txt": "📺 **TVScreenNav : 8 écrans au lieu de 6** : ajout Architecture (3e position) + Liste HAD (6e position). Navigation clavier élargie à **touches 1-8**. Ordre : Interventions → Planning → Architecture → Livraisons → Carte HAD → Liste HAD → Dashboard → Stats" },
+      { "code": "AI", "txt": "🐛 **Fix Export PDF qui scrollait en bas** : le modal Export PDF dans DashboardActions ne lock pas le scroll de la page, donc le clic sur le bouton (en bas de l''accueil) faisait remonter la page derrière et le modal apparaissait coupé. **Fix** : (1) `useEffect` qui set `body.style.overflow = 'hidden'` à l''ouverture + restaure à la fermeture. (2) `window.scrollTo({top:0})` à l''ouverture pour s''assurer que le modal est visible (et restaure la position scroll précédente à la fermeture). (3) Conteneur en `align-items:flex-start; padding-top:5vh` avec inner `margin:auto` pour positionnement parfait" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.5** : Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. Pas de NOUVEAU SQL. **Tests** : (1) Topbar → icône micro orange clignote → click → popup permission navigateur → autoriser → devient vert. (2) /presentation → flèche jusqu''à Architecture (3e écran) → bâtiments affichés avec étages/services. (3) /presentation/had-list → patients HAD avec compteurs anticipation. (4) Accueil → bouton Export PDF → modal s''affiche bien centrée"
+      }
+    ],
+    "themes": ["feature", "tv", "permissions", "architecture", "had"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.5.html"
+  },
+  {
     "v": "0.65.4",
     "kind": "fix",
     "titre": "🔧 BackButton flottant global + TV filtres cantonnés par droits + Onglet Activité profil fix + Popups topbar mobile bottom-sheet",

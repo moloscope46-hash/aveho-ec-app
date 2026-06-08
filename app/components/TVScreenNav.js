@@ -15,8 +15,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 const SCREENS = [
   { path: "/presentation/interventions", label: "Demandes d'intervention", icon: "ti-clipboard-list", color: "#EF9F27" },
   { path: "/presentation/planning",      label: "Planning du jour",        icon: "ti-calendar",       color: "#7CC8C8" },
+  { path: "/presentation/architecture",  label: "Architecture bâtiments",  icon: "ti-building",       color: "#185FA5" },
   { path: "/presentation/livraisons",    label: "Livraisons prévues",      icon: "ti-truck-delivery", color: "#C9867F" },
   { path: "/presentation/carte-had",     label: "Carte HAD & domicile",    icon: "ti-map-pin",        color: "#5aa05a" },
+  { path: "/presentation/had-list",      label: "Liste HAD & anticipation", icon: "ti-home-heart",    color: "#5db5b5" },
   { path: "/presentation/dashboard",     label: "Tableau de bord",         icon: "ti-chart-bar",      color: "#7a6fb0" },
   { path: "/presentation/stats",         label: "Activité temps réel",     icon: "ti-pulse",          color: "#5a8f8f" },
 ];
@@ -60,7 +62,7 @@ export default function TVScreenNav({ currentScreen }) {
     function onKey(e) {
       if (e.key === "ArrowLeft") go(prev.path);
       else if (e.key === "ArrowRight") go(next.path);
-      else if (e.key >= "1" && e.key <= "6") {
+      else if (e.key >= "1" && e.key <= "8") {
         const idx = parseInt(e.key, 10) - 1;
         if (SCREENS[idx]) go(SCREENS[idx].path);
       }

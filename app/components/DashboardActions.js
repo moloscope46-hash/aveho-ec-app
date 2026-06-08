@@ -171,10 +171,22 @@ function ExportModal({ format, setFormat, selected, setSelected, title, setTitle
 
   const nbSelected = Object.values(selected).filter(Boolean).length;
 
+  // 0.65.5 : Lock scroll body + scroll en haut quand modal ouvert
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevScroll = window.scrollY;
+    document.body.style.overflow = "hidden";
+    // Scroll en haut au moment de l'ouverture pour s'assurer que le modal est visible
+    window.scrollTo({ top: 0, behavior: "instant" });
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.scrollTo({ top: prevScroll, behavior: "instant" });
+    };
+  }, []);
+
   function toggleAll(val) {
     const next = {};
     widgets.forEach(w => { next[w.id] = val; });
-    // Garder les "structurels"
     ["atraiter", "kpis", "raccourcis"].forEach(k => { next[k] = true; });
     setSelected(next);
   }
@@ -182,15 +194,23 @@ function ExportModal({ format, setFormat, selected, setSelected, title, setTitle
   return (
     <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
-        position: "fixed", inset: 0, background: "rgba(20,33,49,.7)",
-        backdropFilter: "blur(6px)", zIndex: 999999,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(20,33,49,.7)",
+        backdropFilter: "blur(6px)",
+        zIndex: 999999,
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
+        padding: "5vh 20px",
+        overflowY: "auto",
       }}>
       <div style={{
         background: "#fff", borderRadius: 14, padding: 0,
         maxWidth: 720, width: "100%", maxHeight: "90vh", overflowY: "auto",
         boxShadow: "0 30px 80px rgba(0,0,0,.4)",
         fontFamily: "Quicksand, sans-serif",
+        margin: "auto",
       }}>
         {/* Header */}
         <div style={{ padding: "14px 18px", background: "linear-gradient(135deg, #185FA5, #7CC8C8)", color: "#fff", borderRadius: "14px 14px 0 0", display: "flex", alignItems: "center", gap: 10 }}>

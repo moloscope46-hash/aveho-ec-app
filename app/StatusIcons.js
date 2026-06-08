@@ -84,6 +84,26 @@ export default function StatusIcons({ auth }) {
       s.geoloc = "unsupported";
     }
 
+    // 0.65.5 : Permissions Micro
+    if ("permissions" in navigator && navigator.mediaDevices?.getUserMedia) {
+      try {
+        const p = await navigator.permissions.query({ name: "microphone" });
+        s.micro = p.state;
+      } catch { s.micro = "unknown"; }
+    } else {
+      s.micro = "unsupported";
+    }
+
+    // 0.65.5 : Permissions Caméra
+    if ("permissions" in navigator && navigator.mediaDevices?.getUserMedia) {
+      try {
+        const p = await navigator.permissions.query({ name: "camera" });
+        s.camera = p.state;
+      } catch { s.camera = "unknown"; }
+    } else {
+      s.camera = "unsupported";
+    }
+
     s.pwa = window.matchMedia?.("(display-mode: standalone)")?.matches
          || window.navigator.standalone === true;
 
@@ -168,6 +188,55 @@ export default function StatusIcons({ auth }) {
     );
   }
 
+  // 0.65.5 : Demander permission micro
+  async function requestMicro() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showFeedback("error", "Micro non supporté");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Immédiatement arrêter le stream (juste pour la permission)
+      stream.getTracks().forEach(t => t.stop());
+      await refreshAll();
+      showFeedback("success", "Micro autorisé !");
+    } catch (e) {
+      await refreshAll();
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
+        showFeedback("error",
+          "Micro refusé. Pour autoriser, cliquez sur l'icône cadenas/cam dans la barre d'adresse → Permissions → Micro → Autoriser.",
+          10000
+        );
+      } else {
+        showFeedback("warning", "Erreur micro : " + (e.message || e.name || "inconnue"));
+      }
+    }
+  }
+
+  // 0.65.5 : Demander permission caméra
+  async function requestCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showFeedback("error", "Caméra non supportée");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(t => t.stop());
+      await refreshAll();
+      showFeedback("success", "Caméra autorisée !");
+    } catch (e) {
+      await refreshAll();
+      if (e.name === "NotAllowedError" || e.name === "PermissionDeniedError") {
+        showFeedback("error",
+          "Caméra refusée. Pour autoriser, cliquez sur l'icône cadenas/cam dans la barre d'adresse → Permissions → Caméra → Autoriser.",
+          10000
+        );
+      } else {
+        showFeedback("warning", "Erreur caméra : " + (e.message || e.name || "inconnue"));
+      }
+    }
+  }
+
   // Naviguer vers /profil — utile pour les boutons "Gérer"
   function gotoProfil() {
     setOpen(null);
@@ -196,7 +265,7 @@ export default function StatusIcons({ auth }) {
           : status.notif === "denied" ? "Notifications bloquées (réglages navigateur)"
           : status.notif === "unsupported" ? "Non supporté par ce navigateur"
           : "Notifications non demandées",
-      action: status.notif === "default" ? { label: "Autoriser", fn: async () => { await requestNotif(); } } : null,
+      action: (status.notif === "default" || status.notif === "unknown") ? { label: "Autoriser", fn: async () => { await requestNotif(); } } : null,
     },
     {
       id: "geoloc",
@@ -208,7 +277,33 @@ export default function StatusIcons({ auth }) {
           : status.geoloc === "denied" ? "Position refusée (réglages navigateur)"
           : status.geoloc === "unsupported" ? "Non supporté"
           : "Position non demandée",
-      action: status.geoloc === "prompt" ? { label: "Autoriser", fn: () => requestGeoloc() } : null,
+      action: status.geoloc === "prompt" || status.geoloc === "unknown" ? { label: "Autoriser", fn: () => requestGeoloc() } : null,
+    },
+    // 0.65.5 : Micro
+    {
+      id: "micro",
+      icon: status.micro === "granted" ? "ti-microphone" : "ti-microphone-off",
+      label: "Micro (recherche vocale, dictée)",
+      ok: status.micro === "granted",
+      ko: status.micro === "denied",
+      desc: status.micro === "granted" ? "Micro autorisé"
+          : status.micro === "denied" ? "Micro refusé (réglages navigateur)"
+          : status.micro === "unsupported" ? "Non supporté"
+          : "Micro non demandé",
+      action: (status.micro === "prompt" || status.micro === "unknown") ? { label: "Autoriser", fn: () => requestMicro() } : null,
+    },
+    // 0.65.5 : Caméra
+    {
+      id: "camera",
+      icon: status.camera === "granted" ? "ti-camera" : "ti-camera-off",
+      label: "Caméra (scan QR, photos)",
+      ok: status.camera === "granted",
+      ko: status.camera === "denied",
+      desc: status.camera === "granted" ? "Caméra autorisée"
+          : status.camera === "denied" ? "Caméra refusée (réglages navigateur)"
+          : status.camera === "unsupported" ? "Non supporté"
+          : "Caméra non demandée",
+      action: (status.camera === "prompt" || status.camera === "unknown") ? { label: "Autoriser", fn: () => requestCamera() } : null,
     },
     {
       id: "pwa",
@@ -475,12 +570,21 @@ export default function StatusIcons({ auth }) {
             <button
               key={f.id}
               className="status-icon-btn"
-              onClick={() => setOpen(open === f.id ? null : f.id)}
-              title={`${f.label} — ${f.desc}`}
+              onClick={() => {
+                // 0.65.5 : si l'icône est en mode "demande possible", click direct = demande de permission
+                if (f.action && !f.ok && !f.ko) {
+                  f.action.fn();
+                } else {
+                  setOpen(open === f.id ? null : f.id);
+                }
+              }}
+              onContextMenu={(e) => { e.preventDefault(); setOpen(open === f.id ? null : f.id); }}
+              title={f.action && !f.ok && !f.ko ? `${f.label} — Cliquer pour AUTORISER` : `${f.label} — ${f.desc}`}
               aria-label={f.label}
               style={{
-                background: open === f.id ? color + "22" : "transparent",
-                border: `1px solid ${open === f.id ? color : "transparent"}`,
+                background: open === f.id ? color + "22" : (f.action && !f.ok && !f.ko ? color + "11" : "transparent"),
+                border: `1px solid ${open === f.id ? color : (f.action && !f.ok && !f.ko ? color + "55" : "transparent")}`,
+                animation: f.action && !f.ok && !f.ko ? "av-statusicon-blink 2s ease-in-out infinite" : "none",
               }}
             >
               <i className={`ti ${f.icon}`} style={{ color, fontSize: 16 }} />
@@ -632,6 +736,10 @@ export default function StatusIcons({ auth }) {
         @keyframes status-pop {
           from { opacity: 0; transform: translateY(-4px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes av-statusicon-blink {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 159, 39, .4); }
+          50%      { box-shadow: 0 0 0 4px rgba(239, 159, 39, 0); }
         }
       `}</style>
     </>
