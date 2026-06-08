@@ -240,6 +240,25 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.22",
+    "kind": "feat",
+    "titre": "TV : Sortir HAUT MILIEU + ShareButton HAUT GAUCHE + StatusIcons popup CENTREE + SQL coherence + stocks +20 mouvements +8 receptions",
+    "chantiers": [
+      { "code": "AI", "txt": "TV : bouton SORTIR TV deplace en HAUT-MILIEU (top 16 left 50%). Etait en bas, Cedric le veut en haut" },
+      { "code": "AI", "txt": "ShareButton : deplace en HAUT-GAUCHE (top 70 left 16). Etait centre bas, Cedric le veut en coin haut-gauche pour ne pas chevaucher" },
+      { "code": "AI", "txt": "StatusIcons mobile : popup CENTREE ECRAN au lieu de bottom-sheet. alignItems center + maxWidth 480 + maxHeight 85vh + borderRadius 16 (tous coins) + animation status-pop-in scale .92 → 1. Plus visible et pratique mobile" },
+      { "code": "AI", "txt": "SQL 0.65.22 : COHERENCE forcer structure_id sur 14 tables (etablissements, batiments, services, chambres, equipes, vehicules, patients, materiels, articles, interventions, notifications, maintenances, commandes, transferts, cuves)" },
+      { "code": "AI", "txt": "SQL : COHERENCE patients : UPDATE batiment_id + service_id depuis la jointure chambre. Permet aux pages d afficher correctement patient dans son bat/service" },
+      { "code": "AI", "txt": "SQL : STOCKS articles. UPDATE stock_actuel + stock_min + stock_max avec valeurs realistes par categorie. Consommables (compresses 250+, gants 450+, seringues 320+). Materiel (CPAP 8, concentrateur 6, lit 4, fauteuil 5). Cassettes PCA volontairement 12 < min 20 = ALERTE STOCK CRITIQUE" },
+      { "code": "AI", "txt": "SQL : +20 mouvements de stock dans table mouvements_stock. 15 entrees reception fournisseur (CMD-2026-XXXX SantePlus, Mercurex, ResMed, Philips, Drive, Smith). 3 retours patient (CPAP gueri SAS, lit demenagement, materiel DCD a desinfecter). 2 transferts inter-magasin avec numero TRF" },
+      { "code": "AI", "txt": "SQL : +8 receptions fournisseur dans table receptions_fournisseur. REC-2026-0001 a 0008. 5 Validees + 3 En cours. Avec fournisseur_id + montant_ht + nb_lignes + recu_par (Hugo Martin, Yassir, Corentin, Julien, Issam, Stephane, Thomas). Commentaires realistes" },
+      { "code": "INFO", "txt": "Procedure : rejouer SQL (279K). Push code. Hard refresh Ctrl+Shift+R. Tests : (1) Bouton SORTIR TV en haut-milieu rouge. (2) Bouton PARTAGER rond teal en haut-gauche. (3) Cloche notifs sur mobile = popup centree ecran avec scale animation. (4) /articles voir stocks remplis. (5) /mouvements voir 20+ mouvements. (6) /receptions voir 8 receptions" }
+    ],
+    "themes": ["ui", "tv", "demo-data", "stocks"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.22.html"
+  },
+{
     "v": "0.65.21",
     "kind": "fix",
     "titre": "Fix 400 etage_surplus + membres_etablissements jointure + Sortir TV SOUS tuiles + AirPlay/ChromeCast haut-droite + StatusIcons bouton Fermer",

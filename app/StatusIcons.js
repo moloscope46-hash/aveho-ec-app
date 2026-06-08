@@ -377,9 +377,9 @@ export default function StatusIcons({ auth }) {
               background: "rgba(20,33,49,.7)",
               zIndex: 9991,
               display: "flex",
-              alignItems: "flex-end",
+              alignItems: "center",  /* 0.65.22 : centré écran au lieu de flex-end */
               justifyContent: "center",
-              padding: 0,
+              padding: "20px",  /* marges latérales */
               animation: "fadeIn .2s",
             }}
           >
@@ -387,12 +387,15 @@ export default function StatusIcons({ auth }) {
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: "#fff",
-                borderRadius: "16px 16px 0 0",
+                borderRadius: 16,  /* 0.65.22 : tous les coins arrondis (popup, pas bottom-sheet) */
                 width: "100%",
+                maxWidth: 480,  /* limite largeur sur tablette/desktop */
                 maxHeight: "85vh",
                 display: "flex",
                 flexDirection: "column",
-                animation: "slideUp .25s cubic-bezier(.2,.8,.2,1)",
+                animation: "status-pop-in .25s cubic-bezier(.2,.8,.2,1)",  /* 0.65.22 : pop centré */
+                boxShadow: "0 20px 60px rgba(0,0,0,.4), 0 0 0 1px rgba(20,33,49,.08)",
+                overflow: "hidden",
               }}
             >
               {/* Header */}
@@ -575,6 +578,10 @@ export default function StatusIcons({ auth }) {
           @keyframes slideUp {
             from { transform: translateY(100%); }
             to { transform: translateY(0); }
+          }
+          @keyframes status-pop-in {
+            from { opacity: 0; transform: scale(.92); }
+            to   { opacity: 1; transform: scale(1); }
           }
         `}</style>
       </>

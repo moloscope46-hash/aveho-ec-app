@@ -204,12 +204,12 @@ export default function TVScreenNav({ currentScreen }) {
         </div>
       )}
 
-      {/* 0.65.21 : Bouton SORTIR du mode TV SOUS la barre de tuiles (centré bas) */}
+      {/* 0.65.22 : Bouton SORTIR du mode TV en HAUT-MILIEU (Cédric le veut là, pas en bas) */}
       <button
         onClick={() => router.push("/accueil")}
         style={{
           position: "fixed",
-          bottom: 70,  /* Juste au-dessus du footer dots */
+          top: 16,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 102,
