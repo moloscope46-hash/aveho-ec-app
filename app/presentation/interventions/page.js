@@ -65,7 +65,7 @@ function PresentationInterventions() {
     if (!auth.structureId) return;
     let q = supabase
       .from("interventions")
-      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, materiels(libelle, code), patients(nom, prenom, chambre, ville)")
+      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, chambre, ville), etablissements(nom, ville), batiments(nom), services(nom, etage), equipes(nom, couleur)")
       .eq("structure_id", auth.structureId)
       .not("statut", "in", '("Clôturée","Refusée")')
       .order("urgence", { ascending: false })
@@ -127,7 +127,7 @@ function PresentationInterventions() {
     };
     const [di, sav, livraisons, maintenances, patients, commandes] = await Promise.all([
       tryCount("demandes_internes", { statut: "nouvelle" }),
-      tryCount("signalements", { traite: false }),
+      tryCount("signalements", { statut: "Nouveau" }),
       tryCount("tournees", { statut: "en_cours" }),
       tryCount("maintenances", { statut: "planifiee" }),
       tryCount("patients"),
@@ -351,11 +351,51 @@ function Card({ r, urgent = false }) {
           {r.patients.chambre && <span style={{ color: "#bfe6e6", fontSize: 14, marginLeft: 6 }}>Ch. {r.patients.chambre}</span>}
         </div>
       )}
+      {/* 0.65.12 : Établissement + bâtiment + service */}
+      {(r.etablissements || r.batiments || r.services) && (
+        <div style={{ fontSize: 11.5, color: "#bfe6e6", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {r.etablissements && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <i className="ti ti-building-hospital" style={{ color: "#185FA5" }} />
+              <span style={{ color: "#fff", fontWeight: 700 }}>{r.etablissements.nom}</span>
+              {r.etablissements.ville && <span style={{ opacity: 0.7 }}>· {r.etablissements.ville}</span>}
+            </span>
+          )}
+          {r.batiments && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <i className="ti ti-building" style={{ color: "#7CC8C8" }} />
+              {r.batiments.nom}
+            </span>
+          )}
+          {r.services && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <i className="ti ti-stethoscope" style={{ color: "#7a6fb0" }} />
+              {r.services.nom}{r.services.etage != null && ` · Ét.${r.services.etage}`}
+            </span>
+          )}
+        </div>
+      )}
       {r.materiels && (
         <div style={{ fontSize: 14, color: "#bfe6e6", marginBottom: 4 }}>
           <i className="ti ti-armchair-2" style={{ marginRight: 6 }} />
           {r.materiels.libelle}
-          {r.materiels.code && <span style={{ color: "#7CC8C8", fontSize: 11, marginLeft: 6, fontFamily: "Consolas, monospace" }}>{r.materiels.code}</span>}
+          {r.materiels.num_parc && <span style={{ color: "#7CC8C8", fontSize: 11, marginLeft: 6, fontFamily: "Consolas, monospace" }}>{r.materiels.num_parc}</span>}
+        </div>
+      )}
+      {/* 0.65.12 : Équipe assignée */}
+      {r.equipes && (
+        <div style={{ fontSize: 11.5, marginTop: 4 }}>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "2px 8px",
+            background: (r.equipes.couleur || "#5aa05a") + "30",
+            color: r.equipes.couleur || "#5aa05a",
+            border: `1px solid ${(r.equipes.couleur || "#5aa05a")}50`,
+            borderRadius: 6,
+            fontWeight: 700,
+          }}>
+            <i className="ti ti-users-group" /> {r.equipes.nom}
+          </span>
         </div>
       )}
 

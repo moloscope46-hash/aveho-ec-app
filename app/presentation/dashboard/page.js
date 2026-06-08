@@ -27,6 +27,7 @@ function PresentationDashboard() {
   const refreshSec = parseInt(params.get("refresh") || "60", 10);
 
   const [data, setData] = useState({ kpis: {}, topMat: [], topTech: [], topPat: [] });
+  const [advFilters, setAdvFilters] = useState(() => getTVFilters("dashboard") || {});  // 0.65.11 fix
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));  /* 0.65.0 */

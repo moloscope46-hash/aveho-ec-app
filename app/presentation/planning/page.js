@@ -37,6 +37,7 @@ function PresentationPlanning() {
   const refreshSec = parseInt(params.get("refresh") || "60", 10);
 
   const [events, setEvents] = useState([]);
+  const [advFilters, setAdvFilters] = useState(() => getTVFilters("planning") || {});  // 0.65.11 fix
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));  /* 0.65.0 */
@@ -66,7 +67,7 @@ function PresentationPlanning() {
         .eq("date_tournee", ymd)
         .order("heure_depart")),
       tryFetch(supabase.from("maintenances")
-        .select("id, libelle, type, statut, date_prevue, materiels(libelle, code)")
+        .select("id, libelle, type, statut, date_prevue, materiels(libelle, num_parc)")
         .eq("structure_id", auth.structureId)
         .gte("date_prevue", todayStart.toISOString())
         .lte("date_prevue", todayEnd.toISOString())

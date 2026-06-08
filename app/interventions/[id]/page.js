@@ -38,7 +38,7 @@ export default function InterventionDetailPage() {
     try {
       const { data, error } = await supabase
         .from("interventions")
-        .select("*, materiels(libelle, code)")
+        .select("*, materiels(libelle, num_parc)")
         .eq("id", params.id)
         .maybeSingle();
       if (error) throw error;

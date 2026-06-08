@@ -44,7 +44,7 @@ function PresentationStats() {
 
     const [diRecent, sigRecent, savRecent, today, hour] = await Promise.all([
       tryFetch(supabase.from("interventions").select("id, numero, type, urgence, created_at, patients(nom, prenom)").eq("structure_id", auth.structureId).order("created_at", { ascending: false }).limit(15)),
-      tryFetch(supabase.from("signalements").select("id, titre, criticite, created_at").eq("structure_id", auth.structureId).order("created_at", { ascending: false }).limit(10)),
+      tryFetch(supabase.from("signalements").select("id, titre, created_at").eq("structure_id", auth.structureId).order("created_at", { ascending: false }).limit(10)),
       tryFetch(supabase.from("bilans_sav").select("id, numero, statut, created_at").eq("structure_id", auth.structureId).order("created_at", { ascending: false }).limit(10)),
       tryFetch(supabase.from("interventions").select("id").eq("structure_id", auth.structureId).gte("created_at", todayStart.toISOString())),
       tryFetch(supabase.from("interventions").select("id").eq("structure_id", auth.structureId).gte("created_at", hourAgo)),
@@ -66,10 +66,10 @@ function PresentationStats() {
       id: "sig-" + s.id,
       type: "signalement",
       icon: "ti-alert-circle",
-      col: s.criticite === "Critique" ? "#e35d5b" : "#7a6fb0",
+      col: "#7a6fb0",
       title: `Signalement`,
       sub: s.titre || "—",
-      urgent: s.criticite === "Critique",
+      urgent: false,
       ts: new Date(s.created_at).getTime(),
     }));
     savRecent.forEach(b => items.push({

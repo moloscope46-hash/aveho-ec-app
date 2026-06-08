@@ -48,15 +48,19 @@ function PresentationHadList() {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const in7days = new Date(today); in7days.setDate(in7days.getDate() + 7);
 
-    // 1. Patients HAD/domicile
+    // 1. Patients HAD/domicile - 0.65.12 : ENLEVER notion chambre/lit (que domicile)
     let qPat = supabase.from("patients")
-      .select("id, nom, prenom, ville, code_postal, telephone, chambre, mode_residence, etablissement_id")
+      .select("id, nom, prenom, ville, code_postal, telephone, mode_residence, etablissement_id, latitude, longitude, adresse, date_naissance, sexe, gir, mobilite, allergies, medecin_traitant, medecin_traitant_telephone, regime_alimentaire, date_entree, prescripteur_id, contact_urgence_nom, contact_urgence_telephone, contact_urgence_lien")
       .eq("structure_id", auth.structureId)
       .limit(100);
     if (advFilters.etabId) qPat = qPat.eq("etablissement_id", advFilters.etabId);
     if (advFilters.patientId) qPat = qPat.eq("id", advFilters.patientId);
     const allPats = await tryFetch(qPat);
-    let hadPats = allPats.filter(p => !p.mode_residence || /domicile|HAD/i.test(p.mode_residence || ""));
+    // Patients HAD = domicile uniquement (mode_residence absent OU contient "domicile" / "HAD")
+    let hadPats = allPats.filter(p =>
+      !p.mode_residence ||
+      /domicile|HAD/i.test(p.mode_residence || "")
+    );
 
     // Recherche libre
     if (advFilters.search?.trim()) {
@@ -68,11 +72,11 @@ function PresentationHadList() {
       );
     }
 
-    // 2. Enrichir avec DI + livraisons + maintenances par patient
+    // 2. Enrichir avec DI + livraisons + maintenances + TRAITEMENTS HAD + médecin/IDE/pharmacie par patient
     const enriched = await Promise.all(hadPats.slice(0, 30).map(async (p) => {
-      const [dis, livraisons, maintenances] = await Promise.all([
+      const [dis, livraisons, maintenances, traitements] = await Promise.all([
         tryFetch(supabase.from("interventions")
-          .select("id, numero, type, statut, urgence, created_at, date_planifiee, materiels(libelle)")
+          .select("id, numero, type, statut, urgence, created_at, date_planifiee, materiels(libelle, num_parc)")
           .eq("structure_id", auth.structureId)
           .eq("patient_id", p.id)
           .not("statut", "in", '("Clôturée","Refusée")')
@@ -81,7 +85,7 @@ function PresentationHadList() {
         tryFetch(supabase.from("tournees_etapes")
           .select("id, label, type_etape, statut, ordre, tournees(date_tournee, statut, nom)")
           .ilike("type_etape", "%livraison%")
-          .limit(20)),  // Filtre client-side ensuite par patient via label
+          .limit(20)),
         tryFetch(supabase.from("maintenances")
           .select("id, libelle, date_prevue, statut, type, materiels(libelle)")
           .eq("structure_id", auth.structureId)
@@ -89,6 +93,13 @@ function PresentationHadList() {
           .lte("date_prevue", in7days.toISOString().slice(0, 10))
           .order("date_prevue")
           .limit(10)),
+        // 0.65.12 : Traitements HAD actifs avec IDE et pharmacie
+        tryFetch(supabase.from("had")
+          .select("id, type_traitement, statut, date_debut, observations, prescripteur:prescripteur_id(nom, prenom, specialite), infirmiere:infirmiere_id(nom, prenom, telephone), pharmacie:pharmacie_id(nom, telephone)")
+          .eq("structure_id", auth.structureId)
+          .eq("patient_id", p.id)
+          .eq("statut", "Actif")
+          .limit(5)),
       ]);
 
       // Filtre client-side livraisons : contient nom du patient dans label
@@ -108,6 +119,7 @@ function PresentationHadList() {
         _dis: enCours,
         _livraisons: myLivraisons,
         _maintenances: maintenances,
+        _traitements: traitements,  // 0.65.12 : traitements HAD actifs
         _enRetard: enRetard.length > 0,
         _urgent: enCours.some(d => d.urgence === "Urgent"),
         _nextDate: getNextEventDate(enCours, myLivraisons, maintenances),
@@ -265,9 +277,18 @@ function PatientCard({ p }) {
           </div>
           {(p.ville || p.code_postal) && (
             <div style={{ fontSize: 11, color: "#bfe6e6" }}>
-              <i className="ti ti-map-pin" /> {p.ville || ""}{p.code_postal ? ` (${p.code_postal})` : ""}
+              <i className="ti ti-map-pin" /> {p.adresse ? `${p.adresse}, ` : ""}{p.ville || ""}{p.code_postal ? ` (${p.code_postal})` : ""}
             </div>
           )}
+          {/* 0.65.12 : Infos sup patient HAD */}
+          <div style={{ fontSize: 10, color: "#9bb5b5", marginTop: 2, display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {p.date_naissance && (
+              <span><i className="ti ti-cake" /> {new Date(p.date_naissance).toLocaleDateString("fr-FR")} ({Math.floor((Date.now() - new Date(p.date_naissance).getTime()) / (365.25 * 24 * 3600 * 1000))} ans)</span>
+            )}
+            {p.sexe && <span>{p.sexe === "F" ? "♀" : "♂"}</span>}
+            {p.gir && <span style={{ color: p.gir <= 2 ? "#e35d5b" : "#7CC8C8" }}><i className="ti ti-heart" /> GIR {p.gir}</span>}
+            {p.mobilite && <span><i className="ti ti-walk" /> {p.mobilite}</span>}
+          </div>
         </div>
         {p._nextDate && (
           <div style={{
@@ -285,6 +306,54 @@ function PatientCard({ p }) {
           </div>
         )}
       </div>
+
+      {/* 0.65.12 : Traitements HAD actifs (cœur du dossier patient) */}
+      {p._traitements?.length > 0 && (
+        <div style={{ marginBottom: 6, padding: "6px 8px", background: "rgba(122,111,176,.08)", borderRadius: 6, border: "1px solid rgba(122,111,176,.2)" }}>
+          <div style={{ fontSize: 9.5, color: "#7a6fb0", fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+            <i className="ti ti-pill" /> Traitements HAD ({p._traitements.length})
+          </div>
+          {p._traitements.map(t => (
+            <div key={t.id} style={{ fontSize: 10.5, marginBottom: 2 }}>
+              <span style={{ color: "#fff", fontWeight: 700 }}>{t.type_traitement}</span>
+              {t.observations && <span style={{ color: "#9bb5b5", fontStyle: "italic", marginLeft: 4 }}>· {t.observations}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 0.65.12 : Équipe médicale (médecin traitant + IDE + pharmacie) */}
+      {(p.medecin_traitant || p._traitements?.[0]?.infirmiere || p._traitements?.[0]?.pharmacie) && (
+        <div style={{ marginBottom: 6, padding: "6px 8px", background: "rgba(124,200,200,.06)", borderRadius: 6, border: "1px solid rgba(124,200,200,.15)" }}>
+          <div style={{ fontSize: 9.5, color: "#7CC8C8", fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>
+            <i className="ti ti-stethoscope" /> Équipe médicale
+          </div>
+          {p.medecin_traitant && (
+            <div style={{ fontSize: 10.5, color: "#bfe6e6", marginBottom: 1 }}>
+              <i className="ti ti-user-circle" style={{ color: "#185FA5" }} /> Médecin : <span style={{ color: "#fff", fontWeight: 700 }}>{p.medecin_traitant}</span>
+              {p.medecin_traitant_telephone && <span style={{ color: "#9bb5b5", marginLeft: 4 }}>· {p.medecin_traitant_telephone}</span>}
+            </div>
+          )}
+          {p._traitements?.[0]?.infirmiere && (
+            <div style={{ fontSize: 10.5, color: "#bfe6e6", marginBottom: 1 }}>
+              <i className="ti ti-nurse" style={{ color: "#5aa05a" }} /> IDE : <span style={{ color: "#fff", fontWeight: 700 }}>{p._traitements[0].infirmiere.nom} {p._traitements[0].infirmiere.prenom}</span>
+              {p._traitements[0].infirmiere.telephone && <span style={{ color: "#9bb5b5", marginLeft: 4 }}>· {p._traitements[0].infirmiere.telephone}</span>}
+            </div>
+          )}
+          {p._traitements?.[0]?.pharmacie && (
+            <div style={{ fontSize: 10.5, color: "#bfe6e6", marginBottom: 1 }}>
+              <i className="ti ti-cross" style={{ color: "#e35d5b" }} /> Pharmacie : <span style={{ color: "#fff", fontWeight: 700 }}>{p._traitements[0].pharmacie.nom}</span>
+              {p._traitements[0].pharmacie.telephone && <span style={{ color: "#9bb5b5", marginLeft: 4 }}>· {p._traitements[0].pharmacie.telephone}</span>}
+            </div>
+          )}
+          {p.contact_urgence_nom && (
+            <div style={{ fontSize: 10.5, color: "#bfe6e6", marginTop: 2 }}>
+              <i className="ti ti-phone-call" style={{ color: "#EF9F27" }} /> Urgence : <span style={{ color: "#fff" }}>{p.contact_urgence_nom}</span>
+              {p.contact_urgence_telephone && <span style={{ color: "#9bb5b5", marginLeft: 4 }}>· {p.contact_urgence_telephone}</span>}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* DI en cours */}
       {p._dis.length > 0 && (

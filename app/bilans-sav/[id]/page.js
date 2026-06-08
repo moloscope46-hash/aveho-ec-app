@@ -22,7 +22,7 @@ export default function BilanSavDetailPage() {
     try {
       const { data, error } = await supabase
         .from("bilans_sav")
-        .select("*, materiels(libelle, code)")
+        .select("*, materiels(libelle, num_parc)")
         .eq("id", params.id)
         .maybeSingle();
       if (error) throw error;

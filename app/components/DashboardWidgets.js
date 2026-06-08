@@ -2782,7 +2782,7 @@ export function TopMaterielsSAVWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("materiel_id, materiels(libelle, code)")
+          .select("materiel_id, materiels(libelle, num_parc)")
           .eq("structure_id", auth.structureId)
           .gte("created_at", since);
         const counts = {};
@@ -3021,11 +3021,11 @@ export function TempsMoyenResolutionWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("created_at, date_resolution, etat")
+          .select("created_at, statut")
           .eq("structure_id", auth.structureId)
-          .eq("etat", "Résolue")
+          .eq("statut", "Clôturée")
           .gte("created_at", since)
-          .not("date_resolution", "is", null);
+          ;
 
         if (intervs && intervs.length > 0) {
           const durees = intervs
@@ -3121,11 +3121,11 @@ export function SLARespectWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("created_at, date_resolution, etat, urgence")
+          .select("created_at, statut, urgence")
           .eq("structure_id", auth.structureId)
-          .eq("etat", "Résolue")
+          .eq("statut", "Clôturée")
           .gte("created_at", since)
-          .not("date_resolution", "is", null);
+          ;
 
         let ok = 0, ko = 0;
         (intervs || []).forEach(i => {
@@ -3211,7 +3211,7 @@ export function ChargeEquipesWidget() {
         // Interventions en cours par équipe
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("equipe_id, etat")
+          .select("equipe_id, statut")
           .eq("structure_id", auth.structureId)
           .in("etat", ["Nouvelle", "En cours", "Planifiée"]);
 
@@ -3804,7 +3804,7 @@ export function HeatmapGeoWidget() {
             .eq("structure_id", auth.structureId)
             .gte("created_at", now90)),
           tryFetch(supabase.from("signalements")
-            .select("id, created_at, criticite")
+            .select("id, created_at")
             .eq("structure_id", auth.structureId)
             .gte("created_at", now90)),
           tryFetch(supabase.from("patients")

@@ -13,6 +13,8 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
+import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
+import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 export default function PresentationCarteHADPage() {
   return (
@@ -50,6 +52,7 @@ function PresentationCarteHAD() {
   const [recent, setRecent] = useState([]);
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));
+  const [advFilters, setAdvFilters] = useState(() => getTVFilters("carte-had") || {});  // 0.65.11 fix
   const [activeFilters, setActiveFilters] = useState({ had: true, livraison: true, intervention: true });
   const timerRef = useRef(null);
   const clockRef = useRef(null);

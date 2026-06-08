@@ -202,7 +202,7 @@ export default function TVCastButton({ refreshSec = 60 }) {
           maxWidth: 360,
           border: "1.5px solid rgba(124, 200, 200, .3)",
           boxShadow: "0 20px 60px rgba(0,0,0,.6)",
-          zIndex: 100000,
+          zIndex: 999999,  /* 0.65.11 : au-dessus de BackButtonFloating (z=95) et de tout */
           animation: "av-cast-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
           fontFamily: "Quicksand, sans-serif",
         }}>
