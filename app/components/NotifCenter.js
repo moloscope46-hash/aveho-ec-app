@@ -32,23 +32,33 @@ export default function NotifCenter({ structureId, userId, onClose }) {
     if (!structureId || !userId) return;
     setLoading(true);
     try {
+      // 0.65.17 : lu→lue + archive optionnel (fallback si colonne archive n'existe pas)
       let q = supabase.from("notifications").select("*").eq("structure_id", structureId);
-      if (tab === "unread") q = q.eq("lu", false).eq("archive", false);
-      else if (tab === "all") q = q.eq("archive", false);
-      else if (tab === "mine") q = q.eq("user_id", userId).eq("archive", false);
-      else if (tab === "archived") q = q.eq("archive", true);
-
-      const { data, error } = await q.order("created_at", { ascending: false }).limit(50);
-      if (!error) setNotifs(data || []);
+      try {
+        if (tab === "unread")        q = q.eq("lue", false).eq("archive", false);
+        else if (tab === "all")      q = q.eq("archive", false);
+        else if (tab === "mine")     q = q.eq("user_id", userId).eq("archive", false);
+        else if (tab === "archived") q = q.eq("archive", true);
+        const { data, error } = await q.order("created_at", { ascending: false }).limit(50);
+        if (error) throw error;
+        setNotifs(data || []);
+      } catch {
+        // Fallback : sans archive (la colonne n'existe peut-être pas)
+        let q2 = supabase.from("notifications").select("*").eq("structure_id", structureId);
+        if (tab === "unread")    q2 = q2.eq("lue", false);
+        else if (tab === "mine") q2 = q2.eq("user_id", userId);
+        const { data } = await q2.order("created_at", { ascending: false }).limit(50);
+        setNotifs(data || []);
+      }
     } finally { setLoading(false); }
   }, [supabase, structureId, userId, tab]);
 
   useEffect(() => { load(); }, [load]);
 
   async function markRead(notif) {
-    if (notif.lu) return;
-    await supabase.from("notifications").update({ lu: true, read_at: new Date().toISOString() }).eq("id", notif.id);
-    setNotifs(ns => ns.map(n => n.id === notif.id ? { ...n, lu: true } : n));
+    if (notif.lue) return;
+    await supabase.from("notifications").update({ lue: true, read_at: new Date().toISOString() }).eq("id", notif.id);
+    setNotifs(ns => ns.map(n => n.id === notif.id ? { ...n, lue: true } : n));
   }
 
   async function archive(notif) {

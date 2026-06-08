@@ -79,18 +79,18 @@ export default function FloatingActionBar() {
         />
       )}
 
-      {/* 0.65.16 : FAB en bas-gauche, AU-DESSUS du BackButton (Page précédente) */}
+      {/* 0.65.17 : FAB en BAS-DROITE (corrigé : Cédric veut bulles dans le coin) */}
       <div
         className="av-shortcuts-bar"
         style={{
           position: "fixed",
-          bottom: "calc(68px + env(safe-area-inset-bottom, 0px))",  /* 0.65.16 : juste au-dessus du back button (42px + 16px margin + 10px gap) */
-          left: 16,
+          bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          right: 16,
           zIndex: 9991,
           display: "flex",
           alignItems: "center",
           gap: 10,
-          flexDirection: "row",
+          flexDirection: "row-reverse",  /* bulles s'ouvrent vers la gauche */
         }}
         role="navigation"
         aria-label="Raccourcis rapides"
@@ -193,10 +193,10 @@ export default function FloatingActionBar() {
             }}
           >
             <i className={`ti ${s.icon}`} />
-            {/* 0.65.14 : tooltip à DROITE de la bulle (menu à gauche écran maintenant) */}
+            {/* 0.65.17 : tooltip à GAUCHE de la bulle (menu en bas-droite) */}
             <span style={{
               position: "absolute",
-              left: "calc(100% + 8px)",
+              right: "calc(100% + 8px)",
               top: "50%",
               transform: "translateY(-50%)",
               background: "rgba(20, 33, 49, 0.92)",

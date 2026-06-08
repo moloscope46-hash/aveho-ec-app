@@ -152,15 +152,21 @@ export default function BackButtonFloating() {
         }
         @media (max-width: 720px) {
           .av-back-floating {
-            top: 68px !important;
+            top: auto !important;
+            bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
             left: 8px !important;
             height: 36px !important;
             padding: 0 12px 0 8px !important;
             font-size: 11.5px !important;
+            /* 0.65.17 : largeur réduite sur mobile pour ne pas couvrir les autres boutons (max 45% écran) */
+            max-width: 45vw !important;
           }
           .av-back-floating > span:last-child {
-            max-width: 140px !important;
+            max-width: 100px !important;
             font-size: 11px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
       `}</style>

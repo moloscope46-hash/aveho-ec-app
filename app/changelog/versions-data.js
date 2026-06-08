@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.17",
+    "kind": "fix",
+    "titre": "FIX 400 restantes (etat→statut SLA + notifs.lu→lue NotifCenter) + FAB bas-droite + BackButton mobile mi-largeur + ShareButton milieu + SQL centre de soin complet (+11 equipes +61 chambres +16 vehicules +30 patients)",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX 400 useRealtimeNotifs checkSLA : interventions.etat → statut + Resolue/Annulee → Cloturee/Refusee avec not.in syntax + try/catch sur erreur" },
+      { "code": "AI", "txt": "FIX 400 NotifCenter : lu → lue + fallback robuste si colonne archive n existe pas. Tente avec archive, si echec retombe sans" },
+      { "code": "AI", "txt": "FAB raccourcis en BAS-DROITE : position bottom 16 right 16, flexDirection row-reverse pour que les bulles s ouvrent vers la gauche. Tooltip a gauche de chaque bulle" },
+      { "code": "AI", "txt": "BackButton mobile : max-width 45vw + ellipsis sur le label pour ne plus couvrir toute la largeur. Position bottom-left maintenue" },
+      { "code": "AI", "txt": "Nouveau ShareButtonFloating : bouton rond gradient teal+violet au MILIEU PILE POIL en bas (left 50% translateX -50%). Click utilise Web Share API native sur mobile, fallback copie dans presse-papier sur desktop avec toast feedback" },
+      { "code": "AI", "txt": "SQL 0.65.17 CENTRE DE SOIN COMPLET : +11 equipes rattachees a tous les batiments (Soins palliatifs, Alzheimer Cantou, Medecine geriatrique, Bloc operatoire 8 IBODE + 4 IADE, Medecine ambulatoire, Urgences SAU, Imagerie, Maternite, Reanimation 24/7, HAD coordination, HAD Villeurbanne)" },
+      { "code": "AI", "txt": "SQL : +61 chambres supplementaires reparties dans tous les services nouveaux (cardio 1C05-10, pneumo 2P04-07, gastro 3G01-05, dialyse 0D01-04, onco 4O01-04, ortho CO05-08, viscerale CV01-04, maternite MAT01-06, USIC3-4, USC1-4, endocrino 2E01-03, urgences BOX1-6, UHCD1-4, long sejour 401-405)" },
+      { "code": "AI", "txt": "SQL : +16 vehicules (flotte equivalente centre de soin) : 4 ambulances (Mercedes Sprinter, Renault Master), 4 VSL (Trafic, Jumpy, Kangoo, Partner), 5 camionnettes livraison/SAV magasin et HAD, 3 VL pour coord HAD et direction (Tesla Model 3)" },
+      { "code": "AI", "txt": "SQL : +30 patients dans tous les services nouveaux avec rattachement complet etablissement + batiment + service (cardio, pneumo, gastro, dialyse, onco, chir ortho/viscerale, rea, USIC, soins palliatifs, Alzheimer Cantou, long sejour)" },
+      { "code": "INFO", "txt": "Procedure 0.65.17 : rejouer SQL (199K) qui contient maintenant TOUT. Push code. Tests : (1) Console propre sans 400. (2) FAB raccourcis en bas-droite. (3) BackButton ne couvre plus tout le mobile. (4) Bouton partager rond au milieu en bas. (5) /equipes voir 18 equipes. (6) /vehicules voir 24 vehicules. (7) /patients voir tous services peuples" }
+    ],
+    "themes": ["fix-bugs-400", "ui", "demo-data", "centre-de-soin"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.17.html"
+  },
+{
     "v": "0.65.16",
     "kind": "fix",
     "titre": "MEGA FIX bugs 400 + Bouton sortir TV + BackButton bas-gauche + FAB au-dessus + SQL +12 batiments +33 services +41 chambres +50 historique",
