@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.65.4 — FIX</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #EF9F27 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FIX</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.65.4
+      <small>🔧 BackButton flottant global + TV filtres cantonnés par droits + Onglet Activité profil fix + Popups topbar mobile bottom-sheet</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 8 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.65.4-alpha</span></span>
+      <span>📋 <b>Type :</b> Correction de bug critique</span>
+      <span>🔧 <b>Chantiers :</b> <b>4</b> AI · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#fix</span> <span class="theme-pill">#ux</span> <span class="theme-pill">#permissions</span> <span class="theme-pill">#mobile</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(4)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">BackButtonFloating (NOUVEAU composant global)</h3>
+  <div class="panel ">
+    <p>⬅ flèche de retour belle, ronde, flottante en haut-gauche (sous topbar). <strong>Apparait automatiquement</strong> sur TOUTES les pages SAUF racines (accueil, login, listes de 1er niveau) et pages /presentation/* (qui ont leur propre nav flèches). <strong>Détection auto de la page parente</strong> via pathname : /patient/[id] → /patients (Liste des patients), /bilan-sav/[id] → /bilans-sav (Bilans SAV), /admin/* → /admin (Administration), etc. <strong>Tooltip flottant</strong> au survol/focus avec le NOM de la page de destination (avec petite flèche pointant la cible). <strong>Animation hover</strong> : grossit scale(1.10) + glow teal + petite translation horizontale. Branché dans app/layout.js → présent sur toute l''app sans toucher chaque page</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TVFiltersBar cantonné par droits utilisateur</h3>
+  <div class="panel ">
+    
+    <p>🛡 restriction par rôle</p>
+    <ol class="steps">
+      <li><strong>Admin</strong> (can(''gerer_roles'') ou role.systeme=admin/owner) → accès à TOUS les établissements de la structure</li>
+      <li><strong>User normal</strong> → accès SEULEMENT aux établissements de auth.etablissements (déjà filtré par membres_etablissements en DB)</li>
+      <li><strong>Dépôts</strong> filtrés par établissements accessibles si non-admin</li>
+      <li>Garages restent globaux à la structure (pas de scope par établissement habituellement). <strong>Conformité</strong> : un user ne verra dans son menu TV que ce qu''il a le droit de voir, conforme aux droits RLS Supabase</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Fix onglet Activité du profil</h3>
+  <div class="panel ">
+    <p>🐛 la promesse Promise.all faisait planter TOUT le chargement si UNE seule requête échouait (typiquement audit_log absente en DB, ou created_by manquant dans transferts). <strong>Fix</strong> : wrapper <code>tryFetch</code> autour de chaque requête → si une plante, retourne <code>{ data: [] }</code> et les autres marchent. Résultat : l''onglet Activité s''affiche TOUJOURS, même si certaines tables/colonnes manquent. Plus de page blanche</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Fix CRITIQUE popups topbar mobile</h3>
+  <div class="panel ">
+    <p>📱 depuis le sprint des raccourcis, les popups des icônes toolbar (CartDropdown / NotifCenter / StatusIcons popover) partaient EN HAUT en mode mobile et finissaient coupés. <strong>Cause</strong> : pas de règle @media spécifique pour ces dropdowns, donc <code>position:absolute; top:calc(100%+8px)</code> plaçait le popup juste sous l''icône mais déboordait à droite/gauche. <strong>Fix</strong> : règle CSS globale <code>@media (max-width:720px) { .tb-dropdown, .notif-center-popup, .status-popover { position:fixed!important; bottom:0; left:0; right:0; width:100%; max-height:85vh; border-radius:18px 18px 0 0; animation:slide-up } }</code>. Les 3 popups deviennent de vrais BOTTOM-SHEETS mobile avec drag-handle iOS + backdrop assombri</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Procédure push 0.65.4</h3>
+  <div class="panel ">
+    
+    <p>🚀 Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. <strong>Tests</strong></p>
+    <ol class="steps">
+      <li>Aller sur /patient/[id] → flèche teal en haut-gauche → hover = tooltip 'Liste des patients' → click = retour</li>
+      <li>Mobile (DevTools iPhone) : icône cloche → popup glisse du bas</li>
+      <li>/profil → onglet Activité s''affiche (au lieu de page vide)</li>
+      <li>TV /presentation/* avec compte admin → tous étabs. Avec user normal → seulement les étabs assignés</li>
+    </ol>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.65.4 - Correction de bug critique" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 8 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

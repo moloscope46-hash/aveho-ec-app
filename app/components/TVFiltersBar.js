@@ -63,16 +63,44 @@ export default function TVFiltersBar({
     if (!auth?.structureId) return;
     (async () => {
       const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
-      const [etabsRes, garagesRes, depotsRes] = await Promise.all([
-        tryFetch(supabase.from("etablissements").select("id, nom, ville, actif").eq("structure_id", auth.structureId).order("nom")),
+
+      // 0.65.4 : Restriction par droits utilisateur
+      // Si admin (can('gerer_roles') ou role admin/owner) → accès à TOUT
+      // Sinon : seulement les établissements de auth.etablissements
+      const isAdmin = auth?.can?.("gerer_roles") || ["admin", "owner"].includes(auth?.role?.systeme);
+
+      let etabsAccessible = [];
+      if (isAdmin) {
+        // Admin : tous les établissements de la structure
+        etabsAccessible = await tryFetch(
+          supabase.from("etablissements")
+            .select("id, nom, ville, actif")
+            .eq("structure_id", auth.structureId)
+            .order("nom")
+        );
+      } else {
+        // User non-admin : utiliser auth.etablissements (déjà filtré par membres_etablissements)
+        etabsAccessible = (auth.etablissements || []).map(e => ({
+          id: e.id, nom: e.nom, ville: e.ville, actif: e.actif !== false
+        }));
+      }
+
+      const [garagesRes, depotsRes] = await Promise.all([
         tryFetch(supabase.from("garages").select("id, nom").eq("structure_id", auth.structureId).order("nom")),
         tryFetch(supabase.from("depots").select("id, nom, etablissement_id").eq("structure_id", auth.structureId).order("nom")),
       ]);
-      setEtabs(etabsRes.filter(e => e.actif !== false));
+
+      // Filtrer garages/depots par établissements accessibles si non-admin
+      const accessibleEtabIds = etabsAccessible.map(e => e.id);
+      const filteredDepots = isAdmin
+        ? depotsRes
+        : depotsRes.filter(d => !d.etablissement_id || accessibleEtabIds.includes(d.etablissement_id));
+
+      setEtabs(etabsAccessible.filter(e => e.actif !== false));
       setGarages(garagesRes);
-      setDepots(depotsRes);
+      setDepots(filteredDepots);
     })();
-  }, [auth?.structureId]);
+  }, [auth?.structureId, auth?.role?.systeme]);
 
   // Cascade : quand etabId change → recharger bâtiments
   useEffect(() => {

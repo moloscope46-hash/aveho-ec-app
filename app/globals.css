@@ -408,20 +408,59 @@ button{font-family:inherit;cursor:pointer}
   .topbar::-webkit-scrollbar { display:none; }
   .topbar > *{ flex-shrink:0; }
   .tb-icon { width:34px !important; height:34px !important; font-size:16px !important; }
-  /* Forcer les popups de la topbar à s'afficher en bottom-sheet en mobile */
-  .topbar [style*="position: absolute"][style*="top: calc"],
-  .topbar > div > div[style*="position: absolute"][style*="right: 0"]{
-    position:fixed !important;
-    top:auto !important;
-    bottom:0 !important;
-    left:0 !important;
-    right:0 !important;
-    width:100% !important;
-    max-width:100% !important;
-    border-radius:18px 18px 0 0 !important;
-    max-height:85vh !important;
-    z-index:9999 !important;
+}
+
+/* 0.65.4 : Fix CRITIQUE — popups de la toolbar (panier, notif center, status, etc.)
+   doivent s'afficher en BOTTOM-SHEET sur mobile, PAS sortir en haut.
+   La règle s'applique à tous les dropdowns/popups ancrés à la topbar. */
+@media (max-width: 720px) {
+  /* CartDropdown — ancré sur l'icône panier */
+  .tb-dropdown,
+  .notif-center-popup,
+  .status-popover {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 85vh !important;
+    border-radius: 18px 18px 0 0 !important;
+    z-index: 9999 !important;
+    box-shadow: 0 -10px 30px rgba(20,33,49,.4) !important;
+    animation: av-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   }
+  /* Backdrop : assombrir l'écran derrière */
+  .tb-dropdown::before,
+  .notif-center-popup::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    bottom: 100%;
+    background: rgba(20, 33, 49, .5);
+    z-index: -1;
+    pointer-events: none;
+  }
+  /* Poignée drag-handle iOS-style */
+  .tb-dropdown::after,
+  .notif-center-popup::after,
+  .status-popover::after {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px; height: 4px;
+    border-radius: 99px;
+    background: rgba(20, 33, 49, .18);
+    pointer-events: none;
+    z-index: 10;
+  }
+}
+@keyframes av-bottom-sheet-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 /* === FIN MENU DRAWER PREMIUM ============================ */
 

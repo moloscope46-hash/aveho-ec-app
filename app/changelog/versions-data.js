@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.4",
+    "kind": "fix",
+    "titre": "🔧 BackButton flottant global + TV filtres cantonnés par droits + Onglet Activité profil fix + Popups topbar mobile bottom-sheet",
+    "chantiers": [
+      { "code": "AI", "txt": "⬅ **BackButtonFloating (NOUVEAU composant global)** : flèche de retour belle, ronde, flottante en haut-gauche (sous topbar). **Apparait automatiquement** sur TOUTES les pages SAUF racines (accueil, login, listes de 1er niveau) et pages /presentation/* (qui ont leur propre nav flèches). **Détection auto de la page parente** via pathname : /patient/[id] → /patients (Liste des patients), /bilan-sav/[id] → /bilans-sav (Bilans SAV), /admin/* → /admin (Administration), etc. **Tooltip flottant** au survol/focus avec le NOM de la page de destination (avec petite flèche pointant la cible). **Animation hover** : grossit scale(1.10) + glow teal + petite translation horizontale. Branché dans app/layout.js → présent sur toute l''app sans toucher chaque page" },
+      { "code": "AI", "txt": "🛡 **TVFiltersBar cantonné par droits utilisateur** : restriction par rôle. (1) **Admin** (can(''gerer_roles'') ou role.systeme=admin/owner) → accès à TOUS les établissements de la structure. (2) **User normal** → accès SEULEMENT aux établissements de auth.etablissements (déjà filtré par membres_etablissements en DB). (3) **Dépôts** filtrés par établissements accessibles si non-admin. (4) Garages restent globaux à la structure (pas de scope par établissement habituellement). **Conformité** : un user ne verra dans son menu TV que ce qu''il a le droit de voir, conforme aux droits RLS Supabase" },
+      { "code": "AI", "txt": "🐛 **Fix onglet Activité du profil** : la promesse Promise.all faisait planter TOUT le chargement si UNE seule requête échouait (typiquement audit_log absente en DB, ou created_by manquant dans transferts). **Fix** : wrapper `tryFetch` autour de chaque requête → si une plante, retourne `{ data: [] }` et les autres marchent. Résultat : l''onglet Activité s''affiche TOUJOURS, même si certaines tables/colonnes manquent. Plus de page blanche" },
+      { "code": "AI", "txt": "📱 **Fix CRITIQUE popups topbar mobile** : depuis le sprint des raccourcis, les popups des icônes toolbar (CartDropdown / NotifCenter / StatusIcons popover) partaient EN HAUT en mode mobile et finissaient coupés. **Cause** : pas de règle @media spécifique pour ces dropdowns, donc `position:absolute; top:calc(100%+8px)` plaçait le popup juste sous l''icône mais déboordait à droite/gauche. **Fix** : règle CSS globale `@media (max-width:720px) { .tb-dropdown, .notif-center-popup, .status-popover { position:fixed!important; bottom:0; left:0; right:0; width:100%; max-height:85vh; border-radius:18px 18px 0 0; animation:slide-up } }`. Les 3 popups deviennent de vrais BOTTOM-SHEETS mobile avec drag-handle iOS + backdrop assombri" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.4** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) Aller sur /patient/[id] → flèche teal en haut-gauche → hover = tooltip 'Liste des patients' → click = retour. (2) Mobile (DevTools iPhone) : icône cloche → popup glisse du bas. (3) /profil → onglet Activité s''affiche (au lieu de page vide). (4) TV /presentation/* avec compte admin → tous étabs. Avec user normal → seulement les étabs assignés"
+      }
+    ],
+    "themes": ["fix", "ux", "permissions", "mobile"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.4.html"
+  },
+  {
     "v": "0.65.3",
     "kind": "feat",
     "titre": "🎙 TV : Barre de filtres avancés cascade (Établissement/Bâtiment/Service/Chambre/Patient/Garage/Dépôt) + Recherche vocale avec MICRO",

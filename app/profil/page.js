@@ -67,37 +67,41 @@ export default function Profil() {
   async function loadStats() {
     if (!auth.user?.id || !auth.structureId) return;
     const userId = auth.user.id;
-    // Stats parallèles via Promise.all
-    // Alpha 0.32.0 : signalements perso disponibles via created_by opt-in
+
+    // 0.65.4 : tryFetch défensif - si une requête plante, les autres marchent
+    const tryFetch = async (q) => {
+      try { const r = await q; if (r.error) return { data: [] }; return r; } catch { return { data: [] }; }
+    };
+
+    // Stats parallèles via Promise.all (chaque requête est sécurisée)
     const [diResp, achatsResp, transfertsResp, signResp, eventsResp] = await Promise.all([
       // DI créées par l'utilisateur
-      supabase.from("interventions")
+      tryFetch(supabase.from("interventions")
         .select("id, statut, urgence", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("created_by", userId),
+        .eq("created_by", userId)),
       // Achats créés (demandeur)
-      supabase.from("achats")
+      tryFetch(supabase.from("achats")
         .select("id, statut", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("demandeur_id", userId),
+        .eq("demandeur_id", userId)),
       // Transferts créés
-      supabase.from("transferts")
+      tryFetch(supabase.from("transferts")
         .select("id, statut", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("created_by", userId),
-      // Alpha 0.32.0 : Signalements signés par l'utilisateur (opt-in created_by)
-      // Reste anonyme pour les signalements créés AVANT la 0.32 ou sans coche
-      supabase.from("signalements")
+        .eq("created_by", userId)),
+      // Signalements signés par l'utilisateur (opt-in created_by)
+      tryFetch(supabase.from("signalements")
         .select("id, statut", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("created_by", userId),
+        .eq("created_by", userId)),
       // Activité récente — table s'appelle audit_log (pas audit_events)
-      supabase.from("audit_log")
+      tryFetch(supabase.from("audit_log")
         .select("action, entite, entite_id, details, created_at")
         .eq("structure_id", auth.structureId)
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(15),
+        .limit(15)),
     ]);
 
     const di = diResp.data || [];
