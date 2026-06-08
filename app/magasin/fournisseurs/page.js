@@ -40,9 +40,9 @@ export default function FournisseursPage() {
   const [fActif, setFActif] = useState(true);
 
   const [modal, setModal] = useState(null);
-  // 0.62.126 : Lock anti-collision sur édition
-  const fournisseurLock = useEditLock("fournisseur", form?.id, modal === "edit" && !!form?.id);
   const [form, setForm] = useState({});
+  // 0.62.126 : Lock anti-collision sur édition (APRÈS form pour éviter TDZ)
+  const fournisseurLock = useEditLock("fournisseur", form?.id, modal === "edit" && !!form?.id);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (auth.ready) reload(); }, [auth.ready]);
