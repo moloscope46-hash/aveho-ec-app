@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Suspense } from "react";  /* 0.65.6 */
 import { Quicksand } from "next/font/google";
 // 0.57.8 : Composants visibles dès le 1er render ou très petits → import statique
 import InstallPWA from "./InstallPWA";
@@ -8,6 +9,7 @@ import FirstLoginTour from "./components/FirstLoginTour";  /* 0.62.129 */
 import { SandboxBanner } from "./components/SandboxBanner";  /* 0.65.0 */
 import BackButtonFloating from "./components/BackButtonFloating";  /* 0.65.4 */
 import MobilePopupForcer from "./components/MobilePopupForcer";  /* 0.65.6 */
+import DesignAuditor from "./components/DesignAuditor";  /* 0.65.6 */
 import LectureSeuleBadge from "./LectureSeuleBadge";
 import GlobalSearch from "./GlobalSearch";
 import AlertToastContainer from "./components/AlertToast";
@@ -119,6 +121,7 @@ export default function RootLayout({ children }) {
         <SandboxBanner />
         <BackButtonFloating />
         <MobilePopupForcer />
+        <Suspense fallback={null}><DesignAuditor /></Suspense>
         {/* 0.58.83 : FAB Continuer sur le téléphone (visible sur toutes les pages) */}
         <SwitchToPhoneFab />
       </body>

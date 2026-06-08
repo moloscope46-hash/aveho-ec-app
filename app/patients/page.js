@@ -386,7 +386,6 @@ export default function Patients() {
             const el = document.querySelector('[data-filters="patients"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
           }},
-          { icon: "ti-printer", label: "Imprimer", onClick: () => window.print() },
         ]}
       />
       <div className="wrap" style={{ position: "relative" }}>

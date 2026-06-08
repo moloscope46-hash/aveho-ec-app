@@ -471,6 +471,75 @@ button{font-family:inherit;cursor:pointer}
 }
 /* === FIN MENU DRAWER PREMIUM ============================ */
 
+/* === 0.65.6 : POLISH PREMIUM GLOBAL ====================== */
+/* Panels avec relief subtil et dégradé */
+.panel {
+  background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%) !important;
+  box-shadow:
+    0 1px 3px rgba(20, 33, 49, .04),
+    0 4px 12px rgba(20, 33, 49, .06),
+    0 0 0 1px rgba(124, 200, 200, .04) inset !important;
+  border: 1px solid rgba(20, 33, 49, .06) !important;
+  transition: box-shadow 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.panel:hover {
+  box-shadow:
+    0 2px 6px rgba(20, 33, 49, .06),
+    0 8px 20px rgba(20, 33, 49, .08),
+    0 0 0 1px rgba(124, 200, 200, .12) inset !important;
+}
+
+/* Headers de page avec dégradé subtil */
+.pagehead, .page-head, [class*="PageHead"] {
+  position: relative;
+}
+
+/* Boutons premium : meilleur hover */
+button:not(.tb-icon):not(.menu-tile):not(.av-back-floating):not(.modal-x):not(.menu-section-h):not(.tb-dropdown button):not(.notif-center-popup button):hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  transition: all 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Cards / tiles - dégradé subtil teinté */
+.kpi-tile, .mt-tile, [class*="card-tile"] {
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%) !important;
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 280ms;
+}
+.kpi-tile:hover, .mt-tile:hover, [class*="card-tile"]:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+/* Inputs premium : focus glow teal */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #7CC8C8 !important;
+  box-shadow:
+    0 0 0 3px rgba(124, 200, 200, .18),
+    0 1px 3px rgba(20, 33, 49, .06) !important;
+}
+
+/* Headers : reliefs subtils */
+h1, h2, h3 {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .8);
+  position: relative;
+}
+
+/* Modal avec dégradé header (déjà fait dans modal-head-v2 mais on s'assure) */
+.modal-head-v2 {
+  position: relative;
+}
+.modal-head-v2::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124, 200, 200, .6), transparent);
+}
+/* === FIN POLISH PREMIUM ================================== */
+
 /* layout contenu */
 .wrap{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px))}
 /* 0.60.8 : .page-content utilisé par les nouvelles pages — même comportement que .wrap pour cohérence.

@@ -97,60 +97,52 @@ export default function BackButtonFloating() {
         top: "calc(74px + env(safe-area-inset-top, 0px))",
         left: 16,
         zIndex: 95,
-        width: 44, height: 44,
-        borderRadius: 12,
+        height: 42,
+        borderRadius: 21,
+        padding: "0 16px 0 12px",
         background: hover
           ? "linear-gradient(135deg, #7CC8C8, #5db5b5)"
-          : "rgba(20, 33, 49, .85)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
+          : "linear-gradient(135deg, rgba(20, 33, 49, .92), rgba(28, 84, 84, .92))",
+        backdropFilter: "blur(14px) saturate(180%)",
+        WebkitBackdropFilter: "blur(14px) saturate(180%)",
         color: "#fff",
         border: hover ? "1.5px solid #7CC8C8" : "1.5px solid rgba(124, 200, 200, .35)",
         cursor: "pointer",
-        fontSize: 20,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all 220ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-        transform: hover ? "scale(1.10) translateX(-3px)" : "scale(1)",
+        fontSize: 13,
+        fontWeight: 700,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        transition: "all 280ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+        transform: hover ? "scale(1.05) translateX(-3px)" : "scale(1)",
         boxShadow: hover
-          ? "0 8px 24px rgba(124, 200, 200, .45), 0 0 0 6px rgba(124, 200, 200, .15)"
-          : "0 4px 12px rgba(20, 33, 49, .25)",
+          ? "0 10px 28px rgba(124, 200, 200, .55), 0 0 0 6px rgba(124, 200, 200, .15), 0 2px 6px rgba(0,0,0,.2)"
+          : "0 6px 18px rgba(20, 33, 49, .35), 0 1px 3px rgba(0,0,0,.2), 0 0 0 1px rgba(124, 200, 200, .08) inset",
         fontFamily: "inherit",
+        letterSpacing: 0.3,
+        whiteSpace: "nowrap",
+        maxWidth: "calc(100vw - 32px)",
+        overflow: "hidden",
       }}>
-      <i className="ti ti-arrow-left" />
-
-      {hover && target.lbl && (
-        <span style={{
-          position: "absolute",
-          left: "calc(100% + 10px)",
-          top: "50%",
-          transform: "translateY(-50%)",
-          background: "linear-gradient(135deg, #142131, #1c5454)",
-          color: "#fff",
-          padding: "7px 14px",
-          borderRadius: 10,
-          fontSize: 12,
-          fontWeight: 700,
-          whiteSpace: "nowrap",
-          boxShadow: "0 6px 24px rgba(0,0,0,.4)",
-          border: "1px solid rgba(124, 200, 200, .3)",
-          animation: "av-back-tooltip-in 220ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-          pointerEvents: "none",
-          letterSpacing: 0.3,
-        }}>
-          <i className="ti ti-corner-up-left" style={{ marginRight: 5, color: "#7CC8C8" }} />
-          {target.lbl}
-          <span style={{
-            position: "absolute",
-            right: "100%",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: 0, height: 0,
-            borderTop: "6px solid transparent",
-            borderBottom: "6px solid transparent",
-            borderRight: "7px solid #142131",
-          }} />
-        </span>
-      )}
+      <span style={{
+        width: 26, height: 26, borderRadius: "50%",
+        background: hover ? "rgba(255,255,255,.25)" : "rgba(124, 200, 200, .25)",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontSize: 16, flexShrink: 0,
+        transition: "all 220ms",
+      }}>
+        <i className="ti ti-arrow-left" />
+      </span>
+      <span style={{
+        fontSize: 12.5,
+        fontWeight: 700,
+        textOverflow: "ellipsis",
+        overflow: "hidden",
+        maxWidth: 200,
+        letterSpacing: 0.4,
+      }}>
+        {target.lbl || "Retour"}
+      </span>
 
       <style jsx global>{`
         @keyframes av-back-tooltip-in {
@@ -161,9 +153,13 @@ export default function BackButtonFloating() {
           .av-back-floating {
             top: 68px !important;
             left: 8px !important;
-            width: 40px !important;
-            height: 40px !important;
-            font-size: 17px !important;
+            height: 36px !important;
+            padding: 0 12px 0 8px !important;
+            font-size: 11.5px !important;
+          }
+          .av-back-floating > span:last-child {
+            max-width: 140px !important;
+            font-size: 11px !important;
           }
         }
       `}</style>

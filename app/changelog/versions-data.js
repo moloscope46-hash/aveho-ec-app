@@ -240,6 +240,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.7",
+    "kind": "feat",
+    "titre": "🎨 BackButton avec nom visible + Polish premium global + DesignAuditor + Fix icones invisibles menu",
+    "chantiers": [
+      { "code": "AI", "txt": "⬅ **BackButton enrichi : nom de page TOUJOURS visible** : refonte complète du composant BackButtonFloating. Avant : icône ronde teal avec tooltip uniquement au hover. **Maintenant** : pill horizontale avec icône flèche dans cercle teal + nom de la page de destination affiché en permanence à côté (ex: ← Liste des patients). Largeur dynamique selon le label. **Polish** : (1) Fond gradient navy/teal au repos. (2) Backdrop-filter blur 14px saturate 180%. (3) Hover : gradient teal full + scale 1.05 + translateX(-3px) + glow teal large + ring teal. (4) Mobile responsive avec hauteur 36px et max-width 140px pour le label. Look premium iOS-style" },
+      { "code": "AI", "txt": "🎨 **Polish premium GLOBAL CSS** : ajout d''un bloc CSS final dans globals.css qui améliore tous les panels, boutons, inputs et titres : (1) **.panel** : gradient blanc→blanc cassé subtil + triple ombre (1px close + 4-12px ambient + 1px teal inset). Hover : ombres plus marquées + teal glow. Transition cubic-bezier élastique. (2) **Boutons standards** : hover translateY(-1px) + brightness(1.04). (3) **Cards / tiles** : gradient blanc + transform scale 1.01 au hover. (4) **Inputs focus** : ring teal 3px + ombre interne. (5) **Titres** : text-shadow subtil pour profondeur. (6) **Modal header v2** : gradient teal en bas. **Effet global** : tout l''app a une sensation plus profonde et premium sans changer son ADN" },
+      { "code": "AI", "txt": "🔧 **Fix icônes invisibles menu sidebar (Administratif, Matériel, Mode TV)** : 2 problèmes identifiés. (1) **Section Administratif** avait barCol/txtCol #142131 (navy) sur fond menu sombre → icône invisible. **Fix** : passé à #5e8ec4 (bleu acier visible). (2) **Section Administration tech** : passé du noir #c0392b au #e35d5b (corail visible). (3) Items du menu en noir invisible : /materiels (Matériel) #142131 → #185FA5 bleu, /presentation/interventions (Mode TV) #142131 → #7CC8C8 teal. Maintenant TOUTES les icônes du menu sidebar sont visibles" },
+      { "code": "AI", "txt": "🛠 **DesignAuditor (NOUVEAU outil dev)** : helper pour identifier visuellement les éléments à polir sur n''importe quelle page. **Activation** : ?polish=1 dans l''URL OU touche P pressée 3 fois rapidement. **Audit automatique** : (1) Encadre en ORANGE les panels/sections sans box-shadow. (2) Encadre en ROUGE les titres H1/H2/H3 sans icône. (3) Encadre en JAUNE les boutons plats (sans gradient ni hover effect). **Toolbar flottante** en bas droit avec compteurs par catégorie (panels sans ombre / titres sans icône / boutons plats). Échap pour quitter. **Outil de dev parfait pour itérer sur le polish**" },
+      { "code": "AI", "txt": "🗑 **Bouton Imprimer enlevé de la liste patients** : retrait du bouton `{ icon: 'ti-printer', label: 'Imprimer', onClick: window.print() }` dans la barre MobileActionsBar secondary[]. Le bouton imprimer ne servait à rien sur la liste (déjà la fonction print native du navigateur). Le bouton imprimer bracelet QR par patient (sur chaque ligne) reste, lui est utile" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.7** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) Aller sur une page détail (ex: /patient/[id]) → flèche avec NOM visible en permanence (ex: ← Liste des patients). (2) Ouvrir menu burger gauche → section Administratif → icône ti-folder-cog VISIBLE en bleu acier. (3) /patients → barre du bas MobileActionsBar → plus de bouton Imprimer. (4) Sur n''importe quelle page → presser P 3 fois → POLISH MODE s''active avec encadrement des éléments à améliorer. (5) Hover sur n''importe quel panel → ombre teal + slight lift. (6) Focus dans un input → glow teal 3px"
+      }
+    ],
+    "themes": ["feature", "polish", "ux", "dev-tool"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.7.html"
+  },
+  {
     "v": "0.65.6",
     "kind": "fix",
     "titre": "🔧 Fix DÉFINITIF popups mobile : triple protection (CSS ULTRA agressif + MobilePopupForcer JS + CartDropdown belt-and-suspenders)",
