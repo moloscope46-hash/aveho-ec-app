@@ -63,7 +63,8 @@ function PresentationInterventions() {
 
   async function load() {
     if (!auth.structureId) return;
-    // 0.65.23 : fallback à 3 niveaux si jointures FK pas déclarées
+    // 0.65.25 : SELECT selon colonnes RÉELLES (interventions n'a PAS batiment_id, service_id, chambre_id, technicien_nom, date_planifiee)
+    // Vraies colonnes : etablissement_id, materiel_id, patient_id, intervenant (via maintenances), assignee_email, due_date, equipe_id, magasin_id, depot_id
     const baseFilter = (q) => {
       q = q.eq("structure_id", auth.structureId)
            .neq("statut", "Clôturée").neq("statut", "Refusée")
@@ -72,25 +73,22 @@ function PresentationInterventions() {
            .limit(30);
       if (etabId) q = q.eq("etablissement_id", etabId);
       if (advFilters.etabId) q = q.eq("etablissement_id", advFilters.etabId);
-      if (advFilters.batId)     q = q.eq("batiment_id", advFilters.batId);
-      if (advFilters.svcId)     q = q.eq("service_id", advFilters.svcId);
-      if (advFilters.chambreId) q = q.eq("chambre_id", advFilters.chambreId);
       if (advFilters.patientId) q = q.eq("patient_id", advFilters.patientId);
       return q;
     };
 
-    // Niveau 1 : avec toutes les jointures
+    // Niveau 1 : avec jointures
     let r = await baseFilter(supabase.from("interventions")
-      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, ville), etablissements(nom, ville), batiments(nom), services(nom, etage), equipes(nom, couleur)"));
-    // Niveau 2 : sans jointures
+      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, assignee_email, due_date, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, ville), etablissements(nom, ville), equipes(nom, couleur)"));
     if (r.error) {
+      // Niveau 2 : sans jointures
       r = await baseFilter(supabase.from("interventions")
-        .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id"));
+        .select("id, numero, type, urgence, statut, description, created_at, equipe_id, assignee_email, due_date, patient_id, etablissement_id, materiel_id"));
     }
-    // Niveau 3 : SELECT minimal
     if (r.error) {
+      // Niveau 3 : minimal
       r = await baseFilter(supabase.from("interventions")
-        .select("id, numero, type, urgence, statut, description, created_at, technicien_nom"));
+        .select("id, numero, type, urgence, statut, description, created_at"));
     }
     const data = r.data || [];
 

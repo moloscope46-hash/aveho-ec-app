@@ -67,36 +67,45 @@ function PresentationArchitecture() {
     // Limite affichage 4 bâtiments max (sinon écran illisible)
     bats = bats.slice(0, 4);
 
-    // 2. Pour chaque bâtiment, charger : services + matériels + DI + dépôts + équipes + lits surplus
-    // 0.65.24 : globalQueries d'abord (1 fois), puis filtrage JS par bâtiment
-    // materiels n'a PAS batiment_id, on remonte via depot.batiment_id
-    const [allServices, allMateriels, allDis, allDepots, allMaintenances, allPatients] = await Promise.all([
-      tryFetch(supabase.from("services").select("id, nom, batiment_id").eq("structure_id", auth.structureId)),
-      tryFetch(supabase.from("materiels").select("id, libelle, num_parc, etat, depot_id, etablissement_id").eq("structure_id", auth.structureId).limit(1000)),
-      tryFetch(supabase.from("interventions").select("id, statut, urgence, batiment_id, service_id").eq("structure_id", auth.structureId).neq("statut", "Clôturée").neq("statut", "Refusée")),
+    // 0.65.25 : SELECT selon colonnes RÉELLES (diagnostic Cédric)
+    // - interventions n'a PAS batiment_id, service_id, chambre_id → filtrer via etablissement_id + magasin_id
+    // - materiels n'a PAS batiment_id → filtrer via service_id ou chambre_id
+    // - services n'a PAS etage → utilise etage_id (UUID)
+    const [allServices, allMateriels, allDis, allDepots, allMaintenances, allPatients, allChambres] = await Promise.all([
+      tryFetch(supabase.from("services").select("id, nom, batiment_id, etage_id, etablissement_id").eq("structure_id", auth.structureId)),
+      tryFetch(supabase.from("materiels").select("id, libelle, num_parc, etat, depot_id, etablissement_id, service_id, chambre_id, equipe_id").eq("structure_id", auth.structureId).limit(1000)),
+      tryFetch(supabase.from("interventions").select("id, statut, urgence, etablissement_id, materiel_id, patient_id, type").eq("structure_id", auth.structureId).neq("statut", "Clôturée").neq("statut", "Refusée")),
       tryFetch(supabase.from("depots").select("id, nom, etablissement_id, batiment_id").eq("structure_id", auth.structureId)),
-      tryFetch(supabase.from("maintenances").select("id, libelle, statut, date_prevue, type").eq("structure_id", auth.structureId).gte("date_prevue", new Date().toISOString().slice(0, 10)).order("date_prevue").limit(100)),
-      tryFetch(supabase.from("patients").select("id, nom, prenom, batiment_id, service_id, chambre_id").eq("structure_id", auth.structureId).limit(500)),
+      tryFetch(supabase.from("maintenances").select("id, type, statut, date_prevue, materiel_id, etablissement_id, intervenant, notes").eq("structure_id", auth.structureId).gte("date_prevue", new Date().toISOString().slice(0, 10)).order("date_prevue").limit(100)),
+      tryFetch(supabase.from("patients").select("id, nom, prenom, batiment_id, service_id, chambre_id, chambre").eq("structure_id", auth.structureId).limit(500)),
+      tryFetch(supabase.from("chambres").select("id, libelle, numero, service_id, batiment_id").eq("structure_id", auth.structureId).limit(500)),
     ]);
 
-    // Index : depot_id → batiment_id (pour remonter le batiment d'un matériel)
-    const depotsByBat = {};
-    (allDepots || []).forEach(d => {
-      if (d.batiment_id) {
-        if (!depotsByBat[d.batiment_id]) depotsByBat[d.batiment_id] = [];
-        depotsByBat[d.batiment_id].push(d.id);
-      }
-    });
+    // Index : depot_id → batiment_id (pour remonter le bât d'un matériel via depot)
+    const depotToBat = {};
+    (allDepots || []).forEach(d => { if (d.batiment_id) depotToBat[d.id] = d.batiment_id; });
+    // Index : chambre_id → batiment_id (via chambre.service.batiment)
+    const chambreToBat = {};
+    const chambreToSvc = {};
+    (allChambres || []).forEach(c => { if (c.batiment_id) chambreToBat[c.id] = c.batiment_id; if (c.service_id) chambreToSvc[c.id] = c.service_id; });
+    // Index : service_id → batiment_id
+    const serviceToBat = {};
+    (allServices || []).forEach(s => { if (s.batiment_id) serviceToBat[s.id] = s.batiment_id; });
 
     const enriched = await Promise.all(bats.map(async (b) => {
-      // Filtrage JS uniquement
       const services = (allServices || []).filter(s => s.batiment_id === b.id);
-      const depotIdsForBat = depotsByBat[b.id] || [];
-      // Matériels du bât = ceux dans un dépôt du bât
-      const materiels = (allMateriels || []).filter(m => depotIdsForBat.includes(m.depot_id));
-      const dis = (allDis || []).filter(d => d.batiment_id === b.id);
+      const serviceIdsForBat = services.map(s => s.id);
+      // Matériels du bât = via service_id OU via depot_id OU via chambre_id remontant à b
+      const materiels = (allMateriels || []).filter(m =>
+        serviceIdsForBat.includes(m.service_id) ||
+        depotToBat[m.depot_id] === b.id ||
+        chambreToBat[m.chambre_id] === b.id
+      );
+      // DI du bât = via materiel.service OU etablissement
+      const matIdsForBat = new Set(materiels.map(m => m.id));
+      const dis = (allDis || []).filter(d => matIdsForBat.has(d.materiel_id) || d.etablissement_id === b.etablissement_id);
       const depots = (allDepots || []).filter(d => d.batiment_id === b.id);
-      const maintenances = allMaintenances || [];
+      const maintenances = (allMaintenances || []).filter(m => matIdsForBat.has(m.materiel_id) || m.etablissement_id === b.etablissement_id);
       const patients = (allPatients || []).filter(p => p.batiment_id === b.id);
       const collabs = [];
 

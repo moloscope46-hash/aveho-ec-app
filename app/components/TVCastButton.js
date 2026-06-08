@@ -24,7 +24,23 @@ export default function TVCastButton({ refreshSec = 60 }) {
   const [multiScreenAvailable, setMultiScreenAvailable] = useState(false);
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);  // 0.65.26 : détection mobile
   const wrapRef = useRef(null);
+
+  useEffect(() => {
+    // 0.65.26 : Détection mobile (largeur écran ou user-agent) — masque le bouton CASTER + QR sur mobile
+    if (typeof window !== "undefined") {
+      const checkMobile = () => {
+        const ua = navigator.userAgent || "";
+        const isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+        const isNarrow = window.innerWidth < 768;
+        setIsMobile(isMobileUA || isNarrow);
+      };
+      checkMobile();
+      window.addEventListener("resize", checkMobile);
+      return () => window.removeEventListener("resize", checkMobile);
+    }
+  }, []);
 
   useEffect(() => {
     // 1. Google Cast (Chrome desktop + Android Chrome)
@@ -162,7 +178,8 @@ export default function TVCastButton({ refreshSec = 60 }) {
   }
 
   return (
-    <div ref={wrapRef} style={{ position: "relative", display: "inline-block" }}>
+    <div ref={wrapRef} style={{ position: "relative", display: isMobile ? "none" : "inline-block" }}>
+      {/* 0.65.26 : Bouton CASTER (avec QR Code) masqué sur mobile - sur mobile on a déjà AirPlay/ChromeCast natifs */}
       <button
         onClick={() => setOpen(!open)}
         title="Caster sur TV / Multi-écran"

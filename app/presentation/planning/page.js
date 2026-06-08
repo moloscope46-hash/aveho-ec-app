@@ -53,21 +53,21 @@ function PresentationPlanning() {
 
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
 
-    // Sources parallèles (0.65.23 : retrait jointures FK + date format YYYY-MM-DD)
+    // Sources parallèles (0.65.25 : VRAIES colonnes - due_date au lieu de date_planifiee, intervenant au lieu de technicien_nom)
     const [interventions, tournees, maintenances, planEvts] = await Promise.all([
       tryFetch(supabase.from("interventions")
-        .select("id, numero, type, urgence, date_planifiee, statut, technicien_nom, equipe_id, materiel_id, patient_id")
+        .select("id, numero, type, urgence, due_date, statut, assignee_email, equipe_id, materiel_id, patient_id")
         .eq("structure_id", auth.structureId)
-        .gte("date_planifiee", todayStart.toISOString())
-        .lte("date_planifiee", todayEnd.toISOString())
-        .order("date_planifiee")),
+        .gte("due_date", ymd)
+        .lte("due_date", ymd)
+        .order("due_date")),
       tryFetch(supabase.from("tournees")
         .select("id, numero, nom, statut, heure_depart, date_tournee, chauffeur_user_id, nb_etapes")
         .eq("structure_id", auth.structureId)
         .eq("date_tournee", ymd)
         .order("heure_depart")),
       tryFetch(supabase.from("maintenances")
-        .select("id, libelle, type, statut, date_prevue, materiel_id")
+        .select("id, type, statut, date_prevue, materiel_id, intervenant, notes")
         .eq("structure_id", auth.structureId)
         .gte("date_prevue", ymd)
         .lte("date_prevue", ymd)

@@ -240,6 +240,42 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.26",
+    "kind": "fix",
+    "titre": "AUDIT tables : 6 tables fantomes corrigees (attachments, commandes_lignes, livraisons_planifiees, maintenances_recurrences, membres_magasin, profiles) + bouton QR Caster masque sur mobile",
+    "chantiers": [
+      { "code": "AI", "txt": "AUDIT COMPLET : extrait toutes les tables referencees dans le code (.from) et compare avec la liste reelle Supabase. Resultat : 6 tables fantomes corrigees" },
+      { "code": "AI", "txt": "FIX attachments → pieces_jointes (AttachmentsPanel.js)" },
+      { "code": "AI", "txt": "FIX commandes_lignes → commande_lignes (commandes/[id]/page.js) - faute de frappe avec un S" },
+      { "code": "AI", "txt": "FIX livraisons_planifiees → bons_livraison (livraisons-planifiees/[id]/page.js)" },
+      { "code": "AI", "txt": "FIX maintenances_recurrences → maintenance_recurrences (maintenance/[id]/page.js) - faute de frappe avec un S" },
+      { "code": "AI", "txt": "FIX membres_magasin → membres_structure_magasins (lib/useAuth.js)" },
+      { "code": "AI", "txt": "FIX profiles → membres_structure (lib/notifyValideurs.js) - profiles n EXISTE PAS dans Supabase, on utilise membres_structure qui contient user_id, email, nom, prenom" },
+      { "code": "AI", "txt": "FIX bouton CASTER (avec option QR Code) masque sur mobile dans TVCastButton.js. Detection mobile via user-agent + largeur ecran < 768px. Sur mobile : on a deja AirPlay/ChromeCast natifs en haut-droite via TVScreenNav, pas besoin du bouton QR" },
+      { "code": "INFO", "txt": "ZERO tables creees en doublon : utilisation uniquement des tables QUI EXISTENT VRAIMENT dans Supabase (verifie par grep + diff avec la liste fournie par Cedric). Plus de risque que le code reference une table fantome" }
+    ],
+    "themes": ["fix-bugs-400", "audit-schema", "ui-mobile"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.26.html"
+  },
+{
+    "v": "0.65.25",
+    "kind": "fix",
+    "titre": "DERNIER FIX 400 selon diagnostic colonnes RELLES Cedric : interventions sans batiment_id, materiels via service_id, maintenances sans libelle, bons_reception VRAIES colonnes",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX architecture/page.js : SELECT selon colonnes REELLES. interventions(id, statut, urgence, etablissement_id, materiel_id, patient_id, type) - PAS batiment_id/service_id/chambre_id. maintenances(id, type, statut, date_prevue, materiel_id, etablissement_id, intervenant, notes) - PAS libelle. services(id, nom, batiment_id, etage_id, etablissement_id) - PAS etage. materiels avec chambre_id/service_id/equipe_id. Ajout chambres dans le batch et indexes depotToBat + chambreToBat + serviceToBat. Materiels filtres via service_id ou chambre_id ou depot_id remontant au batiment" },
+      { "code": "AI", "txt": "FIX interventions TV : SELECT sans batiment_id/service_id/chambre_id/technicien_nom/date_planifiee. Utilise assignee_email + due_date + equipe_id. Filtres avFilters.batId/svcId/chambreId retires (colonnes nexistent pas). Fallback 3 niveaux conserve avec jointures materiels/patients/etablissements/equipes uniquement (pas batiments ni services)" },
+      { "code": "AI", "txt": "FIX planning TV : interventions avec due_date au lieu de date_planifiee + assignee_email au lieu de technicien_nom. maintenances avec intervenant + notes (pas libelle ni technicien_nom)" },
+      { "code": "AI", "txt": "FIX SQL bons_reception : utilise VRAIES colonnes (numero, etablissement_id, type_source, source_id, conforme, anomalies, commentaire, signataire_email, receptionne_le, statut). RETIRE montant_ht, fournisseur_id, notes, date_reception qui NEXISTENT PAS. 2 BR marques non conformes avec anomalies (carton abime, lignes manquantes) pour realisme" },
+      { "code": "AI", "txt": "FIX SQL stock_mouvements : utilise notes au lieu de commentaire + ajout colonne type (IN) en plus de type_mouvement" },
+      { "code": "INFO", "txt": "Procedure : rejouer SQL (288K - les ON CONFLICT garantissent zero doublon meme apres 100 relances). Push code 0.65.25. ATTENTION CACHE : Ctrl+Shift+R IMPERATIF apres deploiement Vercel. Hash JS doit changer dans la console (plus 5549-9d3437d2a9298300.js)" },
+      { "code": "INFO", "txt": "Erreur SQL 42601 syntax error at table_name : c est juste que tu as colle le RESULTAT CSV dans le SQL Editor pour le rerelancer. Pas grave, j ai bien recu les colonnes. Le diagnostic est complet" }
+    ],
+    "themes": ["fix-bugs-400", "schema-real", "demo-data"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.25.html"
+  },
+{
     "v": "0.65.24",
     "kind": "fix",
     "titre": "Fix materiels.batiment_id (colonne inexistante) + utilisation bons_reception + stock_mouvements + materiel_mouvements (tables reelles Supabase)",
