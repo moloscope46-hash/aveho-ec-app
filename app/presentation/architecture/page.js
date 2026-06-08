@@ -11,7 +11,7 @@
 //   - Dépôts rattachés
 // =============================================================
 import { useEffect, useState, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
@@ -31,6 +31,7 @@ function Loading() {
 function PresentationArchitecture() {
   const supabase = createClient();
   const auth = useAuth();
+  const router = useRouter();
   const params = useSearchParams();
   const refreshSec = parseInt(params.get("refresh") || "60", 10);
 
@@ -39,6 +40,8 @@ function PresentationArchitecture() {
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));
   const [advFilters, setAdvFilters] = useState(() => getTVFilters("architecture") || {});
+  // 0.65.9 : modal transfert patient
+  const [transferModal, setTransferModal] = useState(null);
   const timerRef = useRef(null);
   const clockRef = useRef(null);
 
@@ -63,18 +66,19 @@ function PresentationArchitecture() {
     // Limite affichage 4 bâtiments max (sinon écran illisible)
     bats = bats.slice(0, 4);
 
-    // 2. Pour chaque bâtiment, charger : services + matériels + DI + dépôts + équipes
+    // 2. Pour chaque bâtiment, charger : services + matériels + DI + dépôts + équipes + lits surplus
     const enriched = await Promise.all(bats.map(async (b) => {
-      const [services, materiels, dis, depots, maintenances, collabs] = await Promise.all([
+      const [services, materiels, dis, depots, maintenances, collabs, patients] = await Promise.all([
         tryFetch(supabase.from("services")
           .select("id, nom, batiment_id, etage")
           .eq("batiment_id", b.id)
           .order("etage", { ascending: false }).order("nom")),
+        // 0.65.9 : ajout etage_surplus pour lits non-affectés
         tryFetch(supabase.from("materiels")
-          .select("id, libelle, code, statut, batiment_id, service_id, chambre_id")
+          .select("id, libelle, num_parc, etat, batiment_id, service_id, chambre_id, etage_surplus")
           .eq("structure_id", auth.structureId)
           .eq("batiment_id", b.id)
-          .limit(200)),
+          .limit(300)),
         tryFetch(supabase.from("interventions")
           .select("id, statut, urgence, batiment_id, service_id")
           .eq("structure_id", auth.structureId)
@@ -95,6 +99,12 @@ function PresentationArchitecture() {
           .select("user_id, role, membres_structure(prenom, nom)")
           .eq("etablissement_id", b.etablissement_id)
           .limit(20)),
+        // 0.65.9 : patients du bâtiment pour les afficher par chambre
+        tryFetch(supabase.from("patients")
+          .select("id, nom, prenom, batiment_id, service_id, chambre_id, chambre")
+          .eq("structure_id", auth.structureId)
+          .eq("batiment_id", b.id)
+          .limit(200)),
       ]);
 
       // Regrouper services par étage
@@ -104,10 +114,26 @@ function PresentationArchitecture() {
         if (!servicesByEtage[etage]) servicesByEtage[etage] = [];
         servicesByEtage[etage].push(s);
       });
-      // Pour chaque service : compter matériels + DI
+      // Pour chaque service : compter matériels + DI + patients
       Object.values(servicesByEtage).flat().forEach(s => {
         s._nbMat = materiels.filter(m => m.service_id === s.id).length;
         s._nbDi = dis.filter(d => d.service_id === s.id).length;
+        s._nbPatients = patients.filter(p => p.service_id === s.id).length;
+      });
+
+      // 0.65.9 : Lits de surplus = matériels rattachés au bâtiment SANS service/chambre, avec étage_surplus
+      const litsSurplus = materiels.filter(m =>
+        !m.service_id && !m.chambre_id && (
+          (m.libelle?.toLowerCase().includes("lit") || m.libelle?.toLowerCase().includes("matelas")) ||
+          m.etage_surplus !== null && m.etage_surplus !== undefined
+        )
+      );
+      // Regrouper par étage
+      const litsSurplusByEtage = {};
+      litsSurplus.forEach(l => {
+        const etage = l.etage_surplus ?? "?";
+        if (!litsSurplusByEtage[etage]) litsSurplusByEtage[etage] = [];
+        litsSurplusByEtage[etage].push(l);
       });
 
       return {
@@ -118,6 +144,9 @@ function PresentationArchitecture() {
         _dis: dis,
         _depots: depots,
         _maintenances: maintenances,
+        _patients: patients,
+        _litsSurplus: litsSurplus,
+        _litsSurplusByEtage: litsSurplusByEtage,
         _collabs: collabs.map(c => ({
           nom: c.membres_structure?.nom || "?",
           prenom: c.membres_structure?.prenom || "",
@@ -181,8 +210,20 @@ function PresentationArchitecture() {
           gridTemplateColumns: `repeat(${Math.min(batiments.length, 4)}, 1fr)`,
           gap: 14,
         }}>
-          {batiments.map(b => <BatimentColumn key={b.id} b={b} />)}
+          {batiments.map(b => <BatimentColumn key={b.id} b={b} router={router} onTransferOpen={setTransferModal} />)}
         </div>
+      )}
+
+      {/* 0.65.9 : Modal de transfert patient */}
+      {transferModal && (
+        <TransferPatientModal
+          patient={transferModal}
+          batiments={batiments}
+          supabase={supabase}
+          structureId={auth.structureId}
+          onClose={() => setTransferModal(null)}
+          onSaved={() => { setTransferModal(null); load(); }}
+        />
       )}
 
       <div style={{ position: "fixed", bottom: 8, right: 12, fontSize: 11, color: "rgba(191,230,230,0.5)" }}>
@@ -197,13 +238,21 @@ function PresentationArchitecture() {
   );
 }
 
-function BatimentColumn({ b }) {
+function BatimentColumn({ b, router, onTransferOpen }) {
   const etages = Object.keys(b._servicesByEtage || {}).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
+  const litsSurplusEtages = Object.keys(b._litsSurplusByEtage || {}).sort((a, b) => parseInt(b, 10) - parseInt(a, 10));
   const nbMat = b._materiels.length;
   const nbDi = b._dis.length;
   const nbDiUrg = b._diUrgentes;
   const nbMaint = b._maintenances.length;
   const nbDep = b._depots.length;
+  const nbPatients = b._patients?.length || 0;
+  const nbLitsSurplus = b._litsSurplus?.length || 0;
+
+  function addPatientQuick() {
+    // Redirige vers /patients?new=1 avec préremplissage du bâtiment
+    router?.push(`/patients?new=1&etab=${b.etablissement_id}&bat=${b.id}`);
+  }
 
   return (
     <div style={{
@@ -221,27 +270,44 @@ function BatimentColumn({ b }) {
         padding: "10px 12px",
         borderRadius: 10,
         borderLeft: "5px solid #7CC8C8",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <i className="ti ti-building" style={{ fontSize: 22, color: "#7CC8C8" }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis" }}>{b.nom}</div>
-            {b.etablissements && (
-              <div style={{ fontSize: 11, color: "#bfe6e6", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                <i className="ti ti-building-hospital" /> {b.etablissements.nom}
-                {b.etablissements.ville && <span style={{ color: "#9bb5b5" }}> · {b.etablissements.ville}</span>}
-              </div>
-            )}
-          </div>
+        <i className="ti ti-building" style={{ fontSize: 22, color: "#7CC8C8" }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "#fff", overflow: "hidden", textOverflow: "ellipsis" }}>{b.nom}</div>
+          {b.etablissements && (
+            <div style={{ fontSize: 11, color: "#bfe6e6", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <i className="ti ti-building-hospital" /> {b.etablissements.nom}
+              {b.etablissements.ville && <span style={{ color: "#9bb5b5" }}> · {b.etablissements.ville}</span>}
+            </div>
+          )}
         </div>
+        {/* 0.65.9 : Bouton + Patient rapide */}
+        <button onClick={addPatientQuick}
+          title="Ajouter un patient à ce bâtiment"
+          style={{
+            background: "linear-gradient(135deg, #5aa05a, #4a8a4a)",
+            color: "#fff", border: "none", borderRadius: 8,
+            width: 32, height: 32, cursor: "pointer", fontSize: 18,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "inherit",
+            boxShadow: "0 4px 12px rgba(90,160,90,.4)",
+            flexShrink: 0,
+          }}>
+          <i className="ti ti-user-plus" />
+        </button>
       </div>
 
       {/* Mini-stats du bâtiment */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 4 }}>
         {[
+          { ic: "ti-users", v: nbPatients, col: "#5aa05a", lbl: "Patients" },
           { ic: "ti-clipboard-list", v: nbDi, col: "#EF9F27", lbl: "DI", pulse: nbDiUrg > 0 },
-          { ic: "ti-alert-triangle", v: nbDiUrg, col: "#e35d5b", lbl: "Urgentes", hide: nbDiUrg === 0 },
+          { ic: "ti-alert-triangle", v: nbDiUrg, col: "#e35d5b", lbl: "Urgences", hide: nbDiUrg === 0 },
           { ic: "ti-package", v: nbMat, col: "#185FA5", lbl: "Matériels" },
+          { ic: "ti-bed", v: nbLitsSurplus, col: "#C9867F", lbl: "Lits surplus", hide: nbLitsSurplus === 0 },
           { ic: "ti-tool", v: nbMaint, col: "#7a6fb0", lbl: "Maint." },
           { ic: "ti-building-warehouse", v: nbDep, col: "#5e4a8c", lbl: "Dépôts" },
         ].filter(s => !s.hide).map(s => (
@@ -260,54 +326,153 @@ function BatimentColumn({ b }) {
         ))}
       </div>
 
-      {/* Étages → services */}
+      {/* Étages → services + lits surplus */}
       <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: "calc(100vh - 410px)", overflowY: "auto" }}>
-        {etages.length === 0 ? (
+        {etages.length === 0 && litsSurplusEtages.length === 0 ? (
           <div style={{ fontSize: 11, color: "#9bb5b5", textAlign: "center", padding: 14, fontStyle: "italic" }}>
             Aucun service
           </div>
-        ) : etages.map(et => (
-          <div key={et}>
-            <div style={{
-              fontSize: 9.5, color: "#7CC8C8", fontWeight: 700,
-              textTransform: "uppercase", letterSpacing: 1,
-              padding: "3px 8px",
-              background: "rgba(124,200,200,.08)",
-              borderRadius: 6,
-              marginBottom: 4,
-              display: "flex", alignItems: "center", gap: 4,
-            }}>
-              <i className="ti ti-stairs" style={{ fontSize: 11 }} />
-              Étage {et}
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {b._servicesByEtage[et].map(s => (
-                <div key={s.id} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "4px 8px",
-                  background: "rgba(255,255,255,.04)",
+        ) : (
+          <>
+            {etages.map(et => (
+              <div key={"svc-" + et}>
+                <div style={{
+                  fontSize: 9.5, color: "#7CC8C8", fontWeight: 700,
+                  textTransform: "uppercase", letterSpacing: 1,
+                  padding: "3px 8px",
+                  background: "rgba(124,200,200,.08)",
                   borderRadius: 6,
-                  fontSize: 11.5,
-                  borderLeft: s._nbDi > 0 ? "2px solid #EF9F27" : "2px solid transparent",
+                  marginBottom: 4,
+                  display: "flex", alignItems: "center", gap: 4,
                 }}>
-                  <i className="ti ti-stethoscope" style={{ color: "#7a6fb0", fontSize: 12, flexShrink: 0 }} />
-                  <span style={{ flex: 1, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.nom}</span>
-                  {s._nbDi > 0 && (
-                    <span style={{ fontSize: 9, padding: "1px 5px", background: "#EF9F27", color: "#fff", borderRadius: 6, fontWeight: 800 }}>
-                      {s._nbDi} DI
-                    </span>
-                  )}
-                  {s._nbMat > 0 && (
-                    <span style={{ fontSize: 9, color: "#7CC8C8", fontWeight: 700 }}>
-                      <i className="ti ti-package" /> {s._nbMat}
-                    </span>
+                  <i className="ti ti-stairs" style={{ fontSize: 11 }} />
+                  Étage {et}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                  {b._servicesByEtage[et].map(s => (
+                    <div key={s.id} style={{
+                      display: "flex", alignItems: "center", gap: 6,
+                      padding: "4px 8px",
+                      background: "rgba(255,255,255,.04)",
+                      borderRadius: 6,
+                      fontSize: 11.5,
+                      borderLeft: s._nbDi > 0 ? "2px solid #EF9F27" : "2px solid transparent",
+                    }}>
+                      <i className="ti ti-stethoscope" style={{ color: "#7a6fb0", fontSize: 12, flexShrink: 0 }} />
+                      <span style={{ flex: 1, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.nom}</span>
+                      {s._nbPatients > 0 && (
+                        <span style={{ fontSize: 9, padding: "1px 5px", background: "rgba(90,160,90,.3)", color: "#5aa05a", borderRadius: 6, fontWeight: 700 }}>
+                          <i className="ti ti-users" /> {s._nbPatients}
+                        </span>
+                      )}
+                      {s._nbDi > 0 && (
+                        <span style={{ fontSize: 9, padding: "1px 5px", background: "#EF9F27", color: "#fff", borderRadius: 6, fontWeight: 800 }}>
+                          {s._nbDi} DI
+                        </span>
+                      )}
+                      {s._nbMat > 0 && (
+                        <span style={{ fontSize: 9, color: "#7CC8C8", fontWeight: 700 }}>
+                          <i className="ti ti-package" /> {s._nbMat}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {/* 0.65.9 : Lits surplus rattachés à cet étage */}
+                  {b._litsSurplusByEtage?.[et]?.length > 0 && (
+                    <div style={{
+                      padding: "4px 8px",
+                      background: "rgba(201,134,127,.10)",
+                      border: "1px dashed rgba(201,134,127,.4)",
+                      borderRadius: 6,
+                      fontSize: 10.5,
+                      color: "#C9867F",
+                      display: "flex", alignItems: "center", gap: 5,
+                    }}>
+                      <i className="ti ti-bed-flat" style={{ fontSize: 12 }} />
+                      <span style={{ flex: 1, fontWeight: 700 }}>
+                        {b._litsSurplusByEtage[et].length} lit{b._litsSurplusByEtage[et].length > 1 ? "s" : ""} de surplus
+                      </span>
+                      <span style={{ fontSize: 9, color: "#bfe6e6" }}>
+                        {b._litsSurplusByEtage[et].slice(0, 2).map(l => l.num_parc).join(", ")}
+                        {b._litsSurplusByEtage[et].length > 2 && " +" + (b._litsSurplusByEtage[et].length - 2)}
+                      </span>
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
+              </div>
+            ))}
+
+            {/* Lits surplus sur étages SANS services */}
+            {litsSurplusEtages.filter(et => !etages.includes(et)).map(et => (
+              <div key={"surplus-" + et}>
+                <div style={{
+                  fontSize: 9.5, color: "#C9867F", fontWeight: 700,
+                  textTransform: "uppercase", letterSpacing: 1,
+                  padding: "3px 8px",
+                  background: "rgba(201,134,127,.10)",
+                  borderRadius: 6,
+                  marginBottom: 4,
+                  display: "flex", alignItems: "center", gap: 4,
+                }}>
+                  <i className="ti ti-stairs" style={{ fontSize: 11 }} />
+                  Étage {et} (réserve)
+                </div>
+                <div style={{
+                  padding: "4px 8px",
+                  background: "rgba(201,134,127,.10)",
+                  border: "1px dashed rgba(201,134,127,.4)",
+                  borderRadius: 6,
+                  fontSize: 10.5,
+                  color: "#C9867F",
+                  display: "flex", alignItems: "center", gap: 5,
+                }}>
+                  <i className="ti ti-bed-flat" style={{ fontSize: 12 }} />
+                  <span style={{ flex: 1, fontWeight: 700 }}>
+                    {b._litsSurplusByEtage[et].length} lit{b._litsSurplusByEtage[et].length > 1 ? "s" : ""} de surplus
+                  </span>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
+
+      {/* Patients du bâtiment avec bouton transfert */}
+      {b._patients?.length > 0 && (
+        <div>
+          <div style={{ fontSize: 10, color: "#5aa05a", fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>
+            <i className="ti ti-users" /> Patients ({b._patients.length})
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, maxHeight: 120, overflowY: "auto" }}>
+            {b._patients.slice(0, 8).map(p => (
+              <div key={p.id} style={{
+                display: "flex", alignItems: "center", gap: 4,
+                padding: "2px 6px",
+                fontSize: 10.5, color: "#bfe6e6",
+              }}>
+                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {p.nom} {p.prenom}{p.chambre ? ` · Ch.${p.chambre}` : ""}
+                </span>
+                <button onClick={() => onTransferOpen?.(p)}
+                  title="Transférer ce patient"
+                  style={{
+                    background: "rgba(124,200,200,.2)", color: "#7CC8C8",
+                    border: "1px solid rgba(124,200,200,.3)", borderRadius: 4,
+                    cursor: "pointer", padding: "0 4px", fontSize: 10,
+                    fontFamily: "inherit", flexShrink: 0,
+                  }}>
+                  <i className="ti ti-arrows-right-left" />
+                </button>
+              </div>
+            ))}
+            {b._patients.length > 8 && (
+              <div style={{ fontSize: 9.5, color: "#9bb5b5", textAlign: "center" }}>
+                +{b._patients.length - 8} autres
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Dépôts */}
       {b._depots.length > 0 && (
@@ -371,6 +536,151 @@ function BatimentColumn({ b }) {
           50%      { box-shadow: 0 0 0 4px rgba(227, 93, 91, 0); }
         }
       `}</style>
+    </div>
+  );
+}
+
+// 0.65.9 : Modal de transfert patient
+function TransferPatientModal({ patient, batiments, supabase, structureId, onClose, onSaved }) {
+  const [targetBatId, setTargetBatId] = useState(patient.batiment_id || "");
+  const [targetSvcId, setTargetSvcId] = useState(patient.service_id || "");
+  const [targetChambreId, setTargetChambreId] = useState(patient.chambre_id || "");
+  const [services, setServices] = useState([]);
+  const [chambres, setChambres] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
+
+  // Charger services quand bâtiment change
+  useEffect(() => {
+    if (!targetBatId) { setServices([]); return; }
+    (async () => {
+      const { data } = await supabase.from("services").select("id, nom, etage").eq("batiment_id", targetBatId).order("nom");
+      setServices(data || []);
+    })();
+  }, [targetBatId]);
+
+  // Charger chambres quand service change
+  useEffect(() => {
+    if (!targetSvcId) { setChambres([]); return; }
+    (async () => {
+      const { data } = await supabase.from("chambres").select("id, libelle, numero").eq("service_id", targetSvcId).order("numero");
+      setChambres(data || []);
+    })();
+  }, [targetSvcId]);
+
+  async function save() {
+    setSaving(true);
+    setErr(null);
+    try {
+      const payload = {
+        batiment_id: targetBatId || null,
+        service_id: targetSvcId || null,
+        chambre_id: targetChambreId || null,
+      };
+      const { error } = await supabase.from("patients").update(payload).eq("id", patient.id);
+      if (error) throw error;
+      onSaved?.();
+    } catch (e) {
+      setErr(e.message || "Erreur de transfert");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 999999,
+        background: "rgba(20,33,49,.8)",
+        backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      }}>
+      <div style={{
+        background: "#fff", color: "#142131",
+        borderRadius: 16,
+        maxWidth: 480, width: "100%",
+        boxShadow: "0 30px 80px rgba(0,0,0,.5)",
+        fontFamily: "Quicksand, sans-serif",
+        overflow: "hidden",
+      }}>
+        <div style={{
+          padding: "14px 18px",
+          background: "linear-gradient(135deg, #7CC8C8, #5db5b5)",
+          color: "#fff",
+          display: "flex", alignItems: "center", gap: 10,
+        }}>
+          <i className="ti ti-arrows-right-left" style={{ fontSize: 22 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 800 }}>Transférer le patient</div>
+            <div style={{ fontSize: 12, opacity: 0.9, marginTop: 2 }}>{patient.nom} {patient.prenom}</div>
+          </div>
+          <button onClick={onClose}
+            style={{ background: "rgba(255,255,255,.2)", color: "#fff", border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", fontFamily: "inherit", fontSize: 16 }}>
+            <i className="ti ti-x" />
+          </button>
+        </div>
+
+        <div style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 11, color: "#185FA5", fontWeight: 700, textTransform: "uppercase", marginBottom: 4, display: "block" }}>
+              <i className="ti ti-building" /> Bâtiment de destination
+            </label>
+            <select value={targetBatId} onChange={(e) => { setTargetBatId(e.target.value); setTargetSvcId(""); setTargetChambreId(""); }}
+              style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #e3e9ee", borderRadius: 10, fontSize: 13, fontFamily: "inherit" }}>
+              <option value="">— Aucun (HAD/domicile) —</option>
+              {batiments.map(b => (
+                <option key={b.id} value={b.id}>{b.nom} {b.etablissements?.nom ? `(${b.etablissements.nom})` : ""}</option>
+              ))}
+            </select>
+          </div>
+
+          {targetBatId && services.length > 0 && (
+            <div>
+              <label style={{ fontSize: 11, color: "#7a6fb0", fontWeight: 700, textTransform: "uppercase", marginBottom: 4, display: "block" }}>
+                <i className="ti ti-stethoscope" /> Service
+              </label>
+              <select value={targetSvcId} onChange={(e) => { setTargetSvcId(e.target.value); setTargetChambreId(""); }}
+                style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #e3e9ee", borderRadius: 10, fontSize: 13, fontFamily: "inherit" }}>
+                <option value="">— Pas de service spécifique —</option>
+                {services.map(s => (
+                  <option key={s.id} value={s.id}>{s.nom}{s.etage !== null ? ` · Étage ${s.etage}` : ""}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {targetSvcId && chambres.length > 0 && (
+            <div>
+              <label style={{ fontSize: 11, color: "#5a8f8f", fontWeight: 700, textTransform: "uppercase", marginBottom: 4, display: "block" }}>
+                <i className="ti ti-bed" /> Chambre
+              </label>
+              <select value={targetChambreId} onChange={(e) => setTargetChambreId(e.target.value)}
+                style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #e3e9ee", borderRadius: 10, fontSize: 13, fontFamily: "inherit" }}>
+                <option value="">— Aucune chambre spécifique —</option>
+                {chambres.map(c => (
+                  <option key={c.id} value={c.id}>{c.libelle || `Ch. ${c.numero}`}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {err && (
+            <div style={{ background: "rgba(227,93,91,.1)", color: "#e35d5b", padding: "8px 12px", borderRadius: 8, fontSize: 12, border: "1px solid rgba(227,93,91,.3)" }}>
+              {err}
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: "12px 18px", borderTop: "1px solid #e3e9ee", display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <button onClick={onClose} disabled={saving}
+            style={{ padding: "8px 14px", background: "#fafbfc", color: "#5a6878", border: "1.5px solid #e3e9ee", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700 }}>
+            Annuler
+          </button>
+          <button onClick={save} disabled={saving}
+            style={{ padding: "8px 18px", background: "linear-gradient(135deg, #185FA5, #7CC8C8)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: "inherit", fontSize: 13, fontWeight: 700, opacity: saving ? 0.6 : 1 }}>
+            <i className="ti ti-check" /> {saving ? "Transfert…" : "Transférer"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

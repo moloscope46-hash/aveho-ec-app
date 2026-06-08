@@ -1,5 +1,4 @@
 "use client";
-// Page Panier — Panier courant et validation de commande
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
@@ -7,11 +6,7 @@ import { useAuth } from "../../lib/useAuth";
 import { fmtEur } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
-import { PageHead, Panel, StateMsg, IconButton } from "../ui";
-// 0.58.49 : migration UI premium
-import { EmptyState } from "../components/ui-premium";
-import { safeInsert } from "../../lib/safeWrite";
-import EquipeSelector from "../components/EquipeSelector";  // 0.58.66
+import { PageHead, Panel, StateMsg } from "../ui";
 
 export default function Panier() {
   const supabase = createClient();
@@ -21,8 +16,6 @@ export default function Panier() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
-  // 0.58.66 : équipe optionnelle pour la commande
-  const [equipeId, setEquipeId] = useState(null);
 
   async function valider() {
     setErr(""); setMsg("");
@@ -32,24 +25,14 @@ export default function Panier() {
     try {
       const numero = "CMD-" + Math.floor(1000 + Math.random() * 9000);
       const magasin_id = cart.items[0].magasin_id;
-      const userId = auth.user?.id;
-      // Alpha 0.28.0 : UUID client pour permettre l'offline + récupérer l'id même en queue
-      const newCmdId = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : null;
-      const cmdPayload = {
-        ...(newCmdId ? { id: newCmdId } : {}),
-        structure_id: auth.structureId, etablissement_id: auth.etabId, magasin_id, numero,
-        statut: "En cours", total: cart.total, created_by: auth.user.id,
-        // 0.58.66 : équipe responsable
-        equipe_id: equipeId || null,
-      };
-      const { data: cmd, error: e1, queued } = await safeInsert(supabase, "commandes", cmdPayload, { userId, returning: true });
+      const { data: cmd, error: e1 } = await supabase.from("commandes")
+        .insert({ structure_id: auth.structureId, etablissement_id: auth.etabId, magasin_id, numero, statut: "En cours", total: cart.total, created_by: auth.user.id })
+        .select().single();
       if (e1) throw e1;
-      const cmdId = queued ? newCmdId : (cmd?.id || newCmdId);
       const lignes = cart.items.map((i) => ({
-        ...(typeof crypto !== "undefined" && crypto.randomUUID ? { id: crypto.randomUUID() } : {}),
-        commande_id: cmdId, promotion_id: i.id, libelle: i.titre, prix_unitaire: i.prix, quantite: i.qte,
+        commande_id: cmd.id, promotion_id: i.id, libelle: i.titre, prix_unitaire: i.prix, quantite: i.qte,
       }));
-      const { error: e2 } = await safeInsert(supabase, "commande_lignes", lignes, { userId });
+      const { error: e2 } = await supabase.from("commande_lignes").insert(lignes);
       if (e2) throw e2;
       cart.clear();
       setMsg(`Commande ${numero} envoyée à votre magasin.`);
@@ -72,13 +55,7 @@ export default function Panier() {
           {err && <div className="err">{err}</div>}
           {msg && <div className="ok">{msg}</div>}
           {cart.items.length === 0 ? (
-            <EmptyState
-              icon="ti-shopping-cart-off"
-              title="Votre panier est vide"
-              description="Découvrez les promotions et ajoutez des articles à votre panier."
-              actionLabel="Voir les promotions"
-              onAction={() => router.push("/promotions")}
-            />
+            <StateMsg>Votre panier est vide. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={() => router.push("/promotions")}>Voir les promotions</a></StateMsg>
           ) : (
             <>
               <table>
@@ -90,20 +67,11 @@ export default function Panier() {
                       <td>{i.prix} €{i.unite}</td>
                       <td><input className="qte" type="number" min="1" value={i.qte} onChange={(e) => cart.setQte(i.id, parseInt(e.target.value || "1"))} /></td>
                       <td style={{ textAlign: "right", fontWeight: 600 }}>{fmtEur(i.prix * i.qte)}</td>
-                      <td style={{ textAlign: "right" }}><IconButton icon="ti-trash" color="#C9867F" ariaLabel={`Retirer ${i.libelle || "article"} du panier`} onClick={() => cart.remove(i.id)} /></td>
+                      <td style={{ textAlign: "right" }}><i className="ti ti-trash" style={{ color: "#C9867F", cursor: "pointer" }} onClick={() => cart.remove(i.id)} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {/* 0.58.66 : équipe optionnelle pour la commande */}
-              <div style={{ marginTop: 16, padding: "10px 14px", background: "linear-gradient(135deg, rgba(124,200,200,.08), #fff)", border: "1px solid rgba(124,200,200,.25)", borderRadius: 10 }}>
-                <EquipeSelector
-                  value={equipeId}
-                  onChange={(eqId) => setEquipeId(eqId)}
-                  structureId={auth.structureId}
-                  label="Équipe responsable (optionnel)"
-                />
-              </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
                 <span style={{ fontSize: 18, fontWeight: 700 }}>Total : {fmtEur(cart.total)}</span>
                 <button className="btn-primary" style={{ width: "auto", padding: "0 28px" }} onClick={valider} disabled={busy}>

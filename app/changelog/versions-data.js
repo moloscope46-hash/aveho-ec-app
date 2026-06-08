@@ -240,6 +240,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.9",
+    "kind": "feat",
+    "titre": "🏥 Architecture TV : Bouton + Patient rapide + Transfert patient + Lits de surplus par étage + SQL démo fixé",
+    "chantiers": [
+      { "code": "AI", "txt": "➕ **Bouton + Patient rapide sur chaque bâtiment (page TV Architecture)** : ajout d''un bouton vert ti-user-plus dans le header de chaque colonne bâtiment. Click → redirige vers /patients?new=1&etab=<id>&bat=<id> avec préremplissage du bâtiment de destination. Permet d''ajouter rapidement un nouveau patient depuis l''écran TV sans naviguer manuellement. **Bouton vert** avec gradient + boxShadow pour le rendre visible et premium" },
+      { "code": "AI", "txt": "🔄 **Transfert patient via modal dédié** : sur chaque patient affiché dans la colonne d''un bâtiment, ajout d''un bouton ti-arrows-right-left teal. Click → ouvre une **modal TransferPatientModal** centrée avec cascade Bâtiment → Service → Chambre. Sélectionner la nouvelle affectation, click Transférer → UPDATE patients (batiment_id, service_id, chambre_id). Reload auto de la vue après. Permet de déplacer un patient d''un point à un autre sans quitter le mode TV" },
+      { "code": "AI", "txt": "🛏 **Lits de surplus rattachés à un étage** : nouvelle notion ! Concept = un lit/matériel \"en réserve\" sur un étage, pas affecté à une chambre précise. **Modèle DB** : nouvelle colonne `materiels.etage_surplus INT` (NULL ou numéro étage). Si etage_surplus est défini et chambre_id/service_id sont NULL → c''est un lit de réserve. **Affichage TV Architecture** : sur chaque étage, bloc rose terracotta avec dashed border montrant \"N lits de surplus\" + leurs num_parc. Étages SANS service mais AVEC lits de surplus apparaissent aussi en tant qu''étages \"réserve\". KPI Lits surplus dans les mini-stats du bâtiment (visible si > 0)" },
+      { "code": "AI", "txt": "📊 **Patients affichés par bâtiment + compteur Patients par service** : nouvelle requête `patients.batiment_id = b.id` dans le load. **Compteur par service** : nombre de patients affectés à ce service avec badge vert. **Liste verticale en bas de chaque colonne** : 8 premiers patients avec nom/prénom/chambre + bouton transfert à droite. Si > 8 patients → \"+N autres\". Maximise l''info visible en mode TV" },
+      { "code": "AI", "txt": "🐛 **Fix SQL démo : colonnes corrigées** : suite à l''erreur `column \"code\" does not exist`, mise à jour des INSERTs. (1) **materiels** : code → num_parc, numero_serie → num_serie, statut → etat, retrait de date_mise_service (n''existe pas). (2) **signalements** : sujet → titre, priorite → categorie, ajout du type=Autre. (3) **prescripteurs** → **partenaires_rpps** (la vraie table) + ajout du type=prescripteur. (4) **Nouvelle section ALTER TABLE materiels ADD COLUMN etage_surplus INT IF NOT EXISTS** à la fin du SQL pour créer la colonne avant les lits de surplus. (5) **+8 lits de surplus** insérés dans la démo, répartis sur les étages des EHPAD et cliniques" },
+      { "code": "INFO", "txt": "🚀 **Procédure 0.65.9** : (1) Re-jouer le SQL `aveho-DEMO-data-import.sql` (qui contient maintenant la création de etage_surplus et 8 lits de surplus). (2) Extraire zip code, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (a) /presentation/architecture → click bouton + vert d''un bâtiment → arrive sur /patients en mode création avec bât pré-rempli. (b) Hover sur un patient dans la liste → click flèches teal → modal de transfert → choisir nouveau bât/svc/chambre → Transférer → reload. (c) Voir les blocs roses \"N lits de surplus\" sous les étages"
+      }
+    ],
+    "themes": ["feature", "tv", "architecture", "fix-sql"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.9.html"
+  },
+  {
     "v": "0.65.8",
     "kind": "fix",
     "titre": "🎯 BUG TROUVÉ — UserMenu flipUp en mobile (sortait par le haut) + Couronne et Sandbox masqués mobile",

@@ -1,14 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
-import { useEditLock } from "../lib/useEditLock";  /* 0.62.125 */
-import LockBanner from "./components/LockBanner";  /* 0.62.125 */
-import { useAuth } from "../lib/useAuth";
-import { safeInsert, safeUpdate, safeDelete } from "../lib/safeWrite";
 import { Panel, StateMsg } from "./ui";
-import AdvFilters from "./AdvFilters";
 
-import { dialogs } from "./dialogs";
 /**
  * Bloc CRUD générique réutilisable (anti-doublon).
  * props:
@@ -20,165 +14,14 @@ import { dialogs } from "./dialogs";
  *  - select : colonnes à charger (avec jointures éventuelles)
  *  - relations : { key: [{value,label}] } pour les selects (ex. articles, patients)
  */
-export default function Crud({ structureId, etabId, table, columns, fields, title, select = "*", relations = {}, onData, canWrite = true, canDelete = true, filterFields = null, extraFilter = null, lockResource = null }) {
+export default function Crud({ structureId, etabId, table, columns, fields, title, select = "*", relations = {}, onData }) {
   const supabase = createClient();
-  const auth = useAuth();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null); // null | {} (new) | row (edit)
-  // 0.62.125 : Lock anti-collision sur édition (si lockResource fourni)
-  const editLock = useEditLock(lockResource, modal?.id, !!lockResource && !!modal?.id);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  // Alpha 0.7 : import CSV
-  const [importPreview, setImportPreview] = useState(null);   // {rows, mapping, fileName}
-  const [importBusy, setImportBusy] = useState(false);
-  const [importMsg, setImportMsg] = useState("");
-  // Alpha 0.8 : tri et pagination
-  const [sortBy, setSortBy] = useState(null);      // clé de colonne
-  const [sortDir, setSortDir] = useState("asc");   // "asc" ou "desc"
-  const [page, setPage] = useState(0);
-  // Alpha 0.19.0 : pageSize configurable par l'utilisateur (était fixé à 50)
-  const [pageSize, setPageSize] = useState(50);
-  // Alpha 0.8 : filtres avancés
-  const [filters, setFilters] = useState(filterFields ? Object.fromEntries(filterFields.map((f) => [f.key, ""])) : {});
-  // Alpha 0.9 : sélection multiple pour bulk actions
-  const [selected, setSelected] = useState(new Set());
-  const [bulkBusy, setBulkBusy] = useState(false);
-
-  // 0.58.46 : ordre des colonnes (drag&drop), persisté par table en localStorage
-  const colsStorageKey = `av-crud-cols-${table}`;
-  const [colOrder, setColOrder] = useState(null);  // null = pas chargé encore, [] = chargé
-  const [draggedColKey, setDraggedColKey] = useState(null);
-  const [dragOverColKey, setDragOverColKey] = useState(null);
-  useEffect(() => {
-    // Charge l'ordre stocké au mount + sync avec les colonnes courantes
-    try {
-      const raw = localStorage.getItem(colsStorageKey);
-      const stored = raw ? JSON.parse(raw) : [];
-      // Réconcilie : garde l'ordre stocké, ajoute les nouvelles colonnes à la fin, retire les disparues
-      const currentKeys = columns.map(c => c.key);
-      const validStored = stored.filter(k => currentKeys.includes(k));
-      const missing = currentKeys.filter(k => !validStored.includes(k));
-      setColOrder([...validStored, ...missing]);
-    } catch {
-      setColOrder(columns.map(c => c.key));
-    }
-  }, [colsStorageKey, columns.length]);  // re-sync si on ajoute/retire des colonnes
-  // Persiste à chaque changement
-  useEffect(() => {
-    if (!colOrder || colOrder.length === 0) return;
-    try { localStorage.setItem(colsStorageKey, JSON.stringify(colOrder)); } catch {}
-  }, [colOrder, colsStorageKey]);
-  // Colonnes effectivement affichées dans l'ordre courant
-  const orderedColumns = colOrder
-    ? colOrder.map(k => columns.find(c => c.key === k)).filter(Boolean)
-    : columns;
-  // Reset = remettre l'ordre par défaut (celui de columns prop)
-  function resetColOrder() {
-    setColOrder(columns.map(c => c.key));
-    try { localStorage.removeItem(colsStorageKey); } catch {}
-  }
-  const isColOrderModified = colOrder && colOrder.join(",") !== columns.map(c => c.key).join(",");
-  // Handlers drag&drop
-  function handleColDragStart(e, key) {
-    setDraggedColKey(key);
-    try { e.dataTransfer.effectAllowed = "move"; } catch {}
-  }
-  function handleColDragOver(e, key) {
-    e.preventDefault();
-    if (key !== draggedColKey) setDragOverColKey(key);
-  }
-  function handleColDragLeave() {
-    setDragOverColKey(null);
-  }
-  function handleColDrop(e, targetKey) {
-    e.preventDefault();
-    if (!draggedColKey || draggedColKey === targetKey) {
-      setDraggedColKey(null); setDragOverColKey(null);
-      return;
-    }
-    setColOrder(prev => {
-      const arr = [...prev];
-      const fromIdx = arr.indexOf(draggedColKey);
-      const toIdx = arr.indexOf(targetKey);
-      if (fromIdx === -1 || toIdx === -1) return prev;
-      arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, draggedColKey);
-      return arr;
-    });
-    setDraggedColKey(null); setDragOverColKey(null);
-  }
-  function handleColDragEnd() {
-    setDraggedColKey(null); setDragOverColKey(null);
-  }
-
-  // 0.58.58 : ordre des CHAMPS du formulaire modal (drag&drop), persisté par table en localStorage
-  const fieldsStorageKey = `av-crud-fields-${table}`;
-  const [fieldOrder, setFieldOrder] = useState(null);
-  const [draggedFieldKey, setDraggedFieldKey] = useState(null);
-  const [dragOverFieldKey, setDragOverFieldKey] = useState(null);
-  const [fieldsEditMode, setFieldsEditMode] = useState(false);  // toggle pour activer le drag dans le modal
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(fieldsStorageKey);
-      const stored = raw ? JSON.parse(raw) : [];
-      const currentKeys = (fields || []).map(f => f.key);
-      const validStored = stored.filter(k => currentKeys.includes(k));
-      const missing = currentKeys.filter(k => !validStored.includes(k));
-      setFieldOrder([...validStored, ...missing]);
-    } catch {
-      setFieldOrder((fields || []).map(f => f.key));
-    }
-  }, [fieldsStorageKey, fields?.length]);
-  useEffect(() => {
-    if (!fieldOrder || fieldOrder.length === 0) return;
-    try { localStorage.setItem(fieldsStorageKey, JSON.stringify(fieldOrder)); } catch {}
-  }, [fieldOrder, fieldsStorageKey]);
-
-  // Fields effectivement rendus dans l'ordre courant
-  const orderedFields = fieldOrder
-    ? fieldOrder.map(k => (fields || []).find(f => f.key === k)).filter(Boolean)
-    : (fields || []);
-
-  function resetFieldOrder() {
-    setFieldOrder((fields || []).map(f => f.key));
-    try { localStorage.removeItem(fieldsStorageKey); } catch {}
-  }
-  const isFieldOrderModified = fieldOrder && fields && fieldOrder.join(",") !== fields.map(f => f.key).join(",");
-
-  function handleFieldDragStart(e, key) {
-    setDraggedFieldKey(key);
-    try { e.dataTransfer.effectAllowed = "move"; } catch {}
-  }
-  function handleFieldDragOver(e, key) {
-    e.preventDefault();
-    if (key !== draggedFieldKey) setDragOverFieldKey(key);
-  }
-  function handleFieldDragLeave() {
-    setDragOverFieldKey(null);
-  }
-  function handleFieldDrop(e, targetKey) {
-    e.preventDefault();
-    if (!draggedFieldKey || draggedFieldKey === targetKey) {
-      setDraggedFieldKey(null); setDragOverFieldKey(null);
-      return;
-    }
-    setFieldOrder(prev => {
-      const arr = [...prev];
-      const fromIdx = arr.indexOf(draggedFieldKey);
-      const toIdx = arr.indexOf(targetKey);
-      if (fromIdx === -1 || toIdx === -1) return prev;
-      arr.splice(fromIdx, 1);
-      arr.splice(toIdx, 0, draggedFieldKey);
-      return arr;
-    });
-    setDraggedFieldKey(null); setDragOverFieldKey(null);
-  }
-  function handleFieldDragEnd() {
-    setDraggedFieldKey(null); setDragOverFieldKey(null);
-  }
 
   async function load() {
     let q = supabase.from(table).select(select).order("created_at", { ascending: false });
@@ -200,504 +43,75 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
     try {
       const payload = {};
       fields.forEach((f) => { payload[f.key] = form[f.key] ?? null; });
-      const userId = auth.user?.id;
       if (modal.id) {
-        // Alpha 0.26.0 : safeUpdate pour support offline
-        const { error } = await safeUpdate(supabase, table, payload, { id: modal.id }, { userId });
+        const { error } = await supabase.from(table).update(payload).eq("id", modal.id);
         if (error) throw error;
       } else {
         const insertPayload = { ...payload, structure_id: structureId };
         if (etabId) insertPayload.etablissement_id = etabId;
-        // UUID client pour pouvoir continuer le flow en offline
-        if (typeof crypto !== "undefined" && crypto.randomUUID && !insertPayload.id) {
-          insertPayload.id = crypto.randomUUID();
-        }
-        const { error } = await safeInsert(supabase, table, insertPayload, { userId });
+        const { error } = await supabase.from(table).insert(insertPayload);
         if (error) throw error;
       }
-      setModal(null); setFieldsEditMode(false); await load();
+      setModal(null); await load();
     } catch (e) { setErr(e.message); } finally { setBusy(false); }
   }
 
   async function del(r) {
-    if (!await dialogs.confirm({ title: "Supprimer cet élément ?", variant: "danger" })) return;
-    // Alpha 0.26.0 : safeDelete pour support offline
-    await safeDelete(supabase, table, { id: r.id }, { userId: auth.user?.id });
+    if (!confirm("Supprimer cet élément ?")) return;
+    await supabase.from(table).delete().eq("id", r.id);
     await load();
   }
-
-  // Alpha 0.9 : helpers sélection multiple
-  function toggleRow(id) {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelected(next);
-  }
-  function toggleAllVisible(visibleRows) {
-    const visibleIds = visibleRows.map((r) => r.id);
-    const allSelected = visibleIds.every((id) => selected.has(id));
-    const next = new Set(selected);
-    if (allSelected) visibleIds.forEach((id) => next.delete(id));
-    else visibleIds.forEach((id) => next.add(id));
-    setSelected(next);
-  }
-  async function bulkDelete() {
-    const ids = Array.from(selected);
-    if (!ids.length) return;
-    if (!await dialogs.confirm({ title: `Supprimer définitivement ${ids.length} élément(s) ? Cette action est irréversible.`, variant: "danger" })) return;
-    setBulkBusy(true);
-    try {
-      // Supabase ne supporte pas IN large -> on split en batches de 100
-      for (let i = 0; i < ids.length; i += 100) {
-        await supabase.from(table).delete().in("id", ids.slice(i, i + 100));
-      }
-      setSelected(new Set());
-      await load();
-    } finally { setBulkBusy(false); }
-  }
-  function bulkExportCSV() {
-    const rowsToExport = rows.filter((r) => selected.has(r.id));
-    if (!rowsToExport.length) return;
-    // 0.57.5 : catch pour gérer un échec de chunk load (réseau coupé, etc.)
-    import("../lib/export")
-      .then((m) => m.exportCSV(`${table}-selection.csv`, rowsToExport, columns.filter((c) => !c.skipExport)))
-      .catch((e) => alert("Export CSV impossible : " + (e?.message || "erreur de chargement")));
-  }
-  function clearSelection() { setSelected(new Set()); }
 
   return (
     <Panel>
       <div className="di-toolbar">
-        {canWrite && <button className="btn-new" onClick={openNew} disabled={!structureId}><i className="ti ti-plus" /> {title}</button>}
-        {canWrite && (
-          <label className="btn-ghost" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }} title="Importer un fichier CSV pour ajout en masse">
-            <i className="ti ti-file-import" /> Import CSV
-            <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={async (e) => {
-              const file = e.target.files?.[0]; if (!file) return;
-              try {
-                const m = await import("../lib/importCsv");
-                const parsed = await m.parseCSV(file);
-                // Construire un mapping initial (en-têtes CSV -> champs du formulaire)
-                const csvHeaders = parsed.length ? Object.keys(parsed[0]) : [];
-                const mapping = {};
-                fields.forEach((f) => {
-                  // auto-match si l'en-tête CSV ressemble au label ou à la clé
-                  const hit = csvHeaders.find((h) =>
-                    h.toLowerCase().trim() === f.label.toLowerCase().trim() ||
-                    h.toLowerCase().trim() === f.key.toLowerCase());
-                  if (hit) mapping[f.key] = hit;
-                });
-                setImportPreview({ rows: parsed, mapping, fileName: file.name, csvHeaders });
-                setImportMsg("");
-              } catch (err) {
-                alert("Lecture du CSV impossible : " + err.message);
-              }
-              e.target.value = ""; // permet de re-choisir le même fichier
-            }} />
-          </label>
-        )}
-        {rows.length > 0 && (
-          <button className="btn-ghost" onClick={() => {
-            // Import dynamique pour ne pas charger la lib si pas utilisée
-            // 0.57.5 : .catch en cas d'échec de chunk load
-            import("../lib/export")
-              .then((m) => m.exportCSV(`${table}.csv`, rows, columns.filter((c) => !c.skipExport)))
-              .catch((e) => alert("Export CSV impossible : " + (e?.message || "erreur de chargement")));
-          }} title="Exporter en CSV (Excel)">
-            <i className="ti ti-file-export" /> Export CSV
-          </button>
-        )}
-        {rows.length > 0 && (
-          <button className="btn-ghost" onClick={() => {
-            // 0.57.5 : .catch idem
-            import("../lib/exportPdf")
-              .then((m) => m.exportPDF({
-                titre: title,
-                sousTitre: `Liste exportée le ${new Date().toLocaleString("fr-FR")}`,
-                rows, columns: columns.filter((c) => !c.skipExport && !c.skipPdf),
-              }))
-              .catch((e) => alert("Export PDF impossible : " + (e?.message || "erreur de chargement")));
-          }} title="Exporter en PDF (impression)">
-            <i className="ti ti-file-type-pdf" /> Export PDF
-          </button>
-        )}
-        {filterFields && <AdvFilters fields={filterFields} values={filters} onChange={(v) => { setFilters(v); setPage(0); }} />}
-        {/* 0.58.46 : bouton Réinitialiser l'ordre des colonnes (visible seulement si l'ordre a été modifié) */}
-        {isColOrderModified && (
-          <button
-            className="btn-ghost"
-            onClick={resetColOrder}
-            title="Remettre les colonnes dans leur ordre par défaut"
-            style={{ color: "#7CC8C8", borderColor: "rgba(124,200,200,.4)" }}
-          >
-            <i className="ti ti-arrows-shuffle" /> Réinitialiser colonnes
-          </button>
-        )}
+        <button className="btn-new" onClick={openNew} disabled={!structureId}><i className="ti ti-plus" /> {title}</button>
       </div>
 
       {loading ? <StateMsg>Chargement…</StateMsg>
         : rows.length === 0 ? <StateMsg>Aucun élément. <a style={{ color: "#2a5a5a", fontWeight: 600 }} onClick={openNew}>Créer le premier</a></StateMsg>
-        : (() => {
-            // 0.58.40 : extraFilter externe (ex : filtre par contexte bât/svc) appliqué EN PREMIER
-            const baseRows = extraFilter ? rows.filter(extraFilter) : rows;
-            // Alpha 0.8 : filtres avancés (appliqués AVANT tri)
-            const filtered = filterFields ? baseRows.filter((r) => {
-              for (const f of filterFields) {
-                const v = filters[f.key];
-                if (!v) continue;
-                if (f.type === "select") {
-                  // récupération éventuelle via accessor si fourni
-                  const rv = f.accessor ? f.accessor(r) : r[f.key];
-                  if (rv !== v) return false;
-                } else {
-                  // recherche texte sur les champs configurés (searchKeys) ou la clé directe
-                  const keys = f.searchKeys || [f.key];
-                  const needle = v.toLowerCase();
-                  const found = keys.some((k) => String(r[k] || "").toLowerCase().includes(needle));
-                  if (!found) return false;
-                }
-              }
-              return true;
-            }) : baseRows;
-            // Alpha 0.8 : tri client-side
-            const sorted = sortBy ? [...filtered].sort((a, b) => {
-              const va = a[sortBy]; const vb = b[sortBy];
-              // null/undefined toujours en fin
-              if (va == null && vb == null) return 0;
-              if (va == null) return 1;
-              if (vb == null) return -1;
-              // Comparaison numérique si les deux sont des nombres
-              if (typeof va === "number" && typeof vb === "number") return sortDir === "asc" ? va - vb : vb - va;
-              // Sinon comparaison string sans casse
-              const sa = String(va).toLowerCase(); const sb = String(vb).toLowerCase();
-              return sortDir === "asc" ? sa.localeCompare(sb) : sb.localeCompare(sa);
-            }) : filtered;
-            // Pagination
-            const totalPages = Math.ceil(sorted.length / pageSize);
-            const pageRows = sorted.slice(page * pageSize, (page + 1) * pageSize);
-            function clickHeader(c) {
-              if (c.skipSort) return;
-              if (sortBy === c.key) {
-                setSortDir(sortDir === "asc" ? "desc" : "asc");
-              } else {
-                setSortBy(c.key); setSortDir("asc");
-              }
-              setPage(0);
-            }
-            return (
-              <>
-                {filtered.length !== rows.length && (
-                  <p style={{ fontSize: 12, color: "#6c7a89", margin: "0 0 10px" }}>
-                    <i className="ti ti-info-circle" /> {filtered.length} sur {rows.length} ligne(s) affichée(s) — filtres actifs.
-                  </p>
-                )}
-                {/* Alpha 0.9 : barre de bulk actions */}
-                {selected.size > 0 && (
-                  <div className="bulk-bar">
-                    <span><b>{selected.size}</b> élément(s) sélectionné(s)</span>
-                    <div className="bulk-actions">
-                      <button onClick={bulkExportCSV}><i className="ti ti-file-export" /> Exporter CSV</button>
-                      {canDelete && <button className="danger" onClick={bulkDelete} disabled={bulkBusy}><i className="ti ti-trash" /> {bulkBusy ? "Suppression…" : "Supprimer"}</button>}
-                      <button onClick={clearSelection}><i className="ti ti-x" /> Désélectionner</button>
-                    </div>
-                  </div>
-                )}
-                {filtered.length === 0 ? (
-                  <StateMsg>Aucun résultat pour ces filtres.</StateMsg>
-                ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ width: 36 }}>
-                        <input type="checkbox"
-                          checked={pageRows.length > 0 && pageRows.every((r) => selected.has(r.id))}
-                          onChange={() => toggleAllVisible(pageRows)}
-                          title="Tout sélectionner (page courante)" />
-                      </th>
-                      {orderedColumns.map((c) => (
-                        <th key={c.key}
-                          draggable
-                          onDragStart={(e) => handleColDragStart(e, c.key)}
-                          onDragOver={(e) => handleColDragOver(e, c.key)}
-                          onDragLeave={handleColDragLeave}
-                          onDrop={(e) => handleColDrop(e, c.key)}
-                          onDragEnd={handleColDragEnd}
-                          onClick={() => clickHeader(c)}
-                          style={{
-                            cursor: c.skipSort ? "move" : "pointer",
-                            userSelect: "none",
-                            // 0.58.46 : indicateurs visuels drag
-                            opacity: draggedColKey === c.key ? 0.3 : 1,
-                            background: dragOverColKey === c.key ? "linear-gradient(135deg, rgba(124,200,200,.25), rgba(24,95,165,.15))" : undefined,
-                            borderLeft: dragOverColKey === c.key ? "2px solid #7CC8C8" : undefined,
-                            transition: "opacity 120ms, background 120ms",
-                          }}
-                          title={c.skipSort ? "Glisser pour réordonner" : "Cliquer pour trier · Glisser pour réordonner"}
-                        >
-                          {/* 0.58.46 : poignée de drag visible au hover (ne déclenche rien, juste indicateur) */}
-                          <span style={{
-                            display: "inline-block",
-                            marginRight: 4,
-                            color: "#cfd5db",
-                            fontSize: 13,
-                            verticalAlign: "middle",
-                            cursor: "grab",
-                          }} aria-hidden="true">⋮⋮</span>
-                          {c.label}
-                          {sortBy === c.key && <i className={`ti ${sortDir === "asc" ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ marginLeft: 4, fontSize: 14, color: "#2a5a5a" }} />}
-                          {sortBy !== c.key && !c.skipSort && <i className="ti ti-arrows-sort" style={{ marginLeft: 4, fontSize: 12, color: "#cfd5db" }} />}
-                        </th>
-                      ))}
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageRows.map((r) => (
-                      <tr key={r.id} className={selected.has(r.id) ? "tr-selected" : ""}>
-                        <td><input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleRow(r.id)} /></td>
-                        {orderedColumns.map((c) => <td key={c.key}>{c.render ? c.render(r) : (r[c.key] ?? "—")}</td>)}
-                        <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                          {canWrite && <i className="ti ti-edit" style={{ color: "#2a5a5a", cursor: "pointer", marginRight: 12 }} onClick={() => openEdit(r)} />}
-                          {canDelete && <i className="ti ti-trash" style={{ color: "#C9867F", cursor: "pointer" }} onClick={() => del(r)} />}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                )}
-                {/* Pagination — affichée si plus d'une page OU si on a > 25 lignes (pour choisir la taille) */}
-                {(totalPages > 1 || sorted.length > 25) && (
-                  <div className="pagination">
-                    {totalPages > 1 && (
-                      <button className="btn-ghost" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} aria-label="Page précédente">
-                        <i className="ti ti-chevron-left" /> Précédent
-                      </button>
-                    )}
-                    <span className="pagination-info">
-                      {totalPages > 1 ? <>Page <b>{page + 1}</b> sur <b>{totalPages}</b> — </> : null}
-                      <b>{sorted.length}</b> ligne(s)
-                    </span>
-                    {/* Alpha 0.19.0 : sélecteur de taille de page (25/50/100/Tout) */}
-                    <span style={{ fontSize: 12, color: "#6c7a89", marginLeft: 8 }}>Afficher :</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(0); }}
-                      style={{ padding: "4px 8px", borderRadius: 6, border: "1px solid #e1e6eb", fontFamily: "inherit", fontSize: 12 }}
-                      aria-label="Nombre d'éléments par page"
-                    >
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                      <option value={sorted.length || 9999}>Tout</option>
-                    </select>
-                    {totalPages > 1 && (
-                      <button className="btn-ghost" onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} aria-label="Page suivante">
-                        Suivant <i className="ti ti-chevron-right" />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
-            );
-          })()}
+        : (
+          <table>
+            <thead><tr>{columns.map((c) => <th key={c.key}>{c.label}</th>)}<th></th></tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id}>
+                  {columns.map((c) => <td key={c.key}>{c.render ? c.render(r) : (r[c.key] ?? "—")}</td>)}
+                  <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <i className="ti ti-edit" style={{ color: "#2a5a5a", cursor: "pointer", marginRight: 12 }} onClick={() => openEdit(r)} />
+                    <i className="ti ti-trash" style={{ color: "#C9867F", cursor: "pointer" }} onClick={() => del(r)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
       {modal && (
         <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setModal(null)}>
           <div className="modal">
-            <div className="modal-head" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span>{modal.id ? "Modifier" : title}</span>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                {/* 0.58.58 : toggle mode édition pour drag&drop des champs */}
-                <button
-                  onClick={() => setFieldsEditMode(!fieldsEditMode)}
-                  title={fieldsEditMode ? "Désactiver le réordonnancement" : "Réorganiser les champs du formulaire (drag&drop)"}
-                  style={{
-                    background: fieldsEditMode ? "linear-gradient(135deg, #7CC8C8, #5da8a8)" : "transparent",
-                    color: fieldsEditMode ? "#fff" : "#5a6878",
-                    border: `1px solid ${fieldsEditMode ? "#7CC8C8" : "#d3d9e0"}`,
-                    padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 600,
-                    cursor: "pointer", fontFamily: "inherit",
-                    display: "inline-flex", alignItems: "center", gap: 4,
-                  }}
-                >
-                  <i className={fieldsEditMode ? "ti ti-check" : "ti ti-arrows-up-down"} />
-                  {fieldsEditMode ? "Terminer" : "Réorganiser"}
-                </button>
-                {isFieldOrderModified && (
-                  <button
-                    onClick={resetFieldOrder}
-                    title="Réinitialiser l'ordre des champs au défaut"
-                    style={{
-                      background: "transparent", color: "#c0392b",
-                      border: "1px solid #fcc",
-                      padding: "4px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 600,
-                      cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >
-                    <i className="ti ti-restore" /> Réinit.
-                  </button>
-                )}
-                <i className="ti ti-x" style={{ cursor: "pointer", marginLeft: 4 }} onClick={() => { setModal(null); setFieldsEditMode(false); }} />
-              </div>
-            </div>
+            <div className="modal-head">{modal.id ? "Modifier" : title} <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setModal(null)} /></div>
             <div className="modal-body">
-              {/* 0.62.125 : LockBanner si édition concurrente */}
-              {editLock?.locked && <LockBanner lockedBy={editLock.lockedBy} onTakeover={editLock.takeover} resourceLabel={`cet enregistrement (${table})`} />}
               {err && <div className="err">{err}</div>}
-              {/* 0.58.58 : bandeau d'instruction en mode édition */}
-              {fieldsEditMode && (
-                <div style={{
-                  padding: "8px 12px",
-                  background: "linear-gradient(135deg, #f0fafa, #e8f5f5)",
-                  border: "1px dashed #7CC8C8",
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  fontSize: 11.5,
-                  color: "#185FA5",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}>
-                  <i className="ti ti-info-circle" />
-                  Glisse les champs avec la poignée <code style={{ background: "#fff", padding: "1px 4px", borderRadius: 3, fontFamily: "monospace" }}>⋮⋮</code> pour les réorganiser. L'ordre est sauvegardé pour la prochaine ouverture.
-                </div>
-              )}
-              {orderedFields.map((f) => (
-                <div
-                  className="fld"
-                  key={f.key}
-                  draggable={fieldsEditMode}
-                  onDragStart={fieldsEditMode ? (e) => handleFieldDragStart(e, f.key) : undefined}
-                  onDragOver={fieldsEditMode ? (e) => handleFieldDragOver(e, f.key) : undefined}
-                  onDragLeave={fieldsEditMode ? handleFieldDragLeave : undefined}
-                  onDrop={fieldsEditMode ? (e) => handleFieldDrop(e, f.key) : undefined}
-                  onDragEnd={fieldsEditMode ? handleFieldDragEnd : undefined}
-                  style={{
-                    position: "relative",
-                    opacity: draggedFieldKey === f.key ? 0.4 : 1,
-                    transition: "opacity 150ms, transform 200ms",
-                    transform: dragOverFieldKey === f.key && draggedFieldKey !== f.key ? "translateY(-2px)" : "none",
-                    borderTop: dragOverFieldKey === f.key && draggedFieldKey !== f.key ? "2px solid #7CC8C8" : "2px solid transparent",
-                    paddingLeft: fieldsEditMode ? 24 : 0,
-                    background: fieldsEditMode ? "linear-gradient(90deg, rgba(124,200,200,.06), transparent)" : "transparent",
-                    borderRadius: fieldsEditMode ? 6 : 0,
-                    marginBottom: fieldsEditMode ? 8 : undefined,
-                  }}
-                >
-                  {/* 0.58.58 : poignée drag visible uniquement en mode édition */}
-                  {fieldsEditMode && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: 4,
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "#7CC8C8",
-                        cursor: "grab",
-                        userSelect: "none",
-                        fontSize: 16,
-                        fontWeight: 900,
-                        lineHeight: 1,
-                        letterSpacing: -2,
-                      }}
-                      title="Glisser pour réorganiser"
-                    >
-                      ⋮⋮
-                    </span>
-                  )}
+              {fields.map((f) => (
+                <div className="fld" key={f.key}>
                   <label>{f.label}{f.required ? " *" : ""}</label>
                   {f.type === "select" ? (
-                    <select value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} disabled={fieldsEditMode}>
+                    <select value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}>
                       <option value="">— Aucun —</option>
                       {(f.options || relations[f.key] || []).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   ) : f.type === "textarea" ? (
-                    <textarea value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} disabled={fieldsEditMode} />
+                    <textarea value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
                   ) : (
-                    <input type={f.type || "text"} value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} disabled={fieldsEditMode} />
+                    <input type={f.type || "text"} value={form[f.key] || ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
                   )}
                 </div>
               ))}
             </div>
             <div className="modal-foot">
-              <button className="btn-ghost" onClick={() => { setModal(null); setFieldsEditMode(false); }}>Annuler</button>
-              <button className="btn-save" onClick={save} disabled={busy || fieldsEditMode}>
-                {busy ? "…" : fieldsEditMode ? "Termine d'abord le réordonnancement" : "Enregistrer"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modale d'import CSV (Alpha 0.7) */}
-      {importPreview && (
-        <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && !importBusy && setImportPreview(null)}>
-          <div className="modal" style={{ maxWidth: 720, width: "100%" }}>
-            <div className="modal-head">
-              Importer "{importPreview.fileName}" — {importPreview.rows.length} ligne(s)
-              <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => !importBusy && setImportPreview(null)} />
-            </div>
-            <div className="modal-body">
-              {importMsg && <div className="ok">{importMsg}</div>}
-              <p style={{ fontSize: 13, color: "#6c7a89", marginTop: 0 }}>
-                Associe chaque champ Aveho à une colonne de ton CSV. Les champs non associés seront laissés vides.
-              </p>
-              <table>
-                <thead><tr><th>Champ Aveho</th><th>Colonne CSV</th><th>Exemple ligne 1</th></tr></thead>
-                <tbody>
-                  {fields.map((f) => (
-                    <tr key={f.key}>
-                      <td style={{ fontWeight: 600 }}>{f.label}{f.required && " *"}</td>
-                      <td>
-                        <select value={importPreview.mapping[f.key] || ""} onChange={(e) => {
-                          setImportPreview({ ...importPreview, mapping: { ...importPreview.mapping, [f.key]: e.target.value } });
-                        }} style={{ width: "100%" }}>
-                          <option value="">— Aucune —</option>
-                          {importPreview.csvHeaders.map((h) => <option key={h} value={h}>{h}</option>)}
-                        </select>
-                      </td>
-                      <td style={{ fontSize: 12, color: "#6c7a89" }}>
-                        {importPreview.mapping[f.key] ? (importPreview.rows[0]?.[importPreview.mapping[f.key]] || "—") : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p style={{ fontSize: 12, color: "#8a98a8", marginTop: 12 }}>
-                <i className="ti ti-info-circle" /> Les lignes seront insérées dans la table <code>{table}</code> avec l'établissement courant. Les erreurs d'insertion arrêteront le processus.
-              </p>
-            </div>
-            <div className="modal-foot">
-              <button className="btn-ghost" onClick={() => setImportPreview(null)} disabled={importBusy}>Annuler</button>
-              <button className="btn-save" disabled={importBusy} onClick={async () => {
-                setImportBusy(true); setImportMsg("");
-                try {
-                  // Construire les objets à insérer selon le mapping
-                  const toInsert = importPreview.rows.map((row) => {
-                    const obj = { structure_id: structureId };
-                    if (etabId) obj.etablissement_id = etabId;
-                    fields.forEach((f) => {
-                      const src = importPreview.mapping[f.key];
-                      if (src && row[src] !== undefined && row[src] !== "") obj[f.key] = row[src];
-                    });
-                    return obj;
-                  }).filter((o) => Object.keys(o).length > (etabId ? 2 : 1)); // au moins 1 champ utile
-                  // Insertion par batches de 100
-                  let inserted = 0;
-                  for (let i = 0; i < toInsert.length; i += 100) {
-                    const batch = toInsert.slice(i, i + 100);
-                    const { error } = await supabase.from(table).insert(batch);
-                    if (error) throw error;
-                    inserted += batch.length;
-                  }
-                  setImportMsg(`✓ ${inserted} ligne(s) importée(s).`);
-                  await load();
-                  setTimeout(() => { setImportPreview(null); setImportMsg(""); }, 1800);
-                } catch (e) {
-                  setImportMsg("Erreur : " + e.message);
-                } finally { setImportBusy(false); }
-              }}>
-                {importBusy ? "Import en cours…" : `Importer ${importPreview.rows.length} ligne(s)`}
-              </button>
+              <button className="btn-ghost" onClick={() => setModal(null)}>Annuler</button>
+              <button className="btn-save" onClick={save} disabled={busy}>{busy ? "…" : "Enregistrer"}</button>
             </div>
           </div>
         </div>
