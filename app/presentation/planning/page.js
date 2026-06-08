@@ -53,10 +53,10 @@ function PresentationPlanning() {
 
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
 
-    // Sources parallèles
+    // Sources parallèles (0.65.23 : retrait jointures FK + date format YYYY-MM-DD)
     const [interventions, tournees, maintenances, planEvts] = await Promise.all([
       tryFetch(supabase.from("interventions")
-        .select("id, numero, type, urgence, date_planifiee, statut, technicien_nom, equipe_id, materiels(libelle), patients(nom, prenom)")
+        .select("id, numero, type, urgence, date_planifiee, statut, technicien_nom, equipe_id, materiel_id, patient_id")
         .eq("structure_id", auth.structureId)
         .gte("date_planifiee", todayStart.toISOString())
         .lte("date_planifiee", todayEnd.toISOString())
@@ -67,10 +67,10 @@ function PresentationPlanning() {
         .eq("date_tournee", ymd)
         .order("heure_depart")),
       tryFetch(supabase.from("maintenances")
-        .select("id, libelle, type, statut, date_prevue, materiels(libelle, num_parc)")
+        .select("id, libelle, type, statut, date_prevue, materiel_id")
         .eq("structure_id", auth.structureId)
-        .gte("date_prevue", todayStart.toISOString())
-        .lte("date_prevue", todayEnd.toISOString())
+        .gte("date_prevue", ymd)
+        .lte("date_prevue", ymd)
         .order("date_prevue")),
       tryFetch(supabase.from("planning_events")
         .select("id, titre, type, date_debut, date_fin, lieu, tout_journee, equipe_id")
@@ -86,8 +86,8 @@ function PresentationPlanning() {
       id: "di-" + d.id,
       type: "intervention",
       titre: `${d.numero} · ${d.type}`,
-      sub: d.materiels?.libelle ? `${d.materiels.libelle} ${d.patients?.nom ? "· " + d.patients.nom + " " + (d.patients.prenom || "") : ""}` : "",
-      chambre: d.patients?.chambre || null,
+      sub: d.materiel_id ? `Matériel #${(d.materiel_id||'').slice(0,8)}` : "",
+      chambre: null,
       heure: d.date_planifiee ? new Date(d.date_planifiee).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?",
       time_ms: d.date_planifiee ? new Date(d.date_planifiee).getTime() : 0,
       assignee: d.technicien_nom || "Non assigné",
@@ -108,7 +108,7 @@ function PresentationPlanning() {
       id: "mnt-" + m.id,
       type: "maintenance",
       titre: m.libelle || `Maintenance ${m.type || ""}`,
-      sub: m.materiels?.libelle || "",
+      sub: m.materiel_id ? `Matériel #${(m.materiel_id||'').slice(0,8)}` : "",
       heure: m.date_prevue ? new Date(m.date_prevue).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "Journée",
       time_ms: m.date_prevue ? new Date(m.date_prevue).getTime() : 0,
       assignee: "Technicien",

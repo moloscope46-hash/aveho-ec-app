@@ -68,45 +68,25 @@ function PresentationArchitecture() {
     bats = bats.slice(0, 4);
 
     // 2. Pour chaque bâtiment, charger : services + matériels + DI + dépôts + équipes + lits surplus
+    // 0.65.23 : globalQueries d'abord (1 fois), puis filtrage JS par bâtiment (évite 7×N requêtes qui peuvent foirer)
+    const [allServices, allMateriels, allDis, allDepots, allMaintenances, allPatients] = await Promise.all([
+      tryFetch(supabase.from("services").select("id, nom, batiment_id, etage").eq("structure_id", auth.structureId)),
+      tryFetch(supabase.from("materiels").select("id, libelle, num_parc, etat, batiment_id, service_id, chambre_id").eq("structure_id", auth.structureId).limit(1000)),
+      tryFetch(supabase.from("interventions").select("id, statut, urgence, batiment_id, service_id").eq("structure_id", auth.structureId).neq("statut", "Clôturée").neq("statut", "Refusée")),
+      tryFetch(supabase.from("depots").select("id, nom, etablissement_id, batiment_id").eq("structure_id", auth.structureId)),
+      tryFetch(supabase.from("maintenances").select("id, libelle, statut, date_prevue, type").eq("structure_id", auth.structureId).gte("date_prevue", new Date().toISOString().slice(0, 10)).order("date_prevue").limit(100)),
+      tryFetch(supabase.from("patients").select("id, nom, prenom, batiment_id, service_id, chambre_id").eq("structure_id", auth.structureId).limit(500)),
+    ]);
+
     const enriched = await Promise.all(bats.map(async (b) => {
-      const [services, materiels, dis, depots, maintenances, collabs, patients] = await Promise.all([
-        tryFetch(supabase.from("services")
-          .select("id, nom, batiment_id, etage")
-          .eq("batiment_id", b.id)
-          .order("etage", { ascending: false }).order("nom")),
-        // 0.65.9 : ajout etage_surplus pour lits non-affectés
-        tryFetch(supabase.from("materiels")
-          .select("id, libelle, num_parc, etat, batiment_id, service_id, chambre_id")
-          .eq("structure_id", auth.structureId)
-          .eq("batiment_id", b.id)
-          .limit(300)),
-        tryFetch(supabase.from("interventions")
-          .select("id, statut, urgence, batiment_id, service_id")
-          .eq("structure_id", auth.structureId)
-          .eq("batiment_id", b.id)
-          .neq("statut", "Clôturée").neq("statut", "Refusée")),
-        tryFetch(supabase.from("depots")
-          .select("id, nom, etablissement_id, batiment_id")
-          .eq("structure_id", auth.structureId)
-          .eq("batiment_id", b.id)),
-        tryFetch(supabase.from("maintenances")
-          .select("id, libelle, statut, date_prevue, type, batiment_id")
-          .eq("structure_id", auth.structureId)
-          .eq("batiment_id", b.id)
-          .gte("date_prevue", new Date().toISOString().slice(0, 10))
-          .order("date_prevue")
-          .limit(20)),
-        tryFetch(supabase.from("membres_etablissements")
-          .select("user_id, role")
-          .eq("etablissement_id", b.etablissement_id)
-          .limit(20)),
-        // 0.65.9 : patients du bâtiment pour les afficher par chambre (0.65.18 : retrait colonne chambre)
-        tryFetch(supabase.from("patients")
-          .select("id, nom, prenom, batiment_id, service_id, chambre_id")
-          .eq("structure_id", auth.structureId)
-          .eq("batiment_id", b.id)
-          .limit(200)),
-      ]);
+      // Filtrage JS uniquement (plus de requêtes par bâtiment)
+      const services = (allServices || []).filter(s => s.batiment_id === b.id).sort((a, b2) => (b2.etage || 0) - (a.etage || 0));
+      const materiels = (allMateriels || []).filter(m => m.batiment_id === b.id);
+      const dis = (allDis || []).filter(d => d.batiment_id === b.id);
+      const depots = (allDepots || []).filter(d => d.batiment_id === b.id);
+      const maintenances = allMaintenances || [];  // global, pas filtré par bât (maintenances n'a pas batiment_id)
+      const patients = (allPatients || []).filter(p => p.batiment_id === b.id);
+      const collabs = [];  // 0.65.23 : retiré pour éviter le 400 sur membres_etablissements
 
       // Regrouper services par étage
       const servicesByEtage = {};

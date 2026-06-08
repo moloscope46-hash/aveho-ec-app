@@ -63,22 +63,36 @@ function PresentationInterventions() {
 
   async function load() {
     if (!auth.structureId) return;
-    let q = supabase
-      .from("interventions")
-      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, ville), etablissements(nom, ville), batiments(nom), services(nom, etage), equipes(nom, couleur)")
-      .eq("structure_id", auth.structureId)
-      .neq("statut", "Clôturée").neq("statut", "Refusée")
-      .order("urgence", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(30);
-    if (etabId) q = q.eq("etablissement_id", etabId);
-    // 0.65.3 : filtres avancés
-    if (advFilters.etabId) q = q.eq("etablissement_id", advFilters.etabId);
-    if (advFilters.batId)     q = q.eq("batiment_id", advFilters.batId);
-    if (advFilters.svcId)     q = q.eq("service_id", advFilters.svcId);
-    if (advFilters.chambreId) q = q.eq("chambre_id", advFilters.chambreId);
-    if (advFilters.patientId) q = q.eq("patient_id", advFilters.patientId);
-    const { data } = await q;
+    // 0.65.23 : fallback à 3 niveaux si jointures FK pas déclarées
+    const baseFilter = (q) => {
+      q = q.eq("structure_id", auth.structureId)
+           .neq("statut", "Clôturée").neq("statut", "Refusée")
+           .order("urgence", { ascending: false })
+           .order("created_at", { ascending: false })
+           .limit(30);
+      if (etabId) q = q.eq("etablissement_id", etabId);
+      if (advFilters.etabId) q = q.eq("etablissement_id", advFilters.etabId);
+      if (advFilters.batId)     q = q.eq("batiment_id", advFilters.batId);
+      if (advFilters.svcId)     q = q.eq("service_id", advFilters.svcId);
+      if (advFilters.chambreId) q = q.eq("chambre_id", advFilters.chambreId);
+      if (advFilters.patientId) q = q.eq("patient_id", advFilters.patientId);
+      return q;
+    };
+
+    // Niveau 1 : avec toutes les jointures
+    let r = await baseFilter(supabase.from("interventions")
+      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, ville), etablissements(nom, ville), batiments(nom), services(nom, etage), equipes(nom, couleur)"));
+    // Niveau 2 : sans jointures
+    if (r.error) {
+      r = await baseFilter(supabase.from("interventions")
+        .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id"));
+    }
+    // Niveau 3 : SELECT minimal
+    if (r.error) {
+      r = await baseFilter(supabase.from("interventions")
+        .select("id, numero, type, urgence, statut, description, created_at, technicien_nom"));
+    }
+    const data = r.data || [];
 
     // 0.65.3 : filtre par recherche libre (côté client) - sur numéro/type/description/patient
     let filteredData = data || [];

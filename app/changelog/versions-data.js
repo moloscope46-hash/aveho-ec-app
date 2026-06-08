@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.23",
+    "kind": "fix",
+    "titre": "Fix CRITIQUE 400 architecture (7 queries en parallele par batiment) + interventions TV fallback 3 niveaux + planning sans jointures + SQL diagnostique colonnes",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX MAJEUR architecture/page.js : au lieu de faire 7 requetes par batiment (multipliees par 4 batiments = 28 requetes), on fait 6 requetes globales 1 fois puis filtrage cote JS par batiment.id. Elimine le spam de 400 et meme si une table foire les autres marchent. Retire aussi membres_etablissements qui foire en 400" },
+      { "code": "AI", "txt": "FIX CRITIQUE interventions TV : ajout fallback 3 niveaux (avec jointures FK, sans jointures, SELECT minimal). Si une jointure foire en 400, la requete se replie sur SELECT simple. Les DI s affichent enfin a l ecran !" },
+      { "code": "AI", "txt": "FIX planning TV : retrait jointures materiels(libelle) et patients(nom, prenom) qui pouvaient foirer en 400 si FK pas declaree. Remplace par materiel_id + patient_id avec affichage en hash court. date_prevue passe en format YYYY-MM-DD au lieu de timestamp ISO" },
+      { "code": "AI", "txt": "Maintenances : retrait du filtre batiment_id (colonne n existe pas sur table maintenances dans le schema) et de la jointure materiels(libelle, num_parc)" },
+      { "code": "AI", "txt": "Cree fichier SQL diagnostique aveho-DIAGNOSTIC-colonnes.sql que Cedric peut executer dans Supabase SQL Editor pour voir TOUTES les colonnes de chaque table impliquee dans les 400. Permet de comprendre quelles colonnes existent vraiment et adapter le code defensivement" },
+      { "code": "INFO", "txt": "ATTENTION CACHE : si Cedric voit toujours 5549-9d3437d2a9298300.js dans la console = navigateur sert le CACHE ancien. APRES push Vercel : Ctrl+Shift+R hard refresh imperatif ou DevTools > Application > Service Workers > Unregister + reload. Le hash JS doit changer dans la console pour confirmer le nouveau build" }
+    ],
+    "themes": ["fix-bugs-400", "tv", "diagnostic"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.23.html"
+  },
+{
     "v": "0.65.22",
     "kind": "feat",
     "titre": "TV : Sortir HAUT MILIEU + ShareButton HAUT GAUCHE + StatusIcons popup CENTREE + SQL coherence + stocks +20 mouvements +8 receptions",
