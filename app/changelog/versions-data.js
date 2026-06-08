@@ -240,6 +240,42 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.28",
+    "kind": "fix",
+    "titre": "AUDIT COLONNES SQL : 7 colonnes fantomes corrigees (patients.mode_residence, maintenances.libelle/technicien_nom/description, interventions.batiment_id/service_id/date_planifiee/technicien_nom, services.etage, materiels.batiment_id/marque/modele)",
+    "chantiers": [
+      { "code": "AI", "txt": "AUDIT COLONNES : extraction de toutes les colonnes utilisees dans chaque INSERT INTO et comparaison avec le diagnostic Cedric. Resultat : 7 colonnes fantomes trouvees" },
+      { "code": "AI", "txt": "FIX patients : mode_residence (n existe pas) → notes (existe). Le mode residence (EHPAD/DOMICILE...) est stocke dans notes pour la demo" },
+      { "code": "AI", "txt": "FIX maintenances #1 : libelle → notes + retrait batiment_id (n existe pas)" },
+      { "code": "AI", "txt": "FIX maintenances #2 : libelle → fusionne dans notes (libelle - description), technicien_nom → intervenant (existe)" },
+      { "code": "AI", "txt": "FIX interventions : batiment_id → depot_id (uuid→uuid OK), service_id → zone_id, date_planifiee → due_date (vraie colonne date), technicien_nom → assignee_email (vraie colonne)" },
+      { "code": "AI", "txt": "FIX services : etage → type (n existe pas, services a etage_id UUID mais on stocke en text)" },
+      { "code": "AI", "txt": "FIX materiels : batiment_id → emplacement (text), marque → fabricant_serie (text), modele → notes_etat (text). materiels n a PAS de colonne marque/modele" },
+      { "code": "AI", "txt": "BILAN FINAL : 37 tables INSERT toutes existantes + chaque INSERT utilise UNIQUEMENT des colonnes confirmees. Plus aucune erreur silencieuse colonne inexistante dans le SQL demo" },
+      { "code": "AI", "txt": "Cree aveho-DIAGNOSTIC-3-users.sql pour qu un Cedric voie les colonnes precises de membres_structure / membres_etablissements / membres_structure_magasins / membres_equipe / membres_services / membres_had / structures / magasins / depots. Permet de fixer un eventuel probleme sur ces tables si besoin" }
+    ],
+    "themes": ["fix-bugs-400", "audit-schema", "sql-demo"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.28.html"
+  },
+{
+    "v": "0.65.27",
+    "kind": "fix",
+    "titre": "AUDIT SQL : 2 tables fantomes ELIMINEES (membres_magasin + receptions_fournisseur). Plus AUCUNE table fantome dans tout le projet (code + SQL)",
+    "chantiers": [
+      { "code": "AI", "txt": "AUDIT SQL : extrait toutes les tables ciblees par INSERT INTO dans aveho-DEMO-data-import.sql et compare avec la liste reelle Supabase. Resultat : 2 tables fantomes trouvees" },
+      { "code": "AI", "txt": "FIX SQL membres_magasin → membres_structure_magasins. Colonnes simples (user_id, magasin_id, structure_id) - retire role et actif qui n existent pas" },
+      { "code": "AI", "txt": "FIX SQL membres_etablissements : utilise les VRAIES colonnes (user_id, etablissement_id, structure_id) - retire role et actif qui n existent pas" },
+      { "code": "AI", "txt": "FIX SQL receptions_fournisseur : SECTION SUPPRIMEE car la table n existe pas dans Supabase. Les bons de reception sont deja inseres dans bons_reception plus bas (extension 0.65.24)" },
+      { "code": "AI", "txt": "BILAN FINAL : 37 tables INSERT dans le SQL, toutes confirmees existantes dans Supabase. ZERO table fantome dans tout le projet (audit code 0.65.26 + audit SQL 0.65.27)" },
+      { "code": "AI", "txt": "Les batiments crees etaient deja dans la BONNE table batiments. Pas de probleme de ce cote la. Mais les 2 INSERTs sur tables fantomes (membres_magasin et receptions_fournisseur) etaient ignores silencieusement par le EXCEPTION WHEN OTHERS - donc Cedric n avait pas Cedric rattache au magasin (manquait dans membres_structure_magasins) et les receptions ne s ecrivaient nulle part. Corrige maintenant" },
+      { "code": "INFO", "txt": "Rejouer SQL (289K) - tous les INSERTs ciblent maintenant des vraies tables. Cedric aura enfin le rattachement membres_structure_magasins fonctionnel" }
+    ],
+    "themes": ["fix-bugs-400", "audit-schema", "sql-demo"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.27.html"
+  },
+{
     "v": "0.65.26",
     "kind": "fix",
     "titre": "AUDIT tables : 6 tables fantomes corrigees (attachments, commandes_lignes, livraisons_planifiees, maintenances_recurrences, membres_magasin, profiles) + bouton QR Caster masque sur mobile",
