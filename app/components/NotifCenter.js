@@ -73,7 +73,7 @@ export default function NotifCenter({ structureId, userId, onClose }) {
   const unreadCount = notifs.filter(n => !n.lu).length;
 
   return (
-    <div style={{
+    <div className="notif-center-popup" style={{
       position: "absolute",
       top: "calc(100% + 8px)",
       right: 0,
@@ -90,7 +90,28 @@ export default function NotifCenter({ structureId, userId, onClose }) {
       overflow: "hidden",
       animation: "av-fade-in 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
     }}>
-      {/* Header */}
+      <style jsx global>{`
+        @media (max-width: 720px) {
+          .notif-center-popup {
+            position: fixed !important;
+            top: auto !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            max-height: 85vh !important;
+            border-radius: 18px 18px 0 0 !important;
+            animation: av-bottom-sheet-slide-up 260ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            z-index: 9999 !important;
+            box-shadow: 0 -10px 30px rgba(20,33,49,.3) !important;
+          }
+        }
+        @keyframes av-bottom-sheet-slide-up {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+      `}</style>      {/* Header */}
       <div style={{
         padding: "12px 16px",
         background: "linear-gradient(135deg, #fafbfc, #fff)",

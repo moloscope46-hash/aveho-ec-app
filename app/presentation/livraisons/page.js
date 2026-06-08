@@ -112,6 +112,7 @@ function PresentationLivraisons() {
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
+            <TVFiltersBar pageKey="livraisons" onChange={setAdvFilters} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>Livraisons prévues du jour</h1>
         </div>

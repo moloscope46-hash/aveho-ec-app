@@ -240,6 +240,37 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.3",
+    "kind": "feat",
+    "titre": "🎙 TV : Barre de filtres avancés cascade (Établissement/Bâtiment/Service/Chambre/Patient/Garage/Dépôt) + Recherche vocale avec MICRO",
+    "chantiers": [
+      { "code": "AI", "txt": "🎯 **TVFiltersBar.js (NOUVEAU composant)** : barre de filtres avancés pour les pages TV. **Features** : (1) **Recherche libre** avec champ texte + bouton MICRO (Web Speech API en fr-FR). Click micro → écoute en cours avec animation pulse rouge → résultat injecté dans le champ en temps réel (interim+final). (2) **Filtres cascade** : Établissement → Bâtiment → Service → Chambre → Patient. Quand l''utilisateur sélectionne un niveau, les suivants se chargent automatiquement. Reset auto des niveaux inférieurs au changement. (3) **Filtres indépendants** : Garage + Dépôt (multi-magasin). (4) **Bouton Filtres compact** dans header avec badge `N` orange si filtres actifs. (5) **Modal centrale** avec gradient navy/teal en header, sections colorées par catégorie, récap badges actifs en bas. (6) **localStorage isolé par page** (av-tv-filters-<pageKey>). (7) **Reset cascade** + Reset all" },
+      { "code": "AI", "txt": "🎙 **Recherche vocale (Web Speech API)** : intégration native SpeechRecognition / webkitSpeechRecognition avec lang=fr-FR + interimResults=true. **Fonctionnement** : click bouton micro teal → bouton devient rouge avec animation pulse → écoute en cours → résultat injecté en direct dans le champ recherche (tu vois les mots apparaître pendant que tu parles). Click pendant écoute = stop. Indicateur 🎙 Écoute en cours visible. Fallback : alert si navigateur non compatible (Safari iOS notamment). **Marche sur Chrome / Edge / Android** (pas sur Firefox/Safari par défaut)" },
+      { "code": "AI", "txt": "🔌 **Branchement 6 pages TV** : TVFiltersBar ajouté dans le header de /presentation/interventions, /planning, /livraisons, /carte-had, /dashboard, /stats. **Requêtes adaptées** : (a) /interventions filtre par etablissement_id + batiment_id + service_id + chambre_id + patient_id + recherche client-side sur numéro/type/description/technicien/patient/matériel. (b) /carte-had filtre patients + DI sur tous les niveaux hiérarchiques + recherche libre sur tous textes. (c) Les autres pages reçoivent les filtres dans le state et peuvent les exploiter selon leurs requêtes (à compléter au besoin)" },
+      { "code": "INFO", "txt": "📋 **Persistance par page** : chaque page TV a sa propre clé localStorage `av-tv-filters-<pageKey>`. Donc tu peux avoir des filtres différents par écran TV (par ex. carte-had filtre Lyon, livraisons filtre Paris). Les filtres survivent au refresh et à la fermeture du navigateur (utile pour les écrans en kiosque)" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.3** : Extraire le zip, npm install --legacy-peer-deps, npm run build, push origin main. Pas de NOUVEAU SQL. **Tests** : (1) /presentation/interventions → bouton Filtres orange → modal s''ouvre → choisir un établissement → bâtiments se chargent. (2) Click micro → autoriser le micro (1ère fois) → parler → texte apparaît → résultats filtrés en live. (3) Fermer et rouvrir le navigateur → les filtres sont conservés"
+      }
+    ],
+    "themes": ["feature", "tv", "voice", "filter"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.3.html"
+  },
+  {
+    "v": "0.65.2",
+    "kind": "fix",
+    "titre": "🔧 Hotfix4 : Edit_locks guard global (anti-spam 404) + Toolbar mobile (overflow + popup bottom-sheet)",
+    "chantiers": [
+      { "code": "AI", "txt": "🛡 **Guard GLOBAL `lib/editLocksGuard.js`** : nouvel utilitaire qui mutualise la détection d''absence de la table `edit_locks` entre TOUS les hooks et composants (useEditLock + EditingIndicator). **Mécanisme** : (1) Flag module-level partagé `_tableMissing`. (2) Fonction `probeEditLocksTable()` qui fait UN seul test avec head:true + count:exact, cache le résultat dans une promesse partagée. (3) Si la table n''existe pas (codes 42P01, PGRST116, 'does not exist', 'schema cache', 'Could not find'), on désactive partout DÉFINITIVEMENT. **Bénéfice** : avant, chaque page ouvrait sa propre requête edit_locks → 1 fail = 1 erreur affichée + N pages = N spams. Maintenant : 1 probe → tout le monde le sait → silence radio" },
+      { "code": "AI", "txt": "📱 **Toolbar mobile fix overflow horizontal** : le bandeau du haut débordait à droite/gauche en mobile car les multiples icônes (NotifBell, RoleBadge, SandboxToggle, EditingIndicator, MobileContextPicker, panier, StatusIcons, UserMenu) dépassaient les 520px. **Fix CSS** : (1) `.topbar { overflow-x:auto; padding:0 10px; gap:6px }`. (2) Scrollbar masquée mais scroll horizontal possible (`scrollbar-width:none`). (3) Icônes réduites à 34px en mobile. (4) `flex-shrink:0` sur les enfants pour pas qu''ils se compressent" },
+      { "code": "AI", "txt": "📱 **Popups topbar → bottom-sheet mobile** : NotifCenter (cloche notifications) utilisait `position:absolute; top:calc(100% + 8px); right:0` → en mobile sur petit écran, le popup s''ouvrait coupé en haut ou hors écran. **Fix** : injection de CSS `@media (max-width:720px)` dans NotifCenter qui transforme le popup en bottom-sheet (position:fixed; bottom:0; width:100%; border-radius:18px 18px 0 0; max-height:85vh; animation slide-up). Idem via règle CSS globale `.topbar [style*=\"position: absolute\"]` pour les autres popups eventuels" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.2** : (1) Re-jouer le SQL `aveho-MEGA-sql-fin-de-journee.sql` (Section 6 crée la table `edit_locks` qui manquait en prod — c''est la VRAIE solution, le guard du code n''est qu''un filet de sécurité). (2) Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main"
+      }
+    ],
+    "themes": ["fix", "mobile", "performance"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.2.html"
+  },
+  {
     "v": "0.65.1",
     "kind": "feat",
     "titre": "🧹 Finitions : Audit doublons adresses + page /maintenance/[id] + clarification PresentationMode.js",

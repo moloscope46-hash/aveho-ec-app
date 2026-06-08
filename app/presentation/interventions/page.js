@@ -18,6 +18,7 @@ import { useAuth } from "../../../lib/useAuth";
 import { fmtDate } from "../../../lib/format";
 import TVScreenNav from "../../components/TVScreenNav";  /* 0.64.0 */
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
+import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
 
 const COULEUR_STATUT = {
   "Nouvelle": "#185FA5",
@@ -52,6 +53,8 @@ function PresentationInterventions() {
   const [now, setNow] = useState(new Date());
   // 0.65.0 : filtre magasin TV
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));
+  // 0.65.3 : Filtres avancés (étab/bât/svc/chambre/patient/garage/dépôt/search)
+  const [advFilters, setAdvFilters] = useState(() => getTVFilters("interventions") || {});
   // 0.62.93 : compteurs récents activité globale
   const [stats, setStats] = useState({ di: 0, sav: 0, livraisons: 0, maintenances: 0, patients: 0, commandes: 0 });
   const timerRef = useRef(null);
@@ -61,17 +64,41 @@ function PresentationInterventions() {
     if (!auth.structureId) return;
     let q = supabase
       .from("interventions")
-      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, materiels(libelle, code), patients(nom, prenom, chambre)")
+      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, materiels(libelle, code), patients(nom, prenom, chambre, ville)")
       .eq("structure_id", auth.structureId)
       .not("statut", "in", '("Clôturée","Refusée")')
       .order("urgence", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(30);
     if (etabId) q = q.eq("etablissement_id", etabId);
+    // 0.65.3 : filtres avancés
+    if (advFilters.etabId) q = q.eq("etablissement_id", advFilters.etabId);
+    if (advFilters.batId)     q = q.eq("batiment_id", advFilters.batId);
+    if (advFilters.svcId)     q = q.eq("service_id", advFilters.svcId);
+    if (advFilters.chambreId) q = q.eq("chambre_id", advFilters.chambreId);
+    if (advFilters.patientId) q = q.eq("patient_id", advFilters.patientId);
     const { data } = await q;
 
+    // 0.65.3 : filtre par recherche libre (côté client) - sur numéro/type/description/patient
+    let filteredData = data || [];
+    if (advFilters.search?.trim()) {
+      const s = advFilters.search.toLowerCase().trim();
+      filteredData = filteredData.filter(d =>
+        (d.numero || "").toLowerCase().includes(s) ||
+        (d.type || "").toLowerCase().includes(s) ||
+        (d.description || "").toLowerCase().includes(s) ||
+        (d.technicien_nom || "").toLowerCase().includes(s) ||
+        (d.materiels?.libelle || "").toLowerCase().includes(s) ||
+        (d.materiels?.code || "").toLowerCase().includes(s) ||
+        (d.patients?.nom || "").toLowerCase().includes(s) ||
+        (d.patients?.prenom || "").toLowerCase().includes(s) ||
+        (d.patients?.ville || "").toLowerCase().includes(s) ||
+        (d.patients?.chambre || "").toLowerCase().includes(s)
+      );
+    }
+
     // 0.64.0 : enrichir avec compteurs PJ + workflow pour les top urgences
-    const enriched = await Promise.all((data || []).map(async (di) => {
+    const enriched = await Promise.all(filteredData.map(async (di) => {
       try {
         const [pj, wf] = await Promise.all([
           supabase.from("pieces_jointes").select("id", { count: "exact", head: true }).eq("resource_type", "intervention").eq("resource_id", di.id),
@@ -114,7 +141,7 @@ function PresentationInterventions() {
     load();
     timerRef.current = setInterval(load, refreshSec * 1000);
     return () => clearInterval(timerRef.current);
-  }, [auth.ready, auth.structureId, etabId, refreshSec, magasinId]);
+  }, [auth.ready, auth.structureId, etabId, refreshSec, magasinId, advFilters]);
 
   // Horloge live (1s)
   useEffect(() => {
@@ -156,9 +183,10 @@ function PresentationInterventions() {
         paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)",
       }}>
         <div>
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
+            <TVFiltersBar pageKey="interventions" onChange={setAdvFilters} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>
             Demandes d'intervention en cours

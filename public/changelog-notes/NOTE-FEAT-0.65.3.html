@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.65.3 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.65.3
+      <small>🎙 TV : Barre de filtres avancés cascade (Établissement/Bâtiment/Service/Chambre/Patient/Garage/Dépôt) + Recherche vocale avec MICRO</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 8 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.65.3-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>3</b> AI · <b>2</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#tv</span> <span class="theme-pill">#voice</span> <span class="theme-pill">#filter</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TVFiltersBar.js (NOUVEAU composant)</h3>
+  <div class="panel ">
+    
+    <p>🎯 barre de filtres avancés pour les pages TV. <strong>Features</strong></p>
+    <ol class="steps">
+      <li><strong>Recherche libre</strong> avec champ texte + bouton MICRO (Web Speech API en fr-FR). Click micro → écoute en cours avec animation pulse rouge → résultat injecté dans le champ en temps réel (interim+final)</li>
+      <li><strong>Filtres cascade</strong> : Établissement → Bâtiment → Service → Chambre → Patient. Quand l''utilisateur sélectionne un niveau, les suivants se chargent automatiquement. Reset auto des niveaux inférieurs au changement</li>
+      <li><strong>Filtres indépendants</strong> : Garage + Dépôt (multi-magasin)</li>
+      <li><strong>Bouton Filtres compact</strong> dans header avec badge <code>N</code> orange si filtres actifs</li>
+      <li><strong>Modal centrale</strong> avec gradient navy/teal en header, sections colorées par catégorie, récap badges actifs en bas</li>
+      <li><strong>localStorage isolé par page</strong> (av-tv-filters-&lt;pageKey&gt;)</li>
+      <li><strong>Reset cascade</strong> + Reset all</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Recherche vocale (Web Speech API)</h3>
+  <div class="panel ">
+    <p>🎙 intégration native SpeechRecognition / webkitSpeechRecognition avec lang=fr-FR + interimResults=true. <strong>Fonctionnement</strong> : click bouton micro teal → bouton devient rouge avec animation pulse → écoute en cours → résultat injecté en direct dans le champ recherche (tu vois les mots apparaître pendant que tu parles). Click pendant écoute = stop. Indicateur 🎙 Écoute en cours visible. Fallback : alert si navigateur non compatible (Safari iOS notamment). <strong>Marche sur Chrome / Edge / Android</strong> (pas sur Firefox/Safari par défaut)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Branchement 6 pages TV</h3>
+  <div class="panel ">
+    <p>🔌 TVFiltersBar ajouté dans le header de /presentation/interventions, /planning, /livraisons, /carte-had, /dashboard, /stats. <strong>Requêtes adaptées</strong> : (a) /interventions filtre par etablissement_id + batiment_id + service_id + chambre_id + patient_id + recherche client-side sur numéro/type/description/technicien/patient/matériel. (b) /carte-had filtre patients + DI sur tous les niveaux hiérarchiques + recherche libre sur tous textes. (c) Les autres pages reçoivent les filtres dans le state et peuvent les exploiter selon leurs requêtes (à compléter au besoin)</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Persistance par page</h3>
+  <div class="panel ">
+    <p>📋 chaque page TV a sa propre clé localStorage <code>av-tv-filters-&lt;pageKey&gt;</code>. Donc tu peux avoir des filtres différents par écran TV (par ex. carte-had filtre Lyon, livraisons filtre Paris). Les filtres survivent au refresh et à la fermeture du navigateur (utile pour les écrans en kiosque)</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Procédure push 0.65.3</h3>
+  <div class="panel ">
+    
+    <p>🚀 Extraire le zip, npm install --legacy-peer-deps, npm run build, push origin main. Pas de NOUVEAU SQL. <strong>Tests</strong></p>
+    <ol class="steps">
+      <li>/presentation/interventions → bouton Filtres orange → modal s''ouvre → choisir un établissement → bâtiments se chargent</li>
+      <li>Click micro → autoriser le micro (1ère fois) → parler → texte apparaît → résultats filtrés en live</li>
+      <li>Fermer et rouvrir le navigateur → les filtres sont conservés</li>
+    </ol>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.65.3 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 8 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

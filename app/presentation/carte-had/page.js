@@ -86,13 +86,29 @@ function PresentationCarteHAD() {
 
     // 1. Patients HAD avec lat/lng
     let qHAD = supabase.from("patients")
-      .select("id, nom, prenom, latitude, longitude, ville, mode_residence, chambre")
+      .select("id, nom, prenom, latitude, longitude, ville, mode_residence, chambre, etablissement_id, batiment_id, service_id, chambre_id")
       .eq("structure_id", auth.structureId)
       .not("latitude", "is", null)
       .not("longitude", "is", null)
       .limit(200);
+    // 0.65.3 : filtres avancés
+    if (advFilters.etabId)    qHAD = qHAD.eq("etablissement_id", advFilters.etabId);
+    if (advFilters.batId)     qHAD = qHAD.eq("batiment_id", advFilters.batId);
+    if (advFilters.svcId)     qHAD = qHAD.eq("service_id", advFilters.svcId);
+    if (advFilters.chambreId) qHAD = qHAD.eq("chambre_id", advFilters.chambreId);
+    if (advFilters.patientId) qHAD = qHAD.eq("id", advFilters.patientId);
     // Approche défensive : on filtre côté client si "mode_residence" est HAD/domicile
-    const allPatients = await tryFetch(qHAD);
+    let allPatients = await tryFetch(qHAD);
+    // Recherche libre côté client
+    if (advFilters.search?.trim()) {
+      const s = advFilters.search.toLowerCase().trim();
+      allPatients = allPatients.filter(p =>
+        (p.nom || "").toLowerCase().includes(s) ||
+        (p.prenom || "").toLowerCase().includes(s) ||
+        (p.ville || "").toLowerCase().includes(s) ||
+        (p.chambre || "").toLowerCase().includes(s)
+      );
+    }
     const hadPatients = allPatients.filter(p =>
       !p.mode_residence || /domicile|HAD/i.test(p.mode_residence || "")
     );
@@ -106,18 +122,42 @@ function PresentationCarteHAD() {
       .eq("tournees.date_tournee", today)
       .limit(150);
     if (magasinId) qEtapes = qEtapes.eq("tournees.magasin_id", magasinId);
-    const livraisons = await tryFetch(qEtapes);
+    let livraisons = await tryFetch(qEtapes);
+    if (advFilters.search?.trim()) {
+      const s = advFilters.search.toLowerCase().trim();
+      livraisons = livraisons.filter(e =>
+        (e.label || "").toLowerCase().includes(s) ||
+        (e.ville || "").toLowerCase().includes(s)
+      );
+    }
 
     // 3. DI en cours avec géoloc patient
-    const qDI = supabase.from("interventions")
-      .select("id, numero, type, statut, urgence, created_at, patient_id, materiels(libelle), patients!inner(nom, prenom, latitude, longitude, ville, mode_residence)")
+    let qDI = supabase.from("interventions")
+      .select("id, numero, type, statut, urgence, created_at, patient_id, etablissement_id, batiment_id, service_id, chambre_id, materiels(libelle), patients!inner(nom, prenom, latitude, longitude, ville, mode_residence)")
       .eq("structure_id", auth.structureId)
       .not("statut", "in", '("Clôturée","Refusée")')
       .not("patients.latitude", "is", null)
       .not("patients.longitude", "is", null)
       .order("created_at", { ascending: false })
       .limit(100);
-    const dis = await tryFetch(qDI);
+    // 0.65.3 : filtres avancés sur DI
+    if (advFilters.etabId)    qDI = qDI.eq("etablissement_id", advFilters.etabId);
+    if (advFilters.batId)     qDI = qDI.eq("batiment_id", advFilters.batId);
+    if (advFilters.svcId)     qDI = qDI.eq("service_id", advFilters.svcId);
+    if (advFilters.chambreId) qDI = qDI.eq("chambre_id", advFilters.chambreId);
+    if (advFilters.patientId) qDI = qDI.eq("patient_id", advFilters.patientId);
+    let dis = await tryFetch(qDI);
+    if (advFilters.search?.trim()) {
+      const s = advFilters.search.toLowerCase().trim();
+      dis = dis.filter(d =>
+        (d.numero || "").toLowerCase().includes(s) ||
+        (d.type || "").toLowerCase().includes(s) ||
+        (d.materiels?.libelle || "").toLowerCase().includes(s) ||
+        (d.patients?.nom || "").toLowerCase().includes(s) ||
+        (d.patients?.prenom || "").toLowerCase().includes(s) ||
+        (d.patients?.ville || "").toLowerCase().includes(s)
+      );
+    }
 
     setCounters({
       had: hadPatients.length,
@@ -231,7 +271,7 @@ function PresentationCarteHAD() {
     setRecent(dis.slice(0, 5));
   }
 
-  useEffect(() => { if (!auth.ready) return; load(); timerRef.current = setInterval(load, refreshSec * 1000); return () => clearInterval(timerRef.current); }, [auth.ready, auth.structureId, leafletReady, magasinId, activeFilters, refreshSec]);
+  useEffect(() => { if (!auth.ready) return; load(); timerRef.current = setInterval(load, refreshSec * 1000); return () => clearInterval(timerRef.current); }, [auth.ready, auth.structureId, leafletReady, magasinId, activeFilters, refreshSec, advFilters]);
   useEffect(() => { clockRef.current = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(clockRef.current); }, []);
 
   function tryFullscreen() { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen(); }
@@ -255,6 +295,7 @@ function PresentationCarteHAD() {
           <div style={{ fontSize: 13, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
+            <TVFiltersBar pageKey="carte-had" onChange={setAdvFilters} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 700, letterSpacing: 1 }}>Carte HAD & Domicile</h1>
         </div>

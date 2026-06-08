@@ -13,6 +13,7 @@
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { isEditLocksDisabled, markEditLocksMissing, probeEditLocksTable } from "../../lib/editLocksGuard";
 
 const REFRESH_INTERVAL = 20 * 1000; // 20s
 
@@ -21,15 +22,22 @@ export default function EditingIndicator() {
   const auth = useAuth();
   const [myLocks, setMyLocks] = useState([]);
   const [show, setShow] = useState(false);
-  // 0.65.1 hotfix3 : flag "table absente" pour stopper le poll
-  const tableMissingRef = useRef(false);
+  // 0.65.1 hotfix4 : guard GLOBAL (partagé avec useEditLock)
+  const tableMissingRef = useRef(isEditLocksDisabled());
 
   useEffect(() => {
     if (!auth?.user?.id) return;
     let alive = true;
 
     async function check() {
-      if (tableMissingRef.current) { setMyLocks([]); return; }
+      if (tableMissingRef.current || isEditLocksDisabled()) { setMyLocks([]); return; }
+      // Probe avant toute requête
+      const ok = await probeEditLocksTable(supabase);
+      if (!ok) {
+        tableMissingRef.current = true;
+        if (alive) setMyLocks([]);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from("edit_locks")
@@ -38,8 +46,8 @@ export default function EditingIndicator() {
           .gte("locked_at", new Date(Date.now() - 120 * 1000).toISOString());
         if (!alive) return;
         if (error) {
-          // Table peut ne pas exister → silencieux + on stoppe le poll
-          if (error.code === "42P01" || error.message?.includes("does not exist") || error.message?.includes("schema cache")) {
+          if (error.code === "42P01" || error.code === "PGRST116" || error.message?.includes("does not exist") || error.message?.includes("schema cache")) {
+            markEditLocksMissing();
             tableMissingRef.current = true;
           }
           setMyLocks([]);
