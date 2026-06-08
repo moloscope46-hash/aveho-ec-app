@@ -189,23 +189,37 @@ export default function TVCastButton({ refreshSec = 60 }) {
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute",
-          top: "calc(100% + 8px)",
-          right: 0,
-          background: "rgba(20, 33, 49, 0.97)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          color: "#fff",
-          padding: 12,
-          borderRadius: 14,
-          minWidth: 280,
-          maxWidth: 360,
-          border: "1.5px solid rgba(124, 200, 200, .3)",
-          boxShadow: "0 20px 60px rgba(0,0,0,.6)",
-          zIndex: 999999,  /* 0.65.11 : au-dessus de BackButtonFloating (z=95) et de tout */
-          animation: "av-cast-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-          fontFamily: "Quicksand, sans-serif",
-        }}>
+        <>
+          {/* 0.65.14 : Backdrop pour fermer en cliquant à côté */}
+          <div onClick={() => setOpen(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 999998,
+              background: "rgba(20, 33, 49, .6)",
+              backdropFilter: "blur(4px)",
+              animation: "av-cast-fade-in 200ms ease-out",
+            }} />
+          <div style={{
+            /* 0.65.14 : centré au MILIEU de la page (était top-right collé au bouton) */
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            background: "rgba(20, 33, 49, 0.97)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            color: "#fff",
+            padding: 16,
+            borderRadius: 16,
+            minWidth: 320,
+            maxWidth: 420,
+            width: "min(420px, 90vw)",
+            maxHeight: "85vh",
+            overflowY: "auto",
+            border: "1.5px solid rgba(124, 200, 200, .4)",
+            boxShadow: "0 30px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(124,200,200,.1)",
+            zIndex: 999999,
+            animation: "av-cast-pop-center 280ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+            fontFamily: "Quicksand, sans-serif",
+          }}>
           <div style={{ fontSize: 11, color: "#7CC8C8", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, padding: "0 4px" }}>
             <i className="ti ti-cast" /> Caster sur un écran
           </div>
@@ -293,6 +307,7 @@ export default function TVCastButton({ refreshSec = 60 }) {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {/* Toast feedback */}
@@ -323,6 +338,14 @@ export default function TVCastButton({ refreshSec = 60 }) {
         @keyframes av-cast-pop {
           from { opacity: 0; transform: translateY(-8px) scale(0.95); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes av-cast-pop-center {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes av-cast-fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         @keyframes av-cast-toast-in {
           from { opacity: 0; transform: translateX(-50%) translateY(20px); }

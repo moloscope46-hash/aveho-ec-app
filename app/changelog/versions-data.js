@@ -240,6 +240,44 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.14",
+    "kind": "fix",
+    "titre": "Fix SQL double AS + Modal hi-tech glow + FAB en haut-gauche + Cast popup centré + +60 DI tous types",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX CRITIQUE SQL : syntax error at AS - le double alias AS t(...) AS arts_data(...) supprime" },
+      { "code": "AI", "txt": "Modal hi-tech : z-index 999990 + glow teal/navy/violet animé + multi-layer shadow + animation rebondie" },
+      { "code": "AI", "txt": "FAB raccourcis en haut a gauche (etait cache top-right) + tooltip a droite" },
+      { "code": "AI", "txt": "TVCastButton popup CENTRE au milieu de la page avec backdrop blur" },
+      { "code": "AI", "txt": "+60 DI de tous types : Panne 15 + Installation 12 + Maintenance 10 + Recuperation 8 + Livraison 10 + Bilan 5" },
+      { "code": "INFO", "txt": "Procedure push 0.65.14 : rejouer SQL + push code. Tests bouton 3 raccourcis haut-gauche + modales avec glow teal + popup Cast centre + +60 DI variees" }
+    ],
+    "themes": ["fix-sql", "ui", "modal", "demo-data"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.14.html"
+  },
+{
+    "v": "0.65.13",
+    "kind": "feat",
+    "titre": "📦 MEGA SQL démo ULTRA complet : +50 articles + mercuriales + 60 matériels (6 états) + dossier médical + cuves O2 + commandes + RGPD + notifs",
+    "chantiers": [
+      { "code": "AI", "txt": "📦 **+50 articles dans le catalogue magasin** : 50 articles supplémentaires avec famille / prix public / prix achat (65%) / unité / référence / description complète. Couvre toutes les familles : 8 perfusion (cassettes 250ml, Huber sécurisée, transfusion, robinet 3 voies, prolongateur, NaCl, PORT-A-CATH, Crono PCA 50ml), 7 nutrition (Abbott FreeGo Wireless, NPAD Aminoven, sondes, bouton MIC-KEY, compresseur Nutricia, Flocare), 9 oxygénothérapie (CPAP Philips DreamStation 2, masques P30i/F30, Inogen G5 + batterie, bouteille O2, cuve liquide Linde, VPAP Trilogy, filtres HEPA), 6 cicatrisation (Mepilex Border, Aquacel Ag, Cica-Care silicone, Chlorhexidine, Bétadine, TPN PICO mini-VAC), 10 VPH (Vermeiren V200, Invacare Storm 4, Hill-Rom CenturisII, Repose Air, Arjo Maxi Move, Sara 3000, déambulateurs, scooter Sterling Sapphire, coussin Roho), 10 consommables (gants nitrile L, SHA gel, champs stériles, set pansement, DASRI 30L, compresses, sparadrap, surchaussures, tablier, FFP2)" },
+      { "code": "AI", "txt": "🔗 **Catalogue fournisseurs (article_fournisseurs)** : 30 liens article ↔ fournisseur avec référence fournisseur / prix unitaire HT / qté min commande / conditionnement / délai livraison. Permet de tester les sélecteurs fournisseur principal / catalogue par fournisseur dans l''interface" },
+      { "code": "AI", "txt": "📋 **+4 mercuriales/devis/AO avec 34 lignes** : (a) Mercuriale annuelle EHPAD Lilas (active, 12% remise, 30j fin de mois, 10 lignes). (b) Mercuriale Clinique Saint-Joseph (active, 15% remise, 60j nets, 10 lignes). (c) Appel d''offres HAD Q2 2026 (en_cours, 8% remise, 10 lignes). (d) Devis renouvellement parc CPAP (4 lignes). Toutes les lignes pointent vers articles existants avec prix négociés calculés (-12% à -15%)" },
+      { "code": "AI", "txt": "🔧 **+60 matériels dans TOUS les états** : (a) 10 EN PANNE répartis sur les sites. (b) 15 EN MAINTENANCE (lits, CPAP, pompes seringue, défibrillateur, scope IntelliVue, bistouri ERBE, aspirateur Storz, couveuse, table opératoire, pompe insuline, glucomètre, stéthoscope, spiromètre, otoscope). (c) 15 EN STOCK pour déploiement futur (lits Drive Delta, concentrateurs EverFlo, pompes BBraun, fauteuils, CPAP, matelas, déambulateurs). (d) 10 CHEZ PATIENT (HAD - pompes PCA Smith, Kangaroo, Inogen G5, lits, fauteuils, CPAP, BBraun, matelas air). (e) 5 AU REBUT (vieux CPAP S9, lits Vieille gen, concentrateurs obsolètes). (f) 5 À RÉCUPÉRER (fin de PEC patient). Permet de tester les filtres par état dans /materiel" },
+      { "code": "AI", "txt": "🫧 **6 cuves d''oxygène** (table cuves_oxygene) : 4 cuves 31L + 2 cuves 60L réparties dans les 3 établissements, avec dates installation/inspection/prochaine_inspection et statuts variés (En service, À remplir, Maintenance)" },
+      { "code": "AI", "txt": "📋 **8 bilans SAV types** : bilans pré-configurés (Maintenance préventive lit, Maintenance CPAP, Contrôle pompe PCA, Bilan concentrateur O2, Diagnostic défibrillateur, Maintenance fauteuil électrique, Contrôle matelas anti-escarres, Diagnostic pompe nutrition) avec durée estimée / icône / couleur" },
+      { "code": "AI", "txt": "🛒 **8 commandes fournisseurs** avec statuts variés (en_cours, livree, en_attente, en_preparation, envoyee, annulee) et montants réalistes HT/TTC, liées aux 3 établissements + 5 fournisseurs + magasin central. Permet de tester les workflows commandes" },
+      { "code": "AI", "txt": "🔒 **15 consentements RGPD** insérés pour patients HAD (Soins à domicile HAD, Partage données prescripteur, Photos plaies cicatrisation, Géolocalisation matériel), datés et expirant dans 2 ans" },
+      { "code": "AI", "txt": "📝 **Dossier médical patients complété** via UPDATE : ajout d''antécédents (HTA, Diabète, Insuffisance cardiaque, BPCO, AVC, fracture col fémur, cancer prostate, démence Alzheimer) + traitement chronique détaillé (Bisoprolol, Metformine, Lévothyrox, Symbicort, Eliquis, Tamoxifène, Aricept) + plan de suivi médical (cardio/diabéto/endocrino/pneumo/neuro/rhumato/onco) - rotation déterministe sur 8 profils types" },
+      { "code": "AI", "txt": "🔔 **8 notifications démo** : DI urgente, maintenance à planifier, signalement frigo pharmacie, commande livrée, transfert à valider, workflow approbation > 2000€, RGPD à renouveler, nouveau patient HAD. Permet de voir la cloche pleine en démo" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.13** : (1) Rejouer le SQL `aveho-DEMO-data-import.sql` ULTRA enrichi (90+ articles, 140+ matériels, 80+ patients, 4 mercuriales, 8 commandes, 6 cuves O2, 15 RGPD, 8 notifs, etc.). Le SQL termine par un grand SELECT récap qui montre tous les compteurs finaux. (2) Pas de changement code applicatif (juste SQL). **Tests** : (a) /magasin/catalogue → 90+ articles avec toutes familles. (b) /magasin/mercuriales → 4 mercuriales avec 34 lignes. (c) /materiel → filtres par état (En panne 10+, Maintenance 15+, En stock 15+, Chez patient 10+, Au rebut 5+, À récupérer 5+). (d) /patient → dossier médical complet visible (antécédents + traitement chronique + suivi)"
+      }
+    ],
+    "themes": ["feature", "demo-data", "mega"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.13.html"
+  },
+  {
     "v": "0.65.12",
     "kind": "feat",
     "titre": "🏠 HAD revu (zéro notion de lit) + Tuiles TV enrichies + SQL admin rattaché + +12 prescripteurs (IDE + pharmacies) + 20 patients HAD",

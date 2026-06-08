@@ -1081,9 +1081,12 @@ label{font-size:11px;font-weight:700;letter-spacing:.5px;color:#8a98a8;text-tran
   -webkit-backdrop-filter:blur(8px) saturate(140%);
   display:flex;
   align-items:center;justify-content:center;
-  z-index:80;
+  z-index:999990;  /* 0.65.14 : z-index ÉNORME pour passer au-dessus de tout (était 80, parfois coincé dans des contextes de stacking parents) */
   padding:20px;
   animation:modal-bg-in 220ms var(--av-ease-out);
+  /* 0.65.14 : casse tout contexte de stacking parent */
+  isolation: isolate;
+  transform: translateZ(0);
 }
 @keyframes modal-bg-in {
   from { opacity:0; backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
@@ -1273,11 +1276,40 @@ table{min-width:560px}                 /* force le scroll plutôt que d'écraser
   padding:0;
   overflow:hidden;
   /* 0.58.9 : animation slide-up plus marquée + shadow premium */
-  animation:modalIn 320ms var(--av-ease-out);
+  /* 0.65.14 : ULTRA HI-TECH - multi-layer shadows + glow teal + border premium */
+  animation:modalIn 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow:
-    0 30px 60px rgba(20,33,49,.30),
-    0 12px 24px rgba(20,33,49,.18),
-    0 0 0 1px rgba(255,255,255,.08) inset;
+    0 30px 80px rgba(20,33,49,.40),
+    0 16px 32px rgba(20,33,49,.22),
+    0 0 0 1px rgba(124,200,200,.15),
+    0 0 60px rgba(124,200,200,.08),
+    0 0 0 1px rgba(255,255,255,.10) inset,
+    0 1px 0 rgba(255,255,255,.20) inset;
+  border-radius: 20px;
+  position: relative;
+}
+/* 0.65.14 : Glow teal animé autour de la modale */
+.modal-v2::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  background: linear-gradient(135deg,
+    rgba(124,200,200,0.20),
+    rgba(24,95,165,0.15),
+    rgba(122,111,176,0.18),
+    rgba(124,200,200,0.20));
+  background-size: 400% 400%;
+  animation: modal-glow-rotate 8s ease infinite;
+  z-index: -1;
+  filter: blur(2px);
+  pointer-events: none;
+  opacity: 0.6;
+}
+@keyframes modal-glow-rotate {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 @keyframes modalIn{
   from { transform:translateY(40px) scale(.94); opacity:0; }
