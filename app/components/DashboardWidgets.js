@@ -3213,7 +3213,7 @@ export function ChargeEquipesWidget() {
           .from("interventions")
           .select("equipe_id, statut")
           .eq("structure_id", auth.structureId)
-          .in("etat", ["Nouvelle", "En cours", "Planifiée"]);
+          .in("statut", ["Nouvelle", "En cours", "Planifiée"]);
 
         const counts = {};
         (intervs || []).forEach(i => {
@@ -3480,10 +3480,10 @@ export function TauxPanneCategorieWidget() {
     async function load() {
       if (!auth?.structureId) return;
       try {
-        // 1. Compte total matériels par catégorie
+        // 1. Compte total matériels par catégorie (0.65.19 : retrait jointure articles si FK pas déclarée)
         const { data: materiels } = await supabase
           .from("materiels")
-          .select("id, categorie, articles(libelle, famille)")
+          .select("id, libelle, marque, modele")
           .eq("structure_id", auth.structureId);
 
         // 2. Compte interventions sur 90j par materiel_id

@@ -274,7 +274,7 @@ export default function Accueil() {
       try {
         const [diR, achR, sigR, renR, mainR] = await Promise.all([
           supabase.from("interventions").select("id", { count: "exact", head: true })
-            .not("statut", "in", "(\"Clôturée\",\"Refusée\")"),
+            .neq("statut", "Clôturée").neq("statut", "Refusée"),
           supabase.from("achats").select("id", { count: "exact", head: true })
             .eq("statut", "À valider"),
           supabase.from("signalements").select("id", { count: "exact", head: true })

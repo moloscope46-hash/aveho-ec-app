@@ -240,6 +240,24 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.19",
+    "kind": "feat",
+    "titre": "Fix 400 final (etat dashboard + not.in encoding accents) + SQL +30 utilisateurs +30 notifications + adresses INSEE patients",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX 400 DashboardWidgets : interventions.etat → statut (la colonne etat n existe pas)" },
+      { "code": "AI", "txt": "FIX 400 not.in encoding : les Postgrest .not(statut, in, (Cloturee, Refusee)) failaient a cause de l encodage URL des accents. Remplace par .neq(statut, Cloturee).neq(statut, Refusee) sur 6 fichiers (carte-had, interventions, had-list, architecture, accueil, useRealtimeNotifs)" },
+      { "code": "AI", "txt": "FIX 400 materiels join articles : retrait de la jointure articles(libelle, famille) qui necessitait une FK declaree non presente" },
+      { "code": "AI", "txt": "SQL 0.65.19 : +30 utilisateurs (profils) avec rattachement complet a la structure et roles diversifies. 8 techniciens SAV biomedicaux (Hugo Martin senior, Yassir Aouaj, Corentin David, Julien Bertrand, Issam Alouane HAD, Marc Dubois, Stephane Leroy CPAP, Thomas Moreau perfusion). 2 coordinateurs HAD (Aurelie Fontaine Lyon centre, Patrick Lambert Villeurbanne). 5 IDE (Sophie Lefebvre coord HAD, Mathilde Garnier EHPAD, Celine Dupont Clinique cardio, Isabelle Roussel bloc, Nathalie Lemoine rea). 4 medecins (Dr Germain coord HAD, Dr Lecomte gerontologie, Dr Barthelemy urgentiste, Dr Perrot anesthesiste). 3 chauffeurs/livreurs. 3 admin/direction (Helene Lafaye DG, Romain Bertrand resp SAV, Mathieu Morin resp magasin). 2 admin facturation/RH. 1 pharmacien hospitalier. 3 parametriques (dieteticienne, kine, ergo)" },
+      { "code": "AI", "txt": "SQL : +30 notifications massivement realistes couvrant TOUTES les categories. Pannes (CPAP fuite patient LACROIX, concentrateur HS, pompe PCA alarme batterie, defib erreur). Maintenances (4 lits Hill-Rom EHPAD, 10 CPAP pneumo, etalonnage defib). Commandes (livree clinique, en preparation EHPAD, urgent pansements, nouvelle HAD). Transferts (a valider, recu, en attente). Signalements (frigo pharmacie, casse materiel HAD, cuve O2 niveau bas). Workflow (approbation > 2000 euros, validation devis CPAP). RGPD (5 consentements expirent). Patients (nouveau HAD urgence, transfere EHPAD, critique rea). Stock (compresses bas, cassettes PCA critique). Info webinaire 26/06. Bilans SAV mensuel. HAD (8 patients tournee, tournee terminee 6/8). Vehicules (Mercedes Sprinter 50000 km)" },
+      { "code": "AI", "txt": "SQL : Patients adresses INSEE completes. 19 rues reelles de Lyon (Republique, Jean Jaures, Bellecour, Lafayette, Brotteaux, Garibaldi, Vendome, Berthelot, Augagneur, Herriot, Vitton, Carmelites, Sainte-Catherine, Croix-Rousse, Tolstoi, Zola, Barbusse, France) + 23 codes postaux INSEE 69001-69009, 69100-69500 + coordonnees GPS reparties dans la metropole" },
+      { "code": "AI", "txt": "SQL : Etablissements adresses + FINESS test : EHPAD Lilas 125 av Berthelot 69007 FINESS 690999991, Clinique 8 bd Croix-Rousse 69004 FINESS 690999992, HAD 42 rue Republique 69003 FINESS 690999993" },
+      { "code": "INFO", "txt": "Procedure : rejouer SQL (258K). Push code. Tests : (1) Console propre 0 erreur 400. (2) /utilisateurs voir 30+ utilisateurs avec roles varies. (3) Cloche notifs montre 20+ non lues avec contenus realistes. (4) /patient les adresses sont remplies avec rues + CP Lyon" }
+    ],
+    "themes": ["fix-bugs-400", "feature", "demo-data", "users"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.19.html"
+  },
+{
     "v": "0.65.18",
     "kind": "feat",
     "titre": "MEGA SQL : +140 materiels (20 par etat) + 10 cuves + patients TOUS champs completes + articles fiche complete",

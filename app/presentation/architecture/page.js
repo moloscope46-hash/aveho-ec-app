@@ -84,7 +84,7 @@ function PresentationArchitecture() {
           .select("id, statut, urgence, batiment_id, service_id")
           .eq("structure_id", auth.structureId)
           .eq("batiment_id", b.id)
-          .not("statut", "in", '("Clôturée","Refusée")')),
+          .neq("statut", "Clôturée").neq("statut", "Refusée")),
         tryFetch(supabase.from("depots")
           .select("id, nom, etablissement_id, batiment_id")
           .eq("structure_id", auth.structureId)

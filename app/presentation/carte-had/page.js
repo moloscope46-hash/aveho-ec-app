@@ -138,7 +138,7 @@ function PresentationCarteHAD() {
     let qDI = supabase.from("interventions")
       .select("id, numero, type, statut, urgence, created_at, patient_id, etablissement_id, batiment_id, service_id, chambre_id, materiels(libelle), patients!inner(nom, prenom, latitude, longitude, ville, mode_residence)")
       .eq("structure_id", auth.structureId)
-      .not("statut", "in", '("Clôturée","Refusée")')
+      .neq("statut", "Clôturée").neq("statut", "Refusée")
       .not("patients.latitude", "is", null)
       .not("patients.longitude", "is", null)
       .order("created_at", { ascending: false })

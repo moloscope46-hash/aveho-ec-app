@@ -80,7 +80,7 @@ function PresentationHadList() {
           .select("id, numero, type, statut, urgence, created_at, date_planifiee, materiels(libelle, num_parc)")
           .eq("structure_id", auth.structureId)
           .eq("patient_id", p.id)
-          .not("statut", "in", '("Clôturée","Refusée")')
+          .neq("statut", "Clôturée").neq("statut", "Refusée")
           .order("created_at", { ascending: false })
           .limit(10)),
         tryFetch(supabase.from("tournees_etapes")

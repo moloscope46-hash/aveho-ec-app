@@ -67,7 +67,7 @@ function PresentationInterventions() {
       .from("interventions")
       .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, batiment_id, service_id, chambre_id, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, ville), etablissements(nom, ville), batiments(nom), services(nom, etage), equipes(nom, couleur)")
       .eq("structure_id", auth.structureId)
-      .not("statut", "in", '("Clôturée","Refusée")')
+      .neq("statut", "Clôturée").neq("statut", "Refusée")
       .order("urgence", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(30);
