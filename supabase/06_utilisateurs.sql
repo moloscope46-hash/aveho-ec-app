@@ -16,6 +16,10 @@ create table if not exists roles (
   created_at timestamptz default now()
 );
 
+-- Alpha 0.15 : alias permissions_json = droits pour compat avec le code app
+alter table roles add column if not exists permissions_json jsonb;
+update roles set permissions_json = droits where permissions_json is null;
+
 -- ---------- PROFIL UTILISATEUR (étend membres_structure) ----------
 -- On enrichit le rattachement existant : rôle + nom affiché.
 alter table membres_structure add column if not exists role_id uuid references roles(id) on delete set null;

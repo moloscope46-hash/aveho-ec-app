@@ -1,4 +1,5 @@
 "use client";
+// Page Promotions — Promotions actives sur le catalogue
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
@@ -6,6 +7,9 @@ import { joursRestants } from "../../lib/format";
 import TopBar from "../TopBar";
 import { useCart } from "../useCart";
 import { PageHead, StateMsg } from "../ui";
+// 0.58.50 : migration UI premium
+import { EmptyState, SkeletonRow } from "../components/ui-premium";
+import { logger } from "../../lib/logger";
 
 export default function Promotions() {
   const supabase = createClient();
@@ -18,13 +22,19 @@ export default function Promotions() {
   useEffect(() => {
     if (!auth.ready) return;
     (async () => {
-      const [{ data: pr }, { data: mg }] = await Promise.all([
-        supabase.from("promotions").select("*").eq("actif", true).order("fin_le"),
-        supabase.from("magasins").select("id,nom"),
-      ]);
-      setPromos(pr || []);
-      setMagasins(Object.fromEntries((mg || []).map((m) => [m.id, m.nom])));
-      setLoading(false);
+      try {
+        const [{ data: pr }, { data: mg }] = await Promise.all([
+          supabase.from("promotions").select("*").eq("actif", true).order("fin_le"),
+          supabase.from("magasins").select("id,nom"),
+        ]);
+        setPromos(pr || []);
+        setMagasins(Object.fromEntries((mg || []).map((m) => [m.id, m.nom])));
+      } catch (e) {
+        // 0.57.5 : try/catch englobant pour pas crasher la page
+        logger.error("[Promotions] load failed:", e);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [auth.ready]);
 
@@ -46,8 +56,16 @@ export default function Promotions() {
           </div>
           <div className="promo-sub">Cliquez sur COMMANDER pour ajouter l'offre à votre panier</div>
 
-          {loading ? <StateMsg>Chargement des promotions…</StateMsg>
-            : promos.length === 0 ? <StateMsg>Aucune promotion active.</StateMsg>
+          {loading ? <SkeletonRow count={4} />
+            : promos.length === 0 ? (
+              <EmptyState
+                icon="ti-discount-2-off"
+                title="Aucune promotion active"
+                description="Aucune offre promotionnelle n'est disponible pour le moment. Revenez plus tard ou consultez le catalogue complet."
+                actionLabel="Voir le catalogue"
+                onAction={() => window.location.href = "/catalogue"}
+              />
+            )
             : (
               <div className="promo-grid">
                 {promos.map((p) => {
@@ -67,7 +85,15 @@ export default function Promotions() {
                       </div>
                       <div className="promo-foot">
                         <span className="days"><i className="ti ti-clock" /> {jr != null ? `${jr}j restants` : "—"}</span>
-                        <button className={`btn-cmd ${t}`} onClick={() => cart.add(p)}>Commander <i className="ti ti-arrow-right" /></button>
+                        <button className={`btn-cmd ${t}`} onClick={async () => {
+                          // 0.62.0 : application auto mercuriale si user a un établissement actif
+                          if (cart.addWithMercuriale && auth.etablissementId) {
+                            const info = await cart.addWithMercuriale({ article: { ...p, id: p.id || p.article_id, titre: p.titre }, etablissementId: auth.etablissementId });
+                            if (info?.source) console.log(`💰 Mercuriale appliquée : ${info.nom} (${info.source})`);
+                          } else {
+                            cart.add(p);
+                          }
+                        }}>Commander <i className="ti ti-arrow-right" /></button>
                       </div>
                     </div>
                   );
