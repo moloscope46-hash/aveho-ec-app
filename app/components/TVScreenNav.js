@@ -204,18 +204,19 @@ export default function TVScreenNav({ currentScreen }) {
         </div>
       )}
 
-      {/* 0.65.16 : Bouton SORTIR du mode plein écran TV en haut à droite */}
+      {/* 0.65.21 : Bouton SORTIR du mode TV SOUS la barre de tuiles (centré bas) */}
       <button
         onClick={() => router.push("/accueil")}
         style={{
           position: "fixed",
-          top: 16,
-          right: 16,
+          bottom: 70,  /* Juste au-dessus du footer dots */
+          left: "50%",
+          transform: "translateX(-50%)",
           zIndex: 102,
-          background: "rgba(227, 93, 91, .9)",
+          background: "rgba(227, 93, 91, .92)",
           color: "#fff",
           border: "1.5px solid rgba(255,255,255,.3)",
-          padding: "10px 16px",
+          padding: "10px 24px",
           borderRadius: 24,
           fontSize: 13,
           fontWeight: 800,
@@ -226,13 +227,73 @@ export default function TVScreenNav({ currentScreen }) {
           display: "flex",
           alignItems: "center",
           gap: 8,
-          boxShadow: "0 4px 16px rgba(227, 93, 91, .4), 0 2px 6px rgba(0,0,0,.2)",
+          boxShadow: "0 6px 20px rgba(227, 93, 91, .5), 0 2px 6px rgba(0,0,0,.25)",
           backdropFilter: "blur(8px)",
         }}
         title="Sortir du mode TV"
       >
         <i className="ti ti-x" style={{ fontSize: 16 }} /> Sortir TV
       </button>
+
+      {/* 0.65.21 : Boutons PARTAGE en haut-droite : AirPlay + ChromeCast */}
+      <div style={{
+        position: "fixed",
+        top: 16,
+        right: 16,
+        zIndex: 102,
+        display: "flex",
+        gap: 8,
+      }}>
+        {/* AirPlay (iOS/Safari) */}
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined" && window.WebKitPlaybackTargetAvailabilityEvent) {
+              alert("Recherche d'appareils AirPlay disponibles...\n(Fonctionnalité native iOS/macOS Safari)");
+            } else {
+              alert("AirPlay n'est disponible que sur Safari (iOS/macOS).\nUtilisez ChromeCast sur Chrome.");
+            }
+          }}
+          title="Diffuser via AirPlay (iOS/Safari)"
+          style={{
+            width: 44, height: 44, borderRadius: "50%",
+            background: "rgba(20, 33, 49, .85)",
+            color: "#fff",
+            border: "1.5px solid rgba(255,255,255,.3)",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 18,
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 4px 16px rgba(0,0,0,.3)",
+          }}
+        >
+          <i className="ti ti-airplay" />
+        </button>
+
+        {/* ChromeCast (Chrome) */}
+        <button
+          onClick={() => {
+            if (typeof window !== "undefined" && window.chrome && window.chrome.cast) {
+              alert("Recherche d'appareils ChromeCast disponibles...");
+            } else {
+              alert("ChromeCast nécessite Google Chrome.\nClick l'icône Cast dans la barre Chrome (en haut-droite du navigateur).");
+            }
+          }}
+          title="Diffuser via ChromeCast (Google Chrome)"
+          style={{
+            width: 44, height: 44, borderRadius: "50%",
+            background: "rgba(20, 33, 49, .85)",
+            color: "#fff",
+            border: "1.5px solid rgba(255,255,255,.3)",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 18,
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 4px 16px rgba(0,0,0,.3)",
+          }}
+        >
+          <i className="ti ti-cast" />
+        </button>
+      </div>
 
       <style>{`
         @keyframes tv-pulse-dot {

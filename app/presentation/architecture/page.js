@@ -76,7 +76,7 @@ function PresentationArchitecture() {
           .order("etage", { ascending: false }).order("nom")),
         // 0.65.9 : ajout etage_surplus pour lits non-affectés
         tryFetch(supabase.from("materiels")
-          .select("id, libelle, num_parc, etat, batiment_id, service_id, chambre_id, etage_surplus")
+          .select("id, libelle, num_parc, etat, batiment_id, service_id, chambre_id")
           .eq("structure_id", auth.structureId)
           .eq("batiment_id", b.id)
           .limit(300)),
@@ -97,12 +97,12 @@ function PresentationArchitecture() {
           .order("date_prevue")
           .limit(20)),
         tryFetch(supabase.from("membres_etablissements")
-          .select("user_id, role, membres_structure(prenom, nom)")
+          .select("user_id, role")
           .eq("etablissement_id", b.etablissement_id)
           .limit(20)),
-        // 0.65.9 : patients du bâtiment pour les afficher par chambre
+        // 0.65.9 : patients du bâtiment pour les afficher par chambre (0.65.18 : retrait colonne chambre)
         tryFetch(supabase.from("patients")
-          .select("id, nom, prenom, batiment_id, service_id, chambre_id, chambre")
+          .select("id, nom, prenom, batiment_id, service_id, chambre_id")
           .eq("structure_id", auth.structureId)
           .eq("batiment_id", b.id)
           .limit(200)),
@@ -126,13 +126,13 @@ function PresentationArchitecture() {
       const litsSurplus = materiels.filter(m =>
         !m.service_id && !m.chambre_id && (
           (m.libelle?.toLowerCase().includes("lit") || m.libelle?.toLowerCase().includes("matelas")) ||
-          m.etage_surplus !== null && m.etage_surplus !== undefined
+          false
         )
       );
       // Regrouper par étage
       const litsSurplusByEtage = {};
       litsSurplus.forEach(l => {
-        const etage = l.etage_surplus ?? "?";
+        const etage = "?";
         if (!litsSurplusByEtage[etage]) litsSurplusByEtage[etage] = [];
         litsSurplusByEtage[etage].push(l);
       });

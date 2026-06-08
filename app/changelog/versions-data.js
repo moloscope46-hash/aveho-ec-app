@@ -240,6 +240,39 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.21",
+    "kind": "fix",
+    "titre": "Fix 400 etage_surplus + membres_etablissements jointure + Sortir TV SOUS tuiles + AirPlay/ChromeCast haut-droite + StatusIcons bouton Fermer",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX 400 materiels.etage_surplus : colonne n existe pas, retiree des SELECT dans architecture page. Logique d affichage adaptee (false / ?)" },
+      { "code": "AI", "txt": "FIX 400 membres_etablissements?...membres_structure(prenom,nom) : jointure FK non declaree, retiree. Affichage simplifie sans prenom/nom (a recuperer separement plus tard si necessaire)" },
+      { "code": "AI", "txt": "FIX 400 patients(chambre) dans architecture : colonne retiree" },
+      { "code": "AI", "txt": "TV mode : bouton SORTIR TV deplace SOUS les tuiles (bottom 70px centre) au lieu de en haut a droite. Plus visible, ne cache pas le contenu" },
+      { "code": "AI", "txt": "TV mode : nouveaux boutons PARTAGER en haut a droite : AirPlay (iOS/Safari) et ChromeCast (Chrome) avec icones rondes 44px noir glassmorphism. Alert avec instructions si non disponible" },
+      { "code": "AI", "txt": "StatusIcons footer : ajout bouton Fermer + texte raccourci (Gere par le navigateur permissions dans reglages OS) au lieu du message long qui prenait toute la largeur" },
+      { "code": "INFO", "txt": "ATTENTION CACHE : ton navigateur garde l ancien JS (5549-9d3437d2a9298300.js). Apres push, fais Ctrl+Shift+R (hard refresh) ou efface le cache du site. Sinon tu verras toujours les anciens 400" }
+    ],
+    "themes": ["fix-bugs-400", "ui", "tv"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.21.html"
+  },
+{
+    "v": "0.65.20",
+    "kind": "feat",
+    "titre": "SwitchToPhoneFab en haut-droite + Rattachement magasin officiel SQL + Agenda massif (+40 maintenances + 8 tournees)",
+    "chantiers": [
+      { "code": "AI", "txt": "SwitchToPhoneFab : bouton Continuer sur mon telephone deplace en HAUT-DROITE (etait bas-droite, plus visible et standard). Position fixed top:70px right:16 + zIndex 9998. Taille reduite a 44x44 (plus discret). Visible mobile ET desktop" },
+      { "code": "AI", "txt": "FIX SQL : retrait du INSERT profiles (la table profiles n existait pas dans Supabase basique, faisait planter tout le bloc 0.65.19). Le SQL passe maintenant sans erreur" },
+      { "code": "AI", "txt": "FIX message Tu n es rattache a aucun magasin : ajout du SQL OFFICIEL recommande par le composant lui-meme. UPDATE membres_structure SET magasin_fournisseur_id + role_professionnel utilisateur_magasin WHERE email moloscope46@gmail.com. C est cette colonne specifique magasin_fournisseur_id qui est verifiee par useMagasinContext, pas membres_magasin" },
+      { "code": "AI", "txt": "SQL : +40 maintenances dans la table maintenances pour remplir l agenda. 20 preventives (lits Hill-Rom, CPAP MAJ firmware, pompes PCA, concentrateurs, defib test choc, fauteuils, matelas, pompes nutrition, couveuse neonat, bistouri) avec dates etalees sur 90 jours futurs. 10 curatives (lit moteur HS, pompe HS, concentrateur, fauteuil moteur droit, leve-personne, defib electrodes, matelas, verticalisateur, aspirateur, couveuse) en cours ou planifiees. 5 calendrier futur (60-150j). 5 passees terminees" },
+      { "code": "AI", "txt": "SQL : +8 tournees planifiees dans la table tournees pour remplir l agenda. TOUR-HAD-046 demain matin Lyon centre (6 etapes). TOUR-HAD-047 Villeurbanne aprem (5 etapes). TOUR-HAD-048 urgences soir (3 etapes). TOUR-EHPAD-021 livraison hebdo (8 etapes). TOUR-CLIN-018 Clinique (4 etapes). TOUR-HAD-049 week-end (4 etapes). TOUR-MAG-055 reappro magasin (12 etapes). TOUR-HAD-050 lundi prochain (7 etapes)" },
+      { "code": "INFO", "txt": "Procedure 0.65.20 : rejouer SQL (265K). Push code. Tests : (1) Bouton telephone en HAUT-DROITE de toutes les pages mobile et PC. (2) Plus de message Tu n es rattache a aucun magasin (verifier que SELECT email moloscope46 a marche dans SQL). (3) /agenda voir 40 maintenances + 8 tournees etalees sur 90 jours. (4) /interventions voir tous les types de DI" }
+    ],
+    "themes": ["feature", "ui", "demo-data", "agenda"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.20.html"
+  },
+{
     "v": "0.65.19",
     "kind": "feat",
     "titre": "Fix 400 final (etat dashboard + not.in encoding accents) + SQL +30 utilisateurs +30 notifications + adresses INSEE patients",

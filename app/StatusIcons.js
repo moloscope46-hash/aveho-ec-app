@@ -525,16 +525,37 @@ export default function StatusIcons({ auth }) {
                 })}
               </div>
 
-              {/* Footer */}
+              {/* Footer (0.65.21 : message + bouton fermer/redirect réglages) */}
               <div style={{
-                padding: "12px 18px",
+                padding: "10px 18px",
                 background: "#f4f7fa",
                 borderTop: "1px solid #e3e9ee",
                 fontSize: 11,
-                color: "#8a98a8",
-                textAlign: "center",
+                color: "#5a6878",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
               }}>
-                <i className="ti ti-info-circle" /> Tout est géré par votre navigateur · paramètres dans les réglages OS pour les permissions refusées
+                <span style={{ flex: 1 }}>
+                  <i className="ti ti-info-circle" /> Géré par le navigateur · permissions dans réglages OS
+                </span>
+                <button
+                  onClick={() => setOpen(false)}
+                  style={{
+                    background: "#142131",
+                    color: "#fff",
+                    border: "none",
+                    padding: "5px 12px",
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Fermer
+                </button>
               </div>
             </div>
           </div>
