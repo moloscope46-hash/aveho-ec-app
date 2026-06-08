@@ -240,6 +240,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.24",
+    "kind": "fix",
+    "titre": "Fix materiels.batiment_id (colonne inexistante) + utilisation bons_reception + stock_mouvements + materiel_mouvements (tables reelles Supabase)",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX CRITIQUE materiels n a PAS de colonne batiment_id : architecture/page.js filtre maintenant via depot.batiment_id. On indexe les depots par batiment_id puis on filtre les materiels par depot_id IN (depots du bat). Plus de 400 sur materiels" },
+      { "code": "AI", "txt": "FIX SQL : utilise les VRAIES tables Supabase fournies par Cedric. bons_reception (et pas receptions_fournisseur). stock_mouvements (et pas mouvements_stock uniquement). materiel_mouvements pour les mouvements de materiels physiques" },
+      { "code": "AI", "txt": "+8 bons de reception (BR-2026-0001 a 0008) dans la table bons_reception avec montant_ht, statut, notes" },
+      { "code": "AI", "txt": "+10 mouvements stock dans stock_mouvements (10 entrees reception fournisseur consommables et materiel)" },
+      { "code": "AI", "txt": "+10 mouvements materiels dans materiel_mouvements : Sortie affectation EHPAD/Clinique, Transfert depot central → EHPAD, Retour patient (DCD, hospitalisation), Transit vers HAD, Rebut obsolete filiere DASRI/DEEE, Maintenance envoi atelier" },
+      { "code": "AI", "txt": "Cree aveho-DIAGNOSTIC-2-colonnes.sql pour que Cedric voie les colonnes precises des tables critiques (interventions, maintenances, materiels, services, stock_mouvements, bons_reception, membres_etablissements, patients, articles)" },
+      { "code": "INFO", "txt": "Procedure : rejouer SQL (288K). Push code. Hard refresh. Tests : (1) /etablissements architecture ne fait plus de 400 sur materiels. (2) /bons-reception ou /receptions voir 8 BR. (3) /mouvements voir 10 mouvements stock + 10 mouvements materiels. (4) /presentation/interventions voir DI affichees (fallback 3 niveaux 0.65.23 actif)" }
+    ],
+    "themes": ["fix-bugs-400", "demo-data", "schema"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.24.html"
+  },
+{
     "v": "0.65.23",
     "kind": "fix",
     "titre": "Fix CRITIQUE 400 architecture (7 queries en parallele par batiment) + interventions TV fallback 3 niveaux + planning sans jointures + SQL diagnostique colonnes",
