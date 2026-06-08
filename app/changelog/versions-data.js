@@ -240,6 +240,22 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.15",
+    "kind": "fix",
+    "titre": "Fix UserMenu PC/Mobile + Modal glow retire + Boutons modaux taille normale + Cards commandes ENRICHIES",
+    "chantiers": [
+      { "code": "AI", "txt": "UserMenu : flipUp completement DESACTIVE (causait bug en PC desormais). Le menu s ouvre TOUJOURS vers le bas en desktop et en bottom-sheet sur mobile (via CSS)" },
+      { "code": "AI", "txt": "Modal : retire le glow ::before anime qui perturbait l affichage et causait des problemes visuels. On garde les shadows premium multi-layer mais sans le glow rotatif" },
+      { "code": "AI", "txt": "Boutons footer modal : retire le flex:1 qui rendait les boutons enormes (50% chacun) sur mobile. Maintenant : flex:0 1 auto + min-width 140px sur primary uniquement. Boutons reviennent a taille normale" },
+      { "code": "AI", "txt": "Liste commandes ENRICHIE : default viewMode = grid (cards) au lieu de list. Chaque card affiche maintenant : numero + statut + date commande + date livraison prevue + Etablissement + Magasin + Fournisseur + Notes (extrait) + Total HT + Total TTC en gros. Statuts traduits avec couleurs (livree vert, annulee rouge, en preparation orange, envoyee teal, autres bleu)" },
+      { "code": "AI", "txt": "SELECT commandes enrichi avec etablissements(nom, ville) + fournisseurs(raison_sociale) en jointure. Les cards sont desormais ULTRA informatives" },
+      { "code": "INFO", "txt": "Procedure 0.65.15 : extraire zip + npm install --legacy-peer-deps + build + push. Tests : (1) Click avatar user en haut a droite -> menu s ouvre VERS LE BAS (jamais vers le haut). (2) Click sur Nouveau achat -> boutons Annuler/Enregistrer taille normale, pas enormes. (3) /commandes -> cards riches avec etab + fournisseur + montant HT/TTC + notes" }
+    ],
+    "themes": ["fix", "ui", "commandes"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.15.html"
+  },
+{
     "v": "0.65.14",
     "kind": "fix",
     "titre": "Fix SQL double AS + Modal hi-tech glow + FAB en haut-gauche + Cast popup centré + +60 DI tous types",
