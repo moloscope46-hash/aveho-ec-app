@@ -14,7 +14,6 @@ import WorkflowApproval from "../components/WorkflowApproval";  /* 0.63.0 */
 import { useEditLock } from "../../lib/useEditLock";  /* 0.62.127 */
 import LockBanner from "../components/LockBanner";  /* 0.62.127 */
 import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
-import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
 import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
 import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
