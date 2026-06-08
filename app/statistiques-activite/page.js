@@ -382,14 +382,27 @@ function StatistiquesActiviteInner() {
         y += 6;
       }
 
-      // Footer pagination
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(138, 152, 168);
-        doc.text(`Aveho EC — Rapport d'activité ${auth.structureNom || ""} — Page ${i}/${pageCount}`, 14, 290);
-        doc.text(`Édité le ${today}`, 196, 290, { align: "right" });
+      // Footer pagination (0.62.125 : via lib/pdfFooter premium)
+      try {
+        const { addPdfFooter, getStructureFooterInfo } = await import("../../lib/pdfFooter");
+        const { createClient } = await import("../../lib/supabase");
+        const supabase = createClient();
+        const structureInfo = await getStructureFooterInfo(supabase, auth.structureId);
+        addPdfFooter(doc, {
+          type: "Rapport d'activité",
+          structure: structureInfo,
+          showLegal: true,
+        });
+      } catch (e) {
+        // Fallback footer simple
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(138, 152, 168);
+          doc.text(`Aveho EC — Rapport d'activité ${auth.structureNom || ""} — Page ${i}/${pageCount}`, 14, 290);
+          doc.text(`Édité le ${today}`, 196, 290, { align: "right" });
+        }
       }
 
       const slug = (auth.structureNom || "structure")

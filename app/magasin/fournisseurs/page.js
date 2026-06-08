@@ -8,9 +8,12 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import { useMagasinContext } from "../../../lib/useMagasinContext";
 import TopBar from "../../TopBar";
+import { useEditLock } from "../../../lib/useEditLock";  /* 0.62.126 */
+import LockBanner from "../../components/LockBanner";  /* 0.62.126 */
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import ImageUploader from "../../components/ImageUploader";  /* 0.62.93 */
+import AdresseAutocomplete from "../../AdresseAutocomplete";  /* 0.62.124 */
 import { EmptyState } from "../../components/PremiumKpi";
 import PageToolbar from "../../components/PageToolbar";
 import BackButton from "../../components/BackButton";
@@ -37,6 +40,8 @@ export default function FournisseursPage() {
   const [fActif, setFActif] = useState(true);
 
   const [modal, setModal] = useState(null);
+  // 0.62.126 : Lock anti-collision sur édition
+  const fournisseurLock = useEditLock("fournisseur", form?.id, modal === "edit" && !!form?.id);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -217,6 +222,8 @@ export default function FournisseursPage() {
             <Btn variant="primary" onClick={save} disabled={busy}>{busy ? "Enregistrement..." : "Enregistrer"}</Btn>
           </>}>
           <div style={{ display: "grid", gap: 10 }}>
+            {/* 0.62.126 : LockBanner si édition concurrente */}
+            {fournisseurLock?.locked && <LockBanner lockedBy={fournisseurLock.lockedBy} onTakeover={fournisseurLock.takeover} resourceLabel="ce fournisseur" />}
             {/* 0.62.93 : Logo fournisseur */}
             <ImageUploader
               value={form.logo_url}
@@ -239,7 +246,23 @@ export default function FournisseursPage() {
               <label>Email <input type="email" value={form.email || ""} onChange={(e) => setForm({ ...form, email: e.target.value })} style={inputStyle()} /></label>
               <label>Téléphone <input value={form.telephone || ""} onChange={(e) => setForm({ ...form, telephone: e.target.value })} style={inputStyle()} /></label>
             </div>
-            <label>Adresse <input value={form.adresse || ""} onChange={(e) => setForm({ ...form, adresse: e.target.value })} style={inputStyle()} /></label>
+            {/* 0.62.124 : Adresse avec autocomplete BAN gouv.fr */}
+            <label>Adresse
+              <AdresseAutocomplete
+                value={form.adresse || ""}
+                onChange={(v) => setForm({ ...form, adresse: v })}
+                onSelect={(a) => setForm({
+                  ...form,
+                  adresse: a.adresse,
+                  cp: a.code_postal,
+                  ville: a.ville,
+                  code_insee: a.code_insee,
+                  latitude: a.latitude,
+                  longitude: a.longitude,
+                })}
+                placeholder="N° + rue (autocomplete activé)"
+              />
+            </label>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10 }}>
               <label>CP <input value={form.cp || ""} onChange={(e) => setForm({ ...form, cp: e.target.value })} style={inputStyle()} /></label>
               <label>Ville <input value={form.ville || ""} onChange={(e) => setForm({ ...form, ville: e.target.value })} style={inputStyle()} /></label>

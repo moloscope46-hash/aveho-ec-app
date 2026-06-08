@@ -217,6 +217,9 @@ export default function Profil() {
 
             {err && <div className="err" style={{ marginBottom: 14 }}>{err}</div>}
 
+            {/* 0.62.133 : Panel notifications natives */}
+            <NotifPrefsPanel />
+
             {/* === ONGLET ACTIVITÉ === */}
             {activeTab === "activite" && (
             <div key="activite" className="av-tab-content">
@@ -1162,5 +1165,166 @@ function ShortcutsConfigPanel() {
         )}
       </div>
     </div>
+  );
+}
+
+// 0.62.133 : Panel paramètres notifications natives
+function NotifPrefsPanel() {
+  const [prefs, setPrefs] = useState({ sound: true, native: true });
+  const [permission, setPermission] = useState("default");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { getNotifPrefs } = await import("../../lib/notifSounds");
+      setPrefs(getNotifPrefs());
+      if (typeof Notification !== "undefined") {
+        setPermission(Notification.permission);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  async function toggle(key) {
+    const newPrefs = { ...prefs, [key]: !prefs[key] };
+    setPrefs(newPrefs);
+    const { setNotifPrefs, requestNotifPermission } = await import("../../lib/notifSounds");
+    setNotifPrefs(newPrefs);
+    if (key === "native" && newPrefs.native && permission !== "granted") {
+      const res = await requestNotifPermission();
+      setPermission(res);
+    }
+  }
+
+  async function testSound(type) {
+    const { playNotifSound } = await import("../../lib/notifSounds");
+    playNotifSound(type);
+  }
+
+  async function testNative() {
+    const { showNativeNotif } = await import("../../lib/notifSounds");
+    await showNativeNotif("🔔 Test Aveho", { body: "Si vous voyez ceci, les notifications natives fonctionnent !" });
+  }
+
+  if (loading) return null;
+
+  return (
+    <Panel style={{ marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <i className="ti ti-bell-ringing" style={{ fontSize: 20, color: "#EF9F27" }} />
+        <h2 style={{ margin: 0, fontSize: 17, color: "#142131" }}>Notifications</h2>
+        <span style={{ marginLeft: "auto", fontSize: 11, color: "#8a98a8" }}>
+          Personnalise tes alertes auto
+        </span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+        {/* Card SON */}
+        <div style={{
+          padding: 14,
+          background: prefs.sound ? "linear-gradient(135deg, rgba(124, 200, 200, .12), #fff)" : "#fff",
+          border: `1.5px solid ${prefs.sound ? "rgba(124, 200, 200, .4)" : "#e3e9ee"}`,
+          borderRadius: 12,
+          display: "flex", flexDirection: "column", gap: 8,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <i className={`ti ${prefs.sound ? "ti-volume" : "ti-volume-off"}`} style={{ fontSize: 22, color: prefs.sound ? "#1c5454" : "#8a98a8" }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#142131" }}>Sons de notification</div>
+              <div style={{ fontSize: 11, color: "#5a6878" }}>Joue un son lors d'événements importants</div>
+            </div>
+            <button onClick={() => toggle("sound")}
+              style={{
+                padding: "4px 12px",
+                background: prefs.sound ? "linear-gradient(135deg, #5aa05a, #3d7a3d)" : "transparent",
+                color: prefs.sound ? "#fff" : "#5a6878",
+                border: prefs.sound ? "none" : "1px solid #cfd8e0",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: 11,
+                fontFamily: "inherit",
+              }}>
+              {prefs.sound ? "✓ Activé" : "Désactivé"}
+            </button>
+          </div>
+          {prefs.sound && (
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", paddingTop: 6, borderTop: "1px solid rgba(124, 200, 200, .25)" }}>
+              {["info", "success", "warning", "error", "urgent"].map(t => (
+                <button key={t} onClick={() => testSound(t)}
+                  style={{
+                    fontSize: 10, padding: "3px 8px",
+                    background: "#fff", border: "1px dashed #cfd8e0",
+                    borderRadius: 6, cursor: "pointer", fontFamily: "inherit",
+                    color: "#5a6878", fontWeight: 700,
+                  }}>
+                  🎵 {t}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Card NATIVE */}
+        <div style={{
+          padding: 14,
+          background: prefs.native ? "linear-gradient(135deg, rgba(24, 95, 165, .12), #fff)" : "#fff",
+          border: `1.5px solid ${prefs.native ? "rgba(24, 95, 165, .4)" : "#e3e9ee"}`,
+          borderRadius: 12,
+          display: "flex", flexDirection: "column", gap: 8,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <i className={`ti ${prefs.native ? "ti-bell" : "ti-bell-off"}`} style={{ fontSize: 22, color: prefs.native ? "#185FA5" : "#8a98a8" }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, color: "#142131" }}>Notifications natives</div>
+              <div style={{ fontSize: 11, color: "#5a6878" }}>Affiche des popups système (même app en arrière-plan)</div>
+            </div>
+            <button onClick={() => toggle("native")}
+              style={{
+                padding: "4px 12px",
+                background: prefs.native ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                color: prefs.native ? "#fff" : "#5a6878",
+                border: prefs.native ? "none" : "1px solid #cfd8e0",
+                borderRadius: 12,
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: 11,
+                fontFamily: "inherit",
+              }}>
+              {prefs.native ? "✓ Activé" : "Désactivé"}
+            </button>
+          </div>
+          <div style={{ paddingTop: 6, borderTop: "1px solid rgba(24, 95, 165, .25)", display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontSize: 10, color: "#5a6878" }}>
+              <strong>Statut permission :</strong>{" "}
+              {permission === "granted" ? (
+                <span style={{ color: "#5aa05a", fontWeight: 700 }}>✓ Accordée</span>
+              ) : permission === "denied" ? (
+                <span style={{ color: "#e35d5b", fontWeight: 700 }}>✕ Refusée (voir paramètres navigateur)</span>
+              ) : (
+                <span style={{ color: "#EF9F27", fontWeight: 700 }}>⏸ Non demandée</span>
+              )}
+            </div>
+            {prefs.native && permission === "granted" && (
+              <button onClick={testNative}
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 10, padding: "3px 8px",
+                  background: "#fff", border: "1px dashed #cfd8e0",
+                  borderRadius: 6, cursor: "pointer", fontFamily: "inherit",
+                  color: "#185FA5", fontWeight: 700,
+                }}>
+                🔔 Tester
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12, padding: 10, background: "#fafbfc", borderRadius: 8, fontSize: 11, color: "#5a6878" }}>
+        <i className="ti ti-info-circle" style={{ color: "#185FA5", marginRight: 4 }} />
+        Les notifications auto se déclenchent sur : <b>DI urgentes</b>, <b>workflow d'approbation</b>, <b>signalements critiques</b>. Historique consultable dans <a href="/audit/notifs" style={{ color: "#185FA5", fontWeight: 700 }}>Audit → Notifications</a>.
+      </div>
+    </Panel>
   );
 }

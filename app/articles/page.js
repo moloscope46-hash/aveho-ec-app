@@ -16,6 +16,9 @@ import { createClient } from "../../lib/supabase";
 import { safeSaveArticle } from "../../lib/articles";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
+import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 // 0.62.60 : PageToolbar universel

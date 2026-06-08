@@ -16,6 +16,10 @@ import { fmtDate } from "../../lib/format";
 // 0.58.42 : hook pour écouter les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
+import LockBanner from "../components/LockBanner";  /* 0.62.123 */
+import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
 import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import CompactToggle from "../CompactToggle";
 import { useCart } from "../useCart";
@@ -63,6 +67,8 @@ export default function Patients() {
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  // 0.62.123 : Lock anti-collision sur édition
+  const patientLock = useEditLock("patient", modal?.id, !!modal?.id);
   // Alpha 0.7 : filtres avancés
   const [filters, setFilters] = useStickyState({ q: "", service: "", chambre: "", etat: "", etiquette: "" }, "patients:filters");
   const [showFilters, setShowFilters] = useState(false);
@@ -393,6 +399,26 @@ export default function Patients() {
         <KpiRow tiles={kpis} />
         {/* Alpha 0.27.0 : indicateur "données potentiellement obsolètes" si lecture cache offline */}
         {staleData && <StaleDataBanner />}
+        {/* 0.62.120 : FoldableFilters avec search + filtres avancés */}
+        <FoldableFilters
+          searchValue={filters.q || ""}
+          onSearchChange={(v) => setFilters({ ...filters, q: v })}
+          searchPlaceholder="Rechercher un patient (nom, prénom, chambre…)"
+          activeFiltersCount={[filters.service, filters.chambre, filters.etat, filters.etiquette].filter(Boolean).length}
+          onResetAll={() => setFilters({ q: "", service: "", chambre: "", etat: "", etiquette: "" })}
+          storageKey="patients"
+        >
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <select value={filters.service || ""} onChange={(e) => setFilters({ ...filters, service: e.target.value })}
+              style={{ padding: "8px 12px", border: "1.5px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit" }}>
+              <option value="">— Tous les services —</option>
+            </select>
+            <input type="text" value={filters.chambre || ""} onChange={(e) => setFilters({ ...filters, chambre: e.target.value })}
+              placeholder="N° chambre" style={{ padding: "8px 12px", border: "1.5px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit", maxWidth: 140 }} />
+            <input type="text" value={filters.etiquette || ""} onChange={(e) => setFilters({ ...filters, etiquette: e.target.value })}
+              placeholder="Étiquette" style={{ padding: "8px 12px", border: "1.5px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit", maxWidth: 140 }} />
+          </div>
+        </FoldableFilters>
         <Panel>
           <div className="di-toolbar">
             {/* 0.62.75 : Mode Liste/Tuiles */}
@@ -928,6 +954,8 @@ export default function Patients() {
           <div className="modal">
             <div className="modal-head">{modal.id ? `Modifier le ${lbl("patient", "patient").toLowerCase()}` : `Nouveau ${lbl("patient", "patient").toLowerCase()}`} <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setModal(null)} /></div>
             <div className="modal-body">
+              {/* 0.62.123 : LockBanner si édition concurrente */}
+              {patientLock?.locked && <LockBanner lockedBy={patientLock.lockedBy} onTakeover={patientLock.takeover} resourceLabel="ce patient" />}
               {err && <div className="err">{err}</div>}
               {!modal.id && <EtabContextHeader auth={auth} color="#7a6fb0" icon="ti-user-heart" />}
               <div className="fld-row">

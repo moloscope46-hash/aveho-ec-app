@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.134 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.134
+      <small>🚀 GROSSE MAJ : Conditions templates avancées (catégorie/fournisseur/prescripteur) + Bouton créer planning_events + Widget BI Taux de panne par catégorie + Notifs natives acquittement workflow</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.134-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>5</b> AI · <b>3</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#workflow</span> <span class="theme-pill">#planning</span> <span class="theme-pill">#bi</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(5)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Conditions templates avancées dans /parametres/workflows</h3>
+  <div class="panel ">
+    
+    <p>🎯 extension UI de la modal édition avec section gradient ambre Conditions de déclenchement automatique</p>
+    <ol class="steps">
+      <li>Toggle auto_trigger</li>
+      <li>Si activé, grid de conditions : <strong>montant_min/max</strong> (achats only), <strong>fournisseur</strong> (contient...), <strong>catégorie</strong> (contient...), <strong>prescripteur</strong> (contient...), <strong>flag urgent</strong> (checkbox)</li>
+      <li>Note info en bas : toutes les conditions doivent être simultanément remplies</li>
+      <li>Payload save étendu avec conditions_json + auto_trigger</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Auto-trigger /achats étendu</h3>
+  <div class="panel ">
+    
+    <p>⚡ code de détection enrichi des conditions avancées 0.62.134. En plus de montant_min/montant_max/urgent, vérifie maintenant</p>
+    <ol class="steps">
+      <li><strong>fournisseur</strong> : form.fournisseur (toLowerCase includes cond.fournisseur)</li>
+      <li><strong>categorie</strong> : form.categorie matching</li>
+      <li><strong>prescripteur</strong> : form.prescripteur matching. Premier template avec auto_trigger=true ET toutes les conditions matchées → applyTemplate + toast info</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">EventCreateModal dans PlanningCalendar</h3>
+  <div class="panel ">
+    
+    <p>📅</p>
+    <ol class="steps">
+      <li>state createOpen ajouté</li>
+      <li><strong>Bouton Nouvel événement</strong> gradient ambre dans la toolbar après VIEW_MODES</li>
+      <li><strong>Modal</strong> avec backdrop blur + 5 chips de type (intervention / tournée / formation / rdv / autre) + champs titre + description + datetime début/fin + checkbox toute la journée + lieu + équipe (select equipes)</li>
+      <li>Insert dans planning_events avec structure_id + couleur + icone du type sélectionné</li>
+      <li>Toast success + reload</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TauxPanneCategorieWidget</h3>
+  <div class="panel ">
+    
+    <p>📊 widget BI avancé. <strong>Calcul</strong></p>
+    <ol class="steps">
+      <li>Fetch materiels + categorie (ou articles.famille si pas de catégorie)</li>
+      <li>Fetch interventions 90j et compte par materiel_id</li>
+      <li>Agrège par catégorie (min 2 matériels pour stat significative)</li>
+      <li>Taux = interventions / nb_materiels de la catégorie</li>
+      <li>Top 5 trié par taux décroissant. <strong>Affichage</strong> : icône package + nom catégorie + count fraction (X/Y) + badge % coloré (vert &lt;50%, ambre 50-100%, rouge &gt;100%) + barres progress proportionnelles. Note explicative en bas</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">useRealtimeNotifs : notifs natives sur acquittement workflow</h3>
+  <div class="panel ">
+    <p>🔔 nouvelle section (4) dans le check. Détecte workflow_steps avec status passant de pending → approved/rejected ET decided_at &gt; baseline. Pour chaque step décidé, vérifie que je suis le created_by de la ressource (fetch achats/transferts/commandes). Si oui → notify type info (approuvé) ou warning (refusé) avec titre + role_label + numéro ressource + comment tronqué + link vers la page. Log dans notifs_log type=workflow</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Récap dashboard BI au 0.62.134</h3>
+  <div class="panel ">
+    <p>📋 <strong>9 widgets BI</strong> disponibles : top-sav, activite-semaine, top-collab, temps-moyen, sla-respect, charge-equipes, top-patients, top-fournisseurs, <strong>taux-panne (nouveau)</strong>. Tous opt-in via DashboardEditorToolbar dans /accueil</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Recap MEGA SPRINT 0.62.128 → 0.62.134 (7 versions)</h3>
+  <div class="panel ">
+    <p>📋 9 widgets BI / NotifBellEnhanced + NotifCenter + sons + Notification API native + opt-in /profil / 3 SmartInput + 2 SmartSelect avec historique localStorage / WorkflowApproval + Templates DB + UI builder + auto-trigger conditions avancées (montant/fournisseur/catégorie/prescripteur/urgent) / PlanningCalendar 3 sources + drag&amp;drop Month/Week + click modal édition + bouton create event / ThemeProvider boot auto + 7 presets + 12 couleurs / useRealtimeNotifs auto sur DI urgentes / workflow / signalements / acquittements / FirstLoginTour automatique / Page /audit/notifs avec stats + filtres</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.62.135+</h3>
+  <div class="panel ">
+    <p>📅 (a) Pages détail commande/[id] pour brancher WorkflowApproval. (b) Notifs natives pour escalade SLA dépassé. (c) Export PDF du dashboard BI complet. (d) Mode présentation des widgets en grand format. (e) Tests pilotes PSAD réels (HMS, Bastide, etc.)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.134 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

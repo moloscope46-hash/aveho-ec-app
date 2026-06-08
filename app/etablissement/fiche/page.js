@@ -230,23 +230,26 @@ function FicheEtablissementInner() {
                 Import depuis une base officielle
               </h3>
               
-              {/* Tabs FINESS / SIRENE */}
-              <div style={{ display: "flex", gap: 4, marginBottom: 10, borderBottom: "1px solid #e3e9ee" }}>
+              {/* Tabs FINESS / SIRENE - 0.62.116 pattern unifié */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
                 <button
                   type="button"
                   onClick={() => setImportSource("finess")}
+                  aria-selected={importSource === "finess"}
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: importSource === "finess" ? "3px solid #5aa05a" : "3px solid transparent",
-                    padding: "8px 14px",
+                    background: importSource === "finess" ? "#fff" : "transparent",
+                    border: importSource === "finess" ? "2px solid #5aa05a" : "2px solid transparent",
+                    borderRadius: 10,
+                    padding: "9px 14px",
                     fontSize: 12.5,
-                    fontWeight: importSource === "finess" ? 700 : 500,
+                    fontWeight: importSource === "finess" ? 700 : 600,
                     color: importSource === "finess" ? "#2e6f33" : "#6c7a89",
                     cursor: "pointer",
                     fontFamily: "inherit",
-                    marginBottom: -1,
                     display: "inline-flex", alignItems: "center", gap: 6,
+                    boxShadow: importSource === "finess" ? "0 4px 12px rgba(90,160,90,.20), 0 0 0 1px #5aa05a" : "none",
+                    transform: importSource === "finess" ? "translateY(-1px)" : "translateY(0)",
+                    transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                   }}
                 >
                   <i className="ti ti-building-hospital" /> FINESS (établissements santé)
@@ -254,18 +257,21 @@ function FicheEtablissementInner() {
                 <button
                   type="button"
                   onClick={() => setImportSource("sirene")}
+                  aria-selected={importSource === "sirene"}
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: importSource === "sirene" ? "3px solid #EF9F27" : "3px solid transparent",
-                    padding: "8px 14px",
+                    background: importSource === "sirene" ? "#fff" : "transparent",
+                    border: importSource === "sirene" ? "2px solid #EF9F27" : "2px solid transparent",
+                    borderRadius: 10,
+                    padding: "9px 14px",
                     fontSize: 12.5,
-                    fontWeight: importSource === "sirene" ? 700 : 500,
+                    fontWeight: importSource === "sirene" ? 700 : 600,
                     color: importSource === "sirene" ? "#7a4f15" : "#6c7a89",
                     cursor: "pointer",
                     fontFamily: "inherit",
-                    marginBottom: -1,
                     display: "inline-flex", alignItems: "center", gap: 6,
+                    boxShadow: importSource === "sirene" ? "0 4px 12px rgba(239,159,39,.20), 0 0 0 1px #EF9F27" : "none",
+                    transform: importSource === "sirene" ? "translateY(-1px)" : "translateY(0)",
+                    transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
                   }}
                 >
                   <i className="ti ti-building-store" /> SIRENE (entreprises)

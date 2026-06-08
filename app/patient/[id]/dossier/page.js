@@ -112,17 +112,24 @@ export default function DossierMedicalPage() {
           </div>
         </div>
 
-        {/* Onglets sections */}
+        {/* Onglets sections - 0.62.116 pattern unifié */}
         <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
-              padding: "8px 14px", border: "none", borderRadius: 8,
-              background: activeSection === s.id ? `${s.col}22` : "transparent",
-              borderBottom: activeSection === s.id ? `3px solid ${s.col}` : "3px solid transparent",
-              color: activeSection === s.id ? s.col : "#5a6878",
-              fontFamily: "inherit", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
-            }}>
+            <button key={s.id} onClick={() => setActiveSection(s.id)}
+              aria-selected={activeSection === s.id}
+              style={{
+                padding: "9px 14px",
+                border: activeSection === s.id ? `2px solid ${s.col}` : "2px solid transparent",
+                borderRadius: 10,
+                background: activeSection === s.id ? "#fff" : "transparent",
+                color: activeSection === s.id ? s.col : "#5a6878",
+                fontFamily: "inherit", fontSize: 12.5, fontWeight: activeSection === s.id ? 700 : 600,
+                cursor: "pointer",
+                display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
+                boxShadow: activeSection === s.id ? `0 4px 12px ${s.col}33, 0 0 0 1px ${s.col}` : "none",
+                transform: activeSection === s.id ? "translateY(-1px)" : "translateY(0)",
+                transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+              }}>
               <i className={`ti ${s.icon}`} /> {s.lbl}
             </button>
           ))}

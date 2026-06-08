@@ -20,7 +20,14 @@ import AddressAutocomplete from "../AddressAutocomplete";
 import { logger } from "../../lib/logger";
 // 0.58.23 : NeonButton premium
 import { NeonButton } from "../components/ui-premium";
-const MODULES = [
+// 0.62.121 : catalogue COMPLET des droits + templates de rôles
+import { MODULES_CATALOG, CATEGORIES, PERM_LABELS, ROLE_ICONS, ROLE_TEMPLATES } from "../../lib/rolesPermissions";
+// 0.62.122 : RoleBadge composant
+import RoleBadge from "../components/RoleBadge";
+
+// Wrapper de compatibilité : on garde l'ancien MODULES + on enrichit
+const MODULES = MODULES_CATALOG.map(m => ({ k: m.k, l: m.l, ic: m.ic, c: m.c, v: m.v, perms: m.perms, col: m.col }));
+const _MODULES_LEGACY = [
   { k: "patients", l: "Patients" }, { k: "etablissement", l: "Établissement" },
   { k: "materiels", l: "Matériel" }, { k: "articles", l: "Articles" },
   { k: "stock", l: "Stock" }, { k: "transferts", l: "Transferts" },
@@ -150,8 +157,8 @@ export default function Utilisateurs() {
 
   // ---- rôles ----
   function openRole(r) {
-    if (r) { setRoleForm({ nom: r.nom, description: r.description || "", droits: r.droits || {} }); setRoleModal(r); }
-    else { setRoleForm({ nom: "", description: "", droits: {} }); setRoleModal({}); }
+    if (r) { setRoleForm({ nom: r.nom, description: r.description || "", droits: r.droits || {}, icone: r.icone || "ti-user-circle", couleur: r.couleur || "#185FA5" }); setRoleModal(r); }
+    else { setRoleForm({ nom: "", description: "", droits: {}, icone: "ti-user-circle", couleur: "#185FA5" }); setRoleModal({}); }
     setErr("");
   }
   function toggleDroit(mod, perm) {
@@ -167,7 +174,7 @@ export default function Utilisateurs() {
   }
   async function saveRole() {
     if (!roleForm.nom) { setErr("Nom du rôle requis."); return; }
-    const payload = { nom: roleForm.nom, description: roleForm.description, droits: roleForm.droits };
+    const payload = { nom: roleForm.nom, description: roleForm.description, droits: roleForm.droits, icone: roleForm.icone || null, couleur: roleForm.couleur || null };
     if (roleModal.id) await supabase.from("roles").update(payload).eq("id", roleModal.id);
     else await supabase.from("roles").insert({ ...payload, structure_id: auth.structureId });
     setRoleModal(null); await loadAll();
@@ -775,10 +782,16 @@ export default function Utilisateurs() {
                               </button>
                             </td>
                             <td>
-                              <select value={m.role_id || ""} onChange={(e) => setMembreRole(m.user_id, e.target.value)} style={{ height: 32, borderRadius: 8, border: "1px solid #e1e6eb", fontFamily: "inherit" }}>
-                                <option value="">— Aucun —</option>
-                                {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
-                              </select>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                {m.role_id && (() => {
+                                  const r = roles.find(r => r.id === m.role_id);
+                                  return r ? <RoleBadge role={r} variant="icon" size="md" showTooltip={true} /> : null;
+                                })()}
+                                <select value={m.role_id || ""} onChange={(e) => setMembreRole(m.user_id, e.target.value)} style={{ height: 32, borderRadius: 8, border: "1px solid #e1e6eb", fontFamily: "inherit", flex: 1, minWidth: 0 }}>
+                                  <option value="">— Aucun —</option>
+                                  {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                                </select>
+                              </div>
                             </td>
                             <td style={{ maxWidth: 240 }}>
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
@@ -862,9 +875,27 @@ export default function Utilisateurs() {
                   <tbody>
                     {roles.map((r) => (
                       <tr key={r.id}>
-                        <td style={{ fontWeight: 600 }}>{r.nom}{r.systeme && <span className="tag-type" style={{ marginLeft: 6 }}>système</span>}</td>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <RoleBadge role={r} variant="icon" size="md" />
+                            <div>
+                              <div style={{ fontWeight: 700, color: "#142131" }}>{r.nom}</div>
+                              {r.systeme && <span className="tag-type" style={{ marginLeft: 0, fontSize: 9 }}>système</span>}
+                            </div>
+                          </div>
+                        </td>
                         <td style={{ fontSize: 12, color: "#5a6776" }}>{r.description}</td>
-                        <td style={{ fontSize: 11, color: "#5a6776" }}>{Object.keys(r.droits || {}).length} module(s)</td>
+                        <td style={{ fontSize: 11, color: "#5a6776" }}>
+                          <span style={{
+                            background: (r.couleur || "#185FA5") + "22",
+                            color: r.couleur || "#185FA5",
+                            padding: "2px 8px",
+                            borderRadius: 10,
+                            fontWeight: 700,
+                          }}>
+                            {Object.keys(r.droits || {}).length} module(s)
+                          </span>
+                        </td>
                         <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                           <IconButton icon="ti-edit" color="#EF9F27" ariaLabel="Modifier" onClick={() => openRole(r)} />
                           {!r.systeme && <IconButton icon="ti-trash" color="#C9867F" ariaLabel="Supprimer" onClick={() => delRole(r)} />}
@@ -1006,32 +1037,205 @@ export default function Utilisateurs() {
         )}
       </div>
 
-      {/* modale rôle */}
+      {/* modale rôle - 0.62.121 : refonte complète avec catégories + templates + icône */}
       {roleModal && (
         <div className="modal-bg" onClick={(e) => e.target.classList.contains("modal-bg") && setRoleModal(null)}>
-          <div className="modal">
-            <div className="modal-head">{roleModal.id ? "Modifier le rôle" : "Nouveau rôle"} <i className="ti ti-x" style={{ cursor: "pointer" }} onClick={() => setRoleModal(null)} /></div>
+          <div className="modal" style={{ maxWidth: 900 }}>
+            <div className="modal-head">
+              <i className={`ti ${roleForm.icone || "ti-key"}`} style={{ color: roleForm.couleur || "#185FA5", marginRight: 8, fontSize: 20 }} />
+              {roleModal.id ? "Modifier le rôle" : "Nouveau rôle"}
+              <i className="ti ti-x" style={{ cursor: "pointer", marginLeft: "auto" }} onClick={() => setRoleModal(null)} />
+            </div>
             <div className="modal-body">
               {err && <div className="err">{err}</div>}
-              <div className="fld"><label>Nom du rôle</label><input value={roleForm.nom} onChange={(e) => setRoleForm({ ...roleForm, nom: e.target.value })} placeholder="Ex : Infirmier coordinateur" /></div>
-              <div className="fld"><label>Description</label><input value={roleForm.description} onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })} /></div>
-              <label style={{ display: "block", marginBottom: 8 }}>Droits par module</label>
-              <div style={{ border: "1px solid #e6ebf0", borderRadius: 10, overflow: "hidden" }}>
-                {MODULES.map((mod, i) => {
-                  const cur = roleForm.droits[mod.k] || [];
+
+              {/* === IDENTITÉ DU RÔLE === */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
+                <div className="fld">
+                  <label>Nom du rôle *</label>
+                  <input value={roleForm.nom} onChange={(e) => setRoleForm({ ...roleForm, nom: e.target.value })} placeholder="Ex : Infirmier coordinateur" />
+                </div>
+                <div className="fld">
+                  <label>Couleur</label>
+                  <input type="color" value={roleForm.couleur || "#185FA5"}
+                    onChange={(e) => setRoleForm({ ...roleForm, couleur: e.target.value })}
+                    style={{ height: 38, padding: 2 }} />
+                </div>
+              </div>
+              <div className="fld" style={{ marginBottom: 14 }}>
+                <label>Description</label>
+                <input value={roleForm.description} onChange={(e) => setRoleForm({ ...roleForm, description: e.target.value })}
+                  placeholder="Décrire ce rôle et son périmètre" />
+              </div>
+
+              {/* === SÉLECTEUR D'ICÔNE === */}
+              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: "#5a6878" }}>
+                <i className="ti ti-sparkles" style={{ marginRight: 4, color: "#EF9F27" }} /> Icône du rôle
+              </label>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))",
+                gap: 6,
+                marginBottom: 16,
+                maxHeight: 180,
+                overflowY: "auto",
+                padding: 8,
+                background: "#fafbfc",
+                borderRadius: 10,
+                border: "1px solid #e3e9ee",
+              }}>
+                {ROLE_ICONS.map((ri) => {
+                  const active = roleForm.icone === ri.ic;
                   return (
-                    <div key={mod.k} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 12px", background: i % 2 ? "#f9fbfc" : "#fff" }}>
-                      <span style={{ fontSize: 13 }}>{mod.l}</span>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", }}>
-                        {["read", "write"].map((perm) => {
-                          const on = cur.includes(perm);
-                          return <span key={perm} onClick={() => toggleDroit(mod.k, perm)}
-                            style={{ cursor: "pointer", fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 12, background: on ? "#eef6f6" : "#f1f3f5", color: on ? "#2a5a5a" : "#9aa7b4", border: `1px solid ${on ? "#cfe6e6" : "#e6ebf0"}` }}>
-                            {perm === "read" ? "Lecture" : "Écriture"}
-                          </span>;
+                    <button key={ri.ic} type="button"
+                      onClick={() => setRoleForm({ ...roleForm, icone: ri.ic })}
+                      title={ri.l}
+                      style={{
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
+                        padding: "8px 4px",
+                        background: active ? `${roleForm.couleur || "#185FA5"}15` : "#fff",
+                        border: active ? `2px solid ${roleForm.couleur || "#185FA5"}` : "1.5px solid #e3e9ee",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        fontFamily: "inherit",
+                        transition: "all 150ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        transform: active ? "scale(1.05)" : "scale(1)",
+                      }}>
+                      <i className={`ti ${ri.ic}`} style={{ fontSize: 20, color: active ? (roleForm.couleur || "#185FA5") : "#5a6878" }} />
+                      <span style={{ fontSize: 9, color: "#5a6878", textAlign: "center", lineHeight: 1.1, fontWeight: active ? 700 : 500 }}>
+                        {ri.l.length > 14 ? ri.l.slice(0, 12) + "…" : ri.l}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* === TEMPLATES DE RÔLES === */}
+              {!roleModal.id && (
+                <>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: "#5a6878" }}>
+                    <i className="ti ti-template" style={{ marginRight: 4, color: "#7CC8C8" }} /> Démarrer avec un template
+                  </label>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                    gap: 8,
+                    marginBottom: 16,
+                  }}>
+                    {ROLE_TEMPLATES.map((tpl, i) => (
+                      <button key={i} type="button"
+                        onClick={() => setRoleForm({
+                          nom: tpl.nom,
+                          description: tpl.description,
+                          icone: tpl.icone,
+                          couleur: tpl.couleur,
+                          droits: { ...tpl.droits },
                         })}
-                      </div>
-                    </div>
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8,
+                          padding: "10px 12px",
+                          background: "#fff",
+                          border: "1.5px solid #e3e9ee",
+                          borderLeft: `4px solid ${tpl.couleur}`,
+                          borderRadius: 10,
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          fontSize: 12.5,
+                          textAlign: "left",
+                          transition: "all 200ms",
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 4px 12px ${tpl.couleur}33`; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}>
+                        <i className={`ti ${tpl.icone}`} style={{ color: tpl.couleur, fontSize: 22, flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, color: "#142131" }}>{tpl.nom}</div>
+                          <div style={{ fontSize: 10.5, color: "#8a98a8", lineHeight: 1.3 }}>{tpl.description}</div>
+                          <div style={{ fontSize: 9, color: tpl.couleur, marginTop: 2, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.3 }}>
+                            {tpl.side === "etab" ? "● Établissement" : tpl.side === "magasin" ? "● Magasin" : "● Commun"}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {/* === DROITS PAR MODULE GROUPÉS PAR CATÉGORIE === */}
+              <label style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 700, color: "#5a6878" }}>
+                <i className="ti ti-key" style={{ marginRight: 4, color: "#185FA5" }} /> Droits par module ({MODULES_CATALOG.length} modules)
+              </label>
+              <div style={{ border: "1px solid #e3e9ee", borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
+                {CATEGORIES.map((cat) => {
+                  const catModules = MODULES_CATALOG.filter(m => m.c === cat.k);
+                  if (catModules.length === 0) return null;
+                  return (
+                    <details key={cat.k} open style={{ borderBottom: "1px solid #e3e9ee" }}>
+                      <summary style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "10px 14px",
+                        background: `linear-gradient(135deg, ${cat.col}15, transparent)`,
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: cat.col,
+                        userSelect: "none",
+                      }}>
+                        <i className={`ti ${cat.ic}`} style={{ color: cat.col, fontSize: 16 }} />
+                        {cat.k}
+                        <span style={{
+                          marginLeft: "auto",
+                          background: cat.col + "22",
+                          color: cat.col,
+                          padding: "1px 8px",
+                          borderRadius: 10,
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}>
+                          {catModules.length} modules
+                        </span>
+                      </summary>
+                      {catModules.map((mod, i) => {
+                        const cur = roleForm.droits[mod.k] || [];
+                        return (
+                          <div key={mod.k} style={{
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
+                            padding: "8px 14px 8px 28px",
+                            background: i % 2 ? "#fafbfc" : "#fff",
+                            borderTop: "1px solid #f0f3f6",
+                            gap: 12,
+                            flexWrap: "wrap",
+                          }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, minWidth: 0, flex: 1 }}>
+                              <i className={`ti ${mod.ic}`} style={{ color: mod.col, fontSize: 14, flexShrink: 0 }} />
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{mod.l}</span>
+                              {mod.v === "magasin" && <span style={{ fontSize: 9, color: "#5a8f8f", fontWeight: 700, marginLeft: 4 }}>MAGASIN</span>}
+                              {mod.v === "etab" && <span style={{ fontSize: 9, color: "#185FA5", fontWeight: 700, marginLeft: 4 }}>ÉTAB</span>}
+                            </span>
+                            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                              {(mod.perms || ["read", "write"]).map((perm) => {
+                                const on = cur.includes(perm);
+                                const pl = PERM_LABELS[perm] || { l: perm, ic: "ti-circle", col: "#185FA5" };
+                                return (
+                                  <span key={perm} onClick={() => toggleDroit(mod.k, perm)} title={pl.l}
+                                    style={{
+                                      cursor: "pointer", fontSize: 10, fontWeight: 700,
+                                      padding: "3px 8px", borderRadius: 10,
+                                      background: on ? pl.col + "22" : "#f1f3f5",
+                                      color: on ? pl.col : "#9aa7b4",
+                                      border: `1px solid ${on ? pl.col + "55" : "#e6ebf0"}`,
+                                      display: "inline-flex", alignItems: "center", gap: 3,
+                                      transition: "all 150ms",
+                                    }}>
+                                    <i className={`ti ${pl.ic}`} style={{ fontSize: 11 }} />
+                                    {pl.l}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </details>
                   );
                 })}
               </div>

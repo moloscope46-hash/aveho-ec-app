@@ -9,6 +9,9 @@
 // =============================================================
 
 import { useEffect, useState, useRef } from "react";
+// 0.62.131 : createClient + useAuth importés au top pour les widgets BI
+import { createClient } from "../../lib/supabase";
+import { useAuth } from "../../lib/useAuth";
 import { Panel } from "../ui";
 import { dialogs } from "../dialogs";
 // 0.62.56 — perf : lazy load des composants d'export PDF/CSV (rarement utilisés)
@@ -2748,6 +2751,1134 @@ export function TeamGoalsWidget() {
                     borderRadius: 4,
                     transition: "width 400ms ease-out",
                   }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// =============================================================
+// 0.62.129 : Widgets BI étendus
+// =============================================================
+
+import { Panel as _Panel0 } from "../ui";
+
+// Widget : Top matériels SAV (les + en panne)
+export function TopMaterielsSAVWidget() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        // Fetch interventions des 30 derniers jours
+        const since = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("materiel_id, materiels(libelle, code)")
+          .eq("structure_id", auth.structureId)
+          .gte("created_at", since);
+        const counts = {};
+        (intervs || []).forEach(i => {
+          if (!i.materiel_id) return;
+          const k = i.materiel_id;
+          if (!counts[k]) counts[k] = { id: k, count: 0, libelle: i.materiels?.libelle || "—", code: i.materiels?.code };
+          counts[k].count++;
+        });
+        const top = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
+        setData(top);
+      } catch {
+        setData([]);
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-trending-down" style={{ fontSize: 18, color: "#e35d5b" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Top 5 matériels en SAV (30j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#5aa05a", fontSize: 12 }}>
+          <i className="ti ti-circle-check" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Aucun SAV en cours
+        </div>
+      ) : (
+        <div>
+          {data.map((m, i) => {
+            const max = Math.max(...data.map(x => x.count));
+            const pct = (m.count / max) * 100;
+            return (
+              <div key={m.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                  <span style={{
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${i === 0 ? "#e35d5b" : i === 1 ? "#EF9F27" : "#7CC8C8"}, ${i === 0 ? "#c0392b" : i === 1 ? "#d48720" : "#5a9999"})`,
+                    color: "#fff", fontSize: 9, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>#{i + 1}</span>
+                  <span style={{ fontSize: 12, color: "#142131", fontWeight: 500, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {m.libelle}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#e35d5b" }}>{m.count}</span>
+                </div>
+                <div style={{ height: 4, background: "#f1f3f5", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: pct + "%",
+                    background: `linear-gradient(90deg, ${i === 0 ? "#e35d5b" : i === 1 ? "#EF9F27" : "#7CC8C8"}, ${i === 0 ? "#c0392b" : i === 1 ? "#d48720" : "#5a9999"})`,
+                    borderRadius: 2,
+                    transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// Widget : Activité de la semaine (sparkline simple)
+export function ActiviteSemaineWidget() {
+  const [data, setData] = useState({ interventions: 0, signalements: 0, commandes: 0, transferts: 0 });
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        const since = new Date(Date.now() - 7 * 86400000).toISOString();
+        const sf = { structure_id: auth.structureId };
+        const queries = [
+          supabase.from("interventions").select("id", { count: "exact", head: true }).match(sf).gte("created_at", since),
+          supabase.from("signalements").select("id", { count: "exact", head: true }).match(sf).gte("created_at", since),
+          supabase.from("commandes").select("id", { count: "exact", head: true }).match(sf).gte("created_at", since),
+          supabase.from("transferts").select("id", { count: "exact", head: true }).match(sf).gte("created_at", since),
+        ];
+        const [i, s, c, t] = await Promise.all(queries);
+        setData({
+          interventions: i.count || 0,
+          signalements: s.count || 0,
+          commandes: c.count || 0,
+          transferts: t.count || 0,
+        });
+      } catch {
+        setData({ interventions: 0, signalements: 0, commandes: 0, transferts: 0 });
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  const items = [
+    { k: "interventions", l: "Interventions", v: data.interventions, ic: "ti-tools", col: "#185FA5" },
+    { k: "signalements", l: "Signalements", v: data.signalements, ic: "ti-alert-circle", col: "#EF9F27" },
+    { k: "commandes", l: "Commandes", v: data.commandes, ic: "ti-truck", col: "#7CC8C8" },
+    { k: "transferts", l: "Transferts", v: data.transferts, ic: "ti-transfer", col: "#5a8f8f" },
+  ];
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-chart-line" style={{ fontSize: 18, color: "#185FA5" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Activité 7 derniers jours</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+          {items.map(item => (
+            <div key={item.k} style={{
+              padding: "10px 12px",
+              background: `linear-gradient(135deg, ${item.col}15, ${item.col}08)`,
+              border: `1px solid ${item.col}33`,
+              borderRadius: 10,
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <i className={`ti ${item.ic}`} style={{ fontSize: 22, color: item.col }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: item.col, lineHeight: 1 }}>{item.v}</div>
+                <div style={{ fontSize: 10, color: "#5a6878", marginTop: 2 }}>{item.l}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// =============================================================
+// 0.62.131 : Widgets BI étendus supplémentaires
+// =============================================================
+
+// Widget : KPI utilisation collaborateurs (top 5 actifs)
+export function TopCollaborateursWidget() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        // Top users par count de interventions traitées sur 30 jours
+        const since = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("technicien_user_id, technicien_nom")
+          .eq("structure_id", auth.structureId)
+          .gte("created_at", since);
+        const counts = {};
+        (intervs || []).forEach(i => {
+          if (!i.technicien_user_id) return;
+          const k = i.technicien_user_id;
+          if (!counts[k]) counts[k] = { id: k, count: 0, nom: i.technicien_nom || "—" };
+          counts[k].count++;
+        });
+        const top = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
+        setData(top);
+      } catch {
+        setData([]);
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-trophy" style={{ fontSize: 18, color: "#EF9F27" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Top 5 collaborateurs actifs (30j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-users" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Pas encore d'activité enregistrée
+        </div>
+      ) : (
+        <div>
+          {data.map((u, i) => {
+            const max = Math.max(...data.map(x => x.count));
+            const pct = (u.count / max) * 100;
+            const medal = ["🥇", "🥈", "🥉", "4.", "5."][i] || `${i + 1}.`;
+            return (
+              <div key={u.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 13, width: 22, flexShrink: 0 }}>{medal}</span>
+                  <span style={{ fontSize: 12, color: "#142131", fontWeight: 500, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {u.nom}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#185FA5" }}>{u.count} action{u.count > 1 ? "s" : ""}</span>
+                </div>
+                <div style={{ height: 4, background: "#f1f3f5", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: pct + "%",
+                    background: `linear-gradient(90deg, ${i === 0 ? "#EF9F27" : i === 1 ? "#7CC8C8" : "#185FA5"}, ${i === 0 ? "#d48720" : i === 1 ? "#5a9999" : "#142131"})`,
+                    borderRadius: 2,
+                    transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// Widget : Temps moyen de résolution des interventions
+export function TempsMoyenResolutionWidget() {
+  const [data, setData] = useState({ avg: 0, min: 0, max: 0, count: 0 });
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        const since = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("created_at, date_resolution, etat")
+          .eq("structure_id", auth.structureId)
+          .eq("etat", "Résolue")
+          .gte("created_at", since)
+          .not("date_resolution", "is", null);
+
+        if (intervs && intervs.length > 0) {
+          const durees = intervs
+            .map(i => {
+              const start = new Date(i.created_at).getTime();
+              const end = new Date(i.date_resolution).getTime();
+              return (end - start) / 3600000; // heures
+            })
+            .filter(d => d > 0 && d < 720); // filtrer outliers (< 30j)
+          const avg = durees.reduce((s, d) => s + d, 0) / durees.length;
+          const min = Math.min(...durees);
+          const max = Math.max(...durees);
+          setData({ avg, min, max, count: durees.length });
+        } else {
+          setData({ avg: 0, min: 0, max: 0, count: 0 });
+        }
+      } catch {
+        setData({ avg: 0, min: 0, max: 0, count: 0 });
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  function fmtDuration(h) {
+    if (h < 1) return `${Math.round(h * 60)} min`;
+    if (h < 24) return `${h.toFixed(1)} h`;
+    return `${(h / 24).toFixed(1)} j`;
+  }
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+        <i className="ti ti-clock-hour-4" style={{ fontSize: 18, color: "#7CC8C8" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Temps moyen de résolution (30j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.count === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-clock-off" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Aucune intervention résolue ce mois
+        </div>
+      ) : (
+        <div>
+          <div style={{
+            textAlign: "center",
+            padding: 16,
+            background: "linear-gradient(135deg, rgba(124, 200, 200, .15), rgba(24, 95, 165, .08))",
+            borderRadius: 12,
+            border: "1px solid rgba(124, 200, 200, .35)",
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: "#185FA5", lineHeight: 1 }}>
+              {fmtDuration(data.avg)}
+            </div>
+            <div style={{ fontSize: 10, color: "#5a6878", marginTop: 4, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>
+              Moyenne sur {data.count} intervention{data.count > 1 ? "s" : ""}
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 8 }}>
+            <div style={{ padding: 8, background: "rgba(90, 160, 90, .12)", borderRadius: 8, textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: "#5aa05a", fontWeight: 700, textTransform: "uppercase" }}>Plus rapide</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#5aa05a" }}>{fmtDuration(data.min)}</div>
+            </div>
+            <div style={{ padding: 8, background: "rgba(227, 93, 91, .12)", borderRadius: 8, textAlign: "center" }}>
+              <div style={{ fontSize: 9, color: "#e35d5b", fontWeight: 700, textTransform: "uppercase" }}>Plus lente</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#e35d5b" }}>{fmtDuration(data.max)}</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// =============================================================
+// 0.62.132 : Widgets BI : SLA respect + Charge équipe
+// =============================================================
+
+// Widget : SLA respect (% interventions résolues dans les délais)
+export function SLARespectWidget() {
+  const [data, setData] = useState({ ok: 0, ko: 0, total: 0, pct: 0 });
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  // SLA selon urgence (en heures)
+  const SLA_HEURES = { "Critique": 4, "Élevée": 24, "Normale": 72, "Faible": 168 };
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        const since = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("created_at, date_resolution, etat, urgence")
+          .eq("structure_id", auth.structureId)
+          .eq("etat", "Résolue")
+          .gte("created_at", since)
+          .not("date_resolution", "is", null);
+
+        let ok = 0, ko = 0;
+        (intervs || []).forEach(i => {
+          const slaHours = SLA_HEURES[i.urgence] || 72;
+          const dureeHours = (new Date(i.date_resolution).getTime() - new Date(i.created_at).getTime()) / 3600000;
+          if (dureeHours <= slaHours) ok++; else ko++;
+        });
+        const total = ok + ko;
+        const pct = total > 0 ? Math.round((ok / total) * 100) : 0;
+        setData({ ok, ko, total, pct });
+      } catch {
+        setData({ ok: 0, ko: 0, total: 0, pct: 0 });
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  // Couleur selon pct
+  const slaColor = data.pct >= 90 ? "#5aa05a" : data.pct >= 70 ? "#EF9F27" : "#e35d5b";
+  const slaLabel = data.pct >= 90 ? "Excellent" : data.pct >= 70 ? "Acceptable" : "À améliorer";
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-target-arrow" style={{ fontSize: 18, color: slaColor }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>SLA respect (30j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.total === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-clock-off" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Aucune intervention résolue
+        </div>
+      ) : (
+        <div>
+          {/* Gauge circulaire SVG */}
+          <div style={{ textAlign: "center", marginBottom: 12 }}>
+            <svg viewBox="0 0 100 100" style={{ width: 110, height: 110 }}>
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#f1f3f5" strokeWidth="10" />
+              <circle cx="50" cy="50" r="42" fill="none" stroke={slaColor} strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={`${(data.pct / 100) * 264} 264`}
+                transform="rotate(-90 50 50)"
+                style={{ transition: "stroke-dasharray 1000ms cubic-bezier(0.34, 1.56, 0.64, 1)" }} />
+              <text x="50" y="48" textAnchor="middle" fontSize="22" fontWeight="800" fill={slaColor}>{data.pct}%</text>
+              <text x="50" y="62" textAnchor="middle" fontSize="8" fill="#5a6878" fontWeight="700">{slaLabel}</text>
+            </svg>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11 }}>
+            <div style={{ padding: 8, background: "rgba(90, 160, 90, .12)", borderRadius: 8, textAlign: "center" }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#5aa05a" }}>{data.ok}</div>
+              <div style={{ fontSize: 9, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>Dans les délais</div>
+            </div>
+            <div style={{ padding: 8, background: "rgba(227, 93, 91, .12)", borderRadius: 8, textAlign: "center" }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "#e35d5b" }}>{data.ko}</div>
+              <div style={{ fontSize: 9, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>Dépassement</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// Widget : Charge des équipes
+export function ChargeEquipesWidget() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        // Equipes
+        const { data: equipes } = await supabase
+          .from("equipes")
+          .select("id, nom")
+          .eq("structure_id", auth.structureId);
+
+        // Interventions en cours par équipe
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("equipe_id, etat")
+          .eq("structure_id", auth.structureId)
+          .in("etat", ["Nouvelle", "En cours", "Planifiée"]);
+
+        const counts = {};
+        (intervs || []).forEach(i => {
+          if (!i.equipe_id) return;
+          counts[i.equipe_id] = (counts[i.equipe_id] || 0) + 1;
+        });
+
+        const result = (equipes || [])
+          .map(e => ({ id: e.id, nom: e.nom, charge: counts[e.id] || 0 }))
+          .sort((a, b) => b.charge - a.charge)
+          .slice(0, 5);
+        setData(result);
+      } catch {
+        setData([]);
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  const max = data.length > 0 ? Math.max(...data.map(x => x.charge), 1) : 1;
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-users-group" style={{ fontSize: 18, color: "#7a6fb0" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Charge des équipes (en cours)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-users-off" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Aucune équipe configurée
+        </div>
+      ) : (
+        <div>
+          {data.map((e, i) => {
+            const pct = (e.charge / max) * 100;
+            // Couleur selon charge
+            const col = e.charge >= 10 ? "#e35d5b" : e.charge >= 5 ? "#EF9F27" : "#5aa05a";
+            return (
+              <div key={e.id} style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                  <span style={{
+                    width: 8, height: 8, borderRadius: "50%",
+                    background: col, flexShrink: 0,
+                  }} />
+                  <span style={{ fontSize: 12, color: "#142131", fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {e.nom}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: col }}>
+                    {e.charge} interv.
+                  </span>
+                </div>
+                <div style={{ height: 6, background: "#f1f3f5", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: pct + "%",
+                    background: `linear-gradient(90deg, ${col}, ${col}cc)`,
+                    borderRadius: 3,
+                    transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// =============================================================
+// 0.62.133 : Widgets BI Top patients + Top fournisseurs
+// =============================================================
+
+// Widget : Top 5 patients avec le plus d'interventions
+export function TopPatientsWidget() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        const since = new Date(Date.now() - 90 * 86400000).toISOString();
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("patient_id, patients(nom, prenom)")
+          .eq("structure_id", auth.structureId)
+          .gte("created_at", since);
+
+        const counts = {};
+        (intervs || []).forEach(i => {
+          if (!i.patient_id) return;
+          if (!counts[i.patient_id]) {
+            const p = i.patients;
+            counts[i.patient_id] = {
+              id: i.patient_id,
+              count: 0,
+              nom: p ? `${p.nom || ""} ${p.prenom || ""}`.trim() : "—",
+            };
+          }
+          counts[i.patient_id].count++;
+        });
+        const top = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
+        setData(top);
+      } catch {
+        setData([]);
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  const max = data.length > 0 ? Math.max(...data.map(x => x.count), 1) : 1;
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-user-heart" style={{ fontSize: 18, color: "#5e4a8c" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Top 5 patients suivis (90j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-users-off" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Aucune intervention enregistrée
+        </div>
+      ) : (
+        <div>
+          {data.map((p, i) => {
+            const pct = (p.count / max) * 100;
+            return (
+              <div key={p.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                  <span style={{
+                    width: 20, height: 20, borderRadius: "50%",
+                    background: "linear-gradient(135deg, #5e4a8c, #7a6fb0)",
+                    color: "#fff", fontSize: 10, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>{i + 1}</span>
+                  <span style={{ fontSize: 12, color: "#142131", fontWeight: 500, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {p.nom}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#5e4a8c" }}>{p.count}</span>
+                </div>
+                <div style={{ height: 4, background: "#f1f3f5", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: pct + "%",
+                    background: "linear-gradient(90deg, #5e4a8c, #7a6fb0)",
+                    borderRadius: 2,
+                    transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// Widget : Top 5 fournisseurs (par nombre de commandes)
+export function TopFournisseursWidget() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        // Récupère les achats avec fournisseur
+        const since = new Date(Date.now() - 90 * 86400000).toISOString();
+        const { data: achats } = await supabase
+          .from("achats")
+          .select("fournisseur")
+          .eq("structure_id", auth.structureId)
+          .gte("created_at", since)
+          .not("fournisseur", "is", null);
+
+        const counts = {};
+        (achats || []).forEach(a => {
+          const k = (a.fournisseur || "").trim();
+          if (!k) return;
+          counts[k] = (counts[k] || 0) + 1;
+        });
+        const top = Object.entries(counts)
+          .map(([nom, count]) => ({ nom, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+        setData(top);
+      } catch {
+        setData([]);
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  const max = data.length > 0 ? Math.max(...data.map(x => x.count), 1) : 1;
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-building-warehouse" style={{ fontSize: 18, color: "#5a8f8f" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Top 5 fournisseurs (90j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-shopping-cart-off" style={{ fontSize: 20, display: "block", marginBottom: 4 }} />
+          Aucune commande enregistrée
+        </div>
+      ) : (
+        <div>
+          {data.map((f, i) => {
+            const pct = (f.count / max) * 100;
+            return (
+              <div key={f.nom} style={{ marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                  <i className="ti ti-building" style={{ color: "#5a8f8f", fontSize: 14, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: "#142131", fontWeight: 500, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {f.nom}
+                  </span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#5a8f8f" }}>{f.count} cmd</span>
+                </div>
+                <div style={{ height: 4, background: "#f1f3f5", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: pct + "%",
+                    background: "linear-gradient(90deg, #5a8f8f, #7CC8C8)",
+                    borderRadius: 2,
+                    transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// =============================================================
+// 0.62.134 : Widget BI Taux de panne par catégorie matériel
+// =============================================================
+
+export function TauxPanneCategorieWidget() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const auth = useAuth();
+
+  useEffect(() => {
+    async function load() {
+      if (!auth?.structureId) return;
+      try {
+        // 1. Compte total matériels par catégorie
+        const { data: materiels } = await supabase
+          .from("materiels")
+          .select("id, categorie, articles(libelle, famille)")
+          .eq("structure_id", auth.structureId);
+
+        // 2. Compte interventions sur 90j par materiel_id
+        const since = new Date(Date.now() - 90 * 86400000).toISOString();
+        const { data: intervs } = await supabase
+          .from("interventions")
+          .select("materiel_id")
+          .eq("structure_id", auth.structureId)
+          .gte("created_at", since);
+
+        const intervCounts = {};
+        (intervs || []).forEach(i => {
+          if (i.materiel_id) intervCounts[i.materiel_id] = (intervCounts[i.materiel_id] || 0) + 1;
+        });
+
+        // 3. Agrège par catégorie
+        const byCat = {};
+        (materiels || []).forEach(m => {
+          const cat = m.categorie || m.articles?.famille || "Non catégorisé";
+          if (!byCat[cat]) byCat[cat] = { cat, total: 0, intervs: 0 };
+          byCat[cat].total++;
+          byCat[cat].intervs += intervCounts[m.id] || 0;
+        });
+
+        const result = Object.values(byCat)
+          .filter(c => c.total >= 2) // au moins 2 matériels pour stat significative
+          .map(c => ({ ...c, taux: (c.intervs / c.total) }))
+          .sort((a, b) => b.taux - a.taux)
+          .slice(0, 5);
+        setData(result);
+      } catch {
+        setData([]);
+      } finally { setLoading(false); }
+    }
+    load();
+  }, [supabase, auth?.structureId]);
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+        <i className="ti ti-tools-kitchen-off" style={{ fontSize: 18, color: "#e35d5b" }} />
+        <h3 style={{ margin: 0, fontSize: 13, color: "#142131" }}>Taux de panne par catégorie (90j)</h3>
+      </div>
+      {loading ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>Chargement…</div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 20, textAlign: "center", color: "#8a98a8", fontSize: 12 }}>
+          <i className="ti ti-shield-check" style={{ fontSize: 20, display: "block", marginBottom: 4, color: "#5aa05a" }} />
+          Aucune panne enregistrée
+        </div>
+      ) : (
+        <div>
+          {data.map((c, i) => {
+            const tauxPct = (c.taux * 100).toFixed(0);
+            // Couleur selon taux
+            const col = c.taux >= 1 ? "#e35d5b" : c.taux >= 0.5 ? "#EF9F27" : "#5aa05a";
+            return (
+              <div key={c.cat} style={{ marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                  <i className="ti ti-package" style={{ color: col, fontSize: 14, flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: "#142131", fontWeight: 600, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {c.cat}
+                  </span>
+                  <span style={{ fontSize: 10, color: "#8a98a8", marginRight: 6 }}>
+                    {c.intervs}/{c.total}
+                  </span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, color: col,
+                    background: col + "18",
+                    padding: "2px 8px",
+                    borderRadius: 10,
+                  }}>
+                    {tauxPct}%
+                  </span>
+                </div>
+                <div style={{ height: 5, background: "#f1f3f5", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: Math.min(c.taux * 100, 100) + "%",
+                    background: `linear-gradient(90deg, ${col}, ${col}cc)`,
+                    borderRadius: 3,
+                    transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ fontSize: 9.5, color: "#8a98a8", marginTop: 6, fontStyle: "italic" }}>
+            Taux = nombre d'interventions ÷ nombre de matériels de la catégorie. {">"} 100% = + d'1 intervention par matériel.
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// =============================================================
+//  ComparatifN1Widget (0.64.0)
+//  Compare DI/SAV/livraisons ce mois vs même mois N-1
+// =============================================================
+export function ComparatifN1Widget() {
+  const supabase = createClient();
+  const auth = useAuth();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!auth.structureId) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const monthEnd = now.toISOString();
+        // Même fenêtre N-1
+        const n1Start = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString();
+        const n1End = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+
+        const tryCount = async (table, from, to, filters = {}) => {
+          try {
+            let q = supabase.from(table).select("id", { count: "exact", head: true })
+              .eq("structure_id", auth.structureId)
+              .gte("created_at", from).lte("created_at", to);
+            Object.entries(filters).forEach(([k, v]) => { q = q.eq(k, v); });
+            const { count } = await q;
+            return count || 0;
+          } catch { return 0; }
+        };
+
+        const [diN, diN1, savN, savN1, livN, livN1] = await Promise.all([
+          tryCount("interventions", monthStart, monthEnd),
+          tryCount("interventions", n1Start, n1End),
+          tryCount("signalements", monthStart, monthEnd),
+          tryCount("signalements", n1Start, n1End),
+          tryCount("tournees", monthStart, monthEnd),
+          tryCount("tournees", n1Start, n1End),
+        ]);
+        setData({
+          di:   { now: diN,  n1: diN1 },
+          sav:  { now: savN, n1: savN1 },
+          livr: { now: livN, n1: livN1 },
+        });
+      } finally { setLoading(false); }
+    })();
+  }, [auth.structureId]);
+
+  return (
+    <Panel>
+      <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#142131", display: "flex", alignItems: "center", gap: 6 }}>
+        <i className="ti ti-chart-arcs" style={{ color: "#5e4a8c" }} />
+        Comparatif vs N-1 (mois en cours)
+      </h3>
+      {loading ? <SpinnerBox /> : data ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          {[
+            { lbl: "DI",         d: data.di,   col: "#EF9F27", ic: "ti-clipboard-list" },
+            { lbl: "Signalements", d: data.sav, col: "#e35d5b", ic: "ti-alert-triangle" },
+            { lbl: "Tournées",   d: data.livr, col: "#C9867F", ic: "ti-truck-delivery" },
+          ].map(s => {
+            const delta = s.d.n1 > 0 ? Math.round(((s.d.now - s.d.n1) / s.d.n1) * 100) : (s.d.now > 0 ? 100 : 0);
+            const up = delta > 0;
+            const same = delta === 0;
+            const trendColor = same ? "#8a98a8" : (up ? "#5aa05a" : "#e35d5b");
+            return (
+              <div key={s.lbl} style={{
+                background: `linear-gradient(135deg, ${s.col}10, #fff)`,
+                border: `1px solid ${s.col}33`,
+                borderRadius: 10,
+                padding: 12,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <i className={`ti ${s.ic}`} style={{ color: s.col, fontSize: 16 }} />
+                  <span style={{ fontSize: 11, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>{s.lbl}</span>
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: s.col, lineHeight: 1 }}>{s.d.now}</div>
+                <div style={{ fontSize: 10.5, color: "#8a98a8", marginTop: 3 }}>vs {s.d.n1} en N-1</div>
+                <div style={{
+                  marginTop: 6,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 3,
+                  background: trendColor + "18",
+                  color: trendColor,
+                  padding: "2px 7px",
+                  borderRadius: 10,
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}>
+                  <i className={`ti ${same ? "ti-equal" : (up ? "ti-trending-up" : "ti-trending-down")}`} />
+                  {delta > 0 ? "+" : ""}{delta}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : <Empty />}
+    </Panel>
+  );
+}
+
+// =============================================================
+//  EvolutionMensuelleWidget (0.64.0)
+//  Line chart : volume DI sur 6 derniers mois
+// =============================================================
+export function EvolutionMensuelleWidget() {
+  const supabase = createClient();
+  const auth = useAuth();
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!auth.structureId) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const months = [];
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+          const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+          months.push({ label: start.toLocaleString("fr-FR", { month: "short" }), start: start.toISOString(), end: end.toISOString() });
+        }
+        const results = await Promise.all(months.map(async (m) => {
+          try {
+            const { count } = await supabase.from("interventions").select("id", { count: "exact", head: true })
+              .eq("structure_id", auth.structureId)
+              .gte("created_at", m.start).lte("created_at", m.end);
+            return { ...m, count: count || 0 };
+          } catch { return { ...m, count: 0 }; }
+        }));
+        setData(results);
+      } finally { setLoading(false); }
+    })();
+  }, [auth.structureId]);
+
+  const max = Math.max(...data.map(d => d.count), 1);
+
+  return (
+    <Panel>
+      <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#142131", display: "flex", alignItems: "center", gap: 6 }}>
+        <i className="ti ti-chart-line" style={{ color: "#185FA5" }} />
+        Évolution des DI sur 6 mois
+      </h3>
+      {loading ? <SpinnerBox /> : data.length === 0 ? <Empty /> : (
+        <div>
+          {/* Barres */}
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 130, padding: "10px 4px 0" }}>
+            {data.map((m, i) => {
+              const pct = (m.count / max) * 100;
+              const isLast = i === data.length - 1;
+              return (
+                <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <div style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: isLast ? "#185FA5" : "#5a6878",
+                    marginBottom: 2,
+                  }}>{m.count}</div>
+                  <div style={{
+                    width: "100%",
+                    height: `${Math.max(pct, 3)}%`,
+                    background: isLast
+                      ? "linear-gradient(180deg, #185FA5, #7CC8C8)"
+                      : "linear-gradient(180deg, #cfd8e0, #e3e9ee)",
+                    borderRadius: "6px 6px 0 0",
+                    boxShadow: isLast ? "0 4px 12px rgba(24,95,165,.3)" : "none",
+                    transition: "height 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  }} />
+                </div>
+              );
+            })}
+          </div>
+          {/* Labels */}
+          <div style={{ display: "flex", gap: 8, padding: "6px 4px 0", borderTop: "1px solid #e3e9ee", marginTop: 6 }}>
+            {data.map((m, i) => (
+              <div key={i} style={{ flex: 1, textAlign: "center", fontSize: 10.5, color: i === data.length - 1 ? "#185FA5" : "#8a98a8", fontWeight: i === data.length - 1 ? 700 : 500, textTransform: "capitalize" }}>
+                {m.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+// Mini helpers locaux (Panel/SpinnerBox/Empty utilisés ci-dessus)
+function SpinnerBox() {
+  return <div style={{ textAlign: "center", padding: 18, color: "#8a98a8", fontSize: 12 }}><i className="ti ti-loader-2" style={{ animation: "av-spinner-spin 0.85s linear infinite" }} /> Chargement…</div>;
+}
+function Empty() {
+  return <div style={{ textAlign: "center", padding: 18, color: "#8a98a8", fontSize: 12, fontStyle: "italic" }}>Aucune donnée</div>;
+}
+
+// =============================================================
+//  HeatmapGeoWidget (0.65.0)
+//  Carte de densité d'activité (DI + signalements) par ville
+//  Top 10 villes avec barre de densité visuelle + nombre
+// =============================================================
+export function HeatmapGeoWidget() {
+  const supabase = createClient();
+  const auth = useAuth();
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!auth.structureId) return;
+    (async () => {
+      setLoading(true);
+      try {
+        const now90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+        const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
+
+        // DI 90j avec patient + ville
+        const [dis, sigs, patAll] = await Promise.all([
+          tryFetch(supabase.from("interventions")
+            .select("id, patient_id, created_at, urgence, patients(ville)")
+            .eq("structure_id", auth.structureId)
+            .gte("created_at", now90)),
+          tryFetch(supabase.from("signalements")
+            .select("id, created_at, criticite")
+            .eq("structure_id", auth.structureId)
+            .gte("created_at", now90)),
+          tryFetch(supabase.from("patients")
+            .select("ville")
+            .eq("structure_id", auth.structureId)
+            .not("ville", "is", null)),
+        ]);
+
+        // Compteurs par ville
+        const byVille = {};
+        dis.forEach(d => {
+          const v = d.patients?.ville;
+          if (!v) return;
+          if (!byVille[v]) byVille[v] = { ville: v, di: 0, urgent: 0, patients: 0 };
+          byVille[v].di++;
+          if (d.urgence === "Urgent") byVille[v].urgent++;
+        });
+        // Compteurs patients par ville
+        const patByVille = {};
+        patAll.forEach(p => { if (p.ville) patByVille[p.ville] = (patByVille[p.ville] || 0) + 1; });
+        Object.keys(byVille).forEach(v => { byVille[v].patients = patByVille[v] || 0; });
+
+        const top = Object.values(byVille).sort((a, b) => b.di - a.di).slice(0, 10);
+        setData(top);
+      } finally { setLoading(false); }
+    })();
+  }, [auth.structureId]);
+
+  return (
+    <Panel>
+      <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#142131", display: "flex", alignItems: "center", gap: 6 }}>
+        <i className="ti ti-map-2" style={{ color: "#5aa05a" }} />
+        Heatmap densité activité (90j)
+      </h3>
+      {loading ? <div style={{ textAlign: "center", padding: 18, color: "#8a98a8", fontSize: 12 }}><i className="ti ti-loader-2" style={{ animation: "av-spinner-spin 0.85s linear infinite" }} /> Chargement…</div> : data.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 18, color: "#8a98a8", fontSize: 12, fontStyle: "italic" }}>Aucune donnée géographique</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {data.map((v, i) => {
+            const maxDi = data[0].di;
+            const pct = (v.di / maxDi) * 100;
+            // Gradient heat : vert si peu, orange si moyen, rouge si beaucoup
+            const heatLvl = pct > 75 ? "danger" : pct > 40 ? "warn" : "calm";
+            const heatCol = heatLvl === "danger" ? "#e35d5b" : heatLvl === "warn" ? "#EF9F27" : "#5aa05a";
+            return (
+              <div key={v.ville} style={{
+                padding: "8px 10px",
+                background: heatCol + "08",
+                border: `1px solid ${heatCol}22`,
+                borderLeft: `4px solid ${heatCol}`,
+                borderRadius: 8,
+                display: "flex", alignItems: "center", gap: 10,
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: heatCol, minWidth: 26, fontFamily: "Consolas, monospace" }}>
+                  #{i + 1}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: "#142131", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.ville}</span>
+                    <span style={{ fontSize: 11, color: "#8a98a8" }}>
+                      <span style={{ color: heatCol, fontWeight: 800, fontSize: 15 }}>{v.di}</span>
+                      <span style={{ marginLeft: 4 }}>DI · {v.patients} pat.</span>
+                      {v.urgent > 0 && <span style={{ marginLeft: 6, color: "#e35d5b", fontWeight: 700 }}>· {v.urgent} ⚠</span>}
+                    </span>
+                  </div>
+                  <div style={{ height: 5, background: "#f1f3f5", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{
+                      height: "100%",
+                      width: `${pct}%`,
+                      background: `linear-gradient(90deg, ${heatCol}, ${heatCol}aa)`,
+                      borderRadius: 3,
+                      transition: "width 800ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    }} />
+                  </div>
                 </div>
               </div>
             );

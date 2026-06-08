@@ -346,13 +346,18 @@ export default function FicheMateriel({ params }) {
             { key: "immobilisation", lbl: "Immobilisation", icon: "ti-coin", disabled: !hasImmo },
           ].map(t => (
             <button key={t.key} onClick={() => !t.disabled && setActiveTab(t.key)} disabled={t.disabled}
+              aria-selected={activeTab === t.key}
               style={{
-                background: activeTab === t.key ? "linear-gradient(135deg, rgba(122,111,176,.20), transparent)" : "transparent",
+                background: activeTab === t.key ? "#fff" : "transparent",
                 color: t.disabled ? "#cfd8e0" : (activeTab === t.key ? "#5e4a8c" : "#5a6878"),
-                border: "none", borderBottom: `3px solid ${activeTab === t.key ? "#5e4a8c" : "transparent"}`,
-                padding: "9px 16px", fontSize: 13, fontWeight: activeTab === t.key ? 700 : 500,
+                border: activeTab === t.key ? "2px solid #5e4a8c" : "2px solid transparent",
+                padding: "9px 14px", borderRadius: 10,
+                fontSize: 12.5, fontWeight: activeTab === t.key ? 700 : 600,
                 cursor: t.disabled ? "not-allowed" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
                 display: "inline-flex", alignItems: "center", gap: 5,
+                boxShadow: activeTab === t.key ? "0 4px 12px rgba(94,74,140,.20), 0 0 0 1px #5e4a8c" : "none",
+                transform: activeTab === t.key ? "translateY(-1px)" : "translateY(0)",
+                transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}>
               <i className={`ti ${t.icon}`} /> {t.lbl}
               {t.disabled && <span style={{ fontSize: 9, background: "#f0f3f6", color: "#a0aeb9", padding: "1px 5px", borderRadius: 3, fontStyle: "italic", marginLeft: 4 }}>SQL pending</span>}

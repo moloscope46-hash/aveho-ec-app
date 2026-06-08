@@ -3,6 +3,9 @@ import { Quicksand } from "next/font/google";
 // 0.57.8 : Composants visibles dès le 1er render ou très petits → import statique
 import InstallPWA from "./InstallPWA";
 import OfflineBanner from "./OfflineBanner";
+import ThemeProvider from "./components/ThemeProvider";  /* 0.62.129 */
+import FirstLoginTour from "./components/FirstLoginTour";  /* 0.62.129 */
+import { SandboxBanner } from "./components/SandboxBanner";  /* 0.65.0 */
 import LectureSeuleBadge from "./LectureSeuleBadge";
 import GlobalSearch from "./GlobalSearch";
 import AlertToastContainer from "./components/AlertToast";
@@ -87,6 +90,8 @@ export default function RootLayout({ children }) {
       <body>
         {/* Alpha 0.18.0 : skip-link accessibilité clavier */}
         <a href="#main-content" className="skip-to-content">Aller au contenu principal</a>
+        {/* 0.62.129 : applique le thème personnalisé au boot */}
+        <ThemeProvider />
         <OfflineBanner />
         <LectureSeuleBadge />
         <GlobalSearch />
@@ -107,6 +112,9 @@ export default function RootLayout({ children }) {
             BiometricOptInModal, FloatingActionBar) chargés en lazy via
             next/dynamic ssr: false. Voir LazyLayoutChrome.js */}
         <LazyLayoutChrome />
+        {/* 0.62.129 : Tour automatique pour les nouveaux comptes (<24h) */}
+        <FirstLoginTour />
+        <SandboxBanner />
         {/* 0.58.83 : FAB Continuer sur le téléphone (visible sur toutes les pages) */}
         <SwitchToPhoneFab />
       </body>

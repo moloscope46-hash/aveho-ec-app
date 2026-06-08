@@ -22,6 +22,9 @@ import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 
 import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
+import WorkflowApproval from "../components/WorkflowApproval";  /* 0.64.0 */
+import AttachmentsPanel from "../components/AttachmentsPanel";  /* 0.64.0 */
+import VoiceDictation from "../components/VoiceDictation";  /* 0.64.0 */
 const TYPES_MAINT = ["Révision annuelle", "Contrôle sécurité", "Étalonnage", "Nettoyage approfondi", "Mise à jour firmware", "Remplacement de pièces", "Autre"];
 
 // Alpha 0.11 : récurrences proposées en jours
@@ -484,18 +487,21 @@ export default function MaintenancePage() {
             <button
               key={t.v}
               onClick={() => setTabActive(t.v)}
+              aria-selected={tabActive === t.v}
               style={{
-                padding: "10px 18px",
-                background: "transparent",
-                border: "none",
-                borderBottom: `3px solid ${tabActive === t.v ? "#185FA5" : "transparent"}`,
+                padding: "9px 14px",
+                background: tabActive === t.v ? "#fff" : "transparent",
+                border: tabActive === t.v ? "2px solid #185FA5" : "2px solid transparent",
+                borderRadius: 10,
                 color: tabActive === t.v ? "#185FA5" : "#6c7a89",
-                fontWeight: tabActive === t.v ? 700 : 500,
+                fontWeight: tabActive === t.v ? 700 : 600,
                 fontFamily: "inherit",
-                fontSize: 14,
+                fontSize: 12.5,
                 cursor: "pointer",
-                marginBottom: -2,
-                display: "inline-flex", alignItems: "center", gap: 8,
+                display: "inline-flex", alignItems: "center", gap: 6,
+                boxShadow: tabActive === t.v ? "0 4px 12px rgba(24,95,165,.20), 0 0 0 1px #185FA5" : "none",
+                transform: tabActive === t.v ? "translateY(-1px)" : "translateY(0)",
+                transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
             >
               <i className={`ti ${t.ic}`} /> {t.l}
@@ -771,8 +777,36 @@ export default function MaintenancePage() {
         </div>
         <div className="fld">
           <label>Notes</label>
-          <textarea value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="Détails, prescriptions, références…" />
+          <div style={{ position: "relative" }}>
+            <textarea value={form.notes || ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="Détails, prescriptions, références…" style={{ paddingRight: 44 }} />
+            <div style={{ position: "absolute", bottom: 8, right: 8 }}>
+              <VoiceDictation
+                onTranscript={(t) => setForm(prev => ({ ...prev, notes: (prev.notes || "") + (prev.notes && !prev.notes.endsWith(" ") ? " " : "") + t }))}
+                size="sm"
+              />
+            </div>
+          </div>
         </div>
+        {/* 0.64.0 : Pièces jointes (planning maintenance, photos contrôle) */}
+        {modal?.id && (
+          <AttachmentsPanel
+            resourceType="maintenance"
+            resourceId={modal.id}
+            structureId={auth.structureId}
+            compact
+          />
+        )}
+        {/* 0.64.0 : Workflow approbation maintenance */}
+        {modal?.id && (
+          <div style={{ marginTop: 12 }}>
+            <WorkflowApproval
+              resourceType="maintenance"
+              resourceId={modal.id}
+              auth={auth}
+              onChange={load}
+            />
+          </div>
+        )}
       </Modal>
 
       {/* Alpha 0.43.0 : Modale CRUD récurrence */}

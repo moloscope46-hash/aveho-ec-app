@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.122 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.122
+      <small>🎯 MEGA BUMP A→D : Composant RoleBadge + déploiement TopBar/Users + FoldableFilters JSX sur /materiels et /signalements + UI/UX premium (role pulse, page stagger, input shake, card shimmer)</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.122-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>6</b> AI · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#ui</span> <span class="theme-pill">#ux</span> <span class="theme-pill">#rolebadge</span> <span class="theme-pill">#filters</span> <span class="theme-pill">#premium</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(6)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Composant RoleBadge</h3>
+  <div class="panel ">
+    <p>📦 (app/components/RoleBadge.js) : affiche le rôle avec icône + couleur personnalisée. <strong>4 variants</strong> : compact (pill avec icône + nom), full (large avec description), minimal (texte coloré), icon (juste l icône dans rond gradient). <strong>3 tailles</strong> : sm/md/lg. <strong>Hover effects</strong> : scale 1.08 + rotate -3deg pour icon, translateY + shadow pour compact. <strong>Animation pulse subtle</strong> ::after halo 3s ease-in-out infinite. Cliquable optionnellement avec onClick</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Déploiement RoleBadge TopBar</h3>
+  <div class="panel ">
+    <p>🎯 badge variant=icon size=md affiché entre les sélecteurs et NotifBell. <strong>Click</strong> → navigation vers /utilisateurs. <strong>Tooltip</strong> sur le nom du rôle. Couleur + icône du rôle (auth.role.icone et auth.role.couleur) déjà disponibles depuis 0.62.121</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Déploiement RoleBadge Page Utilisateurs</h3>
+  <div class="panel ">
+    
+    <p>🎯</p>
+    <ol class="steps">
+      <li><strong>Liste membres</strong> : RoleBadge icon à côté du select de changement de rôle, dans une div flex gap 6 avec le select à flex 1</li>
+      <li><strong>Tableau rôles</strong> : RoleBadge icon + nom bold + label système éventuel + badge module count avec couleur du rôle (au lieu du fontWeight 600 simple)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">FoldableFilters JSX sur /materiels</h3>
+  <div class="panel ">
+    <p>📦 juste après le toggle Liste/Tuiles. searchPlaceholder=Rechercher un matériel (n° série, parc, libellé…). activeFiltersCount=search?1:0. storageKey=materiels. Children : message info sur la recherche</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">FoldableFilters JSX sur /signalements</h3>
+  <div class="panel ">
+    <p>📦 entre le pattern onglets popup et le Panel. searchPlaceholder=Rechercher un signalement (titre, description, auteur…). <strong>activeFiltersCount</strong> compte fType + fStatut + fCategorie + search. <strong>onResetAll</strong> reset tous les filtres dont search. <strong>Children</strong> : select Type + select Statut (les filtres existants extraits du toolbar)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">UI/UX premium 0.62.122</h3>
+  <div class="panel ">
+    
+    <p>🎨</p>
+    <ol class="steps">
+      <li><strong>.av-rolebadge-icon::after</strong> halo pulse 3s scale 1→1.3 opacity 0→0.25</li>
+      <li><strong>Buttons primary hover</strong> : filter brightness 1.08 + saturate 1.1</li>
+      <li><strong>Inputs focus</strong> : animation av-input-focus 250ms cubic-bezier élastique (scale 1.005)</li>
+      <li><strong>Cards data-3d shimmer</strong> : ::after gradient 90deg blanc/teal subtil qui défile au hover (left -100% → 100% en 600ms)</li>
+      <li><strong>Page entrée stagger</strong> : .wrap &gt; * avec animation av-stagger-in 400ms + delay progressif 50ms par enfant (jusqu à 5)</li>
+      <li><strong>Inputs invalides shake</strong> : :invalid:not(:placeholder-shown) border rouge + translateX shake 400ms</li>
+      <li><strong>Empty state pop</strong> : av-empty-fade-in scale 0.95→1 + translateY 20→0 cubic-bezier</li>
+      <li><strong>[data-tooltip-bottom]</strong> : tooltips positionnés dessous (en plus du top par défaut)</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.62.123+</h3>
+  <div class="panel ">
+    <p>📅 (a) <strong>FoldableFilters JSX restants</strong> : /interventions, /articles (state search déjà existant). (b) <strong>useEditLock + banner</strong> dans modals patient/materiel/intervention/article/etablissement. (c) <strong>AddressAutocomplete</strong> dans CRUD etab/fournisseurs/prescripteurs. (d) <strong>Widget ChartCard /accueil</strong> drag&amp;drop. (e) <strong>Intégrer addPdfFooter</strong> sur PDF existants (BL/devis/commande)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.122 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

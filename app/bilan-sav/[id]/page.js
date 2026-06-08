@@ -8,10 +8,16 @@ import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
+import { safeUpdate, safeInsert } from "../../../lib/safeWrite";  /* 0.64.1 offline robust */
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, Modal } from "../../ui";
 import BackButton from "../../components/BackButton";
+import WorkflowApproval from "../../components/WorkflowApproval";  /* 0.63.0 */
+import AttachmentsPanel from "../../components/AttachmentsPanel";  /* 0.63.0 */
+import PiecesDetacheesPanel from "../../components/PiecesDetacheesPanel";  /* 0.63.1 */
+import LockBanner from "../../components/LockBanner";  /* 0.63.1 */
+import { useEditLock } from "../../../lib/useEditLock";  /* 0.63.1 */
 
 // 5 points de contrôle standards (peuvent être customisés par article)
 const POINTS_DEFAUT = [
@@ -37,6 +43,8 @@ export default function BilanSAVPage({ params }) {
   const cart = useCart();
 
   const [bilan, setBilan] = useState(null);
+  // 0.63.1 : Lock anti-collision édition concurrente
+  const bilanLock = useEditLock("bilan_sav", bilan?.id, !!bilan?.id);
   const [points, setPoints] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +83,7 @@ export default function BilanSAVPage({ params }) {
     setPoints(newPoints);
     if (!bilan) return;
     try {
-      await supabase.from("bilans_sav").update({ points: newPoints, updated_at: new Date().toISOString() }).eq("id", bilan.id);
+      await safeUpdate(supabase, "bilans_sav", { points: newPoints, updated_at: new Date().toISOString() }, { id: bilan.id }, { userId: auth.user?.id });
     } catch (e) { console.warn(e); }
   }
 
@@ -99,10 +107,10 @@ export default function BilanSAVPage({ params }) {
         const reader = new FileReader();
         reader.onload = async () => {
           const dataUrl = reader.result;
-          const ins = await supabase.from("bilans_sav_photos").insert({
+          const ins = await safeInsert(supabase, "bilans_sav_photos", {
             bilan_id: bilan.id, point_n: pointN, url: dataUrl, filename: file.name,
             taille_octets: file.size, taken_by: auth.user?.id,
-          });
+          }, { userId: auth.user?.id });
           if (!ins.error) reload();
         };
         reader.readAsDataURL(file);
@@ -111,10 +119,10 @@ export default function BilanSAVPage({ params }) {
       // Signed URL pour affichage
       const signed = await supabase.storage.from("sav-photos").createSignedUrl(filename, 3600 * 24 * 365);
       url = signed.data?.signedUrl || filename;
-      await supabase.from("bilans_sav_photos").insert({
+      await safeInsert(supabase, "bilans_sav_photos", {
         bilan_id: bilan.id, point_n: pointN, url, filename: file.name,
         taille_octets: file.size, taken_by: auth.user?.id,
-      });
+      }, { userId: auth.user?.id });
       reload();
     } catch (e) { alert("Erreur upload : " + e.message); }
     finally { setSaving(false); }
@@ -127,14 +135,14 @@ export default function BilanSAVPage({ params }) {
     }
     setSaving(true);
     try {
-      const r = await supabase.from("bilans_sav").update({
+      const r = await safeUpdate(supabase, "bilans_sav", {
         statut: "termine",
         date_fin: new Date().toISOString(),
         points,
         resultat: bilan.resultat || "conforme",
         diagnostic: bilan.diagnostic || null,
         preconisations: bilan.preconisations || null,
-      }).eq("id", bilan.id);
+      }, { id: bilan.id }, { userId: auth.user?.id });
       if (r.error) throw r.error;
       alert("✓ Bilan terminé. En attente de validation côté EC.");
       reload();
@@ -188,6 +196,11 @@ export default function BilanSAVPage({ params }) {
             <Btn variant="ghost" icon="ti-printer" onClick={() => exportPDF(bilan, points, photos)}>PDF</Btn>
           </div>
         </div>
+
+        {/* 0.63.1 : LockBanner si édition concurrente */}
+        {bilanLock?.locked && (
+          <LockBanner lockedBy={bilanLock.lockedBy} onTakeover={bilanLock.takeover} resourceLabel="ce bilan SAV" />
+        )}
 
         {/* Statut */}
         <Panel style={{ marginTop: 12, borderLeft: `4px solid ${statutColor(bilan.statut)}`, background: `${statutColor(bilan.statut)}10` }}>
@@ -292,7 +305,7 @@ export default function BilanSAVPage({ params }) {
             <label style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#5a6878", letterSpacing: 1 }}>Résultat</label>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
               {RESULTATS.map(r => (
-                <button key={r.v} disabled={!isEditable} onClick={() => { setBilan({ ...bilan, resultat: r.v }); supabase.from("bilans_sav").update({ resultat: r.v }).eq("id", bilan.id); }} style={{
+                <button key={r.v} disabled={!isEditable} onClick={() => { setBilan({ ...bilan, resultat: r.v }); safeUpdate(supabase, "bilans_sav", { resultat: r.v }, { id: bilan.id }, { userId: auth.user?.id }); }} style={{
                   background: bilan.resultat === r.v ? r.col : "transparent",
                   color: bilan.resultat === r.v ? "#fff" : r.col,
                   border: `2px solid ${r.col}`, borderRadius: 6,
@@ -308,15 +321,50 @@ export default function BilanSAVPage({ params }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <label style={{ fontSize: 11, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>Diagnostic
               <textarea defaultValue={bilan.diagnostic || ""} disabled={!isEditable}
-                onBlur={(e) => supabase.from("bilans_sav").update({ diagnostic: e.target.value }).eq("id", bilan.id)}
+                onBlur={(e) => safeUpdate(supabase, "bilans_sav", { diagnostic: e.target.value }, { id: bilan.id }, { userId: auth.user?.id })}
                 placeholder="Causes identifiées..." style={{ width: "100%", marginTop: 4, padding: 8, border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13, minHeight: 70, background: isEditable ? "#fff" : "#f4f7fa" }} />
             </label>
             <label style={{ fontSize: 11, color: "#5a6878", fontWeight: 700, textTransform: "uppercase" }}>Préconisations
               <textarea defaultValue={bilan.preconisations || ""} disabled={!isEditable}
-                onBlur={(e) => supabase.from("bilans_sav").update({ preconisations: e.target.value }).eq("id", bilan.id)}
+                onBlur={(e) => safeUpdate(supabase, "bilans_sav", { preconisations: e.target.value }, { id: bilan.id }, { userId: auth.user?.id })}
                 placeholder="Actions recommandées..." style={{ width: "100%", marginTop: 4, padding: 8, border: "1px solid #cfd8e0", borderRadius: 6, fontFamily: "inherit", fontSize: 13, minHeight: 70, background: isEditable ? "#fff" : "#f4f7fa" }} />
             </label>
           </div>
+        </Panel>
+
+        {/* 0.63.1 : Pièces détachées + main d'œuvre + total HT */}
+        <Panel style={{ marginTop: 14 }}>
+          <PiecesDetacheesPanel
+            bilanId={bilan.id}
+            initialPieces={bilan.pieces_detachees || []}
+            initialDureeMin={bilan.duree_intervention_min || 0}
+            initialCoutMo={bilan.cout_main_doeuvre || 0}
+            readOnly={!isEditable}
+            onChange={() => reload()}
+          />
+        </Panel>
+
+        {/* 0.63.0 : Workflow d'approbation */}
+        <Panel style={{ marginTop: 14 }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 14, color: "#142131" }}>
+            <i className="ti ti-stack-2" style={{ color: "#7a6fb0", marginRight: 4 }} /> Workflow d'approbation
+          </h3>
+          <WorkflowApproval
+            resourceType="bilan_sav"
+            resourceId={bilan.id}
+            auth={auth}
+            onChange={() => window.location.reload()}
+          />
+        </Panel>
+
+        {/* 0.63.0 : Pièces jointes (photos réparation, devis) */}
+        <Panel style={{ marginTop: 14 }}>
+          <AttachmentsPanel
+            resourceType="bilan_sav"
+            resourceId={bilan.id}
+            structureId={auth.structureId}
+            readOnly={!isEditable}
+          />
         </Panel>
 
         {/* Validation EC (si statut = termine) */}
@@ -421,7 +469,7 @@ function ValidationModal({ bilan, action, auth, onClose, onDone }) {
         statut: "refuse_ec",
         motif_refus: motif,
       };
-      const r = await supabase.from("bilans_sav").update(payload).eq("id", bilan.id);
+      const r = await safeUpdate(supabase, "bilans_sav", payload, { id: bilan.id }, { userId: auth.user?.id });
       if (r.error) throw r.error;
       onClose();
       onDone();
@@ -557,9 +605,24 @@ async function exportPDF(bilan, points, photos) {
       } catch {}
     }
 
-    doc.setFontSize(8);
-    doc.setTextColor(140, 152, 168);
-    doc.text(`Généré le ${new Date().toLocaleString("fr-FR")} · ${photos.length} photo(s) jointe(s)`, 14, 285);
+    // 0.62.123 : Footer PDF premium via lib/pdfFooter
+    try {
+      const { addPdfFooter, getStructureFooterInfo } = await import("../../../lib/pdfFooter");
+      const { createClient } = await import("../../../lib/supabase");
+      const supabase = createClient();
+      const structureInfo = await getStructureFooterInfo(supabase, bilan.structure_id || bilan.etablissement_id);
+      addPdfFooter(doc, {
+        type: "Bilan SAV",
+        numero: bilan.numero,
+        structure: structureInfo,
+        showLegal: true,
+      });
+    } catch (e) {
+      // Fallback : footer simple si addPdfFooter indisponible
+      doc.setFontSize(8);
+      doc.setTextColor(140, 152, 168);
+      doc.text(`Généré le ${new Date().toLocaleString("fr-FR")} · ${photos.length} photo(s) jointe(s)`, 14, 285);
+    }
     doc.save(`${bilan.numero || "bilan-sav"}.pdf`);
   } catch (e) {
     alert("Erreur PDF : " + e.message);

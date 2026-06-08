@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.64.0 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.64.0
+      <small>📺 MEGA Sprint Robustesse : TV Multi-écrans (DI / Planning / Dashboard / Stats) avec flèches navigation + Workflow maintenance + 2 widgets BI bonus (Comparatif N-1, Évolution 6 mois)</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 8 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.64.0-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>5</b> AI · <b>4</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#tv</span> <span class="theme-pill">#presentation</span> <span class="theme-pill">#workflow</span> <span class="theme-pill">#bi</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(5)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TV Multi-écrans (4 écrans avec navigation flèches)</h3>
+  <div class="panel ">
+    
+    <p>📺</p>
+    <ol class="steps">
+      <li><strong>/presentation/interventions</strong> existant ENRICHI avec max d''infos (description courte 100c, technicien assigné, date planifiée, badges pièces jointes, badges workflow status fait/total, ancienneté + alerte si &gt;24h)</li>
+      <li><strong>/presentation/planning</strong> NOUVEAU : tranches matin/après-midi/soir/nuit avec interventions + tournées + maintenances + planning_events unifiés, swim-lane par tranche horaire, compteurs par type en bandeau</li>
+      <li><strong>/presentation/dashboard</strong> NOUVEAU : KPIs 30j gros chiffres (DI, SAV, tournées, étapes livrées, DI aujourd''hui, taux résolution) + 3 panels Top 5 (matériels SAV / techniciens / patients) avec barres médailles 🥇🥈🥉</li>
+      <li><strong>/presentation/stats</strong> NOUVEAU : compteurs temps réel (DI aujourd''hui / cette heure / activité récente) + feed live unifié DI + signalements + bilans SAV avec badges urgents pulse</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TVScreenNav (app/components/TVScreenNav.js)</h3>
+  <div class="panel ">
+    
+    <p>🎯 composant de navigation entre écrans TV. <strong>Features</strong></p>
+    <ol class="steps">
+      <li><strong>Grosses flèches gauche/droite</strong> (80px) fixes centrées vertical avec backdrop-filter blur</li>
+      <li><strong>Dots de navigation</strong> en bas centré avec dot actif élargi + nom écran courant + position N/4</li>
+      <li><strong>Navigation clavier</strong> : ← / → / touches 1-4 pour switch direct</li>
+      <li><strong>Auto-rotation</strong> via param URL ?auto=15 → barre progression haute + switch auto au prochain écran</li>
+      <li><strong>Conservation params URL</strong> (etab, refresh) entre les écrans. Hover : transform scale 1.08 + bordure teal</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Workflow + PJ + Voix sur /maintenance</h3>
+  <div class="panel ">
+    <p>🔧 ajout dans le modal édition de WorkflowApproval (resource_type='maintenance') + AttachmentsPanel (photos contrôle, planning) + VoiceDictation sur les Notes. Cible 6 modules avec workflow d''approbation : achats, transferts, commandes/[id], signalements, bilan-sav, <strong>maintenance</strong></p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">2 nouveaux widgets BI</h3>
+  <div class="panel ">
+    
+    <p>📊</p>
+    <ol class="steps">
+      <li><strong>ComparatifN1Widget</strong> : compare DI/Signalements/Tournées du mois en cours vs même mois N-1, calcule delta % avec icône trending-up/down/equal et couleur (vert si plus, rouge si moins, gris si égal)</li>
+      <li><strong>EvolutionMensuelleWidget</strong> : bar chart sur 6 derniers mois avec valeurs au-dessus + mois courant en surbrillance navy/teal avec shadow. <strong>18 widgets BI au total</strong> (16 + 2)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Page /presentation/interventions enrichie</h3>
+  <div class="panel ">
+    
+    <p>🎨 sur chaque card DI affichage de</p>
+    <ol class="steps">
+      <li>description courte 100c en italique entre guillemets</li>
+      <li>Technicien assigné + date planifiée si présents</li>
+      <li>Badge <code>&lt;i class=ti-paperclip&gt;</code> + nombre PJ</li>
+      <li>Badge workflow <code>&lt;i class=ti-checks&gt;</code> fait/total ou <code>&lt;i class=ti-hourglass&gt;</code> si en attente</li>
+      <li>Ancienneté en heures/jours avec icône alerte si &gt;24h (stale)</li>
+      <li>Code matériel mono-space. Auto-refresh toutes 60s par défaut, configurable via ?refresh=N</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(4)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">OfflineSyncIndicator</h3>
+  <div class="panel ">
+    <p>✅ déjà branché dans TopBar via LazyLayoutChrome (depuis 0.62.66). <strong>Signalements</strong> + <strong>Interventions</strong> utilisent déjà safeWrite (10 appels). À faire post-0.64.0 : passer <strong>bilan-sav/[id]</strong> via safeWrite (8 appels supabase directs à wrapper). Et brancher l''Export PDF custom (modal sélection widgets + A3/A4)</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">PROCEDURE PUSH 0.64.0</h3>
+  <div class="panel ">
+    
+    <p>🚀</p>
+    <ol class="steps">
+      <li>Pas de NOUVEAU SQL nécessaire — toutes les tables existent déjà (workflow_steps + pieces_jointes + planning_events)</li>
+      <li>Extraire le zip dans C:/aveho-ec-app</li>
+      <li>npm install --legacy-peer-deps</li>
+      <li>npm run build</li>
+      <li>git add -A + commit + push origin main</li>
+      <li>Vercel 1-2 min + hard refresh Ctrl+Shift+R</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Tests TV multi-écran après push</h3>
+  <div class="panel ">
+    
+    <p>📺</p>
+    <ol class="steps">
+      <li>Ouvrir /presentation/interventions en plein écran sur un grand écran</li>
+      <li>Tester flèche droite → /planning, encore → /dashboard, encore → /stats, encore → revient à /interventions (boucle)</li>
+      <li>Tester clavier ← → 1 2 3 4</li>
+      <li>Tester auto-rotation : /presentation/interventions?auto=15 → switch toutes les 15s avec barre progression haute</li>
+      <li>Tester ?refresh=30 pour refresh plus rapide</li>
+      <li>Tester ?etab=&lt;uuid&gt; pour filtrer un établissement</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.64.1+</h3>
+  <div class="panel ">
+    <p>📅 (a) Sync offline robuste bilans-sav/[id] : wrapper les 8 supabase.from().update direct via safeUpdate. (b) Export PDF custom : modal sélection widgets + format A3/A4 + portrait/paysage + header personnalisé logo. (c) Heatmap géographique densité activité (Recharts ou D3). (d) Widget Top patients facturés vs non facturés. (e) Push API en prod (VAPID + cron Edge). (f) Tests pilotes PSAD réels (HMS, Bastide). (g) Module devis/facturation (gros). (h) Mode Sandbox. (i) Multilingue i18n. (j) Module Carte v2 (reporté)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.64.0 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 8 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

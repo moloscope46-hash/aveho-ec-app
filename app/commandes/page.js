@@ -10,6 +10,7 @@ import { usePageAction } from "../../lib/usePageAction";
 import { useContextPatientIds } from "../../lib/useContextPatientIds";
 import { fmtEur, fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
 import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, Statut, StateMsg } from "../ui";
@@ -26,22 +27,39 @@ export default function Commandes() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(null);
   const [lignes, setLignes] = useState({});
+  // 0.62.119 : recherche texte
+  const [search, setSearch] = useState("");
+  // 0.62.115 : ViewModeToggle
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window === "undefined") return "list";
+    return localStorage.getItem("av:commandes:viewMode") || "list";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("av:commandes:viewMode", viewMode); } catch {}
+  }, [viewMode]);
 
   // 0.58.54 : filtre ctx (bâtiment/service) via patients liés
   const { patientIds, ctx } = useContextPatientIds();
   const filteredCmds = useMemo(() => {
-    if (!ctx.active || (!patientIds && !ctx.equipeId)) return cmds;
-    return cmds.filter(c => {
-      // Filtre patient (bât/svc)
-      if (patientIds && c.patient_id && !patientIds.has(c.patient_id)) return false;
-      if (patientIds && !c.patient_id) {
-        // ok : conserve les commandes sans patient (déjà existant)
-      }
-      // 0.58.63 : filtre équipe
-      if (ctx.equipeId && c.equipe_id !== ctx.equipeId) return false;
-      return true;
-    });
-  }, [cmds, ctx.active, patientIds, ctx.equipeId]);
+    let result = cmds;
+    if (ctx.active && (patientIds || ctx.equipeId)) {
+      result = result.filter(c => {
+        if (patientIds && c.patient_id && !patientIds.has(c.patient_id)) return false;
+        if (ctx.equipeId && c.equipe_id !== ctx.equipeId) return false;
+        return true;
+      });
+    }
+    // 0.62.119 : recherche texte
+    if (search && search.trim()) {
+      const s = search.toLowerCase().trim();
+      result = result.filter(c =>
+        (c.numero || "").toLowerCase().includes(s) ||
+        (c.magasins?.nom || "").toLowerCase().includes(s) ||
+        (c.statut || "").toLowerCase().includes(s)
+      );
+    }
+    return result;
+  }, [cmds, ctx.active, patientIds, ctx.equipeId, search]);
 
   // 0.58.45 : export CSV des commandes (pour Cmd+K)
   async function exportCommandesCsv() {
@@ -115,6 +133,21 @@ export default function Commandes() {
           { label: "Livrées", value: cmds.filter((c) => c.statut === "Livrée").length, icon: "ti-check", color: "#5aa05a" },
           { label: "Total", value: cmds.reduce((s2, c) => s2 + Number(c.total || 0), 0).toLocaleString("fr-FR", { style: "currency", currency: "EUR" }), icon: "ti-cash", color: "#7a6fb0" },
         ]} />
+
+        {/* 0.62.119 : FoldableFilters avec search */}
+        <FoldableFilters
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher par n° de commande, magasin…"
+          activeFiltersCount={search ? 1 : 0}
+          onResetAll={() => setSearch("")}
+          storageKey="commandes"
+        >
+          <div style={{ fontSize: 12, color: "#5a6878" }}>
+            <i className="ti ti-info-circle" /> Filtres avancés disponibles : statut, dates, magasin (en cours d'intégration)
+          </div>
+        </FoldableFilters>
+
         <Panel>
           {loading ? (
             /* 0.58.9 : SkeletonRow x 4 */
@@ -135,36 +168,147 @@ export default function Commandes() {
               />
             )
             : (
-              <table>
-                <thead><tr><th>N°</th><th>Date</th><th>Magasin</th><th style={{ textAlign: "right" }}>Total</th><th>Statut</th><th></th></tr></thead>
-                <tbody>
-                  {filteredCmds.map((c) => (
-                    <Fragment key={c.id}>
-                      <tr style={{ cursor: "pointer" }} onClick={() => toggle(c.id)}>
-                        <td style={{ fontWeight: 600 }}>{c.numero}</td>
-                        <td>{fmtDate(c.created_at)}</td>
-                        <td>{c.magasins?.nom || "—"}</td>
-                        <td style={{ textAlign: "right" }}>{fmtEur(c.total)}</td>
-                        <td><Statut value={c.statut} /></td>
-                        <td style={{ textAlign: "right" }}><i className={`ti ti-chevron-${open === c.id ? "up" : "down"}`} /></td>
-                      </tr>
-                      {open === c.id && (
-                        <tr><td colSpan={6} style={{ background: "#f9fbfc", padding: 0 }}>
-                          <table><tbody>
-                            {(lignes[c.id] || []).map((l) => (
-                              <tr key={l.id}>
-                                <td style={{ paddingLeft: 24 }}>{l.libelle}</td>
-                                <td style={{ textAlign: "right" }}>{l.quantite} × {fmtEur(l.prix_unitaire)}</td>
-                                <td style={{ textAlign: "right", paddingRight: 24, fontWeight: 600 }}>{fmtEur(l.quantite * l.prix_unitaire)}</td>
-                              </tr>
-                            ))}
-                          </tbody></table>
-                        </td></tr>
-                      )}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </table>
+              <>
+                {/* 0.62.115 : Toggle Liste / Tuiles */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+                  <div style={{ display: "inline-flex", background: "#f4f7fa", borderRadius: 10, padding: 3, gap: 2 }}>
+                    <button onClick={() => setViewMode("list")} title="Vue liste"
+                      style={{
+                        padding: "6px 12px", borderRadius: 7,
+                        background: viewMode === "list" ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                        color: viewMode === "list" ? "#fff" : "#5a6878",
+                        border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
+                        transition: "all 200ms",
+                      }}>
+                      <i className="ti ti-list" /> Liste
+                    </button>
+                    <button onClick={() => setViewMode("grid")} title="Vue tuiles"
+                      style={{
+                        padding: "6px 12px", borderRadius: 7,
+                        background: viewMode === "grid" ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                        color: viewMode === "grid" ? "#fff" : "#5a6878",
+                        border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
+                        transition: "all 200ms",
+                      }}>
+                      <i className="ti ti-grid-dots" /> Tuiles
+                    </button>
+                  </div>
+                </div>
+
+                {viewMode === "grid" ? (
+                  <div className="av-stagger" style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: 12,
+                  }}>
+                    {filteredCmds.map((c) => {
+                      const statutColor = c.statut === "Livrée" ? "#5aa05a" : c.statut === "Annulée" ? "#e35d5b" : c.statut === "En préparation" ? "#EF9F27" : "#185FA5";
+                      return (
+                        <div key={c.id} data-3d="true" data-accent="bleu" onClick={() => toggle(c.id)}
+                          style={{
+                            background: "#fff",
+                            borderRadius: 14,
+                            padding: 14,
+                            cursor: "pointer",
+                            border: `1px solid ${statutColor}33`,
+                            borderLeft: `4px solid ${statutColor}`,
+                          }}>
+                          {/* Header */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 11, color: "#8a98a8", fontFamily: "Consolas, monospace", letterSpacing: 0.3 }}>
+                                {c.numero}
+                              </div>
+                              <div style={{ fontSize: 13, color: "#5a6878", marginTop: 2 }}>
+                                <i className="ti ti-calendar" /> {fmtDate(c.created_at)}
+                              </div>
+                            </div>
+                            <span style={{
+                              padding: "3px 8px", borderRadius: 6,
+                              background: statutColor, color: "#fff",
+                              fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                              boxShadow: `0 2px 6px ${statutColor}55`,
+                              whiteSpace: "nowrap",
+                            }}>
+                              {c.statut || "—"}
+                            </span>
+                          </div>
+                          {/* Magasin */}
+                          {c.magasins?.nom && (
+                            <div style={{ fontSize: 12, color: "#5a6878", marginBottom: 10 }}>
+                              <i className="ti ti-building-store" style={{ color: "#5a8f8f", marginRight: 4 }} />
+                              {c.magasins.nom}
+                            </div>
+                          )}
+                          {/* Total prix gros */}
+                          <div style={{
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            paddingTop: 10, borderTop: "1px solid #f0f3f6",
+                          }}>
+                            <span style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.5 }}>
+                              Total
+                            </span>
+                            <span style={{ fontSize: 20, fontWeight: 700, color: "#142131" }}>
+                              {fmtEur(c.total)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <table>
+                    <thead><tr><th>N°</th><th>Date</th><th>Magasin</th><th style={{ textAlign: "right" }}>Total</th><th>Statut</th><th></th></tr></thead>
+                    <tbody>
+                      {filteredCmds.map((c) => (
+                        <Fragment key={c.id}>
+                          <tr style={{ cursor: "pointer" }} onClick={() => toggle(c.id)}>
+                            <td data-label="N°" style={{ fontWeight: 600 }}>{c.numero}</td>
+                            <td data-label="Date">{fmtDate(c.created_at)}</td>
+                            <td data-label="Magasin">{c.magasins?.nom || "—"}</td>
+                            <td data-label="Total" style={{ textAlign: "right" }}>{fmtEur(c.total)}</td>
+                            <td data-label="Statut"><Statut value={c.statut} /></td>
+                            <td style={{ textAlign: "right" }}>
+                              {/* 0.62.135 : bouton vers /commandes/[id] */}
+                              <a href={`/commandes/${c.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                title="Voir le détail + workflow"
+                                style={{
+                                  padding: "4px 8px",
+                                  background: "rgba(122, 111, 176, .15)",
+                                  color: "#5e4a8c",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  textDecoration: "none",
+                                  marginRight: 6,
+                                }}>
+                                <i className="ti ti-stack-2" /> Workflow
+                              </a>
+                              <i className={`ti ti-chevron-${open === c.id ? "up" : "down"}`} />
+                            </td>
+                          </tr>
+                          {open === c.id && (
+                            <tr><td colSpan={6} style={{ background: "#f9fbfc", padding: 0 }}>
+                              <table className="av-mini-table"><tbody>
+                                {(lignes[c.id] || []).map((l) => (
+                                  <tr key={l.id}>
+                                    <td style={{ paddingLeft: 24 }}>{l.libelle}</td>
+                                    <td style={{ textAlign: "right" }}>{l.quantite} × {fmtEur(l.prix_unitaire)}</td>
+                                    <td style={{ textAlign: "right", paddingRight: 24, fontWeight: 600 }}>{fmtEur(l.quantite * l.prix_unitaire)}</td>
+                                  </tr>
+                                ))}
+                              </tbody></table>
+                            </td></tr>
+                          )}
+                        </Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </>
             )}
         </Panel>
       </div>

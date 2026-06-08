@@ -8,6 +8,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
+import WorkflowApproval from "../components/WorkflowApproval";  /* 0.62.129 */
+import SmartInput from "../components/SmartInput";  /* 0.62.130 */
+import VoiceDictation from "../components/VoiceDictation";  /* 0.63.0 */
+import AttachmentsPanel from "../components/AttachmentsPanel";  /* 0.63.0 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.127 */
+import LockBanner from "../components/LockBanner";  /* 0.62.127 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn, IconButton } from "../ui";
 import { EmptyState, SkeletonRow } from "../components/ui-premium";
@@ -57,6 +63,8 @@ function AchatsInner() {
   const [lignes, setLignes] = useState({});
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
+  // 0.62.127 : Lock anti-collision sur édition
+  const achatLock = useEditLock("achat", modal?.id, !!modal?.id);
   const [form, setForm] = useState({});
   const [formLignes, setFormLignes] = useState([]);
   const [err, setErr] = useState("");
@@ -221,6 +229,44 @@ function AchatsInner() {
         if (lignesPayload.length > 0) {
           // Bulk insert : on insère le tableau d'un coup
           await safeInsert(supabase, "achats_lignes", lignesPayload, { userId });
+        }
+      }
+      // 0.62.133 : Auto-trigger workflow templates si conditions_json matchent
+      if (cmdId && !modal?.id) {
+        try {
+          const totalMontant = formLignes.reduce((s, l) =>
+            s + ((parseFloat(l.quantite) || 1) * (parseFloat(l.prix_unitaire) || 0)), 0);
+          const { listTemplatesForResource, applyTemplate } = await import("../../lib/workflowHelpers");
+          const templates = await listTemplatesForResource("achat", auth.structureId);
+          // Trouve le premier template avec auto_trigger ET conditions matchées
+          for (const tpl of templates) {
+            if (!tpl.auto_trigger) continue;
+            const cond = tpl.conditions_json || {};
+            let match = true;
+            // 0.62.133 : montant
+            if (cond.montant_min && totalMontant < cond.montant_min) match = false;
+            if (cond.montant_max && totalMontant > cond.montant_max) match = false;
+            // 0.62.133 : flag urgent
+            if (cond.urgent && !form.urgent) match = false;
+            // 0.62.134 : conditions avancées (fournisseur, catégorie, prescripteur)
+            if (cond.fournisseur && !(form.fournisseur || "").toLowerCase().includes(cond.fournisseur.toLowerCase())) match = false;
+            if (cond.categorie && !(form.categorie || "").toLowerCase().includes(cond.categorie.toLowerCase())) match = false;
+            if (cond.prescripteur && !(form.prescripteur || "").toLowerCase().includes(cond.prescripteur.toLowerCase())) match = false;
+            if (match) {
+              await applyTemplate({
+                template: tpl,
+                resourceType: "achat",
+                resourceId: cmdId,
+                structureId: auth.structureId,
+                userId,
+              });
+              const { toast } = await import("../components/ui-premium");
+              toast?.info?.(`⚡ Workflow "${tpl.nom}" déclenché automatiquement`);
+              break;
+            }
+          }
+        } catch (e) {
+          console.warn("[Auto-workflow] échec :", e);
         }
       }
       setModal(null);
@@ -560,6 +606,74 @@ function AchatsInner() {
           <Btn variant="primary" onClick={save} disabled={busy}>{busy ? "…" : "Enregistrer"}</Btn>
         </>}
       >
+        {/* 0.62.127 : LockBanner si édition concurrente */}
+        {achatLock?.locked && <LockBanner lockedBy={achatLock.lockedBy} onTakeover={achatLock.takeover} resourceLabel="cette demande d'achat" />}
+        {/* 0.62.129 : Workflow d'approbation (uniquement si demande existante) */}
+        {modal?.id && (
+          <>
+            <WorkflowApproval
+              resourceType="achat"
+              resourceId={modal.id}
+              auth={auth}
+              onChange={load}
+            />
+            {/* Bouton config workflow si aucune étape n'existe encore */}
+            {isManager && (
+              <div style={{ marginBottom: 12, textAlign: "center" }}>
+                <button
+                  onClick={async () => {
+                    if (!confirm("Créer un workflow d'approbation à 2 niveaux (Cadre → Direction) ?")) return;
+                    try {
+                      const supabase = (await import("../../lib/supabase")).createClient();
+                      // Niveau 1 : Cadre de santé
+                      const cadreRole = roles?.find?.(r => r.nom === "Cadre de santé");
+                      // Niveau 2 : Direction
+                      const dirRole = roles?.find?.(r => r.nom === "Direction");
+                      const steps = [
+                        {
+                          structure_id: auth.structureId,
+                          resource_type: "achat",
+                          resource_id: modal.id,
+                          step_order: 1,
+                          role_label: "Cadre de santé",
+                          approver_role_id: cadreRole?.id || null,
+                          status: "pending",
+                        },
+                        {
+                          structure_id: auth.structureId,
+                          resource_type: "achat",
+                          resource_id: modal.id,
+                          step_order: 2,
+                          role_label: "Direction",
+                          approver_role_id: dirRole?.id || null,
+                          status: "pending",
+                        },
+                      ];
+                      await supabase.from("workflow_steps").insert(steps);
+                      load();
+                    } catch (e) {
+                      alert("Erreur : " + e.message);
+                    }
+                  }}
+                  style={{
+                    padding: "6px 14px",
+                    background: "linear-gradient(135deg, #7a6fb0, #5e4a8c)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontFamily: "inherit",
+                    fontWeight: 700,
+                  }}
+                >
+                  <i className="ti ti-stack-2" style={{ marginRight: 4 }} />
+                  Lancer workflow d'approbation
+                </button>
+              </div>
+            )}
+          </>
+        )}
         {err && <div className="err">{err}</div>}
         <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div className="fld">
@@ -568,12 +682,34 @@ function AchatsInner() {
           </div>
           <div className="fld">
             <label>Fournisseur</label>
-            <input value={form.fournisseur || ""} onChange={(e) => setForm({ ...form, fournisseur: e.target.value })} placeholder="Bastide, Philips, Hartmann…" />
+            <SmartInput
+              value={form.fournisseur || ""}
+              onChange={(v) => setForm({ ...form, fournisseur: v })}
+              contextKey="achat.fournisseur"
+              placeholder="Bastide, Philips, Hartmann…"
+            />
           </div>
         </div>
         <div className="fld">
           <label>Motif *</label>
-          <textarea value={form.motif || ""} onChange={(e) => setForm({ ...form, motif: e.target.value })} rows={2} placeholder="Pourquoi cet achat ?" />
+          <div style={{ position: "relative" }}>
+            <textarea value={form.motif || ""} onChange={(e) => setForm({ ...form, motif: e.target.value })} rows={2} placeholder="Pourquoi cet achat ?" style={{ paddingRight: 44 }} />
+            <div style={{ position: "absolute", bottom: 8, right: 8 }}>
+              <VoiceDictation
+                onTranscript={(t) => setForm(prev => ({ ...prev, motif: (prev.motif || "") + (prev.motif && !prev.motif.endsWith(" ") ? " " : "") + t }))}
+                size="sm"
+              />
+            </div>
+          </div>
+          {/* 0.63.0 : Pièces jointes (devis, BL fournisseur) */}
+          {modal?.id && (
+            <AttachmentsPanel
+              resourceType="achat"
+              resourceId={modal.id}
+              structureId={auth.structureId}
+              compact
+            />
+          )}
         </div>
         <div className="grid-2-mobile-1" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <div className="fld">

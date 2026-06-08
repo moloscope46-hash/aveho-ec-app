@@ -11,6 +11,9 @@ import { useCurrentContext } from "../../lib/useCurrentContext";
 // 0.58.43 : hook pour écouter les page-actions du Cmd+K
 import { usePageAction } from "../../lib/usePageAction";
 import TopBar from "../TopBar";
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
+import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
 import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -41,6 +44,8 @@ function MaterielsInner() {
   const [rel, setRel] = useState({ article_id: [], patient_id: [] });
   const [relReady, setRelReady] = useState(false);
   const [items, setItems] = useState([]);
+  // 0.62.120 : recherche text
+  const [search, setSearch] = useState("");
   // 0.62.103 : Mode d'affichage tuiles/liste
   const [viewMode, setViewMode] = useState(() => {
     if (typeof window === "undefined") return "list";
@@ -319,6 +324,20 @@ function MaterielsInner() {
           </div>
         </div>
 
+        {/* 0.62.122 : FoldableFilters avec search */}
+        <FoldableFilters
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher un matériel (n° série, parc, libellé…)"
+          activeFiltersCount={search ? 1 : 0}
+          onResetAll={() => setSearch("")}
+          storageKey="materiels"
+        >
+          <div style={{ fontSize: 12, color: "#5a6878" }}>
+            <i className="ti ti-info-circle" /> La recherche filtre sur les n° de série, parc et libellé. Filtres avancés à venir.
+          </div>
+        </FoldableFilters>
+
         {/* 0.62.103 : Rendu TUILES custom (au-dessus du Crud caché en mode grid) */}
         {viewMode === "grid" && items.length > 0 && (
           <div className="av-stagger" style={{
@@ -420,6 +439,7 @@ function MaterielsInner() {
           table="materiels"
           title="Nouveau matériel"
           relations={rel}
+          lockResource="materiel"  /* 0.62.125 : anti-collision édition */
           extraFilter={(ctx.active || filterArticleId) ? (r) => {
             // 0.58.62 : combine filtre patient (bât/svc) ET filtre équipe
             if (ctx.active && ctxPatientIds && (!r.patient_id || !ctxPatientIds.has(r.patient_id))) return false;

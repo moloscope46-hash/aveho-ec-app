@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "../lib/supabase";
+import { useEditLock } from "../lib/useEditLock";  /* 0.62.125 */
+import LockBanner from "./components/LockBanner";  /* 0.62.125 */
 import { useAuth } from "../lib/useAuth";
 import { safeInsert, safeUpdate, safeDelete } from "../lib/safeWrite";
 import { Panel, StateMsg } from "./ui";
@@ -18,12 +20,14 @@ import { dialogs } from "./dialogs";
  *  - select : colonnes à charger (avec jointures éventuelles)
  *  - relations : { key: [{value,label}] } pour les selects (ex. articles, patients)
  */
-export default function Crud({ structureId, etabId, table, columns, fields, title, select = "*", relations = {}, onData, canWrite = true, canDelete = true, filterFields = null, extraFilter = null }) {
+export default function Crud({ structureId, etabId, table, columns, fields, title, select = "*", relations = {}, onData, canWrite = true, canDelete = true, filterFields = null, extraFilter = null, lockResource = null }) {
   const supabase = createClient();
   const auth = useAuth();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null); // null | {} (new) | row (edit)
+  // 0.62.125 : Lock anti-collision sur édition (si lockResource fourni)
+  const editLock = useEditLock(lockResource, modal?.id, !!lockResource && !!modal?.id);
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -536,6 +540,8 @@ export default function Crud({ structureId, etabId, table, columns, fields, titl
               </div>
             </div>
             <div className="modal-body">
+              {/* 0.62.125 : LockBanner si édition concurrente */}
+              {editLock?.locked && <LockBanner lockedBy={editLock.lockedBy} onTakeover={editLock.takeover} resourceLabel={`cet enregistrement (${table})`} />}
               {err && <div className="err">{err}</div>}
               {/* 0.58.58 : bandeau d'instruction en mode édition */}
               {fieldsEditMode && (

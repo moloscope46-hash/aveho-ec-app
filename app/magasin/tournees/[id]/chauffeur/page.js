@@ -298,9 +298,24 @@ export default function ChauffeurTrackingPage({ params }) {
         if (y > 270) { doc.addPage(); y = 18; }
       });
 
-      doc.setFontSize(8);
-      doc.setTextColor(140, 152, 168);
-      doc.text(`Généré le ${new Date().toLocaleString("fr-FR")} · ${gpsTrack.length} points GPS enregistrés`, 14, 285);
+      // 0.62.124 : Footer PDF premium via lib/pdfFooter
+      try {
+        const { addPdfFooter, getStructureFooterInfo } = await import("../../../../../lib/pdfFooter");
+        const { createClient } = await import("../../../../../lib/supabase");
+        const supabase = createClient();
+        const structureInfo = await getStructureFooterInfo(supabase, tournee?.structure_id);
+        addPdfFooter(doc, {
+          type: "Feuille de route",
+          numero: tournee?.numero || p.id.substring(0, 8),
+          structure: structureInfo,
+          showLegal: false,
+        });
+      } catch (e) {
+        // Fallback
+        doc.setFontSize(8);
+        doc.setTextColor(140, 152, 168);
+        doc.text(`Généré le ${new Date().toLocaleString("fr-FR")} · ${gpsTrack.length} points GPS enregistrés`, 14, 285);
+      }
 
       doc.save(`feuille-route-${tournee?.numero || p.id.substring(0, 8)}.pdf`);
     } catch (e) {

@@ -16,6 +16,14 @@ import { useAuth } from "../../lib/useAuth";
 // 0.62.47 : filtre contexte bât/svc courant (TODO depuis 0.58.36)
 import { useCurrentContext } from "../../lib/useCurrentContext";
 import TopBar from "../TopBar";
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
+import LockBanner from "../components/LockBanner";  /* 0.62.124 */
+import SmartInput from "../components/SmartInput";  /* 0.62.130 */
+import SmartSelect from "../components/SmartSelect";  /* 0.62.132 */
+import VoiceDictation from "../components/VoiceDictation";  /* 0.63.0 */
+import AttachmentsPanel from "../components/AttachmentsPanel";  /* 0.63.0 */
+import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
 import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, Modal } from "../ui";
@@ -101,6 +109,8 @@ function InterventionsInner() {
   const [search, setSearch] = useState("");
 
   const [modal, setModal] = useState(null);
+  // 0.62.124 : Lock anti-collision sur édition
+  const interventionLock = useEditLock("intervention", modal?.id, !!modal?.id && modal?.mode !== "new");
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -363,48 +373,53 @@ function InterventionsInner() {
           })}
         </div>
 
-        {/* Toolbar */}
-        <Panel style={{ marginBottom: 14, padding: "12px 14px" }}>
+        {/* 0.62.123 : FoldableFilters avec search + filtres avancés */}
+        <FoldableFilters
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher (numéro, description, matériel, dépôt…)"
+          activeFiltersCount={[fStatut, fUrgence, fEquipe, fDepot].filter(Boolean).length + (search ? 1 : 0)}
+          onResetAll={() => { setFStatut(""); setFUrgence(""); setFEquipe(""); setFDepot(""); setSearch(""); }}
+          storageKey="interventions"
+        >
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input
-              type="search"
-              placeholder="🔍 Recherche (numéro, description, matériel, dépôt…)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ flex: 1, minWidth: 220, padding: "8px 14px", border: "1px solid #e3e9ee", borderRadius: 18, fontSize: 13, fontFamily: "inherit" }}
-            />
-            <select value={fUrgence} onChange={(e) => setFUrgence(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #e3e9ee", fontSize: 12.5 }}>
-              <option value="">Urgences</option>
+            <select value={fUrgence} onChange={(e) => setFUrgence(e.target.value)}
+              style={{ padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e3e9ee", fontSize: 13, fontFamily: "inherit" }}>
+              <option value="">Toutes urgences</option>
               {URGENCES.map(u => <option key={u.value} value={u.value}>{u.value}</option>)}
             </select>
             {equipes.length > 0 && (
-              <select value={fEquipe} onChange={(e) => setFEquipe(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #e3e9ee", fontSize: 12.5 }}>
+              <select value={fEquipe} onChange={(e) => setFEquipe(e.target.value)}
+                style={{ padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e3e9ee", fontSize: 13, fontFamily: "inherit" }}>
                 <option value="">Toutes équipes</option>
                 {equipes.map(eq => <option key={eq.id} value={eq.id}>{eq.nom}</option>)}
               </select>
             )}
             {depots.length > 0 && (
-              <select value={fDepot} onChange={(e) => setFDepot(e.target.value)} style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid #e3e9ee", fontSize: 12.5 }}>
+              <select value={fDepot} onChange={(e) => setFDepot(e.target.value)}
+                style={{ padding: "8px 12px", borderRadius: 8, border: "1.5px solid #e3e9ee", fontSize: 13, fontFamily: "inherit" }}>
                 <option value="">Tous dépôts</option>
                 {depots.map(d => <option key={d.id} value={d.id}>{d.nom}</option>)}
               </select>
             )}
-            {(fStatut || fUrgence || fEquipe || fDepot || search) && (
-              <Btn variant="ghost" icon="ti-x" onClick={() => { setFStatut(""); setFUrgence(""); setFEquipe(""); setFDepot(""); setSearch(""); }}>Reset</Btn>
-            )}
-            <div style={{ display: "inline-flex", border: "1px solid #e3e9ee", borderRadius: 8, overflow: "hidden" }}>
-              <button onClick={() => setView("liste")} style={{ background: view === "liste" ? "#142131" : "#fff", color: view === "liste" ? "#fff" : "#5a6878", border: "none", padding: "7px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+            <div style={{ display: "inline-flex", border: "1px solid #e3e9ee", borderRadius: 8, overflow: "hidden", marginLeft: "auto" }}>
+              <button onClick={() => setView("liste")} style={{ background: view === "liste" ? "#142131" : "#fff", color: view === "liste" ? "#fff" : "#5a6878", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
                 <i className="ti ti-list" /> Liste
               </button>
-              <button onClick={() => setView("kanban")} style={{ background: view === "kanban" ? "#142131" : "#fff", color: view === "kanban" ? "#fff" : "#5a6878", border: "none", padding: "7px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+              <button onClick={() => setView("kanban")} style={{ background: view === "kanban" ? "#142131" : "#fff", color: view === "kanban" ? "#fff" : "#5a6878", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
                 <i className="ti ti-layout-kanban" /> Kanban
               </button>
-              {/* 0.62.105 : Vue Tuiles custom */}
-              <button onClick={() => setView("tuiles")} style={{ background: view === "tuiles" ? "#142131" : "#fff", color: view === "tuiles" ? "#fff" : "#5a6878", border: "none", padding: "7px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
+              <button onClick={() => setView("tuiles")} style={{ background: view === "tuiles" ? "#142131" : "#fff", color: view === "tuiles" ? "#fff" : "#5a6878", border: "none", padding: "8px 12px", cursor: "pointer", fontFamily: "inherit", fontSize: 12 }}>
                 <i className="ti ti-grid-dots" /> Tuiles
               </button>
             </div>
             <NeonButton variant="teal" icon="ti-plus" onClick={() => openNew()}>Nouvelle DI</NeonButton>
+          </div>
+        </FoldableFilters>
+
+        {/* Toolbar legacy retirée */}
+        <Panel style={{ marginBottom: 14, padding: "12px 14px", display: "none" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           </div>
         </Panel>
 
@@ -522,6 +537,8 @@ function InterventionsInner() {
                 <i className="ti ti-scan" /> <b>DI créée depuis le scan d'un QR</b> · Les rattachements sont pré-remplis automatiquement
               </div>
             )}
+            {/* 0.62.124 : LockBanner si édition concurrente */}
+            {interventionLock?.locked && <LockBanner lockedBy={interventionLock.lockedBy} onTakeover={interventionLock.takeover} resourceLabel="cette intervention" />}
             {modal.mode === "new" && <EtabContextHeader auth={auth} color="#e35d5b" icon="ti-tools" />}
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -531,17 +548,42 @@ function InterventionsInner() {
               </div>
               <div className="fld">
                 <label>Type</label>
-                <select value={form.type || "Panne / réparation"} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                  {TYPES_DI.map(t => <option key={t.value} value={t.value}>{t.value}</option>)}
-                </select>
+                {/* 0.62.132 : SmartSelect avec historique + options */}
+                <SmartSelect
+                  value={form.type || "Panne / réparation"}
+                  onChange={(v) => setForm({ ...form, type: v })}
+                  options={TYPES_DI.map(t => ({ value: t.value, label: t.value }))}
+                  contextKey="intervention.type"
+                  allowCustom={false}
+                  placeholder="Choisir un type"
+                />
               </div>
             </div>
 
             <div className="fld" style={{ marginTop: 8 }}>
               <label>Description du problème *</label>
-              <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
-                placeholder="Décris précisément le problème observé, les conditions, les symptômes…" />
+              <div style={{ position: "relative" }}>
+                <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3}
+                  placeholder="Décris précisément le problème observé, les conditions, les symptômes…"
+                  style={{ paddingRight: 44 }} />
+                {/* 0.63.0 : Saisie vocale */}
+                <div style={{ position: "absolute", bottom: 8, right: 8 }}>
+                  <VoiceDictation
+                    onTranscript={(t) => setForm(prev => ({ ...prev, description: (prev.description || "") + (prev.description && !prev.description.endsWith(" ") ? " " : "") + t }))}
+                    size="sm"
+                  />
+                </div>
+              </div>
             </div>
+            {/* 0.63.0 : Pièces jointes (photo de panne) */}
+            {modal?.id && (
+              <AttachmentsPanel
+                resourceType="intervention"
+                resourceId={modal.id}
+                structureId={auth.structureId}
+                compact
+              />
+            )}
 
             <h4 style={{ margin: "14px 0 8px", fontSize: 12, color: "#e35d5b", textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #ffd5d2", paddingBottom: 4 }}>
               <i className="ti ti-flame" /> Urgence
@@ -581,7 +623,12 @@ function InterventionsInner() {
               </div>
               <div className="fld" style={{ gridColumn: "span 2" }}>
                 <label>Emplacement précis (texte libre)</label>
-                <input value={form.emplacement || ""} onChange={(e) => setForm({ ...form, emplacement: e.target.value })} placeholder="Ex: Étagère 3, casier B / Chambre 204, derrière le lit…" />
+                <SmartInput
+                  value={form.emplacement || ""}
+                  onChange={(v) => setForm({ ...form, emplacement: v })}
+                  contextKey="intervention.emplacement"
+                  placeholder="Ex: Étagère 3, casier B / Chambre 204, derrière le lit…"
+                />
               </div>
             </div>
 

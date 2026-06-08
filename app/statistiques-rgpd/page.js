@@ -181,15 +181,34 @@ export default function StatistiquesRgpd() {
       // ===== Header brandé =====
       doc.setFillColor(20, 33, 49); // navy
       doc.rect(0, 0, 210, 30, "F");
+
+      // 0.62.120 : Logo Aveho via doc.addImage
+      try {
+        // Charge le logo PNG (icon-72) en base64 puis l'inscrit
+        const logoRes = await fetch("/icons/icon-72.png");
+        const blob = await logoRes.blob();
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        // Position : x=14, y=4, width=18, height=18 (carré dans le bandeau)
+        doc.addImage(dataUrl, "PNG", 14, 6, 18, 18);
+      } catch (e) {
+        // Logo non disponible : on continue sans
+        console.warn("Logo Aveho non chargé pour le PDF :", e);
+      }
+
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(20);
       doc.setFont("helvetica", "bold");
-      doc.text("aveho", 14, 18);
+      doc.text("aveho", 36, 18);  // décalé pour laisser place au logo
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
-      doc.text("Espace Collectivité — Statistiques RGPD", 14, 24);
+      doc.text("Espace Collectivité — Statistiques RGPD", 36, 24);
       doc.setFontSize(9);
-      doc.text(`Édité le ${today}`, 14, 28);
+      doc.text(`Édité le ${today}`, 36, 28);
 
       // ===== Titre =====
       doc.setTextColor(20, 33, 49);
@@ -327,17 +346,30 @@ export default function StatistiquesRgpd() {
         });
       }
 
-      // ===== Footer =====
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(138, 152, 168);
-        doc.text(
-          `Aveho EC — Rapport RGPD ${auth.structureNom || ""} — Page ${i}/${pageCount}`,
-          14, 290
-        );
-        doc.text(`Édité le ${today}`, 196, 290, { align: "right" });
+      // ===== Footer (0.62.125 : via lib/pdfFooter premium) =====
+      try {
+        const { addPdfFooter, getStructureFooterInfo } = await import("../../lib/pdfFooter");
+        const { createClient } = await import("../../lib/supabase");
+        const supabase = createClient();
+        const structureInfo = await getStructureFooterInfo(supabase, auth.structureId);
+        addPdfFooter(doc, {
+          type: "Rapport RGPD",
+          structure: structureInfo,
+          showLegal: true,
+        });
+      } catch (e) {
+        // Fallback footer simple
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(138, 152, 168);
+          doc.text(
+            `Aveho EC — Rapport RGPD ${auth.structureNom || ""} — Page ${i}/${pageCount}`,
+            14, 290
+          );
+          doc.text(`Édité le ${today}`, 196, 290, { align: "right" });
+        }
       }
 
       // Téléchargement

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.120 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.120
+      <small>🚀 DÉPLOIEMENT MASSIF FINAL : FoldableFilters JSX dans /patients + states search sur 5 pages + imports useEditLock &amp; AddressAutocomplete partout + 🖼️ Logo PNG via doc.addImage dans PDF Stats RGPD</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.120-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>4</b> AI · <b>3</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#deployment</span> <span class="theme-pill">#pdf</span> <span class="theme-pill">#lock</span> <span class="theme-pill">#filters</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(4)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">FoldableFilters JSX COMPLET sur /patients</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li>select Services</li>
+      <li>input N° chambre maxWidth 140</li>
+      <li>input Étiquette maxWidth 140. <strong>activeFiltersCount</strong> : compte filters.service + chambre + etat + etiquette non-vides. <strong>onResetAll</strong> : reset complet du filters object. <strong>storageKey patients</strong> : mémorise l état ouvert/fermé. La barre de recherche est toujours visible, les filtres avancés se déplient à la demande</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">States search ajoutés sur 4 autres pages</h3>
+  <div class="panel ">
+    
+    <p>📦</p>
+    <ol class="steps">
+      <li>/materiels : <code>const [search, setSearch] = useState("")</code></li>
+      <li>/signalements : pareil</li>
+      <li>/interventions : déjà existant à la ligne 102</li>
+      <li>/articles : déjà existant à la ligne 51. <strong>Reste à faire</strong> : envelopper les barres de filtres existantes par &lt;FoldableFilters&gt;...&lt;/FoldableFilters&gt; (pattern de /patients à reproduire avec adaptations selon les filters de chaque page)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Imports useEditLock + AddressAutocomplete sur 5 pages</h3>
+  <div class="panel ">
+    <p>🔒 ajout automatique via sed <code>import { useEditLock } from ".../lib/useEditLock"</code> et <code>import AddressAutocomplete from ".../components/AddressAutocomplete"</code> sur /patients, /materiels, /interventions, /signalements, /articles. <strong>Tous les imports passent node --check syntax</strong>. Les composants sont prêts à être utilisés dans les modals d édition (lock) et de création/édition (autocomplete adresse)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Logo PNG dans PDF Stats RGPD via doc.addImage</h3>
+  <div class="panel ">
+    
+    <p>🖼️ modification de app/statistiques-rgpd/page.js pour intégrer le logo Aveho dans le header brandé. <strong>Process</strong></p>
+    <ol class="steps">
+      <li>fetch /icons/icon-72.png → blob</li>
+      <li>Conversion blob → base64 dataURL via FileReader.readAsDataURL</li>
+      <li>doc.addImage(dataUrl, PNG, 14, 6, 18, 18) en haut-gauche du bandeau navy</li>
+      <li>Texte aveho décalé à x=36 pour laisser place au logo. <strong>Fallback</strong> : try/catch avec console.warn si fetch échoue (le PDF s édite quand même sans logo)</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">AdresseAutocomplete déjà déployé</h3>
+  <div class="panel ">
+    <p>📋 audit a montré que le composant français existant app/AdresseAutocomplete.js (Alpha 0.55.55) est déjà utilisé dans /patients (CRUD), /patient/[id]/edit (TabAdresses, TabIdentite), /admin/referentiels-sante. <strong>Donc le déploiement adresse est partiellement fait</strong>. Le nouveau AddressAutocomplete (anglais) reste disponible comme alternative moderne avec INSEE clairement affiché</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Pattern modal édition avec useEditLock</h3>
+  <div class="panel ">
+    
+    <p>💡</p>
+    <ol class="steps">
+      <li>Dans le composant modal : <code>const { locked, lockedBy, takeover } = useEditLock("patient", modal?.id, !!modal?.id)</code></li>
+      <li><strong>enabled=!!modal?.id</strong> important pour éviter de verrouiller une création (id null)</li>
+      <li>En haut du contenu de la modal, <strong>si locked</strong> : afficher <code>&lt;div className="av-edit-lock-banner"&gt;&lt;i className="ti ti-lock lock-icon" /&gt;&lt;div className="lock-text"&gt;&lt;div className="lock-title"&gt;Édition en cours par {lockedBy.nom}&lt;/div&gt;&lt;div className="lock-detail"&gt;Vous pouvez attendre la fin ou reprendre la main&lt;/div&gt;&lt;/div&gt;&lt;button onClick={takeover}&gt;Reprendre&lt;/button&gt;&lt;/div&gt;</code></li>
+      <li>Désactiver les inputs du form si locked &amp;&amp; !ownLock pour éviter modifs concurrentes</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.62.121+</h3>
+  <div class="panel ">
+    <p>📅 (a) Envelopper les barres de filtres existantes par FoldableFilters dans /materiels, /interventions, /signalements, /articles (pattern /patients à reproduire). (b) Intégrer useEditLock + banner dans les modals d édition des 5 entités (juste après les state hooks de la modal, et JSX en haut du contenu). (c) Déployer AddressAutocomplete (nouveau) ou AdresseAutocomplete (existant) dans les CRUD d établissements / fournisseurs / prescripteurs si pas déjà fait. (d) <strong>Widget ChartCard /accueil</strong> drag&amp;drop. (e) <strong>Intégrer addPdfFooter</strong> sur PDF existants (BL/devis/commande)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.120 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

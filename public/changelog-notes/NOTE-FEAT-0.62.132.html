@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.132 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.132
+      <small>🚀 GROSSE MAJ : SmartSelect partout + Trigger workflow depuis templates + 2 widgets BI (SLA gauge + Charge équipes) + Planning WeekGrid drag&amp;drop + Page audit notifs auto</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.132-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>8</b> AI · <b>1</b> SQL · <b>1</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#smart</span> <span class="theme-pill">#workflow</span> <span class="theme-pill">#bi</span> <span class="theme-pill">#planning</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">notifs-log-0.62.132.sql</h3>
+  <div class="panel violet">
+    <p>🗄️ table notifs_log pour logger les notifs auto déclenchées. Colonnes : structure_id, user_id, type (di_urgente/workflow/signalement_critique), titre, message, resource_type/id, link, level (info/warning/urgent/error), acknowledged + acknowledged_at. Index sur user_id+created_at et type+created_at</p>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(8)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">SmartSelect activé</h3>
+  <div class="panel ">
+    
+    <p>🤖</p>
+    <ol class="steps">
+      <li>/interventions sur form.type avec options TYPES_DI (allowCustom=false)</li>
+      <li>/signalements sur form.statut avec options STATUTS. Suggestions historique combinées aux options définies. Distingue avec icônes (list teal vs history gris)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">workflowHelpers (lib/workflowHelpers.js)</h3>
+  <div class="panel ">
+    
+    <p>📋</p>
+    <ol class="steps">
+      <li><strong>listTemplatesForResource</strong> : récupère les templates filtrés sur resource_type ET resource_type=*</li>
+      <li><strong>applyTemplate</strong> : applique un template en créant les workflow_steps. Match role_label → role_id via fetch roles. Supprime les anciens steps avant insert pour éviter doublons. Retourne {ok, stepsCreated} ou {ok:false, error}</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TemplatesSelector dans WorkflowApproval</h3>
+  <div class="panel ">
+    <p>🎯 quand un workflow n existe pas encore pour la ressource, affiche une grille de templates disponibles avec icône + nom + description + nb_étapes. Click → apply (avec confirm via toast). Visible UNIQUEMENT pour admin (canTrigger). Style premium cards 220px avec hover lift + shadow color du template</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">SLARespectWidget</h3>
+  <div class="panel ">
+    <p>📊 gauge circulaire SVG du pourcentage d interventions résolues dans les délais SLA. <strong>SLA défini</strong> par urgence : Critique=4h, Élevée=24h, Normale=72h, Faible=168h. <strong>Gauge animée</strong> : circle stroke vert/ambre/rouge selon pct (&gt;=90% / &gt;=70% / &lt;70%) + stroke-dasharray transition 1s cubic-bezier. <strong>Stats</strong> : 2 cards Dans les délais (vert) / Dépassement (rouge)</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">ChargeEquipesWidget</h3>
+  <div class="panel ">
+    <p>📊 top 5 équipes avec le + d interventions en cours (Nouvelle/En cours/Planifiée). <strong>Bullet coloré</strong> : vert &lt;5, ambre 5-10, rouge &gt;=10. <strong>Barres progress</strong> proportionnelles à la charge max + transition cubic-bezier 800ms. Permet de voir d un coup d œil les surcharges et déséquilibrer la charge</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">PlanningCalendar drag&amp;drop WeekGrid</h3>
+  <div class="panel ">
+    <p>📅 ajout des handlers HTML5 dans WeekGrid identique au MonthGrid. Events draggable avec onDragStart sérialise event en JSON. Days droppables avec onDragOver preventDefault + change background + onDrop calcule nouvelle date (préserve heure) + update DB selon préfixe (intv-/evt-/tour-) + toast + reload. <strong>Maintenant les 2 vues</strong> Mois et Semaine supportent le drag&amp;drop</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">useRealtimeNotifs log dans notifs_log</h3>
+  <div class="panel ">
+    <p>🔔 modification de la branche DI urgentes pour insérer dans notifs_log à chaque notif émise. Permet de garder une trace consultable de toutes les notifications auto envoyées (qui, quand, quoi, niveau). Insert silencieux dans try/catch pour ne pas bloquer en cas d erreur SQL</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Page /audit/notifs</h3>
+  <div class="panel ">
+    <p>📋 historique complet des notifications auto. <strong>5 stat cards</strong> : Total + DI urgentes + Workflows + Signalements + Non acquittés (highlight rouge si &gt;0). <strong>Toolbar</strong> : recherche titre/message + filtre type + filtre niveau + bouton Acquitter tout. <strong>Liste cards</strong> : icône type + titre bold + message + date + 3 badges colorés (type, niveau, non acquitté) + bouton Voir si link. Empty state si vide ou recherche sans résultat. <strong>500 dernières notifs</strong> chargées</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.62.133+</h3>
+  <div class="panel ">
+    <p>📅 (a) <strong>Auto-trigger templates</strong> : si conditions_json matchent (ex: montant &gt; 500€) déclencher le workflow auto au save de l achat. (b) <strong>SmartSelect</strong> dans /achats statut + criticite. (c) <strong>Drag&amp;drop édition modal</strong> dans Planning : click sur event ouvre modal d édition. (d) <strong>Widgets BI</strong> : Top patients (interventions), top fournisseurs. (e) <strong>Notifs natives</strong> : opt-in dans paramètres user. (f) Tests pilotes PSAD</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+notifs-log-0.62.132.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/notifs-log-0.62.132.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>notifs-log-0.62.132.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.132 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

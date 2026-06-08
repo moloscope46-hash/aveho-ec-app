@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.62.131 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.62.131
+      <small>🚀 MEGA BUMP : Auto-notify DI urgentes + workflow + 2 widgets BI (Top collab + Temps moyen) + SmartSelect combobox + Workflow templates + Planning drag&amp;drop</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 6 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.62.131-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>7</b> AI · <b>2</b> INFO · <b>1</b> SQL</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#branchements</span> <span class="theme-pill">#bi</span> <span class="theme-pill">#workflow</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">workflow-templates-0.62.131.sql</h3>
+  <div class="panel violet">
+    <p>🗄️ table workflow_templates pour sauvegarder des configurations de workflows réutilisables. <strong>Colonnes</strong> : nom, description, resource_type (achat/commande/transfert/*), icone, couleur, steps_json (array d objets {step_order, role_label, approver_role_id, conditions}), conditions_json (déclencheurs), auto_trigger, created_by. <strong>3 templates pré-chargés</strong> : Achat standard (&gt;500€), Achat urgent (1 niveau), Transfert inter-établissement. Index sur structure_id et resource_type</p>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(7)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">useRealtimeNotifs (lib/useRealtimeNotifs.js)</h3>
+  <div class="panel ">
+    
+    <p>🔔 hook global qui détecte en realtime 3 événements clés et déclenche notifications natives + sons</p>
+    <ol class="steps">
+      <li><strong>DI urgentes nouvelles</strong> : interventions where urgence in (Critique, Élevée) créées depuis le dernier check → notify type urgent</li>
+      <li><strong>Workflow approbations en attente pour moi</strong> : workflow_steps pending where approver matches user_id, role_id, ou admin → notify type info</li>
+      <li><strong>Signalements critiques</strong> : signalements where criticite in (Critique, Haute) → notify type warning. <strong>Check</strong> initial puis toutes les 60s. Branché dans TopBar via useRealtimeNotifs(true)</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">safeSave (lib/safeSave.js)</h3>
+  <div class="panel ">
+    
+    <p>📡 wrapper haut-niveau pour écritures avec fallback offline. <strong>Détecte</strong></p>
+    <ol class="steps">
+      <li>si !isOnline() → enqueue direct</li>
+      <li>Erreur retournée matchant /network|fetch|timeout|failed/i → enqueue</li>
+      <li>Exception du même type → enqueue. <strong>Toast info</strong> : Mode hors-ligne, action mise en file. Sera synchronisée à la reconnexion. Compatible avec lib/offlineQueue.js existant (Alpha 0.25.0). À utiliser pour les saves critiques où la résilience offline est importante</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TopCollaborateursWidget</h3>
+  <div class="panel ">
+    <p>📊 Top 5 collaborateurs les + actifs sur 30j. Compte interventions par technicien_user_id. Affichage avec médailles emoji 🥇🥈🥉 puis numéros + barres progress + count actions. Empty state si pas encore d activité</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TempsMoyenResolutionWidget</h3>
+  <div class="panel ">
+    <p>📊 durée moyenne des interventions résolues sur 30j (calcul (date_resolution - created_at) en heures, filtre outliers &lt; 30j). <strong>3 chiffres</strong> : moyenne dans card centrale gradient (32px), min (vert) et max (rouge) en grid 2 colonnes. fmtDuration : &lt;1h=minutes, &lt;24h=heures, &gt;24h=jours. Empty state si aucune résolution</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">SmartSelect (app/components/SmartSelect.js)</h3>
+  <div class="panel ">
+    
+    <p>🤖 composant combobox combinant input texte + dropdown options + suggestions historique</p>
+    <ol class="steps">
+      <li><strong>Affiche</strong> les options passées en prop + entries d historique localStorage non doublonnées</li>
+      <li><strong>Filtre</strong> en temps réel à la frappe</li>
+      <li><strong>allowCustom</strong> prop pour autoriser saisie libre</li>
+      <li><strong>Distingue</strong> dans le dropdown : options vs historique avec icônes différentes (ti-list teal vs ti-history gris)</li>
+      <li><strong>Sauvegarde auto</strong> des valeurs saisies dans localStorage par contextKey</li>
+      <li><strong>Navigation clavier</strong> complète</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Page /parametres/workflows</h3>
+  <div class="panel ">
+    
+    <p>📋 interface admin complète pour gérer les templates</p>
+    <ol class="steps">
+      <li><strong>Liste</strong> : grid cards 320px avec icône+couleur+nom+type ressource (badge coloré) + description + steps en chips (1. Cadre de santé, 2. Direction...)</li>
+      <li><strong>Modal création/édition</strong> : nom, description, type ressource (4 options), icône input + couleur color picker</li>
+      <li><strong>Builder d étapes</strong> : ronds numérotés gradient + input role_label + bouton trash. Bouton +Ajouter une étape dashed teal. Reorder automatique step_order au remove</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">PlanningCalendar drag&amp;drop</h3>
+  <div class="panel ">
+    
+    <p>📅 refonte MonthGrid avec gestion drag&amp;drop HTML5</p>
+    <ol class="steps">
+      <li><strong>Events draggable</strong> : draggable={true} + onDragStart sets dataTransfer.setData(application/json, JSON.stringify(event)). cursor: grab</li>
+      <li><strong>Days droppable</strong> : onDragOver preventDefault + change background. onDragLeave restore. onDrop calcule nouvelle date (préserve heure originale) + update DB selon préfixe id (intv-→interventions, evt-→planning_events, tour-→tournees)</li>
+      <li><strong>Toast success</strong> Déplacé au + reload page pour refresh complet</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(2)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">OfflineQueue déjà branché partout</h3>
+  <div class="panel ">
+    <p>ℹ️ audit a montré que /signalements et /achats utilisent déjà safeUpdate/safeInsert/safeDelete depuis Alpha 0.26.0 (lib/safeWrite.js). Le système offline est déjà fonctionnel sur les modules critiques. safeSave (0.62.131) est une variante moderne disponible si besoin</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.62.132+</h3>
+  <div class="panel ">
+    <p>📅 (a) <strong>SmartSelect activer</strong> dans selects /signalements type, /achats statut, /interventions urgence. (b) <strong>Trigger workflow depuis template</strong> : bouton dans /achats pour appliquer un template sauvegardé. (c) <strong>Widgets BI supplémentaires</strong> : SLA respect par équipe, distribution charge équipe. (d) <strong>Planning</strong> : drag&amp;drop dans WeekGrid + édition modal sur click event. (e) <strong>Audit notifications</strong> : voir l historique des notifs déclenchées par useRealtimeNotifs</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+workflow-templates-0.62.131.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/workflow-templates-0.62.131.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>workflow-templates-0.62.131.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.62.131 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 6 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

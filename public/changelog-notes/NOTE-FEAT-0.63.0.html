@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.63.0 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.63.0
+      <small>🚀 MEGA BUMP 0.63.0 : 7 pages détail [id] + Pièces jointes globales + Saisie vocale + WorkflowApproval signalements/bilans-sav — Sprint 0.62.128 → 0.63.0 (8 versions intégrées)</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 8 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.63.0-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>7</b> AI · <b>1</b> SQL · <b>3</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#mega</span> <span class="theme-pill">#attachments</span> <span class="theme-pill">#voice</span> <span class="theme-pill">#workflow</span> <span class="theme-pill">#detail</span></div>
+  </header>
+
+  <h2>🗄 SQL / Migration <small style="color:#8a98a8;font-weight:400;font-size:13px">(1)</small></h2>
+  <h3 style="border-left:4px solid #7CC8C8;padding-left:10px;color:#7CC8C8;margin-top:24px">SQL CONSOLIDÉ MEGA</h3>
+  <div class="panel violet">
+    <p>🗄️ (aveho-MEGA-sql-0.63.0.sql) : un seul fichier qui regroupe TOUTES les évolutions SQL depuis 0.62.128 : workflow_steps + autocomplete_history + structures.theme_json + notifications enrichies + planning_events (0.62.128) + workflow_templates avec 3 templates pré-chargés (0.62.131) + notifs_log (0.62.132) + activation auto-trigger (0.62.133) + <strong>pieces_jointes + bucket Storage attachments + 3 policies RLS (0.63.0)</strong>. 100% idempotent (CREATE IF NOT EXISTS, INSERT WHERE NOT EXISTS). Un seul fichier à exécuter dans Supabase SQL Editor pour rattraper tout le sprint</p>
+  </div>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(7)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">AttachmentsPanel (app/components/AttachmentsPanel.js)</h3>
+  <div class="panel ">
+    
+    <p>📎 composant générique de pièces jointes pour n'importe quelle ressource</p>
+    <ol class="steps">
+      <li>Stockage Supabase Storage bucket attachments</li>
+      <li>Table pieces_jointes générique (resource_type / resource_id)</li>
+      <li>Upload multi-fichiers avec progress %</li>
+      <li>Thumbnails images + icônes types (PDF, DOC, XLS)</li>
+      <li>Suppression avec confirm</li>
+      <li>Toast feedback</li>
+      <li>Mode compact pour modals</li>
+      <li>Limite 10 Mo / fichier</li>
+      <li>Formats acceptés : images, PDF, Word, Excel</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">VoiceDictation (app/components/VoiceDictation.js)</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li>Bouton micro pulsant rouge quand actif (animation av-mic-pulse)</li>
+      <li>Continuous + interimResults</li>
+      <li>Affichage transcription temporaire en tooltip overlay</li>
+      <li>Gestion erreur not-allowed (permission micro refusée)</li>
+      <li>Wrapper VoiceDictationField inclus avec textarea intégré + bouton micro positionné en bas-droite</li>
+      <li>Lang fr-FR par défaut. Compatible Chrome / Edge / Safari</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">ResourceDetailLayout (app/components/ResourceDetailLayout.js)</h3>
+  <div class="panel ">
+    <p>🎨 layout générique pour les pages détail [id]. <strong>Combine</strong> : TopBar + PageHead + Badges + Children + WorkflowApproval + AttachmentsPanel. <strong>Évite la duplication</strong> entre les 7 pages détail (signalement, intervention, achat, transfert, bilan-sav, livraison, commande-validation). Helper InfoBlock pour grid d'infos uniformes. Loading/error/empty states intégrés</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">7 pages détail [id] créées</h3>
+  <div class="panel ">
+    
+    <p>📄</p>
+    <ol class="steps">
+      <li>/signalements/[id] avec criticité + statut + réponse admin</li>
+      <li>/interventions/[id] avec matériel + urgence + résolution</li>
+      <li>/achats/[id] avec lignes + total + fournisseur + prescripteur</li>
+      <li>/transferts/[id] avec origine/destination/motif</li>
+      <li>/bilans-sav/[id] avec diagnostic + travaux + technicien</li>
+      <li>/livraisons-planifiees/[id] avec adresse + chauffeur + créneau</li>
+      <li>/commandes-validation/[id]. Toutes utilisent ResourceDetailLayout pour cohérence + workflow + PJ branchés automatiquement</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Pièces jointes branchées</h3>
+  <div class="panel ">
+    
+    <p>📎 dans 4 modules critiques</p>
+    <ol class="steps">
+      <li>/signalements modal (photo problème)</li>
+      <li>/interventions modal (photo panne matériel)</li>
+      <li>/achats modal (devis, BL fournisseur)</li>
+      <li>/bilan-sav/[id] (photos avant/après réparation). Affichage uniquement si la ressource existe déjà (modal?.id). Mode compact pour modals</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Saisie vocale branchée</h3>
+  <div class="panel ">
+    
+    <p>🎤 dans 3 modules terrain</p>
+    <ol class="steps">
+      <li>/signalements description (technicien gants/mains sales)</li>
+      <li>/interventions description du problème</li>
+      <li>/achats motif. Bouton micro positionné absolu bottom-right dans le textarea. Pulse rouge pendant l'écoute</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">WorkflowApproval étendu</h3>
+  <div class="panel ">
+    <p>✅ ajout sur /signalements (admin uniquement) et /bilan-sav/[id]. Avec ceux déjà branchés (/achats, /transferts, /commandes/[id]) ça fait maintenant 5 modules avec workflow d'approbation complet</p>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(3)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Récap MEGA SPRINT 0.62.128 → 0.63.0 (8 versions livrées en une fois)</h3>
+  <div class="panel ">
+    <p>📋 16 widgets BI dashboard / NotifBellEnhanced + sons + Notification API native + opt-in /profil / FirstLoginTour / 3 SmartInput + 2 SmartSelect avec historique localStorage / WorkflowApproval + Templates DB + UI builder + auto-trigger 5 conditions / PlanningCalendar 3 sources + drag&amp;drop M/W + click édition + create event / ThemeProvider 7 presets + 12 couleurs / useRealtimeNotifs auto (DI urgentes / workflow / signalements / acquittements / SLA dépassé) / Pages /audit/notifs + /parametres/workflows + /parametres/apparence + /commandes/[id] + <strong>7 nouvelles pages détail [id]</strong> / Export PDF dashboard + Mode présentation / <strong>Pièces jointes + Saisie vocale partout sur les flux terrain</strong></p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">PROCEDURE PUSH</h3>
+  <div class="panel ">
+    
+    <p>🚀</p>
+    <ol class="steps">
+      <li>Exécuter aveho-MEGA-sql-0.63.0.sql dans Supabase SQL Editor (UNE SEULE FOIS)</li>
+      <li>Extraire le zip dans C:/aveho-ec-app</li>
+      <li>npm install --legacy-peer-deps</li>
+      <li>npm run build</li>
+      <li>git add -A + commit + push origin main</li>
+      <li>Wait Vercel 1-2 min + hard refresh Ctrl+Shift+R. Tu pousses TOUT en une fois pour rattraper le sprint complet 0.62.128 → 0.63.0</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.63.1+</h3>
+  <div class="panel ">
+    <p>📅 (a) Push API en prod (VAPID + Edge Function send-push + branchement realtime). (b) lockResource sur bilans-sav + commandes. (c) Filtres contexte bât/svc sur transferts + interventions. (d) Pagination /utilisateurs grandes listes. (e) Mode TV dashboard (rotation auto). (f) Export PDF custom (sélection widgets, A3/A4). (g) Bilans SAV : pièces détachées utilisées tracking. (h) Tests pilotes PSAD réels</p>
+  </div>
+
+
+  <h2>📦 SQL à appliquer dans Supabase</h2>
+  <div class="panel violet">
+    <p>Cette version inclut une migration SQL <strong>à appliquer AVANT le déploiement</strong> du code :</p>
+    <pre><code># Supabase Studio → SQL Editor → New query → Coller le contenu
+aveho-MEGA-sql-0.63.0.sql</code></pre>
+    <p style="margin-top:10px;font-size:12px;color:#6c7a89">📍 Disponible dans <code>public/sql/aveho-MEGA-sql-0.63.0.sql</code> · Téléchargeable depuis la modale changelog</p>
+  </div>
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      <li>Lance le SQL <code>aveho-MEGA-sql-0.63.0.sql</code> dans Supabase SQL Editor</li>
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.63.0 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 8 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

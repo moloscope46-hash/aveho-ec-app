@@ -243,13 +243,18 @@ export default function ParametresCompta() {
             <button key={t.key}
               onClick={() => !t.disabled && setActiveTab(t.key)}
               disabled={t.disabled}
+              aria-selected={activeTab === t.key}
               style={{
-                background: activeTab === t.key ? "linear-gradient(135deg, rgba(239,159,39,.15), transparent)" : "transparent",
+                background: activeTab === t.key ? "#fff" : "transparent",
                 color: t.disabled ? "#cfd8e0" : (activeTab === t.key ? "#EF9F27" : "#5a6878"),
-                border: "none", borderBottom: `3px solid ${activeTab === t.key ? "#EF9F27" : "transparent"}`,
-                padding: "10px 18px", fontSize: 13, fontWeight: activeTab === t.key ? 700 : 500,
+                border: activeTab === t.key ? "2px solid #EF9F27" : "2px solid transparent",
+                padding: "9px 14px", borderRadius: 10,
+                fontSize: 12.5, fontWeight: activeTab === t.key ? 700 : 600,
                 cursor: t.disabled ? "not-allowed" : "pointer", fontFamily: "inherit",
                 display: "inline-flex", alignItems: "center", gap: 6,
+                boxShadow: activeTab === t.key ? "0 4px 12px rgba(239,159,39,.20), 0 0 0 1px #EF9F27" : "none",
+                transform: activeTab === t.key ? "translateY(-1px)" : "translateY(0)",
+                transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
             >
               <i className={`ti ${t.icon}`} /> {t.lbl}

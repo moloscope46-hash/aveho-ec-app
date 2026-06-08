@@ -22,11 +22,12 @@ import { ParticlesBackground } from "../components/ui-premium";
 import GalaxyBackground from "../components/GalaxyBackground";
 // 0.58.33 : dashboard widgets configurables drag & drop
 import DashboardEditorToolbar from "../components/DashboardEditorToolbar";
+import DashboardActions from "../components/DashboardActions";  /* 0.62.135 */
 // 0.58.38 : 3 nouveaux widgets opt-in (citation, mini-calendrier, liens-favoris)
 // 0.58.39 : + widget météo (Open-Meteo + géolocalisation)
 // 0.58.40 : + widget Notes personnelles (markdown léger)
 // 0.58.43 : + widget Mes objectifs (progress bars + milestones)
-import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget, ObjectifsWidget, TeamGoalsWidget } from "../components/DashboardWidgets";
+import { CitationWidget, MiniCalendrierWidget, LiensFavorisWidget, WeatherWidget, NotesWidget, ObjectifsWidget, TeamGoalsWidget, TopMaterielsSAVWidget, ActiviteSemaineWidget, TopCollaborateursWidget, TempsMoyenResolutionWidget, SLARespectWidget, ChargeEquipesWidget, TopPatientsWidget, TopFournisseursWidget, TauxPanneCategorieWidget, ComparatifN1Widget, EvolutionMensuelleWidget, HeatmapGeoWidget } from "../components/DashboardWidgets";
 import {
   getDashboardLayout, setDashboardLayout, resetDashboardLayout,
   DEFAULT_ACTIVE, DEFAULT_ORDER, ALL_WIDGETS,
@@ -364,6 +365,8 @@ export default function Accueil() {
               </button>
             );
           })()}
+          {/* 0.62.135 : Actions export PDF + mode présentation */}
+          <DashboardActions />
           </div>{/* fin wrap toggle+button 0.62.73 */}
         </div>
 
@@ -657,6 +660,23 @@ export default function Accueil() {
               if (k === "notes") return wrapWithDrag(<NotesWidget />);
               if (k === "objectifs") return wrapWithDrag(<ObjectifsWidget />);
               if (k === "objectifs-equipe") return wrapWithDrag(<TeamGoalsWidget />);
+              // 0.62.130 : widgets BI étendus
+              if (k === "top-sav") return wrapWithDrag(<TopMaterielsSAVWidget />);
+              if (k === "activite-semaine") return wrapWithDrag(<ActiviteSemaineWidget />);
+              // 0.62.131 : widgets BI supplémentaires
+              if (k === "top-collab") return wrapWithDrag(<TopCollaborateursWidget />);
+              if (k === "temps-moyen") return wrapWithDrag(<TempsMoyenResolutionWidget />);
+              // 0.62.132 : SLA + charge équipes
+              if (k === "sla-respect") return wrapWithDrag(<SLARespectWidget />);
+              if (k === "charge-equipes") return wrapWithDrag(<ChargeEquipesWidget />);
+              // 0.62.133 : Top patients + Top fournisseurs
+              if (k === "top-patients") return wrapWithDrag(<TopPatientsWidget />);
+              if (k === "top-fournisseurs") return wrapWithDrag(<TopFournisseursWidget />);
+              // 0.62.134 : Taux de panne par catégorie
+              if (k === "taux-panne") return wrapWithDrag(<TauxPanneCategorieWidget />);
+              if (k === "comparatif-n1") return wrapWithDrag(<ComparatifN1Widget />);
+              if (k === "evolution-6m") return wrapWithDrag(<EvolutionMensuelleWidget />);
+              if (k === "heatmap-geo") return wrapWithDrag(<HeatmapGeoWidget />);
               return null;
             })}
           </>

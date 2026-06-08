@@ -35,6 +35,8 @@ export default function ArticleDetailPage({ params }) {
   const [mouvements, setMouvements] = useState([]);
   // 0.62.20 : modal d'édition local (au lieu de redirect /articles)
   const [editModal, setEditModal] = useState(false);
+  // 0.62.124 : Lock anti-collision sur édition
+  const articleLock = useEditLock("article", article?.id, editModal && !!article?.id);
   const [editForm, setEditForm] = useState({});
   const [editSaving, setEditSaving] = useState(false);
   // 0.58.72 : nouveaux états (fournisseurs multi, tags article)
@@ -300,13 +302,18 @@ export default function ArticleDetailPage({ params }) {
             { key: "compta", lbl: "Comptabilité", icon: "ti-calculator" },
           ].map(t => (
             <button key={t.key} onClick={() => setActiveTab(t.key)}
+              aria-selected={activeTab === t.key}
               style={{
-                background: activeTab === t.key ? "linear-gradient(135deg, rgba(124,200,200,.20), transparent)" : "transparent",
+                background: activeTab === t.key ? "#fff" : "transparent",
                 color: activeTab === t.key ? "#185FA5" : "#5a6878",
-                border: "none", borderBottom: `3px solid ${activeTab === t.key ? "#185FA5" : "transparent"}`,
-                padding: "9px 16px", fontSize: 13, fontWeight: activeTab === t.key ? 700 : 500,
+                border: activeTab === t.key ? "2px solid #185FA5" : "2px solid transparent",
+                borderRadius: 10,
+                padding: "9px 14px", fontSize: 12.5, fontWeight: activeTab === t.key ? 700 : 600,
                 cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
                 display: "inline-flex", alignItems: "center", gap: 5,
+                boxShadow: activeTab === t.key ? "0 4px 12px rgba(24,95,165,.20), 0 0 0 1px #185FA5" : "none",
+                transform: activeTab === t.key ? "translateY(-1px)" : "translateY(0)",
+                transition: "all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
             >
               <i className={`ti ${t.icon}`} /> {t.lbl}
@@ -742,6 +749,8 @@ export default function ArticleDetailPage({ params }) {
               }}>{editSaving ? "Enregistrement…" : "Enregistrer"}</Btn>
             </>
           }>
+          {/* 0.62.124 : LockBanner si édition concurrente */}
+          {articleLock?.locked && <LockBanner lockedBy={articleLock.lockedBy} onTakeover={articleLock.takeover} resourceLabel="cet article" />}
           {/* 0.62.24 : Onglets pour mieux organiser les champs */}
           <ArticleEditTabs article={article} editForm={editForm} setEditForm={setEditForm} editInp={editInp} />
         </Modal>

@@ -16,6 +16,8 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import { fmtDate } from "../../../lib/format";
+import TVScreenNav from "../../components/TVScreenNav";  /* 0.64.0 */
+import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
 
 const COULEUR_STATUT = {
   "Nouvelle": "#185FA5",
@@ -48,6 +50,8 @@ function PresentationInterventions() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [now, setNow] = useState(new Date());
+  // 0.65.0 : filtre magasin TV
+  const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));
   // 0.62.93 : compteurs récents activité globale
   const [stats, setStats] = useState({ di: 0, sav: 0, livraisons: 0, maintenances: 0, patients: 0, commandes: 0 });
   const timerRef = useRef(null);
@@ -57,15 +61,30 @@ function PresentationInterventions() {
     if (!auth.structureId) return;
     let q = supabase
       .from("interventions")
-      .select("id, numero, type, urgence, statut, created_at, materiels(libelle), patients(nom, prenom, chambre)")
+      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, materiels(libelle, code), patients(nom, prenom, chambre)")
       .eq("structure_id", auth.structureId)
       .not("statut", "in", '("Clôturée","Refusée")')
-      .order("urgence", { ascending: false }) // Urgent en premier
+      .order("urgence", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(30);
     if (etabId) q = q.eq("etablissement_id", etabId);
     const { data } = await q;
-    setRows(data || []);
+
+    // 0.64.0 : enrichir avec compteurs PJ + workflow pour les top urgences
+    const enriched = await Promise.all((data || []).map(async (di) => {
+      try {
+        const [pj, wf] = await Promise.all([
+          supabase.from("pieces_jointes").select("id", { count: "exact", head: true }).eq("resource_type", "intervention").eq("resource_id", di.id),
+          supabase.from("workflow_steps").select("status").eq("resource_type", "intervention").eq("resource_id", di.id),
+        ]);
+        return {
+          ...di,
+          _nbPJ: pj.count || 0,
+          _wfSteps: wf.data || [],
+        };
+      } catch { return { ...di, _nbPJ: 0, _wfSteps: [] }; }
+    }));
+    setRows(enriched);
     setLastUpdate(new Date());
     setLoading(false);
 
@@ -95,7 +114,7 @@ function PresentationInterventions() {
     load();
     timerRef.current = setInterval(load, refreshSec * 1000);
     return () => clearInterval(timerRef.current);
-  }, [auth.ready, auth.structureId, etabId, refreshSec]);
+  }, [auth.ready, auth.structureId, etabId, refreshSec, magasinId]);
 
   // Horloge live (1s)
   useEffect(() => {
@@ -137,7 +156,10 @@ function PresentationInterventions() {
         paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)",
       }}>
         <div>
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700 }}>AVEHO — TV DE SERVICE</div>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>
+            AVEHO — TV DE SERVICE
+            <TVMagasinFilter onChange={setMagasinId} />
+          </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>
             Demandes d'intervention en cours
           </h1>
@@ -255,17 +277,32 @@ function PresentationInterventions() {
           50% { box-shadow: 0 0 0 8px rgba(255,139,128,0); }
         }
       `}</style>
+
+      {/* 0.64.0 : Navigation flèches multi-écrans */}
+      <TVScreenNav currentScreen="/presentation/interventions" />
     </div>
   );
 }
 
 function Card({ r, urgent = false }) {
+  // 0.64.0 : durée écoulée formatée
+  const ageMs = r.created_at ? Date.now() - new Date(r.created_at).getTime() : 0;
+  const ageHours = Math.floor(ageMs / 3600000);
+  const ageDays = Math.floor(ageHours / 24);
+  const ageStr = ageDays > 0 ? `${ageDays}j` : `${ageHours}h`;
+  const isStale = ageHours > 24;
+  // Workflow status
+  const wfPending = (r._wfSteps || []).filter(s => s.status === "pending").length;
+  const wfDone = (r._wfSteps || []).filter(s => s.status === "approved").length;
+  const wfTotal = (r._wfSteps || []).length;
+
   return (
     <div style={{
       background: urgent ? "rgba(255,139,128,0.12)" : "rgba(255,255,255,0.07)",
       border: urgent ? "2px solid #ff8b80" : "1px solid rgba(255,255,255,0.18)",
       borderRadius: 12, padding: "14px 16px",
       animation: urgent ? "pulse-urgent 2.5s ease-in-out infinite" : "none",
+      position: "relative",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
         <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", letterSpacing: 0.5 }}>{r.numero}</div>
@@ -288,13 +325,56 @@ function Card({ r, urgent = false }) {
         <div style={{ fontSize: 14, color: "#bfe6e6", marginBottom: 4 }}>
           <i className="ti ti-armchair-2" style={{ marginRight: 6 }} />
           {r.materiels.libelle}
+          {r.materiels.code && <span style={{ color: "#7CC8C8", fontSize: 11, marginLeft: 6, fontFamily: "Consolas, monospace" }}>{r.materiels.code}</span>}
         </div>
       )}
-      <div style={{ fontSize: 13, color: "#9bb5b5", marginTop: 6 }}>
-        <i className="ti ti-tag" /> {r.type}
-        <span style={{ marginLeft: 12 }}>
-          <i className="ti ti-clock" /> {fmtDate(r.created_at)}
+
+      {/* 0.64.0 : Description courte si présente */}
+      {r.description && (
+        <div style={{ fontSize: 12, color: "#9bb5b5", marginTop: 6, fontStyle: "italic", lineHeight: 1.4, maxHeight: 36, overflow: "hidden" }}>
+          « {r.description.slice(0, 100)}{r.description.length > 100 ? "…" : ""} »
+        </div>
+      )}
+
+      {/* 0.64.0 : Technicien assigné si planifié */}
+      {r.technicien_nom && (
+        <div style={{ fontSize: 12, color: "#7CC8C8", marginTop: 6 }}>
+          <i className="ti ti-user-check" /> {r.technicien_nom}
+          {r.date_planifiee && <span style={{ marginLeft: 6, color: "#9bb5b5" }}>· {new Date(r.date_planifiee).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>}
+        </div>
+      )}
+
+      {/* 0.64.0 : Footer enrichi - type + âge + badges */}
+      <div style={{ fontSize: 13, color: "#9bb5b5", marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span><i className="ti ti-tag" /> {r.type}</span>
+        <span style={{ color: isStale ? "#ff8b80" : "#9bb5b5" }}>
+          <i className="ti ti-clock" /> {ageStr}
+          {isStale && <i className="ti ti-alert-circle" style={{ marginLeft: 3, color: "#ff8b80" }} />}
         </span>
+        {r._nbPJ > 0 && (
+          <span style={{
+            background: "rgba(124,200,200,.2)",
+            color: "#7CC8C8",
+            padding: "1px 7px",
+            borderRadius: 8,
+            fontSize: 11,
+            fontWeight: 700,
+          }}>
+            <i className="ti ti-paperclip" /> {r._nbPJ}
+          </span>
+        )}
+        {wfTotal > 0 && (
+          <span style={{
+            background: wfPending > 0 ? "rgba(239,159,39,.22)" : "rgba(90,160,90,.22)",
+            color: wfPending > 0 ? "#EF9F27" : "#5aa05a",
+            padding: "1px 7px",
+            borderRadius: 8,
+            fontSize: 11,
+            fontWeight: 700,
+          }}>
+            <i className={`ti ${wfPending > 0 ? "ti-hourglass" : "ti-checks"}`} /> {wfDone}/{wfTotal}
+          </span>
+        )}
       </div>
     </div>
   );

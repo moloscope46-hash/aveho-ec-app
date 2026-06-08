@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.126 */
+import LockBanner from "../components/LockBanner";  /* 0.62.126 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, IconButton, Modal } from "../ui";
 import { EmptyState, SkeletonRow, toast } from "../components/ui-premium";
@@ -59,6 +61,8 @@ export default function DepotsPage() {
   const [filterBatiment, setFilterBatiment] = useState("");
 
   const [modal, setModal] = useState(null);
+  // 0.62.126 : Lock anti-collision sur édition
+  const depotLock = useEditLock("depot", modal?.id, !!modal?.id && modal?.mode !== "new");
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -419,6 +423,8 @@ export default function DepotsPage() {
                 <Btn variant="primary" icon="ti-check" onClick={save} disabled={busy}>{busy ? "..." : "Enregistrer"}</Btn>
               </>
             }>
+            {/* 0.62.126 : LockBanner si édition concurrente */}
+            {depotLock?.locked && <LockBanner lockedBy={depotLock.lockedBy} onTakeover={depotLock.takeover} resourceLabel="ce dépôt" />}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld" style={{ gridColumn: "span 2" }}>
                 <label>Nom *</label>

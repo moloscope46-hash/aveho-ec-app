@@ -318,6 +318,9 @@ export default function AuditPage() {
           sub="Trace complète des actions sur la collectivité"
         />
 
+        {/* 0.62.127 : Verrous d'édition actifs (anti-collision) */}
+        <LocksPanel />
+
         {/* Alpha 0.52.0 (BE) : filtres rapides prédéfinis */}
         <Panel style={{ marginBottom: 10, padding: "10px 16px", background: "linear-gradient(135deg, #fff 0%, #eef5fc 100%)" }}>
           <div className="chip-row">
@@ -664,4 +667,130 @@ function actionColor(action) {
     envoyer: { bg: "#fcefda", fg: "#7a4f15" },
   };
   return map[action] || { bg: "#f4f7fa", fg: "#6c7a89" };
+}
+
+// 0.62.127 : Panel des verrous d'édition actifs (anti-collision)
+function LocksPanel() {
+  const supabase = createClient();
+  const [locks, setLocks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(null);
+
+  async function loadLocks() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("edit_locks")
+        .select("*")
+        .gte("locked_at", new Date(Date.now() - 120 * 1000).toISOString())
+        .order("locked_at", { ascending: false });
+      if (error) { setLocks([]); return; }
+      setLocks(data || []);
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => {
+    loadLocks();
+    const it = setInterval(loadLocks, 15 * 1000);
+    return () => clearInterval(it);
+  }, []);
+
+  async function forceRelease(lock) {
+    if (!confirm(`Libérer le verrou de ${lock.user_nom || "cet utilisateur"} sur ${lock.resource_type} ?`)) return;
+    setBusy(lock.id);
+    try {
+      await supabase.from("edit_locks").delete().eq("id", lock.id);
+      await loadLocks();
+    } finally { setBusy(null); }
+  }
+
+  async function releaseAll() {
+    if (!confirm(`Libérer TOUS les ${locks.length} verrous actifs ?`)) return;
+    setBusy("all");
+    try {
+      const ids = locks.map(l => l.id);
+      for (const id of ids) {
+        await supabase.from("edit_locks").delete().eq("id", id);
+      }
+      await loadLocks();
+    } finally { setBusy(null); }
+  }
+
+  return (
+    <Panel style={{ marginBottom: 14, padding: "14px 18px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+        <i className="ti ti-lock" style={{ fontSize: 20, color: "#EF9F27" }} />
+        <h3 style={{ margin: 0, fontSize: 15, color: "#142131" }}>
+          Verrous d'édition actifs
+          <span style={{
+            marginLeft: 8,
+            background: locks.length > 0 ? "#EF9F27" : "#cfd8e0",
+            color: "#fff",
+            padding: "2px 10px",
+            borderRadius: 12,
+            fontSize: 12,
+            fontWeight: 700,
+          }}>{locks.length}</span>
+        </h3>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          <button onClick={loadLocks} disabled={loading}
+            style={{ padding: "6px 10px", background: "transparent", border: "1px solid #cfd8e0", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: "inherit", color: "#5a6878" }}>
+            <i className={`ti ti-${loading ? "loader-2" : "refresh"}`} style={{ animation: loading ? "av-spinner-spin 0.85s linear infinite" : "none" }} /> Rafraîchir
+          </button>
+          {locks.length > 0 && (
+            <button onClick={releaseAll} disabled={busy === "all"}
+              style={{ padding: "6px 10px", background: "linear-gradient(135deg, #e35d5b, #c0392b)", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 12, fontFamily: "inherit", fontWeight: 700 }}>
+              <i className="ti ti-trash" /> Tout libérer
+            </button>
+          )}
+        </div>
+      </div>
+      {loading && locks.length === 0 ? (
+        <div style={{ padding: 16, textAlign: "center", color: "#8a98a8", fontSize: 13 }}>Chargement…</div>
+      ) : locks.length === 0 ? (
+        <div style={{ padding: 18, textAlign: "center", color: "#8a98a8", fontSize: 13, background: "#fafbfc", borderRadius: 10, border: "1px dashed #e3e9ee" }}>
+          <i className="ti ti-circle-check" style={{ fontSize: 24, color: "#5aa05a", display: "block", marginBottom: 4 }} />
+          Aucun verrou actif. Tous les utilisateurs sont libres d'éditer.
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 8 }}>
+          {locks.map(lock => {
+            const since = new Date(lock.locked_at);
+            const minAgo = Math.round((Date.now() - since.getTime()) / 60000);
+            return (
+              <div key={lock.id} style={{
+                background: "#fff",
+                border: "1px solid #e3e9ee",
+                borderLeft: "4px solid #EF9F27",
+                borderRadius: 10,
+                padding: "10px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}>
+                <i className="ti ti-pencil" style={{ color: "#EF9F27", fontSize: 18, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: "#142131", textTransform: "capitalize" }}>
+                    {lock.resource_type}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#5a6878" }}>
+                    <i className="ti ti-user" style={{ marginRight: 3 }} />
+                    {lock.user_nom || lock.user_id?.substring(0, 8)}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#8a98a8", marginTop: 2 }}>
+                    Depuis {minAgo} min · ID <code style={{ fontFamily: "Consolas, monospace" }}>{lock.resource_id?.substring(0, 8)}…</code>
+                  </div>
+                </div>
+                <button onClick={() => forceRelease(lock)} disabled={busy === lock.id}
+                  title="Libérer ce verrou"
+                  style={{ background: "rgba(227, 93, 91, .12)", color: "#c0392b", border: "1px solid rgba(227, 93, 91, .25)", padding: "6px 8px", borderRadius: 6, cursor: "pointer", fontSize: 12, fontFamily: "inherit", flexShrink: 0 }}>
+                  <i className="ti ti-lock-open" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Panel>
+  );
 }

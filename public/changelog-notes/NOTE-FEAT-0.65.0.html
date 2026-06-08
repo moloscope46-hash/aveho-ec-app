@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aveho 0.65.0 — FEATURE</title>
+<style>
+  :root {
+    --navy: #142131; --teal: #7CC8C8; --amber: #EF9F27;
+    --terra: #C9867F; --violet: #7a6fb0; --green: #5aa05a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Quicksand', 'Segoe UI', -apple-system, sans-serif; max-width: 920px; margin: 0 auto; padding: 24px; background: #f4f7fa; color: #2a3a48; line-height: 1.65; }
+  header.cover { background: linear-gradient(135deg, var(--navy) 0%, #185FA5 50%, var(--navy) 100%); color: #fff; border-radius: 16px; padding: 30px 32px; margin-bottom: 28px; box-shadow: 0 12px 32px rgba(20,33,49,.24); }
+  .eyebrow { font-size: 11px; letter-spacing: 3px; color: rgba(255,255,255,.85); font-weight: 700; text-transform: uppercase; }
+  .logo { font-size: 26px; font-weight: 600; letter-spacing: 2px; margin-top: 4px; }
+  .logo .v { color: var(--teal); }
+  h1 { font-size: 22px; font-weight: 700; margin: 10px 0 4px; color: #fff; }
+  h1 small { font-size: 13.5px; font-weight: 500; color: rgba(255,255,255,.85); display: block; margin-top: 8px; line-height: 1.5; }
+  .meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.9); }
+  .meta .badge { background: rgba(255,255,255,.15); padding: 3px 10px; border-radius: 6px; font-family: 'Consolas', monospace; }
+  .themes-row { margin-top: 14px; }
+  .theme-pill { display: inline-block; padding: 2px 10px; background: rgba(255,255,255,.18); color: #fff; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px 4px 2px 0; }
+  h2 { font-size: 18px; color: var(--navy); margin: 30px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--amber); }
+  h3 { font-size: 15px; color: var(--navy); margin: 20px 0 8px; padding-left: 10px; }
+  .panel { background: #fff; border: 1px solid #e3e9ee; border-radius: 12px; padding: 18px 22px; margin: 10px 0 18px; }
+  .panel.hi { background: #eef9ef; border-color: #bfe2bf; }
+  .panel.warn { background: #fff8ec; border-color: #f0d59f; }
+  .panel.violet { background: #f3effa; border-color: #d6c9ec; }
+  .panel.danger { background: #fce5e0; border-color: #f0c4be; }
+  .panel p { margin: 8px 0; }
+  code { font-family: 'Consolas', 'Menlo', monospace; background: #f4f7fa; color: #2a5a5a; padding: 2px 7px; border-radius: 4px; font-size: 12.5px; border: 1px solid #e3e9ee; }
+  pre { background: var(--navy); color: #e8edf2; padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.55; }
+  pre code { background: none; color: inherit; border: none; padding: 0; }
+  ol.steps { padding-left: 22px; }
+  ol.steps li { margin: 8px 0; padding-left: 4px; }
+  ul { padding-left: 22px; } ul li { margin: 5px 0; }
+  strong { color: var(--navy); }
+  footer { margin-top: 36px; padding-top: 18px; border-top: 1px solid #e3e9ee; font-size: 11.5px; color: #6c7a89; text-align: center; }
+  @media(max-width: 700px) { body { padding: 14px; } header.cover { padding: 22px 18px; } h1 { font-size: 19px; } h2 { font-size: 16px; } }
+</style>
+</head>
+<body>
+
+  <header class="cover">
+    <div class="eyebrow">NOTE D'ÉVOLUTION · FEATURE</div>
+    <div class="logo">a<span class="v">v</span>eho <span style="font-size:11px;font-weight:400;opacity:.7;letter-spacing:0">Espace Collectivité</span></div>
+    <h1>Version 0.65.0
+      <small>🚀 MEGA Sprint Robustesse complète : 2 nouveaux écrans TV (Livraisons + Carte HAD/Domicile) + Filtre magasin partout + Sync offline bilan-sav + Heatmap géo + Export PDF custom + Mode Sandbox</small>
+    </h1>
+    <div class="meta">
+      <span>📅 <b>Date :</b> 8 juin 2026</span>
+      <span>📦 <b>Version :</b> <span class="badge">v0.65.0-alpha</span></span>
+      <span>📋 <b>Type :</b> Nouvelle fonctionnalité</span>
+      <span>🔧 <b>Chantiers :</b> <b>8</b> AI · <b>4</b> INFO</span>
+    </div>
+    <div class="themes-row"><span class="theme-pill">#feature</span> <span class="theme-pill">#tv</span> <span class="theme-pill">#carte</span> <span class="theme-pill">#sandbox</span> <span class="theme-pill">#offline</span> <span class="theme-pill">#heatmap</span> <span class="theme-pill">#export</span></div>
+  </header>
+
+  <h2>🤖 Backend / Frontend <small style="color:#8a98a8;font-weight:400;font-size:13px">(8)</small></h2>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TV Écran Livraisons NOUVEAU</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li><strong>5 KPIs</strong> : tournées planifiées + en cours (pulse) + terminées + étapes complétées/total + % avancement</li>
+      <li><strong>Cards tournées</strong> enrichies : nom + numéro + chauffeur + véhicule (marque/modèle/immat) + horaires départ/retour + nb étapes complétées + barre progression colorée selon statut</li>
+      <li><strong>Mini-liste 8 étapes par tournée</strong> avec ordre + label + ville + type (livraison/transfert/sav) + état (à faire/en cours/terminée/échec) + couleur dynamique</li>
+      <li><strong>Animation pulse</strong> sur tournées en cours. Filtré par magasin sélectionné</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TV Écran Carte HAD NOUVEAU</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li><strong>Patients HAD/domicile</strong> (mode_residence) en marker vert (icône home-heart)</li>
+      <li><strong>Étapes livraisons</strong> du jour (type livraison/had/domicile) en marker orange numéroté avec animation pulse si tournée en cours</li>
+      <li><strong>Demandes d''intervention</strong> (DI) avec géoloc patient en marker rouge, bordure colorée selon état, animation pulse si urgent. <strong>Panel gauche</strong> : compteurs HAD/Livraisons/DI avec toggle on/off par catégorie. <strong>Panel droite</strong> : 5 dernières DI avec patient + matériel + état badge coloré. Auto-fit bounds. Refresh 90s. Popups détaillés avec patient + ville + matériel + état</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TVMagasinFilter (app/components/TVMagasinFilter.js)</h3>
+  <div class="panel ">
+    
+    <p>🏪 sélecteur magasin/fournisseur pour les pages TV. <strong>Features</strong></p>
+    <ol class="steps">
+      <li>Dropdown discret intégré dans header AVEHO</li>
+      <li>localStorage persistant (<code>av-tv-magasin-id</code>) + sync URL param ?mag=&lt;uuid&gt;</li>
+      <li>Liste magasins de la structure avec nom fournisseur en suffix</li>
+      <li>Caché auto si l''utilisateur n''a qu''1 seul magasin</li>
+      <li>Helper <code>getTVMagasinId(params)</code> pour init state initial. <strong>Branché dans 6 pages TV</strong> : interventions, planning, livraisons, carte-had, dashboard, stats</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">TVScreenNav étendu à 6 écrans</h3>
+  <div class="panel ">
+    <p>🎯 ajout dans la rotation de Livraisons (icône truck-delivery couleur terra) + Carte HAD (icône map-pin couleur vert). <strong>Navigation clavier 1-6</strong> au lieu de 1-4. Flèches gauche/droite circulent dans l''ordre : Interventions → Planning → Livraisons → Carte HAD → Dashboard → Stats → boucle</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Sync offline robuste bilan-sav</h3>
+  <div class="panel ">
+    
+    <p></p>
+    <ol class="steps">
+      <li>Si offline → la modif est queueée dans IndexedDB</li>
+      <li>Replay auto au retour de connexion via setupAutoSync (déjà actif depuis 0.62.66)</li>
+      <li>Indicateur dans TopBar affiche les ops en attente avec bouton sync forcée. Bilan-sav rejoint signalements + interventions dans la liste des pages offline-robust</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">HeatmapGeoWidget (NOUVEAU widget BI)</h3>
+  <div class="panel ">
+    <p>🗺 Top 10 villes par densité d''activité DI sur 90j. <strong>Calcul</strong> : compte DI / ville + urgences + patients par ville. <strong>Affichage</strong> : barre colorée gradient heat (vert si &lt;40%, orange si 40-75%, rouge si &gt;75% du max). Médaille #N + ville + chiffres (DI / patients / urgents). 19 widgets BI au total</p>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Export PDF custom (modal complète)</h3>
+  <div class="panel ">
+    
+    <p>📄 refonte du bouton Export PDF dans DashboardActions. <strong>Modal</strong> avec</p>
+    <ol class="steps">
+      <li>Champ titre du document</li>
+      <li><strong>4 formats</strong> : A4 Portrait/Paysage + A3 Portrait/Paysage avec icônes</li>
+      <li><strong>Sélection widgets</strong> : grid 2 colonnes avec checkbox + icône + nom, prefilled avec layout courant</li>
+      <li>Boutons Tout/Aucun</li>
+      <li>Compteur sélection en titre</li>
+      <li>Bouton Générer désactivé si 0 widget. <strong>Application</strong> : <code>@page { size: A3 landscape }</code> injecté dynamiquement avant window.print(). Sauvegarde/restauration layout pour ne pas perdre la config user</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #7a6fb0;padding-left:10px;color:#7a6fb0;margin-top:24px">Mode Sandbox (SandboxBanner + SandboxToggle)</h3>
+  <div class="panel ">
+    
+    <p>🧪</p>
+    <ol class="steps">
+      <li><strong>SandboxToggle</strong> dans TopBar (admin uniquement via auth.can("gerer_roles")), bouton flask rouge clignotant si actif</li>
+      <li><strong>SandboxBanner</strong> sticky top z-index 99999 : bandeau gradient rouge animé <code>linear-gradient(90deg, #e35d5b, #c0392b, #e35d5b)</code> avec text-shift + pulse</li>
+      <li><strong>localStorage <code>av-sandbox-mode</code></strong> + dispatch event av-sandbox-toggle pour sync inter-composants. <strong>Cas d''usage</strong> : démos, formations, tests pré-prod — signalement visuel fort que les actions impactent vraiment les données mais sont en mode test</li>
+    </ol>
+  </div>
+
+  <h2>ℹ Info / Tâche restante <small style="color:#8a98a8;font-weight:400;font-size:13px">(4)</small></h2>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">19 widgets BI au total</h3>
+  <div class="panel ">
+    <p>📊 16 widgets précédents + ComparatifN1 (0.64.0) + EvolutionMensuelle (0.64.0) + HeatmapGeo (0.65.0). Tous opt-in via le panel personnalisation du dashboard</p>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">PROCEDURE PUSH 0.65.0</h3>
+  <div class="panel ">
+    
+    <p>🚀</p>
+    <ol class="steps">
+      <li>Pas de NOUVEAU SQL requis — toutes tables existent (tournees + tournees_etapes + bilans_sav + patients avec latitude/longitude/mode_residence + magasins)</li>
+      <li>Extraire le zip dans C:/aveho-ec-app</li>
+      <li>npm install --legacy-peer-deps</li>
+      <li>npm run build</li>
+      <li>git add -A + commit + push origin main</li>
+      <li>Wait Vercel + hard refresh</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">Tests TV après push</h3>
+  <div class="panel ">
+    
+    <p>📺</p>
+    <ol class="steps">
+      <li>/presentation/interventions → flèche droite → Planning → Livraisons (cards tournées + barre progression) → Carte HAD (carte plein écran avec markers + filtres latéral + DI récentes droite) → Dashboard → Stats → boucle</li>
+      <li>Sélectionner un magasin dans le dropdown TV → toutes les pages filtrent (URL ?mag=&lt;uuid&gt; persiste)</li>
+      <li>Auto-rotation : ?auto=20 → switch toutes 20s</li>
+      <li>Mode Sandbox : Topbar → Mode Test → bandeau rouge visible partout</li>
+      <li>Export PDF custom : Accueil → bouton Export → modal → choisir A3 paysage + cocher widgets → Générer le PDF</li>
+    </ol>
+  </div>
+  <h3 style="border-left:4px solid #5a6878;padding-left:10px;color:#5a6878;margin-top:24px">TODO 0.65.1+</h3>
+  <div class="panel ">
+    <p>📅 (a) Sandbox vraiment isolé (schéma sandbox_* avec middleware). (b) Push API en prod (VAPID + cron Edge). (c) Module Devis/Facturation (gros). (d) Multilingue i18n. (e) Module Carte v2 complet (création tournée par click + drag&amp;drop stops + 6 onglets). (f) Widgets BI bonus (Top patients facturés vs non, prédictif). (g) Tests pilotes PSAD réels (HMS, Bastide)</p>
+  </div>
+
+
+
+  <h2>🚀 Procédure de déploiement</h2>
+  <div class="panel hi">
+    <ol class="steps">
+      
+      <li>Extraire le zip dans <code>C:\aveho-ec-app</code> (remplace les fichiers existants)</li>
+      <li>Terminal : <code>npm install --legacy-peer-deps</code></li>
+      <li>Terminal : <code>npm run build</code> (vérifie qu'il passe sans erreur)</li>
+      <li>Terminal : <code>git add -A ; git commit -m "0.65.0 - Nouvelle fonctionnalité" ; git push origin main</code></li>
+      <li>Vercel déploie automatiquement depuis le push</li>
+    </ol>
+  </div>
+
+
+  <footer>
+    <p><strong>Aveho Espace Collectivité</strong> — Note d'évolution générée le 8 juin 2026</p>
+    <p>📝 Pour toute question, consulte le changelog complet sur <code>/changelog</code> ou contacte ton chef de produit</p>
+  </footer>
+
+</body>
+</html>

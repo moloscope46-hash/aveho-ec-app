@@ -6,6 +6,16 @@ import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import TopBar from "../TopBar";
+import SmartInput from "../components/SmartInput";  /* 0.62.129 */
+import SmartSelect from "../components/SmartSelect";  /* 0.62.132 */
+import VoiceDictation from "../components/VoiceDictation";  /* 0.63.0 */
+import AttachmentsPanel from "../components/AttachmentsPanel";  /* 0.63.0 */
+import WorkflowApproval from "../components/WorkflowApproval";  /* 0.63.0 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.127 */
+import LockBanner from "../components/LockBanner";  /* 0.62.127 */
+import FoldableFilters from "../components/FoldableFilters";  /* 0.62.119 */
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.120 */
+import AddressAutocomplete from "../components/AddressAutocomplete";  /* 0.62.120 */
 import MobileActionsBar from "../components/MobileActionsBar";  /* 0.62.109 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, StateMsg, Modal, Btn} from "../ui";
@@ -45,6 +55,8 @@ export default function SignalementsPage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);    // {} ou row pour édition
+  // 0.62.127 : Lock anti-collision sur édition
+  const signalementLock = useEditLock("signalement", modal?.id, !!modal?.id);
   const [form, setForm] = useState({});
   const [err, setErr] = useState("");
   const [fStatut, setFStatut] = useStickyState("", "signalements:fStatut");
@@ -53,6 +65,16 @@ export default function SignalementsPage() {
   // Alpha 0.41.0 : filtre catégorie + tri
   const [fCategorie, setFCategorie] = useStickyState("", "signalements:fCategorie");
   const [triPar, setTriPar] = useStickyState("recent", "signalements:tri"); // "recent" | "votes"
+  // 0.62.120 : recherche text
+  const [search, setSearch] = useState("");
+  // 0.62.115 : mode d'affichage Liste / Tuiles
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window === "undefined") return "list";
+    return localStorage.getItem("av:signalements:viewMode") || "list";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("av:signalements:viewMode", viewMode); } catch {}
+  }, [viewMode]);
   // Alpha 0.53.0 (BM) : templates de signalements
   const [templates, setTemplates] = useState([]);
 
@@ -288,6 +310,29 @@ export default function SignalementsPage() {
           ))}
         </div>
 
+        {/* 0.62.122 : FoldableFilters avec search */}
+        <FoldableFilters
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Rechercher un signalement (titre, description, auteur…)"
+          activeFiltersCount={[fType, fStatut, fCategorie].filter(Boolean).length + (search ? 1 : 0)}
+          onResetAll={() => { setSearch(""); setFType(""); setFStatut(""); setFCategorie(""); }}
+          storageKey="signalements"
+        >
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <select value={fType} onChange={(e) => setFType(e.target.value)}
+              style={{ padding: "8px 12px", border: "1.5px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit" }}>
+              <option value="">Tous les types</option>
+              {TYPES.map((t) => <option key={t.value} value={t.value}>{t.value}</option>)}
+            </select>
+            <select value={fStatut} onChange={(e) => setFStatut(e.target.value)}
+              style={{ padding: "8px 12px", border: "1.5px solid #e3e9ee", borderRadius: 8, fontSize: 13, fontFamily: "inherit" }}>
+              <option value="">Tous les statuts</option>
+              {STATUTS.map((s) => <option key={s.value} value={s.value}>{s.value}</option>)}
+            </select>
+          </div>
+        </FoldableFilters>
+
         <Panel>
           <div className="di-toolbar" style={{ flexWrap: "wrap" }}>
             {/* 0.58.22 : NeonButton variant=teal pour "Nouveau signalement" */}
@@ -337,19 +382,129 @@ export default function SignalementsPage() {
               />
             )
             : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {filtered.map((r) => {
-                  const ti = typeInfo(r.type);
-                  const si = statutInfo(r.statut);
-                  return (
-                    <div key={r.id} style={{
-                      padding: "16px 18px", border: "1px solid #e3e9ee", borderRadius: 12, background: "#fff",
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, flexWrap: "wrap" }}>
-                            <span style={{ background: ti.color + "22", color: ti.color, padding: "3px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4, border: `1px solid ${ti.color}44` }}>
+              <>
+                {/* 0.62.115 : Toggle Liste / Tuiles */}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10, gap: 4 }}>
+                  <div style={{ display: "inline-flex", background: "#f4f7fa", borderRadius: 10, padding: 3, gap: 2 }}>
+                    <button onClick={() => setViewMode("list")} title="Vue liste"
+                      style={{
+                        padding: "6px 12px", borderRadius: 7,
+                        background: viewMode === "list" ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                        color: viewMode === "list" ? "#fff" : "#5a6878",
+                        border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
+                        transition: "all 200ms",
+                      }}>
+                      <i className="ti ti-list" /> Liste
+                    </button>
+                    <button onClick={() => setViewMode("grid")} title="Vue tuiles"
+                      style={{
+                        padding: "6px 12px", borderRadius: 7,
+                        background: viewMode === "grid" ? "linear-gradient(135deg, #185FA5, #7CC8C8)" : "transparent",
+                        color: viewMode === "grid" ? "#fff" : "#5a6878",
+                        border: "none", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
+                        cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4,
+                        transition: "all 200ms",
+                      }}>
+                      <i className="ti ti-grid-dots" /> Tuiles
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mode Tuiles : grille auto-fill 280px */}
+                {viewMode === "grid" ? (
+                  <div className="av-stagger" style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+                    gap: 12,
+                  }}>
+                    {filtered.map(r => {
+                      const ti = typeInfo(r.type);
+                      const si = statutInfo(r.statut);
+                      return (
+                        <div key={r.id} data-3d="true" data-accent="bleu" onClick={() => editRow(r)}
+                          style={{
+                            background: "#fff",
+                            borderRadius: 14,
+                            padding: 14,
+                            cursor: "pointer",
+                            border: `1px solid ${ti.color}33`,
+                            borderLeft: `4px solid ${ti.color}`,
+                          }}>
+                          {/* Badge type + statut */}
+                          <div style={{ display: "flex", gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
+                            <span style={{
+                              padding: "3px 8px", borderRadius: 6,
+                              background: ti.color, color: "#fff",
+                              fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
+                              boxShadow: `0 2px 6px ${ti.color}55`,
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                            }}>
                               <i className={`ti ${ti.icon}`} /> {r.type}
+                            </span>
+                            <span style={{
+                              padding: "3px 8px", borderRadius: 6,
+                              background: si.color + "22", color: si.color,
+                              fontSize: 10, fontWeight: 700,
+                              border: `1px solid ${si.color}44`,
+                            }}>
+                              {r.statut}
+                            </span>
+                          </div>
+                          {/* Titre */}
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "#142131", marginBottom: 6, lineHeight: 1.3 }}>
+                            {r.titre || "Sans titre"}
+                          </div>
+                          {/* Description preview */}
+                          {r.description && (
+                            <div style={{
+                              fontSize: 12, color: "#5a6878",
+                              lineHeight: 1.4, marginBottom: 8,
+                              overflow: "hidden", display: "-webkit-box",
+                              WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                            }}>
+                              {r.description}
+                            </div>
+                          )}
+                          {/* Footer : votes + auteur + date */}
+                          <div style={{
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            paddingTop: 8, borderTop: "1px solid #f0f3f6", fontSize: 11, color: "#8a98a8",
+                          }}>
+                            <span>
+                              {r.signature ? (
+                                <><i className="ti ti-user" style={{ color: "#7a6fb0" }} /> {r.signature}</>
+                              ) : (
+                                <span style={{ fontStyle: "italic" }}>Anonyme</span>
+                              )}
+                            </span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              {r.nb_votes > 0 && (
+                                <span style={{ color: "#EF9F27", fontWeight: 700 }}>
+                                  <i className="ti ti-arrow-up" /> {r.nb_votes}
+                                </span>
+                              )}
+                              <span>{fmtDate(r.created_at)}</span>
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {filtered.map((r) => {
+                      const ti = typeInfo(r.type);
+                      const si = statutInfo(r.statut);
+                      return (
+                        <div key={r.id} style={{
+                          padding: "16px 18px", border: "1px solid #e3e9ee", borderRadius: 12, background: "#fff",
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6, flexWrap: "wrap" }}>
+                                <span style={{ background: ti.color + "22", color: ti.color, padding: "3px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4, border: `1px solid ${ti.color}44` }}>
+                                  <i className={`ti ${ti.icon}`} /> {r.type}
                             </span>
                             <span style={{ background: si.color + "22", color: si.color, padding: "3px 10px", borderRadius: 12, fontSize: 12, fontWeight: 600, border: `1px solid ${si.color}44` }}>
                               {r.statut}
@@ -413,6 +568,8 @@ export default function SignalementsPage() {
                 })}
               </div>
             )}
+              </>
+            )}
         </Panel>
       </div>
 
@@ -425,6 +582,8 @@ export default function SignalementsPage() {
           </NeonButton>
         </>}
       >
+        {/* 0.62.127 : LockBanner si édition concurrente */}
+        {signalementLock?.locked && <LockBanner lockedBy={signalementLock.lockedBy} onTakeover={signalementLock.takeover} resourceLabel="ce signalement" />}
         {err && <div className="err">{err}</div>}
         {!modal?.id && (
           <p style={{ background: "#eaf7f7", padding: "10px 14px", borderRadius: 8, fontSize: 13, margin: "0 0 14px", borderLeft: "3px solid #7CC8C8" }}>
@@ -501,7 +660,13 @@ export default function SignalementsPage() {
         </div>
         <div className="fld">
           <label>Titre *</label>
-          <input value={form.titre || ""} onChange={(e) => setForm({ ...form, titre: e.target.value })} placeholder="Résumé en quelques mots…" disabled={!!modal?.id && !isAdmin} />
+          <SmartInput
+            value={form.titre || ""}
+            onChange={(v) => setForm({ ...form, titre: v })}
+            contextKey="signalement.titre"
+            placeholder="Résumé en quelques mots…"
+            disabled={!!modal?.id && !isAdmin}
+          />
         </div>
         {/* Alpha 0.40.0 : catégorie libre (optionnelle) */}
         <div className="fld">
@@ -524,7 +689,36 @@ export default function SignalementsPage() {
         </div>
         <div className="fld">
           <label>Description *</label>
-          <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} placeholder="Détails du problème, de l'idée ou de la question…" disabled={!!modal?.id && !isAdmin} />
+          <div style={{ position: "relative" }}>
+            <textarea value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={5} placeholder="Détails du problème, de l'idée ou de la question…" disabled={!!modal?.id && !isAdmin} style={{ paddingRight: 44 }} />
+            {/* 0.63.0 : Saisie vocale */}
+            <div style={{ position: "absolute", bottom: 8, right: 8 }}>
+              <VoiceDictation
+                onTranscript={(t) => setForm(prev => ({ ...prev, description: (prev.description || "") + (prev.description && !prev.description.endsWith(" ") ? " " : "") + t }))}
+                size="sm"
+              />
+            </div>
+          </div>
+          {/* 0.63.0 : Pièces jointes (uniquement si signalement existant) */}
+          {modal?.id && (
+            <AttachmentsPanel
+              resourceType="signalement"
+              resourceId={modal.id}
+              structureId={auth.structureId}
+              compact
+            />
+          )}
+          {/* 0.63.0 : Workflow d'approbation (admin uniquement) */}
+          {modal?.id && isAdmin && (
+            <div style={{ marginTop: 12 }}>
+              <WorkflowApproval
+                resourceType="signalement"
+                resourceId={modal.id}
+                auth={auth}
+                onChange={load}
+              />
+            </div>
+          )}
         </div>
         {/* 0.58.66 : équipe en charge */}
         {(!modal?.id || isAdmin) && (
@@ -578,9 +772,15 @@ export default function SignalementsPage() {
           <>
             <div className="fld">
               <label>Statut</label>
-              <select value={form.statut || "Nouveau"} onChange={(e) => setForm({ ...form, statut: e.target.value })}>
-                {STATUTS.map((s) => <option key={s.value} value={s.value}>{s.value}</option>)}
-              </select>
+              {/* 0.62.132 : SmartSelect statut */}
+              <SmartSelect
+                value={form.statut || "Nouveau"}
+                onChange={(v) => setForm({ ...form, statut: v })}
+                options={STATUTS.map(s => ({ value: s.value, label: s.value }))}
+                contextKey="signalement.statut"
+                allowCustom={false}
+                placeholder="Choisir un statut"
+              />
             </div>
             <div className="fld">
               <label>Réponse de l'administration</label>

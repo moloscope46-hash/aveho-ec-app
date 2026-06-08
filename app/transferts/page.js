@@ -19,6 +19,9 @@ import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 import { fmtDate } from "../../lib/format";
 import TopBar from "../TopBar";
+import { useEditLock } from "../../lib/useEditLock";  /* 0.62.126 */
+import LockBanner from "../components/LockBanner";  /* 0.62.126 */
+import WorkflowApproval from "../components/WorkflowApproval";  /* 0.62.130 */
 import { useCart } from "../useCart";
 import { PageHead, Panel, Btn, IconButton, Modal } from "../ui";
 // 0.62.60 : PageToolbar universel
@@ -100,6 +103,8 @@ function TransfertsInner() {
   const [filterEquipe, setFilterEquipe] = useState(null);  // 0.62.30
 
   const [modal, setModal] = useState(null);
+  // 0.62.126 : Lock anti-collision sur édition
+  const transfertLock = useEditLock("transfert", modal?.id, !!modal?.id && modal?.mode !== "new");
   const [form, setForm] = useState({});
   const [busy, setBusy] = useState(false);
 
@@ -448,6 +453,17 @@ function TransfertsInner() {
                 <Btn variant="primary" icon="ti-check" onClick={save} disabled={busy}>{busy ? "..." : "Enregistrer"}</Btn>
               </>
             }>
+            {/* 0.62.126 : LockBanner si édition concurrente */}
+            {transfertLock?.locked && <LockBanner lockedBy={transfertLock.lockedBy} onTakeover={transfertLock.takeover} resourceLabel="ce transfert" />}
+            {/* 0.62.130 : Workflow d'approbation (uniquement si transfert existant) */}
+            {modal?.id && modal?.mode !== "new" && (
+              <WorkflowApproval
+                resourceType="transfert"
+                resourceId={modal.id}
+                auth={auth}
+                onChange={() => {}}
+              />
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <div className="fld">
                 <label>Motif *</label>

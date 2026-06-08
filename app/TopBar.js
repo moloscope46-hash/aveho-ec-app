@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import pkg from "../package.json";
 import NotifBell from "./NotifBell";
+import NotifBellEnhanced from "./components/NotifBellEnhanced";  /* 0.62.129 */
 // Alpha 0.35.0 : GlobalSearch est monté uniquement dans layout.js (palette Ctrl+K).
 // L'instance dupliquée dans TopBar a été retirée (causait un doublon d'event listeners
 // et disparaissait quand etabId était null). Bouton visible ci-dessous qui déclenche
@@ -24,6 +25,11 @@ import BatimentServiceSwitcher from "./components/BatimentServiceSwitcher";
 // 0.58.87 : mini-panier dropdown style Amazon
 import CartDropdown from "./components/CartDropdown";
 import TopBarEtabSelect from "./components/TopBarEtabSelect";  /* 0.62.111 */
+import RoleBadge from "./components/RoleBadge";  /* 0.62.122 */
+import EditingIndicator from "./components/EditingIndicator";  /* 0.62.126 */
+import { SandboxToggle } from "./components/SandboxBanner";  /* 0.65.0 */
+import { useEscReleaseLocks } from "../lib/useEscReleaseLocks";  /* 0.62.127 */
+import { useRealtimeNotifs } from "../lib/useRealtimeNotifs";  /* 0.62.131 */
 import StructureLogo from "./components/StructureLogo";  /* 0.62.69 */
 import MobileContextPicker from "./components/MobileContextPicker";  /* 0.62.74 */
 // 0.61.4 : adapter TopBar selon mode magasin (catalogue, panier, etc.)
@@ -201,6 +207,10 @@ function isPageNew(p) {
 const TITLES = Object.fromEntries(MENU.flatMap((s) => s.items).map((i) => [i.p, i.lbl]));
 
 export default function TopBar({ cartCount = 0, auth }) {
+  // 0.62.127 : Raccourci Shift+Esc ou triple Esc pour libérer tous mes locks
+  useEscReleaseLocks(true);
+  // 0.62.131 : Auto-notify DI urgentes + workflow + signalements critiques
+  useRealtimeNotifs(true);
   const router = useRouter();
   const path = usePathname();
   // 0.61.4 : mode magasin pour adapter l'UI
@@ -330,7 +340,12 @@ export default function TopBar({ cartCount = 0, auth }) {
         {mounted && auth && <MobileContextPicker auth={auth} />}
         {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) */}
         {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
-        {mounted && auth && <NotifBell structureId={auth.structureId} userId={auth.user?.id} />}
+        {/* 0.62.122 : Badge du rôle avec icône+couleur personnalisée */}
+        {mounted && auth && auth.role && <RoleBadge auth={auth} variant="icon" size="md" onClick={() => router.push("/utilisateurs")} />}
+        {/* 0.62.126 : Indicateur visuel des locks actifs (édition en cours) */}
+        {mounted && auth && <EditingIndicator />}
+        {mounted && auth?.can?.("gerer_roles") && <SandboxToggle />}
+        {mounted && auth && <NotifBellEnhanced structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <div style={{ position: "relative" }}>
             {isMagasin ? (

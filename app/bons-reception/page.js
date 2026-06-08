@@ -78,10 +78,24 @@ async function exportPDF(bon) {
       lines.forEach(l => { doc.text(l, 14, y); y += lineH; });
       y += 3;
     }
-    // Footer
-    doc.setFontSize(9);
-    doc.setTextColor(140, 152, 168);
-    doc.text(`Aveho Espace Collectivité — généré le ${new Date().toLocaleString("fr-FR")}`, 14, 285);
+    // 0.62.124 : Footer PDF premium via lib/pdfFooter
+    try {
+      const { addPdfFooter, getStructureFooterInfo } = await import("../../lib/pdfFooter");
+      const { createClient } = await import("../../lib/supabase");
+      const supabase = createClient();
+      const structureInfo = await getStructureFooterInfo(supabase, bon.structure_id || bon.etablissement_id);
+      addPdfFooter(doc, {
+        type: "Bon de réception",
+        numero: bon.numero,
+        structure: structureInfo,
+        showLegal: true,
+      });
+    } catch (e) {
+      // Fallback footer simple
+      doc.setFontSize(9);
+      doc.setTextColor(140, 152, 168);
+      doc.text(`Aveho Espace Collectivité — généré le ${new Date().toLocaleString("fr-FR")}`, 14, 285);
+    }
     doc.save(`${bon.numero || "bon-reception"}.pdf`);
   } catch (e) {
     alert("Erreur PDF : " + e.message);

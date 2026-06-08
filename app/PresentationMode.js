@@ -1,7 +1,10 @@
 "use client";
 // =============================================================
 //  PresentationMode — Mode présentation (0.62.47)
-//  TODO en attente depuis 0.58.30 ! Cédric le demandait depuis longtemps.
+//  CONSERVÉ après audit 0.65.1 — ce mode est DIFFÉRENT de :
+//   - DashboardActions.PresentationOverlay (carousel widgets BI fullscreen)
+//   - Pages /presentation/* (TV multi-écrans 0.64-0.65)
+//  Ce mode-ci masque les DONNÉES SENSIBLES (montants, badges, RPPS) pour démos.
 //
 //  Active/désactive un état "présentation" qui masque :
 //   - Badges notifications (cloche, compteurs)
