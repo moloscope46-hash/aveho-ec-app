@@ -10,7 +10,7 @@
 //  Refresh toutes les 20s. Cache résiste aux changements de page.
 // =============================================================
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
 
@@ -21,12 +21,15 @@ export default function EditingIndicator() {
   const auth = useAuth();
   const [myLocks, setMyLocks] = useState([]);
   const [show, setShow] = useState(false);
+  // 0.65.1 hotfix3 : flag "table absente" pour stopper le poll
+  const tableMissingRef = useRef(false);
 
   useEffect(() => {
     if (!auth?.user?.id) return;
     let alive = true;
 
     async function check() {
+      if (tableMissingRef.current) { setMyLocks([]); return; }
       try {
         const { data, error } = await supabase
           .from("edit_locks")
@@ -35,7 +38,10 @@ export default function EditingIndicator() {
           .gte("locked_at", new Date(Date.now() - 120 * 1000).toISOString());
         if (!alive) return;
         if (error) {
-          // Table peut ne pas exister → silencieux
+          // Table peut ne pas exister → silencieux + on stoppe le poll
+          if (error.code === "42P01" || error.message?.includes("does not exist") || error.message?.includes("schema cache")) {
+            tableMissingRef.current = true;
+          }
           setMyLocks([]);
           return;
         }
