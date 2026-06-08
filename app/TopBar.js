@@ -341,10 +341,12 @@ export default function TopBar({ cartCount = 0, auth }) {
         {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) */}
         {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
         {/* 0.62.122 : Badge du rôle avec icône+couleur personnalisée */}
-        {mounted && auth && auth.role && <RoleBadge auth={auth} variant="icon" size="md" onClick={() => router.push("/utilisateurs")} />}
+        {/* 0.65.7 : couronne RoleBadge masquée en mobile (gain place toolbar) */}
+        {mounted && auth && auth.role && <span className="hide-on-mobile-tb"><RoleBadge auth={auth} variant="icon" size="md" onClick={() => router.push("/utilisateurs")} /></span>}
         {/* 0.62.126 : Indicateur visuel des locks actifs (édition en cours) */}
         {mounted && auth && <EditingIndicator />}
-        {mounted && auth?.can?.("gerer_roles") && <SandboxToggle />}
+        {/* 0.65.7 : Bouton Sandbox masqué en mobile (gain place + dispo dans /admin) */}
+        {mounted && auth?.can?.("gerer_roles") && <span className="hide-on-mobile-tb"><SandboxToggle /></span>}
         {mounted && auth && <NotifBellEnhanced structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <div style={{ position: "relative" }}>

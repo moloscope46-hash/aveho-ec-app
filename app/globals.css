@@ -464,6 +464,8 @@ button{font-family:inherit;cursor:pointer}
     pointer-events: none;
     z-index: 10;
   }
+  /* 0.65.7 : éléments masqués en mobile dans la topbar (couronne + sandbox) */
+  .hide-on-mobile-tb { display: none !important; }
 }
 @keyframes av-bottom-sheet-up {
   from { transform: translateY(100%); opacity: 0.7; }
@@ -1889,6 +1891,26 @@ body[data-lecture="1"]::after{content:"LECTURE SEULE";position:fixed;bottom:12px
   top:auto;
   bottom:calc(100% + 10px);
   animation:um-pop-up 220ms var(--av-ease-out);
+}
+/* 0.65.7 hotfix : en mobile, annule TOUJOURS flip-up et bascule en bottom-sheet (sécurité) */
+@media (max-width: 720px) {
+  .um-sheet,
+  .um-sheet.um-sheet-up {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    max-height: 80vh !important;
+    border-radius: 18px 18px 0 0 !important;
+    animation: av-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    z-index: 99998 !important;
+    overflow-y: auto !important;
+    box-shadow: 0 -10px 30px rgba(20,33,49,.4) !important;
+  }
 }
 @keyframes um-pop-up{
   from{opacity:0;transform:translateY(8px) scale(0.97)}

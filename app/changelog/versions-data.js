@@ -240,6 +240,21 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.8",
+    "kind": "fix",
+    "titre": "🎯 BUG TROUVÉ — UserMenu flipUp en mobile (sortait par le haut) + Couronne et Sandbox masqués mobile",
+    "chantiers": [
+      { "code": "AI", "txt": "🎯 **LE BUG ! UserMenu avait un flipUp qui poussait le menu VERS LE HAUT en mobile**. Le composant detectait l''espace disponible en bas vs en haut. Sur petits écrans mobile avec l''avatar user en haut à droite (peu d''espace en bas car le menu fait 380px), le code estimait qu''il y avait MOINS d''espace en bas qu''en haut et faisait flip avec CSS `.um-sheet.um-sheet-up { bottom: calc(100% + 10px) }` → menu s''ouvrait AU-DESSUS de l''avatar → SORTAIT DE L''ÉCRAN par le haut (invisible). **Cédric voyait juste \"le bas du popup\" car le contenu débordait du viewport**. Fix double-protection : (1) Dans UserMenu.js useEffect → si window.innerWidth ≤ 720 → setFlipUp(false). (2) CSS @media (max-width:720px) → force .um-sheet ET .um-sheet-up en bottom-sheet position:fixed bottom:0. Plus aucune chance de sortir par le haut" },
+      { "code": "AI", "txt": "👑 **Couronne RoleBadge masquée en mobile** : wrapper `<span className=\"hide-on-mobile-tb\">` autour de RoleBadge. CSS @media (max-width:720px) { .hide-on-mobile-tb { display:none !important } }. **Avantage** : libère 36px de toolbar, plus de place pour les icônes essentielles. La couronne reste accessible en desktop et le rôle est toujours visible dans /utilisateurs et /profil" },
+      { "code": "AI", "txt": "🧪 **Bouton Sandbox masqué en mobile** : même technique avec hide-on-mobile-tb. La fonctionnalité Sandbox reste accessible via la console admin desktop (/admin) — masquée en mobile pour libérer la toolbar et car ce n''est pas une fonctionnalité utilisée en mobilité" },
+      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.8** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) Mobile (DevTools iPhone 13 390px) → topbar plus aérée (couronne et sandbox absents). (2) Click avatar user → menu glisse DEPUIS LE BAS (pas du haut !) avec drag-handle iOS. (3) Click cloche → idem bottom-sheet. (4) Toutes les icônes statut → bottom-sheet OK"
+      }
+    ],
+    "themes": ["fix", "mobile", "critical"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.8.html"
+  },
+  {
     "v": "0.65.7",
     "kind": "feat",
     "titre": "🎨 BackButton avec nom visible + Polish premium global + DesignAuditor + Fix icones invisibles menu",

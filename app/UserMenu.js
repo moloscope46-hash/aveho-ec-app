@@ -102,8 +102,14 @@ export default function UserMenu({ auth }) {
   }, [open]);
 
   // 0.58.55 : à l'ouverture, détecte si on doit flip vers le haut
+  // 0.65.7 hotfix : SUR MOBILE, pas de flipUp — le menu doit toujours être bottom-sheet
   useEffect(() => {
     if (!open || !ref.current) return;
+    const isMobile = window.innerWidth <= 720;
+    if (isMobile) {
+      setFlipUp(false);
+      return;
+    }
     const rect = ref.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
