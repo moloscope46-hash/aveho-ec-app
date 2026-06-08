@@ -94,7 +94,8 @@ export default function BackButtonFloating() {
       className="av-back-floating"
       style={{
         position: "fixed",
-        top: "calc(74px + env(safe-area-inset-top, 0px))",
+        /* 0.65.16 : Cédric veut Page Précédente EN BAS À GAUCHE */
+        bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
         left: 16,
         zIndex: 95,
         height: 42,

@@ -56,7 +56,7 @@ function PresentationPlanning() {
     // Sources parallèles
     const [interventions, tournees, maintenances, planEvts] = await Promise.all([
       tryFetch(supabase.from("interventions")
-        .select("id, numero, type, urgence, date_planifiee, statut, technicien_nom, equipe_id, materiels(libelle), patients(nom, prenom, chambre)")
+        .select("id, numero, type, urgence, date_planifiee, statut, technicien_nom, equipe_id, materiels(libelle), patients(nom, prenom)")
         .eq("structure_id", auth.structureId)
         .gte("date_planifiee", todayStart.toISOString())
         .lte("date_planifiee", todayEnd.toISOString())

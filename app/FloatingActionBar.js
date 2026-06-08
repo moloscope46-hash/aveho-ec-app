@@ -79,18 +79,18 @@ export default function FloatingActionBar() {
         />
       )}
 
-      {/* 0.65.14 : container fixed TOP-LEFT (était top-right - caché derrière topbar mobile) */}
+      {/* 0.65.16 : FAB en bas-gauche, AU-DESSUS du BackButton (Page précédente) */}
       <div
         className="av-shortcuts-bar"
         style={{
           position: "fixed",
-          top: "calc(80px + env(safe-area-inset-top, 0px))",
-          left: 16,  /* 0.65.14 : à gauche, plus visible */
+          bottom: "calc(68px + env(safe-area-inset-bottom, 0px))",  /* 0.65.16 : juste au-dessus du back button (42px + 16px margin + 10px gap) */
+          left: 16,
           zIndex: 9991,
           display: "flex",
           alignItems: "center",
           gap: 10,
-          flexDirection: "row",  /* 0.65.14 : bulles s'étirent vers la droite naturellement */
+          flexDirection: "row",
         }}
         role="navigation"
         aria-label="Raccourcis rapides"

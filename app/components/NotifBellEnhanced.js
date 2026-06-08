@@ -19,19 +19,35 @@ export default function NotifBellEnhanced({ structureId, userId }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const wrapRef = useRef(null);
 
-  // Fetch count non-lu
+  // Fetch count non-lu (0.65.16 : 'lue' au lieu de 'lu' + fallback si archive manque)
   const loadCount = useCallback(async () => {
     if (!structureId) return;
     try {
-      const { count, error } = await supabase
+      // Tentative 1 : avec lue + archive
+      let r = await supabase
         .from("notifications")
         .select("id", { count: "exact", head: true })
         .eq("structure_id", structureId)
-        .eq("lu", false)
+        .eq("lue", false)
         .eq("archive", false);
-      if (!error) {
+      // Fallback 1 : sans archive
+      if (r.error) {
+        r = await supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("structure_id", structureId)
+          .eq("lue", false);
+      }
+      // Fallback 2 : juste structure_id
+      if (r.error) {
+        r = await supabase
+          .from("notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("structure_id", structureId);
+      }
+      if (!r.error) {
+        const count = r.count;
         setUnreadCount(prev => {
-          // 0.62.130 : si nouvelle notif détectée, son + notification native
           if (count > prev && prev > 0) {
             import("../../lib/notifSounds").then(({ notify }) => {
               notify("Nouvelle notification", `${count - prev} nouvelle${count - prev > 1 ? "s" : ""} notification${count - prev > 1 ? "s" : ""}`, { type: "info" });

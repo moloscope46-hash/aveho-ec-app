@@ -204,6 +204,36 @@ export default function TVScreenNav({ currentScreen }) {
         </div>
       )}
 
+      {/* 0.65.16 : Bouton SORTIR du mode plein écran TV en haut à droite */}
+      <button
+        onClick={() => router.push("/accueil")}
+        style={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 102,
+          background: "rgba(227, 93, 91, .9)",
+          color: "#fff",
+          border: "1.5px solid rgba(255,255,255,.3)",
+          padding: "10px 16px",
+          borderRadius: 24,
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+          cursor: "pointer",
+          fontFamily: "Quicksand, sans-serif",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          boxShadow: "0 4px 16px rgba(227, 93, 91, .4), 0 2px 6px rgba(0,0,0,.2)",
+          backdropFilter: "blur(8px)",
+        }}
+        title="Sortir du mode TV"
+      >
+        <i className="ti ti-x" style={{ fontSize: 16 }} /> Sortir TV
+      </button>
+
       <style>{`
         @keyframes tv-pulse-dot {
           0%, 100% { opacity: 1; }

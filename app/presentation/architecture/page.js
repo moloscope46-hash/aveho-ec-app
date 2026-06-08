@@ -15,6 +15,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
+import TVCastButton from "../../components/TVCastButton";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
 import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";
 

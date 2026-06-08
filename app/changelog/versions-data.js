@@ -240,6 +240,26 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.16",
+    "kind": "fix",
+    "titre": "MEGA FIX bugs 400 + Bouton sortir TV + BackButton bas-gauche + FAB au-dessus + SQL +12 batiments +33 services +41 chambres +50 historique",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX critique TVCastButton is not defined : ajout import dans had-list et architecture (manquaient)" },
+      { "code": "AI", "txt": "FIX spam 400 useAuth : retrait du SELECT roles(...permissions_json,droits,icone,couleur) qui plantait. Commence directement par SELECT simple sans la jointure roles" },
+      { "code": "AI", "txt": "FIX 400 signalements.criticite : la colonne n existe pas. Remplace par statut=Nouveau + type. Wrappé en try/catch dans useRealtimeNotifs" },
+      { "code": "AI", "txt": "FIX 400 notifications lu/archive : la colonne s appelle lue (avec un e). Ajout fallback multi-niveaux dans NotifBellEnhanced (avec archive, sans archive, juste structure_id)" },
+      { "code": "AI", "txt": "FIX 400 magasins.fournisseurs(raison_sociale) : FK non declaree. Retrait de la jointure dans TVMagasinFilter et fallback dans commandes/page.js" },
+      { "code": "AI", "txt": "FIX 400 patients(chambre) : colonne retiree des SELECT dans interventions et planning TV (patients HAD = pas de chambre)" },
+      { "code": "AI", "txt": "Bouton SORTIR TV : nouveau bouton rouge en haut a droite des pages TV (TVScreenNav). Click renvoie vers /accueil pour quitter le mode plein ecran" },
+      { "code": "AI", "txt": "BackButton Page precedente : passe en BAS A GAUCHE (etait top). FAB raccourcis passe juste AU DESSUS du BackButton (bottom 68px) pour empilage propre" },
+      { "code": "AI", "txt": "SQL 0.65.16 MEGA enrichissement : +12 batiments (Soins palliatifs, Alzheimer, Chirurgie aile sud, Maternite, Soins intensifs, Imagerie...) +33 services (bloc operatoire, reanimation, USIC, cardiologie, pneumologie, gastro, oncologie, urgences, IRM, scanner, neonatologie...) +41 chambres reparties dans services divers +8 patients EHPAD/Clinique avec rattachement complet etab+bat+svc+chambre +50 DI historique cloturees sur les 90 derniers jours" },
+      { "code": "INFO", "txt": "Procedure 0.65.16 : rejouer SQL aveho-DEMO-data-import.sql complet (174K). Push code. Tests : (1) Plus de spam 400 dans la console. (2) /presentation/* : bouton SORTIR TV rouge en haut-droite. (3) Page precedente en BAS A GAUCHE. (4) FAB raccourcis juste AU-DESSUS du back button. (5) /etablissements voir les nouveaux batiments+services" }
+    ],
+    "themes": ["fix-bugs-400", "ui", "demo-data"],
+    "date": "8 juin 2026",
+    "noteFile": "NOTE-FIX-0.65.16.html"
+  },
+{
     "v": "0.65.15",
     "kind": "fix",
     "titre": "Fix UserMenu PC/Mobile + Modal glow retire + Boutons modaux taille normale + Cards commandes ENRICHIES",

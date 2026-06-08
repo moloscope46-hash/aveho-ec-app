@@ -86,9 +86,16 @@ export default function Commandes() {
     if (!auth.ready) return;
     (async () => {
       try {
+        // 0.65.16 : essai avec jointures, fallback simple si FK pas déclarée
         let q = supabase.from("commandes").select("*, magasins(nom), etablissements(nom, ville), fournisseurs(raison_sociale)").order("created_at", { ascending: false });
         if (auth.etabId) q = q.eq("etablissement_id", auth.etabId);
-        const { data } = await q;
+        let { data, error } = await q;
+        if (error) {
+          // Fallback : sans fournisseurs
+          let q2 = supabase.from("commandes").select("*, magasins(nom), etablissements(nom, ville)").order("created_at", { ascending: false });
+          if (auth.etabId) q2 = q2.eq("etablissement_id", auth.etabId);
+          ({ data } = await q2);
+        }
         setCmds(data || []);
       } catch (e) {
         // 0.57.5 : try/catch englobant pour pas crasher la page
