@@ -240,6 +240,19 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.74",
+    "kind": "fix",
+    "titre": "FIX TOTAL 400/404 + bug btnIcon dans /articles (helper manquant cause du crash de la page) + SQL ULTIME ajoute toutes les colonnes phantoms (roles.structure_id/famille_metier/ordre_affichage, patients.mode_residence/chambre/latitude/longitude, partenaires_rpps complet, fournisseurs complet, tournees.date_planifiee/chauffeur_nom/distance_km, interventions.materiel_id/patient_id, maintenances.materiel_id) + declare TOUTES les FK PostgREST manquantes + cree v_tournees_jour_complete + table optimisation_suggestions + v_patient_complete + RLS update etablissements + SQL seeding data demo (50 roles + 4 etabs + 7 fournisseurs + 6 RPPS + 4 magasins + 8 patients HAD geoloc + 2 tournees du jour avec 8 etapes)",
+    "chantiers": [
+      { "code": "FIX", "txt": "BUG CRASH /articles - btnIcon n etait pas defini comme helper donc la map des articles plantait avec ReferenceError. Helper btnIcon(color) ajoute inline dans la fonction map qui retourne un style object compact (32x32 rounded background color/15 border color/40)" },
+      { "code": "SQL", "txt": "aveho-FIX-TOTAL-400-404.sql 14 K en 9 parties - PART A roles (structure_id, famille_metier, ordre_affichage, icone, couleur, permissions_json, droits, systeme) - PART B patients (mode_residence, chambre, geoloc, ville, adresse, telephone, est_had) - PART C partenaires_rpps + fournisseurs avec structure_id et tous les attributs - PART D tournees (date_planifiee+date_tournee sync) + tournees_etapes (libelle/label sync, geoloc, ordre, statut, type_etape, patient_id, tournee_id) - PART E interventions + maintenances + magasins + materiels - PART F vues v_tournees_jour_complete et v_patient_complete + table optimisation_suggestions - PART G declaration de 8 FK PostgREST critiques (magasins.fournisseur_id, interventions.materiel/patient_id, maintenances.materiel/vehicule_id, tournees_etapes.patient_id/tournee_id, tournees.magasin_id) - PART H 11 index perf - PART I policy RLS UPDATE etablissements (resout le peux pas enregistrer sur /etablissement/edition)" },
+      { "code": "SQL", "txt": "aveho-SEEDING-DATA.sql 13 K avec 50 roles metier organises par 9 familles (direction medical technique logistique commercial admin support had caisse) tous avec icone et couleur charte + 4 etablissements demo dans le Lot (EHPAD Les Lilas Saint-Cere, Clinique du Causse Figeac, CH Mayrinhac, EHPAD Les Tilleuls Gramat) + 7 fournisseurs (ResMed Philips Fisher-Paykel Air Liquide BBraun Lovenox Cair LGL) + 6 partenaires RPPS (medecins IDE pneumologue cardiologue) + 4 magasins Aveho avec geoloc (Cahors Brive Rodez Aurillac) + 8 patients HAD avec geoloc dans le Lot/Correze/Aveyron + 2 tournees du jour (Causse Matin Marc DUPUIS et Lot Apres-midi Sophie LEROY) avec 8 etapes geolocalisees" }
+    ],
+    "themes": ["fix-bug-btnIcon-articles-crash", "sql-fix-400-404-total", "seeding-data-demo-complet"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.74.html"
+  },
+{
     "v": "0.65.73",
     "kind": "feat",
     "titre": "BATCH FINAL JOURNEE - 18 ameliorations majeures Wake-lock + Permissions-Policy headers + Detection Android Auto/CarPlay UA + Hook TTS Speech Synthesis + Mode TV Pharmacie 4 panels + PermissionGate sur 8 pages pharmacie + MobileToolbarPopup popup full-screen droite + PatientMultiSelectActions branche /patients+/had + i18n FR/EN/ES + Page detail facture avec PDF + Export FEC norme francaise + SQL modules avances Forfaits SAV LPP + Caisse Terminals NF525 + Banque CAMT.053 + FSE SESAM-Vitale + FEC exports + RefreshButton+CastButton imports sur 4 pages mode TV",

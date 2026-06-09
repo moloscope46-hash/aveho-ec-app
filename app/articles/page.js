@@ -429,6 +429,13 @@ export default function Articles() {
                   a.marge_pct ? { label: "Marge", value: `${a.marge_pct}%`, color: margeColor } : null,
                 ].filter(Boolean);
                 
+                const btnIcon = (color) => ({
+                  width: 32, height: 32, borderRadius: 8,
+                  background: `${color}15`, color, border: `1px solid ${color}40`,
+                  cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, transition: "all 150ms",
+                });
+                
                 return (
                   <ExpandableRow
                     key={a.id}
