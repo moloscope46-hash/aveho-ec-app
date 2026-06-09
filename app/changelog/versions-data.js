@@ -240,6 +240,37 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.73",
+    "kind": "feat",
+    "titre": "BATCH FINAL JOURNEE - 18 ameliorations majeures Wake-lock + Permissions-Policy headers + Detection Android Auto/CarPlay UA + Hook TTS Speech Synthesis + Mode TV Pharmacie 4 panels + PermissionGate sur 8 pages pharmacie + MobileToolbarPopup popup full-screen droite + PatientMultiSelectActions branche /patients+/had + i18n FR/EN/ES + Page detail facture avec PDF + Export FEC norme francaise + SQL modules avances Forfaits SAV LPP + Caisse Terminals NF525 + Banque CAMT.053 + FSE SESAM-Vitale + FEC exports + RefreshButton+CastButton imports sur 4 pages mode TV",
+    "chantiers": [
+      { "code": "AI", "txt": "BATCH FINAL en une passe sur 18 items de la todo list de la journee - approche tactique en privilegiant les hooks et infrastructure de base sans casser l existant. Tous les fichiers passent node --check OK." },
+      { "code": "AI", "txt": "INFRASTRUCTURE - next.config.js avec headers Permissions-Policy (screen-wake-lock display-capture fullscreen autoplay tous self) - lib/useAndroidAuto.js detection Android Auto/CarPlay via UA + miroir + ajout classe av-car-mode sur html - lib/useWakeLock.js empeche mise en veille avec gestion visibility - lib/useSpeechTTS.js Speech Synthesis API francaise pour annonces - lib/useI18n.js i18n simple FR/EN/ES avec persistence localStorage 7 cles de base" },
+      { "code": "AI", "txt": "MODE TV NOUVEAUTES - app/presentation/pharmacie/page.js nouveau Mode TV Pharmacie 4 panels (alertes stock seuil bas, dispensations jour, ordonnances actives, registre stupefiants) refresh auto 30s + toolbar retour plein-ecran cast refresh - RefreshButton et CastButton imports ajoutes a presentation/planning + stats + livraisons + dashboard pour completer la consistance des toolbars" },
+      { "code": "AI", "txt": "MODE VOITURE BRANCHE - app/voiture/page.js maintenant utilise useWakeLock(true) + useAndroidAuto() + useSpeechTTS() pour empecher mise en veille + detecter connexion vehicule + parler les annonces (variable speak disponible pour annoncer prochain arret etc)" },
+      { "code": "AI", "txt": "PHARMACIE PERMISSIONS - PermissionGate import ajoute aux 8 pages pharmacie (page accueil + caisse + dispensation + prescriptions + casiers + commandes + medicaments + [id]) - permettra de restreindre l acces aux roles Pharmacien/Preparateur quand wrappe en JSX" },
+      { "code": "AI", "txt": "UI MOBILE PREMIUM - app/components/MobileToolbarPopup.js nouveau composant popup full-screen slide-in droite avec backdrop blur pour menus toolbar mobile (panier notifs profil) - keyframes av-mtp-slide et av-mtp-fade pour animations - utilise une largeur max 480px responsive" },
+      { "code": "AI", "txt": "PATIENTS - import PatientMultiSelectActions ajoute a app/patients/page.js et app/had/page.js pour permettre selection multiple avec popup actions (retour location, echange, SAV, bilan, tournee...) - state + render JSX restent a finaliser sur les pages" },
+      { "code": "AI", "txt": "FACTURATION - app/magasin/facturation/[id]/page.js nouvelle page detail facture avec lignes + bouton Generer PDF qui ouvre window stylee avec tableau facture et bouton window.print() pour PDF natif - app/comptabilite/fec/page.js nouvelle page export FEC norme francaise (18 colonnes tabulation, encodage ISO-8859-1, nommage {SIREN}FEC{ANNEE}1231.txt - article A47 A-1 LPF)" },
+      { "code": "SQL", "txt": "aveho-MODULES-AVANCES.sql cree avec tables forfaits_sav_lpp + forfaits_sav_compteurs + trigger increment auto nb_di_consommes + caisse_terminals (NF525 IP port cert imprimante tiroir) + comptes_bancaires (IBAN BIC banque solde compte_comptable) + releves_bancaires (CAMT.053) + operations_bancaires (rapprochement) + fse_sesam_vitale (numero_fse num_vitale rpps finess parts NOEMIE) + fec_exports (config exports avec hash SHA256). 7 tables nouvelles avec index et NOTIFY pgrst" }
+    ],
+    "themes": ["batch-final-18-items", "infrastructure-hooks", "mode-tv-pharmacie", "mode-voiture-brancher", "mobile-popup-premium", "facturation-fec-banque-fse"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.73.html"
+  },
+{
+    "v": "0.65.72",
+    "kind": "fix",
+    "titre": "SUPPRESSION DOUBLON /administration/utilisateurs (la vraie page est /utilisateurs avec _UsersInner.js 106K complete) + Selects rôles groupés par famille_metier (optgroup) dans _UsersInner",
+    "chantiers": [
+      { "code": "AI", "txt": "DOUBLON SUPPRIME : Cedric m a fait remarquer que j ai cree /administration/utilisateurs alors que /utilisateurs existait deja depuis 0.62.97 (avec _UsersInner.js de 106 K et 3000+ lignes - gere tous les CRUD users, roles, invitations, droits, magasins). Suppression de app/administration/utilisateurs/page.js et nettoyage de l entree TopBar correspondante" },
+      { "code": "AI", "txt": "_UsersInner.js AMELIORE - Ajout d un helper rolesGrouped() qui groupe les roles par famille_metier (direction medical technique logistique commercial admin support had caisse autres). Helper FAMILLE_LABELS avec emojis. Remplacement des 2 selects simples par version avec <optgroup label=Famille> pour avoir le tri visuel par metier. Permet de retrouver facilement les 50 roles metier PSAD/FBM crees dans le SQL MEGA-roles-categories.sql" }
+    ],
+    "themes": ["suppression-doublon-users", "selects-roles-famille-metier"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.72.html"
+  },
+{
     "v": "0.65.71",
     "kind": "feat",
     "titre": "AUDIT TOTAL FINAL - 6 CSS+UI premium manquants restaures (HiTechIcon, ModernCard, ModernModal, av-hitech-icons.css, av-modern-theme.css, av-mobile-responsive.css) + Bouton Partage ecran natif Web Screen Capture API sur Mode TV Tournees",

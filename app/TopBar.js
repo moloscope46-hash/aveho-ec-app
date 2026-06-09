@@ -174,7 +174,6 @@ const MENU = [
   // 6. ADMIN (tech) — 0.62.64 : nettoyage, les pages déplacées en onglets dans /parametres
   { section: "Administration", sectionIcon: "ti-shield-lock", items: [
     { p: "/utilisateurs", ic: "ti-users-group", lbl: "Utilisateurs", col: "#185FA5" },
-    { p: "/administration/utilisateurs", ic: "ti-user-cog", lbl: "Utilisateurs & Droits (premium)", col: "#5e4a8c" },
     { p: "/historique", ic: "ti-history", lbl: "Historique", col: "#7a6fb0" },
     { p: "/admin/rpps-diagnostic", ic: "ti-stethoscope", lbl: "Diagnostic API RPPS", col: "#7a6fb0" },
     { p: "/admin/rpps-dump", ic: "ti-database-import", lbl: "Dump RPPS (Plan B)", col: "#5aa05a" },

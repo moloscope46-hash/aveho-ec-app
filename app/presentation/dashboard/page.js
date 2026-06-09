@@ -4,6 +4,8 @@
 //  Mode TV : KPIs + barres top par catégorie (BI synthèse)
 // =============================================================
 import { useEffect, useState, useRef, Suspense } from "react";
+import RefreshButton from "../../components/RefreshButton";
+import CastButton from "../../components/CastButton";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";

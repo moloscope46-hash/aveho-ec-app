@@ -5,6 +5,8 @@
 //  + équipes affectées. Affichage swim-lane par technicien/équipe.
 // =============================================================
 import { useEffect, useState, useRef, Suspense } from "react";
+import RefreshButton from "../../components/RefreshButton";
+import CastButton from "../../components/CastButton";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";

@@ -45,6 +45,28 @@ export default function Utilisateurs() {
   const [tab, setTab] = useState("membres");
   const [membres, setMembres] = useState([]);
   const [roles, setRoles] = useState([]);
+  // 0.65.72 - grouping par famille metier
+  function rolesGrouped() {
+    const groups = {};
+    (roles || []).forEach(r => {
+      const k = r.famille_metier || 'autres';
+      (groups[k] = groups[k] || []).push(r);
+    });
+    return groups;
+  }
+  const FAMILLE_LABELS = {
+    direction: '🎩 Direction',
+    medical: '🩺 Médical / Soins',
+    technique: '🔧 Technique / SAV',
+    logistique: '🚛 Logistique',
+    commercial: '📈 Commercial',
+    admin: '📋 Administratif',
+    support: '🎧 Support',
+    had: '🏠 HAD',
+    caisse: '💰 Caisse',
+    autres: '👤 Autres'
+  };
+
   const [invitations, setInvitations] = useState([]);
   const [services, setServices] = useState([]);
   const [memServices, setMemServices] = useState([]);
@@ -789,7 +811,11 @@ export default function Utilisateurs() {
                                 })()}
                                 <select value={m.role_id || ""} onChange={(e) => setMembreRole(m.user_id, e.target.value)} style={{ height: 32, borderRadius: 8, border: "1px solid #e1e6eb", fontFamily: "inherit", flex: 1, minWidth: 0 }}>
                                   <option value="">— Aucun —</option>
-                                  {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                                  {Object.entries(rolesGrouped()).sort(([a],[b]) => (FAMILLE_LABELS[a] || a).localeCompare(FAMILLE_LABELS[b] || b)).map(([fam, list]) => (
+                                    <optgroup key={fam} label={FAMILLE_LABELS[fam] || fam}>
+                                      {list.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                                    </optgroup>
+                                  ))}
                                 </select>
                               </div>
                             </td>
@@ -1418,7 +1444,11 @@ export default function Utilisateurs() {
                   <label>Rôle *</label>
                   <select value={inviteForm.role_id} onChange={(e) => setInviteForm({ ...inviteForm, role_id: e.target.value })}>
                     <option value="">— Choisir —</option>
-                    {roles.map((r) => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                    {Object.entries(rolesGrouped()).sort(([a],[b]) => (FAMILLE_LABELS[a] || a).localeCompare(FAMILLE_LABELS[b] || b)).map(([fam, list]) => (
+                                    <optgroup key={fam} label={FAMILLE_LABELS[fam] || fam}>
+                                      {list.map(r => <option key={r.id} value={r.id}>{r.nom}</option>)}
+                                    </optgroup>
+                                  ))}
                   </select>
                 </div>
                 {/* 0.62.13 : Rôle professionnel */}

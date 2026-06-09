@@ -14,6 +14,7 @@ import { EmptyState } from "../components/PremiumKpi";
 import PageToolbar from "../components/PageToolbar";
 import BackButton from "../components/BackButton";
 import ViewModeToggle, { useViewMode } from "../components/ViewModeToggle";
+import PatientMultiSelectActions from "../components/PatientMultiSelectActions";
 
 const TYPES = [
   { v: "had_generaliste", l: "Généraliste",    c: "#185FA5", ic: "ti-stethoscope" },

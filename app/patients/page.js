@@ -42,6 +42,7 @@ import { dialogs } from "../dialogs";
 import { logger } from "../../lib/logger";
 // 0.58.23 : NeonButton premium pour boutons d'action
 import { NeonButton } from "../components/ui-premium";
+import PatientMultiSelectActions from "../components/PatientMultiSelectActions";
 export default function Patients() {
   const supabase = createClient();
   const [viewMode, setViewMode] = useViewMode("patients-list", "list");  /* 0.62.75 */

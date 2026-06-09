@@ -8,6 +8,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
+import { useWakeLock } from "../../lib/useWakeLock";
+import { useSpeechTTS } from "../../lib/useSpeechTTS";
+import { useAndroidAuto } from "../../lib/useAndroidAuto";
 import { useAuth } from "../../lib/useAuth";
 
 const CATEGORIES = [
@@ -23,6 +26,9 @@ export default function ModeVoiturePage() {
   const supabase = createClient();
   const router = useRouter();
   const auth = useAuth();
+  useWakeLock(true);
+  const carDetect = useAndroidAuto();
+  const speak = useSpeechTTS({ lang: "fr-FR" });
   const [category, setCategory] = useState("patients");
   const [data, setData] = useState({ patients: [], etablissements: [], magasins: [], pharmacies: [], rpps: [], fournisseurs: [] });
   const [search, setSearch] = useState("");
