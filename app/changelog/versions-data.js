@@ -240,6 +240,46 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.59",
+    "kind": "feat",
+    "titre": "MEGA enrichissement : Dossier medical patients + Pathologies N-N + Ordonnances + RDV + DI massives + Audit/rattachement users",
+    "chantiers": [
+      { "code": "AI", "txt": "SQL aveho-MEGA-ENRICHISSEMENT-patients.sql : 8 etapes pour completer toutes les fiches metier" },
+      { "code": "AI", "txt": "Etape 1 - Patients : 23 colonnes dossier medical ajoutees - poids_kg / taille_cm / imc (calcule auto) / groupe_sanguin / allergies / antecedents_familiaux / antecedents_personnels / traitements_en_cours / medecin_traitant + RPPS / pathologie_principale / gir (1-6) / personne_a_prevenir (nom/tel/lien) / observations_medicales / chambre_id / service_id / mutuelle_id / caisse_assurance_maladie_id / numero_securite_sociale / ald (boolean) / taux_remboursement" },
+      { "code": "AI", "txt": "Etape 1 - SEEDS patients : pour 200 patients sans donnees medicales, generation auto poids 50-100kg, taille 150-185cm, groupe sanguin random parmi 8, pathologie parmi 15 (HTA / Diabete II / BPCO / Insuf cardiaque / AVC / Alzheimer / Parkinson / Cancer remission / IRC / Arthrose / PR / Asthme / SAOS / Depression / Anxiete), allergies (Penicilline / Latex / Iode / Pollen / Acariens / Arachides), ALD 40 pourcent, GIR 1-6, taux remb 70 ou 100, medecin traitant Dr MARTIN/BERNARD/DUBOIS/PETIT/ROBERT. IMC calcule automatiquement" },
+      { "code": "AI", "txt": "Etape 2 - NOUVELLE table patient_pathologies (N-N) : structure_id, patient_id, pathologie_id, pathologie_nom, date_diagnostic, severite (legere/moderee/severe), est_active, notes. UNIQUE (patient_id, pathologie_nom). Seeds : 20 pathologies de reference ajoutees a la table pathologies + 1-3 pathologies attribuees a chaque patient (jusqu a 5 ans en arriere)" },
+      { "code": "AI", "txt": "Etape 3 - Ordonnances : 8 colonnes ajoutees a prescriptions (patient_id / prescripteur_nom / prescripteur_rpps / date_prescription / duree_jours / renouvelable / nb_renouvellements / statut). SEEDS : 100 patients recoivent 1-2 ordonnances avec 2-5 medicaments parmi 16 references (Doliprane / Levothyrox / Kardegic / Eliquis / Glucophage / Crestor / Coversyl / Inexium / Lasilix / Spasfon / Atarax / Zolpidem / Tahor / Cardensiel / Ventoline / Symbicort), posologie variee" },
+      { "code": "AI", "txt": "Etape 4 - RDV patients : 11 colonnes assurees sur rdv_patients (structure/etablissement/patient_id / type_rdv / date_rdv / duree / statut / objet / lieu / intervenant). SEEDS : 80 patients ont 2-3 RDV (passes + futurs) avec types varies (Consultation medicale / Bilan kine / Visite IDE / Suivi dieteticien / Prise de sang / Renouvellement / Vaccination / Soins dentaires / Cardio / Imagerie). Lieux varies (cabinet / domicile / hopital / centre)" },
+      { "code": "AI", "txt": "Etape 5 - DI MASSIVES : pour CHAQUE etablissement, 10 demandes interventions creees. Types varies (Livraison VPH / Livraison oxygene / Livraison perfusion / Echange / Reprise / SAV technique / Bilan domicile / Installation lit medicalise / VAC / Maintenance preventive / Devis / Forfait LPP). Urgences (Faible/Normale/Haute/Critique). Etats (Nouvelle/En cours/En attente/Affectee/Planifiee). Numero DI-YYMMDD-XXXX. Dates creees jusqu a 30 jours en arriere, planifiees jusqu a 14 jours en avant" },
+      { "code": "AI", "txt": "Etape 6 - AUDIT users : compte les users dans membres_structure / membres_etablissements / auth.users. Pour tout user dans auth.users mais absent de membres_structure : rattachement automatique a la structure principale avec le role systeme (admin) ou le 1er role disponible. Empeche les users orphelins" },
+      { "code": "AI", "txt": "Etape 7 - Vue v_patient_complete : SELECT patient + etablissement_nom + chambre_numero + service_nom + nb_prescriptions_actives + nb_rdv_a_venir + nb_pathologies_actives + nb_di_en_cours + pathologies_json (apercu 5). Une seule requete pour avoir TOUTE la fiche patient en lecture" },
+      { "code": "AI", "txt": "Etape 8 - NOTIFY pgrst reload schema + diagnostic final qui montre Patients/Patients enrichis/Patient_pathologies/Prescriptions/Lignes medicaments/RDV/DI/Membres_structure" }
+    ],
+    "themes": ["dossier-medical-patient", "pathologies-rattachees", "ordonnances-medicaments", "rdv-patients", "di-massives", "audit-users"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.59.html"
+  },
+{
+    "v": "0.65.58",
+    "kind": "feat",
+    "titre": "MEGA seeding global : Bat/Etage/Chambre/Service/Equipe pour TOUS etablissements + Tournees 5 types par etab + Reconnexion FK + Rattachement patients orphelins",
+    "chantiers": [
+      { "code": "AI", "txt": "SQL aveho-MEGA-SEEDING-reconnexion.sql : 7 etapes pour reconnecter et seeder TOUTE l app proprement en zero doublon" },
+      { "code": "AI", "txt": "Etape 1 - FK MANQUANTES ajoutees : batiments.etablissement_id, etages.batiment_id, chambres.batiment_id + chambres.etage_id, lits.chambre_id, services.etablissement_id, patients.etablissement_id, tournees.etablissement_id, tournees_etapes.tournee_id. Chacune en defensif (verification existence FK avant ALTER)" },
+      { "code": "AI", "txt": "Etape 2 - Pour CHAQUE etablissement sans batiment : creation auto 2 batiments (Principal A + Annexe B). Pour chaque batiment sans etage : creation 3 etages (RDC, 1er, 2e). Pour chaque etage : 5 chambres numerotees 001-005. Resultat : 2 batiments x 3 etages x 5 chambres = 30 chambres par etablissement minimum" },
+      { "code": "AI", "txt": "Etape 3 - Pour CHAQUE batiment : creation 5 services types (Soins infirmiers terra / Medecine bleu / Restauration orange / Technique violet / Direction navy) avec codes hierarchiques SI-XXXX, MG-XXXX, REST-XXXX, TECH-XXXX, DIR-XXXX. Couleurs et icones automatiques. Capacite lits par defaut" },
+      { "code": "AI", "txt": "Etape 4 - Pour CHAQUE service : creation auto d une equipe rattachee via la table de liaison equipes_services. Nom Equipe Soins infirmiers - Batiment Principal etc" },
+      { "code": "AI", "txt": "Etape 5 - Pour CHAQUE etablissement : creation 5 tournees du jour de tous types - livraison (orange) / infirmiere_idel (terra) / pharmacie (vert) / visite_domicile (bleu) / chambres_batiment (violet). Distance + duree aleatoires. Chauffeur generique. Date planifiee = aujourd hui 8h00" },
+      { "code": "AI", "txt": "Etape 5 suite - ETAPES de chaque tournee : pour les tournees visite/infirmiere = 4 patients geolocalises de l etab (ordre random), pour chambres_batiment = 5 chambres physiques (avec nom batiment), pour livraison/pharmacie = 5 patients de l etab. Toutes les etapes ont latitude/longitude pour s afficher sur la carte" },
+      { "code": "AI", "txt": "Etape 6 - RECONNEXION patients orphelins : UPDATE patients SET etablissement_id = premier etablissement de la structure WHERE etablissement_id IS NULL. Comme ca tous les patients sont rattaches" },
+      { "code": "AI", "txt": "Etape 7 - NOTIFY pgrst, reload schema pour recharger PostgREST" },
+      { "code": "AI", "txt": "Diagnostic final affiche : Etablissements / Batiments / Etages / Chambres / Services (et combien avec batiment) / Equipes / Equipes_services / Membres_services / Tournees (et combien aujourd hui) / Etapes tournees / Patients (et combien rattaches). Permet de voir l etat global apres execution" }
+    ],
+    "themes": ["mega-seeding", "reconnexion-fk", "tournees-multi-types", "structure-hierarchique"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.58.html"
+  },
+{
     "v": "0.65.57",
     "kind": "feat",
     "titre": "Services rattaches aux batiments + Collaborateurs avec chef de service + Seeds automatiques + page /services premium",
