@@ -240,6 +240,45 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.55",
+    "kind": "fix",
+    "titre": "FIX 400 ultra-defensif (SQL isole par statement) + ContextFilterBar tolerant aux schemas variables + Fix CSS texte tuiles mobile + SQL diagnostic schema",
+    "chantiers": [
+      { "code": "AI", "txt": "DIAGNOSTIC : le SQL FIX precedent plantait en plein milieu a cause d une erreur sur equipes.etablissement_id (la colonne n existe pas chez Cedric). Donc les autres ALTER n etaient JAMAIS executes. Resultat : tous les 400 persistaient" },
+      { "code": "AI", "txt": "NOUVEAU SQL aveho-FIX-400-ULTRA-DEFENSIF.sql : CHAQUE ALTER est isole dans son propre DO BEGIN EXCEPTION block. Si un plante, les autres continuent. RAISE NOTICE pour chaque colonne ajoutee avec check mark. Plus jamais un ALTER ne bloquera les suivants" },
+      { "code": "AI", "txt": "NOUVEAU SQL aveho-DIAGNOSTIC-schema.sql : a executer en premier dans Supabase pour voir EXACTEMENT quelles tables/colonnes existent. Liste les tables publiques + colonnes des tables critiques + check existence des 18 colonnes attendues par l app. Permet de cibler precisement ce qui manque" },
+      { "code": "AI", "txt": "Vue membres_structure : try-catch multiple - 1) creer vue depuis membres_etablissements 2) creer table minimale si rien n existe. Plus jamais d echec sur cette table" },
+      { "code": "AI", "txt": "Role Administrateur : insertion en 2 essais - 1) avec toutes colonnes (permissions_json/droits/icone/couleur/systeme), 2) fallback minimal (juste structure_id + nom). Comme ca le selecteur impersonate a TOUJOURS au moins 1 role visible" },
+      { "code": "AI", "txt": "ContextFilterBar refait ULTRA DEFENSIF : helper safeQuery wrappe chaque appel Supabase en try/catch. Plus de page blanche si une table n existe pas. Pour les equipes : tentatives multiples (etablissement_id, structure_id, rien) pour s adapter au schema reel. Logs console.warn explicites pour debug" },
+      { "code": "AI", "txt": "Selects affichent le NOMBRE d options disponibles (Etablissement 5, Service 2, Equipe 0) - permet de voir immediatement quelles tables ont des donnees" },
+      { "code": "AI", "txt": "FIX CSS mobile : texte tuiles parfois aligne a droite sur petite resolution. Ajout dans globals.css media query max-width 768px qui force text-align: left sur av-tile / av-card / modern-card. Aussi direction: ltr global pour eviter RTL accidentel" }
+    ],
+    "themes": ["fix-400-defensif", "sql-diagnostic", "context-filter-robust", "css-mobile-text-align"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.55.html"
+  },
+{
+    "v": "0.65.54",
+    "kind": "fix",
+    "titre": "FIX 400 Supabase massif (colonnes manquantes roles/notifications/signalements/interventions) + Selecteur impersonate avec fallback + Barre filtres contextuels Etablissement/Service/Equipe/Batiment/Chambre sticky top",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX 400 critique : la table roles n avait pas les colonnes permissions_json / droits / icone / couleur / systeme - toutes les requetes select=id,nom,icone,couleur,permissions_json plantaient. SQL aveho-FIX-400-colonnes-manquantes.sql ajoute toutes les colonnes manquantes avec ALTER TABLE ADD COLUMN IF NOT EXISTS" },
+      { "code": "AI", "txt": "FIX membres_structure : si la table n existe pas (Cedric utilise membres_etablissements), creation auto d une VUE membres_structure pointant sur membres_etablissements - resoudre les erreurs 400 sur cette table" },
+      { "code": "AI", "txt": "FIX notifications : ajout colonnes lu (boolean) + archive (boolean) si manquantes. FIX signalements : criticite (text) + traite (boolean). FIX interventions : etat (text) + urgence (text) + technicien_user_id (uuid) + numero (text)" },
+      { "code": "AI", "txt": "SQL Creation auto du role Administrateur (systeme=true) avec TOUTES les 50 permissions du systeme si aucun role admin n existe encore. Comme ca le selecteur impersonate a au moins 1 role visible" },
+      { "code": "AI", "txt": "SQL Vue v_filtres_contextuels : structures + etablissements + nb_services + nb_equipes + nb_batiments + nb_chambres. Utilise pour alimenter la barre filtres contextuels" },
+      { "code": "AI", "txt": "RoleImpersonateSelect FALLBACK robuste : 1ere tentative select complet, si erreur (colonnes manquent) fallback sur select id,nom seulement. Plus de page blanche, affichage d un message d erreur clair avec instruction d executer le SQL" },
+      { "code": "AI", "txt": "RoleImpersonateSelect : affichage du nombre de roles ('Simuler un role (5)'), badge Systeme avec emoji bouclier, compteur de permissions par role, fallback sur couleurs et icones par defaut si null" },
+      { "code": "AI", "txt": "NOUVEAU composant ContextFilterBar : barre sticky top juste sous le TopBar avec 5 selecteurs Etablissement / Service / Equipe / Batiment-Etage / Chambre. Cascade auto (changer etab reset services/equipes/batiments/chambres). Persistance localStorage av-ctx-*-id. Event broadcast av-ctx-change pour que les autres pages se mettent a jour" },
+      { "code": "AI", "txt": "ContextFilterBar - 2 vues : compacte (chips colorees des filtres actifs avec bouton X pour retirer + Tout effacer) ET deroulée (5 selects cascades en grid auto-fit). Couleurs par filtre : terra etab, teal service, violet equipe, violet fonce batiment, orange chambre. Bouton Contexte avec badge nombre filtres actifs" },
+      { "code": "AI", "txt": "Hook useContextFilters() : recupere les filtres actifs depuis localStorage et reagit aux event av-ctx-change. Utilisable dans toutes les pages pour filtrer leurs donnees selon le contexte" },
+      { "code": "AI", "txt": "ContextFilterBar branchee dans TopBar.js - sticky en haut de toutes les pages (zIndex 800). Visible immediatement sans rien faire" }
+    ],
+    "themes": ["fix-400-supabase", "context-filters-bar", "impersonate-robust", "admin-role-auto"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.54.html"
+  },
+{
     "v": "0.65.53",
     "kind": "feat",
     "titre": "Module Infirmiere ERP COMPLET : NGAP + Plans soins + BSI/DSI (14 axes Henderson) + Surveillance + Pansements + Stats + Permissions etendues",

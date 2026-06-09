@@ -8057,3 +8057,23 @@ input:invalid:not(:placeholder-shown) {
   pointer-events: none;
 }
 
+
+/* 0.65.55 : Fix texte tuiles à droite sur mobile */
+@media (max-width: 768px) {
+  /* Cards et tuiles : texte gauche par défaut, jamais à droite */
+  .av-tile, .av-card, [class*="modern-card"], [class*="ModernCard"] {
+    text-align: left !important;
+  }
+  /* Sauf les chiffres KPI qui restent alignés */
+  .av-tile [style*="font-variant-numeric"], 
+  .av-card [style*="font-variant-numeric"] {
+    text-align: left;
+  }
+  /* Force le text-align dans les flex/grid items des tuiles */
+  .av-tile > div, .av-card > div {
+    text-align: inherit;
+  }
+}
+
+/* Évite le débordement RTL accidentel */
+body { direction: ltr; }

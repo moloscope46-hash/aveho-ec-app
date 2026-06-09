@@ -1,4 +1,5 @@
 "use client";
+import ContextFilterBar from "./components/ContextFilterBar";
 // =============================================================
 //  TopBar — Bandeau de navigation principal
 //  Alpha 0.16.0 : refonte desktop + mobile
@@ -504,6 +505,7 @@ export default function TopBar({ cartCount = 0, auth }) {
           })}
         </div>
       </nav>
+      <ContextFilterBar auth={auth} />
         </>,
         document.body
       )}
