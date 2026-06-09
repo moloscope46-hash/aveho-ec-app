@@ -240,6 +240,23 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.56",
+    "kind": "fix",
+    "titre": "FIX 400 FINAL : NOTIFY pgrst reload schema (cache PostgREST) + FK membres_structure pour les joins + vue de fallback",
+    "chantiers": [
+      { "code": "AI", "txt": "DIAGNOSTIC : Cedric a envoye sa liste de tables. TOUTES les tables existent (roles, membres_structure, notifications, signalements, interventions, etablissements, services, equipes, batiments, chambres, etages...). Donc le probleme n est PAS les tables manquantes. Le vrai probleme est ailleurs" },
+      { "code": "AI", "txt": "ROOT CAUSE #1 : PostgREST CACHE le schema. Apres un ALTER TABLE, PostgREST continue d utiliser l ancien schema en memoire jusqu a ce qu on lui envoie NOTIFY pgrst, reload schema. Sans ca, les 400 persistent meme si les colonnes existent ! FIX : ajout de NOTIFY pgrst, reload schema a la fin du SQL" },
+      { "code": "AI", "txt": "ROOT CAUSE #2 : Foreign Keys non declarees. Le code fait membres_structure?select=structures(nom),roles(id,nom,...) qui est un PostgREST embed. Pour que ca marche, il faut une FK explicite membres_structure.role_id -> roles.id et membres_structure.structure_id -> structures.id. FIX : ajout des deux FK avec ALTER TABLE ADD CONSTRAINT (en defensif si elles existent deja)" },
+      { "code": "AI", "txt": "ROOT CAUSE #3 : Equipes n a pas etablissement_id direct (lien via table de liaison equipes_services). C est pour ca que mon precedent SQL plantait sur LEFT JOIN equipes eq ON eq.etablissement_id = e.id. La vue v_filtres_contextuels a ete retiree" },
+      { "code": "AI", "txt": "Vue de fallback v_membres_structure_complete : SELECT avec joins precalcules sur structures et roles. Si jamais PostgREST n arrive toujours pas a faire les embed apres FK declaration, l app peut utiliser cette vue qui contient deja role_nom / role_couleur / structure_nom / role_permissions_json prets a consommer" },
+      { "code": "AI", "txt": "SQL aveho-FIX-400-FINAL.sql : 5 etapes - 1) ALTER TABLE pour colonnes manquantes (chaque isole), 2) FK declarations sur membres_structure, 3) Role Administrateur defensif, 4) Vue v_membres_structure_complete, 5) NOTIFY pgrst reload schema. Suivi de diagnostic final qui affiche has_permissions_json/has_icone/has_couleur/etc pour visualiser l etat apres execution" },
+      { "code": "AI", "txt": "Procedure recommandee : 1) Lancer aveho-DIAGNOSTIC-colonnes.sql pour voir les colonnes actuelles 2) Lancer aveho-FIX-400-FINAL.sql 3) ATTENDRE 5 SECONDES (le temps que PostgREST recharge le schema apres NOTIFY) 4) Hard refresh navigateur" }
+    ],
+    "themes": ["fix-400-final", "postgrest-reload-cache", "fk-declarations", "fallback-view"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.56.html"
+  },
+{
     "v": "0.65.55",
     "kind": "fix",
     "titre": "FIX 400 ultra-defensif (SQL isole par statement) + ContextFilterBar tolerant aux schemas variables + Fix CSS texte tuiles mobile + SQL diagnostic schema",
