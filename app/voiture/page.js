@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
 // =============================================================
 //  /voiture — Mode VOITURE (Android Auto / Apple CarPlay)
 //  Interface ultra-épurée, gros boutons tactiles 60px+
@@ -10,7 +9,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
-import { useCarMode, useForceLandscape } from "../../lib/useCarMode";
 
 const CATEGORIES = [
   { key: "patients",      l: "Patients",       ic: "ti-user",            c: "#7a6fb0" },
@@ -19,10 +17,6 @@ const CATEGORIES = [
   { key: "pharmacies",    l: "Pharmacies",     ic: "ti-medical-cross",   c: "#5aa05a" },
   { key: "rpps",          l: "Partenaires RPPS",ic: "ti-stethoscope",    c: "#C9867F" },
   { key: "fournisseurs",  l: "Fournisseurs",   ic: "ti-truck",           c: "#5e4a8c" },
-  { key: "had",           l: "Patients HAD",   ic: "ti-home-heart",      c: "#185FA5" },
-  { key: "tournee",       l: "Tournée en cours",ic: "ti-route",          c: "#EF9F27" },
-  { key: "tournees_jour", l: "Tournées du jour", ic: "ti-calendar-route", c: "#185FA5" },
-  { key: "di_urgentes",   l: "DI urgentes",     ic: "ti-bell-ringing",    c: "#D45E5E" },
 ];
 
 export default function ModeVoiturePage() {
@@ -30,25 +24,20 @@ export default function ModeVoiturePage() {
   const router = useRouter();
   const auth = useAuth();
   const [category, setCategory] = useState("patients");
-  const [data, setData] = useState({ patients: [], etablissements: [], magasins: [], pharmacies: [], rpps: [], fournisseurs: [], had: [], tournee: [], tournees_jour: [], di_urgentes: [] });
-  const [wakeLock, setWakeLock] = useState(null);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
-  const [lastAnnouncedStop, setLastAnnouncedStop] = useState(null);
+  const [data, setData] = useState({ patients: [], etablissements: [], magasins: [], pharmacies: [], rpps: [], fournisseurs: [] });
   const [search, setSearch] = useState("");
   const [time, setTime] = useState(new Date());
   const [isInCar, setIsInCar] = useState(false);
 
-  // 0.65.45 : Détection auto Android Auto / CarPlay + force landscape
-  const carMode = useCarMode();
-  useForceLandscape(carMode.isCarMode);
-
+  // Détection miroir véhicule
   useEffect(() => {
     if (typeof window === "undefined") return;
     const ua = navigator.userAgent.toLowerCase();
     // Android Auto = pas de UA spécifique mais l'utilisateur peut le déclencher manuellement
     // CarPlay = idem
     // Détection screen ratio + landscape forcé + grand DPR
-    setIsInCar(carMode.isCarMode);
+    const isLandscapeBigScreen = window.innerWidth > window.innerHeight && window.innerWidth >= 800;
+    setIsInCar(isLandscapeBigScreen);
   }, []);
 
   // Horloge live
@@ -59,47 +48,15 @@ export default function ModeVoiturePage() {
 
   useEffect(() => { if (auth.ready) load(); }, [auth.ready, auth.etabId]);
 
-
-  // 0.65.46 : Wake-lock
-  useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.wakeLock) return;
-    let lock = null;
-    async function reqLock() {
-      try { lock = await navigator.wakeLock.request("screen"); setWakeLock(lock); }
-      catch (e) { console.warn("Wake-lock", e); }
-    }
-    reqLock();
-    function onVis() { if (document.visibilityState === "visible" && !lock) reqLock(); }
-    document.addEventListener("visibilitychange", onVis);
-    return () => { try { lock?.release(); } catch (e) {} document.removeEventListener("visibilitychange", onVis); };
-  }, []);
-
-  // 0.65.46 : TTS prochain arrêt
-  useEffect(() => {
-    if (!ttsEnabled || typeof window === "undefined" || !window.speechSynthesis) return;
-    const arret = (data.tournee || [])[0];
-    if (!arret || arret.id === lastAnnouncedStop) return;
-    setLastAnnouncedStop(arret.id);
-    const msg = new SpeechSynthesisUtterance(`Prochain arrêt : ${arret.nom}${arret.ville ? ", " + arret.ville : ""}`);
-    msg.lang = "fr-FR"; msg.rate = 0.95;
-    window.speechSynthesis.speak(msg);
-  }, [ttsEnabled, data.tournee, lastAnnouncedStop]);
-
   async function load() {
     const sid = auth.structureId;
-    const [pa, et, mg, ph, rp, fn, had, tourneeEnCours, tJour, diUrg] = await Promise.all([
+    const [pa, et, mg, ph, rp, fn] = await Promise.all([
       supabase.from("patients").select("id, nom, prenom, telephone, ville, latitude, longitude, adresse").eq("structure_id", sid).order("nom").limit(200),
       supabase.from("etablissements").select("id, nom, code, telephone, ville, latitude, longitude, adresse").eq("structure_id", sid).order("nom").limit(50),
       supabase.from("magasins").select("id, nom, code, telephone, ville, adresse").eq("structure_id", sid).order("nom").limit(50),
       supabase.from("pharmacies").select("id, nom, telephone, ville, adresse").eq("structure_id", sid).order("nom").limit(50),
       supabase.from("partenaires_rpps").select("id, nom, prenom, telephone, mobile, ville, profession, adresse").eq("structure_id", sid).order("nom").limit(200),
       supabase.from("fournisseurs").select("id, nom, telephone, ville, adresse").eq("structure_id", sid).order("nom").limit(100),
-      // Patients HAD (had isolés)
-      supabase.from("patients").select("id, nom, prenom, telephone, ville, latitude, longitude, adresse").eq("structure_id", sid).eq("est_had", true).order("nom").limit(200),
-      // Étapes de la tournée en cours (statut en_cours)
-      supabase.from("tournees_etapes").select("id, libelle, latitude, longitude, ordre, statut, patient:patient_id(nom, prenom, telephone, ville)").eq("structure_id", sid).order("ordre").limit(50),
-      supabase.from("tournees").select("id, nom, statut, distance_km, duree_minutes, chauffeur_nom, date_planifiee").eq("structure_id", sid).gte("date_planifiee", new Date().toISOString().substring(0,10) + "T00:00:00").lt("date_planifiee", new Date().toISOString().substring(0,10) + "T23:59:59").order("date_planifiee").limit(20),
-      supabase.from("interventions").select("id, numero, type, urgence, statut, description, created_at, patient:patient_id(nom, prenom, telephone, ville, latitude, longitude, adresse)").eq("structure_id", sid).in("urgence", ["Urgent","Prioritaire","critique","haute"]).neq("statut", "Clôturée").neq("statut", "Refusée").order("created_at", { ascending: false }).limit(30),
     ]);
     setData({
       patients: pa.data || [],
@@ -108,37 +65,6 @@ export default function ModeVoiturePage() {
       pharmacies: ph.data || [],
       rpps: rp.data || [],
       fournisseurs: fn.data || [],
-      had: had?.data || [],
-      // Tournée en cours : on remappe les étapes au format contact
-      tournees_jour: (tJour?.data || []).map(t => ({
-        id: t.id,
-        nom: t.nom || `Tournée ${t.id.substring(0,6)}`,
-        prenom: t.chauffeur_nom || "",
-        telephone: null,
-        ville: `${t.statut || ""} · ${(t.distance_km || 0).toFixed(0)}km`,
-        latitude: null, longitude: null,
-        profession: `${(t.distance_km || 0).toFixed(0)} km · ${t.duree_minutes || 0} min`,
-      })),
-      di_urgentes: (diUrg?.data || []).map(i => ({
-        id: i.id,
-        nom: i.numero || "DI",
-        prenom: i.patient ? `${i.patient.prenom} ${i.patient.nom}` : "",
-        telephone: i.patient?.telephone,
-        ville: i.patient?.ville,
-        latitude: i.patient?.latitude,
-        longitude: i.patient?.longitude,
-        profession: `${i.type || "Intervention"} · ${i.urgence || ""}`,
-      })),
-      tournee: (tourneeEnCours?.data || []).map(e => ({
-        id: e.id,
-        nom: e.libelle || (e.patient ? `${e.patient.nom} ${e.patient.prenom}` : "—"),
-        prenom: "",
-        telephone: e.patient?.telephone,
-        ville: e.patient?.ville,
-        latitude: e.latitude,
-        longitude: e.longitude,
-        profession: `Arrêt #${e.ordre} · ${e.statut || "a_venir"}`,
-      })),
     });
   }
 
@@ -189,29 +115,8 @@ export default function ModeVoiturePage() {
           </div>
         </div>
 
-        {/* 0.65.45 : Badge mode voiture détecté + Horloge */}
+        {/* Horloge + sortie */}
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <button onClick={() => setTtsEnabled(!ttsEnabled)} title="Annonces vocales tournée" style={{ width: 50, height: 50, borderRadius: 12, background: ttsEnabled ? "rgba(90,160,90,.20)" : "rgba(255,255,255,.06)", color: ttsEnabled ? "#5aa05a" : "rgba(255,255,255,.5)", border: `1px solid ${ttsEnabled ? "#5aa05a50" : "rgba(255,255,255,.10)"}`, cursor: "pointer", fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <i className={`ti ti-${ttsEnabled ? "volume" : "volume-off"}`} />
-          </button>
-          {wakeLock && (
-            <div title="Écran maintenu allumé" style={{ padding: "8px 12px", borderRadius: 10, background: "rgba(239,159,39,.15)", color: "#EF9F27", border: "1px solid #EF9F2740", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <i className="ti ti-bulb-filled" /> ÉCRAN ON
-            </div>
-          )}
-          {carMode.isCarMode && (
-            <div style={{
-              padding: "8px 14px", borderRadius: 10,
-              background: "rgba(90,160,90,.20)", color: "#5aa05a",
-              border: "1px solid #5aa05a50",
-              fontSize: 12, fontWeight: 800,
-              display: "inline-flex", alignItems: "center", gap: 6,
-              animation: "av-tv-pulse 2s ease-in-out infinite",
-            }}>
-              <i className="ti ti-circle-dot" />
-              {carMode.type === "android_auto" ? "ANDROID AUTO" : carMode.type === "carplay" ? "CARPLAY" : "MODE MIROIR"}
-            </div>
-          )}
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 32, fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
               {time.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
@@ -272,7 +177,7 @@ export default function ModeVoiturePage() {
       <div style={{ padding: "16px 32px", flexShrink: 0 }}>
         <input
           type="search"
-          placeholder="🔍 Rechercher..."
+          placeholder="?? Rechercher..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
