@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.52",
+    "kind": "fix",
+    "titre": "FIX Vercel npm install ERESOLVE react-leaflet vs React 19 : .npmrc legacy-peer-deps + overrides",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX Vercel ERESOLVE : react-leaflet 4.2.1 declare peer react ^18 alors que le projet utilise React 19. npm install plantait avec Could not resolve dependency / Conflicting peer dependency: react@18.3.1" },
+      { "code": "AI", "txt": "Creation .npmrc a la racine avec legacy-peer-deps=true et auto-install-peers=true. Vercel respecte ce fichier et applique --legacy-peer-deps automatiquement pendant le npm install. Plus besoin de specifier le flag manuellement" },
+      { "code": "AI", "txt": "Ajout overrides dans package.json pour forcer react et react-dom a la version du projet (React 19) meme pour les dependances qui demandent React 18. Empeche les doublons de version et les warning peer" },
+      { "code": "AI", "txt": "Note : react-leaflet 5.x sera la version officielle pour React 19 quand elle sortira en stable. En attendant, la 4.2.1 fonctionne avec React 19 sans probleme (juste un peer warning ignore via legacy-peer-deps)" }
+    ],
+    "themes": ["fix-vercel-eresolve", "npmrc-legacy", "react19-compat"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.52.html"
+  },
+{
     "v": "0.65.51",
     "kind": "fix",
     "titre": "FIX prerender /infirmieres : composants ui-premium manquants + force-dynamic sur les pages dynamiques",

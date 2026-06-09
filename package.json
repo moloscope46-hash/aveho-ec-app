@@ -1,6 +1,6 @@
 {
   "name": "aveho-ec-app",
-  "version": "0.65.51-alpha",
+  "version": "0.65.52-alpha",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -42,5 +42,9 @@
     "not dead",
     "not IE 11",
     "not op_mini all"
-  ]
+  ],
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
+  }
 }
