@@ -1,0 +1,301 @@
+/* =============================================================
+   av-mobile-responsive.css — Mobile boost (0.65.32)
+   Optimisations responsive pour téléphones et tablettes
+   ============================================================= */
+
+/* ===== MOBILE (< 768px) ===== */
+@media (max-width: 768px) {
+
+  /* PageShell : padding réduit + titre adapté */
+  .av-shell {
+    padding-top: 0 !important;
+  }
+
+  .av-shell > div {
+    padding: 12px 12px 80px !important;
+  }
+
+  .av-shell-header {
+    margin-bottom: 18px !important;
+    padding-bottom: 14px !important;
+    gap: 12px !important;
+  }
+
+  .av-shell-header > div {
+    gap: 12px !important;
+  }
+
+  /* Icône header plus petite */
+  .av-shell-header > div > div:first-child,
+  .av-page-hero > div > div:first-child {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .av-shell-header > div > div:first-child > div:last-child,
+  .av-page-hero > div > div:first-child > div:last-child {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 24px !important;
+    border-radius: 14px !important;
+  }
+
+  /* Titre plus petit sur mobile */
+  .av-shell-header h1,
+  .av-page-hero h1,
+  .av-page-hero-title {
+    font-size: 20px !important;
+    line-height: 1.1 !important;
+  }
+
+  .av-shell-header h1 + div,
+  .av-page-hero-sub {
+    font-size: 12px !important;
+  }
+
+  /* MODALS : pleine largeur avec marges réduites */
+  .modal-content,
+  .modal-dialog,
+  .av-modal,
+  [class*="modal-container"] {
+    margin: 8px !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100vh - 16px) !important;
+    border-radius: 16px !important;
+  }
+
+  .modal-header,
+  [class*="modal-head"] {
+    padding: 14px 16px !important;
+  }
+
+  .modal-header h2,
+  .modal-header h3,
+  [class*="modal-head"] h2 {
+    font-size: 15px !important;
+  }
+
+  .modal-body,
+  [class*="modal-body"] {
+    padding: 16px !important;
+  }
+
+  .modal-footer,
+  [class*="modal-foot"] {
+    padding: 12px 16px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* PANELS / CARTES : marges/padding réduits */
+  .panel,
+  .av-panel,
+  .card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* BOUTONS : touch-friendly (min 44px) */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .av-btn-primary,
+  button:not(.av-icon-btn):not([class*="close"]) {
+    min-height: 40px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+  }
+
+  /* TABLES : scroll horizontal */
+  .table-responsive,
+  [class*="table-container"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 12px !important;
+  }
+
+  .table th,
+  .table td,
+  table th,
+  table td {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* KPI ROW : grid mobile */
+  .kpi-row,
+  [class*="kpi-row"],
+  .av-kpi-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* GRIDS responsive */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* TOPBAR : compact */
+  .av-topbar,
+  [class*="topbar"] {
+    padding: 8px 12px !important;
+  }
+
+  /* SIDEBAR : full screen overlay sur mobile */
+  .av-sidebar.av-sidebar-open,
+  [class*="sidebar"].open {
+    width: 85vw !important;
+    max-width: 320px !important;
+  }
+
+  /* FORMS : champs full-width */
+  .form-control,
+  input[type="text"],
+  input[type="email"],
+  input[type="search"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 16px !important; /* anti-zoom iOS */
+  }
+
+  /* LISTS d'éléments : padding plus aéré pour toucher */
+  [class*="list-item"],
+  .list-row {
+    padding: 14px !important;
+    min-height: 56px !important;
+  }
+
+  /* ACTION BARS / Floating buttons */
+  .av-share-floating,
+  .av-fab {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* CACHER le bouton CASTER sur mobile (déjà fait en 0.65.26 mais on reforce) */
+  .av-tv-cast,
+  [data-tv-cast] {
+    display: none !important;
+  }
+
+  /* HIDDEN sur mobile : éléments décoratifs */
+  .av-desktop-only,
+  [data-desktop-only="true"] {
+    display: none !important;
+  }
+}
+
+/* ===== TABLETTE (768-1024px) ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .av-shell > div {
+    padding: 20px 16px 80px !important;
+  }
+
+  .av-shell-header h1 {
+    font-size: 26px !important;
+  }
+
+  /* KPI 3 colonnes */
+  .kpi-row,
+  .av-kpi-row {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  /* Grids 2 colonnes */
+  [style*="repeat(auto-fill, minmax(240px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ===== ULTRA SMALL (< 380px) - smartphones étroits ===== */
+@media (max-width: 380px) {
+  .av-shell-header h1 {
+    font-size: 18px !important;
+  }
+
+  .av-shell-header > div > div:first-child > div:last-child {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 20px !important;
+  }
+
+  .kpi-row,
+  .av-kpi-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== LARGE DESKTOP (> 1600px) - extra spacing ===== */
+@media (min-width: 1600px) {
+  .av-shell > div {
+    max-width: 1500px !important;
+  }
+}
+
+/* ===== TOUCH DEVICES - hover states adaptés ===== */
+@media (hover: none) and (pointer: coarse) {
+  /* Désactive le hover lift sur touch (pas pratique) */
+  .panel:hover,
+  .av-panel:hover,
+  .card:hover,
+  .av-modern-card:hover,
+  .av-shell-header > div > div:first-child:hover {
+    transform: none !important;
+  }
+
+  /* Mais on garde l'effet glow icons en active (clic) */
+  button:active .ti,
+  a:active .ti {
+    filter: drop-shadow(0 0 8px currentColor) !important;
+  }
+}
+
+/* ===== SAFE AREA (iPhone notch) ===== */
+@supports (padding: env(safe-area-inset-top)) {
+  .av-shell {
+    padding-top: env(safe-area-inset-top) !important;
+  }
+  .av-topbar,
+  [class*="topbar"] {
+    padding-top: calc(8px + env(safe-area-inset-top)) !important;
+  }
+  .av-bottom-nav,
+  [class*="bottom-nav"] {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ===== ORIENTATION LANDSCAPE MOBILE ===== */
+@media (max-width: 932px) and (orientation: landscape) {
+  .av-shell-header {
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .av-shell-header h1 {
+    font-size: 22px !important;
+  }
+}
+
+/* ===== ANIMATIONS REDUITES (accessibility) ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== DARK MODE SYSTEM (si pas déjà bg-dark) ===== */
+@media (prefers-color-scheme: dark) {
+  body:not(.bg-light) {
+    color-scheme: dark;
+  }
+}

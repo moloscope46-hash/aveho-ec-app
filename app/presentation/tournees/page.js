@@ -164,6 +164,29 @@ export default function ModeTVTourneesPage() {
           style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,.06)", color: "#fff", border: "1px solid rgba(255,255,255,.10)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
           <i className="ti ti-arrows-maximize" />
         </button>
+        <button onClick={async () => {
+          // Web Screen Capture API - partage écran natif (PC vers projection/TV via OS)
+          try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+            // Stream démarré : ouvre une fenêtre miroir
+            const win = window.open("", "_blank", "width=1280,height=720");
+            if (win) {
+              win.document.title = "Aveho - Partage écran";
+              win.document.body.style.cssText = "margin:0;background:#000;display:flex;align-items:center;justify-content:center";
+              const v = win.document.createElement("video");
+              v.srcObject = stream;
+              v.autoplay = true;
+              v.style.cssText = "max-width:100%;max-height:100vh";
+              win.document.body.appendChild(v);
+            }
+            stream.getVideoTracks()[0].onended = () => { if (win) win.close(); };
+          } catch (e) {
+            alert("Partage écran refusé ou non supporté\n\nAstuce : utilisez le bouton 📡 Cast pour Chromecast/AirPlay/Smart View");
+          }
+        }} title="Partage écran (natif)"
+          style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,.06)", color: "#fff", border: "1px solid rgba(255,255,255,.10)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+          <i className="ti ti-screen-share" />
+        </button>
         <RefreshButton onRefresh={load} color="#7CC8C8" size="sm" label="" />
         <CastButton size={28} />
       </div>

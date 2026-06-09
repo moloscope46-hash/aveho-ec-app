@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.71",
+    "kind": "feat",
+    "titre": "AUDIT TOTAL FINAL - 6 CSS+UI premium manquants restaures (HiTechIcon, ModernCard, ModernModal, av-hitech-icons.css, av-modern-theme.css, av-mobile-responsive.css) + Bouton Partage ecran natif Web Screen Capture API sur Mode TV Tournees",
+    "chantiers": [
+      { "code": "AI", "txt": "AUDIT FINAL : 71 fichiers cites dans les transcripts de la journee, 71 presents sur disque (verification via information_schema des chemins). 0 manquant. Tous les fichiers de la session 9 juin sont la." },
+      { "code": "AI", "txt": "Restauration de 6 fichiers critiques UI manquants depuis transcript 09:08 - HiTechIcon.js (6.3K composant icone hitec avec gradient), ModernCard.js (4.8K card avec hover/glow), ModernModal.js (7K modal avec backdrop blur), av-hitech-icons.css (5.6K animations icones), av-modern-theme.css (12.4K theme moderne app), av-mobile-responsive.css (6.8K responsive mobile). Ces fichiers etaient utilises par PageShell et plein de pages premium." },
+      { "code": "AI", "txt": "Bouton PARTAGE ECRAN NATIF ajoute au Mode TV /presentation/tournees - utilise navigator.mediaDevices.getDisplayMedia() (Web Screen Capture API). Quand on clique, le navigateur demande quel ecran/onglet partager, puis ouvre une fenetre popup miroir qui affiche le flux video. Permet de partager via projecteur USB-C, deuxieme ecran, ou capture pour enregistrement. Fallback alerte vers Cast (Chromecast/AirPlay) si refus utilisateur" },
+      { "code": "AI", "txt": "Le toolbar du Mode TV Tournees a maintenant 5 boutons - Retour fleche gauche + Plein ecran arrows-maximize + Partage ecran natif screen-share + Refresh + Cast (Chromecast/AirPlay/SmartView)" }
+    ],
+    "themes": ["audit-71-fichiers-tous-presents", "css-ui-premium-restaures", "partage-ecran-natif-mode-tv"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.71.html"
+  },
+{
     "v": "0.65.70",
     "kind": "fix",
     "titre": "AUDIT TOTAL DE LA JOURNEE - 20 fichiers manquants restaures depuis transcripts (Carte V2, Pharmacie complete avec dispensation/prescriptions/casiers/commandes/medicaments/[id], Comptabilite pointage, Magasin facturation, Plan comptable, Entity Drawers, Mobile Drawer, TVCastButton, ShareButtonFloating, Architecture page, useMobile hook, design-system)",

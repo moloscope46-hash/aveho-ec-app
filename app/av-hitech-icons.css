@@ -1,0 +1,234 @@
+/* =============================================================
+   av-hitech-icons.css — Icônes HITECH (0.65.32)
+   Transforme toutes les icônes Tabler (ti-*) en versions futuristes
+   avec gradient text-fill, glow lumineux, duotone, animations
+   ============================================================= */
+
+/* ===== ICÔNES STANDARD (gradient subtil + glow) ===== */
+.ti,
+[class*="ti-"]:not(.ti-no-fx) {
+  display: inline-block;
+  transition: filter 200ms cubic-bezier(.2,.8,.2,1), transform 200ms;
+  position: relative;
+}
+
+/* ===== ICÔNES DANS LES BOUTONS PRIMARY (effet glow lumineux) ===== */
+.btn-primary .ti,
+.av-btn-primary .ti,
+button[type="submit"] .ti,
+[class*="btn-primary"] .ti {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* ===== ICÔNES DANS LES HEADERS DE PAGE (gros effet) ===== */
+.av-page-hero .ti,
+.av-shell-header .ti,
+.page-hero .ti {
+  filter:
+    drop-shadow(0 2px 4px rgba(0,0,0,.3))
+    drop-shadow(0 0 8px currentColor);
+}
+
+/* ===== ICÔNES DANS LES MODAL HEADERS ===== */
+.modal-header .ti,
+[class*="modal-head"] .ti {
+  filter:
+    drop-shadow(0 1px 2px rgba(0,0,0,.3))
+    drop-shadow(0 0 6px currentColor);
+}
+
+/* ===== TUILES KPI ET STATS - icônes lumineuses ===== */
+.kpi-card .ti,
+.av-kpi .ti,
+[class*="stat-tile"] .ti,
+.metric-card .ti {
+  filter: drop-shadow(0 0 6px currentColor);
+  transition: filter 250ms, transform 250ms;
+}
+
+.kpi-card:hover .ti,
+.av-kpi:hover .ti {
+  filter: drop-shadow(0 0 12px currentColor);
+  transform: scale(1.1);
+}
+
+/* ===== SIDEBAR / NAV - icônes glow ===== */
+.av-sidebar .ti,
+.nav-side .ti,
+[class*="sidebar"] .ti {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.av-sidebar a.active .ti,
+.av-sidebar a.current .ti,
+.nav-side a.active .ti {
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: av-icon-pulse 2s ease-in-out infinite;
+}
+
+/* ===== TOPBAR - icônes animées au hover ===== */
+.av-topbar .ti,
+[class*="topbar"] .ti {
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.av-topbar button:hover .ti,
+[class*="topbar"] button:hover .ti {
+  filter: drop-shadow(0 0 10px currentColor);
+  transform: rotate(8deg) scale(1.1);
+}
+
+/* ===== BOUTONS FAB / Round buttons ===== */
+.av-fab,
+.fab-btn,
+button[class*="round"] .ti {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.av-fab:hover .ti,
+.fab-btn:hover .ti {
+  filter: drop-shadow(0 0 14px currentColor);
+}
+
+/* ===== ICÔNES STATUS / BADGE ===== */
+.badge .ti,
+.av-badge .ti,
+[class*="status-"] .ti {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes av-icon-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px currentColor); }
+  50%      { filter: drop-shadow(0 0 12px currentColor); }
+}
+
+@keyframes av-icon-glow {
+  0%, 100% { text-shadow: 0 0 8px currentColor; }
+  50%      { text-shadow: 0 0 16px currentColor, 0 0 24px currentColor; }
+}
+
+@keyframes av-icon-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ===== CLASSES UTILITAIRES ===== */
+.av-icon-glow {
+  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 16px currentColor);
+}
+
+.av-icon-pulse-glow {
+  animation: av-icon-pulse 2s ease-in-out infinite;
+}
+
+.av-icon-spin-slow {
+  animation: av-icon-spin-slow 12s linear infinite;
+}
+
+/* ===== HOVER EFFETS GLOBAUX SUR LIENS ET BOUTONS ===== */
+a:hover > .ti,
+a:hover .ti,
+button:hover > .ti {
+  filter: drop-shadow(0 0 8px currentColor);
+  transform: scale(1.05);
+}
+
+/* ===== EFFET DUOTONE pour grandes icônes (>= 32px) ===== */
+.av-icon-duotone {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.av-icon-duotone::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, currentColor 0%, transparent 60%);
+  opacity: 0.3;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ===== CONTAINERS D'ICÔNES (les wrappers carrés/ronds avec icône dedans) ===== */
+.av-icon-container,
+[class*="icon-wrap"],
+.entity-icon {
+  position: relative;
+  overflow: visible;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15), 0 0 0 1px currentColor inset;
+  transition: all 250ms cubic-bezier(.2,.8,.2,1);
+}
+
+.av-icon-container::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, currentColor 0%, transparent 60%);
+  filter: blur(8px);
+  opacity: 0.4;
+  z-index: -1;
+  transition: opacity 250ms;
+}
+
+.av-icon-container:hover::after {
+  opacity: 0.8;
+}
+
+/* ===== ICÔNES DANS CELLULES DE TABLEAU ===== */
+.table .ti,
+table .ti {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 2px currentColor);
+}
+
+.table tr:hover .ti,
+table tr:hover .ti {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* ===== ICÔNES SPÉCIALES (rotate, charge, sync) ===== */
+.ti-refresh,
+.ti-sync,
+.ti-rotate,
+.ti-loader,
+.ti-loader-2,
+.ti-loader-quarter {
+  /* Si l'élément a aussi la classe .spinning ou .loading, on rotate */
+}
+
+.spinning .ti,
+.loading .ti-refresh,
+.loading .ti-loader-2,
+.av-spinning {
+  animation: av-icon-spin-slow 1.5s linear infinite;
+}
+
+/* ===== Effet rayon laser sur certaines icônes critiques ===== */
+.av-icon-laser {
+  position: relative;
+}
+
+.av-icon-laser::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    currentColor 50%,
+    transparent 100%);
+  opacity: 0;
+  border-radius: 4px;
+  filter: blur(4px);
+  animation: av-laser-sweep 3s ease-in-out infinite;
+}
+
+@keyframes av-laser-sweep {
+  0%   { opacity: 0; transform: translateX(-100%); }
+  50%  { opacity: 0.6; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(100%); }
+}
