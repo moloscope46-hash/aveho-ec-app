@@ -3,12 +3,12 @@
 //  components/TVCastButton.js (0.65.10)
 //
 //  Bouton de cast pour les pages TV : ouvre un menu avec
-//   - 📺 Google Cast (Chromecast)
-//   - 🍎 AirPlay (Safari)
-//   - 🖥 Multi-écran (Screen Detail API Chrome desktop)
-//   - 📱 Picture-in-Picture (PiP)
-//   - 🖼 Plein écran natif (Fullscreen API)
-//   - 🔗 Copier le lien pour ouvrir sur un autre device
+//   - ?? Google Cast (Chromecast)
+//   - ?? AirPlay (Safari)
+//   - ?? Multi-écran (Screen Detail API Chrome desktop)
+//   - ?? Picture-in-Picture (PiP)
+//   - ?? Plein écran natif (Fullscreen API)
+//   - ?? Copier le lien pour ouvrir sur un autre device
 //
 //  Détecte automatiquement les APIs disponibles.
 // =============================================================
@@ -24,23 +24,7 @@ export default function TVCastButton({ refreshSec = 60 }) {
   const [multiScreenAvailable, setMultiScreenAvailable] = useState(false);
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);  // 0.65.26 : détection mobile
   const wrapRef = useRef(null);
-
-  useEffect(() => {
-    // 0.65.26 : Détection mobile (largeur écran ou user-agent) — masque le bouton CASTER + QR sur mobile
-    if (typeof window !== "undefined") {
-      const checkMobile = () => {
-        const ua = navigator.userAgent || "";
-        const isMobileUA = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
-        const isNarrow = window.innerWidth < 768;
-        setIsMobile(isMobileUA || isNarrow);
-      };
-      checkMobile();
-      window.addEventListener("resize", checkMobile);
-      return () => window.removeEventListener("resize", checkMobile);
-    }
-  }, []);
 
   useEffect(() => {
     // 1. Google Cast (Chrome desktop + Android Chrome)
@@ -178,8 +162,7 @@ export default function TVCastButton({ refreshSec = 60 }) {
   }
 
   return (
-    <div ref={wrapRef} style={{ position: "relative", display: isMobile ? "none" : "inline-block" }}>
-      {/* 0.65.26 : Bouton CASTER (avec QR Code) masqué sur mobile - sur mobile on a déjà AirPlay/ChromeCast natifs */}
+    <div ref={wrapRef} style={{ position: "relative", display: "inline-block" }}>
       <button
         onClick={() => setOpen(!open)}
         title="Caster sur TV / Multi-écran"
@@ -206,37 +189,23 @@ export default function TVCastButton({ refreshSec = 60 }) {
       </button>
 
       {open && (
-        <>
-          {/* 0.65.14 : Backdrop pour fermer en cliquant à côté */}
-          <div onClick={() => setOpen(false)}
-            style={{
-              position: "fixed", inset: 0, zIndex: 999998,
-              background: "rgba(20, 33, 49, .6)",
-              backdropFilter: "blur(4px)",
-              animation: "av-cast-fade-in 200ms ease-out",
-            }} />
-          <div style={{
-            /* 0.65.14 : centré au MILIEU de la page (était top-right collé au bouton) */
-            position: "fixed",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            background: "rgba(20, 33, 49, 0.97)",
-            backdropFilter: "blur(20px) saturate(180%)",
-            color: "#fff",
-            padding: 16,
-            borderRadius: 16,
-            minWidth: 320,
-            maxWidth: 420,
-            width: "min(420px, 90vw)",
-            maxHeight: "85vh",
-            overflowY: "auto",
-            border: "1.5px solid rgba(124, 200, 200, .4)",
-            boxShadow: "0 30px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(124,200,200,.1)",
-            zIndex: 999999,
-            animation: "av-cast-pop-center 280ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-            fontFamily: "Quicksand, sans-serif",
-          }}>
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 8px)",
+          right: 0,
+          background: "rgba(20, 33, 49, 0.97)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          color: "#fff",
+          padding: 12,
+          borderRadius: 14,
+          minWidth: 280,
+          maxWidth: 360,
+          border: "1.5px solid rgba(124, 200, 200, .3)",
+          boxShadow: "0 20px 60px rgba(0,0,0,.6)",
+          zIndex: 100000,
+          animation: "av-cast-pop 200ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+          fontFamily: "Quicksand, sans-serif",
+        }}>
           <div style={{ fontSize: 11, color: "#7CC8C8", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, padding: "0 4px" }}>
             <i className="ti ti-cast" /> Caster sur un écran
           </div>
@@ -324,7 +293,6 @@ export default function TVCastButton({ refreshSec = 60 }) {
             </div>
           </div>
         </div>
-        </>
       )}
 
       {/* Toast feedback */}
@@ -355,14 +323,6 @@ export default function TVCastButton({ refreshSec = 60 }) {
         @keyframes av-cast-pop {
           from { opacity: 0; transform: translateY(-8px) scale(0.95); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes av-cast-pop-center {
-          from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
-          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
-        @keyframes av-cast-fade-in {
-          from { opacity: 0; }
-          to   { opacity: 1; }
         }
         @keyframes av-cast-toast-in {
           from { opacity: 0; transform: translateX(-50%) translateY(20px); }

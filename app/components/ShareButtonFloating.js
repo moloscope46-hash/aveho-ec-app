@@ -24,7 +24,7 @@ export default function ShareButtonFloating() {
     // Fallback : copier dans presse-papier
     try {
       await navigator.clipboard.writeText(url);
-      setFeedback("Lien copié ! 📋");
+      setFeedback("Lien copié ! ??");
       setTimeout(() => setFeedback(null), 2000);
     } catch {
       setFeedback("Impossible de partager");
@@ -41,8 +41,9 @@ export default function ShareButtonFloating() {
         className="av-share-floating"
         style={{
           position: "fixed",
-          top: "calc(70px + env(safe-area-inset-top, 0px))",  /* 0.65.22 : sous topbar */
-          left: 16,  /* 0.65.22 : Cédric veut en HAUT-GAUCHE (était centré bas) */
+          bottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
+          left: "50%",
+          transform: "translateX(-50%)",
           zIndex: 95,
           width: 44,
           height: 44,
@@ -61,11 +62,11 @@ export default function ShareButtonFloating() {
           transition: "transform 200ms ease, box-shadow 200ms ease",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.08)";
+          e.currentTarget.style.transform = "translateX(-50%) scale(1.08)";
           e.currentTarget.style.boxShadow = "0 10px 28px rgba(124, 200, 200, .55), 0 2px 6px rgba(0,0,0,.25)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.transform = "translateX(-50%) scale(1)";
           e.currentTarget.style.boxShadow = "0 6px 20px rgba(124, 200, 200, .4), 0 2px 6px rgba(0,0,0,.2)";
         }}
       >
@@ -75,8 +76,9 @@ export default function ShareButtonFloating() {
       {feedback && (
         <div style={{
           position: "fixed",
-          top: "calc(120px + env(safe-area-inset-top, 0px))",  /* sous le bouton share */
-          left: 16,
+          bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
+          left: "50%",
+          transform: "translateX(-50%)",
           background: "rgba(20, 33, 49, 0.95)",
           color: "#fff",
           padding: "8px 16px",
@@ -97,8 +99,8 @@ export default function ShareButtonFloating() {
 
       <style jsx global>{`
         @keyframes av-share-toast-in {
-          from { opacity: 0; transform: translateX(-8px); }
-          to   { opacity: 1; transform: translateX(0); }
+          from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
       `}</style>
     </>

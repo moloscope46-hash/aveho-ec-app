@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.70",
+    "kind": "fix",
+    "titre": "AUDIT TOTAL DE LA JOURNEE - 20 fichiers manquants restaures depuis transcripts (Carte V2, Pharmacie complete avec dispensation/prescriptions/casiers/commandes/medicaments/[id], Comptabilite pointage, Magasin facturation, Plan comptable, Entity Drawers, Mobile Drawer, TVCastButton, ShareButtonFloating, Architecture page, useMobile hook, design-system)",
+    "chantiers": [
+      { "code": "AI", "txt": "Cedric a demande un audit complet de la journee. Re-lecture systematique des 6 transcripts du 9 juin : extraction des chemins de tous les create_file et str_replace. Decouverte de 20 fichiers MANQUANTS dans la sandbox alors qu ils avaient ete crees pendant la journee." },
+      { "code": "AI", "txt": "RESTAURATION depuis transcripts (en cherchant le file_text correspondant a chaque path) - 17 fichiers depuis transcripts du 9 juin + 3 fichiers depuis transcripts du 8 juin (ShareButtonFloating, TVCastButton, presentation/architecture qui sont anterieurs)." },
+      { "code": "AI", "txt": "FICHIERS RESTAURES - Carte V2 (21K), Pharmacie [id] (21K), Pharmacie commandes (12K), Pharmacie medicaments (13K), Pharmacie casiers (11K), Pharmacie dispensation (14K), Pharmacie prescriptions (16K), Comptabilite pointage (14K), Magasin facturation (15K), Parametres plan-comptable (15K), EntityDrawer (18K), EntityDrawers (20K), EntityDrawers3 (20K), EntityDrawersExtra (25K), MobileDrawer (8K), ShareButtonFloating (3K), TVCastButton (14K), Presentation architecture (16K), Design-system (10K), useMobile (1K)." },
+      { "code": "AI", "txt": "TOUS les fichiers ont passe node --check OK. Aucun ne casse la build." }
+    ],
+    "themes": ["audit-journee-complete", "restauration-20-fichiers", "carte-v2", "pharmacie-complete"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.70.html"
+  },
+{
     "v": "0.65.65",
     "kind": "fix",
     "titre": "ContextFilterBar RETIRE de TopBar (plus visible sur PC) + Page d accueil /pharmacie creee + Audit complet tous modules presents (pharmacie 3 pages, infirmiere 4 pages, services, agenda, tournees globales, mode voiture, parametres CarPlay, mode TV)",
