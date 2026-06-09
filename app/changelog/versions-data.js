@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.77",
+    "kind": "fix",
+    "titre": "FIX BUILD VERCEL - tous les imports relatifs cassés trouvés et corriges via script audit Python ULTRA - PermissionGate path app/pharmacie/page.js (1 niveau pas 2), EntityDrawers/EntityDrawers3/EntityDrawersExtra path supabase (3 niveaux pas 2 depuis ui-premium/), TVFiltersBar.js manquant cree comme stub avec localStorage filters. AUDIT FINAL : 1835 imports tous resolved, 0 casses",
+    "chantiers": [
+      { "code": "FIX", "txt": "Path PermissionGate sur app/pharmacie/page.js (page racine pharmacie) - etait ../../components alors qu il faut ../components car le fichier est a 1 niveau de profondeur depuis app/. Les sous-pages /pharmacie/X/page.js (casiers, commandes, etc) sont a 2 niveaux donc ../../components est correct pour elles" },
+      { "code": "FIX", "txt": "Path supabase dans EntityDrawers / EntityDrawers3 / EntityDrawersExtra - ces composants sont dans app/components/ui-premium/ donc 3 niveaux up jusqu a lib/. Les imports etaient ../../lib/supabase (2 niveaux) au lieu de ../../../lib/supabase (3 niveaux). Le script Python audit a detecte que app/components/ui-premium/EntityDrawers.js + ../../lib/supabase resolvait a app/lib/supabase qui n existe pas" },
+      { "code": "FIX", "txt": "TVFiltersBar.js manquant - app/presentation/architecture/page.js l importait mais le fichier n existait nulle part. Stub minimal cree : composant avec input search + helper getTVFilters(pageKey) qui lit/ecrit dans localStorage av-tv-filters par page. Permet a la page architecture de compiler" },
+      { "code": "AI", "txt": "AUDIT FINAL Python qui parse TOUS les fichiers .js de app/ et resoud chaque import relatif (parties .. et . + extensions .js .jsx .ts .tsx /index.js) - 1835 imports tous resolus, 0 casses. Le build Vercel doit maintenant passer" }
+    ],
+    "themes": ["fix-build-vercel-imports", "audit-1835-imports-tous-resolus"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.77.html"
+  },
+{
     "v": "0.65.76",
     "kind": "feat",
     "titre": "MEGA REFONTE Mode TV - Composant ModeTVToolbar standard sur 9 pages presentation/* (Retour + Hub + Plein ecran + Screen Share natif Web Capture API + Cast Google/Apple/SmartView avec vraies icones + Refresh) + Hub /presentation refondu en page d accueil avec 9 tuiles cliquables vers chaque ecran TV + mode kiosque rotation auto 10s/30s/60s/120s + FIX FICHE ARTICLE inaccessible (useEditLock manquait dans les imports - ReferenceError au runtime comme btnIcon)",

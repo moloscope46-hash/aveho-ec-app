@@ -7,7 +7,7 @@
 //    <PatientDrawer open={true} patientId={id} onClose={...} />
 // =============================================================
 import { useEffect, useState } from "react";
-import { createClient } from "../../lib/supabase";
+import { createClient } from "../../../lib/supabase";
 import EntityDrawer, { EntitySection, InfoField, InfoGrid, MiniKpi, Timeline } from "./EntityDrawer";
 
 // =============================================================

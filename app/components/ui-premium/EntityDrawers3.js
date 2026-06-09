@@ -4,7 +4,7 @@
 //  Véhicule, Fournisseur, RPPS, Service, Chambre, Bâtiment
 // =============================================================
 import { useEffect, useState } from "react";
-import { createClient } from "../../lib/supabase";
+import { createClient } from "../../../lib/supabase";
 import EntityDrawer, { EntitySection, InfoField, InfoGrid, MiniKpi } from "./EntityDrawer";
 
 // =============================================================
