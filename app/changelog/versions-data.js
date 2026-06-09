@@ -240,6 +240,28 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.53",
+    "kind": "feat",
+    "titre": "Module Infirmiere ERP COMPLET : NGAP + Plans soins + BSI/DSI (14 axes Henderson) + Surveillance + Pansements + Stats + Permissions etendues",
+    "chantiers": [
+      { "code": "AI", "txt": "AUDIT zero doublon : verifie ce qui existe (table infirmieres, visites_infirmieres, page /infirmieres, roles Infirmiere + IDEC) - aucune duplication" },
+      { "code": "AI", "txt": "SQL aveho-MODULE-infirmieres-erp.sql DEFENSIF : 8 nouvelles tables + 1 fonction + 1 vue stats. Referentiel NGAP officiel CNAM 2024 seede : AIS 3/4, AMI 1/1.5/2/3/4/5/6, AIP 1, AMX, IFI, PSP, MCI, BSA, BSB, BSI, MAU, MCC, SF (20 codes avec tarif calcule)" },
+      { "code": "AI", "txt": "SQL Tables : actes_ngap (referentiel + majorations dimanche/nuit/jeune enfant/coordination), visites_actes (cotation N-N avec rang 1=100% / 2=50%), plans_soins (palliatif/post_op/chronique/aigu/dependance + GIR 1-6 + diagnostic IDE + objectifs), plan_soins_actes (frequence + jours_semaine + heure_passage), bilans_bsi (BSI/BSA/BSB avec EVA douleur + GIR + IMC + 6 risques), bilans_bsi_axes (14 besoins Henderson + niveau dependance 0-4), indemnites_km_config (plaine/montagne/neige + IFD), surveillance_clinique (TA/pouls/temp/SpO2/glycemie/EVA/Glasgow), pansements_suivi (escarres/ulceres/photos avant-apres + dimensions + aspect)" },
+      { "code": "AI", "txt": "SQL Fonction calculer_cotation_visite : applique automatiquement les regles NGAP (100% / 50% / 0% pour le 3e acte selon convention), additione les majorations, met a jour total_actes + total_majorations + total_visite sur visites_infirmieres" },
+      { "code": "AI", "txt": "SQL Vue v_infirmiere_stats : par IDE - nb_visites_7j / 30j, nb_patients_30j, CA 30j (sum total_visite), nb_plans_actifs, nb_bsi_30j. Tri possible par CA pour classement performance" },
+      { "code": "AI", "txt": "SQL Permissions etendues sur roles Infirmiere + IDEC : ajout bsi_lire/ecrire/valider, plan_soins_lire/ecrire, cotation_ngap, fse_emettre, surveillance_lire/ecrire, pansements_lire/ecrire. IDEC en plus : bsi_admin, plan_soins_admin, stats_ide" },
+      { "code": "AI", "txt": "SQL Colonnes ajoutees a visites_infirmieres : plan_soins_id, bsi_id, total_actes/majorations/indemnites/visite, km_facturable + ik_montant + ifd_applique/montant, surveillance clinique (TA systo/diasto, pouls, glycemie, temp, SpO2, EVA), FSE (fse_emise/numero/date + noemie_recue)" },
+      { "code": "AI", "txt": "NOUVELLE page /infirmieres/plans-soins : Liste cards par type plan (standard/palliatif/post_op/chronique/aigu/dependance avec color), statut (brouillon/actif/suspendu/termine/annule), filtres + recherche. Modal creation/edition complet : patient + IDE referente + prescripteur RPPS + GIR 1-6 + dates + diagnostic IDE + objectifs. Compteurs visites planifiees vs realisees" },
+      { "code": "AI", "txt": "NOUVELLE page /infirmieres/bsi : Bilans de Soins Infirmiers (BSI/BSA/BSB) avec tarif auto. Modal XL avec 9 champs patient (age/GIR/poids/taille/EVA) + 6 risques cliquables (chute, escarres, denutrition, deshydratation, iatrogene, isolement) + 14 AXES VIRGINIA HENDERSON (respirer, boire-manger, eliminer, mouvoir, dormir, vetir, temperature, hygiene, securite, communiquer, valeurs, occuper, apprendre, recreatives) chacun avec niveau dependance 0-4 (boutons color cliquables) + observations + diagnostic IDE + objectifs + conclusion" },
+      { "code": "AI", "txt": "NOUVELLE page /infirmieres/stats : 4 KPIs globaux (CA 30j / Visites 30j / Patients 30j / BSI 30j). Tableau par IDE trie par CA decroissant avec 5 mini-stats par ligne. Section Referentiel NGAP avec 20 codes seedés (couleur vert, monospace, tarif aligne droit)" },
+      { "code": "AI", "txt": "PermissionGate applique sur toutes les pages IDE : /plans-soins require plan_soins_lire, /bsi require bsi_lire, /stats require lire. Tu peux maintenant tester avec impersonate role IDE et verifier que les pages affichent acces restreint quand permission manque" },
+      { "code": "AI", "txt": "Sidebar TopBar enrichie : 3 entrees sous Infirmieres - Plans de soins IDE (clipboard-list violet), BSI / DSI / BSA (clipboard-check violet fonce), Stats activite IDE (chart-bar teal)" }
+    ],
+    "themes": ["erp-infirmier-complet", "ngap-cnam", "bsi-dsi-henderson", "plans-soins", "stats-ide", "permissions-etendues"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.53.html"
+  },
+{
     "v": "0.65.52",
     "kind": "fix",
     "titre": "FIX Vercel npm install ERESOLVE react-leaflet vs React 19 : .npmrc legacy-peer-deps + overrides",
