@@ -143,7 +143,7 @@ export default function ModeTVTourneesPage() {
       color: "#fff", fontFamily: "Quicksand, sans-serif",
       display: "flex", flexDirection: "column",
     }}>
-      {/* TOOLBAR floating */}
+      {/* TOOLBAR floating - retour + cast + refresh + plein écran */}
       <div style={{
         position: "fixed", top: 16, right: 16,
         display: "flex", gap: 8, zIndex: 8500,
@@ -152,6 +152,18 @@ export default function ModeTVTourneesPage() {
         borderRadius: 14, border: "1px solid rgba(255,255,255,.08)",
         boxShadow: "0 8px 24px rgba(0,0,0,.3)",
       }}>
+        <button onClick={() => { if (window.history.length > 1) window.history.back(); else window.location.href = "/"; }}
+          title="Retour"
+          style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,.06)", color: "#fff", border: "1px solid rgba(255,255,255,.10)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+          <i className="ti ti-arrow-left" />
+        </button>
+        <button onClick={() => {
+          if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+          else document.exitFullscreen?.();
+        }} title="Plein écran"
+          style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(255,255,255,.06)", color: "#fff", border: "1px solid rgba(255,255,255,.10)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+          <i className="ti ti-arrows-maximize" />
+        </button>
         <RefreshButton onRefresh={load} color="#7CC8C8" size="sm" label="" />
         <CastButton size={28} />
       </div>

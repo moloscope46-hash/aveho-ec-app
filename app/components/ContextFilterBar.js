@@ -1,7 +1,8 @@
 "use client";
 // =============================================================
-//  ContextFilterBar — Sélecteurs Étab/Service/Équipe/Bâtiment/Chambre
-//  ULTRA DÉFENSIF : tolère colonnes/tables manquantes
+//  ContextFilterBar — MOBILE ONLY (caché desktop >= 768px)
+//  Requêtes safes : équipes via vue v_equipes_etablissement
+//  Chambres : juste id, nom (pas de numero qui n'existe pas)
 // =============================================================
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
@@ -36,25 +37,22 @@ export function setContextFilter(key, value) {
   } catch (e) {}
 }
 
-// Helper : safe query avec fallback
 async function safeQuery(supabase, table, select, where) {
   try {
     let q = supabase.from(table).select(select);
     Object.entries(where || {}).forEach(([k, v]) => { q = q.eq(k, v); });
     const r = await q;
     if (r.error) {
-      console.warn(`[ContextFilter] ${table} query failed:`, r.error.message);
+      console.warn(`[ContextFilter] ${table}: ${r.error.message}`);
       return [];
     }
     return r.data || [];
-  } catch (e) {
-    console.warn(`[ContextFilter] ${table} threw:`, e.message);
-    return [];
-  }
+  } catch (e) { return []; }
 }
 
 export default function ContextFilterBar({ auth }) {
   const supabase = createClient();
+  const [isMobile, setIsMobile] = useState(false);
   const [etabs, setEtabs] = useState([]);
   const [services, setServices] = useState([]);
   const [equipes, setEquipes] = useState([]);
@@ -63,37 +61,41 @@ export default function ContextFilterBar({ auth }) {
   const [sel, setSel] = useState({ etabId: null, serviceId: null, equipeId: null, batId: null, chambreId: null });
   const [open, setOpen] = useState(false);
 
+  // Détecter mobile (matchMedia + resize)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    function check() { setIsMobile(window.innerWidth < 768); }
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
   useEffect(() => {
     setSel(getContextFilters());
   }, []);
 
   useEffect(() => {
-    if (!auth?.structureId) return;
+    if (!auth?.structureId || !isMobile) return;
     (async () => {
-      // Établissements : essai avec structure_id
       let e = await safeQuery(supabase, "etablissements", "id, nom", { structure_id: auth.structureId });
-      if (e.length === 0) {
-        // Fallback : tous les etabs
-        e = await safeQuery(supabase, "etablissements", "id, nom", {});
-      }
       setEtabs(e);
     })();
-  }, [auth?.structureId]);
+  }, [auth?.structureId, isMobile]);
 
   useEffect(() => {
-    if (!sel.etabId) {
+    if (!sel.etabId || !isMobile) {
       setServices([]); setEquipes([]); setBatiments([]); setChambres([]);
       return;
     }
     (async () => {
-      // Tentatives multiples car les schémas varient
       const [s, eq, b] = await Promise.all([
+        // Services : OK avec etablissement_id
         safeQuery(supabase, "services", "id, nom", { etablissement_id: sel.etabId }),
-        // Équipes : peut être lié à structure_id OU etablissement_id OU rien
+        // Équipes : via VUE v_equipes_etablissement (qui agrège via equipes_services)
         (async () => {
-          let r = await safeQuery(supabase, "equipes", "id, nom", { etablissement_id: sel.etabId });
+          let r = await safeQuery(supabase, "v_equipes_etablissement", "id, nom", { etablissement_id: sel.etabId });
+          // Fallback : toutes les équipes de la structure
           if (r.length === 0) r = await safeQuery(supabase, "equipes", "id, nom", { structure_id: auth.structureId });
-          if (r.length === 0) r = await safeQuery(supabase, "equipes", "id, nom", {});
           return r;
         })(),
         safeQuery(supabase, "batiments", "id, nom", { etablissement_id: sel.etabId }),
@@ -102,19 +104,16 @@ export default function ContextFilterBar({ auth }) {
       setEquipes(eq);
       setBatiments(b);
     })();
-  }, [sel.etabId, auth?.structureId]);
+  }, [sel.etabId, auth?.structureId, isMobile]);
 
   useEffect(() => {
-    if (!sel.batId) { setChambres([]); return; }
+    if (!sel.batId || !isMobile) { setChambres([]); return; }
     (async () => {
-      let c = await safeQuery(supabase, "chambres", "id, nom, numero", { batiment_id: sel.batId });
-      // Fallback si pas batiment_id
-      if (c.length === 0 && sel.etabId) {
-        c = await safeQuery(supabase, "chambres", "id, nom, numero", { etablissement_id: sel.etabId });
-      }
+      // Chambres : juste id + nom (pas de "numero" qui n'existe pas chez tout le monde)
+      const c = await safeQuery(supabase, "chambres", "id, nom", { batiment_id: sel.batId });
       setChambres(c);
     })();
-  }, [sel.batId, sel.etabId]);
+  }, [sel.batId, isMobile]);
 
   function changeFilter(key, value) {
     const newSel = { ...sel, [key]: value };
@@ -135,11 +134,12 @@ export default function ContextFilterBar({ auth }) {
     Object.keys(STORAGE_KEYS).forEach(k => setContextFilter(k, null));
   }
 
+  // CACHÉ SUR DESKTOP : si pas mobile, ne rien afficher
+  if (!isMobile) return null;
+  if (!auth?.structureId) return null;
+
   const activeCount = Object.values(sel).filter(Boolean).length;
   const etabNom = etabs.find(e => e.id === sel.etabId)?.nom;
-
-  // Si pas connecté, ne rien afficher
-  if (!auth?.structureId) return null;
 
   return (
     <div style={{
@@ -148,44 +148,44 @@ export default function ContextFilterBar({ auth }) {
       borderBottom: "1px solid rgba(255,255,255,.06)",
       fontFamily: "Quicksand, sans-serif",
     }}>
-      <div style={{ padding: "8px 16px", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <div style={{ padding: "8px 12px", display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
         <button onClick={() => setOpen(!open)} style={{
-          padding: "6px 12px",
+          padding: "6px 10px",
           background: activeCount > 0 ? "linear-gradient(135deg, #185FA5, #0d4585)" : "rgba(255,255,255,.06)",
           color: "#fff",
           border: `1px solid ${activeCount > 0 ? "#185FA580" : "rgba(255,255,255,.10)"}`,
           borderRadius: 8, fontFamily: "Quicksand", fontWeight: 700, fontSize: 11,
-          cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+          cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5,
         }}>
           <i className="ti ti-filter" />
           Contexte
-          {activeCount > 0 && <span style={{ background: "rgba(255,255,255,.20)", padding: "1px 6px", borderRadius: 4, fontSize: 10 }}>{activeCount}</span>}
-          <i className="ti ti-chevron-down" style={{ fontSize: 10 }} />
+          {activeCount > 0 && <span style={{ background: "rgba(255,255,255,.20)", padding: "1px 5px", borderRadius: 4, fontSize: 10 }}>{activeCount}</span>}
+          <i className={`ti ti-chevron-${open ? "up" : "down"}`} style={{ fontSize: 10 }} />
         </button>
 
-        {sel.etabId && etabNom && <Chip ic="ti-building-hospital" l={etabNom} c="#C9867F" onRemove={() => changeFilter("etabId", null)} />}
-        {sel.serviceId && <Chip ic="ti-stethoscope" l={services.find(s => s.id === sel.serviceId)?.nom || "Service"} c="#7CC8C8" onRemove={() => changeFilter("serviceId", null)} />}
-        {sel.equipeId && <Chip ic="ti-users" l={equipes.find(e => e.id === sel.equipeId)?.nom || "Équipe"} c="#7a6fb0" onRemove={() => changeFilter("equipeId", null)} />}
-        {sel.batId && <Chip ic="ti-building" l={batiments.find(b => b.id === sel.batId)?.nom || "Bâtiment"} c="#5e4a8c" onRemove={() => changeFilter("batId", null)} />}
-        {sel.chambreId && <Chip ic="ti-bed" l={chambres.find(c => c.id === sel.chambreId)?.nom || chambres.find(c => c.id === sel.chambreId)?.numero || "Chambre"} c="#EF9F27" onRemove={() => changeFilter("chambreId", null)} />}
+        {sel.etabId && etabNom && <Chip ic="ti-building-hospital" l={etabNom.substring(0, 12)} c="#C9867F" onRemove={() => changeFilter("etabId", null)} />}
+        {sel.serviceId && <Chip ic="ti-stethoscope" l={(services.find(s => s.id === sel.serviceId)?.nom || "Service").substring(0, 10)} c="#7CC8C8" onRemove={() => changeFilter("serviceId", null)} />}
+        {sel.equipeId && <Chip ic="ti-users" l={(equipes.find(e => e.id === sel.equipeId)?.nom || "Équipe").substring(0, 10)} c="#7a6fb0" onRemove={() => changeFilter("equipeId", null)} />}
+        {sel.batId && <Chip ic="ti-building" l={(batiments.find(b => b.id === sel.batId)?.nom || "Bât").substring(0, 10)} c="#5e4a8c" onRemove={() => changeFilter("batId", null)} />}
+        {sel.chambreId && <Chip ic="ti-bed" l={(chambres.find(c => c.id === sel.chambreId)?.nom || "Ch").substring(0, 8)} c="#EF9F27" onRemove={() => changeFilter("chambreId", null)} />}
         {activeCount > 0 && (
           <button onClick={clearAll} style={{
-            marginLeft: "auto", padding: "4px 10px", background: "transparent",
+            marginLeft: "auto", padding: "3px 8px", background: "transparent",
             color: "rgba(255,255,255,.6)", border: "1px solid rgba(255,255,255,.15)",
             borderRadius: 6, fontFamily: "Quicksand", fontWeight: 700, fontSize: 10, cursor: "pointer",
           }}>
-            <i className="ti ti-x" /> Tout effacer
+            <i className="ti ti-x" />
           </button>
         )}
       </div>
 
       {open && (
-        <div style={{ padding: 12, background: "rgba(20,33,49,.95)", borderTop: "1px solid rgba(255,255,255,.06)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+        <div style={{ padding: 10, background: "rgba(20,33,49,.95)", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", flexDirection: "column", gap: 8 }}>
           <Sel label="Établissement" ic="ti-building-hospital" c="#C9867F" value={sel.etabId || ""} onChange={(v) => changeFilter("etabId", v || null)} options={etabs} />
           <Sel label="Service" ic="ti-stethoscope" c="#7CC8C8" value={sel.serviceId || ""} onChange={(v) => changeFilter("serviceId", v || null)} options={services} disabled={!sel.etabId} />
           <Sel label="Équipe" ic="ti-users" c="#7a6fb0" value={sel.equipeId || ""} onChange={(v) => changeFilter("equipeId", v || null)} options={equipes} disabled={!sel.etabId} />
           <Sel label="Bâtiment / Étage" ic="ti-building" c="#5e4a8c" value={sel.batId || ""} onChange={(v) => changeFilter("batId", v || null)} options={batiments} disabled={!sel.etabId} />
-          <Sel label="Chambre" ic="ti-bed" c="#EF9F27" value={sel.chambreId || ""} onChange={(v) => changeFilter("chambreId", v || null)} options={chambres.map(c => ({ id: c.id, nom: c.nom || c.numero || c.id }))} disabled={!sel.batId} />
+          <Sel label="Chambre" ic="ti-bed" c="#EF9F27" value={sel.chambreId || ""} onChange={(v) => changeFilter("chambreId", v || null)} options={chambres} disabled={!sel.batId} />
         </div>
       )}
     </div>
@@ -195,7 +195,7 @@ export default function ContextFilterBar({ auth }) {
 function Sel({ label, ic, c, value, onChange, options, disabled }) {
   return (
     <div>
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: c, marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
+      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: c, marginBottom: 3, textTransform: "uppercase", letterSpacing: 0.5 }}>
         <i className={`ti ${ic}`} /> {label} {options.length > 0 && <span style={{ marginLeft: "auto", color: "rgba(255,255,255,.3)" }}>{options.length}</span>}
       </label>
       <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled || options.length === 0} style={{
@@ -217,13 +217,13 @@ function Chip({ ic, l, c, onRemove }) {
   return (
     <span style={{
       background: `${c}25`, color: "#fff",
-      border: `1px solid ${c}50`, padding: "3px 8px", borderRadius: 6,
-      fontSize: 11, fontWeight: 600,
-      display: "inline-flex", alignItems: "center", gap: 4,
+      border: `1px solid ${c}50`, padding: "3px 6px", borderRadius: 6,
+      fontSize: 10, fontWeight: 600,
+      display: "inline-flex", alignItems: "center", gap: 3,
     }}>
-      <i className={`ti ${ic}`} style={{ color: c }} />
+      <i className={`ti ${ic}`} style={{ color: c, fontSize: 11 }} />
       {l}
-      <button onClick={onRemove} style={{ background: "transparent", color: c, border: "none", cursor: "pointer", fontSize: 10, padding: 0, marginLeft: 2 }}>
+      <button onClick={onRemove} style={{ background: "transparent", color: c, border: "none", cursor: "pointer", fontSize: 9, padding: 0, marginLeft: 2 }}>
         <i className="ti ti-x" />
       </button>
     </span>

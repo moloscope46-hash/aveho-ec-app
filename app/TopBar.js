@@ -1,5 +1,4 @@
 "use client";
-import ContextFilterBar from "./components/ContextFilterBar";
 // =============================================================
 //  TopBar — Bandeau de navigation principal
 //  Alpha 0.16.0 : refonte desktop + mobile
@@ -50,7 +49,11 @@ const MENU = [
     { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
     { p: "/planning", ic: "ti-calendar-event", lbl: "Agenda", col: "#EF9F27" },  /* 0.62.107 */
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
-    { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV", col: "#142131" },  /* 0.62.106 */
+    { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV (DI)", col: "#142131" },  /* 0.62.106 */
+    { p: "/presentation/tournees", ic: "ti-device-tv", lbl: "Mode TV Tournées", col: "#5e4a8c" },
+    { p: "/voiture", ic: "ti-car", lbl: "Mode Voiture", col: "#185FA5" },
+    { p: "/parametres/voiture", ic: "ti-car-suv", lbl: "Paramétrage voiture/CarPlay", col: "#185FA5" },
+    { p: "/profil/personnalisation", ic: "ti-layout-dashboard", lbl: "Personnalisation interface", col: "#7a6fb0" },
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/magasin/catalogue", ic: "ti-shopping-bag", lbl: "Catalogue magasin", col: "#5a8f8f" },
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
@@ -71,6 +74,22 @@ const MENU = [
     { p: "/carte", ic: "ti-map", lbl: "Carte", col: "#5aa05a" },
     // 3. CONTENU MÉTIER (juste patients ici)
     { p: "/patients", ic: "ti-users", lbl: "Patients", col: "#7a6fb0" },
+    { p: "/services", ic: "ti-building-cottage", lbl: "Services & collaborateurs", col: "#7CC8C8" },
+    { p: "/agenda", ic: "ti-calendar-time", lbl: "Agenda complet", col: "#EF9F27" },
+    { p: "/tournees-globales", ic: "ti-route-2", lbl: "Tournées globales", col: "#185FA5" },
+  ] },
+  // Section Soins & Infirmières
+  { section: "Soins & Infirmières", sectionIcon: "ti-stethoscope", items: [
+    { p: "/infirmieres", ic: "ti-stethoscope", lbl: "Infirmières & Visites", col: "#C9867F" },
+    { p: "/infirmieres/plans-soins", ic: "ti-clipboard-list", lbl: "Plans de soins IDE", col: "#C9867F" },
+    { p: "/infirmieres/bsi", ic: "ti-clipboard-check", lbl: "BSI / DSI / BSA", col: "#C9867F" },
+    { p: "/infirmieres/stats", ic: "ti-chart-bar", lbl: "Stats IDE / NGAP", col: "#C9867F" },
+  ] },
+  // Section Pharmacie
+  { section: "Pharmacie", sectionIcon: "ti-pill", items: [
+    { p: "/pharmacie", ic: "ti-pill", lbl: "Pharmacie", col: "#5aa05a" },
+    { p: "/pharmacie/caisse", ic: "ti-cash-register", lbl: "Caisse tactile NF525", col: "#EF9F27" },
+    { p: "/prescriptions", ic: "ti-prescription", lbl: "Prescriptions", col: "#5aa05a" },
   ] },
   // 0.62.22 : NOUVEAU - Menu STOCK regroupé
   { section: "Stock", sectionIcon: "ti-stack-2", items: [
@@ -155,6 +174,7 @@ const MENU = [
   // 6. ADMIN (tech) — 0.62.64 : nettoyage, les pages déplacées en onglets dans /parametres
   { section: "Administration", sectionIcon: "ti-shield-lock", items: [
     { p: "/utilisateurs", ic: "ti-users-group", lbl: "Utilisateurs", col: "#185FA5" },
+    { p: "/administration/utilisateurs", ic: "ti-user-cog", lbl: "Utilisateurs & Droits (premium)", col: "#5e4a8c" },
     { p: "/historique", ic: "ti-history", lbl: "Historique", col: "#7a6fb0" },
     { p: "/admin/rpps-diagnostic", ic: "ti-stethoscope", lbl: "Diagnostic API RPPS", col: "#7a6fb0" },
     { p: "/admin/rpps-dump", ic: "ti-database-import", lbl: "Dump RPPS (Plan B)", col: "#5aa05a" },
@@ -347,7 +367,7 @@ export default function TopBar({ cartCount = 0, auth }) {
         {/* 0.62.126 : Indicateur visuel des locks actifs (édition en cours) */}
         {mounted && auth && <EditingIndicator />}
         {mounted && auth?.can?.("gerer_roles") && <SandboxToggle />}
-        {mounted && auth && <RoleImpersonateSelect auth={auth} />}  /* 0.65.47 */
+        {mounted && auth && <RoleImpersonateSelect auth={auth} />}{/* 0.65.47 */}
         {mounted && auth && <NotifBellEnhanced structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <div style={{ position: "relative" }}>
@@ -505,7 +525,7 @@ export default function TopBar({ cartCount = 0, auth }) {
           })}
         </div>
       </nav>
-      <ContextFilterBar auth={auth} />
+      {/* ContextFilterBar retiré 0.65.65 - trop intrusif, sera réintégré uniquement sur pages métier ciblées */}
         </>,
         document.body
       )}

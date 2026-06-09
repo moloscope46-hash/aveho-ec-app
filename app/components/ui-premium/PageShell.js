@@ -5,7 +5,12 @@
 // =============================================================
 import { useEffect } from "react";
 
-export function PageShell({ color = "#7CC8C8", icon = "ti-square", title, subtitle, badge, actions, children }) {
+export function PageShell({ color = "#7CC8C8", icon = "ti-square", title, subtitle, badge, actions, children, backUrl, hideBack }) {
+  function goBack() {
+    if (backUrl) { window.location.href = backUrl; return; }
+    if (typeof window !== "undefined" && window.history.length > 1) window.history.back();
+    else window.location.href = "/";
+  }
   return (
     <div style={{
       minHeight: "calc(100vh - 60px)",
@@ -15,6 +20,18 @@ export function PageShell({ color = "#7CC8C8", icon = "ti-square", title, subtit
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24, flexWrap: "wrap" }}>
+        {!hideBack && (
+          <button onClick={goBack} title="Retour" style={{
+            width: 40, height: 40, borderRadius: 10,
+            background: "rgba(255,255,255,.06)", color: "#fff",
+            border: "1px solid rgba(255,255,255,.10)",
+            cursor: "pointer", fontSize: 18,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <i className="ti ti-arrow-left" />
+          </button>
+        )}
         <div style={{
           width: 52, height: 52, borderRadius: 14,
           background: `linear-gradient(135deg, ${color}, ${color}cc)`,

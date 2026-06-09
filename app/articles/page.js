@@ -26,6 +26,7 @@ import PageToolbar from "../components/PageToolbar";
 import ImageUploader from "../components/ImageUploader";  /* 0.62.88 */
 import { EmptyState, SkeletonRow, toast } from "../components/ui-premium";
 import { fmtEur } from "../../lib/format";
+import { ExpandableRow, ExpandableList, DetailGrid, DetailAction } from "../components/ExpandableRow";
 import { generateEan13, isValidEan13, detectBarcodeType, generateEan13Svg } from "../../lib/barcode";
 import { safeInsert, safeUpdate, safeDelete } from "../../lib/safeWrite";
 
@@ -348,119 +349,72 @@ export default function Articles() {
               onAction={items.length === 0 ? newArticle : null}
             />
           ) : (
-            <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-              <thead>
-                <tr style={{ background: "linear-gradient(135deg, #f5f8fc, #fff)", borderBottom: "2px solid #e3e9ee" }}>
-                  <th style={{ padding: "10px 8px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Réf.</th>
-                  <th style={{ padding: "10px 8px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Libellé</th>
-                  <th style={{ padding: "10px 8px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Famille</th>
-                  <th style={{ padding: "10px 8px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Code-barres</th>
-                  <th style={{ padding: "10px 8px", textAlign: "left", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Cond.</th>
-                  <th style={{ padding: "10px 8px", textAlign: "right", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>PA HT</th>
-                  <th style={{ padding: "10px 8px", textAlign: "right", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>PV HT</th>
-                  <th style={{ padding: "10px 8px", textAlign: "center", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>TVA</th>
-                  <th style={{ padding: "10px 8px", textAlign: "right", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Marge</th>
-                  <th style={{ padding: "10px 8px", textAlign: "center", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }} title="Tracabilité">🔍</th>
-                  <th style={{ padding: "10px 8px", textAlign: "center", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }} title="Matériels rattachés">📦</th>
-                  <th style={{ padding: "10px 8px", textAlign: "right", color: "#5a6878", fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(a => {
-                  const matCount = materielsByArticle[a.id] || 0;
-                  return (
-                    <tr key={a.id} style={{ borderBottom: "1px solid #f0f3f6", transition: "background 100ms" }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = "#fafbfc"; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}>
-                      <td style={{ padding: "8px", fontFamily: "Consolas, monospace", fontSize: 11.5, color: "#185FA5" }}>{a.reference || "—"}</td>
-                      <td style={{ padding: "8px" }}>
-                        <a onClick={() => router.push(`/article/${a.id}`)} style={{ cursor: "pointer", color: "#142131", fontWeight: 600, textDecoration: "none" }} title="Ouvrir la fiche complète (immobilisation, stock, mouvements)">{a.libelle}</a>
-                        {a.dispositif_medical && <span style={{ marginLeft: 5, fontSize: 9, background: "#fde4e1", color: "#c0392b", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }}>DM{a.classe_dm ? ` ${a.classe_dm}` : ""}</span>}
-                        {a.sterile && <span style={{ marginLeft: 4, fontSize: 9, background: "#dbe7f5", color: "#185FA5", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }} title="Stérile">✦</span>}
-                        {a.usage_unique && <span style={{ marginLeft: 4, fontSize: 9, background: "#fff8ec", color: "#7a4f15", padding: "1px 5px", borderRadius: 4, fontWeight: 700 }} title="Usage unique">UU</span>}
-                      </td>
-                      <td style={{ padding: "8px", color: "#5a6878" }}>{a.famille || "—"}</td>
-                      <td style={{ padding: "8px", fontFamily: "Consolas, monospace", fontSize: 11 }}>
-                        {a.code_barre ? (
-                          <span title={`Type : ${a.code_barre_type || "?"}`}>{a.code_barre}</span>
-                        ) : <span style={{ color: "#cfd8e0" }}>—</span>}
-                      </td>
-                      <td style={{ padding: "8px", color: "#5a6878", fontSize: 11.5 }}>
-                        {a.conditionnement_libelle || (a.conditionnement && a.conditionnement > 1 ? `${a.conditionnement} ${a.unite}` : a.unite)}
-                      </td>
-                      <td style={{ padding: "8px", textAlign: "right", color: "#5a6878", fontFamily: "Consolas, monospace" }}>{a.prix_achat_ht ? fmtEur(a.prix_achat_ht) : "—"}</td>
-                      <td style={{ padding: "8px", textAlign: "right", color: "#142131", fontWeight: 600, fontFamily: "Consolas, monospace" }}>{a.prix_vente_ht ? fmtEur(a.prix_vente_ht) : "—"}</td>
-                      <td style={{ padding: "8px", textAlign: "center", fontSize: 11, color: "#7a6fb0", fontWeight: 600 }}>{a.tva_pct ? `${a.tva_pct}%` : "—"}</td>
-                      <td style={{ padding: "8px", textAlign: "right", fontFamily: "Consolas, monospace", color: a.marge_pct >= 30 ? "#5aa05a" : a.marge_pct >= 10 ? "#EF9F27" : "#e35d5b", fontWeight: 600 }}>
-                        {a.marge_pct ? `${a.marge_pct}%` : "—"}
-                      </td>
-                      <td style={{ padding: "8px", textAlign: "center" }}>
-                        {a.gere_lot && <span title="Lot tracé" style={{ marginRight: 2, fontSize: 12 }}>🏷</span>}
-                        {a.gere_serie && <span title="Série tracée" style={{ marginRight: 2, fontSize: 12 }}>🔢</span>}
-                        {a.gere_peremption && <span title="Péremption tracée" style={{ fontSize: 12 }}>⏱</span>}
-                      </td>
-                      {/* 0.58.67 : count matériels rattachés + hover overlay */}
-                      <td style={{ padding: "8px", textAlign: "center", position: "relative" }}>
-                        {matCount > 0 ? (
-                          <span
-                            onMouseEnter={() => { setHoveredArticle(a.id); loadMaterielsForArticle(a.id); }}
-                            onMouseLeave={() => { setHoveredArticle(null); setHoveredMateriels([]); }}
-                            style={{
-                              cursor: "help",
-                              background: "linear-gradient(135deg, #7CC8C8, #5da8a8)",
-                              color: "#fff", padding: "2px 8px", borderRadius: 10,
-                              fontSize: 11, fontWeight: 700,
-                              display: "inline-flex", alignItems: "center", gap: 3,
-                            }}
-                          >
-                            <i className="ti ti-package" /> {matCount}
-                          </span>
-                        ) : <span style={{ color: "#cfd8e0" }}>—</span>}
-                        {hoveredArticle === a.id && hoveredMateriels.length > 0 && (
-                          <div style={{
-                            position: "absolute",
-                            top: "100%", right: 0,
-                            background: "#142131",
-                            color: "#fff",
-                            padding: "10px 12px",
-                            borderRadius: 8,
-                            minWidth: 280,
-                            zIndex: 100,
-                            boxShadow: "0 10px 30px rgba(0,0,0,.30)",
-                            fontSize: 11.5,
-                            textAlign: "left",
-                            marginTop: 4,
-                          }}>
-                            <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 12 }}>
-                              <i className="ti ti-package" /> Matériels rattachés ({matCount})
-                            </div>
-                            {hoveredMateriels.map(m => (
-                              <div key={m.id} style={{ padding: "4px 0", borderBottom: "1px solid #2a3850", display: "flex", justifyContent: "space-between", gap: 8 }}>
-                                <span>{m.libelle || "Sans libellé"}</span>
-                                <span style={{ color: "#7CC8C8", fontFamily: "Consolas, monospace", fontSize: 10.5 }}>
-                                  {m.num_serie ? `S/N ${m.num_serie}` : m.num_lot ? `Lot ${m.num_lot}` : ""}
-                                </span>
-                              </div>
-                            ))}
-                            {matCount > hoveredMateriels.length && (
-                              <div style={{ marginTop: 6, fontSize: 10, color: "#7CC8C8", textAlign: "center" }}>
-                                + {matCount - hoveredMateriels.length} autre{matCount - hoveredMateriels.length > 1 ? "s" : ""}…
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: "8px", textAlign: "right" }}>
-                        <IconButton icon="ti-pencil" color="#185FA5" ariaLabel="Éditer" onClick={() => editArticle(a)} />
-                        <IconButton icon="ti-trash" color="#C9867F" ariaLabel="Supprimer" onClick={() => deleteArticle(a.id)} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            </div>
+            <ExpandableList gap={8}>
+              {filtered.map(a => {
+                const matCount = materielsByArticle[a.id] || 0;
+                const margeColor = a.marge_pct >= 30 ? "#5aa05a" : a.marge_pct >= 10 ? "#EF9F27" : "#e35d5b";
+                
+                const badges = [];
+                if (a.dispositif_medical) badges.push({ label: `DM${a.classe_dm ? " " + a.classe_dm : ""}`, color: "#c0392b", icon: "ti-medical-cross" });
+                if (a.sterile) badges.push({ label: "Stérile", color: "#185FA5", icon: "ti-droplet" });
+                if (a.usage_unique) badges.push({ label: "UU", color: "#7a4f15" });
+                if (a.gere_lot) badges.push({ label: "Lot", color: "#7a6fb0" });
+                if (a.gere_serie) badges.push({ label: "Série", color: "#5e4a8c" });
+                if (matCount > 0) badges.push({ label: `${matCount} mat`, color: "#7CC8C8", icon: "ti-package" });
+                
+                const kpis = [
+                  a.prix_achat_ht ? { label: "PA HT", value: fmtEur(a.prix_achat_ht), color: "#7CC8C8" } : null,
+                  a.prix_vente_ht ? { label: "PV HT", value: fmtEur(a.prix_vente_ht), color: "#fff" } : null,
+                  a.tva_pct ? { label: "TVA", value: `${a.tva_pct}%`, color: "#7a6fb0" } : null,
+                  a.marge_pct ? { label: "Marge", value: `${a.marge_pct}%`, color: margeColor } : null,
+                ].filter(Boolean);
+                
+                return (
+                  <ExpandableRow
+                    key={a.id}
+                    color="#185FA5"
+                    icon={a.dispositif_medical ? "ti-medical-cross" : "ti-package"}
+                    title={a.libelle}
+                    subtitle={(a.reference || "—") + (a.code_barre ? " · " + a.code_barre : "")}
+                    badges={badges}
+                    kpis={kpis}
+                    actions={
+                      <>
+                        <button onClick={(e) => { e.stopPropagation(); router.push(`/article/${a.id}`); }} title="Fiche complète" style={btnIcon("#7CC8C8")}>
+                          <i className="ti ti-eye" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); editArticle(a); }} title="Éditer" style={btnIcon("#185FA5")}>
+                          <i className="ti ti-pencil" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); deleteArticle(a.id); }} title="Supprimer" style={btnIcon("#C9867F")}>
+                          <i className="ti ti-trash" />
+                        </button>
+                      </>
+                    }
+                  >
+                    <DetailGrid items={[
+                      { label: "Famille", value: a.famille, icon: "ti-category-2", color: "#185FA5" },
+                      { label: "Conditionnement", value: a.conditionnement_libelle || (a.conditionnement > 1 ? `${a.conditionnement} ${a.unite}` : a.unite), icon: "ti-package" },
+                      { label: "Code-barres", value: a.code_barre, icon: "ti-barcode" },
+                      { label: "Code LPP", value: a.code_lpp, icon: "ti-receipt-tax", color: "#5aa05a" },
+                      { label: "Tarif LPP", value: a.tarif_lpp ? fmtEur(a.tarif_lpp) : null, icon: "ti-coin-euro", color: "#5aa05a" },
+                      { label: "Prix achat HT", value: a.prix_achat_ht ? fmtEur(a.prix_achat_ht) : null, icon: "ti-arrow-down", color: "#7CC8C8" },
+                      { label: "Prix vente HT", value: a.prix_vente_ht ? fmtEur(a.prix_vente_ht) : null, icon: "ti-arrow-up", color: "#185FA5" },
+                      { label: "Prix vente TTC", value: a.prix_vente_ttc ? fmtEur(a.prix_vente_ttc) : null, icon: "ti-coin", color: "#5aa05a" },
+                      { label: "TVA", value: a.tva_pct ? `${a.tva_pct}%` : null, icon: "ti-receipt", color: "#7a6fb0" },
+                      { label: "Marge", value: a.marge_pct ? `${a.marge_pct}%` : null, icon: "ti-trending-up", color: margeColor },
+                      { label: "Unité vente", value: a.unite_vente, icon: "ti-ruler" },
+                      { label: "Matériels rattachés", value: matCount, icon: "ti-package", color: "#7CC8C8" },
+                    ]} color="#185FA5" />
+                    <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                      <DetailAction icon="ti-eye" label="Fiche complète" color="#7CC8C8" onClick={() => router.push(`/article/${a.id}`)} />
+                      <DetailAction icon="ti-pencil" label="Modifier" color="#185FA5" variant="primary" onClick={() => editArticle(a)} />
+                      <DetailAction icon="ti-printer" label="Étiquette" color="#EF9F27" onClick={() => router.push(`/articles/etiquettes?ids=${a.id}`)} />
+                    </div>
+                  </ExpandableRow>
+                );
+              })}
+            </ExpandableList>
           )}
         </Panel>
 

@@ -240,6 +240,118 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.65",
+    "kind": "fix",
+    "titre": "ContextFilterBar RETIRE de TopBar (plus visible sur PC) + Page d accueil /pharmacie creee + Audit complet tous modules presents (pharmacie 3 pages, infirmiere 4 pages, services, agenda, tournees globales, mode voiture, parametres CarPlay, mode TV)",
+    "chantiers": [
+      { "code": "AI", "txt": "ContextFilterBar COMPLETEMENT retire du TopBar : suppression de l import en haut + suppression de l instanciation a la ligne 529. Plus visible sur AUCUNE page en mode PC. Sera reintegre uniquement sur pages metier ciblees (mobile only) plus tard si besoin" },
+      { "code": "AI", "txt": "NOUVELLE page /pharmacie (page accueil module pharmacie qui manquait) : dashboard avec 6 KPIs (stock, alertes seuil bas, dispensations jour, ordonnances actives, stupefiants, prep en attente) + 8 acces rapides cliquables vers Caisse tactile NF525, Ordonnances, Depots pharmacie, Dispensation scan, Registre stupefiants, Preparations magistrales, Inventaires, Interactions DMI" },
+      { "code": "AI", "txt": "AUDIT COMPLET confirme : 13 nouvelles pages + 10 composants UI tous presents sur disque et dans le zip. Module Pharmacie 3 pages (accueil + caisse + config depot). Module Infirmiere 4 pages (accueil + BSI + plans soins + stats). Services 19 K. Agenda 15 K. Tournees globales 16 K. Mode Voiture 19 K. Parametres Voiture/CarPlay 21 K (7 onglets). Mode TV Tournees 16 K. Administration utilisateurs 14 K. Personnalisation 10 K. ExpandableRow 8 K. ContextFilterBar 11 K. RoleImpersonate 12 K" },
+      { "code": "AI", "txt": "Carte V2 : n existe pas comme route /carte-v2 mais la route /carte est present (97 K) - Cedric peut utiliser /carte qui existe deja, refonte V2 a venir avec Leaflet React si demande" }
+    ],
+    "themes": ["context-bar-retiree-topbar", "page-accueil-pharmacie", "audit-tous-modules-presents"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.65.html"
+  },
+{
+    "v": "0.65.64",
+    "kind": "fix",
+    "titre": "SQL PROPRE (sans pourcent dans RAISE qui plantait) + CarPlay 7 onglets de parametres complets (categories/comportement/securite/TTS/navigation/connexion/apparence)",
+    "chantiers": [
+      { "code": "AI", "txt": "DIAGNOSTIC : Le SQL plantait avec too few parameters for RAISE car PL/pgSQL interprete les pourcent comme placeholders de variable. Mon RAISE NOTICE contenait des phrases avec pourcent (70-120 pourcent, etc) sans variable apres. Fix : SQL TOUT PROPRE sans DO BEGIN avec RAISE NOTICE - juste ALTER TABLE ADD COLUMN IF NOT EXISTS et UPDATE directs, plus SELECT diagnostic final qui retourne les comptes" },
+      { "code": "AI", "txt": "SQL aveho-FIX-PROPRE-tout.sql en 5 parties - 1) ALTER de toutes les colonnes critiques (roles, notifications, signalements, interventions avec statut+etat, materiels, articles avec tarifs, patients, magasins, maintenances, tournees, tournees_etapes) 2) Table carplay_config complete avec 30+ colonnes 3) Tables defensives (patient_pathologies, categories_referentiels) 4) Vues v_equipes_etablissement et v_patient_complete 5) NOTIFY pgrst + diagnostic" },
+      { "code": "AI", "txt": "Table carplay_config MEGA enrichie : 12 cat_* booleens (patients, etabs, magasins, pharmacies, rpps, fournisseurs, had, tournees_jour, di_urgentes, infirmieres, visites_inf, chambres) + 4 toggles (tts/wakelock/compact/aujourd_hui) + securite (vibrations, son, vitesse_max_interaction, proposer_pause_min) + navigation (navigation_par_defaut, proposer_pause_min) + TTS (langue_tts, vitesse_tts, voix_tts) + connection (bluetooth_auto, android_auto_active, carplay_actif, miroir_actif) + layout (taille_tuiles, theme_couleur)" },
+      { "code": "AI", "txt": "Page /parametres/voiture REFAITE COMPLETE avec 7 onglets - CATEGORIES (12 toggles colorables avec icones), COMPORTEMENT (TTS/Wakelock/Compact/Aujourdhui), SECURITE CONDUITE (vibrations, son, slider vitesse max interaction 0-130 km/h avec avertissement code de la route, slider pause 30-300 min recommande 120), VOIX TTS (4 voix Azure Neural Amelie/Henri/Denise/Celeste, langue 4 options, vitesse 0.5-2.0x, bouton TEST), NAVIGATION (Waze/Google Maps/Apple Plans/Mappy avec icones), CONNEXION (Android Auto/CarPlay/Bluetooth/Miroir ecran), APPARENCE (4 tailles tuiles + 4 themes navy/teal/amber/violet)" },
+      { "code": "AI", "txt": "Bouton TEST voix TTS dans onglet TTS - utilise window.speechSynthesis API du navigateur pour parler avec la langue+vitesse configurees. Phrase test : Test de la synthese vocale. Bonjour Cedric, Mode Voiture active" },
+      { "code": "AI", "txt": "Composant Toggle reutilisable avec icone box gradient (subtle si off, gradient si on) + slider rond pill animé. Composant Field avec label uppercase et icone couleur. Selects stylisés ligne avec fond translucide" },
+      { "code": "AI", "txt": "Audit complet sandbox : tous les fichiers crees ce matin sont LA - 13 nouvelles pages (services, agenda, voiture, tournees-globales, profil/personnalisation, parametres/voiture, pharmacie/caisse, administration/utilisateurs, infirmieres+3 sous-pages, depot/[id]/configuration-pharmacie) + 10 composants UI (ExpandableRow, ContextFilterBar, RoleImpersonateSelect, PermissionGate, CastButton, RefreshButton, PatientMultiSelectActions, TimelinePatient, WidgetPharmacieAlertes, GlobalFiltersIndicatorAuto). Rien de perdu" }
+    ],
+    "themes": ["sql-propre", "carplay-7-onglets-complet", "audit-sandbox-rien-perdu"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.64.html"
+  },
+{
+    "v": "0.65.63",
+    "kind": "feat",
+    "titre": "NOUVEAU composant ExpandableRow reutilisable + Refonte Articles avec liste dépliable verticale (plus de scroll horizontal) + Fix /* 0.65.47 */ qui fuitait + SQL articles tarifs PA/PV/TVA/marge/LPP",
+    "chantiers": [
+      { "code": "AI", "txt": "BUG FIX critique : le commentaire /* 0.65.47 */ apparaissait comme texte dans le DOM du TopBar parce qu il etait ecrit en JS classique au lieu de JSX. En JSX il faut {/* */}. Corrige - plus de texte parasite a cote du selecteur impersonate" },
+      { "code": "AI", "txt": "NOUVEAU composant ExpandableRow + ExpandableList + DetailGrid + DetailAction dans app/components/ExpandableRow.js : composant dépliable réutilisable avec couleur paramétrable. Header : chevron qui tourne, icône box gradient, titre + sous-titre + KPIs en ligne + badges pills à droite + actions. Dépliage animé avec av-expand. Click sur header toggle (sauf si on clique sur un bouton)" },
+      { "code": "AI", "txt": "DetailGrid : utilitaire pour afficher les détails dans le déplié - grid responsive auto-fit 160px min, chaque item avec icone + label uppercase + valeur. Couleurs par item. DetailAction : boutons d action dans le déplié avec 3 variants (default/primary/danger)" },
+      { "code": "AI", "txt": "Page /articles REFONDUE : suppression du tableau HTML qui scrollait horizontalement. Remplacé par ExpandableList de ExpandableRow. Chaque article : title=libellé, subtitle=référence + code-barres, badges (DM/Stérile/UU/Lot/Série/N mat), KPIs (PA HT, PV HT, TVA, Marge avec couleur selon valeur). Click sur la ligne déplie : 12 détails (famille, cond, code-barres, code LPP, tarif LPP, PA HT, PV HT, PV TTC, TVA, marge, unité, mat rattachés) + 3 actions (Fiche complète, Modifier, Étiquette)" },
+      { "code": "AI", "txt": "Plus de scroll horizontal galère sur articles ! Tout est vertical, lecture naturelle. Couleurs : #185FA5 (bleu articles) sur header, marge en vert/orange/rouge selon seuil 30/10/0, TVA en violet, prix achat en teal" },
+      { "code": "AI", "txt": "SQL aveho-FIX-articles-tarifs.sql : remplit prix_achat_ht / prix_vente_ht / prix_vente_ttc / marge_pct / tva_pct / tva_taux_id / code_lpp / tarif_lpp / gere_lot / gere_serie / est_dm / unite_vente sur TOUS les articles existants. Tarifs réalistes selon catégorie - DM (oxygène/PPC/perfusion/lit/VPH/mobilier) avec TVA 5.5 percent + serie + marge 35 percent, Consommables/pansements/incontinence TVA 20 percent + lot + péremption + marge 25 percent, Nutrition TVA 5.5 percent + lot, Defaults TVA 20 percent" },
+      { "code": "AI", "txt": "SQL TVA taux : creation des 4 taux français standards (20 percent normal / 10 percent intermédiaire / 5.5 percent santé / 2.1 percent médicaments). Idempotent (WHERE NOT EXISTS). Lien automatique tva_taux_id sur articles" },
+      { "code": "AI", "txt": "SQL Codes LPP : générés au format officiel 1NNNNNNAA (8 chiffres + 1 lettre A-E) pour tous les DM. Tarif LPP = 70 a 120 percent du prix vente TTC" },
+      { "code": "AI", "txt": "Composant ExpandableRow utilisable sur d AUTRES pages : Patients, Matériels, Interventions, Tournées, Pharmacie etc. Suffit d importer et passer color, icon, title, subtitle, badges, kpis, actions, children" }
+    ],
+    "themes": ["composant-expandable-reutilisable", "articles-liste-verticale", "fix-commentaire-jsx", "articles-tarifs-tva-marge"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.63.html"
+  },
+{
+    "v": "0.65.62",
+    "kind": "fix",
+    "titre": "ContextFilterBar MOBILE ONLY + Vue v_equipes_etablissement + Chambres sans .numero + Table patient_pathologies idempotente",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX 400 sur chambres.numero : la colonne n existe pas chez tout le monde. ContextFilterBar requete maintenant juste id, nom" },
+      { "code": "AI", "txt": "FIX 400 sur equipes.etablissement_id : la colonne n existe PAS, le lien etablissement-equipe passe par services puis equipes_services. Creation d une vue v_equipes_etablissement qui agrege equipes JOIN equipes_services JOIN services pour avoir etablissement_id. ContextFilterBar utilise maintenant cette vue avec fallback sur equipes par structure_id" },
+      { "code": "AI", "txt": "ContextFilterBar refait MOBILE ONLY : nouveau hook isMobile qui ecoute window.innerWidth < 768. La barre retourne null sur desktop. Sur mobile, layout vertical en colonne dans le dropdown (5 selects empiles) au lieu d une grid. Padding compact, fonts plus petits, chips tronques a 12 chars max" },
+      { "code": "AI", "txt": "Les requetes Supabase ne se lancent QUE si isMobile=true - economie d appels reseau sur desktop" },
+      { "code": "AI", "txt": "SQL aveho-FIX-patient-pathologies.sql : creation defensive de la table patient_pathologies (CREATE TABLE IF NOT EXISTS) avec colonnes structure_id, patient_id, pathologie_id, pathologie_nom, date_diagnostic, severite, est_active, notes. Index sur patient_id. UNIQUE constraint patient_id+pathologie_nom isole en DO BEGIN pour eviter de planter si donnees existent" },
+      { "code": "AI", "txt": "SQL Vue v_patient_complete recreee CORRIGEE : COALESCE(p.chambre, c.nom) AS chambre_libelle au lieu de c.numero qui n existait pas. Tous les COUNT subqueries (prescriptions, rdv, pathologies, di) safes" },
+      { "code": "AI", "txt": "SQL Vue v_equipes_etablissement creee : SELECT equipes.id, nom, structure_id et l etablissement_id derive de services lies par equipes_services. Permet a PostgREST de filter equipes par etablissement sans avoir la colonne etablissement_id directement sur equipes" },
+      { "code": "AI", "txt": "SQL NOTIFY pgrst, reload schema a la fin" }
+    ],
+    "themes": ["mobile-only-context-filter", "patient-pathologies-table", "vue-equipes-etablissement", "chambres-sans-numero"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.62.html"
+  },
+{
+    "v": "0.65.61",
+    "kind": "fix",
+    "titre": "FIX MASSIF colonnes manquantes (statut/technicien_nom/libelle/date_tournee/type_etape/mode_residence) + Boutons retour PageShell partout + nouvelles pages dans Mon Espace + Mode TV avec retour et plein ecran + Attribution roles metier aux users",
+    "chantiers": [
+      { "code": "AI", "txt": "DIAGNOSTIC : la vue v_patient_complete plantait sur c.numero. La table chambres a colonne nom et non numero chez Cedric. Fix : COALESCE(p.chambre, c.nom)" },
+      { "code": "AI", "txt": "DIAGNOSTIC : tournees.date_planifiee n existait pas chez Cedric, c est date_tournee. Plein de 400 sur tournees_etapes.type_etape (vs type_arret), label (vs libelle). Patients.chambre (texte) vs chambre_id. Materiels.libelle/code. Articles.libelle/famille. Magasins.fournisseur_id. Maintenances.libelle/type/statut/date_prevue. Interventions.statut (vs etat), technicien_nom, equipe_id, materiel_id" },
+      { "code": "AI", "txt": "SQL aveho-FIX-MASSIF-colonnes.sql en 12 etapes : ALTER TABLE defensif pour TOUTES les colonnes manquantes vues dans les 400. Synchronisation statut depuis etat (UPDATE). Synchronisation date_tournee depuis date_planifiee. Synchronisation type_etape/label depuis type_arret/libelle. Mapping livraison_patient->livraison, visite_domicile->domicile, visite_infirmiere->had" },
+      { "code": "AI", "txt": "SQL FK ajoutees : magasins.fournisseur_id -> fournisseurs. Defensive avec ON CONFLICT" },
+      { "code": "AI", "txt": "SEEDS Articles : 17 articles types avec libelle + code + categorie + famille + icone + couleur (Oxygene 5L/2L, Concentrateur, Masques PPC nasal/facial, Tubulure, Pompe perfusion, Set gravite, Lit medicalise, Matelas anti-escarres, Fauteuil roulant, Deambulateur, Leve-personne, Gants nitrile, Compresses, Set nutrition, Change adulte). Si articles existent deja, juste UPDATE libelle depuis nom" },
+      { "code": "AI", "txt": "SEEDS Materiels.libelle/code : synchronisation depuis materiels.nom si manquant. Genere code MAT-XXXXXX a partir de l UUID si pas de code" },
+      { "code": "AI", "txt": "SEEDS Patients.chambre (texte) : peuple depuis chambres.nom ou chambres.numero lie via chambre_id. mode_residence random parmi domicile/etablissement/had" },
+      { "code": "AI", "txt": "ATTRIBUTION ROLES METIER AUX USERS : pour chaque membre_structure sans role_id ou avec role_id invalide, tirage aleatoire ponderé d une famille (medical x4, logistique x3, direction/technique/commercial/admin/support/had/caisse x1). Recherche d un role de cette famille non systeme et attribution. Permet d avoir une diversite de roles attribues aux users existants" },
+      { "code": "AI", "txt": "VUE v_patient_complete CORRIGEE : retrait de c.numero (qui n existait pas). Utilise COALESCE(p.chambre, c.nom) AS chambre_libelle. Statut accepte etat OU statut. Plus de plante a la creation" },
+      { "code": "AI", "txt": "PageShell.js REFAIT avec bouton retour : nouveau prop backUrl ou hideBack. Bouton 40x40 fleche gauche avant l icone du header. Comportement window.history.back() ou fallback /. Toutes les nouvelles pages auront le bouton retour automatiquement" },
+      { "code": "AI", "txt": "TopBar.js MENU enrichi : Mon Espace recoit Mode TV Tournees (violet), Mode Voiture (bleu), Parametrage voiture CarPlay, Personnalisation interface (violet). Groupement recoit Services collaborateurs (teal), Agenda complet (orange), Tournees globales (bleu). NOUVELLES sections Soins et Infirmieres (BSI, Plans soins, Stats IDE) et Pharmacie (Caisse tactile NF525 amber). Administration recoit Utilisateurs et Droits premium (violet)" },
+      { "code": "AI", "txt": "Mode TV /presentation/tournees : ajout bouton RETOUR (fleche gauche) + bouton PLEIN ECRAN (arrows-maximize) dans le toolbar flottant top-right en plus du Cast et Refresh. Bouton retour fait window.history.back() ou redirige vers /. Bouton plein ecran toggle requestFullscreen/exitFullscreen" }
+    ],
+    "themes": ["fix-colonnes-massives", "bouton-retour-partout", "menu-mon-espace", "mode-tv-controles", "attribution-roles-users"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.61.html"
+  },
+{
+    "v": "0.65.60",
+    "kind": "feat",
+    "titre": "ROLES METIER ECOSYSTEME PSAD complet 50+ + CATEGORIES partout (etab/chambre/etage/vehicule/article/batiment) + Sélecteur roles par famille + Page personnalisation (positionneur boutons app et Mode TV) + tournees 10 par etab + RDV massifs",
+    "chantiers": [
+      { "code": "AI", "txt": "SQL aveho-MEGA-roles-categories.sql : creation de 50+ roles metier de l ecosysteme PSAD-FBM groupes par famille - DIRECTION (DG, Directeur Operationnel/Commercial/Medical, RAQ navy) - MEDICAL (Pharmacien/Preparateur, IDE/IDEL/IDEC/IPA, Medecin coord/prescripteur, Kine, Ergo, Dieteticien, Psy, AS, AVS terra) - TECHNIQUE (Tech materiel/oxygene/PPC/perfusion, Chef atelier, RSAV violet) - LOGISTIQUE (Chauffeur livreur/HAD, Magasinier, Gestion stock, Prepa commandes, Resp logistique bleu) - COMMERCIAL (Commercial, Account manager, Charge clientele, Teleoperateur, Resp dev vert) - ADMIN (Comptable, Resp facturation, Agent fact, Secretaire med, Assistant admin, Resp RH, Charge formation orange) - SUPPORT (N1/N2, Hotline, Customer success teal) - HAD (Coordinateur, IDE HAD, AS HAD coral) - CAISSE (Caissier, Resp caisse amber). 50+ roles avec icones et couleurs et permissions_json adaptees" },
+      { "code": "AI", "txt": "SQL Colonnes ajoutees a roles : famille_metier (groupe), description, ordre_affichage. Permet le tri et le regroupement dans le selecteur" },
+      { "code": "AI", "txt": "SQL Nouvelle table categories_referentiels (centrale) : id / structure_id / domaine (etablissement/chambre/vehicule/article/etage/batiment/service) / cle / libelle / icone / couleur / ordre / meta / est_actif. UNIQUE (domaine, cle). Seeds de 55+ categories avec icones tabler et couleurs charte" },
+      { "code": "AI", "txt": "SQL Categories seeds : ETABLISSEMENT (10 types - EHPAD, MAS, FAM, USLD, Clinique, Hopital, Maison retraite, Centre rééducation, SSR, Foyer vie) - CHAMBRE (7 - Standard, Confort, Premium, Medicalisee, Isolement, Double, Soins palliatifs) - ETAGE (4 - RDC, Standard, Sous-sol, Penthouse) - BATIMENT (4 - Principal, Annexe, Extension, Pavillon) - VEHICULE (7 - Utilitaire, VL, PL, Frigo, Oxygene, Velo, Moto) - ARTICLE (10 - Consommable, Oxygene, PPC, Perfusion, VPH, Lit medicalise, Mobilier, Nutrition, Incontinence, Pansement) - SERVICE (10 - Soins, Medecine, Pharmacie, Restauration, Technique, Admin, Logistique, Reeducation, Labo, Imagerie)" },
+      { "code": "AI", "txt": "SQL Colonnes type ajoutees aux tables - etablissements.type_etablissement + icone + couleur. chambres.categorie + icone + couleur. etages.type_etage + icone + couleur. vehicules.type_vehicule + icone + couleur. articles.categorie + icone + couleur. batiments.type_batiment + icone + couleur. Attribution random aux entites existantes pour avoir des donnees prets a afficher" },
+      { "code": "AI", "txt": "SQL Boost tournees - 10 tournees par etablissement reparties sur 3 jours, 6 types (livraison, infirmiere_idel, pharmacie, visite_domicile, chambres_batiment, sav_maintenance) avec couleurs charte. Chauffeurs varies. 5-6 etapes par tournee avec geolocalisation patient ou chambre" },
+      { "code": "AI", "txt": "SQL Boost RDV - 20 patients par etablissement recoivent chacun 3 RDV varies (15 types). Sur 90 jours (passes + futurs). Lieux varies dont Teleconsultation. Medecins varies (MARTIN/BERNARD/DUBOIS/PETIT/ROBERT/RICHARD/MOREAU). Statuts (planifie/confirme/realise)" },
+      { "code": "AI", "txt": "RoleImpersonateSelect REFAIT : groupage par FAMILLE collapsible avec chevrons. Couleur de famille (DIR navy, MED terra, TECH violet, LOG bleu, COMM vert, ADMIN orange, SUPP teal, HAD coral, CAISSE amber). Champ recherche en haut filtre instantanement les roles. Compteur par famille en badge. Ordre d affichage respecte (ordre_affichage SQL)" },
+      { "code": "AI", "txt": "ImpersonateBanner ameliore : utilise la couleur du role + icone du role + nom de famille en sous-titre" },
+      { "code": "AI", "txt": "NOUVELLE page /profil/personnalisation : positionneur de boutons pour 2 contextes (App / Mode TV) avec onglets. 19 boutons disponibles (Dashboard, Patients, Carte, Tournees x2, Agenda, DI, Pharmacie, Caisse, IDE, BSI, Services, Materiel, Stock, Facturation, Voiture, TV, RGPD, Rapports). 7 positions App (top-left/top-right/FAB/menu-1-2-3/sidebar) et 4 positions TV (top/bottom-left/bottom-right/sidebar)" },
+      { "code": "AI", "txt": "Page personnalisation - Carte apercu positions disponibles avec compteur boutons. Liste deroulante par bouton pour choisir sa position. Localstorage av-layout-app et av-layout-tv. Event av-layout-change pour synchroniser les autres pages. Bouton Reinitialiser danger" },
+      { "code": "AI", "txt": "Sidebar TopBar : Personnalisation interface (ti-layout-dashboard violet) ajoutee apres Services" }
+    ],
+    "themes": ["roles-metier-psad", "categories-referentiel", "personnalisation-layout", "tournees-rdv-massifs"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.60.html"
+  },
+{
     "v": "0.65.59",
     "kind": "feat",
     "titre": "MEGA enrichissement : Dossier medical patients + Pathologies N-N + Ordonnances + RDV + DI massives + Audit/rattachement users",
