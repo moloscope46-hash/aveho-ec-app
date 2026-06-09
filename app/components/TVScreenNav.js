@@ -15,10 +15,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 const SCREENS = [
   { path: "/presentation/interventions", label: "Demandes d'intervention", icon: "ti-clipboard-list", color: "#EF9F27" },
   { path: "/presentation/planning",      label: "Planning du jour",        icon: "ti-calendar",       color: "#7CC8C8" },
-  { path: "/presentation/architecture",  label: "Architecture bâtiments",  icon: "ti-building",       color: "#185FA5" },
   { path: "/presentation/livraisons",    label: "Livraisons prévues",      icon: "ti-truck-delivery", color: "#C9867F" },
   { path: "/presentation/carte-had",     label: "Carte HAD & domicile",    icon: "ti-map-pin",        color: "#5aa05a" },
-  { path: "/presentation/had-list",      label: "Liste HAD & anticipation", icon: "ti-home-heart",    color: "#5db5b5" },
   { path: "/presentation/dashboard",     label: "Tableau de bord",         icon: "ti-chart-bar",      color: "#7a6fb0" },
   { path: "/presentation/stats",         label: "Activité temps réel",     icon: "ti-pulse",          color: "#5a8f8f" },
 ];
@@ -62,7 +60,7 @@ export default function TVScreenNav({ currentScreen }) {
     function onKey(e) {
       if (e.key === "ArrowLeft") go(prev.path);
       else if (e.key === "ArrowRight") go(next.path);
-      else if (e.key >= "1" && e.key <= "8") {
+      else if (e.key >= "1" && e.key <= "6") {
         const idx = parseInt(e.key, 10) - 1;
         if (SCREENS[idx]) go(SCREENS[idx].path);
       }
@@ -203,97 +201,6 @@ export default function TVScreenNav({ currentScreen }) {
           }} />
         </div>
       )}
-
-      {/* 0.65.22 : Bouton SORTIR du mode TV en HAUT-MILIEU (Cédric le veut là, pas en bas) */}
-      <button
-        onClick={() => router.push("/accueil")}
-        style={{
-          position: "fixed",
-          top: 16,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 102,
-          background: "rgba(227, 93, 91, .92)",
-          color: "#fff",
-          border: "1.5px solid rgba(255,255,255,.3)",
-          padding: "10px 24px",
-          borderRadius: 24,
-          fontSize: 13,
-          fontWeight: 800,
-          letterSpacing: 0.5,
-          textTransform: "uppercase",
-          cursor: "pointer",
-          fontFamily: "Quicksand, sans-serif",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          boxShadow: "0 6px 20px rgba(227, 93, 91, .5), 0 2px 6px rgba(0,0,0,.25)",
-          backdropFilter: "blur(8px)",
-        }}
-        title="Sortir du mode TV"
-      >
-        <i className="ti ti-x" style={{ fontSize: 16 }} /> Sortir TV
-      </button>
-
-      {/* 0.65.21 : Boutons PARTAGE en haut-droite : AirPlay + ChromeCast */}
-      <div style={{
-        position: "fixed",
-        top: 16,
-        right: 16,
-        zIndex: 102,
-        display: "flex",
-        gap: 8,
-      }}>
-        {/* AirPlay (iOS/Safari) */}
-        <button
-          onClick={() => {
-            if (typeof window !== "undefined" && window.WebKitPlaybackTargetAvailabilityEvent) {
-              alert("Recherche d'appareils AirPlay disponibles...\n(Fonctionnalité native iOS/macOS Safari)");
-            } else {
-              alert("AirPlay n'est disponible que sur Safari (iOS/macOS).\nUtilisez ChromeCast sur Chrome.");
-            }
-          }}
-          title="Diffuser via AirPlay (iOS/Safari)"
-          style={{
-            width: 44, height: 44, borderRadius: "50%",
-            background: "rgba(20, 33, 49, .85)",
-            color: "#fff",
-            border: "1.5px solid rgba(255,255,255,.3)",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18,
-            backdropFilter: "blur(8px)",
-            boxShadow: "0 4px 16px rgba(0,0,0,.3)",
-          }}
-        >
-          <i className="ti ti-airplay" />
-        </button>
-
-        {/* ChromeCast (Chrome) */}
-        <button
-          onClick={() => {
-            if (typeof window !== "undefined" && window.chrome && window.chrome.cast) {
-              alert("Recherche d'appareils ChromeCast disponibles...");
-            } else {
-              alert("ChromeCast nécessite Google Chrome.\nClick l'icône Cast dans la barre Chrome (en haut-droite du navigateur).");
-            }
-          }}
-          title="Diffuser via ChromeCast (Google Chrome)"
-          style={{
-            width: 44, height: 44, borderRadius: "50%",
-            background: "rgba(20, 33, 49, .85)",
-            color: "#fff",
-            border: "1.5px solid rgba(255,255,255,.3)",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18,
-            backdropFilter: "blur(8px)",
-            boxShadow: "0 4px 16px rgba(0,0,0,.3)",
-          }}
-        >
-          <i className="ti ti-cast" />
-        </button>
-      </div>
 
       <style>{`
         @keyframes tv-pulse-dot {

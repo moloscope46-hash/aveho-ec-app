@@ -2782,7 +2782,7 @@ export function TopMaterielsSAVWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("materiel_id, materiels(libelle, num_parc)")
+          .select("materiel_id, materiels(libelle, code)")
           .eq("structure_id", auth.structureId)
           .gte("created_at", since);
         const counts = {};
@@ -2942,14 +2942,14 @@ export function TopCollaborateursWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("technicien_user_id, assignee_email")
+          .select("technicien_user_id, technicien_nom")
           .eq("structure_id", auth.structureId)
           .gte("created_at", since);
         const counts = {};
         (intervs || []).forEach(i => {
           if (!i.technicien_user_id) return;
           const k = i.technicien_user_id;
-          if (!counts[k]) counts[k] = { id: k, count: 0, nom: i.assignee_email || "—" };
+          if (!counts[k]) counts[k] = { id: k, count: 0, nom: i.technicien_nom || "—" };
           counts[k].count++;
         });
         const top = Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
@@ -3021,11 +3021,11 @@ export function TempsMoyenResolutionWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("created_at, statut")
+          .select("created_at, date_resolution, etat")
           .eq("structure_id", auth.structureId)
-          .eq("statut", "Clôturée")
+          .eq("etat", "Résolue")
           .gte("created_at", since)
-          ;
+          .not("date_resolution", "is", null);
 
         if (intervs && intervs.length > 0) {
           const durees = intervs
@@ -3121,11 +3121,11 @@ export function SLARespectWidget() {
         const since = new Date(Date.now() - 30 * 86400000).toISOString();
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("created_at, statut, urgence")
+          .select("created_at, date_resolution, etat, urgence")
           .eq("structure_id", auth.structureId)
-          .eq("statut", "Clôturée")
+          .eq("etat", "Résolue")
           .gte("created_at", since)
-          ;
+          .not("date_resolution", "is", null);
 
         let ok = 0, ko = 0;
         (intervs || []).forEach(i => {
@@ -3211,9 +3211,9 @@ export function ChargeEquipesWidget() {
         // Interventions en cours par équipe
         const { data: intervs } = await supabase
           .from("interventions")
-          .select("equipe_id, statut")
+          .select("equipe_id, etat")
           .eq("structure_id", auth.structureId)
-          .in("statut", ["Nouvelle", "En cours", "Planifiée"]);
+          .in("etat", ["Nouvelle", "En cours", "Planifiée"]);
 
         const counts = {};
         (intervs || []).forEach(i => {
@@ -3480,10 +3480,10 @@ export function TauxPanneCategorieWidget() {
     async function load() {
       if (!auth?.structureId) return;
       try {
-        // 1. Compte total matériels par catégorie (0.65.19 : retrait jointure articles si FK pas déclarée)
+        // 1. Compte total matériels par catégorie
         const { data: materiels } = await supabase
           .from("materiels")
-          .select("id, libelle, marque, modele")
+          .select("id, categorie, articles(libelle, famille)")
           .eq("structure_id", auth.structureId);
 
         // 2. Compte interventions sur 90j par materiel_id
@@ -3804,7 +3804,7 @@ export function HeatmapGeoWidget() {
             .eq("structure_id", auth.structureId)
             .gte("created_at", now90)),
           tryFetch(supabase.from("signalements")
-            .select("id, created_at")
+            .select("id, created_at, criticite")
             .eq("structure_id", auth.structureId)
             .gte("created_at", now90)),
           tryFetch(supabase.from("patients")

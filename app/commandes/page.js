@@ -4,6 +4,7 @@ import { useEffect, useState, Fragment, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { useGlobalFilters, applyGlobalFilters, hasActiveFilters, GlobalFiltersIndicator } from "../../lib/useGlobalFilters";
 // 0.58.45 : hook pour les page-actions du Cmd+K (export-csv)
 import { usePageAction } from "../../lib/usePageAction";
 // 0.58.54 : filtre contexte bât/svc via patient_id
@@ -22,6 +23,7 @@ export default function Commandes() {
   const supabase = createClient();
   const router = useRouter();
   const auth = useAuth();
+  const globalFilters = useGlobalFilters();
   const cart = useCart();
   const [cmds, setCmds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +33,8 @@ export default function Commandes() {
   const [search, setSearch] = useState("");
   // 0.62.115 : ViewModeToggle
   const [viewMode, setViewMode] = useState(() => {
-    if (typeof window === "undefined") return "grid";
-    return localStorage.getItem("av:commandes:viewMode") || "grid";  /* 0.65.15 : grid par défaut */
+    if (typeof window === "undefined") return "list";
+    return localStorage.getItem("av:commandes:viewMode") || "list";
   });
   useEffect(() => {
     try { localStorage.setItem("av:commandes:viewMode", viewMode); } catch {}
@@ -86,16 +88,9 @@ export default function Commandes() {
     if (!auth.ready) return;
     (async () => {
       try {
-        // 0.65.16 : essai avec jointures, fallback simple si FK pas déclarée
-        let q = supabase.from("commandes").select("*, magasins(nom), etablissements(nom, ville), fournisseurs(raison_sociale)").order("created_at", { ascending: false });
+        let q = supabase.from("commandes").select("*, magasins(nom)").order("created_at", { ascending: false });
         if (auth.etabId) q = q.eq("etablissement_id", auth.etabId);
-        let { data, error } = await q;
-        if (error) {
-          // Fallback : sans fournisseurs
-          let q2 = supabase.from("commandes").select("*, magasins(nom), etablissements(nom, ville)").order("created_at", { ascending: false });
-          if (auth.etabId) q2 = q2.eq("etablissement_id", auth.etabId);
-          ({ data } = await q2);
-        }
+        const { data } = await q;
         setCmds(data || []);
       } catch (e) {
         // 0.57.5 : try/catch englobant pour pas crasher la page
@@ -207,17 +202,11 @@ export default function Commandes() {
                 {viewMode === "grid" ? (
                   <div className="av-stagger" style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                     gap: 12,
                   }}>
                     {filteredCmds.map((c) => {
-                      const statutColor = c.statut === "livree" || c.statut === "Livrée" ? "#5aa05a"
-                                        : c.statut === "annulee" || c.statut === "Annulée" ? "#e35d5b"
-                                        : c.statut === "en_preparation" || c.statut === "En préparation" ? "#EF9F27"
-                                        : c.statut === "envoyee" || c.statut === "Envoyée" ? "#7CC8C8"
-                                        : "#185FA5";
-                      const totalHT  = c.montant_total_ht  ?? c.total ?? 0;
-                      const totalTTC = c.montant_total_ttc ?? (totalHT * 1.2);
+                      const statutColor = c.statut === "Livrée" ? "#5aa05a" : c.statut === "Annulée" ? "#e35d5b" : c.statut === "En préparation" ? "#EF9F27" : "#185FA5";
                       return (
                         <div key={c.id} data-3d="true" data-accent="bleu" onClick={() => toggle(c.id)}
                           style={{
@@ -227,90 +216,45 @@ export default function Commandes() {
                             cursor: "pointer",
                             border: `1px solid ${statutColor}33`,
                             borderLeft: `4px solid ${statutColor}`,
-                            boxShadow: "0 2px 8px rgba(20,33,49,.05)",
                           }}>
-                          {/* Header : Numéro + Statut */}
+                          {/* Header */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 14, fontWeight: 800, color: "#142131", letterSpacing: 0.3 }}>
-                                <i className="ti ti-shopping-cart" style={{ color: statutColor, marginRight: 4 }} />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 11, color: "#8a98a8", fontFamily: "Consolas, monospace", letterSpacing: 0.3 }}>
                                 {c.numero}
                               </div>
-                              <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 2, display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                <span><i className="ti ti-calendar" /> {fmtDate(c.created_at)}</span>
-                                {c.date_livraison_prevue && (
-                                  <span style={{ color: "#7a6fb0", fontWeight: 600 }}>
-                                    <i className="ti ti-truck-delivery" /> Livr. : {fmtDate(c.date_livraison_prevue)}
-                                  </span>
-                                )}
+                              <div style={{ fontSize: 13, color: "#5a6878", marginTop: 2 }}>
+                                <i className="ti ti-calendar" /> {fmtDate(c.created_at)}
                               </div>
                             </div>
                             <span style={{
                               padding: "3px 8px", borderRadius: 6,
                               background: statutColor, color: "#fff",
                               fontSize: 10, fontWeight: 700, letterSpacing: 0.4,
-                              textTransform: "uppercase",
                               boxShadow: `0 2px 6px ${statutColor}55`,
                               whiteSpace: "nowrap",
-                              flexShrink: 0,
                             }}>
                               {c.statut || "—"}
                             </span>
                           </div>
-
-                          {/* 0.65.15 : Établissement */}
-                          {c.etablissements && (
-                            <div style={{ fontSize: 12.5, color: "#142131", marginBottom: 4, fontWeight: 700 }}>
-                              <i className="ti ti-building-hospital" style={{ color: "#185FA5", marginRight: 4 }} />
-                              {c.etablissements.nom}
-                              {c.etablissements.ville && <span style={{ color: "#8a98a8", fontWeight: 400 }}> · {c.etablissements.ville}</span>}
-                            </div>
-                          )}
-
                           {/* Magasin */}
                           {c.magasins?.nom && (
-                            <div style={{ fontSize: 12, color: "#5a6878", marginBottom: 3 }}>
+                            <div style={{ fontSize: 12, color: "#5a6878", marginBottom: 10 }}>
                               <i className="ti ti-building-store" style={{ color: "#5a8f8f", marginRight: 4 }} />
-                              Magasin : <b style={{ color: "#142131" }}>{c.magasins.nom}</b>
+                              {c.magasins.nom}
                             </div>
                           )}
-
-                          {/* 0.65.15 : Fournisseur */}
-                          {c.fournisseurs?.raison_sociale && (
-                            <div style={{ fontSize: 12, color: "#5a6878", marginBottom: 3 }}>
-                              <i className="ti ti-truck-loading" style={{ color: "#EF9F27", marginRight: 4 }} />
-                              Fournisseur : <b style={{ color: "#142131" }}>{c.fournisseurs.raison_sociale}</b>
-                            </div>
-                          )}
-
-                          {/* 0.65.15 : Notes */}
-                          {c.notes && (
-                            <div style={{ fontSize: 11, color: "#8a98a8", marginTop: 6, padding: 6, background: "#fafbfc", borderRadius: 6, fontStyle: "italic", lineHeight: 1.4 }}>
-                              <i className="ti ti-message" /> {c.notes.slice(0, 80)}{c.notes.length > 80 ? "…" : ""}
-                            </div>
-                          )}
-
-                          {/* Total HT + TTC */}
+                          {/* Total prix gros */}
                           <div style={{
                             display: "flex", justifyContent: "space-between", alignItems: "center",
-                            paddingTop: 10, marginTop: 8, borderTop: "1px solid #f0f3f6",
+                            paddingTop: 10, borderTop: "1px solid #f0f3f6",
                           }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                              <span style={{ fontSize: 9.5, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.5 }}>
-                                Total HT
-                              </span>
-                              <span style={{ fontSize: 13, fontWeight: 700, color: "#5a6878" }}>
-                                {fmtEur(totalHT)}
-                              </span>
-                            </div>
-                            <div style={{ textAlign: "right" }}>
-                              <span style={{ fontSize: 9.5, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.5, display: "block" }}>
-                                Total TTC
-                              </span>
-                              <span style={{ fontSize: 20, fontWeight: 800, color: "#142131", lineHeight: 1 }}>
-                                {fmtEur(totalTTC)}
-                              </span>
-                            </div>
+                            <span style={{ fontSize: 11, color: "#8a98a8", textTransform: "uppercase", fontWeight: 700, letterSpacing: 0.5 }}>
+                              Total
+                            </span>
+                            <span style={{ fontSize: 20, fontWeight: 700, color: "#142131" }}>
+                              {fmtEur(c.total)}
+                            </span>
                           </div>
                         </div>
                       );

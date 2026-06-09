@@ -18,8 +18,6 @@ import { useAuth } from "../../../lib/useAuth";
 import { fmtDate } from "../../../lib/format";
 import TVScreenNav from "../../components/TVScreenNav";  /* 0.64.0 */
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
-import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
-import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 const COULEUR_STATUT = {
   "Nouvelle": "#185FA5",
@@ -54,8 +52,6 @@ function PresentationInterventions() {
   const [now, setNow] = useState(new Date());
   // 0.65.0 : filtre magasin TV
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));
-  // 0.65.3 : Filtres avancés (étab/bât/svc/chambre/patient/garage/dépôt/search)
-  const [advFilters, setAdvFilters] = useState(() => getTVFilters("interventions") || {});
   // 0.62.93 : compteurs récents activité globale
   const [stats, setStats] = useState({ di: 0, sav: 0, livraisons: 0, maintenances: 0, patients: 0, commandes: 0 });
   const timerRef = useRef(null);
@@ -63,55 +59,19 @@ function PresentationInterventions() {
 
   async function load() {
     if (!auth.structureId) return;
-    // 0.65.25 : SELECT selon colonnes RÉELLES (interventions n'a PAS batiment_id, service_id, chambre_id, assignee_email, date_planifiee)
-    // Vraies colonnes : etablissement_id, materiel_id, patient_id, intervenant (via maintenances), assignee_email, due_date, equipe_id, magasin_id, depot_id
-    const baseFilter = (q) => {
-      q = q.eq("structure_id", auth.structureId)
-           .neq("statut", "Clôturée").neq("statut", "Refusée")
-           .order("urgence", { ascending: false })
-           .order("created_at", { ascending: false })
-           .limit(30);
-      if (etabId) q = q.eq("etablissement_id", etabId);
-      if (advFilters.etabId) q = q.eq("etablissement_id", advFilters.etabId);
-      if (advFilters.patientId) q = q.eq("patient_id", advFilters.patientId);
-      return q;
-    };
-
-    // Niveau 1 : avec jointures
-    let r = await baseFilter(supabase.from("interventions")
-      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, assignee_email, due_date, patient_id, etablissement_id, materiels(libelle, num_parc), patients(nom, prenom, ville), etablissements(nom, ville), equipes(nom, couleur)"));
-    if (r.error) {
-      // Niveau 2 : sans jointures
-      r = await baseFilter(supabase.from("interventions")
-        .select("id, numero, type, urgence, statut, description, created_at, equipe_id, assignee_email, due_date, patient_id, etablissement_id, materiel_id"));
-    }
-    if (r.error) {
-      // Niveau 3 : minimal
-      r = await baseFilter(supabase.from("interventions")
-        .select("id, numero, type, urgence, statut, description, created_at"));
-    }
-    const data = r.data || [];
-
-    // 0.65.3 : filtre par recherche libre (côté client) - sur numéro/type/description/patient
-    let filteredData = data || [];
-    if (advFilters.search?.trim()) {
-      const s = advFilters.search.toLowerCase().trim();
-      filteredData = filteredData.filter(d =>
-        (d.numero || "").toLowerCase().includes(s) ||
-        (d.type || "").toLowerCase().includes(s) ||
-        (d.description || "").toLowerCase().includes(s) ||
-        (d.assignee_email || "").toLowerCase().includes(s) ||
-        (d.materiels?.libelle || "").toLowerCase().includes(s) ||
-        (d.materiels?.code || "").toLowerCase().includes(s) ||
-        (d.patients?.nom || "").toLowerCase().includes(s) ||
-        (d.patients?.prenom || "").toLowerCase().includes(s) ||
-        (d.patients?.ville || "").toLowerCase().includes(s) ||
-        (d.patients?.chambre || "").toLowerCase().includes(s)
-      );
-    }
+    let q = supabase
+      .from("interventions")
+      .select("id, numero, type, urgence, statut, description, created_at, equipe_id, technicien_nom, date_planifiee, materiels(libelle, code), patients(nom, prenom, chambre)")
+      .eq("structure_id", auth.structureId)
+      .not("statut", "in", '("Clôturée","Refusée")')
+      .order("urgence", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (etabId) q = q.eq("etablissement_id", etabId);
+    const { data } = await q;
 
     // 0.64.0 : enrichir avec compteurs PJ + workflow pour les top urgences
-    const enriched = await Promise.all(filteredData.map(async (di) => {
+    const enriched = await Promise.all((data || []).map(async (di) => {
       try {
         const [pj, wf] = await Promise.all([
           supabase.from("pieces_jointes").select("id", { count: "exact", head: true }).eq("resource_type", "intervention").eq("resource_id", di.id),
@@ -139,7 +99,7 @@ function PresentationInterventions() {
     };
     const [di, sav, livraisons, maintenances, patients, commandes] = await Promise.all([
       tryCount("demandes_internes", { statut: "nouvelle" }),
-      tryCount("signalements", { statut: "Nouveau" }),
+      tryCount("signalements", { traite: false }),
       tryCount("tournees", { statut: "en_cours" }),
       tryCount("maintenances", { statut: "planifiee" }),
       tryCount("patients"),
@@ -154,7 +114,7 @@ function PresentationInterventions() {
     load();
     timerRef.current = setInterval(load, refreshSec * 1000);
     return () => clearInterval(timerRef.current);
-  }, [auth.ready, auth.structureId, etabId, refreshSec, magasinId, advFilters]);
+  }, [auth.ready, auth.structureId, etabId, refreshSec, magasinId]);
 
   // Horloge live (1s)
   useEffect(() => {
@@ -196,11 +156,9 @@ function PresentationInterventions() {
         paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)",
       }}>
         <div>
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
-            <TVFiltersBar pageKey="interventions" onChange={setAdvFilters} />
-            <TVCastButton refreshSec={refreshSec} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>
             Demandes d'intervention en cours
@@ -363,51 +321,11 @@ function Card({ r, urgent = false }) {
           {r.patients.chambre && <span style={{ color: "#bfe6e6", fontSize: 14, marginLeft: 6 }}>Ch. {r.patients.chambre}</span>}
         </div>
       )}
-      {/* 0.65.12 : Établissement + bâtiment + service */}
-      {(r.etablissements || r.batiments || r.services) && (
-        <div style={{ fontSize: 11.5, color: "#bfe6e6", marginBottom: 4, display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {r.etablissements && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-              <i className="ti ti-building-hospital" style={{ color: "#185FA5" }} />
-              <span style={{ color: "#fff", fontWeight: 700 }}>{r.etablissements.nom}</span>
-              {r.etablissements.ville && <span style={{ opacity: 0.7 }}>· {r.etablissements.ville}</span>}
-            </span>
-          )}
-          {r.batiments && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-              <i className="ti ti-building" style={{ color: "#7CC8C8" }} />
-              {r.batiments.nom}
-            </span>
-          )}
-          {r.services && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-              <i className="ti ti-stethoscope" style={{ color: "#7a6fb0" }} />
-              {r.services.nom}{r.services.etage != null && ` · Ét.${r.services.etage}`}
-            </span>
-          )}
-        </div>
-      )}
       {r.materiels && (
         <div style={{ fontSize: 14, color: "#bfe6e6", marginBottom: 4 }}>
           <i className="ti ti-armchair-2" style={{ marginRight: 6 }} />
           {r.materiels.libelle}
-          {r.materiels.num_parc && <span style={{ color: "#7CC8C8", fontSize: 11, marginLeft: 6, fontFamily: "Consolas, monospace" }}>{r.materiels.num_parc}</span>}
-        </div>
-      )}
-      {/* 0.65.12 : Équipe assignée */}
-      {r.equipes && (
-        <div style={{ fontSize: 11.5, marginTop: 4 }}>
-          <span style={{
-            display: "inline-flex", alignItems: "center", gap: 4,
-            padding: "2px 8px",
-            background: (r.equipes.couleur || "#5aa05a") + "30",
-            color: r.equipes.couleur || "#5aa05a",
-            border: `1px solid ${(r.equipes.couleur || "#5aa05a")}50`,
-            borderRadius: 6,
-            fontWeight: 700,
-          }}>
-            <i className="ti ti-users-group" /> {r.equipes.nom}
-          </span>
+          {r.materiels.code && <span style={{ color: "#7CC8C8", fontSize: 11, marginLeft: 6, fontFamily: "Consolas, monospace" }}>{r.materiels.code}</span>}
         </div>
       )}
 
@@ -419,9 +337,9 @@ function Card({ r, urgent = false }) {
       )}
 
       {/* 0.64.0 : Technicien assigné si planifié */}
-      {r.assignee_email && (
+      {r.technicien_nom && (
         <div style={{ fontSize: 12, color: "#7CC8C8", marginTop: 6 }}>
-          <i className="ti ti-user-check" /> {r.assignee_email}
+          <i className="ti ti-user-check" /> {r.technicien_nom}
           {r.date_planifiee && <span style={{ marginLeft: 6, color: "#9bb5b5" }}>· {new Date(r.date_planifiee).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}</span>}
         </div>
       )}

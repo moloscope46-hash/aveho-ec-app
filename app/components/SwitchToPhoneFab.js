@@ -33,25 +33,21 @@ export default function SwitchToPhoneFab() {
 
   return (
     <>
-      {/* FAB en HAUT-DROITE (0.65.20 : était bas-droite, déplacé en haut) */}
+      {/* FAB bas droite */}
       <button onClick={() => setOpen(true)} aria-label="Continuer sur mon téléphone" title="Continuer sur mon téléphone"
-        className="av-switch-phone-fab"
         style={{
-          position: "fixed",
-          top: "calc(70px + env(safe-area-inset-top, 0px))",  /* Sous la topbar */
-          right: 16,
-          zIndex: 9998,
-          width: 44, height: 44, borderRadius: "50%",
+          position: "fixed", bottom: 24, right: 24, zIndex: 9998,
+          width: 56, height: 56, borderRadius: "50%",
           background: "linear-gradient(135deg, #7CC8C8, #5db5b5)",
-          color: "#142131", border: "1.5px solid rgba(255,255,255,0.3)", cursor: "pointer",
-          boxShadow: "0 6px 20px rgba(124,200,200,.45), 0 0 0 1px rgba(20,33,49,.08)",
+          color: "#142131", border: "none", cursor: "pointer",
+          boxShadow: "0 8px 24px rgba(124,200,200,.45), 0 0 0 1px rgba(20,33,49,.08)",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontFamily: "inherit", transition: "all .15s",
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 10px 26px rgba(124,200,200,.6)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(124,200,200,.45), 0 0 0 1px rgba(20,33,49,.08)"; }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 12px 30px rgba(124,200,200,.6)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(124,200,200,.45), 0 0 0 1px rgba(20,33,49,.08)"; }}
       >
-        <i className="ti ti-device-mobile" style={{ fontSize: 22 }} />
+        <i className="ti ti-device-mobile" style={{ fontSize: 26 }} />
       </button>
 
       {/* Modal */}

@@ -73,9 +73,9 @@ export default function AttachmentsPanel({
       try {
         const ext = file.name.split(".").pop().toLowerCase();
         const filename = `${resourceType}/${resourceId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("pieces_jointes").upload(filename, file);
+        const { error: upErr } = await supabase.storage.from("attachments").upload(filename, file);
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("pieces_jointes").getPublicUrl(filename);
+        const { data: pub } = supabase.storage.from("attachments").getPublicUrl(filename);
         const { error: dbErr } = await supabase.from("pieces_jointes").insert({
           structure_id: structureId,
           resource_type: resourceType,
@@ -108,7 +108,7 @@ export default function AttachmentsPanel({
   async function remove(item) {
     if (!confirm(`Supprimer "${item.nom}" ?`)) return;
     try {
-      await supabase.storage.from("pieces_jointes").remove([item.path]);
+      await supabase.storage.from("attachments").remove([item.path]);
       await supabase.from("pieces_jointes").delete().eq("id", item.id);
       try {
         const { toast } = await import("./ui-premium");

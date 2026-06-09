@@ -10,8 +10,6 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
-import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
-import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 export default function PresentationPlanningPage() {
   return (
@@ -37,7 +35,6 @@ function PresentationPlanning() {
   const refreshSec = parseInt(params.get("refresh") || "60", 10);
 
   const [events, setEvents] = useState([]);
-  const [advFilters, setAdvFilters] = useState(() => getTVFilters("planning") || {});  // 0.65.11 fix
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));  /* 0.65.0 */
@@ -53,24 +50,24 @@ function PresentationPlanning() {
 
     const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
 
-    // Sources parallèles (0.65.25 : VRAIES colonnes - due_date au lieu de date_planifiee, intervenant au lieu de assignee_email)
+    // Sources parallèles
     const [interventions, tournees, maintenances, planEvts] = await Promise.all([
       tryFetch(supabase.from("interventions")
-        .select("id, numero, type, urgence, due_date, statut, assignee_email, equipe_id, materiel_id, patient_id")
+        .select("id, numero, type, urgence, date_planifiee, statut, technicien_nom, equipe_id, materiels(libelle), patients(nom, prenom, chambre)")
         .eq("structure_id", auth.structureId)
-        .gte("due_date", ymd)
-        .lte("due_date", ymd)
-        .order("due_date")),
+        .gte("date_planifiee", todayStart.toISOString())
+        .lte("date_planifiee", todayEnd.toISOString())
+        .order("date_planifiee")),
       tryFetch(supabase.from("tournees")
         .select("id, numero, nom, statut, heure_depart, date_tournee, chauffeur_user_id, nb_etapes")
         .eq("structure_id", auth.structureId)
         .eq("date_tournee", ymd)
         .order("heure_depart")),
       tryFetch(supabase.from("maintenances")
-        .select("id, type, statut, date_prevue, materiel_id, intervenant, notes")
+        .select("id, libelle, type, statut, date_prevue, materiels(libelle, code)")
         .eq("structure_id", auth.structureId)
-        .gte("date_prevue", ymd)
-        .lte("date_prevue", ymd)
+        .gte("date_prevue", todayStart.toISOString())
+        .lte("date_prevue", todayEnd.toISOString())
         .order("date_prevue")),
       tryFetch(supabase.from("planning_events")
         .select("id, titre, type, date_debut, date_fin, lieu, tout_journee, equipe_id")
@@ -86,11 +83,11 @@ function PresentationPlanning() {
       id: "di-" + d.id,
       type: "intervention",
       titre: `${d.numero} · ${d.type}`,
-      sub: d.materiel_id ? `Matériel #${(d.materiel_id||'').slice(0,8)}` : "",
-      chambre: null,
+      sub: d.materiels?.libelle ? `${d.materiels.libelle} ${d.patients?.nom ? "· " + d.patients.nom + " " + (d.patients.prenom || "") : ""}` : "",
+      chambre: d.patients?.chambre || null,
       heure: d.date_planifiee ? new Date(d.date_planifiee).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "?",
       time_ms: d.date_planifiee ? new Date(d.date_planifiee).getTime() : 0,
-      assignee: d.assignee_email || "Non assigné",
+      assignee: d.technicien_nom || "Non assigné",
       statut: d.statut,
       urgent: d.urgence === "Urgent",
     }));
@@ -108,7 +105,7 @@ function PresentationPlanning() {
       id: "mnt-" + m.id,
       type: "maintenance",
       titre: m.libelle || `Maintenance ${m.type || ""}`,
-      sub: m.materiel_id ? `Matériel #${(m.materiel_id||'').slice(0,8)}` : "",
+      sub: m.materiels?.libelle || "",
       heure: m.date_prevue ? new Date(m.date_prevue).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "Journée",
       time_ms: m.date_prevue ? new Date(m.date_prevue).getTime() : 0,
       assignee: "Technicien",
@@ -187,9 +184,7 @@ function PresentationPlanning() {
         paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)",
       }}>
         <div>
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>AVEHO — TV DE SERVICE<TVMagasinFilter onChange={setMagasinId} />
-            <TVFiltersBar pageKey="planning" onChange={setAdvFilters} />
-            <TVCastButton refreshSec={refreshSec} /></div>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>AVEHO — TV DE SERVICE<TVMagasinFilter onChange={setMagasinId} /></div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>
             Planning du jour
           </h1>

@@ -6,6 +6,7 @@ import { useEffect, useState, Suspense } from "react";
 import { createClient } from "../../lib/supabase";
 import { selectChambresContexte } from "../../lib/chambres";
 import { useAuth } from "../../lib/useAuth";
+import { useGlobalFilters, applyGlobalFilters, hasActiveFilters, GlobalFiltersIndicator } from "../../lib/useGlobalFilters";
 // 0.58.40 : hook réutilisable pour le contexte bât/svc (introduit 0.58.39)
 import { useCurrentContext } from "../../lib/useCurrentContext";
 // 0.58.43 : hook pour écouter les page-actions du Cmd+K
@@ -36,6 +37,7 @@ export default function Materiels() {
 function MaterielsInner() {
   const supabase = createClient();
   const auth = useAuth();
+  const globalFilters = useGlobalFilters();
   const router = useRouter();
   const searchParams = useSearchParams();
   // 0.62.2 : Pré-filtre via query string (ex: /materiels?article_id=XXX)

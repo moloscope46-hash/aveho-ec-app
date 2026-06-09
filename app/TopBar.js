@@ -8,6 +8,7 @@
 //  Alpha 0.49.0 : + badge version cliquable dans le header
 // =============================================================
 import { useEffect, useState, useRef } from "react";
+import RoleImpersonateSelect, { ImpersonateBanner } from "./components/RoleImpersonateSelect";
 import { createPortal } from "react-dom";
 import { useRouter, usePathname } from "next/navigation";
 import pkg from "../package.json";
@@ -48,7 +49,7 @@ const MENU = [
     { p: "/vue-globale", ic: "ti-layout-dashboard", lbl: "Vue globale", col: "#185FA5" },
     { p: "/planning", ic: "ti-calendar-event", lbl: "Agenda", col: "#EF9F27" },  /* 0.62.107 */
     { p: "/profil", ic: "ti-user-circle", lbl: "Mon profil", col: "#7a6fb0" },
-    { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV", col: "#7CC8C8" },  /* 0.62.106 */
+    { p: "/presentation/interventions", ic: "ti-device-tv", lbl: "Mode TV", col: "#142131" },  /* 0.62.106 */
     { p: "/articles", ic: "ti-package", lbl: "Articles catalogue", col: "#5aa05a" },
     { p: "/magasin/catalogue", ic: "ti-shopping-bag", lbl: "Catalogue magasin", col: "#5a8f8f" },
     { p: "/magasins", ic: "ti-building-store", lbl: "Magasins Aveho", col: "#5a8f8f" },
@@ -74,7 +75,7 @@ const MENU = [
   { section: "Stock", sectionIcon: "ti-stack-2", items: [
     { p: "/stock", ic: "ti-stack-2", lbl: "Stock global", col: "#c97a2a" },
     { p: "/articles", ic: "ti-package", lbl: "Articles", col: "#185FA5" },
-    { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#185FA5" },
+    { p: "/materiels", ic: "ti-armchair-2", lbl: "Matériel", col: "#142131" },
     { p: "/depots", ic: "ti-building-warehouse", lbl: "Dépôts", col: "#5a8f8f" },
     { p: "/magasins/nouveau", ic: "ti-building-warehouse", lbl: "Magasins fournisseurs", col: "#5a8f8f" },
     { p: "/garages", ic: "ti-parking", lbl: "Garages", col: "#EF9F27" },
@@ -341,12 +342,11 @@ export default function TopBar({ cartCount = 0, auth }) {
         {/* 0.58.35 : sélecteurs bâtiment + service (desktop only) */}
         {mounted && auth && <BatimentServiceSwitcher auth={auth} />}
         {/* 0.62.122 : Badge du rôle avec icône+couleur personnalisée */}
-        {/* 0.65.7 : couronne RoleBadge masquée en mobile (gain place toolbar) */}
-        {mounted && auth && auth.role && <span className="hide-on-mobile-tb"><RoleBadge auth={auth} variant="icon" size="md" onClick={() => router.push("/utilisateurs")} /></span>}
+        {mounted && auth && auth.role && <RoleBadge auth={auth} variant="icon" size="md" onClick={() => router.push("/utilisateurs")} />}
         {/* 0.62.126 : Indicateur visuel des locks actifs (édition en cours) */}
         {mounted && auth && <EditingIndicator />}
-        {/* 0.65.7 : Bouton Sandbox masqué en mobile (gain place + dispo dans /admin) */}
-        {mounted && auth?.can?.("gerer_roles") && <span className="hide-on-mobile-tb"><SandboxToggle /></span>}
+        {mounted && auth?.can?.("gerer_roles") && <SandboxToggle />}
+        {mounted && auth && <RoleImpersonateSelect auth={auth} />}  /* 0.65.47 */
         {mounted && auth && <NotifBellEnhanced structureId={auth.structureId} userId={auth.user?.id} />}
         {mounted && (
           <div style={{ position: "relative" }}>
@@ -419,9 +419,8 @@ export default function TopBar({ cartCount = 0, auth }) {
               { bg: "rgba(90,160,90,.06)",   barCol: "#5aa05a", txtCol: "#5aa05a" }, // vert - Scan
               { bg: "rgba(239,159,39,.06)",  barCol: "#EF9F27", txtCol: "#c97a2a" }, // ambre - Commande
               { bg: "rgba(201,134,127,.06)", barCol: "#C9867F", txtCol: "#a04a2a" }, // terra - Livraison
-              // 0.65.6 : Administratif → bleu acier visible (avant: navy #142131 invisible sur fond sombre)
-              { bg: "rgba(94,142,196,.10)",  barCol: "#5e8ec4", txtCol: "#5e8ec4" }, // bleu acier - Administratif
-              { bg: "rgba(192,57,43,.08)",   barCol: "#e35d5b", txtCol: "#e35d5b" }, // rouge corail - Admin tech
+              { bg: "rgba(20,33,49,.06)",    barCol: "#142131", txtCol: "#142131" }, // navy - Administratif
+              { bg: "rgba(192,57,43,.05)",   barCol: "#c0392b", txtCol: "#c0392b" }, // rouge - Admin
             ];
             const hue = SECTION_HUES[secIdx % SECTION_HUES.length];
             const isCollapsed = collapsedSections[sec.section];

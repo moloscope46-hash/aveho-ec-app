@@ -93,7 +93,7 @@ function MagasinSidebar() {
         const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
         const [di, sav, tr] = await Promise.all([
           tryFetch(supabase.from("demandes_internes").select("id").in("statut", ["en_attente", "validee"])),
-          tryFetch(supabase.from("signalements").select("id").in("statut", ["Nouveau","En cours"])),
+          tryFetch(supabase.from("signalements").select("id").eq("traite", false)),
           tryFetch(supabase.from("transferts").select("id").in("statut", ["en_attente", "valide"])),
         ]);
         if (cancelled) return;

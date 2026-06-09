@@ -21,7 +21,7 @@ export default function LivraisonDetailPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("bons_livraison")
+        .from("livraisons_planifiees")
         .select("*")
         .eq("id", params.id)
         .maybeSingle();

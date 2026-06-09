@@ -10,6 +10,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { useGlobalFilters, applyGlobalFilters, hasActiveFilters, GlobalFiltersIndicator } from "../../lib/useGlobalFilters";
 import TopBar from "../TopBar";
 import { useEditLock } from "../../lib/useEditLock";  /* 0.62.126 */
 import LockBanner from "../components/LockBanner";  /* 0.62.126 */
@@ -45,6 +46,7 @@ export default function DepotsPage() {
   const router = useRouter();
   const supabase = createClient();
   const auth = useAuth();
+  const globalFilters = useGlobalFilters();
   const cart = useCart();
 
   const [batiments, setBatiments] = useState([]);

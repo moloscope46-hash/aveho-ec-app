@@ -408,139 +408,22 @@ button{font-family:inherit;cursor:pointer}
   .topbar::-webkit-scrollbar { display:none; }
   .topbar > *{ flex-shrink:0; }
   .tb-icon { width:34px !important; height:34px !important; font-size:16px !important; }
-}
-
-/* 0.65.4 : Fix CRITIQUE — popups de la toolbar (panier, notif center, status, etc.)
-   doivent s'afficher en BOTTOM-SHEET sur mobile, PAS sortir en haut.
-   La règle s'applique à tous les dropdowns/popups ancrés à la topbar. */
-@media (max-width: 720px) {
-  /* 0.65.6 — Fix ULTIME : tous les popups custom (dropdown, popover, sheets) */
-  .tb-dropdown,
-  .notif-center-popup,
-  .status-popover,
-  .av-dropdown,
-  .av-popover,
-  .av-popup,
-  [role="menu"][data-popup],
-  [role="listbox"]:not(select [role="listbox"]) {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    height: auto !important;
-    max-height: 80vh !important;
-    border-radius: 18px 18px 0 0 !important;
-    z-index: 99998 !important;
-    box-shadow: 0 -10px 30px rgba(20,33,49,.4) !important;
-    animation: av-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    /* CRITIQUE : permet de scroller à l'intérieur si contenu trop haut */
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    /* CRITIQUE : padding-top pour laisser de la place au drag-handle */
-    padding-top: 24px !important;
-    /* Empêcher transform inline de remonter le popup */
-    transform: none !important;
+  /* Forcer les popups de la topbar à s'afficher en bottom-sheet en mobile */
+  .topbar [style*="position: absolute"][style*="top: calc"],
+  .topbar > div > div[style*="position: absolute"][style*="right: 0"]{
+    position:fixed !important;
+    top:auto !important;
+    bottom:0 !important;
+    left:0 !important;
+    right:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    border-radius:18px 18px 0 0 !important;
+    max-height:85vh !important;
+    z-index:9999 !important;
   }
-  /* Poignée drag-handle iOS-style au-dessus du popup */
-  .tb-dropdown::before,
-  .notif-center-popup::before,
-  .status-popover::before,
-  .av-dropdown::before,
-  .av-popover::before,
-  .av-popup::before {
-    content: "";
-    position: sticky;
-    top: 0;
-    display: block;
-    width: 40px; height: 4px;
-    border-radius: 99px;
-    background: rgba(20, 33, 49, .25);
-    margin: 0 auto 8px;
-    pointer-events: none;
-    z-index: 10;
-  }
-  /* 0.65.7 : éléments masqués en mobile dans la topbar (couronne + sandbox) */
-  .hide-on-mobile-tb { display: none !important; }
-}
-@keyframes av-bottom-sheet-up {
-  from { transform: translateY(100%); opacity: 0.7; }
-  to   { transform: translateY(0);    opacity: 1; }
 }
 /* === FIN MENU DRAWER PREMIUM ============================ */
-
-/* === 0.65.6 : POLISH PREMIUM GLOBAL ====================== */
-/* Panels avec relief subtil et dégradé */
-.panel {
-  background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%) !important;
-  box-shadow:
-    0 1px 3px rgba(20, 33, 49, .04),
-    0 4px 12px rgba(20, 33, 49, .06),
-    0 0 0 1px rgba(124, 200, 200, .04) inset !important;
-  border: 1px solid rgba(20, 33, 49, .06) !important;
-  transition: box-shadow 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.panel:hover {
-  box-shadow:
-    0 2px 6px rgba(20, 33, 49, .06),
-    0 8px 20px rgba(20, 33, 49, .08),
-    0 0 0 1px rgba(124, 200, 200, .12) inset !important;
-}
-
-/* Headers de page avec dégradé subtil */
-.pagehead, .page-head, [class*="PageHead"] {
-  position: relative;
-}
-
-/* Boutons premium : meilleur hover */
-button:not(.tb-icon):not(.menu-tile):not(.av-back-floating):not(.modal-x):not(.menu-section-h):not(.tb-dropdown button):not(.notif-center-popup button):hover {
-  transform: translateY(-1px);
-  filter: brightness(1.04);
-  transition: all 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* Cards / tiles - dégradé subtil teinté */
-.kpi-tile, .mt-tile, [class*="card-tile"] {
-  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%) !important;
-  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 280ms;
-}
-.kpi-tile:hover, .mt-tile:hover, [class*="card-tile"]:hover {
-  transform: translateY(-2px) scale(1.01);
-}
-
-/* Inputs premium : focus glow teal */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
-textarea:focus,
-select:focus {
-  outline: none !important;
-  border-color: #7CC8C8 !important;
-  box-shadow:
-    0 0 0 3px rgba(124, 200, 200, .18),
-    0 1px 3px rgba(20, 33, 49, .06) !important;
-}
-
-/* Headers : reliefs subtils */
-h1, h2, h3 {
-  text-shadow: 0 1px 0 rgba(255, 255, 255, .8);
-  position: relative;
-}
-
-/* Modal avec dégradé header (déjà fait dans modal-head-v2 mais on s'assure) */
-.modal-head-v2 {
-  position: relative;
-}
-.modal-head-v2::after {
-  content: "";
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(124, 200, 200, .6), transparent);
-}
-/* === FIN POLISH PREMIUM ================================== */
 
 /* layout contenu */
 .wrap{max-width:1180px;margin:0 auto;padding:30px 24px calc(140px + env(safe-area-inset-bottom, 0px))}
@@ -1081,12 +964,9 @@ label{font-size:11px;font-weight:700;letter-spacing:.5px;color:#8a98a8;text-tran
   -webkit-backdrop-filter:blur(8px) saturate(140%);
   display:flex;
   align-items:center;justify-content:center;
-  z-index:999990;  /* 0.65.14 : z-index ÉNORME pour passer au-dessus de tout (était 80, parfois coincé dans des contextes de stacking parents) */
+  z-index:80;
   padding:20px;
   animation:modal-bg-in 220ms var(--av-ease-out);
-  /* 0.65.14 : casse tout contexte de stacking parent */
-  isolation: isolate;
-  transform: translateZ(0);
 }
 @keyframes modal-bg-in {
   from { opacity:0; backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px); }
@@ -1276,17 +1156,11 @@ table{min-width:560px}                 /* force le scroll plutôt que d'écraser
   padding:0;
   overflow:hidden;
   /* 0.58.9 : animation slide-up plus marquée + shadow premium */
-  /* 0.65.15 : on garde les shadows premium MAIS on retire le ::before glow qui perturbait l'affichage */
-  animation:modalIn 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation:modalIn 320ms var(--av-ease-out);
   box-shadow:
-    0 30px 80px rgba(20,33,49,.40),
-    0 16px 32px rgba(20,33,49,.22),
-    0 0 0 1px rgba(124,200,200,.15),
-    0 0 60px rgba(124,200,200,.08),
-    0 0 0 1px rgba(255,255,255,.10) inset,
-    0 1px 0 rgba(255,255,255,.20) inset;
-  border-radius: 20px;
-  position: relative;
+    0 30px 60px rgba(20,33,49,.30),
+    0 12px 24px rgba(20,33,49,.18),
+    0 0 0 1px rgba(255,255,255,.08) inset;
 }
 @keyframes modalIn{
   from { transform:translateY(40px) scale(.94); opacity:0; }
@@ -1900,26 +1774,6 @@ body[data-lecture="1"]::after{content:"LECTURE SEULE";position:fixed;bottom:12px
   top:auto;
   bottom:calc(100% + 10px);
   animation:um-pop-up 220ms var(--av-ease-out);
-}
-/* 0.65.7 hotfix : en mobile, annule TOUJOURS flip-up et bascule en bottom-sheet (sécurité) */
-@media (max-width: 720px) {
-  .um-sheet,
-  .um-sheet.um-sheet-up {
-    position: fixed !important;
-    top: auto !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100vw !important;
-    min-width: 0 !important;
-    max-width: 100vw !important;
-    max-height: 80vh !important;
-    border-radius: 18px 18px 0 0 !important;
-    animation: av-bottom-sheet-up 280ms cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    z-index: 99998 !important;
-    overflow-y: auto !important;
-    box-shadow: 0 -10px 30px rgba(20,33,49,.4) !important;
-  }
 }
 @keyframes um-pop-up{
   from{opacity:0;transform:translateY(8px) scale(0.97)}
@@ -5544,18 +5398,11 @@ body.av-anim-off .av-page-hero {
     z-index: 5;
   }
 
-  /* Boutons footer modal : 0.65.15 — taille normale, pas full width (était flex:1 → trop gros) */
+  /* Boutons footer modal : full width 2 colonnes (UNIQUEMENT .modal-foot) */
   .modal-foot > button,
   [role="dialog"] > .modal-foot > button {
-    flex: 0 1 auto;
+    flex: 1;
     min-height: 40px !important;
-    padding: 8px 16px !important;
-    font-size: 13px !important;
-  }
-  /* Le bouton primary prend un peu plus de place visuellement mais reste raisonnable */
-  .modal-foot > button.btn-primary,
-  [role="dialog"] > .modal-foot > button.btn-primary {
-    min-width: 140px;
   }
 
   /* Sections internes modals : padding réduit */

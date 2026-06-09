@@ -58,7 +58,7 @@ export default function CommandeDetailPage() {
 
       // Fetch lignes
       const { data: lg } = await supabase
-        .from("commande_lignes")
+        .from("commandes_lignes")
         .select("*")
         .eq("commande_id", params.id)
         .order("created_at");

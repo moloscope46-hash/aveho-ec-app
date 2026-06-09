@@ -12,8 +12,6 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
-import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
-import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 const STATUT_TOURNEE = {
   planifiee: { col: "#EF9F27", lbl: "PLANIFIÉE", ic: "ti-calendar" },
@@ -48,7 +46,6 @@ function PresentationLivraisons() {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));
-  const [advFilters, setAdvFilters] = useState(() => getTVFilters("livraisons") || {});  // 0.65.11 fix
   const timerRef = useRef(null);
   const clockRef = useRef(null);
 
@@ -115,8 +112,6 @@ function PresentationLivraisons() {
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>
             AVEHO — TV DE SERVICE
             <TVMagasinFilter onChange={setMagasinId} />
-            <TVFiltersBar pageKey="livraisons" onChange={setAdvFilters} />
-            <TVCastButton refreshSec={refreshSec} />
           </div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>Livraisons prévues du jour</h1>
         </div>

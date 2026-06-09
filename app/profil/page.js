@@ -67,41 +67,37 @@ export default function Profil() {
   async function loadStats() {
     if (!auth.user?.id || !auth.structureId) return;
     const userId = auth.user.id;
-
-    // 0.65.4 : tryFetch défensif - si une requête plante, les autres marchent
-    const tryFetch = async (q) => {
-      try { const r = await q; if (r.error) return { data: [] }; return r; } catch { return { data: [] }; }
-    };
-
-    // Stats parallèles via Promise.all (chaque requête est sécurisée)
+    // Stats parallèles via Promise.all
+    // Alpha 0.32.0 : signalements perso disponibles via created_by opt-in
     const [diResp, achatsResp, transfertsResp, signResp, eventsResp] = await Promise.all([
       // DI créées par l'utilisateur
-      tryFetch(supabase.from("interventions")
+      supabase.from("interventions")
         .select("id, statut, urgence", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("created_by", userId)),
+        .eq("created_by", userId),
       // Achats créés (demandeur)
-      tryFetch(supabase.from("achats")
+      supabase.from("achats")
         .select("id, statut", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("demandeur_id", userId)),
+        .eq("demandeur_id", userId),
       // Transferts créés
-      tryFetch(supabase.from("transferts")
+      supabase.from("transferts")
         .select("id, statut", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("created_by", userId)),
-      // Signalements signés par l'utilisateur (opt-in created_by)
-      tryFetch(supabase.from("signalements")
+        .eq("created_by", userId),
+      // Alpha 0.32.0 : Signalements signés par l'utilisateur (opt-in created_by)
+      // Reste anonyme pour les signalements créés AVANT la 0.32 ou sans coche
+      supabase.from("signalements")
         .select("id, statut", { count: "exact" })
         .eq("structure_id", auth.structureId)
-        .eq("created_by", userId)),
+        .eq("created_by", userId),
       // Activité récente — table s'appelle audit_log (pas audit_events)
-      tryFetch(supabase.from("audit_log")
+      supabase.from("audit_log")
         .select("action, entite, entite_id, details, created_at")
         .eq("structure_id", auth.structureId)
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
-        .limit(15)),
+        .limit(15),
     ]);
 
     const di = diResp.data || [];
@@ -279,8 +275,6 @@ export default function Profil() {
             {/* === ONGLET PROFIL === */}
             {activeTab === "profil" && (
             <div key="profil" className="av-tab-content">
-            {/* 0.65.11 : Section Mes affectations & droits ULTRA enrichie */}
-            <MesAffectationsPanel auth={auth} supabase={supabase} />
             {/* Nom d'affichage */}
             <Panel style={{ marginBottom: 18 }}>
               <h2 style={{ margin: "0 0 16px", fontSize: 17 }}>Nom d'affichage</h2>
@@ -1330,230 +1324,6 @@ function NotifPrefsPanel() {
       <div style={{ marginTop: 12, padding: 10, background: "#fafbfc", borderRadius: 8, fontSize: 11, color: "#5a6878" }}>
         <i className="ti ti-info-circle" style={{ color: "#185FA5", marginRight: 4 }} />
         Les notifications auto se déclenchent sur : <b>DI urgentes</b>, <b>workflow d'approbation</b>, <b>signalements critiques</b>. Historique consultable dans <a href="/audit/notifs" style={{ color: "#185FA5", fontWeight: 700 }}>Audit → Notifications</a>.
-      </div>
-    </Panel>
-  );
-}
-
-// =============================================================
-// 0.65.11 : MesAffectationsPanel - infos complètes user
-// =============================================================
-function MesAffectationsPanel({ auth, supabase }) {
-  const [etablissements, setEtablissements] = useState([]);
-  const [batiments, setBatiments] = useState([]);
-  const [services, setServices] = useState([]);
-  const [equipes, setEquipes] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!auth?.user?.id || !auth?.structureId) { setLoading(false); return; }
-    (async () => {
-      try {
-        const tryFetch = async (q) => { try { const r = await q; return r.data || []; } catch { return []; } };
-        const [etabs, batLinks, svcLinks, eqMembres] = await Promise.all([
-          tryFetch(supabase.from("membres_etablissements")
-            .select("etablissement_id, role, batiment_id, service_id, etablissements(id, nom, ville, type, code_postal)")
-            .eq("user_id", auth.user.id)),
-          tryFetch(supabase.from("batiments")
-            .select("id, nom, etablissement_id")
-            .eq("structure_id", auth.structureId)),
-          tryFetch(supabase.from("services")
-            .select("id, nom, batiment_id, etage")
-            .eq("structure_id", auth.structureId)),
-          tryFetch(supabase.from("equipes_membres")
-            .select("equipe_id, role, equipes(id, nom, couleur, description)")
-            .eq("user_id", auth.user.id)),
-        ]);
-
-        const etabsMap = {};
-        etabs.forEach(e => {
-          const etabId = e.etablissement_id;
-          if (!etabsMap[etabId]) {
-            etabsMap[etabId] = {
-              ...e.etablissements,
-              role: e.role,
-              batiments: new Set(),
-              services: new Set(),
-            };
-          }
-          if (e.batiment_id) etabsMap[etabId].batiments.add(e.batiment_id);
-          if (e.service_id) etabsMap[etabId].services.add(e.service_id);
-        });
-        setEtablissements(Object.values(etabsMap));
-
-        // Bâtiments rattachés (résolus)
-        const myBatIds = new Set();
-        const mySvcIds = new Set();
-        etabs.forEach(e => {
-          if (e.batiment_id) myBatIds.add(e.batiment_id);
-          if (e.service_id) mySvcIds.add(e.service_id);
-        });
-        setBatiments(batLinks.filter(b => myBatIds.has(b.id)));
-        setServices(svcLinks.filter(s => mySvcIds.has(s.id)));
-        setEquipes(eqMembres.map(em => ({ ...em.equipes, roleDansEquipe: em.role })));
-      } catch (e) {
-        console.error("MesAffectations error", e);
-      }
-      setLoading(false);
-    })();
-  }, [auth?.user?.id, auth?.structureId]);
-
-  if (loading) return null;
-
-  const droits = auth?.role?.droits || auth?.role?.permissions_json || {};
-  const droitsList = Object.entries(droits).filter(([_, v]) => v === true || v === "true");
-
-  return (
-    <Panel style={{ marginBottom: 18, borderLeft: "4px solid #185FA5" }}>
-      <h2 style={{ margin: "0 0 14px", fontSize: 17, color: "#142131" }}>
-        <i className="ti ti-id-badge" style={{ color: "#185FA5", marginRight: 6 }} /> Mes affectations & droits
-      </h2>
-
-      {/* Rôle principal */}
-      {auth?.role && (
-        <div style={{
-          padding: "12px 14px",
-          background: `linear-gradient(135deg, ${auth.role.couleur || "#185FA5"}15, ${auth.role.couleur || "#185FA5"}05)`,
-          borderRadius: 12,
-          border: `1.5px solid ${auth.role.couleur || "#185FA5"}40`,
-          marginBottom: 14,
-          display: "flex", alignItems: "center", gap: 12,
-        }}>
-          <i className={`ti ${auth.role.icone || "ti-user"}`} style={{ fontSize: 32, color: auth.role.couleur || "#185FA5" }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700 }}>Rôle</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#142131" }}>{auth.role.nom}</div>
-            {auth.role.systeme && <span style={{ fontSize: 10, padding: "2px 8px", background: "#185FA5", color: "#fff", borderRadius: 6, fontWeight: 700, marginLeft: 4 }}>SYSTÈME</span>}
-          </div>
-          {droitsList.length > 0 && (
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 10, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700 }}>Permissions</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: auth.role.couleur || "#185FA5", fontFamily: "Consolas, monospace" }}>{droitsList.length}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Structure */}
-      {auth?.structureNom && (
-        <div style={{ marginBottom: 14, padding: "10px 12px", background: "rgba(124,200,200,.06)", borderRadius: 10, borderLeft: "3px solid #7CC8C8" }}>
-          <div style={{ fontSize: 10, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700 }}>
-            <i className="ti ti-building-store" /> Collectivité / Structure
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#142131", marginTop: 2 }}>{auth.structureNom}</div>
-        </div>
-      )}
-
-      {/* Établissements rattachés */}
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 8 }}>
-          <i className="ti ti-building-hospital" /> Établissements rattachés ({etablissements.length})
-        </div>
-        {etablissements.length === 0 ? (
-          <div style={{ padding: 12, background: "#fafbfc", borderRadius: 8, fontSize: 12, color: "#8a98a8", fontStyle: "italic" }}>
-            Aucun établissement rattaché. Demande à un admin de t'affecter.
-          </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 10 }}>
-            {etablissements.map(e => (
-              <div key={e.id} style={{
-                padding: 12,
-                background: "#fff",
-                border: "1.5px solid #e3e9ee",
-                borderRadius: 10,
-                boxShadow: "0 2px 6px rgba(20,33,49,.05)",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <i className="ti ti-building-hospital" style={{ fontSize: 18, color: "#185FA5" }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#142131", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.nom}</div>
-                    <div style={{ fontSize: 11, color: "#5a6878" }}>{e.type || "Établissement"} · {e.ville}</div>
-                  </div>
-                </div>
-                {e.role && (
-                  <div style={{ fontSize: 10, color: "#7CC8C8", padding: "2px 8px", background: "rgba(124,200,200,.1)", borderRadius: 6, display: "inline-block", fontWeight: 700, marginRight: 4 }}>
-                    Rôle : {e.role}
-                  </div>
-                )}
-                <div style={{ marginTop: 6, fontSize: 11, color: "#5a6878" }}>
-                  {e.batiments.size > 0 && <><i className="ti ti-building" /> {e.batiments.size} bâtiment{e.batiments.size > 1 ? "s" : ""} </>}
-                  {e.services.size > 0 && <><i className="ti ti-stethoscope" /> {e.services.size} service{e.services.size > 1 ? "s" : ""}</>}
-                  {e.batiments.size === 0 && e.services.size === 0 && <span style={{ fontStyle: "italic" }}>Accès complet</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Bâtiments rattachés */}
-      {batiments.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 8 }}>
-            <i className="ti ti-building" /> Bâtiments rattachés ({batiments.length})
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {batiments.map(b => (
-              <span key={b.id} style={{ padding: "4px 10px", background: "rgba(24,95,165,.08)", color: "#185FA5", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "1px solid rgba(24,95,165,.2)" }}>
-                <i className="ti ti-building" /> {b.nom}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Services rattachés */}
-      {services.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 8 }}>
-            <i className="ti ti-stethoscope" /> Services rattachés ({services.length})
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {services.map(s => (
-              <span key={s.id} style={{ padding: "4px 10px", background: "rgba(122,111,176,.08)", color: "#7a6fb0", borderRadius: 8, fontSize: 12, fontWeight: 600, border: "1px solid rgba(122,111,176,.2)" }}>
-                <i className="ti ti-stethoscope" /> {s.nom} {s.etage != null && <span style={{ fontSize: 10, opacity: 0.7 }}>(étage {s.etage})</span>}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Équipes */}
-      {equipes.length > 0 && (
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: "#5a6878", textTransform: "uppercase", letterSpacing: 0.8, fontWeight: 700, marginBottom: 8 }}>
-            <i className="ti ti-users" /> Équipes ({equipes.length})
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {equipes.map(eq => (
-              <span key={eq.id} style={{ padding: "4px 10px", background: (eq.couleur || "#5aa05a") + "15", color: eq.couleur || "#5aa05a", borderRadius: 8, fontSize: 12, fontWeight: 600, border: `1px solid ${(eq.couleur || "#5aa05a")}40` }}>
-                <i className="ti ti-users-group" /> {eq.nom}
-                {eq.roleDansEquipe && <span style={{ fontSize: 10, opacity: 0.8, marginLeft: 4 }}>· {eq.roleDansEquipe}</span>}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Droits/Permissions détaillés */}
-      {droitsList.length > 0 && (
-        <CollapsibleSection title={`Mes droits détaillés (${droitsList.length})`} icon="ti-key" defaultOpen={false}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 4, marginTop: 6 }}>
-            {droitsList.map(([key]) => (
-              <div key={key} style={{ padding: "4px 8px", background: "#fafbfc", borderRadius: 6, fontSize: 11, color: "#142131", display: "flex", alignItems: "center", gap: 4 }}>
-                <i className="ti ti-check" style={{ color: "#5aa05a" }} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{key.replace(/_/g, " ")}</span>
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
-
-      {/* Email + ID user */}
-      <div style={{ marginTop: 14, padding: 10, background: "#fafbfc", borderRadius: 8, fontSize: 11, color: "#5a6878" }}>
-        <div><i className="ti ti-mail" /> <b>Email :</b> {auth?.user?.email}</div>
-        <div style={{ marginTop: 3 }}><i className="ti ti-id" /> <b>User ID :</b> <code style={{ fontFamily: "Consolas, monospace", fontSize: 10 }}>{auth?.user?.id}</code></div>
-        {auth?.user?.created_at && <div style={{ marginTop: 3 }}><i className="ti ti-calendar" /> <b>Inscrit le :</b> {new Date(auth.user.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</div>}
       </div>
     </Panel>
   );

@@ -101,10 +101,15 @@ export default function UserMenu({ auth }) {
     };
   }, [open]);
 
-  // 0.65.15 : flipUp DÉSACTIVÉ complètement (causait des problèmes en PC aussi)
-  // Le menu s'ouvre TOUJOURS vers le bas en desktop, et en bottom-sheet sur mobile (via CSS)
+  // 0.58.55 : à l'ouverture, détecte si on doit flip vers le haut
   useEffect(() => {
-    setFlipUp(false);
+    if (!open || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    // Estime que le menu fait ~380px de haut. Si pas assez en bas ET plus d'espace en haut → flip
+    const menuHeight = 380;
+    setFlipUp(spaceBelow < menuHeight && spaceAbove > spaceBelow);
   }, [open]);
 
   function go(p) { setOpen(false); router.push(p); }

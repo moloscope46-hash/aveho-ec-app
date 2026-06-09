@@ -41,7 +41,7 @@ export default function MaintenanceDetailPage() {
       setItem(data);
       // Si rattachée à une récurrence, la charger
       if (data.recurrence_id) {
-        const { data: rec } = await supabase.from("maintenance_recurrences")
+        const { data: rec } = await supabase.from("maintenances_recurrences")
           .select("*").eq("id", data.recurrence_id).maybeSingle();
         setRecurrence(rec);
       }

@@ -240,471 +240,66 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
-    "v": "0.65.29",
-    "kind": "fix",
-    "titre": "MEGA FIX COLONNES FANTOMES dans tout le CODE (pas que le SQL) - 11 fichiers corriges - les patients vont enfin saffisher",
-    "chantiers": [
-      { "code": "AI", "txt": "AUDIT GLOBAL : recherche toutes les references aux colonnes fantomes dans tout le code JS (pas juste SQL). 11 fichiers contenaient encore des references" },
-      { "code": "AI", "txt": "FIX mode_residence → notes dans 5 fichiers : presentation/carte-had/page.js, presentation/had-list/page.js + tout fichier qui faisait patients.select(...mode_residence) ou d.mode_residence. C est pour ca que la LISTE PATIENTS etait VIDE - le SELECT foirait en 400" },
-      { "code": "AI", "txt": "FIX technicien_nom → assignee_email dans 10 fichiers : presentation/planning, presentation/interventions, presentation/dashboard, components/DashboardWidgets, planning/page.js, bilans-sav, interventions/[id], bilan-sav/[id]" },
-      { "code": "AI", "txt": "FIX prescripteur_id → collaborateur_id dans patients (had-list, api prescriptions)" },
-      { "code": "AI", "txt": "FIX magasins.fournisseur_id : RETIRE du SELECT magasins dans TVMagasinFilter (cette colonne nexiste pas sur magasins)" },
-      { "code": "AI", "txt": "FIX materiels.code → num_parc dans presentation/dashboard (materiels na pas de colonne code, vraie colonne est num_parc ou code_barre_principal)" },
-      { "code": "AI", "txt": "FIX carte-had : SELECT interventions sans batiment_id/service_id/chambre_id. Filtres advFilters.batId/svcId/chambreId retires car colonnes inexistantes" },
-      { "code": "INFO", "txt": "Maintenant LISTE PATIENTS va saffisher car le SELECT ne contient plus mode_residence qui foirait en 400 systematiquement. Et la TopBar TVMagasinFilter ne fait plus de 400 a chaque load" }
-    ],
-    "themes": ["fix-bugs-400", "audit-code", "schema-real"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.29.html"
-  },
-{
-    "v": "0.65.28",
-    "kind": "fix",
-    "titre": "AUDIT COLONNES SQL : 7 colonnes fantomes corrigees (patients.mode_residence, maintenances.libelle/technicien_nom/description, interventions.batiment_id/service_id/date_planifiee/technicien_nom, services.etage, materiels.batiment_id/marque/modele)",
-    "chantiers": [
-      { "code": "AI", "txt": "AUDIT COLONNES : extraction de toutes les colonnes utilisees dans chaque INSERT INTO et comparaison avec le diagnostic Cedric. Resultat : 7 colonnes fantomes trouvees" },
-      { "code": "AI", "txt": "FIX patients : mode_residence (n existe pas) → notes (existe). Le mode residence (EHPAD/DOMICILE...) est stocke dans notes pour la demo" },
-      { "code": "AI", "txt": "FIX maintenances #1 : libelle → notes + retrait batiment_id (n existe pas)" },
-      { "code": "AI", "txt": "FIX maintenances #2 : libelle → fusionne dans notes (libelle - description), technicien_nom → intervenant (existe)" },
-      { "code": "AI", "txt": "FIX interventions : batiment_id → depot_id (uuid→uuid OK), service_id → zone_id, date_planifiee → due_date (vraie colonne date), technicien_nom → assignee_email (vraie colonne)" },
-      { "code": "AI", "txt": "FIX services : etage → type (n existe pas, services a etage_id UUID mais on stocke en text)" },
-      { "code": "AI", "txt": "FIX materiels : batiment_id → emplacement (text), marque → fabricant_serie (text), modele → notes_etat (text). materiels n a PAS de colonne marque/modele" },
-      { "code": "AI", "txt": "BILAN FINAL : 37 tables INSERT toutes existantes + chaque INSERT utilise UNIQUEMENT des colonnes confirmees. Plus aucune erreur silencieuse colonne inexistante dans le SQL demo" },
-      { "code": "AI", "txt": "Cree aveho-DIAGNOSTIC-3-users.sql pour qu un Cedric voie les colonnes precises de membres_structure / membres_etablissements / membres_structure_magasins / membres_equipe / membres_services / membres_had / structures / magasins / depots. Permet de fixer un eventuel probleme sur ces tables si besoin" }
-    ],
-    "themes": ["fix-bugs-400", "audit-schema", "sql-demo"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.28.html"
-  },
-{
-    "v": "0.65.27",
-    "kind": "fix",
-    "titre": "AUDIT SQL : 2 tables fantomes ELIMINEES (membres_magasin + receptions_fournisseur). Plus AUCUNE table fantome dans tout le projet (code + SQL)",
-    "chantiers": [
-      { "code": "AI", "txt": "AUDIT SQL : extrait toutes les tables ciblees par INSERT INTO dans aveho-DEMO-data-import.sql et compare avec la liste reelle Supabase. Resultat : 2 tables fantomes trouvees" },
-      { "code": "AI", "txt": "FIX SQL membres_magasin → membres_structure_magasins. Colonnes simples (user_id, magasin_id, structure_id) - retire role et actif qui n existent pas" },
-      { "code": "AI", "txt": "FIX SQL membres_etablissements : utilise les VRAIES colonnes (user_id, etablissement_id, structure_id) - retire role et actif qui n existent pas" },
-      { "code": "AI", "txt": "FIX SQL receptions_fournisseur : SECTION SUPPRIMEE car la table n existe pas dans Supabase. Les bons de reception sont deja inseres dans bons_reception plus bas (extension 0.65.24)" },
-      { "code": "AI", "txt": "BILAN FINAL : 37 tables INSERT dans le SQL, toutes confirmees existantes dans Supabase. ZERO table fantome dans tout le projet (audit code 0.65.26 + audit SQL 0.65.27)" },
-      { "code": "AI", "txt": "Les batiments crees etaient deja dans la BONNE table batiments. Pas de probleme de ce cote la. Mais les 2 INSERTs sur tables fantomes (membres_magasin et receptions_fournisseur) etaient ignores silencieusement par le EXCEPTION WHEN OTHERS - donc Cedric n avait pas Cedric rattache au magasin (manquait dans membres_structure_magasins) et les receptions ne s ecrivaient nulle part. Corrige maintenant" },
-      { "code": "INFO", "txt": "Rejouer SQL (289K) - tous les INSERTs ciblent maintenant des vraies tables. Cedric aura enfin le rattachement membres_structure_magasins fonctionnel" }
-    ],
-    "themes": ["fix-bugs-400", "audit-schema", "sql-demo"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.27.html"
-  },
-{
-    "v": "0.65.26",
-    "kind": "fix",
-    "titre": "AUDIT tables : 6 tables fantomes corrigees (attachments, commandes_lignes, livraisons_planifiees, maintenances_recurrences, membres_magasin, profiles) + bouton QR Caster masque sur mobile",
-    "chantiers": [
-      { "code": "AI", "txt": "AUDIT COMPLET : extrait toutes les tables referencees dans le code (.from) et compare avec la liste reelle Supabase. Resultat : 6 tables fantomes corrigees" },
-      { "code": "AI", "txt": "FIX attachments → pieces_jointes (AttachmentsPanel.js)" },
-      { "code": "AI", "txt": "FIX commandes_lignes → commande_lignes (commandes/[id]/page.js) - faute de frappe avec un S" },
-      { "code": "AI", "txt": "FIX livraisons_planifiees → bons_livraison (livraisons-planifiees/[id]/page.js)" },
-      { "code": "AI", "txt": "FIX maintenances_recurrences → maintenance_recurrences (maintenance/[id]/page.js) - faute de frappe avec un S" },
-      { "code": "AI", "txt": "FIX membres_magasin → membres_structure_magasins (lib/useAuth.js)" },
-      { "code": "AI", "txt": "FIX profiles → membres_structure (lib/notifyValideurs.js) - profiles n EXISTE PAS dans Supabase, on utilise membres_structure qui contient user_id, email, nom, prenom" },
-      { "code": "AI", "txt": "FIX bouton CASTER (avec option QR Code) masque sur mobile dans TVCastButton.js. Detection mobile via user-agent + largeur ecran < 768px. Sur mobile : on a deja AirPlay/ChromeCast natifs en haut-droite via TVScreenNav, pas besoin du bouton QR" },
-      { "code": "INFO", "txt": "ZERO tables creees en doublon : utilisation uniquement des tables QUI EXISTENT VRAIMENT dans Supabase (verifie par grep + diff avec la liste fournie par Cedric). Plus de risque que le code reference une table fantome" }
-    ],
-    "themes": ["fix-bugs-400", "audit-schema", "ui-mobile"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.26.html"
-  },
-{
-    "v": "0.65.25",
-    "kind": "fix",
-    "titre": "DERNIER FIX 400 selon diagnostic colonnes RELLES Cedric : interventions sans batiment_id, materiels via service_id, maintenances sans libelle, bons_reception VRAIES colonnes",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX architecture/page.js : SELECT selon colonnes REELLES. interventions(id, statut, urgence, etablissement_id, materiel_id, patient_id, type) - PAS batiment_id/service_id/chambre_id. maintenances(id, type, statut, date_prevue, materiel_id, etablissement_id, intervenant, notes) - PAS libelle. services(id, nom, batiment_id, etage_id, etablissement_id) - PAS etage. materiels avec chambre_id/service_id/equipe_id. Ajout chambres dans le batch et indexes depotToBat + chambreToBat + serviceToBat. Materiels filtres via service_id ou chambre_id ou depot_id remontant au batiment" },
-      { "code": "AI", "txt": "FIX interventions TV : SELECT sans batiment_id/service_id/chambre_id/technicien_nom/date_planifiee. Utilise assignee_email + due_date + equipe_id. Filtres avFilters.batId/svcId/chambreId retires (colonnes nexistent pas). Fallback 3 niveaux conserve avec jointures materiels/patients/etablissements/equipes uniquement (pas batiments ni services)" },
-      { "code": "AI", "txt": "FIX planning TV : interventions avec due_date au lieu de date_planifiee + assignee_email au lieu de technicien_nom. maintenances avec intervenant + notes (pas libelle ni technicien_nom)" },
-      { "code": "AI", "txt": "FIX SQL bons_reception : utilise VRAIES colonnes (numero, etablissement_id, type_source, source_id, conforme, anomalies, commentaire, signataire_email, receptionne_le, statut). RETIRE montant_ht, fournisseur_id, notes, date_reception qui NEXISTENT PAS. 2 BR marques non conformes avec anomalies (carton abime, lignes manquantes) pour realisme" },
-      { "code": "AI", "txt": "FIX SQL stock_mouvements : utilise notes au lieu de commentaire + ajout colonne type (IN) en plus de type_mouvement" },
-      { "code": "INFO", "txt": "Procedure : rejouer SQL (288K - les ON CONFLICT garantissent zero doublon meme apres 100 relances). Push code 0.65.25. ATTENTION CACHE : Ctrl+Shift+R IMPERATIF apres deploiement Vercel. Hash JS doit changer dans la console (plus 5549-9d3437d2a9298300.js)" },
-      { "code": "INFO", "txt": "Erreur SQL 42601 syntax error at table_name : c est juste que tu as colle le RESULTAT CSV dans le SQL Editor pour le rerelancer. Pas grave, j ai bien recu les colonnes. Le diagnostic est complet" }
-    ],
-    "themes": ["fix-bugs-400", "schema-real", "demo-data"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.25.html"
-  },
-{
-    "v": "0.65.24",
-    "kind": "fix",
-    "titre": "Fix materiels.batiment_id (colonne inexistante) + utilisation bons_reception + stock_mouvements + materiel_mouvements (tables reelles Supabase)",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX CRITIQUE materiels n a PAS de colonne batiment_id : architecture/page.js filtre maintenant via depot.batiment_id. On indexe les depots par batiment_id puis on filtre les materiels par depot_id IN (depots du bat). Plus de 400 sur materiels" },
-      { "code": "AI", "txt": "FIX SQL : utilise les VRAIES tables Supabase fournies par Cedric. bons_reception (et pas receptions_fournisseur). stock_mouvements (et pas mouvements_stock uniquement). materiel_mouvements pour les mouvements de materiels physiques" },
-      { "code": "AI", "txt": "+8 bons de reception (BR-2026-0001 a 0008) dans la table bons_reception avec montant_ht, statut, notes" },
-      { "code": "AI", "txt": "+10 mouvements stock dans stock_mouvements (10 entrees reception fournisseur consommables et materiel)" },
-      { "code": "AI", "txt": "+10 mouvements materiels dans materiel_mouvements : Sortie affectation EHPAD/Clinique, Transfert depot central → EHPAD, Retour patient (DCD, hospitalisation), Transit vers HAD, Rebut obsolete filiere DASRI/DEEE, Maintenance envoi atelier" },
-      { "code": "AI", "txt": "Cree aveho-DIAGNOSTIC-2-colonnes.sql pour que Cedric voie les colonnes precises des tables critiques (interventions, maintenances, materiels, services, stock_mouvements, bons_reception, membres_etablissements, patients, articles)" },
-      { "code": "INFO", "txt": "Procedure : rejouer SQL (288K). Push code. Hard refresh. Tests : (1) /etablissements architecture ne fait plus de 400 sur materiels. (2) /bons-reception ou /receptions voir 8 BR. (3) /mouvements voir 10 mouvements stock + 10 mouvements materiels. (4) /presentation/interventions voir DI affichees (fallback 3 niveaux 0.65.23 actif)" }
-    ],
-    "themes": ["fix-bugs-400", "demo-data", "schema"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.24.html"
-  },
-{
-    "v": "0.65.23",
-    "kind": "fix",
-    "titre": "Fix CRITIQUE 400 architecture (7 queries en parallele par batiment) + interventions TV fallback 3 niveaux + planning sans jointures + SQL diagnostique colonnes",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX MAJEUR architecture/page.js : au lieu de faire 7 requetes par batiment (multipliees par 4 batiments = 28 requetes), on fait 6 requetes globales 1 fois puis filtrage cote JS par batiment.id. Elimine le spam de 400 et meme si une table foire les autres marchent. Retire aussi membres_etablissements qui foire en 400" },
-      { "code": "AI", "txt": "FIX CRITIQUE interventions TV : ajout fallback 3 niveaux (avec jointures FK, sans jointures, SELECT minimal). Si une jointure foire en 400, la requete se replie sur SELECT simple. Les DI s affichent enfin a l ecran !" },
-      { "code": "AI", "txt": "FIX planning TV : retrait jointures materiels(libelle) et patients(nom, prenom) qui pouvaient foirer en 400 si FK pas declaree. Remplace par materiel_id + patient_id avec affichage en hash court. date_prevue passe en format YYYY-MM-DD au lieu de timestamp ISO" },
-      { "code": "AI", "txt": "Maintenances : retrait du filtre batiment_id (colonne n existe pas sur table maintenances dans le schema) et de la jointure materiels(libelle, num_parc)" },
-      { "code": "AI", "txt": "Cree fichier SQL diagnostique aveho-DIAGNOSTIC-colonnes.sql que Cedric peut executer dans Supabase SQL Editor pour voir TOUTES les colonnes de chaque table impliquee dans les 400. Permet de comprendre quelles colonnes existent vraiment et adapter le code defensivement" },
-      { "code": "INFO", "txt": "ATTENTION CACHE : si Cedric voit toujours 5549-9d3437d2a9298300.js dans la console = navigateur sert le CACHE ancien. APRES push Vercel : Ctrl+Shift+R hard refresh imperatif ou DevTools > Application > Service Workers > Unregister + reload. Le hash JS doit changer dans la console pour confirmer le nouveau build" }
-    ],
-    "themes": ["fix-bugs-400", "tv", "diagnostic"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.23.html"
-  },
-{
-    "v": "0.65.22",
+    "v": "0.65.48",
     "kind": "feat",
-    "titre": "TV : Sortir HAUT MILIEU + ShareButton HAUT GAUCHE + StatusIcons popup CENTREE + SQL coherence + stocks +20 mouvements +8 receptions",
+    "titre": "FIX build webpack 0.65.47 + Module Agenda complet + Tournees globales avec optimisation + Pharmacie ERP (inventaire/stupefiants/preparations/retraits/interactions) + Mode TV TOUTES tournees",
     "chantiers": [
-      { "code": "AI", "txt": "TV : bouton SORTIR TV deplace en HAUT-MILIEU (top 16 left 50%). Etait en bas, Cedric le veut en haut" },
-      { "code": "AI", "txt": "ShareButton : deplace en HAUT-GAUCHE (top 70 left 16). Etait centre bas, Cedric le veut en coin haut-gauche pour ne pas chevaucher" },
-      { "code": "AI", "txt": "StatusIcons mobile : popup CENTREE ECRAN au lieu de bottom-sheet. alignItems center + maxWidth 480 + maxHeight 85vh + borderRadius 16 (tous coins) + animation status-pop-in scale .92 → 1. Plus visible et pratique mobile" },
-      { "code": "AI", "txt": "SQL 0.65.22 : COHERENCE forcer structure_id sur 14 tables (etablissements, batiments, services, chambres, equipes, vehicules, patients, materiels, articles, interventions, notifications, maintenances, commandes, transferts, cuves)" },
-      { "code": "AI", "txt": "SQL : COHERENCE patients : UPDATE batiment_id + service_id depuis la jointure chambre. Permet aux pages d afficher correctement patient dans son bat/service" },
-      { "code": "AI", "txt": "SQL : STOCKS articles. UPDATE stock_actuel + stock_min + stock_max avec valeurs realistes par categorie. Consommables (compresses 250+, gants 450+, seringues 320+). Materiel (CPAP 8, concentrateur 6, lit 4, fauteuil 5). Cassettes PCA volontairement 12 < min 20 = ALERTE STOCK CRITIQUE" },
-      { "code": "AI", "txt": "SQL : +20 mouvements de stock dans table mouvements_stock. 15 entrees reception fournisseur (CMD-2026-XXXX SantePlus, Mercurex, ResMed, Philips, Drive, Smith). 3 retours patient (CPAP gueri SAS, lit demenagement, materiel DCD a desinfecter). 2 transferts inter-magasin avec numero TRF" },
-      { "code": "AI", "txt": "SQL : +8 receptions fournisseur dans table receptions_fournisseur. REC-2026-0001 a 0008. 5 Validees + 3 En cours. Avec fournisseur_id + montant_ht + nb_lignes + recu_par (Hugo Martin, Yassir, Corentin, Julien, Issam, Stephane, Thomas). Commentaires realistes" },
-      { "code": "INFO", "txt": "Procedure : rejouer SQL (279K). Push code. Hard refresh Ctrl+Shift+R. Tests : (1) Bouton SORTIR TV en haut-milieu rouge. (2) Bouton PARTAGER rond teal en haut-gauche. (3) Cloche notifs sur mobile = popup centree ecran avec scale animation. (4) /articles voir stocks remplis. (5) /mouvements voir 20+ mouvements. (6) /receptions voir 8 receptions" }
+      { "code": "AI", "txt": "FIX 0.65.47 : double fragment <> </> dans TopBar.js causait l erreur de build webpack. Selecteur RoleImpersonateSelect repositionné proprement à côté de NotifBellEnhanced sans wrap fragment" },
+      { "code": "AI", "txt": "SQL aveho-MODULE-agenda-tournees-pharmacie.sql : Tables rendez_vous (avec récurrence RRULE iCal, type_rdv, source_type/id pour pointer interventions/visites/livraisons, lieu+adresse+coords, couleur+icone, rappel_minutes), tournees_globales (regroupement de tournees, optimisation_score, economies_km), tournee_globale_liens (lien N-N), optimisation_suggestions (moteur cross-tournees)" },
+      { "code": "AI", "txt": "SQL pharmacie ERP COMPLET : pharmacie_inventaires (complet/partiel/tournant/stupefiant) + pharmacie_inventaire_lignes (theorique/comptee/ecart), pharmacie_stupefiants_registre (registre légal entrée/sortie/destruction avec n° de registre), pharmacie_preparations (magistrales/officinales/hospitalières), pharmacie_retraits_lots (alertes ANSM/fabricant/interne avec niveau d urgence), pharmacie_interactions (DMI contre-indication/déconseillée/précaution)" },
+      { "code": "AI", "txt": "SQL Vue v_tournees_jour_complete : agrège TOUTES tournées du jour avec couleur_type calculée selon sous_type (infirmière terra C9867F, pharma vert 5aa05a, chambre violet 7a6fb0, domicile bleu 185FA5, autre orange EF9F27). Compteurs nb_etapes et nb_etapes_livrees. Utilisée par le Mode TV" },
+      { "code": "AI", "txt": "SQL Vue v_agenda_complet : UNION rendez_vous + interventions avec date_planifiee/due_date. Tous les évenements remontent dans l agenda avec leur source et couleur" },
+      { "code": "AI", "txt": "NOUVELLE page /agenda : 4 vues (jour / semaine / mois / liste). Toolbar avec navigation prev/next/aujourd hui + recherche + 7 filtres source (RDV / Intervention / Visite IDE / Livraison / Tournée / Formation / Réunion) cliquables avec compteurs. Vue calendrier en grille avec jours colorés. Modal création RDV avec datetime-local + couleur picker + lien patient" },
+      { "code": "AI", "txt": "NOUVELLE page /tournees-globales : RATTACHER plusieurs tournées entre elles pour mutualisation. 2 onglets (Globales / Suggestions). Modal création avec checklist multiple des tournées du jour (par couleur type), calcul auto optimisation (12 pct économie estimée par mutualisation, score 60-100), génération auto suggestions d optimisation cross-tournées" },
+      { "code": "AI", "txt": "Module suggestions optimisation : moteur qui propose mutualisations entre infirmières et pharmaciens qui passent au même endroit. Score color (>70 vert / >50 orange / <50 rouge). Boutons Accepter/Refuser. Économies km et minutes affichées" },
+      { "code": "AI", "txt": "Mode TV /presentation/tournees : utilise maintenant v_tournees_jour_complete au lieu de tournees direct. TOUTES les tournées du jour remontent automatiquement avec leur couleur calculée par type (livraison/infirmière/pharmacie/chambre/domicile)" },
+      { "code": "AI", "txt": "Sidebar TopBar enrichie : Agenda complet (ti-calendar teal) + Tournées globales + Optimisation (ti-route-2 bleu). 2 entrées clés ajoutées" }
     ],
-    "themes": ["ui", "tv", "demo-data", "stocks"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.22.html"
+    "themes": ["fix-build", "module-agenda", "tournees-globales", "optimisation-cross", "pharmacie-erp-complet"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.48.html"
   },
 {
-    "v": "0.65.21",
-    "kind": "fix",
-    "titre": "Fix 400 etage_surplus + membres_etablissements jointure + Sortir TV SOUS tuiles + AirPlay/ChromeCast haut-droite + StatusIcons bouton Fermer",
+    "v": "0.65.47",
+    "kind": "feat",
+    "titre": "Selecteur impersonate role admin + Parametrage voiture/CarPlay + Module Infirmieres + Liste users avec bulles permissions + popup oeil + SQL commande",
     "chantiers": [
-      { "code": "AI", "txt": "FIX 400 materiels.etage_surplus : colonne n existe pas, retiree des SELECT dans architecture page. Logique d affichage adaptee (false / ?)" },
-      { "code": "AI", "txt": "FIX 400 membres_etablissements?...membres_structure(prenom,nom) : jointure FK non declaree, retiree. Affichage simplifie sans prenom/nom (a recuperer separement plus tard si necessaire)" },
-      { "code": "AI", "txt": "FIX 400 patients(chambre) dans architecture : colonne retiree" },
-      { "code": "AI", "txt": "TV mode : bouton SORTIR TV deplace SOUS les tuiles (bottom 70px centre) au lieu de en haut a droite. Plus visible, ne cache pas le contenu" },
-      { "code": "AI", "txt": "TV mode : nouveaux boutons PARTAGER en haut a droite : AirPlay (iOS/Safari) et ChromeCast (Chrome) avec icones rondes 44px noir glassmorphism. Alert avec instructions si non disponible" },
-      { "code": "AI", "txt": "StatusIcons footer : ajout bouton Fermer + texte raccourci (Gere par le navigateur permissions dans reglages OS) au lieu du message long qui prenait toute la largeur" },
-      { "code": "INFO", "txt": "ATTENTION CACHE : ton navigateur garde l ancien JS (5549-9d3437d2a9298300.js). Apres push, fais Ctrl+Shift+R (hard refresh) ou efface le cache du site. Sinon tu verras toujours les anciens 400" }
+      { "code": "AI", "txt": "NOUVEAU composant RoleImpersonateSelect dans TopBar (visible admin uniquement) : selecteur deroulant avec liste de tous les roles, click sur un role applique le mode Voir Comme et stocke en localStorage av-impersonate-role-id. Reload page pour appliquer. Bouton vert RETOUR ADMINISTRATEUR pour sortir. Animation pulse orange quand impersonate actif" },
+      { "code": "AI", "txt": "Composant ImpersonateBanner sticky top : barre orange persistante avec icone oeil et nom du role simule + bouton Sortir, visible sur toutes les pages quand mode actif" },
+      { "code": "AI", "txt": "NOUVELLE page /parametres/voiture : Configuration mode voiture/CarPlay par utilisateur. Checkbox pour chaque categorie (12 categories incluant Infirmieres et Visites IDE), 4 toggles options (TTS / Wake-lock / Affichage compact / Aujourd hui seulement). Sauvegarde dans table carplay_config avec UPSERT" },
+      { "code": "AI", "txt": "Parametrage voiture - APERCU CARPLAY : bouton dans header + bouton dans la sidebar live. Ouvre popup XL qui simule l ecran CarPlay avec mock entiere (cadre TV noir, header voiture, chips des categories cochees, sample card patient avec 3 boutons Appeler/GPS/SMS, indicateurs activated). Aperçu en live quand on coche/décoche" },
+      { "code": "AI", "txt": "SQL aveho-MODULE-infirmieres-carplay.sql : Tables infirmieres (IDEL/IDEC/IDE/IPA avec type_infirmiere, rpps, adeli, ide, est_interne, est_externe, zone_intervention), visites_infirmieres (type_visite : soins/surveillance/prelevement/pansement/injection/sondage, type_lieu : domicile/chambre_batiment/cabinet, cotation NGAP, signature), carplay_config (categories_visibles, options par user)" },
+      { "code": "AI", "txt": "SQL Tournees enrichies avec sous_type (tournee_interne, tournee_externe, visite_domicile, chambres_batiment, infirmiere_idel, infirmiere_idec) + infirmiere_id + batiment_id" },
+      { "code": "AI", "txt": "SQL Roles Infirmiere + IDEC Coordinatrice creees avec permissions specifiques (infirmiere_lire/ecrire/admin, visites_creer/valider/admin, tournees_admin, voiture_*). Mise a jour Pharmacien avec permissions voiture" },
+      { "code": "AI", "txt": "SQL Permissions standardisees pour CarPlay (14 permissions): voiture_acces / voiture_patients / voiture_etablissements / voiture_magasins / voiture_pharmacies / voiture_rpps / voiture_fournisseurs / voiture_had / voiture_tournees_jour / voiture_di_urgentes / voiture_infirmieres / voiture_visites_inf / voiture_tts / voiture_wakelock" },
+      { "code": "AI", "txt": "NOUVELLE page /infirmieres : 2 onglets (Infirmieres / Visites). Liste cards avec avatar gradient color par type, badge Interne vert / Externe orange, contact tel mobile, ville, RPPS. Modal creation/edition avec tous les champs IDEL" },
+      { "code": "AI", "txt": "NOUVELLE page /administration/utilisateurs : Liste users avec gros pavés cards. Avatar 56px gradient color du role. Badge role avec icone+color. BULLES PERMISSIONS colorees par groupe (Base/Patients/Materiel/Interventions/Pharmacie/Infirmieres/Facturation/Voiture). Icone oeil 48px qui ouvre popup" },
+      { "code": "AI", "txt": "Popup oeil edition permissions : 8 GROUPES de permissions cochables (Base 5, Patients 4, Materiel 4, Interventions 4, Pharmacie 5, Infirmieres 7, Facturation 4, Voiture 14 = 47 perms total). Chaque perm en chip arrondi cliquable. Bouton Tout cocher/decocher par groupe. Compteur de coches par groupe. Bouton Generer SQL produit UPDATE roles SET permissions_json copier-coller. Bouton Appliquer fait UPDATE en BDD" },
+      { "code": "AI", "txt": "Sidebar TopBar enrichie : 3 nouvelles entrees - Paramétrage voiture/CarPlay (ti-settings-cog violet), Infirmières & Visites (ti-stethoscope terra), Utilisateurs & Droits (ti-user-cog violet fonce)" }
     ],
-    "themes": ["fix-bugs-400", "ui", "tv"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.21.html"
+    "themes": ["impersonate-role", "carplay-config", "module-infirmieres", "permissions-bubble-ui", "sql-command-builder"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.47.html"
   },
 {
-    "v": "0.65.20",
+    "v": "0.65.46",
     "kind": "feat",
-    "titre": "SwitchToPhoneFab en haut-droite + Rattachement magasin officiel SQL + Agenda massif (+40 maintenances + 8 tournees)",
+    "titre": "Filtres globaux persistes localStorage + indicateur visuel + Mode voiture Tournees jour/DI urgentes + TTS + Wake-lock + SQL CONSOLIDE journee",
     "chantiers": [
-      { "code": "AI", "txt": "SwitchToPhoneFab : bouton Continuer sur mon telephone deplace en HAUT-DROITE (etait bas-droite, plus visible et standard). Position fixed top:70px right:16 + zIndex 9998. Taille reduite a 44x44 (plus discret). Visible mobile ET desktop" },
-      { "code": "AI", "txt": "FIX SQL : retrait du INSERT profiles (la table profiles n existait pas dans Supabase basique, faisait planter tout le bloc 0.65.19). Le SQL passe maintenant sans erreur" },
-      { "code": "AI", "txt": "FIX message Tu n es rattache a aucun magasin : ajout du SQL OFFICIEL recommande par le composant lui-meme. UPDATE membres_structure SET magasin_fournisseur_id + role_professionnel utilisateur_magasin WHERE email moloscope46@gmail.com. C est cette colonne specifique magasin_fournisseur_id qui est verifiee par useMagasinContext, pas membres_magasin" },
-      { "code": "AI", "txt": "SQL : +40 maintenances dans la table maintenances pour remplir l agenda. 20 preventives (lits Hill-Rom, CPAP MAJ firmware, pompes PCA, concentrateurs, defib test choc, fauteuils, matelas, pompes nutrition, couveuse neonat, bistouri) avec dates etalees sur 90 jours futurs. 10 curatives (lit moteur HS, pompe HS, concentrateur, fauteuil moteur droit, leve-personne, defib electrodes, matelas, verticalisateur, aspirateur, couveuse) en cours ou planifiees. 5 calendrier futur (60-150j). 5 passees terminees" },
-      { "code": "AI", "txt": "SQL : +8 tournees planifiees dans la table tournees pour remplir l agenda. TOUR-HAD-046 demain matin Lyon centre (6 etapes). TOUR-HAD-047 Villeurbanne aprem (5 etapes). TOUR-HAD-048 urgences soir (3 etapes). TOUR-EHPAD-021 livraison hebdo (8 etapes). TOUR-CLIN-018 Clinique (4 etapes). TOUR-HAD-049 week-end (4 etapes). TOUR-MAG-055 reappro magasin (12 etapes). TOUR-HAD-050 lundi prochain (7 etapes)" },
-      { "code": "INFO", "txt": "Procedure 0.65.20 : rejouer SQL (265K). Push code. Tests : (1) Bouton telephone en HAUT-DROITE de toutes les pages mobile et PC. (2) Plus de message Tu n es rattache a aucun magasin (verifier que SELECT email moloscope46 a marche dans SQL). (3) /agenda voir 40 maintenances + 8 tournees etalees sur 90 jours. (4) /interventions voir tous les types de DI" }
+      { "code": "AI", "txt": "useGlobalFilters enrichi : persistance localStorage automatique (av-global-filters key) avec restauration au chargement. Helper hasActiveFilters(f) detecte si au moins un filtre est actif. Composant GlobalFiltersIndicator affiche un badge sticky en haut avec chips colorées des filtres actifs (search/statut/urgence/period) + bouton Effacer" },
+      { "code": "AI", "txt": "Indicateur GlobalFiltersIndicator integré au layout root via GlobalFiltersIndicatorAuto : badge teal en haut de TOUTES les pages quand au moins un filtre est actif. Position sticky top + backdrop blur + chips listant les filtres + bouton clear" },
+      { "code": "AI", "txt": "useGlobalFilters branche sur 4 pages SUPPLÉMENTAIRES : materiels (search libelle/num_parc/fabricant_serie/notes_etat), depots (nom/code/ville/adresse), commandes (numero/type_commande/commentaire), signalements (titre/description). Total maintenant : 7 pages avec filtres globaux actifs" },
+      { "code": "AI", "txt": "Mode voiture - 2 NOUVELLES CATÉGORIES : Tournées du jour (icone ti-calendar-route bleu, liste tournees du jour avec statut distance duree chauffeur), DI urgentes (icone ti-bell-ringing rouge, liste interventions urgence Urgent/Prioritaire/critique/haute non clôturées avec patient + tel + GPS)" },
+      { "code": "AI", "txt": "Mode voiture - WAKE-LOCK API : navigator.wakeLock.request screen pour empecher l ecran de se mettre en veille pendant la conduite. Re-acquire au visibilitychange. Badge orange ÉCRAN ON visible dans le header quand actif. Release auto au unmount" },
+      { "code": "AI", "txt": "Mode voiture - TEXT-TO-SPEECH (Synthèse vocale) : bouton volume dans header pour activer/desactiver. Quand actif, annonce automatiquement Prochain arrêt : NOM, VILLE en français rate 0.95 via window.speechSynthesis. Anti-doublon avec lastAnnouncedStop" },
+      { "code": "AI", "txt": "★ SQL CONSOLIDÉ JOURNÉE 09 JUIN 2026 : un seul fichier aveho-CONSOLIDE-JOURNEE-09JUIN.sql contenant TOUS les SQL de la journée - Pharmacie phase 1 (7 tables + vue), Phase 2 prescriptions/dispensations (3 tables + 2 fonctions + triggers + vue), Rôles pharmacien + renouvellement, Facturation complete (PCG 20 comptes + 7 tables + 3 fonctions + 2 triggers + vue + 5 journaux seeds), Décès patient + Tournées enrichies + flag est_had + vue timeline 6 sources" },
+      { "code": "AI", "txt": "SQL CONSOLIDÉ - 100% idempotent : CREATE IF NOT EXISTS partout + ALTER ADD IF NOT EXISTS pour les colonnes + ON CONFLICT DO NOTHING pour les seeds + DROP TRIGGER IF EXISTS avant CREATE TRIGGER + CREATE OR REPLACE pour vues et fonctions. Exécutable plusieurs fois sans casser. RAISE NOTICE en sections pour suivre la progression dans Supabase" }
     ],
-    "themes": ["feature", "ui", "demo-data", "agenda"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.20.html"
+    "themes": ["filtres-localStorage", "mode-voiture-complete", "tts-wakelock", "sql-consolide-journee"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.46.html"
   },
 {
-    "v": "0.65.19",
-    "kind": "feat",
-    "titre": "Fix 400 final (etat dashboard + not.in encoding accents) + SQL +30 utilisateurs +30 notifications + adresses INSEE patients",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX 400 DashboardWidgets : interventions.etat → statut (la colonne etat n existe pas)" },
-      { "code": "AI", "txt": "FIX 400 not.in encoding : les Postgrest .not(statut, in, (Cloturee, Refusee)) failaient a cause de l encodage URL des accents. Remplace par .neq(statut, Cloturee).neq(statut, Refusee) sur 6 fichiers (carte-had, interventions, had-list, architecture, accueil, useRealtimeNotifs)" },
-      { "code": "AI", "txt": "FIX 400 materiels join articles : retrait de la jointure articles(libelle, famille) qui necessitait une FK declaree non presente" },
-      { "code": "AI", "txt": "SQL 0.65.19 : +30 utilisateurs (profils) avec rattachement complet a la structure et roles diversifies. 8 techniciens SAV biomedicaux (Hugo Martin senior, Yassir Aouaj, Corentin David, Julien Bertrand, Issam Alouane HAD, Marc Dubois, Stephane Leroy CPAP, Thomas Moreau perfusion). 2 coordinateurs HAD (Aurelie Fontaine Lyon centre, Patrick Lambert Villeurbanne). 5 IDE (Sophie Lefebvre coord HAD, Mathilde Garnier EHPAD, Celine Dupont Clinique cardio, Isabelle Roussel bloc, Nathalie Lemoine rea). 4 medecins (Dr Germain coord HAD, Dr Lecomte gerontologie, Dr Barthelemy urgentiste, Dr Perrot anesthesiste). 3 chauffeurs/livreurs. 3 admin/direction (Helene Lafaye DG, Romain Bertrand resp SAV, Mathieu Morin resp magasin). 2 admin facturation/RH. 1 pharmacien hospitalier. 3 parametriques (dieteticienne, kine, ergo)" },
-      { "code": "AI", "txt": "SQL : +30 notifications massivement realistes couvrant TOUTES les categories. Pannes (CPAP fuite patient LACROIX, concentrateur HS, pompe PCA alarme batterie, defib erreur). Maintenances (4 lits Hill-Rom EHPAD, 10 CPAP pneumo, etalonnage defib). Commandes (livree clinique, en preparation EHPAD, urgent pansements, nouvelle HAD). Transferts (a valider, recu, en attente). Signalements (frigo pharmacie, casse materiel HAD, cuve O2 niveau bas). Workflow (approbation > 2000 euros, validation devis CPAP). RGPD (5 consentements expirent). Patients (nouveau HAD urgence, transfere EHPAD, critique rea). Stock (compresses bas, cassettes PCA critique). Info webinaire 26/06. Bilans SAV mensuel. HAD (8 patients tournee, tournee terminee 6/8). Vehicules (Mercedes Sprinter 50000 km)" },
-      { "code": "AI", "txt": "SQL : Patients adresses INSEE completes. 19 rues reelles de Lyon (Republique, Jean Jaures, Bellecour, Lafayette, Brotteaux, Garibaldi, Vendome, Berthelot, Augagneur, Herriot, Vitton, Carmelites, Sainte-Catherine, Croix-Rousse, Tolstoi, Zola, Barbusse, France) + 23 codes postaux INSEE 69001-69009, 69100-69500 + coordonnees GPS reparties dans la metropole" },
-      { "code": "AI", "txt": "SQL : Etablissements adresses + FINESS test : EHPAD Lilas 125 av Berthelot 69007 FINESS 690999991, Clinique 8 bd Croix-Rousse 69004 FINESS 690999992, HAD 42 rue Republique 69003 FINESS 690999993" },
-      { "code": "INFO", "txt": "Procedure : rejouer SQL (258K). Push code. Tests : (1) Console propre 0 erreur 400. (2) /utilisateurs voir 30+ utilisateurs avec roles varies. (3) Cloche notifs montre 20+ non lues avec contenus realistes. (4) /patient les adresses sont remplies avec rues + CP Lyon" }
-    ],
-    "themes": ["fix-bugs-400", "feature", "demo-data", "users"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.19.html"
-  },
-{
-    "v": "0.65.18",
-    "kind": "feat",
-    "titre": "MEGA SQL : +140 materiels (20 par etat) + 10 cuves + patients TOUS champs completes + articles fiche complete",
-    "chantiers": [
-      { "code": "AI", "txt": "SQL 0.65.18 : +140 materiels repartis 20 par etat. 20 En service (chez patient HAD ou en service EHPAD/clinique). 20 En panne avec descriptions detaillees (CPAP fuite, concentrateur HS, lit moteur bloque, pompe alarme batterie...). 20 Maintenance (etalonnage, MAJ firmware, calibration, test cellules...). 20 En stock NEUFS au depot central pret a deployer. 20 A recuperer (patient DCD, fin PEC, demenagement, changement modele...). 20 En transit entre depots ou en livraison. 20 Au rebut (CPAP S9 obsolete, lit gen1 1995, concentrateur DeVilbiss obsolete, pompe PHC-A1 1995...)" },
-      { "code": "AI", "txt": "Tous les materiels rattaches a etablissement + batiment + depot_id pour pouvoir filtrer dans l app et les voir dans les vues globales" },
-      { "code": "AI", "txt": "+10 cuves O2 supplementaires : 3 EHPAD (CUV-EHPAD-A01, A02, B01), 3 Clinique (CUV-CLIN-01, 02, 03), 4 HAD (CUV-HAD-01 a 04). Statuts varies (En service, A remplir, Maintenance)" },
-      { "code": "AI", "txt": "Patients : UPDATE massif pour completer TOUS les champs manquants. sexe, GIR (1-6), mobilite (Autonome/Aidee/Fauteuil/Alite), regime (Normal/Diabetique/Sans sel/Mixe/Sans gluten), allergies, medecin traitant + telephone, contact urgence (nom + tel + lien de parente), commentaire enrichi (antecedents + traitement chronique + suivi medical). Tous remplis avec rotation deterministe sur 6-8 profils types" },
-      { "code": "AI", "txt": "Articles : UPDATE massif pour completer la fiche complete. reference, description (Article medical professionnel...), unite, TVA (5.5 consommables ou 20% materiel), code LPP automatique selon libelle (1101230 CPAP, 1100620 concentrateur, 1208005 lit medicalise, 1244925 matelas, 4108090 fauteuil, 1129995 pompe PCA, 1230050 pompe nutrition), actif=true" },
-      { "code": "INFO", "txt": "Procedure : rejouer SQL (234K) qui contient maintenant TOUT. Pas de changement code. Tests : (1) /materiel filtre par etat -> chaque etat a 20+ materiels. (2) /patient -> tous les champs remplis dans la fiche. (3) /catalogue articles -> reference + LPP + TVA + description. (4) /cuves -> 16+ cuves" }
-    ],
-    "themes": ["feature", "demo-data"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.18.html"
-  },
-{
-    "v": "0.65.17",
-    "kind": "fix",
-    "titre": "FIX 400 restantes (etat→statut SLA + notifs.lu→lue NotifCenter) + FAB bas-droite + BackButton mobile mi-largeur + ShareButton milieu + SQL centre de soin complet (+11 equipes +61 chambres +16 vehicules +30 patients)",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX 400 useRealtimeNotifs checkSLA : interventions.etat → statut + Resolue/Annulee → Cloturee/Refusee avec not.in syntax + try/catch sur erreur" },
-      { "code": "AI", "txt": "FIX 400 NotifCenter : lu → lue + fallback robuste si colonne archive n existe pas. Tente avec archive, si echec retombe sans" },
-      { "code": "AI", "txt": "FAB raccourcis en BAS-DROITE : position bottom 16 right 16, flexDirection row-reverse pour que les bulles s ouvrent vers la gauche. Tooltip a gauche de chaque bulle" },
-      { "code": "AI", "txt": "BackButton mobile : max-width 45vw + ellipsis sur le label pour ne plus couvrir toute la largeur. Position bottom-left maintenue" },
-      { "code": "AI", "txt": "Nouveau ShareButtonFloating : bouton rond gradient teal+violet au MILIEU PILE POIL en bas (left 50% translateX -50%). Click utilise Web Share API native sur mobile, fallback copie dans presse-papier sur desktop avec toast feedback" },
-      { "code": "AI", "txt": "SQL 0.65.17 CENTRE DE SOIN COMPLET : +11 equipes rattachees a tous les batiments (Soins palliatifs, Alzheimer Cantou, Medecine geriatrique, Bloc operatoire 8 IBODE + 4 IADE, Medecine ambulatoire, Urgences SAU, Imagerie, Maternite, Reanimation 24/7, HAD coordination, HAD Villeurbanne)" },
-      { "code": "AI", "txt": "SQL : +61 chambres supplementaires reparties dans tous les services nouveaux (cardio 1C05-10, pneumo 2P04-07, gastro 3G01-05, dialyse 0D01-04, onco 4O01-04, ortho CO05-08, viscerale CV01-04, maternite MAT01-06, USIC3-4, USC1-4, endocrino 2E01-03, urgences BOX1-6, UHCD1-4, long sejour 401-405)" },
-      { "code": "AI", "txt": "SQL : +16 vehicules (flotte equivalente centre de soin) : 4 ambulances (Mercedes Sprinter, Renault Master), 4 VSL (Trafic, Jumpy, Kangoo, Partner), 5 camionnettes livraison/SAV magasin et HAD, 3 VL pour coord HAD et direction (Tesla Model 3)" },
-      { "code": "AI", "txt": "SQL : +30 patients dans tous les services nouveaux avec rattachement complet etablissement + batiment + service (cardio, pneumo, gastro, dialyse, onco, chir ortho/viscerale, rea, USIC, soins palliatifs, Alzheimer Cantou, long sejour)" },
-      { "code": "INFO", "txt": "Procedure 0.65.17 : rejouer SQL (199K) qui contient maintenant TOUT. Push code. Tests : (1) Console propre sans 400. (2) FAB raccourcis en bas-droite. (3) BackButton ne couvre plus tout le mobile. (4) Bouton partager rond au milieu en bas. (5) /equipes voir 18 equipes. (6) /vehicules voir 24 vehicules. (7) /patients voir tous services peuples" }
-    ],
-    "themes": ["fix-bugs-400", "ui", "demo-data", "centre-de-soin"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.17.html"
-  },
-{
-    "v": "0.65.16",
-    "kind": "fix",
-    "titre": "MEGA FIX bugs 400 + Bouton sortir TV + BackButton bas-gauche + FAB au-dessus + SQL +12 batiments +33 services +41 chambres +50 historique",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX critique TVCastButton is not defined : ajout import dans had-list et architecture (manquaient)" },
-      { "code": "AI", "txt": "FIX spam 400 useAuth : retrait du SELECT roles(...permissions_json,droits,icone,couleur) qui plantait. Commence directement par SELECT simple sans la jointure roles" },
-      { "code": "AI", "txt": "FIX 400 signalements.criticite : la colonne n existe pas. Remplace par statut=Nouveau + type. Wrappé en try/catch dans useRealtimeNotifs" },
-      { "code": "AI", "txt": "FIX 400 notifications lu/archive : la colonne s appelle lue (avec un e). Ajout fallback multi-niveaux dans NotifBellEnhanced (avec archive, sans archive, juste structure_id)" },
-      { "code": "AI", "txt": "FIX 400 magasins.fournisseurs(raison_sociale) : FK non declaree. Retrait de la jointure dans TVMagasinFilter et fallback dans commandes/page.js" },
-      { "code": "AI", "txt": "FIX 400 patients(chambre) : colonne retiree des SELECT dans interventions et planning TV (patients HAD = pas de chambre)" },
-      { "code": "AI", "txt": "Bouton SORTIR TV : nouveau bouton rouge en haut a droite des pages TV (TVScreenNav). Click renvoie vers /accueil pour quitter le mode plein ecran" },
-      { "code": "AI", "txt": "BackButton Page precedente : passe en BAS A GAUCHE (etait top). FAB raccourcis passe juste AU DESSUS du BackButton (bottom 68px) pour empilage propre" },
-      { "code": "AI", "txt": "SQL 0.65.16 MEGA enrichissement : +12 batiments (Soins palliatifs, Alzheimer, Chirurgie aile sud, Maternite, Soins intensifs, Imagerie...) +33 services (bloc operatoire, reanimation, USIC, cardiologie, pneumologie, gastro, oncologie, urgences, IRM, scanner, neonatologie...) +41 chambres reparties dans services divers +8 patients EHPAD/Clinique avec rattachement complet etab+bat+svc+chambre +50 DI historique cloturees sur les 90 derniers jours" },
-      { "code": "INFO", "txt": "Procedure 0.65.16 : rejouer SQL aveho-DEMO-data-import.sql complet (174K). Push code. Tests : (1) Plus de spam 400 dans la console. (2) /presentation/* : bouton SORTIR TV rouge en haut-droite. (3) Page precedente en BAS A GAUCHE. (4) FAB raccourcis juste AU-DESSUS du back button. (5) /etablissements voir les nouveaux batiments+services" }
-    ],
-    "themes": ["fix-bugs-400", "ui", "demo-data"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.16.html"
-  },
-{
-    "v": "0.65.15",
-    "kind": "fix",
-    "titre": "Fix UserMenu PC/Mobile + Modal glow retire + Boutons modaux taille normale + Cards commandes ENRICHIES",
-    "chantiers": [
-      { "code": "AI", "txt": "UserMenu : flipUp completement DESACTIVE (causait bug en PC desormais). Le menu s ouvre TOUJOURS vers le bas en desktop et en bottom-sheet sur mobile (via CSS)" },
-      { "code": "AI", "txt": "Modal : retire le glow ::before anime qui perturbait l affichage et causait des problemes visuels. On garde les shadows premium multi-layer mais sans le glow rotatif" },
-      { "code": "AI", "txt": "Boutons footer modal : retire le flex:1 qui rendait les boutons enormes (50% chacun) sur mobile. Maintenant : flex:0 1 auto + min-width 140px sur primary uniquement. Boutons reviennent a taille normale" },
-      { "code": "AI", "txt": "Liste commandes ENRICHIE : default viewMode = grid (cards) au lieu de list. Chaque card affiche maintenant : numero + statut + date commande + date livraison prevue + Etablissement + Magasin + Fournisseur + Notes (extrait) + Total HT + Total TTC en gros. Statuts traduits avec couleurs (livree vert, annulee rouge, en preparation orange, envoyee teal, autres bleu)" },
-      { "code": "AI", "txt": "SELECT commandes enrichi avec etablissements(nom, ville) + fournisseurs(raison_sociale) en jointure. Les cards sont desormais ULTRA informatives" },
-      { "code": "INFO", "txt": "Procedure 0.65.15 : extraire zip + npm install --legacy-peer-deps + build + push. Tests : (1) Click avatar user en haut a droite -> menu s ouvre VERS LE BAS (jamais vers le haut). (2) Click sur Nouveau achat -> boutons Annuler/Enregistrer taille normale, pas enormes. (3) /commandes -> cards riches avec etab + fournisseur + montant HT/TTC + notes" }
-    ],
-    "themes": ["fix", "ui", "commandes"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.15.html"
-  },
-{
-    "v": "0.65.14",
-    "kind": "fix",
-    "titre": "Fix SQL double AS + Modal hi-tech glow + FAB en haut-gauche + Cast popup centré + +60 DI tous types",
-    "chantiers": [
-      { "code": "AI", "txt": "FIX CRITIQUE SQL : syntax error at AS - le double alias AS t(...) AS arts_data(...) supprime" },
-      { "code": "AI", "txt": "Modal hi-tech : z-index 999990 + glow teal/navy/violet animé + multi-layer shadow + animation rebondie" },
-      { "code": "AI", "txt": "FAB raccourcis en haut a gauche (etait cache top-right) + tooltip a droite" },
-      { "code": "AI", "txt": "TVCastButton popup CENTRE au milieu de la page avec backdrop blur" },
-      { "code": "AI", "txt": "+60 DI de tous types : Panne 15 + Installation 12 + Maintenance 10 + Recuperation 8 + Livraison 10 + Bilan 5" },
-      { "code": "INFO", "txt": "Procedure push 0.65.14 : rejouer SQL + push code. Tests bouton 3 raccourcis haut-gauche + modales avec glow teal + popup Cast centre + +60 DI variees" }
-    ],
-    "themes": ["fix-sql", "ui", "modal", "demo-data"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.14.html"
-  },
-{
-    "v": "0.65.13",
-    "kind": "feat",
-    "titre": "📦 MEGA SQL démo ULTRA complet : +50 articles + mercuriales + 60 matériels (6 états) + dossier médical + cuves O2 + commandes + RGPD + notifs",
-    "chantiers": [
-      { "code": "AI", "txt": "📦 **+50 articles dans le catalogue magasin** : 50 articles supplémentaires avec famille / prix public / prix achat (65%) / unité / référence / description complète. Couvre toutes les familles : 8 perfusion (cassettes 250ml, Huber sécurisée, transfusion, robinet 3 voies, prolongateur, NaCl, PORT-A-CATH, Crono PCA 50ml), 7 nutrition (Abbott FreeGo Wireless, NPAD Aminoven, sondes, bouton MIC-KEY, compresseur Nutricia, Flocare), 9 oxygénothérapie (CPAP Philips DreamStation 2, masques P30i/F30, Inogen G5 + batterie, bouteille O2, cuve liquide Linde, VPAP Trilogy, filtres HEPA), 6 cicatrisation (Mepilex Border, Aquacel Ag, Cica-Care silicone, Chlorhexidine, Bétadine, TPN PICO mini-VAC), 10 VPH (Vermeiren V200, Invacare Storm 4, Hill-Rom CenturisII, Repose Air, Arjo Maxi Move, Sara 3000, déambulateurs, scooter Sterling Sapphire, coussin Roho), 10 consommables (gants nitrile L, SHA gel, champs stériles, set pansement, DASRI 30L, compresses, sparadrap, surchaussures, tablier, FFP2)" },
-      { "code": "AI", "txt": "🔗 **Catalogue fournisseurs (article_fournisseurs)** : 30 liens article ↔ fournisseur avec référence fournisseur / prix unitaire HT / qté min commande / conditionnement / délai livraison. Permet de tester les sélecteurs fournisseur principal / catalogue par fournisseur dans l''interface" },
-      { "code": "AI", "txt": "📋 **+4 mercuriales/devis/AO avec 34 lignes** : (a) Mercuriale annuelle EHPAD Lilas (active, 12% remise, 30j fin de mois, 10 lignes). (b) Mercuriale Clinique Saint-Joseph (active, 15% remise, 60j nets, 10 lignes). (c) Appel d''offres HAD Q2 2026 (en_cours, 8% remise, 10 lignes). (d) Devis renouvellement parc CPAP (4 lignes). Toutes les lignes pointent vers articles existants avec prix négociés calculés (-12% à -15%)" },
-      { "code": "AI", "txt": "🔧 **+60 matériels dans TOUS les états** : (a) 10 EN PANNE répartis sur les sites. (b) 15 EN MAINTENANCE (lits, CPAP, pompes seringue, défibrillateur, scope IntelliVue, bistouri ERBE, aspirateur Storz, couveuse, table opératoire, pompe insuline, glucomètre, stéthoscope, spiromètre, otoscope). (c) 15 EN STOCK pour déploiement futur (lits Drive Delta, concentrateurs EverFlo, pompes BBraun, fauteuils, CPAP, matelas, déambulateurs). (d) 10 CHEZ PATIENT (HAD - pompes PCA Smith, Kangaroo, Inogen G5, lits, fauteuils, CPAP, BBraun, matelas air). (e) 5 AU REBUT (vieux CPAP S9, lits Vieille gen, concentrateurs obsolètes). (f) 5 À RÉCUPÉRER (fin de PEC patient). Permet de tester les filtres par état dans /materiel" },
-      { "code": "AI", "txt": "🫧 **6 cuves d''oxygène** (table cuves_oxygene) : 4 cuves 31L + 2 cuves 60L réparties dans les 3 établissements, avec dates installation/inspection/prochaine_inspection et statuts variés (En service, À remplir, Maintenance)" },
-      { "code": "AI", "txt": "📋 **8 bilans SAV types** : bilans pré-configurés (Maintenance préventive lit, Maintenance CPAP, Contrôle pompe PCA, Bilan concentrateur O2, Diagnostic défibrillateur, Maintenance fauteuil électrique, Contrôle matelas anti-escarres, Diagnostic pompe nutrition) avec durée estimée / icône / couleur" },
-      { "code": "AI", "txt": "🛒 **8 commandes fournisseurs** avec statuts variés (en_cours, livree, en_attente, en_preparation, envoyee, annulee) et montants réalistes HT/TTC, liées aux 3 établissements + 5 fournisseurs + magasin central. Permet de tester les workflows commandes" },
-      { "code": "AI", "txt": "🔒 **15 consentements RGPD** insérés pour patients HAD (Soins à domicile HAD, Partage données prescripteur, Photos plaies cicatrisation, Géolocalisation matériel), datés et expirant dans 2 ans" },
-      { "code": "AI", "txt": "📝 **Dossier médical patients complété** via UPDATE : ajout d''antécédents (HTA, Diabète, Insuffisance cardiaque, BPCO, AVC, fracture col fémur, cancer prostate, démence Alzheimer) + traitement chronique détaillé (Bisoprolol, Metformine, Lévothyrox, Symbicort, Eliquis, Tamoxifène, Aricept) + plan de suivi médical (cardio/diabéto/endocrino/pneumo/neuro/rhumato/onco) - rotation déterministe sur 8 profils types" },
-      { "code": "AI", "txt": "🔔 **8 notifications démo** : DI urgente, maintenance à planifier, signalement frigo pharmacie, commande livrée, transfert à valider, workflow approbation > 2000€, RGPD à renouveler, nouveau patient HAD. Permet de voir la cloche pleine en démo" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.13** : (1) Rejouer le SQL `aveho-DEMO-data-import.sql` ULTRA enrichi (90+ articles, 140+ matériels, 80+ patients, 4 mercuriales, 8 commandes, 6 cuves O2, 15 RGPD, 8 notifs, etc.). Le SQL termine par un grand SELECT récap qui montre tous les compteurs finaux. (2) Pas de changement code applicatif (juste SQL). **Tests** : (a) /magasin/catalogue → 90+ articles avec toutes familles. (b) /magasin/mercuriales → 4 mercuriales avec 34 lignes. (c) /materiel → filtres par état (En panne 10+, Maintenance 15+, En stock 15+, Chez patient 10+, Au rebut 5+, À récupérer 5+). (d) /patient → dossier médical complet visible (antécédents + traitement chronique + suivi)"
-      }
-    ],
-    "themes": ["feature", "demo-data", "mega"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.13.html"
-  },
-  {
-    "v": "0.65.12",
-    "kind": "feat",
-    "titre": "🏠 HAD revu (zéro notion de lit) + Tuiles TV enrichies + SQL admin rattaché + +12 prescripteurs (IDE + pharmacies) + 20 patients HAD",
-    "chantiers": [
-      { "code": "AI", "txt": "🏠 **Page HAD revue - ZÉRO notion de lit/chambre** : la HAD c''est par définition à domicile (Hospitalisation À Domicile), pas en chambre. Retiré le champ `chambre` du SELECT des patients HAD. Ajout de NOMBREUX champs vraiment utiles : adresse complète, latitude/longitude, date_naissance + âge calculé, sexe (♀/♂), GIR (avec couleur rouge si ≤ 2), mobilité, allergies, médecin traitant + téléphone, régime alimentaire, contact urgence" },
-      { "code": "AI", "txt": "💊 **Section TRAITEMENTS HAD dans la card patient** : nouveau bloc violet montrant les traitements HAD actifs (Perfusion PERFADOM / Nutrition entérale / NPAD / Oxygénothérapie / Cicatrisation / CPAP) avec observations détaillées. Charge depuis la table `had` filtrée par patient_id + statut=Actif" },
-      { "code": "AI", "txt": "👨‍⚕️ **Section ÉQUIPE MÉDICALE dans la card patient HAD** : nouveau bloc teal avec : (a) Médecin traitant + téléphone (icône user-circle bleu). (b) IDE assignée + nom/prénom/téléphone (icône nurse vert). (c) Pharmacie habituelle + téléphone (icône cross rouge). (d) Contact urgence + nom/téléphone (icône phone-call orange). Toutes ces infos remontent via jointures sur partenaires_rpps depuis la table `had`" },
-      { "code": "AI", "txt": "📋 **Tuiles TV interventions ENRICHIES** : ajout des infos établissement + bâtiment + service sur chaque tuile DI. Affichage en ligne avec icônes : 🏥 Établissement (avec ville), 🏢 Bâtiment, 🩺 Service (avec étage). Ajout de l''équipe assignée en badge coloré avec nom et couleur de l''équipe. Tuile désormais ULTRA dense en infos avec : numéro / statut / patient / établissement / bâtiment / service / matériel / équipe / description / technicien / type / âge / pièces jointes / workflow" },
-      { "code": "AI", "txt": "🎯 **SQL démo 0.65.12 : Admin rattaché + magasin + transferts magasin→dépôt + prescripteurs étendus + 20 patients HAD + traitements HAD** : (a) **Magasin démo** créé `[DEMO] Magasin Central Aveho` à Lyon avec rattachement automatique de l''email `moloscope46@gmail.com` en admin via `membres_magasin` + rattachement aux 3 établissements démo via `membres_etablissements`. (b) **8 transferts magasin → dépôt** avec divers statuts (en_attente, valide, recu, en_preparation) et motifs réalistes (réappro EHPAD, pompes PCA pour bloc, CPAP pour pneumologie, etc.). (c) **+12 prescripteurs** : 6 IDE libérales (Chevrier, Rousseau, Martin, Dupont, Lefebvre coordinatrice HAD, Girard) + 4 pharmacies (Centrale, de la Place, du Stade, Saint-Antoine) + 2 kinésithérapeutes (Berthelot, Fournier), tous avec ville/téléphone/email/spécialité. (d) **+20 patients HAD supplémentaires** géolocalisés Lyon (mode_residence=Domicile, jamais de chambre), avec adresse + médecin traitant + allergies + régime + mobilité. (e) **15 traitements HAD insérés** dans la table `had` (Perfusion, Nutrition, Oxygénothérapie, Cicatrisation, CPAP, NPAD) liés patient/prescripteur/IDE/pharmacie" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.12** : (1) Rejouer le SQL `aveho-DEMO-data-import.sql` ENRICHI 0.65.12. (2) Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (a) /presentation/interventions → tuiles avec établissement/bâtiment/service/équipe visibles. (b) /presentation/had-list → cards patients HAD sans chambre, AVEC traitements + équipe médicale + médecin/IDE/pharmacie. (c) Login en tant que Cédric → désormais admin du Magasin Central + des 3 établissements démo (peut tout faire). (d) /magasin → voir le magasin central + faire des transferts magasin→dépôt"
-      }
-    ],
-    "themes": ["feature", "tv", "had", "demo-data"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.12.html"
-  },
-  {
-    "v": "0.65.11",
-    "kind": "fix",
-    "titre": "🚨 MEGA FIX bugs 400 + Profil ultra enrichi + SQL démo véhicules/équipes/transferts/stock + Z-index Cast",
-    "chantiers": [
-      { "code": "AI", "txt": "🚨 **FIX CRITIQUE setAdvFilters is not defined** : sur 4 pages TV (planning, livraisons, carte-had, dashboard), le composant TVFiltersBar utilisait `setAdvFilters` mais le state `const [advFilters, setAdvFilters] = useState()` manquait (mon sed précédent avait foiré l''injection). Ajouté manuellement le state avec `getTVFilters(pageKey)` dans chaque page. Imports TVFiltersBar/TVCastButton corrigés aussi sur livraisons et carte-had qui les utilisaient sans importer" },
-      { "code": "AI", "txt": "🐛 **MEGA FIX bugs 400 multiples Supabase** : (1) **materiels(libelle, code) → materiels(libelle, num_parc)** dans 5 fichiers (planning, interventions TV, DashboardWidgets, bilans-sav/[id], interventions/[id]). (2) **signalements.traite=eq.false → statut.in.(Nouveau, En cours)** dans MagasinSidebar + interventions TV. (3) **signalements.criticite supprimé** dans stats (column n''existe pas), select + filtres ajustés. (4) **interventions.etat → interventions.statut** dans DashboardWidgets, retrait de date_resolution (n''existe pas). (5) **fournisseurs(nom) → fournisseurs(raison_sociale)** dans TVMagasinFilter" },
-      { "code": "AI", "txt": "👤 **MesAffectationsPanel (NOUVEAU) dans onglet Profil** : section ultra enrichie qui affiche TOUTES les infos user. **Sections** : (a) **Rôle principal** avec icône + couleur + badge SYSTÈME + compteur permissions. (b) **Collectivité/Structure** rattachée. (c) **Établissements rattachés** : cards avec nom/type/ville + rôle dans l''étab + nb bâtiments + nb services rattachés. (d) **Bâtiments rattachés** : badges bleus. (e) **Services rattachés** : badges violets avec étage. (f) **Équipes** : badges colorés avec rôle dans l''équipe. (g) **Droits détaillés** (collapsible) : grille de tous les droits avec ✓ vert. (h) **Email + User ID + Date d''inscription**. Tout est chargé via membres_etablissements + equipes_membres" },
-      { "code": "AI", "txt": "📺 **Z-index TVCastButton popup forcé à 999999** : la bulle de cast (avec QR Code, multi-écran, etc.) passe maintenant AU-DESSUS de BackButtonFloating (z=95) et de tous les autres éléments. Plus de risque que la bulle soit coupée par le bouton retour en mobile ou PC" },
-      { "code": "AI", "txt": "🚗 **SQL démo MEGA enrichi : véhicules + équipes + transferts + mouvements de stock + commandes** : (a) **8 véhicules** dans les 4 garages (Renault Master, Citroën Jumpy, Peugeot Boxer, Ambulances, Iveco Daily, etc.) avec immatriculation/marque/modèle/année/couleur/capacité/statut. (b) **7 équipes** réparties dans les bâtiments (Soins Jour A, Soins Nuit A, Équipe Médicale B, Équipe Médecine, Équipe Chir, Équipe Tech HAD, Équipe SAV transverse) avec couleurs. (c) **10 transferts** entre dépôts avec statuts variés (en_attente, valide, recu, refuse) et motifs réalistes. (d) **10 mouvements de stock** (entrées, sorties, ajustements, transferts) liés à articles et dépôts. (e) **5 demandes internes/commandes** réparties dans les 3 établissements avec statuts (en_attente, validee, preparee, livree). Tout est lié aux établissements + bâtiments + garages + dépôts + articles existants. Tout est défensif (BEGIN/EXCEPTION/END par section)" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.11** : (1) Rejouer le SQL `aveho-DEMO-data-import.sql` ENRICHI (avec véhicules + équipes + transferts + mouvements + DI commandes). (2) Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (a) Console F12 : tous les bugs 400 sur materiels.code / signalements.traite / etat doivent disparaître. (b) Pages TV planning/livraisons/carte-had/dashboard chargent sans erreur. (c) /profil onglet Profil → nouvelle section bleu \"Mes affectations & droits\" avec rôle + établissements + bâtiments + services + équipes + droits. (d) Cast button → bulle QR Code reste au-dessus du bouton Retour mobile"
-      }
-    ],
-    "themes": ["fix", "critical", "profile", "demo-data"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.11.html"
-  },
-  {
-    "v": "0.65.10",
-    "kind": "feat",
-    "titre": "📺 Mode TV ULTRA : bouton Cast (Chromecast/AirPlay/MultiÉcran) + page Paramètres TV complète + fix SQL fournisseurs/articles",
-    "chantiers": [
-      { "code": "AI", "txt": "📺 **TVCastButton.js (NOUVEAU)** : bouton de cast premium dans le header de TOUTES les pages TV (interventions, planning, architecture, livraisons, carte-had, had-list, dashboard, stats). **Menu déroulant teal avec gradient** au click. **Détection auto des APIs disponibles** : (1) **Google Cast** (window.chrome.cast - Chrome desktop) → bouton Caster vers Chromecast. (2) **AirPlay** (window.WebKitPlaybackTargetAvailabilityEvent - Safari iOS/macOS) → bouton AirPlay. (3) **Multi-écran** (window.getScreenDetails - Chrome 100+) → détecte tous les écrans branchés au PC et permet de pousser la page sur chacun via window.open(features=left/top/width/height). (4) **Plein écran** (Fullscreen API - F11). (5) **QR Code** pour ouvrir sur smartphone (génération via api.qrserver.com). (6) **Copier lien direct** avec paramètres. (7) Toast feedback élégant en bas écran. État live des 4 APIs affiché en bas du menu" },
-      { "code": "AI", "txt": "⚙ **Page TV Paramètres NOUVELLE (/presentation/parametres)** : page de config ULTRA complète. **Sections** : (1) **Capacités détectées** : badges OK/KO pour Chromecast / AirPlay / Multi-écran / PiP. (2) **Multi-écrans physiques** : détection via getScreenDetails(), liste avec label/résolution/écran principal, sélecteur de page à déployer par écran, bouton \"Lancer la diffusion sur tous\" qui ouvre N popups en plein écran. (3) **Cast vers TV** : explications Chromecast/AirPlay/SmartTV + boutons copier lien + QR Code. (4) **Refresh & rotation** : slider 15s-5min, checkbox auto-rotation entre pages avec slider interval + multi-select des pages à inclure. (5) **Thèmes** : 6 thèmes (Aveho/Navy/Ember/Violet/Rouge/Clair) avec preview gradient. (6) **Options** : plein écran auto + masquer topbar. (7) **Astuces & raccourcis clavier** : F11, 1-8, R, P P P. **Persistance localStorage** : tous les réglages sauvegardés (av-tv-params)" },
-      { "code": "AI", "txt": "🐛 **Fix SQL démo : colonnes fournisseurs et articles** : (1) **fournisseurs** : la colonne s''appelle `raison_sociale` et non `nom`. Mise à jour de l''INSERT et du SELECT du récap. (2) **articles** : retrait des colonnes inexistantes `famille_id` et `lpp_code`. `prix_vente_ht` → `prix_public_ht` (la vraie colonne). Garde libelle/code/structure_id/unite/actif qui sont obligatoires. Maintenant le SQL démo passe complètement"
-      },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.10** : (1) Rejouer le SQL `aveho-DEMO-data-import.sql` mis à jour. (2) Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (a) /presentation/interventions → bouton CASTER teal en haut → menu déroulant. (b) Sur Chrome → \"Détecter mes écrans\" → liste des écrans branchés + bouton \"Déployer sur cet écran\". (c) /presentation/parametres → page complète avec sliders, thèmes, multi-écran assignment. (d) Choisir 6 pages dans la rotation auto et 60s d''intervalle → click déployer → popups s''ouvrent en plein écran"
-      }
-    ],
-    "themes": ["feature", "tv", "cast", "multi-screen"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.10.html"
-  },
-  {
-    "v": "0.65.9",
-    "kind": "feat",
-    "titre": "🏥 Architecture TV : Bouton + Patient rapide + Transfert patient + Lits de surplus par étage + SQL démo fixé",
-    "chantiers": [
-      { "code": "AI", "txt": "➕ **Bouton + Patient rapide sur chaque bâtiment (page TV Architecture)** : ajout d''un bouton vert ti-user-plus dans le header de chaque colonne bâtiment. Click → redirige vers /patients?new=1&etab=<id>&bat=<id> avec préremplissage du bâtiment de destination. Permet d''ajouter rapidement un nouveau patient depuis l''écran TV sans naviguer manuellement. **Bouton vert** avec gradient + boxShadow pour le rendre visible et premium" },
-      { "code": "AI", "txt": "🔄 **Transfert patient via modal dédié** : sur chaque patient affiché dans la colonne d''un bâtiment, ajout d''un bouton ti-arrows-right-left teal. Click → ouvre une **modal TransferPatientModal** centrée avec cascade Bâtiment → Service → Chambre. Sélectionner la nouvelle affectation, click Transférer → UPDATE patients (batiment_id, service_id, chambre_id). Reload auto de la vue après. Permet de déplacer un patient d''un point à un autre sans quitter le mode TV" },
-      { "code": "AI", "txt": "🛏 **Lits de surplus rattachés à un étage** : nouvelle notion ! Concept = un lit/matériel \"en réserve\" sur un étage, pas affecté à une chambre précise. **Modèle DB** : nouvelle colonne `materiels.etage_surplus INT` (NULL ou numéro étage). Si etage_surplus est défini et chambre_id/service_id sont NULL → c''est un lit de réserve. **Affichage TV Architecture** : sur chaque étage, bloc rose terracotta avec dashed border montrant \"N lits de surplus\" + leurs num_parc. Étages SANS service mais AVEC lits de surplus apparaissent aussi en tant qu''étages \"réserve\". KPI Lits surplus dans les mini-stats du bâtiment (visible si > 0)" },
-      { "code": "AI", "txt": "📊 **Patients affichés par bâtiment + compteur Patients par service** : nouvelle requête `patients.batiment_id = b.id` dans le load. **Compteur par service** : nombre de patients affectés à ce service avec badge vert. **Liste verticale en bas de chaque colonne** : 8 premiers patients avec nom/prénom/chambre + bouton transfert à droite. Si > 8 patients → \"+N autres\". Maximise l''info visible en mode TV" },
-      { "code": "AI", "txt": "🐛 **Fix SQL démo : colonnes corrigées** : suite à l''erreur `column \"code\" does not exist`, mise à jour des INSERTs. (1) **materiels** : code → num_parc, numero_serie → num_serie, statut → etat, retrait de date_mise_service (n''existe pas). (2) **signalements** : sujet → titre, priorite → categorie, ajout du type=Autre. (3) **prescripteurs** → **partenaires_rpps** (la vraie table) + ajout du type=prescripteur. (4) **Nouvelle section ALTER TABLE materiels ADD COLUMN etage_surplus INT IF NOT EXISTS** à la fin du SQL pour créer la colonne avant les lits de surplus. (5) **+8 lits de surplus** insérés dans la démo, répartis sur les étages des EHPAD et cliniques" },
-      { "code": "INFO", "txt": "🚀 **Procédure 0.65.9** : (1) Re-jouer le SQL `aveho-DEMO-data-import.sql` (qui contient maintenant la création de etage_surplus et 8 lits de surplus). (2) Extraire zip code, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (a) /presentation/architecture → click bouton + vert d''un bâtiment → arrive sur /patients en mode création avec bât pré-rempli. (b) Hover sur un patient dans la liste → click flèches teal → modal de transfert → choisir nouveau bât/svc/chambre → Transférer → reload. (c) Voir les blocs roses \"N lits de surplus\" sous les étages"
-      }
-    ],
-    "themes": ["feature", "tv", "architecture", "fix-sql"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.9.html"
-  },
-  {
-    "v": "0.65.8",
-    "kind": "fix",
-    "titre": "🎯 BUG TROUVÉ — UserMenu flipUp en mobile (sortait par le haut) + Couronne et Sandbox masqués mobile",
-    "chantiers": [
-      { "code": "AI", "txt": "🎯 **LE BUG ! UserMenu avait un flipUp qui poussait le menu VERS LE HAUT en mobile**. Le composant detectait l''espace disponible en bas vs en haut. Sur petits écrans mobile avec l''avatar user en haut à droite (peu d''espace en bas car le menu fait 380px), le code estimait qu''il y avait MOINS d''espace en bas qu''en haut et faisait flip avec CSS `.um-sheet.um-sheet-up { bottom: calc(100% + 10px) }` → menu s''ouvrait AU-DESSUS de l''avatar → SORTAIT DE L''ÉCRAN par le haut (invisible). **Cédric voyait juste \"le bas du popup\" car le contenu débordait du viewport**. Fix double-protection : (1) Dans UserMenu.js useEffect → si window.innerWidth ≤ 720 → setFlipUp(false). (2) CSS @media (max-width:720px) → force .um-sheet ET .um-sheet-up en bottom-sheet position:fixed bottom:0. Plus aucune chance de sortir par le haut" },
-      { "code": "AI", "txt": "👑 **Couronne RoleBadge masquée en mobile** : wrapper `<span className=\"hide-on-mobile-tb\">` autour de RoleBadge. CSS @media (max-width:720px) { .hide-on-mobile-tb { display:none !important } }. **Avantage** : libère 36px de toolbar, plus de place pour les icônes essentielles. La couronne reste accessible en desktop et le rôle est toujours visible dans /utilisateurs et /profil" },
-      { "code": "AI", "txt": "🧪 **Bouton Sandbox masqué en mobile** : même technique avec hide-on-mobile-tb. La fonctionnalité Sandbox reste accessible via la console admin desktop (/admin) — masquée en mobile pour libérer la toolbar et car ce n''est pas une fonctionnalité utilisée en mobilité" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.8** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) Mobile (DevTools iPhone 13 390px) → topbar plus aérée (couronne et sandbox absents). (2) Click avatar user → menu glisse DEPUIS LE BAS (pas du haut !) avec drag-handle iOS. (3) Click cloche → idem bottom-sheet. (4) Toutes les icônes statut → bottom-sheet OK"
-      }
-    ],
-    "themes": ["fix", "mobile", "critical"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.8.html"
-  },
-  {
-    "v": "0.65.7",
-    "kind": "feat",
-    "titre": "🎨 BackButton avec nom visible + Polish premium global + DesignAuditor + Fix icones invisibles menu",
-    "chantiers": [
-      { "code": "AI", "txt": "⬅ **BackButton enrichi : nom de page TOUJOURS visible** : refonte complète du composant BackButtonFloating. Avant : icône ronde teal avec tooltip uniquement au hover. **Maintenant** : pill horizontale avec icône flèche dans cercle teal + nom de la page de destination affiché en permanence à côté (ex: ← Liste des patients). Largeur dynamique selon le label. **Polish** : (1) Fond gradient navy/teal au repos. (2) Backdrop-filter blur 14px saturate 180%. (3) Hover : gradient teal full + scale 1.05 + translateX(-3px) + glow teal large + ring teal. (4) Mobile responsive avec hauteur 36px et max-width 140px pour le label. Look premium iOS-style" },
-      { "code": "AI", "txt": "🎨 **Polish premium GLOBAL CSS** : ajout d''un bloc CSS final dans globals.css qui améliore tous les panels, boutons, inputs et titres : (1) **.panel** : gradient blanc→blanc cassé subtil + triple ombre (1px close + 4-12px ambient + 1px teal inset). Hover : ombres plus marquées + teal glow. Transition cubic-bezier élastique. (2) **Boutons standards** : hover translateY(-1px) + brightness(1.04). (3) **Cards / tiles** : gradient blanc + transform scale 1.01 au hover. (4) **Inputs focus** : ring teal 3px + ombre interne. (5) **Titres** : text-shadow subtil pour profondeur. (6) **Modal header v2** : gradient teal en bas. **Effet global** : tout l''app a une sensation plus profonde et premium sans changer son ADN" },
-      { "code": "AI", "txt": "🔧 **Fix icônes invisibles menu sidebar (Administratif, Matériel, Mode TV)** : 2 problèmes identifiés. (1) **Section Administratif** avait barCol/txtCol #142131 (navy) sur fond menu sombre → icône invisible. **Fix** : passé à #5e8ec4 (bleu acier visible). (2) **Section Administration tech** : passé du noir #c0392b au #e35d5b (corail visible). (3) Items du menu en noir invisible : /materiels (Matériel) #142131 → #185FA5 bleu, /presentation/interventions (Mode TV) #142131 → #7CC8C8 teal. Maintenant TOUTES les icônes du menu sidebar sont visibles" },
-      { "code": "AI", "txt": "🛠 **DesignAuditor (NOUVEAU outil dev)** : helper pour identifier visuellement les éléments à polir sur n''importe quelle page. **Activation** : ?polish=1 dans l''URL OU touche P pressée 3 fois rapidement. **Audit automatique** : (1) Encadre en ORANGE les panels/sections sans box-shadow. (2) Encadre en ROUGE les titres H1/H2/H3 sans icône. (3) Encadre en JAUNE les boutons plats (sans gradient ni hover effect). **Toolbar flottante** en bas droit avec compteurs par catégorie (panels sans ombre / titres sans icône / boutons plats). Échap pour quitter. **Outil de dev parfait pour itérer sur le polish**" },
-      { "code": "AI", "txt": "🗑 **Bouton Imprimer enlevé de la liste patients** : retrait du bouton `{ icon: 'ti-printer', label: 'Imprimer', onClick: window.print() }` dans la barre MobileActionsBar secondary[]. Le bouton imprimer ne servait à rien sur la liste (déjà la fonction print native du navigateur). Le bouton imprimer bracelet QR par patient (sur chaque ligne) reste, lui est utile" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.7** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) Aller sur une page détail (ex: /patient/[id]) → flèche avec NOM visible en permanence (ex: ← Liste des patients). (2) Ouvrir menu burger gauche → section Administratif → icône ti-folder-cog VISIBLE en bleu acier. (3) /patients → barre du bas MobileActionsBar → plus de bouton Imprimer. (4) Sur n''importe quelle page → presser P 3 fois → POLISH MODE s''active avec encadrement des éléments à améliorer. (5) Hover sur n''importe quel panel → ombre teal + slight lift. (6) Focus dans un input → glow teal 3px"
-      }
-    ],
-    "themes": ["feature", "polish", "ux", "dev-tool"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.7.html"
-  },
-  {
-    "v": "0.65.6",
-    "kind": "fix",
-    "titre": "🔧 Fix DÉFINITIF popups mobile : triple protection (CSS ULTRA agressif + MobilePopupForcer JS + CartDropdown belt-and-suspenders)",
-    "chantiers": [
-      { "code": "AI", "txt": "📱 **Fix popups mobile — TRIPLE protection** : malgré les hotfix précédents 0.65.2 et 0.65.4, certains popups continuaient à sortir de l''écran. **3 défenses superposées** : (1) **CSS ULTRA agressif** dans globals.css : règle @media (max-width:720px) qui force position:fixed + bottom:0 + width:100vw + max-height:80vh + overflow-y:auto + transform:none !important sur 8 classes (.tb-dropdown, .notif-center-popup, .status-popover, .av-dropdown, .av-popover, .av-popup + [role=menu] + [role=listbox]). Drag-handle iOS-style en sticky top. (2) **MobilePopupForcer.js** : nouveau composant global dans layout.js qui surveille le DOM via MutationObserver. Dès qu''un popup est ajouté au DOM avec position:absolute/fixed et top<120px (= ancré près de la topbar), il FORCE les styles inline avec setProperty important. Détection auto sans dépendre des classes. (3) **CartDropdown belt-and-suspenders** : ajout d''un useState isMobile + style conditionnel sur le composant lui-même. Si isMobile, le style inline applique direct bottom-sheet (pas besoin que le CSS override fonctionne). Drag-handle visible" },
-      { "code": "AI", "txt": "🎯 **MobilePopupForcer (MutationObserver intelligent)** : (1) Observe toute mutation du DOM. (2) Si nouvel élément avec position absolute/fixed → vérifie son rect.top : si <120px (= popup ancré à la topbar), force le bottom-sheet. (3) Vérifie aussi via classNames : tb-dropdown / notif-center-popup / status-popover etc. (4) Marque les éléments traités avec data-bottom-sheet-forced=1 pour éviter re-application. (5) Reload de page si l''utilisateur passe de desktop à mobile au resize (pour ré-activer l''observer). **Avantage** : marche même pour les popups qu''on n''aurait pas identifiés" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.6** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) DevTools en mode iPhone 13 (390px). (2) Cliquer cloche notif → popup glisse DEPUIS LE BAS, pas du haut. (3) Cliquer panier → idem. (4) Click icônes statut (micro/caméra/GPS) → popover en bottom-sheet. (5) Click avatar user → menu en bottom-sheet. Si UN seul popup persiste à sortir en haut, le MutationObserver doit le forcer dans la seconde"
-      }
-    ],
-    "themes": ["fix", "mobile", "critical"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.6.html"
-  },
-  {
-    "v": "0.65.5",
-    "kind": "feat",
-    "titre": "🚀 MEGA Sprint TV : Permissions browser (Micro/Caméra/GPS/Notifs) + 2 nouvelles pages TV (Architecture bâtiments + Liste HAD anticipation) + Fix Export PDF",
-    "chantiers": [
-      { "code": "AI", "txt": "🔐 **StatusIcons enrichi : permissions navigateur complètes** : ajout de 2 nouvelles icônes dans la toolbar (Micro + Caméra) en plus de GPS, Notifs, Réseau, PWA, ServiceWorker, Empreinte, Face ID. **Détection via navigator.permissions.query()** pour chacune. **Couleurs dynamiques** : vert (granted), rouge (denied), orange/clignotant (prompt/unknown), gris (unsupported). **Click direct sur icône** = demande la permission (au lieu d''ouvrir le popup d''info). **Animation blink orange** sur icônes non encore demandées pour attirer l''attention. **Fonctions request** : `requestMicro()` et `requestCamera()` utilisent `navigator.mediaDevices.getUserMedia({audio/video:true})` puis ferment le stream juste après obtention de la permission. **Feedback** : toast vert si OK, rouge si denied avec explication, warning sinon" },
-      { "code": "AI", "txt": "🏗 **Page TV Architecture bâtiment NOUVELLE (/presentation/architecture)** : vue éclatée multi-bâtiments. **Layout** : grille N colonnes (1 par bâtiment, max 4). **Pour chaque bâtiment** : (1) Header avec nom + établissement + ville. (2) **5 mini-stats** : DI en cours, urgentes (pulse rouge), matériels, maintenances, dépôts. (3) **Liste verticale étages → services** avec bordure orange si DI dedans + badges nb DI + nb matériels. (4) **Dépôts rattachés**. (5) **Maintenances à venir** avec dates J/M. (6) **Équipe rattachée** : badges initiales (PM, JD, etc.). **Filtre établissement via TVFiltersBar** + droits utilisateur respectés" },
-      { "code": "AI", "txt": "🏠 **Page TV Liste HAD NOUVELLE (/presentation/had-list)** : vue d''anticipation pour patients à domicile. **Différente de /carte-had** (qui était une vue carte). **Layout** : cards patients en grille (380px min). **4 KPIs en haut** : DI en cours / patients en retard (pulse) / livraisons 7j / maintenances 7j. **Pour chaque patient HAD** : (1) Nom + ville + code postal + téléphone. (2) **Badge URGENT (rouge pulse) ou EN RETARD (orange)** selon priorité. (3) **DI en cours** (max 3) avec numéro + matériel + statut + bordure rouge si urgent. (4) **Livraisons prévues** avec date J/M format compact. (5) **Maintenances 7j à venir** avec date. (6) **Prochaine échéance globale** en badge teal en coin. **Tri** : urgents → en retard → volume. Recherche libre vocale via TVFiltersBar" },
-      { "code": "AI", "txt": "📺 **TVScreenNav : 8 écrans au lieu de 6** : ajout Architecture (3e position) + Liste HAD (6e position). Navigation clavier élargie à **touches 1-8**. Ordre : Interventions → Planning → Architecture → Livraisons → Carte HAD → Liste HAD → Dashboard → Stats" },
-      { "code": "AI", "txt": "🐛 **Fix Export PDF qui scrollait en bas** : le modal Export PDF dans DashboardActions ne lock pas le scroll de la page, donc le clic sur le bouton (en bas de l''accueil) faisait remonter la page derrière et le modal apparaissait coupé. **Fix** : (1) `useEffect` qui set `body.style.overflow = 'hidden'` à l''ouverture + restaure à la fermeture. (2) `window.scrollTo({top:0})` à l''ouverture pour s''assurer que le modal est visible (et restaure la position scroll précédente à la fermeture). (3) Conteneur en `align-items:flex-start; padding-top:5vh` avec inner `margin:auto` pour positionnement parfait" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.5** : Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. Pas de NOUVEAU SQL. **Tests** : (1) Topbar → icône micro orange clignote → click → popup permission navigateur → autoriser → devient vert. (2) /presentation → flèche jusqu''à Architecture (3e écran) → bâtiments affichés avec étages/services. (3) /presentation/had-list → patients HAD avec compteurs anticipation. (4) Accueil → bouton Export PDF → modal s''affiche bien centrée"
-      }
-    ],
-    "themes": ["feature", "tv", "permissions", "architecture", "had"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.5.html"
-  },
-  {
-    "v": "0.65.4",
-    "kind": "fix",
-    "titre": "🔧 BackButton flottant global + TV filtres cantonnés par droits + Onglet Activité profil fix + Popups topbar mobile bottom-sheet",
-    "chantiers": [
-      { "code": "AI", "txt": "⬅ **BackButtonFloating (NOUVEAU composant global)** : flèche de retour belle, ronde, flottante en haut-gauche (sous topbar). **Apparait automatiquement** sur TOUTES les pages SAUF racines (accueil, login, listes de 1er niveau) et pages /presentation/* (qui ont leur propre nav flèches). **Détection auto de la page parente** via pathname : /patient/[id] → /patients (Liste des patients), /bilan-sav/[id] → /bilans-sav (Bilans SAV), /admin/* → /admin (Administration), etc. **Tooltip flottant** au survol/focus avec le NOM de la page de destination (avec petite flèche pointant la cible). **Animation hover** : grossit scale(1.10) + glow teal + petite translation horizontale. Branché dans app/layout.js → présent sur toute l''app sans toucher chaque page" },
-      { "code": "AI", "txt": "🛡 **TVFiltersBar cantonné par droits utilisateur** : restriction par rôle. (1) **Admin** (can(''gerer_roles'') ou role.systeme=admin/owner) → accès à TOUS les établissements de la structure. (2) **User normal** → accès SEULEMENT aux établissements de auth.etablissements (déjà filtré par membres_etablissements en DB). (3) **Dépôts** filtrés par établissements accessibles si non-admin. (4) Garages restent globaux à la structure (pas de scope par établissement habituellement). **Conformité** : un user ne verra dans son menu TV que ce qu''il a le droit de voir, conforme aux droits RLS Supabase" },
-      { "code": "AI", "txt": "🐛 **Fix onglet Activité du profil** : la promesse Promise.all faisait planter TOUT le chargement si UNE seule requête échouait (typiquement audit_log absente en DB, ou created_by manquant dans transferts). **Fix** : wrapper `tryFetch` autour de chaque requête → si une plante, retourne `{ data: [] }` et les autres marchent. Résultat : l''onglet Activité s''affiche TOUJOURS, même si certaines tables/colonnes manquent. Plus de page blanche" },
-      { "code": "AI", "txt": "📱 **Fix CRITIQUE popups topbar mobile** : depuis le sprint des raccourcis, les popups des icônes toolbar (CartDropdown / NotifCenter / StatusIcons popover) partaient EN HAUT en mode mobile et finissaient coupés. **Cause** : pas de règle @media spécifique pour ces dropdowns, donc `position:absolute; top:calc(100%+8px)` plaçait le popup juste sous l''icône mais déboordait à droite/gauche. **Fix** : règle CSS globale `@media (max-width:720px) { .tb-dropdown, .notif-center-popup, .status-popover { position:fixed!important; bottom:0; left:0; right:0; width:100%; max-height:85vh; border-radius:18px 18px 0 0; animation:slide-up } }`. Les 3 popups deviennent de vrais BOTTOM-SHEETS mobile avec drag-handle iOS + backdrop assombri" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.4** : Pas de NOUVEAU SQL. Extraire zip, npm install --legacy-peer-deps, npm run build, push origin main. **Tests** : (1) Aller sur /patient/[id] → flèche teal en haut-gauche → hover = tooltip 'Liste des patients' → click = retour. (2) Mobile (DevTools iPhone) : icône cloche → popup glisse du bas. (3) /profil → onglet Activité s''affiche (au lieu de page vide). (4) TV /presentation/* avec compte admin → tous étabs. Avec user normal → seulement les étabs assignés"
-      }
-    ],
-    "themes": ["fix", "ux", "permissions", "mobile"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FIX-0.65.4.html"
-  },
-  {
-    "v": "0.65.3",
-    "kind": "feat",
-    "titre": "🎙 TV : Barre de filtres avancés cascade (Établissement/Bâtiment/Service/Chambre/Patient/Garage/Dépôt) + Recherche vocale avec MICRO",
-    "chantiers": [
-      { "code": "AI", "txt": "🎯 **TVFiltersBar.js (NOUVEAU composant)** : barre de filtres avancés pour les pages TV. **Features** : (1) **Recherche libre** avec champ texte + bouton MICRO (Web Speech API en fr-FR). Click micro → écoute en cours avec animation pulse rouge → résultat injecté dans le champ en temps réel (interim+final). (2) **Filtres cascade** : Établissement → Bâtiment → Service → Chambre → Patient. Quand l''utilisateur sélectionne un niveau, les suivants se chargent automatiquement. Reset auto des niveaux inférieurs au changement. (3) **Filtres indépendants** : Garage + Dépôt (multi-magasin). (4) **Bouton Filtres compact** dans header avec badge `N` orange si filtres actifs. (5) **Modal centrale** avec gradient navy/teal en header, sections colorées par catégorie, récap badges actifs en bas. (6) **localStorage isolé par page** (av-tv-filters-<pageKey>). (7) **Reset cascade** + Reset all" },
-      { "code": "AI", "txt": "🎙 **Recherche vocale (Web Speech API)** : intégration native SpeechRecognition / webkitSpeechRecognition avec lang=fr-FR + interimResults=true. **Fonctionnement** : click bouton micro teal → bouton devient rouge avec animation pulse → écoute en cours → résultat injecté en direct dans le champ recherche (tu vois les mots apparaître pendant que tu parles). Click pendant écoute = stop. Indicateur 🎙 Écoute en cours visible. Fallback : alert si navigateur non compatible (Safari iOS notamment). **Marche sur Chrome / Edge / Android** (pas sur Firefox/Safari par défaut)" },
-      { "code": "AI", "txt": "🔌 **Branchement 6 pages TV** : TVFiltersBar ajouté dans le header de /presentation/interventions, /planning, /livraisons, /carte-had, /dashboard, /stats. **Requêtes adaptées** : (a) /interventions filtre par etablissement_id + batiment_id + service_id + chambre_id + patient_id + recherche client-side sur numéro/type/description/technicien/patient/matériel. (b) /carte-had filtre patients + DI sur tous les niveaux hiérarchiques + recherche libre sur tous textes. (c) Les autres pages reçoivent les filtres dans le state et peuvent les exploiter selon leurs requêtes (à compléter au besoin)" },
-      { "code": "INFO", "txt": "📋 **Persistance par page** : chaque page TV a sa propre clé localStorage `av-tv-filters-<pageKey>`. Donc tu peux avoir des filtres différents par écran TV (par ex. carte-had filtre Lyon, livraisons filtre Paris). Les filtres survivent au refresh et à la fermeture du navigateur (utile pour les écrans en kiosque)" },
-      { "code": "INFO", "txt": "🚀 **Procédure push 0.65.3** : Extraire le zip, npm install --legacy-peer-deps, npm run build, push origin main. Pas de NOUVEAU SQL. **Tests** : (1) /presentation/interventions → bouton Filtres orange → modal s''ouvre → choisir un établissement → bâtiments se chargent. (2) Click micro → autoriser le micro (1ère fois) → parler → texte apparaît → résultats filtrés en live. (3) Fermer et rouvrir le navigateur → les filtres sont conservés"
-      }
-    ],
-    "themes": ["feature", "tv", "voice", "filter"],
-    "date": "8 juin 2026",
-    "noteFile": "NOTE-FEAT-0.65.3.html"
-  },
-  {
     "v": "0.65.2",
     "kind": "fix",
     "titre": "🔧 Hotfix4 : Edit_locks guard global (anti-spam 404) + Toolbar mobile (overflow + popup bottom-sheet)",

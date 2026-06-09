@@ -9,8 +9,6 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
-import TVFiltersBar, { getTVFilters } from "../../components/TVFiltersBar";  /* 0.65.3 */
-import TVCastButton from "../../components/TVCastButton";  /* 0.65.10 */
 
 export default function PresentationDashboardPage() {
   return (
@@ -27,7 +25,6 @@ function PresentationDashboard() {
   const refreshSec = parseInt(params.get("refresh") || "60", 10);
 
   const [data, setData] = useState({ kpis: {}, topMat: [], topTech: [], topPat: [] });
-  const [advFilters, setAdvFilters] = useState(() => getTVFilters("dashboard") || {});  // 0.65.11 fix
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
   const [magasinId, setMagasinId] = useState(() => getTVMagasinId(params));  /* 0.65.0 */
@@ -42,11 +39,11 @@ function PresentationDashboard() {
     const now30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     const [di30j, sav30j, livr30j, mat, techs, di_today, di_resolved] = await Promise.all([
-      tryFetch(supabase.from("interventions").select("id, materiel_id, assignee_email, created_at, statut, patients(nom, prenom)").eq("structure_id", auth.structureId).gte("created_at", now30)),
+      tryFetch(supabase.from("interventions").select("id, materiel_id, technicien_nom, created_at, statut, patients(nom, prenom)").eq("structure_id", auth.structureId).gte("created_at", now30)),
       tryFetch(supabase.from("signalements").select("id").eq("structure_id", auth.structureId).gte("created_at", now30)),
       tryFetch(supabase.from("tournees").select("id, nb_etapes").eq("structure_id", auth.structureId).gte("date_tournee", now30.slice(0, 10))),
-      tryFetch(supabase.from("materiels").select("id, libelle, num_parc").eq("structure_id", auth.structureId)),
-      tryFetch(supabase.from("interventions").select("assignee_email").eq("structure_id", auth.structureId).gte("created_at", now30).not("assignee_email", "is", null)),
+      tryFetch(supabase.from("materiels").select("id, libelle, code").eq("structure_id", auth.structureId)),
+      tryFetch(supabase.from("interventions").select("technicien_nom").eq("structure_id", auth.structureId).gte("created_at", now30).not("technicien_nom", "is", null)),
       tryFetch(supabase.from("interventions").select("id").eq("structure_id", auth.structureId).gte("created_at", new Date(new Date().setHours(0,0,0,0)).toISOString())),
       tryFetch(supabase.from("interventions").select("id").eq("structure_id", auth.structureId).eq("statut", "Validée").gte("created_at", now30)),
     ]);
@@ -55,11 +52,11 @@ function PresentationDashboard() {
     const matCount = {};
     di30j.forEach(d => { if (d.materiel_id) matCount[d.materiel_id] = (matCount[d.materiel_id] || 0) + 1; });
     const matMap = Object.fromEntries(mat.map(m => [m.id, m]));
-    const topMat = Object.entries(matCount).map(([id, c]) => ({ id, c, libelle: matMap[id]?.libelle || "?", code: matMap[id]?.num_parc })).sort((a,b) => b.c - a.c).slice(0, 6);
+    const topMat = Object.entries(matCount).map(([id, c]) => ({ id, c, libelle: matMap[id]?.libelle || "?", code: matMap[id]?.code })).sort((a,b) => b.c - a.c).slice(0, 6);
 
     // Top techniciens
     const techCount = {};
-    techs.forEach(t => { techCount[t.assignee_email] = (techCount[t.assignee_email] || 0) + 1; });
+    techs.forEach(t => { techCount[t.technicien_nom] = (techCount[t.technicien_nom] || 0) + 1; });
     const topTech = Object.entries(techCount).map(([nom, c]) => ({ nom, c })).sort((a,b) => b.c - a.c).slice(0, 5);
 
     // Top patients (par nombre DI)
@@ -137,9 +134,7 @@ function PresentationDashboard() {
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
         <div>
-          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>AVEHO — TV DE SERVICE<TVMagasinFilter onChange={setMagasinId} />
-            <TVFiltersBar pageKey="dashboard" onChange={setAdvFilters} />
-            <TVCastButton refreshSec={refreshSec} /></div>
+          <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>AVEHO — TV DE SERVICE<TVMagasinFilter onChange={setMagasinId} /></div>
           <h1 style={{ margin: "4px 0 0", fontSize: 32, fontWeight: 700, letterSpacing: 1 }}>Tableau de bord (30 jours)</h1>
         </div>
         <div style={{ textAlign: "right" }}>
@@ -181,7 +176,7 @@ function PresentationDashboard() {
               {data.topMat.length === 0 ? (
                 <Empty />
               ) : data.topMat.map((m, i) => (
-                <BarRow key={m.id} rank={i + 1} label={m.libelle} sub={m.num_parc} value={m.c} max={maxMat} col="#EF9F27" />
+                <BarRow key={m.id} rank={i + 1} label={m.libelle} sub={m.code} value={m.c} max={maxMat} col="#EF9F27" />
               ))}
             </Panel>
 

@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "../../lib/supabase";
 import { useAuth } from "../../lib/useAuth";
+import { useGlobalFilters, applyGlobalFilters, hasActiveFilters, GlobalFiltersIndicator } from "../../lib/useGlobalFilters";
 import TopBar from "../TopBar";
 import SmartInput from "../components/SmartInput";  /* 0.62.129 */
 import SmartSelect from "../components/SmartSelect";  /* 0.62.132 */
@@ -50,6 +51,7 @@ const STATUTS = [
 export default function SignalementsPage() {
   const supabase = createClient();
   const auth = useAuth();
+  const globalFilters = useGlobalFilters();
   const cart = useCart();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);

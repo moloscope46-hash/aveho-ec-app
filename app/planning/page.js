@@ -75,7 +75,7 @@ function PlanningInner() {
     try {
       const { data } = await supabase
         .from("interventions")
-        .select("id, type, date_prevue, assignee_email, statut, patient_id")
+        .select("id, type, date_prevue, technicien_nom, statut, patient_id")
         .eq("structure_id", auth.structureId)
         .gte("date_prevue", start.toISOString())
         .lte("date_prevue", end.toISOString())
@@ -83,7 +83,7 @@ function PlanningInner() {
       (data || []).forEach(i => all.push({
         id: i.id, kind: "intervention",
         title: i.type || "Intervention",
-        sub: i.assignee_email || "",
+        sub: i.technicien_nom || "",
         date: new Date(i.date_prevue),
         status: i.statut,
         href: `/intervention/${i.id}`,
@@ -94,7 +94,7 @@ function PlanningInner() {
     try {
       const { data } = await supabase
         .from("maintenances")
-        .select("id, type, date_prevue, assignee_email, statut, vehicule_id, description")
+        .select("id, type, date_prevue, technicien_nom, statut, vehicule_id, description")
         .eq("structure_id", auth.structureId)
         .gte("date_prevue", start.toISOString().slice(0, 10))
         .lte("date_prevue", end.toISOString().slice(0, 10))
@@ -102,7 +102,7 @@ function PlanningInner() {
       (data || []).forEach(m => all.push({
         id: m.id, kind: "maintenance",
         title: m.type || "Maintenance",
-        sub: m.assignee_email || m.description || "",
+        sub: m.technicien_nom || m.description || "",
         date: new Date(m.date_prevue),
         status: m.statut,
         href: `/maintenance`,
