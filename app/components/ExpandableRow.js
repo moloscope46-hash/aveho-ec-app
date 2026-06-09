@@ -1,182 +1,144 @@
 "use client";
 // =============================================================
-//  ExpandableRow / ExpandableList — Composants réutilisables
-//  Pour afficher des listes dépliables, sans scroll horizontal
-//  Couleur paramétrable selon la page
-//  0.65.63 — Pattern : utilisé Articles, Patients, Matériels, etc.
+//  ExpandableRow — Ligne dépliable réutilisable (0.65.78)
+//  ★ AUTO-ADAPTATIF dark/light theme via prop `theme` ou détection
 // =============================================================
 import { useState } from "react";
 
-/**
- * ExpandableRow : une ligne dépliable
- * 
- * Props :
- *  - color: couleur d'accent de la page (#185FA5 pour articles, #7a6fb0 pour patients...)
- *  - icon: icône principale Tabler (ti-package, ti-user...)
- *  - title: titre principal (gros)
- *  - subtitle: sous-titre (petit)
- *  - badges: array d'objets {label, color, icon} pour pills à droite
- *  - kpis: array d'objets {label, value, color} pour mini KPIs sur la ligne
- *  - actions: <ReactNode> pour les boutons d'action (modifier/supprimer)
- *  - children: contenu dépliable (détails)
- *  - defaultOpen: ouvert par défaut
- *  - onClick: si fourni, click sur la ligne (au lieu de toggle)
- */
-export function ExpandableRow({
+export default function ExpandableRow({
   color = "#185FA5",
-  icon = "ti-circle",
+  icon = "ti-package",
   title,
   subtitle,
   badges = [],
   kpis = [],
   actions,
+  theme = "light",  // NEW: "light" (default) ou "dark"
   children,
   defaultOpen = false,
-  onClick,
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const hasContent = !!children;
-
-  function handleHeaderClick(e) {
-    // Si action sur un bouton/select, ne pas toggler
-    if (e.target.closest("button, a, select, input")) return;
-    if (onClick) onClick(); else if (hasContent) setOpen(!open);
-  }
+  const isDark = theme === "dark";
+  
+  // Couleurs adaptatives selon thème
+  const colors = isDark ? {
+    bgClosed: "rgba(255,255,255,.03)",
+    bgOpen: `linear-gradient(180deg, ${color}10, ${color}05)`,
+    border: open ? color + "40" : "rgba(255,255,255,.08)",
+    textPrimary: "#fff",
+    textSecondary: "rgba(255,255,255,.55)",
+    textTertiary: "rgba(255,255,255,.4)",
+    iconBgLight: `${color}25`,
+    detailBorder: "rgba(255,255,255,.06)",
+    detailBg: "rgba(255,255,255,.04)",
+  } : {
+    bgClosed: "#ffffff",
+    bgOpen: `linear-gradient(180deg, ${color}08, #ffffff)`,
+    border: open ? color + "60" : "#e1e6eb",
+    textPrimary: "#142131",
+    textSecondary: "#5a6878",
+    textTertiary: "#8a96a4",
+    iconBgLight: `${color}15`,
+    detailBorder: "#e8edf2",
+    detailBg: "#fafbfc",
+  };
 
   return (
     <div style={{
-      background: open ? `linear-gradient(180deg, ${color}10, ${color}05)` : "rgba(255,255,255,.03)",
-      border: `1px solid ${open ? color + "40" : "rgba(255,255,255,.08)"}`,
+      background: open ? colors.bgOpen : colors.bgClosed,
+      border: `1px solid ${colors.border}`,
       borderRadius: 12,
+      marginBottom: 8,
       overflow: "hidden",
-      transition: "all 200ms ease",
+      transition: "all 200ms",
       fontFamily: "Quicksand, sans-serif",
     }}>
-      {/* HEADER cliquable */}
-      <div onClick={handleHeaderClick} style={{
+      <div onClick={() => setOpen(!open)} style={{
         padding: "12px 14px",
-        cursor: hasContent || onClick ? "pointer" : "default",
-        display: "grid",
-        gridTemplateColumns: "auto 1fr auto auto",
-        gap: 12,
-        alignItems: "center",
+        cursor: "pointer",
+        display: "flex", alignItems: "center", gap: 12,
       }}>
-        {/* Chevron / icone */}
-        {hasContent && !onClick ? (
-          <div style={{
-            width: 32, height: 32, borderRadius: 8,
-            background: `${color}25`, color,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 14,
-            transform: open ? "rotate(90deg)" : "rotate(0)",
-            transition: "transform 200ms",
-            flexShrink: 0,
-          }}>
-            <i className="ti ti-chevron-right" />
-          </div>
-        ) : (
-          <div style={{
-            width: 32, height: 32, borderRadius: 8,
-            background: `linear-gradient(135deg, ${color}, ${color}cc)`, color: "#fff",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 16, boxShadow: `0 2px 6px ${color}40`,
-            flexShrink: 0,
-          }}>
-            <i className={`ti ${icon}`} />
-          </div>
-        )}
-
-        {/* Title + subtitle */}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div onClick={(e) => { e.stopPropagation(); setOpen(!open); }} style={{
+          width: 28, height: 28, borderRadius: 8,
+          background: colors.iconBgLight, color,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 14, cursor: "pointer", flexShrink: 0,
+          transition: "transform 200ms",
+          transform: open ? "rotate(90deg)" : "rotate(0)",
+        }}>
+          <i className="ti ti-chevron-right" />
+        </div>
+        <div style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: `linear-gradient(135deg, ${color}, ${color}cc)`, color: "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 16, boxShadow: `0 2px 6px ${color}40`,
+          flexShrink: 0,
+        }}>
+          <i className={`ti ${icon}`} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ color: colors.textPrimary, fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {title}
           </div>
           {subtitle && (
-            <div style={{ color: "rgba(255,255,255,.55)", fontSize: 11, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <div style={{ color: colors.textSecondary, fontSize: 11, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {subtitle}
             </div>
           )}
-          {/* KPIs en ligne sous le titre */}
           {kpis.length > 0 && (
             <div style={{ display: "flex", gap: 12, marginTop: 4, flexWrap: "wrap" }}>
-              {kpis.map((k, i) => (
-                <span key={i} style={{ fontSize: 11, color: "rgba(255,255,255,.6)", display: "inline-flex", alignItems: "center", gap: 3 }}>
+              {kpis.filter(k => k).map((k, i) => (
+                <span key={i} style={{ fontSize: 11, color: colors.textSecondary, display: "inline-flex", alignItems: "center", gap: 3 }}>
                   <span style={{ color: k.color || color, fontWeight: 700 }}>{k.value}</span>
-                  <span style={{ color: "rgba(255,255,255,.4)" }}>{k.label}</span>
+                  <span style={{ color: colors.textTertiary }}>{k.label}</span>
                 </span>
               ))}
             </div>
           )}
         </div>
-
-        {/* Badges à droite */}
         {badges.length > 0 && (
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", justifyContent: "flex-end", maxWidth: 220 }}>
-            {badges.map((b, i) => (
+          <div style={{ display: "flex", gap: 4, flexShrink: 0, flexWrap: "wrap", justifyContent: "flex-end", maxWidth: "40%" }}>
+            {badges.filter(b => b).map((b, i) => (
               <span key={i} style={{
+                padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700,
                 background: `${b.color || color}25`,
                 color: b.color || color,
                 border: `1px solid ${b.color || color}50`,
-                padding: "2px 8px",
-                borderRadius: 6,
-                fontSize: 10,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: 0.3,
-                display: "inline-flex", alignItems: "center", gap: 3,
                 whiteSpace: "nowrap",
               }}>
-                {b.icon && <i className={`ti ${b.icon}`} />}
-                {b.label}
+                {b.icon && <i className={`ti ${b.icon}`} />} {b.label}
               </span>
             ))}
           </div>
         )}
-
-        {/* Actions */}
-        {actions && <div style={{ display: "flex", gap: 4 }}>{actions}</div>}
+        {actions && <div style={{ display: "flex", gap: 4, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>{actions}</div>}
       </div>
-
-      {/* CONTENT déplié */}
-      {open && hasContent && (
+      {open && children && (
         <div style={{
-          padding: "0 14px 14px 14px",
+          padding: "14px 16px",
           borderTop: `1px solid ${color}25`,
-          paddingTop: 14,
-          marginTop: 0,
-          animation: "av-expand 200ms ease",
+          background: colors.detailBg,
         }}>
           {children}
         </div>
       )}
-
-      <style jsx global>{`
-        @keyframes av-expand {
-          from { opacity: 0; transform: translateY(-4px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
 
 /**
- * ExpandableList : container pour plusieurs ExpandableRow
- * gère le gap entre les items
+ * DetailGrid — adapté dark/light
  */
-export function ExpandableList({ children, gap = 8, style }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap, ...style }}>
-      {children}
-    </div>
-  );
-}
-
-/**
- * DetailGrid : utilitaire pour afficher les détails dans le déplié
- * Grid responsive 2/3 cols avec label/value
- */
-export function DetailGrid({ items, columns = 3, color = "#185FA5" }) {
+export function DetailGrid({ items, columns = 3, color = "#185FA5", theme = "light" }) {
+  const isDark = theme === "dark";
+  const colors = isDark ? {
+    cardBg: "rgba(255,255,255,.04)", cardBorder: "rgba(255,255,255,.06)",
+    label: "rgba(255,255,255,.45)", value: "#fff", valueEmpty: "rgba(255,255,255,.3)",
+  } : {
+    cardBg: "#ffffff", cardBorder: "#e8edf2",
+    label: "#8a96a4", value: "#142131", valueEmpty: "#bcc5d0",
+  };
   return (
     <div style={{
       display: "grid",
@@ -185,16 +147,16 @@ export function DetailGrid({ items, columns = 3, color = "#185FA5" }) {
     }}>
       {items.filter(i => i).map((i, idx) => (
         <div key={idx} style={{
-          background: "rgba(255,255,255,.04)",
-          border: "1px solid rgba(255,255,255,.06)",
+          background: colors.cardBg,
+          border: `1px solid ${colors.cardBorder}`,
           borderRadius: 8,
           padding: "8px 10px",
         }}>
-          <div style={{ color: "rgba(255,255,255,.45)", fontSize: 9, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
+          <div style={{ color: colors.label, fontSize: 9, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700, marginBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
             {i.icon && <i className={`ti ${i.icon}`} style={{ color: i.color || color }} />}
             {i.label}
           </div>
-          <div style={{ color: i.value ? "#fff" : "rgba(255,255,255,.3)", fontSize: 12, fontWeight: 600 }}>
+          <div style={{ color: i.value ? colors.value : colors.valueEmpty, fontSize: 12, fontWeight: 600 }}>
             {i.value || "—"}
           </div>
         </div>
@@ -204,25 +166,31 @@ export function DetailGrid({ items, columns = 3, color = "#185FA5" }) {
 }
 
 /**
- * DetailAction : bouton dans le déplié
+ * DetailAction — bouton dans le déplié (inchangé)
  */
 export function DetailAction({ icon, label, color = "#185FA5", onClick, variant = "default" }) {
-  const styles = {
-    default: { background: `${color}20`, color, border: `1px solid ${color}40` },
-    primary: { background: `linear-gradient(135deg, ${color}, ${color}cc)`, color: "#fff", border: "none" },
-    danger:  { background: "rgba(212,94,94,.15)", color: "#D45E5E", border: "1px solid rgba(212,94,94,.30)" },
-  };
   return (
     <button onClick={onClick} style={{
-      ...styles[variant],
-      padding: "6px 12px",
-      borderRadius: 8,
-      fontSize: 12, fontWeight: 700,
-      fontFamily: "Quicksand", cursor: "pointer",
-      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "8px 14px", borderRadius: 8,
+      background: variant === "primary" ? `linear-gradient(135deg, ${color}, ${color}cc)` : `${color}15`,
+      color: variant === "primary" ? "#fff" : color,
+      border: variant === "primary" ? "none" : `1px solid ${color}30`,
+      cursor: "pointer", fontFamily: "Quicksand", fontWeight: 700, fontSize: 12,
+      display: "inline-flex", alignItems: "center", gap: 6,
     }}>
       {icon && <i className={`ti ${icon}`} />}
       {label}
     </button>
+  );
+}
+
+/**
+ * ExpandableList — wrapper avec gap
+ */
+export function ExpandableList({ gap = 8, children }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap }}>
+      {children}
+    </div>
   );
 }

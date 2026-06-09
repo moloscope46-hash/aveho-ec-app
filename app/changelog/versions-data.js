@@ -240,6 +240,37 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.81",
+    "kind": "feat",
+    "titre": "MODALS centres au milieu de l ecran (CSS override force align-items et justify-content center sur tous les .modal-bg et .modal-v2 - plus besoin de scroller pour les trouver - meme en mobile centre au lieu de bottom-sheet) + MobileToolbarPopup REFONDU centre au milieu (avant : slide-in droite) + SEEDING MEGA Patients/Batiments/Etages/Services/Chambres/Lits via SQL ULTRA-DEFENSIF avec ALTER TABLE ADD COLUMN IF NOT EXISTS et DO relax_pnn auto-detect NOT NULL exotiques",
+    "chantiers": [
+      { "code": "AI", "txt": "globals.css FIN du fichier - override final qui force .modal-bg avec align-items et justify-content center, padding 20px, plus de bottom-sheet en mobile (avant le sticky bas faisait scroller pour trouver le modal). .modal et .modal-v2 ont position relative + max-height 90vh + animation av-modal-pop scale .92 to 1 en 220ms. Media query 768px reduit padding a 12 et max-height a 88vh" },
+      { "code": "AI", "txt": "MobileToolbarPopup.js REFONDU - avant : slide-in droite (transform translateX -100%). Apres : center centre middle de l ecran avec align-items center justify-content center, animation av-mtp-pop scale .92 to 1, max-width 420px, max-height 88vh. Plus de bottom-sheet ou popup decalee" },
+      { "code": "AI", "txt": "SQL aveho-SEEDING-PATIENTS-LIEUX.sql (58K) ULTRA DEFENSIF - ALTER TABLE ADD COLUMN IF NOT EXISTS sur 6 tables (batiments, etages, services, chambres, patients, lits) avec toutes les colonnes courantes nom code etablissement_id batiment_id etage_id service_id chambre_id structure_id etc. CREATE TABLE IF NOT EXISTS lits. DO relax_pnn auto-detect colonnes NOT NULL et drop NOT NULL sauf id+structure_id+timestamps" },
+      { "code": "AI", "txt": "Seeding hierarchie complete : 1 batiment par etab + 4 etages par batiment (RDC + 1 + 2 + 3) + 3 services par etage (Medecine/Chirurgie/SSR/Geriatrie/Cardio/Pneumo/Reed/Heb/MT/HAD) + 8 chambres par service (4 individuelles + 4 standard) + 1-2 lits par chambre. Avec NOT EXISTS pour idempotent" },
+      { "code": "AI", "txt": "200 PATIENTS au total - 80 HAD a domicile avec latitude/longitude reelles 18 villes Lot/Aveyron/Corrèze + 120 institution rattaches automatiquement aux chambres via UPDATE WITH CTE + ROW_NUMBER. Tous avec NIR/secu, telephone, adresse, civilite, date_naissance, sexe, pathologies (1-4 parmi 20), medecin traitant" },
+      { "code": "AI", "txt": "PageHeader.js (composant prepare 0.65.80) + CenteredModal.js prets a etre branches sur les pages cles - PageHeader = bouton retour + nom page + icone + bouton 3 raccourcis qui ouvre une popup CENTRE avec 6 tuiles (Panier/Notifs/Profil/Accueil/Recherche/Parametres). CenteredModal = modal fix centre avec backdrop blur" }
+    ],
+    "themes": ["modals-centres-milieu", "mobile-popup-centre", "seeding-patients-lieux-200-defensif", "page-header-prepare"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.81.html"
+  },
+{
+    "v": "0.65.78",
+    "kind": "feat",
+    "titre": "ExpandableRow + DetailGrid AUTO-ADAPTATIFS dark/light theme (fix bug texte BLANC SUR BLANC invisible sur pages avec fond clair comme /articles) + ViewModeToggle Liste/Tuiles persiste localStorage visible mobile et desktop + OSRM Routing reel via API publique project-osrm.org (remplace Haversine vol d oiseau par calcul d itineraire routier reel avec geometry) + MQTT Broker fonctionnel via WebSocket pour tiroirs pharmacie connectes (subscribe/publish + helpers tiroir.ouvrir/fermer/led/status)",
+    "chantiers": [
+      { "code": "FIX", "txt": "ROOT CAUSE TEXTE INVISIBLE - ExpandableRow.js utilisait color: #fff partout (lignes 80 91 95 103-105) mais quand wrappe sur une page avec background light (comme /articles), le texte etait BLANC SUR BLANC invisible. Refonte avec prop theme=light (defaut) ou theme=dark. Couleurs adaptatives : light = textPrimary #142131 textSecondary #5a6878 / dark = #fff rgba(255,255,255,.55). DetailGrid aussi adapte avec cardBg/cardBorder/label/value/valueEmpty differents par theme" },
+      { "code": "AI", "txt": "ViewModeToggle nouveau composant + hook useViewMode(key) qui persiste en localStorage av-vm-{key}. Visible mobile ET desktop (les labels Liste/Tuiles inline donc occupent espace minimum). Style toggle pill avec gradient sur le mode actif. Theme dark/light auto-adapte aussi" },
+      { "code": "AI", "txt": "lib/osrmRouting.js calcule un itineraire ROUTIER REEL via OSRM API publique (router.project-osrm.org) - retourne distance_km duree_min et geometry GeoJSON pour tracer la polyline sur la carte. Fallback Haversine si OSRM indispo ou timeout 8s. Fonction optimizeRoute pour TSP-like (ordre optimal des etapes). Pour prod : deployer Docker OSRM local sur infra Aveho" },
+      { "code": "AI", "txt": "lib/mqttBroker.js vrai broker via WebSocket vers test.mosquitto.org:8081 par defaut (configurable via NEXT_PUBLIC_MQTT_WS_URL pour brancher Mosquitto interne en prod). Fonctions subscribe(topic, cb) avec auto-reconnect / publish(topic, payload) / helpers tiroir.ouvrir(id) tiroir.fermer(id) tiroir.led(id, color) tiroir.status(id, cb) - topics prefixes aveho/pharmacie/. Hook useMqttStatus() pour afficher l etat connexion" },
+      { "code": "AI", "txt": "Audit chantier applyEtabFilter - script Python detecte 171 pages avec .from() sans applyEtabFilter (top : /had/[id] 24 from, /etablissement 21, /demandes-internes/[id] 17, /mobile/patient/new 15). Chantier mecanique en cours - prochaines versions" }
+    ],
+    "themes": ["fix-texte-blanc-sur-blanc-invisible", "expandablerow-theme-adaptatif", "viewmode-toggle-mobile-desktop", "osrm-routing-reel", "mqtt-broker-fonctionnel"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.78.html"
+  },
+{
     "v": "0.65.77",
     "kind": "fix",
     "titre": "FIX BUILD VERCEL - tous les imports relatifs cassés trouvés et corriges via script audit Python ULTRA - PermissionGate path app/pharmacie/page.js (1 niveau pas 2), EntityDrawers/EntityDrawers3/EntityDrawersExtra path supabase (3 niveaux pas 2 depuis ui-premium/), TVFiltersBar.js manquant cree comme stub avec localStorage filters. AUDIT FINAL : 1835 imports tous resolved, 0 casses",

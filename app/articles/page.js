@@ -438,6 +438,7 @@ export default function Articles() {
                 
                 return (
                   <ExpandableRow
+                    theme="light"
                     key={a.id}
                     color="#185FA5"
                     icon={a.dispositif_medical ? "ti-medical-cross" : "ti-package"}

@@ -8077,3 +8077,48 @@ input:invalid:not(:placeholder-shown) {
 
 /* Évite le débordement RTL accidentel */
 body { direction: ltr; }
+
+/* =================================================================
+   0.65.81 — FORCE TOUS LES MODALS CENTRES AU MILIEU DE L'ECRAN
+   Override final pour eviter d'avoir a scroller pour les trouver
+================================================================= */
+.modal-bg {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9500 !important;
+  background: rgba(20, 33, 49, 0.55) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;       /* CENTRE VERTICAL */
+  justify-content: center !important;   /* CENTRE HORIZONTAL */
+  padding: 20px !important;
+  overflow: hidden !important;
+}
+
+.modal, .modal-v2 {
+  position: relative !important;
+  margin: 0 !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  width: 100% !important;
+  border-radius: 20px !important;
+  animation: av-modal-pop 220ms cubic-bezier(.2,.7,.3,1) !important;
+}
+
+@keyframes av-modal-pop {
+  from { transform: scale(.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Override le bottom-sheet mobile : on garde centré */
+@media (max-width: 768px) {
+  .modal-bg {
+    align-items: center !important;
+    padding: 12px !important;
+  }
+  .modal, .modal-v2 {
+    max-height: 88vh !important;
+    border-radius: 16px !important;
+  }
+}
