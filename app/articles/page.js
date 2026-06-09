@@ -41,6 +41,7 @@ export default function Articles() {
   const auth = useAuth();
   const cart = useCart();
   const [items, setItems] = useState([]);
+  const [viewMode, setViewMode] = useState("liste"); // "liste" ou "tuiles" — 0.65.66
   const [tvaTaux, setTvaTaux] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
   const [partenaires, setPartenaires] = useState([]);
@@ -349,6 +350,65 @@ export default function Articles() {
               onAction={items.length === 0 ? newArticle : null}
             />
           ) : (
+            <>
+            {/* Toggle Vue Liste / Tuiles - 0.65.66 */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 12, justifyContent: "flex-end" }}>
+              <button onClick={() => setViewMode("liste")} title="Vue liste" style={{
+                padding: "6px 10px", borderRadius: 8,
+                background: viewMode === "liste" ? "linear-gradient(135deg, #185FA5, #134e87)" : "rgba(255,255,255,.06)",
+                color: "#fff", border: "1px solid rgba(255,255,255,.10)",
+                cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "Quicksand",
+              }}>
+                <i className="ti ti-list" /> Liste
+              </button>
+              <button onClick={() => setViewMode("tuiles")} title="Vue tuiles" style={{
+                padding: "6px 10px", borderRadius: 8,
+                background: viewMode === "tuiles" ? "linear-gradient(135deg, #185FA5, #134e87)" : "rgba(255,255,255,.06)",
+                color: "#fff", border: "1px solid rgba(255,255,255,.10)",
+                cursor: "pointer", fontSize: 12, fontWeight: 700, fontFamily: "Quicksand",
+              }}>
+                <i className="ti ti-grid-dots" /> Tuiles
+              </button>
+            </div>
+            {viewMode === "tuiles" ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                {filtered.map(a => {
+                  const margeColor = a.marge_pct >= 30 ? "#5aa05a" : a.marge_pct >= 10 ? "#EF9F27" : "#e35d5b";
+                  return (
+                    <div key={a.id} onClick={() => router.push(`/article/${a.id}`)} style={{
+                      padding: 14, borderRadius: 12,
+                      background: "linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02))",
+                      border: "1px solid rgba(255,255,255,.08)",
+                      cursor: "pointer", transition: "all 200ms",
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 10 }}>
+                        <div style={{
+                          width: 42, height: 42, borderRadius: 10,
+                          background: "linear-gradient(135deg, #185FA5, #134e87)",
+                          color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
+                          flexShrink: 0,
+                        }}>
+                          <i className={`ti ${a.dispositif_medical ? "ti-medical-cross" : "ti-package"}`} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ color: "#fff", fontWeight: 700, fontSize: 14, marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{a.libelle}</div>
+                          <div style={{ color: "rgba(255,255,255,.5)", fontSize: 11, fontFamily: "Consolas, monospace" }}>{a.reference || "—"}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 11 }}>
+                        <div><span style={{ color: "rgba(255,255,255,.4)" }}>PA</span> <span style={{ color: "#7CC8C8", fontWeight: 700 }}>{a.prix_achat_ht ? fmtEur(a.prix_achat_ht) : "—"}</span></div>
+                        <div><span style={{ color: "rgba(255,255,255,.4)" }}>PV</span> <span style={{ color: "#fff", fontWeight: 700 }}>{a.prix_vente_ht ? fmtEur(a.prix_vente_ht) : "—"}</span></div>
+                        <div><span style={{ color: "rgba(255,255,255,.4)" }}>TVA</span> <span style={{ color: "#7a6fb0", fontWeight: 700 }}>{a.tva_pct ? `${a.tva_pct}%` : "—"}</span></div>
+                        <div><span style={{ color: "rgba(255,255,255,.4)" }}>Marge</span> <span style={{ color: margeColor, fontWeight: 700 }}>{a.marge_pct ? `${a.marge_pct}%` : "—"}</span></div>
+                      </div>
+                      {a.famille && <div style={{ marginTop: 8, fontSize: 10, color: "#7CC8C8" }}><i className="ti ti-category-2" /> {a.famille}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
             <ExpandableList gap={8}>
               {filtered.map(a => {
                 const matCount = materielsByArticle[a.id] || 0;
@@ -415,6 +475,8 @@ export default function Articles() {
                 );
               })}
             </ExpandableList>
+            )}
+            </>
           )}
         </Panel>
 
