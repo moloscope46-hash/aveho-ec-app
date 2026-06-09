@@ -10,7 +10,8 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
-import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
+import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
+import ModeTVToolbar from "../../components/ModeTVToolbar";  /* 0.65.0 */
 
 export default function PresentationDashboardPage() {
   return (
@@ -134,6 +135,8 @@ function PresentationDashboard() {
       padding: "24px 110px",
       overflow: "auto",
     }}>
+      <ModeTVToolbar onRefresh={() => (typeof load === "function" ? load() : location.reload())} />
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
         <div>
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700, display: "flex", alignItems: "center", gap: 10 }}>AVEHO — TV DE SERVICE<TVMagasinFilter onChange={setMagasinId} /></div>

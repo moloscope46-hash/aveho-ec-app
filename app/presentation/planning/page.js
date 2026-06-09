@@ -11,7 +11,8 @@ import { useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
-import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
+import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
+import ModeTVToolbar from "../../components/ModeTVToolbar";  /* 0.65.0 */
 
 export default function PresentationPlanningPage() {
   return (
@@ -166,6 +167,8 @@ function PresentationPlanning() {
   if (auth.ready && !auth.structureId) {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#142131", color: "#fff", fontSize: 24 }}>
+      <ModeTVToolbar onRefresh={() => (typeof load === "function" ? load() : location.reload())} />
+
         Authentification requise
       </div>
     );

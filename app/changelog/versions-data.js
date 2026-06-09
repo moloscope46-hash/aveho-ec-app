@@ -240,6 +240,20 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.76",
+    "kind": "feat",
+    "titre": "MEGA REFONTE Mode TV - Composant ModeTVToolbar standard sur 9 pages presentation/* (Retour + Hub + Plein ecran + Screen Share natif Web Capture API + Cast Google/Apple/SmartView avec vraies icones + Refresh) + Hub /presentation refondu en page d accueil avec 9 tuiles cliquables vers chaque ecran TV + mode kiosque rotation auto 10s/30s/60s/120s + FIX FICHE ARTICLE inaccessible (useEditLock manquait dans les imports - ReferenceError au runtime comme btnIcon)",
+    "chantiers": [
+      { "code": "AI", "txt": "Composant nouveau app/components/ModeTVToolbar.js (5K) - toolbar fixe haut-droite avec 9 boutons : Hub TV (icone home) + Retour (router.back) + Plein ecran toggle + Partage ecran natif (getDisplayMedia ouvre popup miroir video) + 3 boutons Cast avec vraies icones SVG (Google Cast bleu logo Cast, Apple AirPlay gris logo AppleTV, Samsung Smart View bleu logo Miracast) avec instructions popup detaillees + bouton Refresh personnalise par page. Style : sticky top 14 right 14, backdrop blur, padding 8 10, border-radius 14, shadow profond" },
+      { "code": "AI", "txt": "Hub /presentation/page.js REFONDU - avant : redirect direct vers /interventions. Apres : vraie page Mode TV avec 9 tuiles cliquables 280px+ une par ecran (Tournees, Interventions DI, Planning, Livraisons, Dashboard, Stats, Pharmacie, Carte HAD, Architecture) avec icones gradient 72x72 + libelle + description metier + couleurs charte differentes + hover translateY-6px + glow shadow + section footer Mode Kiosque avec 4 boutons rotation auto 10s/30s/60s/120s (panneau d affichage)" },
+      { "code": "AI", "txt": "ModeTVToolbar BRANCHE sur 9 pages presentation - import ajoute via script Python regex (chemin ../../components/ModeTVToolbar correctement calcule) puis composant <ModeTVToolbar onRefresh={() => load()} /> insere juste apres le tag racine du JSX retourne. Tournees l avait deja en mode inline 0.65.71. 9/9 pages passent node --check OK." },
+      { "code": "FIX", "txt": "Bug FICHE ARTICLE /article/[id] - useEditLock etait utilise ligne 39 mais JAMAIS IMPORTE - meme pattern qu avec btnIcon. ReferenceError au runtime faisait crasher la page. Import { useEditLock } from ../../../lib/useEditLock ajoute. La page fait 57K et utilise le hook pour anti-collision multi-user sur la modale d edition" }
+    ],
+    "themes": ["mode-tv-toolbar-standard-9-pages", "hub-presentation-refondu-tuiles", "fix-fiche-article-useEditLock-import"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.76.html"
+  },
+{
     "v": "0.65.74",
     "kind": "fix",
     "titre": "FIX TOTAL 400/404 + bug btnIcon dans /articles (helper manquant cause du crash de la page) + SQL ULTIME ajoute toutes les colonnes phantoms (roles.structure_id/famille_metier/ordre_affichage, patients.mode_residence/chambre/latitude/longitude, partenaires_rpps complet, fournisseurs complet, tournees.date_planifiee/chauffeur_nom/distance_km, interventions.materiel_id/patient_id, maintenances.materiel_id) + declare TOUTES les FK PostgREST manquantes + cree v_tournees_jour_complete + table optimisation_suggestions + v_patient_complete + RLS update etablissements + SQL seeding data demo (50 roles + 4 etabs + 7 fournisseurs + 6 RPPS + 4 magasins + 8 patients HAD geoloc + 2 tournees du jour avec 8 etapes)",

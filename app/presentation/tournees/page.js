@@ -10,6 +10,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import RefreshButton from "../../components/RefreshButton";
 import CastButton from "../../components/CastButton";
+import ModeTVToolbar from "../../components/ModeTVToolbar";
 
 const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false });
 const TileLayer    = dynamic(() => import("react-leaflet").then(m => m.TileLayer), { ssr: false });

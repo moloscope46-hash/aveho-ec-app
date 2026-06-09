@@ -10,6 +10,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import RefreshButton from "../../components/RefreshButton";
 import CastButton from "../../components/CastButton";
+import ModeTVToolbar from "../../components/ModeTVToolbar";
 
 export default function PresentationPharmaciePage() {
   const supabase = createClient();

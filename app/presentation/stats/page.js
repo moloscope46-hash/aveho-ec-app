@@ -12,6 +12,7 @@ import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
 import { fmtDate } from "../../../lib/format";
+import ModeTVToolbar from "../../components/ModeTVToolbar";
 
 export default function PresentationStatsPage() {
   return (
@@ -122,6 +123,8 @@ function PresentationStats() {
       padding: "24px 110px",
       overflow: "auto",
     }}>
+      <ModeTVToolbar onRefresh={() => (typeof load === "function" ? load() : location.reload())} />
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, paddingBottom: 16, borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
         <div>
           <div style={{ fontSize: 14, letterSpacing: 3, color: "#7CC8C8", fontWeight: 700 }}>

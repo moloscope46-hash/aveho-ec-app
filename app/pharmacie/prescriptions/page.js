@@ -5,7 +5,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TopBar from "../../TopBar";
 import { PageShell, ModernCard, ModernModal, ModalBtn, HiTechIconBox } from "../../components/ui-premium";
-import PermissionGate from "../../../components/PermissionGate";
+import PermissionGate from "../../components/PermissionGate";
 
 const COLOR = "#7a6fb0";
 

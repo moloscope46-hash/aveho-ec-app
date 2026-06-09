@@ -12,6 +12,7 @@ import { createClient } from "../../../lib/supabase";
 import { selectMaterielsByArticle } from "../../../lib/materiels";
 import BackButton from "../../components/BackButton";
 import { useAuth } from "../../../lib/useAuth";
+import { useEditLock } from "../../../lib/useEditLock";
 import TopBar from "../../TopBar";
 import { useCart } from "../../useCart";
 import { PageHead, Panel, Btn, IconButton, Modal } from "../../ui";

@@ -13,6 +13,7 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import TVScreenNav from "../../components/TVScreenNav";
 import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
+import ModeTVToolbar from "../../components/ModeTVToolbar";
 
 export default function PresentationCarteHADPage() {
   return (
@@ -243,6 +244,8 @@ function PresentationCarteHAD() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#142131", color: "#fff", fontFamily: "Segoe UI, Quicksand, Helvetica, Arial, sans-serif", padding: 0, overflow: "hidden", position: "relative" }}>
+      <ModeTVToolbar onRefresh={() => (typeof load === "function" ? load() : location.reload())} />
+
 
       {/* Header flottant */}
       <div style={{

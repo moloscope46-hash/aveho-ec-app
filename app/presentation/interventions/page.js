@@ -17,7 +17,8 @@ import { createClient } from "../../../lib/supabase";
 import { useAuth } from "../../../lib/useAuth";
 import { fmtDate } from "../../../lib/format";
 import TVScreenNav from "../../components/TVScreenNav";  /* 0.64.0 */
-import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";  /* 0.65.0 */
+import TVMagasinFilter, { getTVMagasinId } from "../../components/TVMagasinFilter";
+import ModeTVToolbar from "../../components/ModeTVToolbar";  /* 0.65.0 */
 
 const COULEUR_STATUT = {
   "Nouvelle": "#185FA5",
@@ -133,6 +134,8 @@ function PresentationInterventions() {
   if (auth.ready && !auth.structureId) {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#142131", color: "#fff", fontSize: 24 }}>
+      <ModeTVToolbar onRefresh={() => (typeof load === "function" ? load() : location.reload())} />
+
         Authentification requise
       </div>
     );
