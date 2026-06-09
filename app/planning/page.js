@@ -75,16 +75,16 @@ function PlanningInner() {
     try {
       const { data } = await supabase
         .from("interventions")
-        .select("id, type, date_prevue, technicien_nom, statut, patient_id")
+        .select("id, type, date_planifiee, technicien_nom, statut, patient_id")
         .eq("structure_id", auth.structureId)
-        .gte("date_prevue", start.toISOString())
-        .lte("date_prevue", end.toISOString())
+        .gte("date_planifiee", start.toISOString())
+        .lte("date_planifiee", end.toISOString())
         .limit(200);
       (data || []).forEach(i => all.push({
         id: i.id, kind: "intervention",
         title: i.type || "Intervention",
         sub: i.technicien_nom || "",
-        date: new Date(i.date_prevue),
+        date: new Date(i.date_planifiee),
         status: i.statut,
         href: `/intervention/${i.id}`,
       }));
@@ -113,16 +113,16 @@ function PlanningInner() {
     try {
       const { data } = await supabase
         .from("demandes_internes")
-        .select("id, numero, objet, statut, priorite, cree_le")
+        .select("id, numero, objet, statut, priorite, created_at")
         .eq("structure_id", auth.structureId)
-        .gte("cree_le", start.toISOString())
-        .lte("cree_le", end.toISOString())
+        .gte("created_at", start.toISOString())
+        .lte("created_at", end.toISOString())
         .limit(200);
       (data || []).forEach(d => all.push({
         id: d.id, kind: "di",
         title: d.objet || d.numero || "DI",
         sub: d.priorite ? `Priorité ${d.priorite}` : "",
-        date: new Date(d.cree_le),
+        date: new Date(d.created_at),
         status: d.statut,
         href: `/magasin?tab=di&id=${d.id}`,
       }));
