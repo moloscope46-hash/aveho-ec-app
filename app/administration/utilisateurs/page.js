@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 // =============================================================
 //  /administration/utilisateurs — Liste users avec bulles
 //  Cards avec permissions en bulles + icône œil → popup détail

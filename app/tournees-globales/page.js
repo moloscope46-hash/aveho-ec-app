@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 // =============================================================
 //  /tournees-globales — Tournées globales + optimisation cross
 // =============================================================

@@ -50,3 +50,6 @@ export { default as ConicCard } from "./ConicCard";
 export { default as ParticlesBackground } from "./ParticlesBackground";
 // 0.58.11 : Combobox multi-select avec tags
 export { default as Combobox } from "./Combobox";
+
+// 0.65.50 : PageShell + ModernCard + ModernModal + ModalBtn + HiTechIconBox
+export { PageShell, ModernCard, ModernModal, ModalBtn, HiTechIconBox } from "./PageShell";

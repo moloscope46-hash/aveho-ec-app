@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 // =============================================================
 //  /voiture — Mode VOITURE (Android Auto / Apple CarPlay)
 //  Interface ultra-épurée, gros boutons tactiles 60px+

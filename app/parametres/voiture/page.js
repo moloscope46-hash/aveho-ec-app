@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 // =============================================================
 //  /parametres/voiture — Configuration mode voiture / CarPlay
 //  Toggle catégories visibles + Aperçu CarPlay

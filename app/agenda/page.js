@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 // =============================================================
 //  /agenda — Agenda complet avec filtres + tous événements
 // =============================================================

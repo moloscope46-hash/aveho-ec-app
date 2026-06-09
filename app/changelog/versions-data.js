@@ -240,6 +240,54 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.51",
+    "kind": "fix",
+    "titre": "FIX prerender /infirmieres : composants ui-premium manquants + force-dynamic sur les pages dynamiques",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX critique : les composants PageShell / ModernCard / ModernModal / ModalBtn / HiTechIconBox importes depuis ui-premium n existaient PAS dans le code de base. Toutes les pages /infirmieres /agenda /tournees-globales /voiture /pharmacie-caisse /administration-utilisateurs etc plantaient avec Element type is invalid: expected... but got: undefined" },
+      { "code": "AI", "txt": "Creation app/components/ui-premium/PageShell.js avec 5 composants : PageShell (header avec icone gradient + title + subtitle + badge + actions), ModernCard (default/accent variants, hoverable, icon+title optionnels), ModernModal (sm/md/lg/xl sizes, ESC pour fermer, animation slide-in), ModalBtn (primary/secondary), HiTechIconBox (gradient/default variants, pulse animation, taille configurable)" },
+      { "code": "AI", "txt": "Export depuis ui-premium/index.js : { PageShell, ModernCard, ModernModal, ModalBtn, HiTechIconBox } from PageShell" },
+      { "code": "AI", "txt": "Ajout export const dynamic = force-dynamic sur 7 pages : infirmieres / agenda / tournees-globales / voiture / pharmacie-caisse / parametres-voiture / administration-utilisateurs. Empeche le prerender static qui plantait sur les useAuth / useState" }
+    ],
+    "themes": ["fix-prerender", "ui-premium-pageshell", "force-dynamic"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.51.html"
+  },
+{
+    "v": "0.65.50",
+    "kind": "fix",
+    "titre": "FIX BUILD VERCEL : recreation 6 fichiers perdus en sandbox + ajout react-leaflet en deps",
+    "chantiers": [
+      { "code": "AI", "txt": "FIX critique Vercel build failed : 6 fichiers etaient perdus dans la sandbox lors des derniers livrables. Recreation propre de tout : app/components/RefreshButton.js (avec GlobalFiltersBar), app/components/CastButton.js (Google Cast + AirPlay + SmartView + Fullscreen vraies icones SVG), lib/useCarMode.js (detection Android Auto/CarPlay + useForceLandscape), app/components/PatientMultiSelectActions.js (popup 7 actions + FloatingSelectionBar), app/components/TimelinePatient.js (mode compact + plein), app/components/PermissionGate.js (acces restreint), app/components/WidgetPharmacieAlertes.js (alertes périmés)" },
+      { "code": "AI", "txt": "FIX package.json : ajout dependances react-leaflet@4.2.1 + leaflet@1.9.4 manquantes (causait le module not found react-leaflet sur Vercel build)" },
+      { "code": "AI", "txt": "Audit complet : verification de tous les fichiers requis + tests node --check sur les pages Mode TV, voiture, agenda, tournees-globales, caisse, infirmieres" }
+    ],
+    "themes": ["fix-build-vercel", "fichiers-perdus-sandbox", "react-leaflet-deps"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.50.html"
+  },
+{
+    "v": "0.65.49",
+    "kind": "feat",
+    "titre": "FIX 42P01 pharmacie_stock + Generation auto rayons/tiroirs pharmacie + Caisse tactile NF525 + Tiroirs electroniques IoT",
+    "chantiers": [
+      { "code": "AI", "txt": "SQL aveho-MODULE-rayons-caisse.sql DEFENSIF : creation auto de pharmacie_stock si absent (FIX erreur 42P01). Toutes les tables sont en CREATE IF NOT EXISTS avec checks information_schema avant FK" },
+      { "code": "AI", "txt": "SQL Tables generation auto : depot_pharmacie_config (nb_rayons + nb_niveaux + nb_emplacements + nb_tiroirs + zones speciales JSONB + IoT config), depot_rayons (zone standard/refrigere/coffre_stupefiants/quarantaine, temperature, securise), depot_emplacements (niveau + position + dimensions cm), depot_tiroirs (electronique avec adresse IoT + pin_gpio + canal + LED couleur + medicament rattache + seuil alerte + coffre stupefiants + code deverrouillage hashe), depot_tiroirs_log (events ouverture/scan/alerte_temp)" },
+      { "code": "AI", "txt": "SQL Fonction generer_rayons_pharmacie(depot_id) : genere AUTOMATIQUEMENT toute la structure - le 1er rayon = Refrigere (2-8 deg), le 2e = Coffre Stupefiants (securise), les autres = standard. Cree rayons + emplacements + tiroirs en cascade avec codes hierarchiques (R01-N02-E03-T01) + QR codes uniques + capacite. SUPPRIME et REGENERE proprement" },
+      { "code": "AI", "txt": "SQL Caisse tactile NF525 : caisse_terminals (1 caisse rattachee a 1 pharmacie uniquement, hardware tiroir/imprimante/scanner/TPE marque ingenico/sumup/verifone, IoT tiroirs active), caisse_sessions (Z journalier avec fond ouverture/fermeture, totaux par mode, ecart), caisse_tickets (numero T-2026-000001, securite NF525 avec hash_signature + chainage_precedent_hash, part AMO/AMC, modes paiement detail JSONB), caisse_ticket_lignes (avec tiroir_id pour tracer d ou vient le med)" },
+      { "code": "AI", "txt": "SQL Fonction localiser_medicament(pharmacie_id, code_cip) : retourne jusqu a 5 tiroirs ou le medicament est present, avec rayon+emplacement+quantite+est_electronique. Tri par quantite DESC (priorise le tiroir le mieux servi)" },
+      { "code": "AI", "txt": "SQL Role Caissier(e) pharmacie cree avec permissions caisse_acces/vente/cloture + pharmacie_lire/dispenser" },
+      { "code": "AI", "txt": "NOUVELLE page /depot/[id]/configuration-pharmacie : Sliders 4 dimensions (rayons 1-50, niveaux 1-20, emplacements 1-30, tiroirs 1-5). Compteur LIVE du total de tiroirs qui seraient generes (gros chiffre 36px vert). Bouton ROCKET Generer (apres confirm avec count exact)" },
+      { "code": "AI", "txt": "Page config - Section IoT Tiroirs electroniques : toggle activation, choix modele (BD Pyxis MedStation, Omnicell XR2, Aesynt MedCarousel, Custom Raspberry Pi GPIO), protocole (MQTT, HTTP REST, WebSocket, Modbus TCP), URL API IoT + Token. Section Zones speciales (preconfigurees : Refrigere 2-8 deg, Coffre Stupefiants). Visualisation Plan du depot avec icones par type rayon" },
+      { "code": "AI", "txt": "NOUVELLE page /pharmacie/caisse : Caisse tactile NF525 plein ecran. Ouvre / cloture session Z avec fond. Scanner code-barres en gros input monospace 18px. SCAN → appel RPC localiser_medicament → ouvre auto le tiroir IoT correspondant (POST API) → ajoute au panier. Visual feedback Tiroir ouvert via IoT en vert 3s" },
+      { "code": "AI", "txt": "Caisse tactile - Panier : lignes avec designation + CIP + tiroir code + boutons +/- quantite tactiles 36px + montant TTC. Totaux HT/TVA/TTC. 4 GROS BOUTONS PAIEMENT XXL touch (CB bleu / Especes vert / Cheque teal / Tiers payant violet). Bouton ENCAISSER 18px gradient vert avec montant. Bouton Tiroir caisse pour ouverture manuelle (ESC/POS kick drawer simu). Cloture Z calcule ecart caisse" },
+      { "code": "AI", "txt": "Sidebar TopBar : Caisse tactile pharmacie (ti-cash-register orange) apres Tournees globales" }
+    ],
+    "themes": ["fix-42P01", "depot-pharmacie", "rayons-tiroirs-auto", "caisse-tactile-NF525", "iot-tiroirs"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.49.html"
+  },
+{
     "v": "0.65.48",
     "kind": "feat",
     "titre": "FIX build webpack 0.65.47 + Module Agenda complet + Tournees globales avec optimisation + Pharmacie ERP (inventaire/stupefiants/preparations/retraits/interactions) + Mode TV TOUTES tournees",
