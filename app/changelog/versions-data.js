@@ -240,6 +240,27 @@ export const THEME_LABELS = {
 
 export const ALL_VERSIONS = [
   {
+    "v": "0.65.57",
+    "kind": "feat",
+    "titre": "Services rattaches aux batiments + Collaborateurs avec chef de service + Seeds automatiques + page /services premium",
+    "chantiers": [
+      { "code": "AI", "txt": "SQL aveho-MODULE-services-batiments.sql : colonnes ajoutees a services - batiment_id, etage_id, type_service (soins/medical/pharmacie/restauration/technique/administration/logistique/reeducation/laboratoire/imagerie), couleur, icone, chef_service_id, chef_service_nom, capacite_lits, code_service. FK services.batiment_id -> batiments.id et services.etage_id -> etages.id" },
+      { "code": "AI", "txt": "SQL Colonnes ajoutees a membres_services : user_id, structure_id, role, est_chef (boolean pour designer le chef de service), date_rattachement. Permet de rattacher des collaborateurs precis aux services avec leur role" },
+      { "code": "AI", "txt": "SEEDS AUTOMATIQUES : pour CHAQUE batiment existant dans la BDD, creation auto de 5 services types - Soins infirmiers (terra), Medecine generale (bleu), Restauration (orange), Service technique (violet), Direction (navy). Codes hierarchiques SI-XXXX, MG-XXXX, REST-XXXX, TECH-XXXX, DIR-XXXX bases sur l ID du batiment. Defensif : INSERT WHERE NOT EXISTS pour zero doublon" },
+      { "code": "AI", "txt": "SEEDS GENERIQUES : si peu de batiments, creation de 5 services au niveau etablissement principal - Soins generaux / Pharmacie interne / Logistique / Administration / Maintenance avec couleurs et icones" },
+      { "code": "AI", "txt": "RATTACHEMENT AUTO membres_services : pour chaque membre des membres_etablissements (jusqu a 100), liaison automatique au premier service de son etablissement. Comme ca chaque collaborateur a au moins 1 service par defaut" },
+      { "code": "AI", "txt": "SQL Vue v_services_complete : SELECT avec joins precalcules sur batiments + etablissements + count nb_collaborateurs + count nb_chefs + JSON apercu des collaborateurs (limit 20). Utilisable directement par PostgREST sans embed" },
+      { "code": "AI", "txt": "SQL NOTIFY pgrst, reload schema : a la fin pour recharger le cache PostgREST apres ajout des colonnes et FK" },
+      { "code": "AI", "txt": "NOUVELLE page /services : Cards par couleur de type service avec gradient, badge type uppercase, icone box gradient 40px. Filtres 4 niveaux (recherche / etab / batiment cascade / type). Pour chaque service : etablissement_nom, batiment_nom, lits, chef" },
+      { "code": "AI", "txt": "Page /services - 3 boutons sur chaque card : icone Users (n collaborateurs) qui ouvre popup gestion, icone Edit pour modifier, icone Trash pour supprimer. Modal creation/edition avec 9 champs (nom, code, type avec 10 options, etab, batiment cascade, chef, capacite lits, couleur color picker, icone Tabler)" },
+      { "code": "AI", "txt": "Page /services - Modal Collaborateurs : Liste avatars circle initiale colorier avec nom + role + badge Chef avec couronne. Boutons Definir/Retirer chef (toggle est_chef), Retirer du service. Select pour ajouter nouveau collaborateur (filtre ceux deja rattaches). Tout en temps reel" },
+      { "code": "AI", "txt": "Sidebar TopBar : entree Services & collaborateurs (ti-building-cottage teal) apres Utilisateurs & Droits" }
+    ],
+    "themes": ["services-batiments", "membres-services-chef", "seeds-automatiques", "page-services-premium"],
+    "date": "9 juin 2026",
+    "noteFile": "NOTE-FEAT-0.65.57.html"
+  },
+{
     "v": "0.65.56",
     "kind": "fix",
     "titre": "FIX 400 FINAL : NOTIFY pgrst reload schema (cache PostgREST) + FK membres_structure pour les joins + vue de fallback",
